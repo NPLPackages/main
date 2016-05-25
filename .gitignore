@@ -9,4 +9,13 @@
 !/script/apps
 /script/apps/*
 !/script/apps/WebServer
+/script/ide/Animation
+/script/ide/Director
+/script/ide/Display
+/script/ide/Display3D
+/script/ide/Director
+/script/ide/Motion
+/script/ide/MotionEx
+/script/ide/NPLFlashTest
+/script/ide/Storyboard
 
