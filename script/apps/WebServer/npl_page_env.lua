@@ -28,7 +28,7 @@ following are exposed via meta class:
 	xml_encode(value)    to xml string
 	include_pagecode(code, filename):  inplace include page code. 
 	get_file_text(filename) 
-	util.GetUrl(url, function(msg:{header, code, rcode==200}) end): 
+	util.GetUrl(url, function(err, msg, data) end): 
 	util.parse_str(query_string): 
 
 I may consider reimplement some handy functions from php reference below. 
@@ -65,7 +65,7 @@ function npl_page_env:new(request, response)
 		response = response,
 		echo = function(text)
 			if(text~=nil and text~="") then
-				response:send(tostring(text));
+				response:sendsome(tostring(text));
 			end
 		end,
 		util = util,
@@ -127,14 +127,29 @@ end
 -- @param filename: file path, relative or absolute. 
 -- begin with './', relative to current file
 -- begin with '/', relative to web root directory
+-- begin with '../../../', up several directory to current file
 -- no "/" in filename, relative to current file
 -- otherwise, filename is absolute path. 
 function npl_page_env.getfilepath(filename)
 	local self = npl_http.code_env;
 	local firstByte = filename:byte(1);
-	if(firstByte == 46 and filename:byte(2) == 47) then 
-		-- begin with './', relative to current file
-		filename = self.dirname(self.__FILE__)..filename:sub(3, -1);
+	if(firstByte == 46) then 
+		local secondByte = filename:byte(2);
+		if(secondByte == 47) then
+			-- begin with './', relative to current file
+			filename = self.dirname(self.__FILE__)..filename:sub(3, -1);
+		elseif(secondByte == 46) then
+			if(filename:byte(3) == 47) then
+				local parentDir = self.dirname(self.__FILE__);
+				parentDir = parentDir:gsub("([^/]+)/$", "");
+				filename = filename:sub(3, -1);
+				while (filename:match("^%.%./")) do
+					parentDir = parentDir:gsub("([^/]+)/$", "");
+					filename = filename:sub(3, -1);
+				end
+				filename = parentDir..filename;
+			end
+		end
 	elseif(firstByte == 47) then
 		-- begin with '/', relative to web root directory
 		filename = WebServer:webdir()..filename:sub(2, -1);

@@ -54,6 +54,7 @@ function request:GetNid()
 	return self.nid;
 end
 
+<<<<<<< .mine
 function request:errorEvent(msg)
     msg = tostring(msg)
 	LOG.std(nil, "error", "npl_http", "NPLWebServer Error nid:%s: %s", tostring(self.nid), msg);
@@ -66,6 +67,18 @@ function request:errorEvent(msg)
 <p>%s</p>
 </body></html>
 ]], string.gsub (msg, "\n", "<br/>\n")))
+=======
+function request:errorEvent(msg)
+    msg = tostring(msg)
+	LOG.std(nil, "error", "npl_http", "NPLWebServer Error nid:%s: %s", tostring(self.nid), msg);
+	self.response:send(string.format ([[
+<html><head><title>NPL_http Error!</title></head>
+<body>
+<h1>NPL_http Error!</h1>
+<p>%s</p>
+</body></html>
+]], string.gsub (msg, "\n", "<br/>\n")));
+>>>>>>> .r21462
 end
 
 function request:tostring()

@@ -30,9 +30,13 @@ end
 
 -- return the content of a given url. 
 -- e.g.  echo(NPL.GetURL("www.paraengine.com"))
--- @param url: a REST like url or a table {url=string, form={key=value}, headers={key=value, "line strings"}}
--- @param callbackFunc: a function(msg:{headers, code, rcode==200}) end, 
+-- @param url: url string or a options table of {url=string, form={key=value}, headers={key=value, "line strings"}, json=bool, qs={}}
+-- if .json is true, code will be decoded as json.
+-- if .qs is query string table
+-- @param callbackFunc: a function(err, msg, data) end, 
+--  where msg is the raw HTTP message {header, code=0, rcode=200, data}
 --  if nil, the function will not return until result is returned(sync call).
+-- @param option: mostly nil. "-I" for headers only
 -- @return: return nil if callbackFunc is a function. or the string content in sync call. 
 function NPL.GetURL(url, callbackFunc, option)
 	NPL.load("(gl)script/ide/System/os/GetUrl.lua");

@@ -67,6 +67,11 @@ function Collection:GetWriterThreadName()
 	return self.writerThread or "main";
 end
 
+-- find by internal id.
+function Collection:findById(id, callbackFunc, timeout)
+	return self:findOne({_id = id}, callbackFunc, timeout);
+end
+
 -- please note, index will be automatically created for query field if not exist.
 --@param query: key, value pair table, such as {name="abc"}
 --@param callbackFunc: function(err, row) end, where row._id is the internal row id.

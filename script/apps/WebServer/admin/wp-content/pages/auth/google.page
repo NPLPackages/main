@@ -20,7 +20,7 @@ if(is_ajax()) then
 	response:Begin();
 
 	-- Step 1. Exchange authorization code for access token.
-	util.GetUrl({url = accessTokenUrl, json = true, form = params }, function(msg)
+	util.GetUrl({url = accessTokenUrl, json = true, form = params }, function(err, msg)
 		--local accessToken = token.access_token;
 		--local headers = { Authorization = 'Bearer ' .. accessToken };
 		--wp_send_json({});

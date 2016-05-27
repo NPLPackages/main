@@ -9,9 +9,9 @@ use the lib:
 ------------------------------------------------------------
 NPL.load("(gl)script/ide/System/os/GetUrl.lua");
 -- get headers only with "-I" option. 
-System.os.GetUrl("https://github.com/LiXizhi/HourOfCode/archive/master.zip", function(msg)  echo(msg) end, "-I");
+System.os.GetUrl("https://github.com/LiXizhi/HourOfCode/archive/master.zip", function(err, msg, data)  echo(msg) end, "-I");
 System.os.GetUrl("https://github.com/LiXizhi/HourOfCode/archive/master.zip", echo);
-System.os.GetUrl({url = string, json = true, form = {key=value, } }, function(msg)		echo(msg)	end);
+System.os.GetUrl({url = string, json = true, form = {key=value, } }, function(err, msg, data)		echo(data)	end);
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/Json.lua");
@@ -89,7 +89,7 @@ end
 
 function Request:InvokeCallback()
 	if(self.response and self.callbackFunc) then
-		self.callbackFunc(self.response);
+		self.callbackFunc(self.response.rcode, self.response, self.response.data);
 	end
 end
 
@@ -127,7 +127,8 @@ end
 -- @param url: url string or a options table of {url=string, form={key=value}, headers={key=value, "line strings"}, json=bool, qs={}}
 -- if .json is true, code will be decoded as json.
 -- if .qs is query string table
--- @param callbackFunc: a function(msg:{header, code=0, rcode=200, data}) end, 
+-- @param callbackFunc: a function(err, msg, data) end, 
+--  where msg is the raw HTTP message {header, code=0, rcode=200, data}
 --  if nil, the function will not return until result is returned(sync call).
 -- @param option: mostly nil. "-I" for headers only
 -- @return: return nil if callbackFunc is a function. or the string content in sync call. 

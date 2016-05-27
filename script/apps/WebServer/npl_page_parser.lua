@@ -148,8 +148,8 @@ end
 
 function npl_page_parser:send_page_error(msg, code_env)
 	code_env = code_env or npl_http.code_env;
-	code_env.response:send(string.format("fatal error occurs when running page %s, %s: ", code_env.request:url(), self.filename or ""))
-	code_env.response:send(tostring(msg));
+	code_env.response:sendsome(string.format("fatal error occurs when running page %s, %s: ", code_env.request:url(), self.filename or ""))
+	code_env.response:sendsome(tostring(msg));
 end
 
 -- return the call depth
@@ -194,12 +194,12 @@ function npl_page_parser:run(code_env)
 			if(not code_env.is_exit_call) then
 				-- runtime error:
 				self:send_page_error(result, code_env);
-				LOG.std(nil, "error", "npl_page_parser", "runtime error: %s", tostring(result));
+				LOG.std(nil, "error", "npl_page_parser", "runtime error: %s in %s", tostring(result), last_filename or "");
 				-- self:set_error_msg(result);
 			else
 				if(call_depth==0) then
 					if(code_env.exit_msg) then
-						code_env.response:send(tostring(code_env.exit_msg));
+						code_env.response:sendsome(tostring(code_env.exit_msg));
 					end
 					code_env.is_exit_call = nil;
 				else

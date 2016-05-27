@@ -6,7 +6,8 @@ Desc:
 -----------------------------------------------
 NPL.load("(gl)script/apps/WebServer/npl_response.lua");
 local response = commonlib.gettable("WebServer.response");
-response:send();
+response:status(200):send({message="json message"});
+response:sendsome();
 response:send_xml();
 response:send_json();
 response:set_header(h, v);
@@ -37,6 +38,7 @@ local status_strings = {
 	unauthorized = "HTTP/1.1 401 Unauthorized",
 	forbidden = "HTTP/1.1 403 Forbidden",
 	not_found = "HTTP/1.1 404 Not Found",
+	conflict = "HTTP/1.1 409 Conflict",
 	internal_server_error = "HTTP/1.1 500 Internal Server Error",
 	not_implemented = "HTTP/1.1 501 Not Implemented",
 	bad_gateway = "HTTP/1.1 502 Bad Gateway",
@@ -70,26 +72,30 @@ function response:send_xml(xml, return_code, headers)
 	self.headers = headers or self.headers;
 
 	if(type(xml) == "table") then
-		self:send([[<?xml version="1.0" encoding="utf-8"?>]]);
-		self:send(commonlib.Lua2XmlString(xml));
+		self:sendsome([[<?xml version="1.0" encoding="utf-8"?>]]);
+		self:sendsome(commonlib.Lua2XmlString(xml));
 	else
 		self.content = xml;
 	end
+	self:finish();	self:End();
 end
 
 -- make a json response
 -- @param return_code: nil if default to "ok"(200)
 function response:send_json(json, return_code, headers)
+	self:set_header('Content-Type', 'application/json');
 	if(type(json) == "table") then
 		json = commonlib.Json.Encode(json)
 	end
 	self:SetReturnCode(return_code);
 	self.headers = headers or self.headers;
 	self.content = json;
+	self:finish();	self:End();
 end
 
 function response:SetReturnCode(return_code)
 	self.statusline = status_strings[return_code or "ok"] or status_strings["not_found"];
+	return self;
 end
 
 -- it will replace value
@@ -117,18 +123,43 @@ function response:add_header (h, v)
             self.headers[h] = {prevval, v}
         end
     end
+	return self;
 end
 
 
 -- if one calls SetContent instead of send(), any previously buffered send text will be ignored. 
 function response:SetContent(text)
 	self.content = text;
+	return self;
+end
+
+-- send response and finish the request now. 
+-- @param bUseEmptyArray: by default, empty table is serialized to json as object {}. 
+-- calling this function will be serialized to json as array []
+-- @param pure HTML text or json table
+function response:send(text, bUseEmptyArray)
+	if(type(text) == "table") then
+		self:set_header('Content-Type', 'application/json');
+		text = commonlib.Json.Encode(text);
+	end
+	self:sendsome(text);
+	self:finish();	self:End();
+end
+
+-- set return code and return response object.
+function response:status(code)
+	if(type(code) == "number") then
+		self.statusline = "HTTP/1.1 "..tostring(code);
+	else
+		self:SetReturnCode(code);
+	end
+	return self;
 end
 
 -- cache string and send it until finish() is called.
 -- it is optimized to call send() many times during a single request. 
 -- @param text: string or a table of text lines. 
-function response:send(text)
+function response:sendsome(text)
 	if(type(text) == "string") then
 		local content = self.content;
 		if(not content) then
