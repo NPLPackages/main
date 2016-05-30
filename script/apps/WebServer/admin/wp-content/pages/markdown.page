@@ -5,8 +5,18 @@ Author: leio
 Date: 2016/5/10
 Desc: 
 
-// wiki format [[电影方块教学课程|MovieBlockTutorials]]
---http://localhost:8099/markdown?wiki=https://github.com/LiXizhi/ParaCraft/wiki
+// var wiki = "https://github.com/LiXizhi/ParaCraft/wiki"
+// var wiki = "https://github.com/LiXizhi/ParaCraft/wiki/MovieBlockTutorials"
+// var source = "https://github.com/LiXizhi/ParaCraft/raw/gh-pages/readme.md"
+// var source = "https://raw.githubusercontent.com/LiXizhi/ParaCraft/gh-pages/readme.md"
+// var source = "https://raw.githubusercontent.com/wiki/LiXizhi/Paracraft/Home.md"
+// var home = "https://github.com/LiXizhi/ParaCraft"
+
+
+
+-- http://localhost:8099/markdown?wiki=https://github.com/LiXizhi/ParaCraft/wiki
+-- http://localhost:8099/markdown?wiki=https://github.com/LiXizhi/ParaCraft/wiki/_Sidebar
+
 --]]
 wp_enqueue_script("ace", "/wp-includes/js/ace/ace.js");
 wp_enqueue_script("angular", "/wp-includes/js/angular/angular.min.js");
@@ -35,6 +45,10 @@ var author;
 var repository;
 var wiki = getUrlParameter("wiki");
 var source = getRawUrl(wiki);
+var sidebar = getRawUrl(getSidebarUrl());
+function getSidebarUrl(){
+	return github_home + "/" + author + "/" + repository + "/wiki/_Sidebar";
+}
 function replaceMarkdown(data){
 	if(!data){
 		return
@@ -45,9 +59,24 @@ function replaceMarkdown(data){
 		return s;
 	}
 	
-	var re = /\[\[([\u4E00-\u9FA5\uF900-\uFA2Da-zA-Z0-9]+)\|(\w+)\]\]/g;
-	//var re = /\[\[([\u4E00-\uFA29]+|[\uE7C7-\uE7F3]+|\w+)\|(\w+)\]\]/g;
+	var re = /\[\[([a-zA-Z0-9\u4E00-\u9FA5\uF900-\uFA2D]+)\|(\w+)\]\]/g;
 	var newstr = data.replace(re, replacer);
+
+	//[video](http://static.video.qq.com/TPout.swf?vid=l01276tvc8i)
+	function replace_video(match,p1,url,offset,string){
+		var s = "<span class=\"flashplayer\"><embed src=\"" + url + "\"" + " type=\"application/x-shockwave-flash\"></embed></span>"
+		return s;
+	}
+	re = /\[(\w+)\]\(((https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])\)/ig;
+	newstr = newstr.replace(re, replace_video);
+
+	function replace_otherdomain(match,name,url,offset,string){
+		url = origin + "/markdown?wiki=" + url;
+		var wiki = "[" + name + "](" + url + ")";
+		return wiki;
+	}
+	re = /\[\[([a-zA-Z0-9\u4E00-\u9FA5\uF900-\uFA2D]+)\|((https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])\]\]/ig;
+	newstr = newstr.replace(re, replace_otherdomain);
 	return newstr
 }
 function getRawUrl(wiki){
@@ -67,27 +96,25 @@ function getRawUrl(wiki){
 	}
 	var re = /(\w+)\/(\w+)\/(\w+)\/wiki\/?(\w*)/
 	wiki.replace(re, replacer);
+
 	return url
 }
+// no changes: https://github.com/LiXizhi/NPLRuntime/wiki 
 function getPageUrl(pageName){
 	if(!pageName){
 		pageName = "Home";
 	}
+	if(pageName.includes("http")){
+		return pageName;
+	}
 	return github_home + "/" + author + "/" + repository + "/wiki/" + pageName;
 }
-// var wiki = "https://github.com/LiXizhi/ParaCraft/wiki"
-// var wiki = "https://github.com/LiXizhi/ParaCraft/wiki/MovieBlockTutorials"
-//var source = "https://github.com/LiXizhi/ParaCraft/raw/gh-pages/readme.md"
-//var source = "https://raw.githubusercontent.com/LiXizhi/ParaCraft/gh-pages/readme.md"
-//var source = "https://raw.githubusercontent.com/wiki/LiXizhi/Paracraft/Home.md"
-// var home = "https://github.com/LiXizhi/ParaCraft"
 
 var md = window.markdownit('commonmark');
-
 angular.module('MarkdownParser', [])
  .controller('MarkdownController', function ($scope, $http) {
 
-	$scope.load = function(url){
+	$scope.load = function(url,container_name){
 		$http({
 		  method: 'GET',
 		  url: url,
@@ -95,18 +122,22 @@ angular.module('MarkdownParser', [])
 			if(response.status == 200){
 				var s = replaceMarkdown(response.data);
 				s = md.render(s);
-				$(".result-html").html(s);
+				$(container_name).html(s);
 			}else{
-				$(".result-html").html("<p>error</p>");
+				$(container_name).html("<p>error</p>");
 			}
 		  }, function errorCallback(response) {
-				$(".result-html").html("<p>load failed.</p>");
+				$(container_name).html("<p>load failed.</p>");
 		  });
 	}
-	$scope.load(source);
+	$scope.load(sidebar,".sidebar-html");
+	$scope.load(source,".result-html");
 });
 </script>
 <div ng-app="MarkdownParser" ng-controller="MarkdownController">
-	<div class="result-html"></div>
+<div class="row">
+	<div class="col-md-4 sidebar-html"></div>
+	<div class="col-md-8 result-html"></div>
+</div>
 </div>
 
