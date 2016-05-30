@@ -167,6 +167,7 @@ function response:sendsome(text)
 			self.content = content;
 		elseif(type(content) == "string") then
 			self.content = {self.content};
+			content = self.content;
 		end
 		content[#content + 1] = text;
 	elseif(type(text) == "table") then
@@ -175,6 +176,10 @@ function response:sendsome(text)
 			content = text;
 			self.content = content;
 		else
+			if(type(content) == "string") then
+				self.content = {self.content};
+				content = self.content;
+			end
 			for i = 1, #text do
 				content[#content + 1] = text[i];
 			end

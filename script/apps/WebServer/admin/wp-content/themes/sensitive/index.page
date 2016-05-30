@@ -1,4 +1,5 @@
 <?npl
+<<<<<<< .mine
 if(not ABSPATH) then die() end
 
 get_header(); ?>
@@ -16,4 +17,25 @@ get_header(); ?>
   ?>  
 </div>
 
+=======
+if(not ABSPATH) then die() end
+
+if(not is_page() and (pagename() and #(pagename()) > 1)) then
+	the_content("nopage.page");
+	return
+end
+
+get_header(); ?>
+
+<div class="container">
+  <?npl 
+  if(is_page()) then
+    the_content();
+  else
+    the_content("index.page");
+  end
+  ?>  
+</div>
+
+>>>>>>> .r21467
 <?npl get_footer(); ?>

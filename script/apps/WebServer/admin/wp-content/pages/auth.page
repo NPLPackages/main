@@ -6,10 +6,17 @@ Date: 2016/5/10
 ]]
 
 wp_enqueue_script("angular", "/wp-includes/js/angular/angular.min.js");
+<<<<<<< .mine
 wp_enqueue_script("satellizer", "/wp-includes/js/oauth/satellizer.min.js");
 ?>
+=======
+wp_enqueue_script("angular-route", "/wp-includes/js/angular/angular-route.min.js");
+wp_enqueue_script("angular-ui", "/wp-includes/js/angular/ui-bootstrap-tpls-1.3.3.min.js");
+wp_enqueue_script("satellizer", "/wp-includes/js/oauth/satellizer.min.js");
+?>
+>>>>>>> .r21467
 <script>
-	angular.module('Auth', ['satellizer'])
+	angular.module('Auth', ['satellizer', 'ui.bootstrap'])
 	.config(function($authProvider) {
 		$authProvider.facebook({
 			url: "/ajax/auth/facebook",
@@ -27,19 +34,92 @@ wp_enqueue_script("satellizer", "/wp-includes/js/oauth/satellizer.min.js");
 			redirectUri: window.location.origin + '/auth',
 		});
 	})
-	.controller('LoginCtrl', function($scope, $auth) {
-		$scope.authenticate = function(provider) {
-			$auth.authenticate(provider);
+	.factory('Account', function($http) {
+		return {
+			getProfile: function() {
+				return $http.get('/ajax/auth/api_me');
+			},
+			updateProfile: function(profileData) {
+				return $http.put('/ajax/auth/api_me', profileData);
+			}
 		};
+	})
+	.controller('ModalLoginCtrl', function ($scope, $auth, $uibModalInstance) {
+		$scope.isAuthenticating = false;
+		$scope.authenticate = function(provider) {
+			$scope.isAuthenticating = true;
+			$auth.authenticate(provider)
+				.then(function() {
+					$uibModalInstance.close(provider);
+				})
+				.catch(function(error) {
+					$uibModalInstance.dismiss("error", error);
+				});
+		};
+	})
+	.controller('LoginCtrl', function($scope, $auth, $uibModal, Account) {
+		$scope.user = {};
+		$scope.getProfile = function() {
+			Account.getProfile()
+				.then(function(response) {
+					$scope.user = response.data;
+				})
+				.catch(function(response) {
+					$scope.user = null;
+					if(response.data)
+						alert(response.data.message || "some error!");
+				});
+		};
+		$scope.logout = function() {
+			if (!$auth.isAuthenticated()) { return; }
+			$auth.logout().then(function() { 
+				alert("you are signed out!") 
+			});	
+		};
+		$scope.isAuthenticated = function() {
+		  return $auth.isAuthenticated();
+		};
+		$scope.login = function() {
+			$uibModal.open({
+				templateUrl : "/wp-content/pages/auth/login.html",
+				controller: "ModalLoginCtrl",
+			}).result.then(function (provider) {
+				alert('You have successfully signed in with ' + provider + '!');
+			}, function (text, error) {
+				if (error && error.error) {
+					// Popup error - invalid redirect_uri, pressed cancel button, etc.
+					alert(error.error);
+				} else if (error && error.data) {
+					// HTTP response error from server
+					alert(error.data.message || "some error!");
+				}
+			});
+		};
+		if($scope.isAuthenticated())
+			$scope.getProfile();
 	})
 </script>
 <div ng-app="Auth" style="margin-top:10px;" class="form-horizontal">
 	<div ng-controller="LoginCtrl as Login">
-		<button ng-click="authenticate('facebook')">Sign in with Facebook</button>
-		<button ng-click="authenticate('google')">Sign in with Google</button>
-		<button ng-click="authenticate('github')">Sign in with GitHub</button>
+		<div ng-if="!isAuthenticated()" >
+			<ul class="nav navbar-nav pull-right">
+				<li><a ng-click="login()">Login</a></li>
+				<li><a href="/#/signup">Sign up</a></li>
+			</ul>
+		</div>
+		<div ng-if="isAuthenticated()" >
+			<ul class="nav navbar-nav pull-right">
+				<li><a ng-click="logout()">Logout</a></li>
+			</ul>
+			<div>
+				<label class="control-label">Profile Picture</label>
+				<img class="profile-picture" ng-src="{{user.picture || 'http://placehold.it/100x100'}}">
+			</div>
+		</div>
 	</div>
+<<<<<<< .mine
 </div>
 <?
 
-?>
+?>=======
+</div>>>>>>>> .r21467
