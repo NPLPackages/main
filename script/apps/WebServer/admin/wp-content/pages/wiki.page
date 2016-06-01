@@ -97,4 +97,14 @@ end
             </div>
         </div>
     </div>
+	<div class="footer">
+		<div class="container">
+		  <div class="row"  style="min-height:60px;">
+			  <div class="col-md-12 content ftxt">
+				<div style="font-size:14px"><a href="_edit">编辑</a> | <a href="_view">查看源码</a></div>
+			    Copyright &copy; Tatfook Inc. Powered by ParaEngine and NPL |  <a href="http://www.paracraft.cn">Official Website</a>
+			  </div>
+		  </div>
+		</div>
+	</div>
 </div>

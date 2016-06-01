@@ -92,6 +92,10 @@ WikiPage = {
 // markdown controller module
 angular.module('MyApp').controller('MarkdownController', function ($scope, $http) {
     var md = window.markdownit({
+        html: true, // Enable HTML tags in source
+        linkify: true, // Autoconvert URL-like text to links
+        typographer: true, // Enable some language-neutral replacement + quotes beautification
+        breaks: false,        // Convert '\n' in paragraphs into <br>
         highlight: function (str, lang) {
             if (lang && window.hljs.getLanguage(lang)) {
                 try {
