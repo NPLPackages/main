@@ -1,0 +1,9 @@
+﻿
+<div ng-if="isAuthenticating">
+    Authenticating, please wait ...
+</div>
+<div ng-if="!isAuthenticating">
+    <button ng-click="authenticate('facebook')">Sign in with Facebook</button>
+    <button ng-click="authenticate('google')">Sign in with Google</button>
+    <button ng-click="authenticate('github')">Sign in with GitHub</button>
+</div>

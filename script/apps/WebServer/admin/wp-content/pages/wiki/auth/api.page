@@ -1,0 +1,37 @@
+<?npl
+include_once("../db.page");
+
+-- from user.id to site token
+function createJWT(user)
+	return user and user._id;
+end
+
+-- from site token to id
+-- @return id, expireTime
+function jwt_decode(token)
+	return token;
+end
+
+
+-- call this function to ensure we are authenticated.
+-- request.userid contains the userid
+function ensureAuthenticated()
+	if (not request:header('Authorization')) then
+		return response:status(401):send({ message = 'Please make sure your request has an Authorization header' });
+	end
+	local token = request:header('Authorization'):match("%s+(%S+)");
+	local config = include("config.page");
+	local userid, expireTime = jwt_decode(token, config.TOKEN_SECRET);
+	
+	if(not userid) then
+		response:status(401):send({ message = "invalid token"});
+		exit();
+	end
+
+	local curTime = ParaGlobal.GetDateFormat("yyyy-MM-dd");
+	if (expireTime and expireTime <= curTime) then
+		response:status(401):send({ message = 'Token has expired' });
+		exit();
+	end
+	request.userid = userid;
+end

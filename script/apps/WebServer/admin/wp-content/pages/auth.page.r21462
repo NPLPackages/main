@@ -1,0 +1,45 @@
+<?npl
+--[[
+Title: auth/login page
+Author: LiXizhi
+Date: 2016/5/10
+]]
+
+wp_enqueue_script("angular", "/wp-includes/js/angular/angular.min.js");
+wp_enqueue_script("satellizer", "/wp-includes/js/oauth/satellizer.min.js");
+?>
+<script>
+	angular.module('Auth', ['satellizer'])
+	.config(function($authProvider) {
+		$authProvider.facebook({
+			url: "/ajax/auth/facebook",
+			clientId: '128754717528463',
+			redirectUri: window.location.origin + '/auth',
+		 });
+		$authProvider.google({
+			url: "/ajax/auth/google",
+			clientId: '638766295212-f99rcpljr68ld4pfmme4qrh2ru0ke4nd.apps.googleusercontent.com',
+			redirectUri: window.location.origin + '/auth',
+		});
+		$authProvider.github({
+			url: "/ajax/auth/github",
+			clientId: '44ed8acc9b71e36f47d8',
+			redirectUri: window.location.origin + '/auth',
+		});
+	})
+	.controller('LoginCtrl', function($scope, $auth) {
+		$scope.authenticate = function(provider) {
+			$auth.authenticate(provider);
+		};
+	})
+</script>
+<div ng-app="Auth" style="margin-top:10px;" class="form-horizontal">
+	<div ng-controller="LoginCtrl as Login">
+		<button ng-click="authenticate('facebook')">Sign in with Facebook</button>
+		<button ng-click="authenticate('google')">Sign in with Google</button>
+		<button ng-click="authenticate('github')">Sign in with GitHub</button>
+	</div>
+</div>
+<?
+
+?>

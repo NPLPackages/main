@@ -1,0 +1,40 @@
+<?npl
+--[[
+Title: oauth handler for `satellizer oauth framework`
+Author: LiXizhi
+Date: 2016/5/10
+]]
+if(is_ajax()) then
+	local config = include("config.page");
+	
+	local accessTokenUrl = 'https://github.com/login/oauth/access_token';
+	local userApiUrl = 'https://api.github.com/user';
+	local params = {
+		code = request:get("code"),
+		client_id = request:get("clientId"),
+		client_secret = config.GITHUB_SECRET,
+		redirect_uri = request:get("redirectUri"),
+	};
+
+	response:Begin();
+
+	-- Step 1. Exchange authorization code for access token.
+	util.GetUrl({url = accessTokenUrl, qs = params }, function(msg)
+		local accessToken = util.parse_str(msg.data);
+		
+		local headers = { ['User-Agent'] = 'Satellizer' };
+		
+		commonlib.echo(accessToken);
+		-- Step 2. Retrieve profile information about the current user.
+		util.GetUrl({ url = userApiUrl, qs = accessToken, headers = headers, json = true }, function(msg)
+			if(request:header('Authorization')) then
+				-- Step 3a. Link user accounts.
+			else
+				-- Step 3b. Create a new user account or return an existing one.
+				
+				wp_send_json({ token = "1234567" });
+			end
+			response:End();
+		end);
+	end);
+end

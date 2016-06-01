@@ -1,0 +1,26 @@
+<?npl
+--[[
+Title: ajax api
+Author: LiXizhi
+Date: 2016/5/30
+Desc: 
+]]
+include_once("api.page");
+
+ensureAuthenticated();
+
+if(not request.userid) then
+	response:status(404):send({message="invalid userid"});
+	return
+end
+
+if(request:GetMethod() == "GET") then
+	response:Begin();
+	db.User:findById(request.userid, function(err, user)
+		response:send(user);
+	end);
+	return;
+else
+	-- TODO: put request
+end
+

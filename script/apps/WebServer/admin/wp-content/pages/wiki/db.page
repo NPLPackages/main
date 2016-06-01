@@ -1,0 +1,12 @@
+<?npl
+--[[
+Title: table database
+Author: LiXizhi
+Date: 2016/5/26
+]]
+if(db) then
+	return;
+end
+NPL.load("(gl)script/ide/System/Database/TableDatabase.lua");
+local TableDatabase = commonlib.gettable("System.Database.TableDatabase");
+db = TableDatabase:new():connect("database/npl/", function() end);

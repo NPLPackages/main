@@ -1,0 +1,65 @@
+.notification-indicator .mail-status {
+    position: absolute;
+    top: 9px;
+    right:11px;
+    z-index: 2;
+    display: none;
+    width: 14px;
+    height: 14px;
+    color: #fff;
+    background-image: -webkit-linear-gradient(#7aa1d3, #4078c0);
+    background-image: linear-gradient(#7aa1d3, #4078c0);
+    background-clip: padding-box;
+    border: 2px solid #000000;
+    border-radius: 50%;
+}
+
+.notification-indicator .mail-status.unread {
+    display: inline-block;
+}
+
+.octicon-bell {
+    vertical-align: text-bottom;
+}
+.octicon {
+    width: 16px;
+    margin-top: 1px;
+    text-align: center;
+}
+
+.navbar .btn {
+    margin-top:8px;
+    padding:5px 10px;
+}
+.navbar .btn-subscribe {
+    padding:5px 5px;
+}
+
+.navbar .indexbartrue {
+    background-color: #4078c0;
+    color: #fff;
+}
+.navbar .indexbartrue:hover {
+    background-color: #3068b0;
+    color: #fff;
+}
+.navbar-wiki {
+    /*background-color:#006600;
+    border-color:#005500;*/
+    margin-bottom: 0px;
+}
+.wiki-content{
+    margin-top:5px;
+}
+.wiki-page{
+}
+.wiki-sidebar{
+    border: 1px solid #cccccc;
+    padding-left:0px;
+    padding-right:0px;
+}
+.wiki-indexbar{
+    background-color: #daeefa;
+    padding-left:0px;
+    padding-right:0px;
+}

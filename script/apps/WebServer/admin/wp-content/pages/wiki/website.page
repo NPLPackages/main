@@ -1,0 +1,45 @@
+﻿<?npl
+--[[
+Title: get website from database
+Author: LiXizhi
+Date: 2016/5/30
+Desc: 
+]]
+if(not db) then	
+	include_once("db.page");
+end
+include_once("buildin.page");
+
+-- get website url and host from name
+-- @param callbackFunc: function(err, website) end. if nil, it will always return from buildin
+-- @return buildin_site {url, host}
+function getWebsite(sitename, callbackFunc)
+	sitename = sitename or "wiki";
+	local site = buildin_website[string.lower(sitename)];
+	if(site or not callbackFunc) then
+		if(callbackFunc) then
+			callbackFunc(nil, site);
+		end
+		return site;
+	else
+		return db.website:FindOne({name=sitename}, callbackFunc);
+	end
+end
+
+-- @return rootUrl, projectName
+function getSiteRootURL(site)
+	if(site and site.url) then
+		if(not site.host or site.host == "github") then
+			local rootUrl;
+			local siteName, projectName, wiki = site.url:match("^/?([^/]+)/([^/]+)/?(.*)")
+			if(wiki == "wiki") then
+				rootUrl = "https://raw.githubusercontent.com/wiki/"..siteName.."/"..projectName.."/";
+			else
+				rootUrl = "https://raw.githubusercontent.com/"..siteName.."/"..projectName.."/master/";
+			end
+			return rootUrl, projectName;
+		else
+			-- TODO other database store like coding.net?
+		end
+	end
+end
