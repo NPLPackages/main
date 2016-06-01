@@ -208,5 +208,69 @@ function Quaternion:ToEulerAngles()
 	return heading, attitude, bank
 end
 
+local s_iNext = { [0] = 1, 2, 0 };
+
+-- @param kRot: Matrix4 object
+function Quaternion:FromRotationMatrix(kRot)
+	-- Algorithm in Ken Shoemake's article in 1987 SIGGRAPH course notes
+	-- article "Quaternion Calculus and Fast Animation".
+
+	local m00, m01, m02 = kRot[1], kRot[2], kRot[3];
+    local m10, m11, m12 = kRot[5], kRot[6], kRot[7];
+    local m20, m21, m22 = kRot[9], kRot[10],kRot[11];
+    
+	local fTrace = m00 + m11 + m22;
+	local fRoot;
+
+	if (fTrace > 0) then
+		--  |w| > 1/2, may as well choose w > 1/2
+		fRoot = math.sqrt(fTrace + 1.0);  -- 2w
+		self[4] = 0.5*fRoot;
+		fRoot = 0.5 / fRoot;  --  1/(4w)
+		self[1] = (m12 - m21)*fRoot;
+		self[2] = (m20 - m02)*fRoot;
+		self[3] = (m01 - m10)*fRoot;
+	else
+		-- |w| <= 1/2
+		local i = 0;
+		if (m11 > m00) then
+			i = 1;
+		end
+		if (m22 > kRot:get(i,i)) then
+			i = 2;
+		end
+		local j = s_iNext[i];
+		local k = s_iNext[j];
+
+		fRoot = math.sqrt(kRot:get(i,i) - kRot:get(j,j) - kRot:get(k,k) + 1.0);
+		self[i+1] = 0.5 * fRoot;
+		fRoot = 0.5 / fRoot;
+		self[4] = (kRot:get(j,k) - kRot:get(k,j))*fRoot;
+		self[j+1] = (kRot:get(i,j) + kRot:get(j,i))*fRoot;
+		self[k+1] = (kRot:get(i,k) + kRot:get(k,i))*fRoot;
+	end
+end
+
+function Quaternion:ToRotationMatrix(kRot)
+	kRot = kRot or mathlib.Matrix4:new():identity();
+    local fTx = self[1] + self[1];
+	local fTy = self[2] + self[2];
+	local fTz = self[3] + self[3];
+    local fTwx = fTx*self[4];
+    local fTwy = fTy*self[4];
+    local fTwz = fTz*self[4];
+    local fTxx = fTx*self[1];
+    local fTxy = fTy*self[1];
+    local fTxz = fTz*self[1];
+    local fTyy = fTy*self[2];
+    local fTyz = fTz*self[2];
+    local fTzz = fTz*self[3];
+
+    kRot[1] = 1.0-(fTyy+fTzz);      kRot[5] = fTxy-fTwz;			kRot[9] = fTxz+fTwy;
+    kRot[2] = fTxy+fTwz;			kRot[6] = 1.0-(fTxx+fTzz);      kRot[10] = fTyz-fTwx;
+    kRot[3] = fTxz-fTwy;			kRot[7] = fTyz+fTwx;			kRot[11] = 1.0-(fTxx+fTyy);
+	return kRot;
+end 
+   
 -- const static identity matrix. 
 Quaternion.IDENTITY = Quaternion:new({0, 0, 0, 1});

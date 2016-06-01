@@ -469,11 +469,13 @@ function SqliteStore:updateOne(query, update, callbackFunc)
 	return self:InvokeCallback(callbackFunc, err, self:InjectID(data, id));
 end
 
+local query_by_id = {_id = id};
 function SqliteStore:insertOne(query, callbackFunc)
 	-- if row id is found, we will need to get row id and turn this query into update
 	local id = self:GetRowId(query, false);
 	if(id) then
-		return self:updateOne({_id = id}, query, callbackFunc);
+		query_by_id._id = id;
+		return self:updateOne(query_by_id, query, callbackFunc);
 	end
 	
 	self:AddStat("insert", 1);
@@ -488,7 +490,6 @@ function SqliteStore:insertOne(query, callbackFunc)
 		-- get row id. 
 		id = self._db:last_insert_rowid();
 		data = query;
-		
 		-- update all index
 		for name, indexTable in pairs(self.indexes) do
 			local keyValue = query[name];

@@ -20,6 +20,7 @@ local mathlib = commonlib.gettable("mathlib");
 
 if(not AnimBlock) then AnimBlock = {}; end
 
+local type = type;
 AnimBlock.tableType = "AnimBlock";
 -- "Linear "or "Hermite" or "Discrete" or "LinearAngle"
 AnimBlock.type = "Linear";
@@ -412,16 +413,19 @@ function AnimBlock:getValue2(anim, time)
 			
 			local r = (time-t1)/(t2-t1);
 
-			if (self.type == "Linear") then
+			local vType = self.type;
+			if (vType == "Linear") then
 				-- interpolate linear
 				return self:InterpolateLinear(r, self.data[pos], self.data[pos+1]);
-			elseif (self.type == "Discrete") then
+			elseif (vType == "Discrete") then
 				-- the first one is used. 
 				return self.data[pos];	
-			elseif (self.type == "LinearAngle") then
+			elseif (vType == "LinearAngle") then
 				-- angle values -pi, pi
 				return self:InterpolateLinearAngle(r, self.data[pos], self.data[pos+1]);
-			elseif (self.type == "Hermite") then
+			elseif (vType == "LinearTable") then
+				return self:InterpolateLinearTable(r, self.data[pos], self.data[pos+1]);
+			elseif (vType == "Hermite") then
 				-- HERMITE
 				log("error: Caution inVal and outVal table are empty right now\r\n");
 				return self:InterpolateHermite(r, self.data[pos], self.data[pos+1], self.inVal[pos], self.outVal[pos]);
@@ -449,6 +453,38 @@ function AnimBlock:InterpolateLinearAngle(range, v1, v2)
 	return mathlib.ToStandardAngle(v1 + delta * range);
 end
 
+-- linear interpolation between two tables recursively. For string subfield, we will use value from fromT, 
+-- for number sub fields, we will use linear interpolation, or if the key name begins with "rot", we will use linear angle for its child data field.
+function AnimBlock:InterpolateLinearTable(range, fromT, toT, isAngleData)
+	if(type(fromT) == "table" and type(toT) == "table") then
+		local thisT = {};
+		
+		for name, value in pairs(toT) do
+			if(fromT[name] == nil) then
+				thisT[name] = value;
+			end
+		end
+
+		for name, value in pairs(fromT) do
+			local dataType = type(value);
+			if(dataType == "number") then
+				if(not isAngleData) then
+					thisT[name] = self:InterpolateLinear(range, value, toT[name] or value);
+				else
+					thisT[name] = self:InterpolateLinearAngle(range, value, toT[name] or value);
+				end
+			elseif(dataType == "string") then
+				thisT[name] = value;
+			elseif(dataType == "table") then
+				local isAngleData = name:match("^rot")~=nil;
+				thisT[name] = self:InterpolateLinearTable(range, value, toT[name] or value, isAngleData)
+			end
+		end
+
+		return thisT;
+	end
+	return fromT or toT;
+end
 
 -- blend the two values use linear interpolation
 function AnimBlock:BlendValues(currentValue, blendingValue, blendingFactor)

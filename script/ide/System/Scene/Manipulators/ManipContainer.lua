@@ -112,7 +112,7 @@ function ManipContainer:connectToDependNode(node)
 		local child = children:first();
 		while (child) do
 			if(not self.manip_objs[child]) then
-				self.manip_objs[obj] = child;
+				self.manip_objs[child] = true;
 				child:Connect("valueChanged", self, self.OnManipValueChanged);
 			end
 			child = children:next(child);

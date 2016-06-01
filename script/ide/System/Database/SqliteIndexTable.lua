@@ -49,6 +49,7 @@ end
 
 -- get collection row id
 -- @param value: value of the key to get
+-- @return collection id or nil if not found. 
 function IndexTable:getId(value)
 	if(value) then
 		value = tostring(value);
@@ -144,9 +145,9 @@ function IndexTable:CreateTable()
 	local name = self.name;
 	self.parent:find(query, function(err, rows)
 		if(rows) then
-			for _, obj in ipairs(rows) do
-				if(obj and obj[name]) then
-					local keyValue = tostring(obj[name])
+			for _, row in ipairs(rows) do
+				if(row and row[name]) then
+					local keyValue = tostring(row[name])
 					if(keyValue~="") then
 						indexmap[keyValue] = row._id;
 					end

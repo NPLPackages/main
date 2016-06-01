@@ -38,6 +38,9 @@ TranslateManip:Property({"gridOffset", {0,0,0}, "GetGridOffset", "SetGridOffset"
 TranslateManip:Property({"RealTimeUpdate", true, "IsRealTimeUpdate", "SetRealTimeUpdate", auto=true});
 -- whether to update the manipulator's real position according to "position" variable.
 TranslateManip:Property({"UpdatePosition", true, "IsUpdatePosition", "SetUpdatePosition", auto=true});
+-- when rendering, the axis is fixed at "origin" (default to 0,0,0)
+TranslateManip:Property({"FixOrigin", false, "IsFixOrigin", "SetFixOrigin", auto=true});
+TranslateManip:Property({"origin", {0,0,0}, "GetOrigin", "SetOrigin", auto=true});
 
 -- private: "x|y|z" current selected axis
 TranslateManip:Property({"selectedAxis", nil});
@@ -230,12 +233,17 @@ function TranslateManip:paintEvent(painter)
 	local isDrawingPickable = self:IsPickingPass();
 
 	if(self.drag_offset) then
-		if(not self:IsUpdatePosition()) then
-			local old_x, old_y, old_z = unpack(self.old_position);
-			if(old_x) then
-				painter:TranslateMatrix(old_x, old_y, old_z);
+		if(self:IsFixOrigin()) then
+			painter:TranslateMatrix(unpack(self:GetOrigin()));
+		else
+			if(not self:IsUpdatePosition()) then
+				local old_x, old_y, old_z = unpack(self.old_position);
+				if(old_x) then
+					painter:TranslateMatrix(old_x, old_y, old_z);
+				end
 			end
 		end
+		
 		if(not isDrawingPickable) then
 			self:SetColorAndName(painter, Color.ChangeOpacity(self.lineColor,196));
 			-- draw dragging path
@@ -262,10 +270,16 @@ function TranslateManip:paintEvent(painter)
 			end
 		end
 		painter:TranslateMatrix(self.drag_offset.x, self.drag_offset.y, self.drag_offset.z);
-	elseif(not self:IsUpdatePosition()) then
-		local x,y,z = unpack(self:GetField("position", {0,0,0}));
-		if(x) then
-			painter:TranslateMatrix(x, y, z);
+	else
+		if(self:IsFixOrigin()) then
+			painter:TranslateMatrix(unpack(self:GetOrigin()));
+		else
+			if(not self:IsUpdatePosition()) then
+				local x,y,z = unpack(self:GetField("position", {0,0,0}));
+				if(x) then
+					painter:TranslateMatrix(x, y, z);
+				end
+			end
 		end
 	end
 

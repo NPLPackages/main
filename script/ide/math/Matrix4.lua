@@ -85,11 +85,17 @@ end
 -- @param b: can be vector3d or Matrix4
 function Matrix4.__mul(a,b)
 	local nSizeB = #b;
-	if(#b == 16) then
+	if(nSizeB == 16) then
 		return math3d.MatrixMultiply(nil, a, b);
-	elseif(#b == 3) then
+	elseif(nSizeB == 3) then
 		return math3d.MatrixMultiplyVector(nil, a, b)
 	end
+end
+
+-- @param row: 0-3
+-- @param col: 0-3
+function Matrix4:get(row, col)
+	return self[row*4+col+1];
 end
 
 -- Builds a translation matrix
@@ -110,6 +116,22 @@ end
 
 function Matrix4:setTrans(tx, ty, tz)
 	self[13] = tx or 0;  self[14] = ty or 0;  self[15] = tz or 0;
+end
+
+function Matrix4:RemoveScaling(Tolerance)
+	Tolerance = Tolerance or 0.000001;
+	-- For each row, find magnitude, and if its non-zero re-scale so its unit length.
+	local SquareSum0 = (self[1] * self[1]) + (self[2] * self[2]) + (self[3] * self[3]);
+	local SquareSum1 = (self[5] * self[5]) + (self[6] * self[6]) + (self[7] * self[7]);
+	local SquareSum2 = (self[9] * self[9]) + (self[10] * self[10]) + (self[11] * self[11]);
+	local Scale0 = (SquareSum0 - Tolerance) > 0 and 1/math.sqrt(SquareSum0) or 1;
+	local Scale1 = (SquareSum1 - Tolerance) > 0 and 1/math.sqrt(SquareSum1) or 1;
+	local Scale2 = (SquareSum2 - Tolerance) > 0 and 1/math.sqrt(SquareSum2) or 1;
+
+	self[1] = self[1] * Scale0;		self[2] = self[2] * Scale0;		self[3] = self[3] * Scale0;
+	self[5] = self[5] * Scale1;		self[6] = self[6] * Scale1;		self[7] = self[7] * Scale1;
+	self[9] = self[9] * Scale2;		self[10] = self[10] * Scale2;	self[11] = self[11] * Scale2;
+	return self;
 end
 
 -- return the inverse of this matrix
