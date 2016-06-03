@@ -37,6 +37,9 @@
 .controller('LoginCtrl', function ($scope, $auth, $uibModal, Account, WikiPage) {
 	$scope.user = {};
 	$scope.bShowIndexBar = false;
+	$scope.GetWikiPage = function () {
+	    return WikiPage;
+	};
 	$scope.getProfile = function () {
 	    Account.getProfile()
 			.then(function (response) {
@@ -60,7 +63,12 @@
 	$scope.actiontip = function (text, timeout) {
 	    // TODO: alert(text);
 	};
-	$scope.isPageExist = WikiPage.isPageExist;
+	$scope.showSiteInfo = function () {
+        // TODO: 
+	}
+	$scope.showPageInfo = function () {
+	    // TODO: 
+	}
 	$scope.login = function () {
 	    $uibModal.open({
 	        templateUrl: "/wp-content/pages/wiki/auth/login.html",
@@ -92,7 +100,6 @@
 	    $scope.bShowIndexBar = bShow;
 	    WikiPage.ShowIndexBar(bShow);
 	};
-	$scope.sitename = WikiPage.getSiteName();
 	if ($scope.isAuthenticated())
 	    $scope.getProfile();
 });

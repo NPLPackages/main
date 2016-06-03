@@ -14,7 +14,7 @@ angular.module('MyApp')
         siteName: $window.siteName,
         pageName: $window.pageName,
         rootUrl: $window.rootUrl,
-        pageExist: false,
+        pageExist: "loading",
     };
     
     WikiPage.ShowIndexBar =  function (bShow) {
@@ -34,7 +34,7 @@ angular.module('MyApp')
             return
         }
         var newstr = data;
-        var siteName = WikiPage.getSiteName();
+        var siteName = this.getSiteName();
         // [[a|b]] -->[a](b), and replace with wiki
         function replacer_1(match, p1, p2, offset, string) {
             return "[" + p1 + "](" + p2 + ")";
@@ -72,36 +72,42 @@ angular.module('MyApp')
     };
     
     WikiPage.getSiteName = function () {
-        if (!WikiPage.siteName)
-            WikiPage.siteName = (window.location.pathname.split("/")[1] || "Paracraft");
-        return WikiPage.siteName;
+        if (!this.siteName)
+            this.siteName = (window.location.pathname.split("/")[1] || "Paracraft");
+        return this.siteName;
     };
     WikiPage.getPageName = function () {
-        if (!WikiPage.pageName)
-            WikiPage.pageName = window.location.pathname.split("/")[2] || "Home";
-        return WikiPage.pageName;
+        if (!this.pageName)
+            this.pageName = window.location.pathname.split("/")[2] || "Home";
+        return this.pageName;
     };
     WikiPage.getRootRawUrl = function () {
         // default to `SiteName/wiki` project
-        if (!WikiPage.rootUrl)
-            WikiPage.rootUrl = ("https://raw.githubusercontent.com/wiki/" + WikiPage.getSiteName() + "/wiki/");
-        return WikiPage.rootUrl;
+        if (!this.rootUrl)
+            this.rootUrl = ("https://raw.githubusercontent.com/wiki/" + this.getSiteName() + "/wiki/");
+        return this.rootUrl;
     };
     WikiPage.getPageUrl = function () {
-        if (!WikiPage.pageUrl)
-            WikiPage.pageUrl = WikiPage.getRootRawUrl() + WikiPage.getPageName() + ".md";
-        return WikiPage.pageUrl;
+        if (!this.pageUrl)
+            this.pageUrl = this.getRootRawUrl() + this.getPageName() + ".md";
+        return this.pageUrl;
     };
     WikiPage.getSidebarUrl = function () {
-        if (!WikiPage.sidebarUrl)
-            WikiPage.sidebarUrl = WikiPage.getRootRawUrl() + "_Sidebar.md";
-        return WikiPage.sidebarUrl;
+        if (!this.sidebarUrl)
+            this.sidebarUrl = this.getRootRawUrl() + "_Sidebar.md";
+        return this.sidebarUrl;
     };
+    WikiPage.isPageLoading = function () {
+        return this.pageExist == "loading";
+    }
     WikiPage.isPageExist = function () {
-        return WikiPage.pageExist;
+        return this.pageExist == "downloaded";
+    }
+    WikiPage.isPageNotFound = function () {
+        return this.pageExist == "notfound";
     }
     WikiPage.setPageExist = function (bExist) {
-        WikiPage.pageExist = bExist;
+        this.pageExist = bExist ? "downloaded" : "notfound";
     }
     return WikiPage;
 })
@@ -122,6 +128,9 @@ angular.module('MyApp')
     });
     var idPage = "#wikipage";
     var idSidebar = "#wikisidebar";
+    $scope.GetWikiPage = function () {
+        return WikiPage;
+    };
     $scope.ShowSideBar = function (bShow) {
         if (bShow) {
             $(idPage).addClass("col-md-8");
@@ -154,8 +163,9 @@ angular.module('MyApp')
             }
             if (url == WikiPage.getSidebarUrl())
                 $scope.ShowSideBar(true);
-            if (url == WikiPage.getPageUrl())
+            if (url == WikiPage.getPageUrl()) {
                 WikiPage.setPageExist(true);
+            }
         }, function errorCallback(response) {
             if (response.status == 404) {
                 if (url == WikiPage.getSidebarUrl())
@@ -163,14 +173,13 @@ angular.module('MyApp')
                 else {
                     if (url == WikiPage.getPageUrl())
                         WikiPage.setPageExist(false);
-                    $(container_name).html("<p>网页不存在</p>");
+                    $(container_name).html("<p></p>");
                 }
             }
             else
                 $(container_name).html("<p>load failed.</p>");
         });
     }
-    $scope.isPageExist = WikiPage.isPageExist;
     // load all pages
     $scope.load(WikiPage.getPageUrl(), idPage);
     $scope.load(WikiPage.getSidebarUrl(), idSidebar);

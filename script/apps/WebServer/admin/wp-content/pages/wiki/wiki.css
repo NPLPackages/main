@@ -17,7 +17,6 @@
 .notification-indicator .mail-status.unread {
     display: inline-block;
 }
-
 .octicon-bell {
     vertical-align: text-bottom;
 }
@@ -26,7 +25,6 @@
     margin-top: 1px;
     text-align: center;
 }
-
 .navbar .btn {
     margin-top:8px;
     padding:5px 10px;
@@ -34,16 +32,21 @@
 .navbar .btn-subscribe {
     padding:5px 5px;
 }
-
+.wiki .navbar-inverse .navbar-brand{
+    /*color: #17aa1c;*/
+    font-weight: bold;
+}
+.wiki .navbar-inverse a:hover {
+    text-decoration:none;
+    cursor:pointer;
+}
 .navbar .indexbartrue {
     background-color: #4078c0;
-    color: #fff;
 }
 .navbar .indexbartrue:hover {
     background-color: #3068b0;
-    color: #fff;
 }
-.navbar-wiki {
+.wiki .navbar {
     /*background-color:#006600;
     border-color:#005500;*/
     margin-bottom: 0px;
@@ -66,4 +69,8 @@
 
 .wiki-form .has-error {
     border-color: red;
+}
+.wiki img{
+    max-width: 100%;
+    height: auto;
 }
