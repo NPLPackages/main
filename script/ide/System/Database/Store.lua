@@ -124,6 +124,16 @@ function Store:flush(query, callbackFunc)
 end
 
 -- virtual:
+-- after issuing an really important group of commands, and you want to ensure that 
+-- these commands are actually successful like a transaction, the client can issue a waitflush 
+-- command to check if the previous commands are successful. Please note that waitflush command 
+-- may take up to 3 seconds or Store.AutoFlushInterval to return. 
+-- @param callbackFunc: function(err, fFlushed) end
+function Store:waitflush(query, callbackFunc, timeout)
+	
+end
+
+-- virtual:
 -- this is usually used for changing database settings, such as cache size and sync mode. 
 -- this function is specific to store implementation. 
 -- @param query: string or {sql=string, CacheSize=number, IgnoreOSCrash=bool, IgnoreAppCrash=bool} 

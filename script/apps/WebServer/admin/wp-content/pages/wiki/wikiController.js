@@ -2,13 +2,22 @@
 Title: wiki rendering
 Author: LiXizhi
 Date: 2016.5.30
+Reference:  https://developer.github.com/v3
 */
 
 /**
 * siteName, pageName, rootUrl should be filled on server side
 */
-WikiPage = {
-    ShowIndexBar: function (bShow) {
+angular.module('MyApp')
+.factory('WikiPage', function ($window) {
+    var WikiPage = {
+        siteName: $window.siteName,
+        pageName: $window.pageName,
+        rootUrl: $window.rootUrl,
+        pageExist: false,
+    };
+    
+    WikiPage.ShowIndexBar =  function (bShow) {
         if (bShow) {
             $("#content").addClass("col-md-9");
             $("#indexbar").show();
@@ -18,9 +27,9 @@ WikiPage = {
             $("#content").removeClass("col-md-9");
             $("#content").addClass("col-md-12");
         }
-    },
+    };
     // preprocess to support wiki words like [[a|b]] and flash video [video](a.swf)
-    preprocessMarkdown: function (data) {
+    WikiPage.preprocessMarkdown = function (data) {
         if (!data) {
             return
         }
@@ -60,37 +69,43 @@ WikiPage = {
         newstr = newstr.replace(re, replacer_2);
 
         return newstr;
-    },
-    getSiteName: function () {
+    };
+    
+    WikiPage.getSiteName = function () {
         if (!WikiPage.siteName)
             WikiPage.siteName = (window.location.pathname.split("/")[1] || "Paracraft");
         return WikiPage.siteName;
-    },
-    getPageName: function () {
+    };
+    WikiPage.getPageName = function () {
         if (!WikiPage.pageName)
             WikiPage.pageName = window.location.pathname.split("/")[2] || "Home";
         return WikiPage.pageName;
-    },
-    getRootRawUrl: function () {
+    };
+    WikiPage.getRootRawUrl = function () {
         // default to `SiteName/wiki` project
         if (!WikiPage.rootUrl)
             WikiPage.rootUrl = ("https://raw.githubusercontent.com/wiki/" + WikiPage.getSiteName() + "/wiki/");
         return WikiPage.rootUrl;
-    },
-    getPageUrl: function () {
+    };
+    WikiPage.getPageUrl = function () {
         if (!WikiPage.pageUrl)
             WikiPage.pageUrl = WikiPage.getRootRawUrl() + WikiPage.getPageName() + ".md";
         return WikiPage.pageUrl;
-    },
-    getSidebarUrl: function () {
+    };
+    WikiPage.getSidebarUrl = function () {
         if (!WikiPage.sidebarUrl)
             WikiPage.sidebarUrl = WikiPage.getRootRawUrl() + "_Sidebar.md";
         return WikiPage.sidebarUrl;
+    };
+    WikiPage.isPageExist = function () {
+        return WikiPage.pageExist;
     }
-};
-
-// markdown controller module
-angular.module('MyApp').controller('MarkdownController', function ($scope, $http) {
+    WikiPage.setPageExist = function (bExist) {
+        WikiPage.pageExist = bExist;
+    }
+    return WikiPage;
+})
+.controller('MarkdownController', function ($scope, $http, WikiPage) {
     var md = window.markdownit({
         html: true, // Enable HTML tags in source
         linkify: true, // Autoconvert URL-like text to links
@@ -139,17 +154,24 @@ angular.module('MyApp').controller('MarkdownController', function ($scope, $http
             }
             if (url == WikiPage.getSidebarUrl())
                 $scope.ShowSideBar(true);
+            if (url == WikiPage.getPageUrl())
+                WikiPage.setPageExist(true);
         }, function errorCallback(response) {
             if (response.status == 404) {
                 if (url == WikiPage.getSidebarUrl())
                     $scope.ShowSideBar(false);
-                else
+                else {
+                    if (url == WikiPage.getPageUrl())
+                        WikiPage.setPageExist(false);
                     $(container_name).html("<p>网页不存在</p>");
+                }
             }
             else
                 $(container_name).html("<p>load failed.</p>");
         });
     }
+    $scope.isPageExist = WikiPage.isPageExist;
+    // load all pages
     $scope.load(WikiPage.getPageUrl(), idPage);
     $scope.load(WikiPage.getSidebarUrl(), idSidebar);
     $scope.load("https://raw.githubusercontent.com/wiki/NPLPackages/wiki/index.md", "#indexbar");

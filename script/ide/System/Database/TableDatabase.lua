@@ -56,6 +56,8 @@ Code Examples:
 	db.User:find({}, function(err, rows) echo(rows); end, 1000);
 	-- remove item
 	db.User:deleteOne({name="LXZ2"}, function(err, count) echo(count);	end);
+	-- wait flush may take up to 3 seconds
+	db.User:waitflush({}, function(err, data) echo({data, "data is flushed"}) end);
 	-- find all rows
 	db.User:find({}, function(err, rows) echo(rows); end);
 	-- set cache to 2000KB, turn synchronous IO off, and use in-memory journal and 
@@ -86,6 +88,25 @@ Current SQL/NoSQL implementation can not satisfy following requirements at the s
 * Each database file contains a key to object-id table for each custom index key. 
 * All DB IO operations are performanced in a single dedicated NPL thread. 
 
+## About Transactions
+Each write/insert operation is by default a write command (virtual transaction). 
+We will periodically (default is 3 seconds, see `Store.AutoFlushInterval`) flush all queued commands into disk. 
+Everything during these period will either succeed or fail. 
+If you are worried about data lose, you can manually invoke `flush` command, however doing so 
+will greatly compromise performance. Please note `flush` command will affect the overall throughput of the entire DB system.
+In general, you can only get about 20-100 flush(real transactions) per second. Without enforcing transaction on each command, you 
+can easily get a throughput of 6000 write commands per second (i.e. could be 100 times faster). 
+
+> There is one solution to get both high throughput and transaction.
+After issuing an really important group of commands, and you want to ensure that these commands 
+are actually successful like a transaction, the client can issue a `waitflush` 
+command to check if the previous commands are successful. Please note that `waitflush` 
+command may take up to 3 seconds or `Store.AutoFlushInterval` to return. 
+You can make all calls asynchronous, so 99.99% times user get a fast feed back, 
+but there is a very low chance that user may be informed of failure after 3 seconds. 
+On client side, you may also need to prevent user to issue next transaction in 3 seconds,
+In most cases, users do not click mouse that quick, so this hidden logic goes barely noticed.
+
 ## Opinion on Software Achitecture
 Like the brain, we recommend that each computer manages its own chunk of data. 
 As modern computers are having more computing cores, it is possible for a single (virtual) machine 
@@ -95,6 +116,7 @@ in such situation for both performance and ease of deployment.
 To scale up to even more data and requests, we devide data with machines and use higher level
 programming logics for communications. In this way, we control all the logics with our own code, 
 rather than using general-purpose solutions like memcached, MangoDB(NoSQL), or SQLServer, etc. 
+
 ------------------------------------------------------------
 NPL.load("(gl)script/ide/System/Database/TableDatabase.lua");
 local TableDatabase = commonlib.gettable("System.Database.TableDatabase");

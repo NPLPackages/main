@@ -63,3 +63,7 @@
     padding-left:0px;
     padding-right:0px;
 }
+
+.wiki-form .has-error {
+    border-color: red;
+}

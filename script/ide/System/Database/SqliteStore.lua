@@ -46,7 +46,7 @@ function SqliteStore:ctor()
 	self.transaction_count_ = 0
 	self.transaction_labels_ = {}
 	self.queued_transaction_count = 0;
-
+	self.waitflush_queue = {};
 	self.timer = self.timer or commonlib.Timer:new({callbackFunc = function(timer)
 		if(self:FlushAll()) then
 			timer:Change();
@@ -546,6 +546,17 @@ function SqliteStore:flush(query, callbackFunc)
 	return self:InvokeCallback(callbackFunc, err, res);
 end
 
+-- after issuing an really important group of commands, and you want to ensure that 
+-- these commands are actually successful like a transaction, the client can issue a waitflush 
+-- command to check if the previous commands are successful. Please note that waitflush command 
+-- may take up to 3 seconds or Store.AutoFlushInterval to return. 
+-- @param callbackFunc: function(err, fFlushed) end
+function SqliteStore:waitflush(query, callbackFunc)
+	if(callbackFunc) then
+		self.waitflush_queue[#(self.waitflush_queue) + 1] = callbackFunc;
+	end
+end
+
 -- flush all transactions to database. 
 -- return true if committed. 
 function SqliteStore:FlushAll()
@@ -553,8 +564,19 @@ function SqliteStore:FlushAll()
 		LOG.std(nil, "debug", "SqliteStore", "flushing %d queued database transactions :%s", self.queued_transaction_count, self.kFileName);
 		self.queued_transaction_count = 0;
 		-- flush now
-		self._db:exec("END")
-		return true;
+		local _, err = self._db:exec("END");
+		self:NotifyEndTransaction(err);
+		return data;
+	end
+end
+
+function SqliteStore:NotifyEndTransaction(err)
+	local data = not err;
+	if (#(self.waitflush_queue) > 0) then
+		for i, callbackFunc in ipairs(self.waitflush_queue) do
+			self:InvokeCallback(callbackFunc, err, data);
+		end
+		self.waitflush_queue = {};
 	end
 end
 
@@ -610,6 +632,7 @@ function SqliteStore:End(bRollback, bForceFlush)
 				end
 			else
 				_,err = self._db:exec("END");
+				self:NotifyEndTransaction(err);
 			end	
 		else
 			-- Rollback is necessary, 

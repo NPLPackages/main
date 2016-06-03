@@ -43,3 +43,15 @@ function getSiteRootURL(site)
 		end
 	end
 end
+
+-- server side pre-calculation here:
+-- calculate website name and page name from current url
+function RenderServerSide()
+	local siteName, pageName = request:url():match("^/?([^/]+)/?([^/]*)");
+	if(siteName) then
+		local rootUrl, siteName = getSiteRootURL(getWebsite(siteName));
+		if(rootUrl) then
+			echo(format("<script>window.siteName = '%s'; window.pageName = '%s'; window.rootUrl = '%s';</script>", siteName, pageName, rootUrl));
+		end
+	end
+end

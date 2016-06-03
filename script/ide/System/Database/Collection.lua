@@ -13,6 +13,8 @@ local Collection = commonlib.gettable("System.Database.Collection");
 NPL.load("(gl)script/ide/System/Database/Item.lua");
 NPL.load("(gl)script/ide/System/Database/StorageProvider.lua");
 NPL.load("(gl)script/ide/System/Database/IORequest.lua");
+NPL.load("(gl)script/ide/System/Database/Store.lua");
+local Store = commonlib.gettable("System.Database.Store");
 local IORequest = commonlib.gettable("System.Database.IORequest");
 local StorageProvider = commonlib.gettable("System.Database.StorageProvider");
 local Item = commonlib.gettable("System.Database.Item");
@@ -139,6 +141,20 @@ function Collection:flush(query, callbackFunc, timeout)
 		return self.storageProvider:flush(query, callbackFunc);
 	else
 		return IORequest:Send("flush", self, query, callbackFunc, timeout);
+	end
+end
+
+-- after issuing an really important group of commands, and you want to ensure that 
+-- these commands are actually successful like a transaction, the client can issue a waitflush 
+-- command to check if the previous commands are successful. Please note that waitflush command 
+-- may take up to 3 seconds or Store.AutoFlushInterval to return. 
+-- @param callbackFunc: function(err, fFlushed) end
+function Collection:waitflush(query, callbackFunc, timeout)
+	if(self:IsServer()) then
+		return self.storageProvider:waitflush(query, callbackFunc);
+	else
+		timeout = timeout or (Store.AutoFlushInterval + 3000);
+		return IORequest:Send("waitflush", self, query, callbackFunc, timeout);
 	end
 end
 

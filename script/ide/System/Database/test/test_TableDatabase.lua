@@ -37,6 +37,8 @@ function TestSQLOperations()
 	db.User:find({}, function(err, rows) echo(rows); end, 1000);
 	-- remove item
 	db.User:deleteOne({name="LXZ2"}, function(err, count) echo(count);	end);
+	-- wait flush may take up to 3 seconds
+	db.User:waitflush({}, function(err, data) echo({data, "data is flushed"}) end);
 	-- find all rows
 	db.User:find({}, function(err, rows) echo(rows); end);
 	-- set cache to 2000KB, turn synchronous IO off, and use in-memory journal and 

@@ -9,7 +9,7 @@
         }
     };
 })
-.controller('ModalLoginCtrl', function ($scope, $auth, $uibModalInstance) {
+.controller('ModalLoginCtrl', function ($scope, $http, $auth, $uibModalInstance) {
 	$scope.isAuthenticating = false;
 	$scope.authenticate = function (provider) {
 	    $scope.isAuthenticating = true;
@@ -22,7 +22,19 @@
 			});
 	};
 })
-.controller('LoginCtrl', function ($scope, $auth, $uibModal, Account) {
+.controller('ModalRegisterCtrl', function ($scope, $http, $auth, $uibModalInstance) {
+    $scope.cancel = function () {
+        $uibModalInstance.dismiss('cancel');
+    };
+    $scope.registerUser = function () {
+        $uibModalInstance.close();
+        // alert(JSON.stringify({ name: $scope.username, pw: $scope.password }));
+        $http.get("/ajax/wiki/auth/api_register?username=AAA&password=BBB").then(function (response) {
+            alert(JSON.stringify(response));
+        });
+    };
+})
+.controller('LoginCtrl', function ($scope, $auth, $uibModal, Account, WikiPage) {
 	$scope.user = {};
 	$scope.bShowIndexBar = false;
 	$scope.getProfile = function () {
@@ -48,6 +60,7 @@
 	$scope.actiontip = function (text, timeout) {
 	    // TODO: alert(text);
 	};
+	$scope.isPageExist = WikiPage.isPageExist;
 	$scope.login = function () {
 	    $uibModal.open({
 	        templateUrl: "/wp-content/pages/wiki/auth/login.html",
@@ -63,6 +76,14 @@
 	            // HTTP response error from server
 	            $scope.actiontip(error.data.message || "some error!");
 	        }
+	    });
+	};
+	$scope.register = function () {
+	    $uibModal.open({
+	        templateUrl: "/wp-content/pages/wiki/auth/register.html",
+	        controller: "ModalRegisterCtrl",
+	    }).result.then(function (provider) {
+	        
 	    });
 	};
 	$scope.showIndexBar = function (bShow) {

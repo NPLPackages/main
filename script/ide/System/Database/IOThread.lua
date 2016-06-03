@@ -139,6 +139,10 @@ function IOThread:HandleRequest(msg)
 				collection:flush(msg.query, function(err, data)
 					self:SendResponse(err, data, msg);
 				end);
+			elseif(query_type == "waitflush") then
+				collection:waitflush(msg.query, function(err, data)
+					self:SendResponse(err, data, msg);
+				end);
 			elseif(query_type == "exec") then
 				collection:exec(msg.query, function(err, data)
 					self:SendResponse(err, data, msg);
