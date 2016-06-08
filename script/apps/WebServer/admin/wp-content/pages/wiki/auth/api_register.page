@@ -1,0 +1,24 @@
+<?npl
+--[[
+Title: ajax api
+Author: LiXizhi
+Date: 2016/5/30
+Desc: 
+]]
+include_once("../db.page");
+
+response:Begin();
+db.User:findById(request:get("username"), function(err, user)
+	if(user) then
+		response:send({error="already registered"});
+	else
+		local username = request:get("username");		
+		local password = request:get("password");
+		db.User:insertOne({username=username, password=password}, function(err, user)
+			if(user) then
+				response:send({user=user});
+			end
+		end);
+	end
+end);
+
