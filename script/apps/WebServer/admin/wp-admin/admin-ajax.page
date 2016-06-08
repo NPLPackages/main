@@ -8,13 +8,15 @@ Desc:
 
 DOING_AJAX = true;
 
--- Load Bootstrap
-include_once( dirname( dirname( __FILE__ ) ) .. '/wp-load.page' );
+if(not WP_USE_MINI_LOADER) then
+	-- Load Bootstrap
+	include_once( dirname( dirname( __FILE__ ) ) .. '/wp-load.page' );
+end
 
 -- Allow for cross-domain requests (from the frontend). 
 send_origin_headers();
 
--- Require an action parameter, default ot page name
+-- Require an action parameter, default to page name
 local action = request:get('action') or wp_query:pagename();
 if ( not action ) then
 	die(0);
@@ -31,10 +33,12 @@ if(page_path()) then
   include_once( page_path());
 end
 
-if ( is_user_logged_in() ) then
-	-- Fires authenticated AJAX actions for logged-in users.
-	do_action( 'wp_ajax_' .. action);
-else
-	-- Fires non-authenticated AJAX actions for logged-out users.
-	do_action( 'wp_ajax_nopriv_' .. action);
+if(is_user_logged_in) then
+	if ( is_user_logged_in() ) then
+		-- Fires authenticated AJAX actions for logged-in users.
+		do_action( 'wp_ajax_' .. action);
+	else
+		-- Fires non-authenticated AJAX actions for logged-out users.
+		do_action( 'wp_ajax_nopriv_' .. action);
+	end
 end

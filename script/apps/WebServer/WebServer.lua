@@ -15,6 +15,17 @@ functions:
 	IsStarted()
 	site_url()
 
+### Command Line Params
+- root: root folder
+- ip: default to "0.0.0.0"
+- port: default to "8099"
+- package: commar separated list of packages like "npl_packages/paracraftwiki/"
+
+Examples:
+```
+npl bootstrapper="script/apps/WebServer/WebServer.lua"  port="8099" root="paracraftwiki/" package="npl_packages/paracraftwiki/"
+```
+
 -----------------------------------------------
 NPL.load("(gl)script/apps/WebServer/WebServer.lua");
 WebServer:Start("script/apps/WebServer/admin", "0.0.0.0", 8099);
@@ -90,7 +101,7 @@ WebServer:LoadConfig({
 -- @param filename: if nil, it will be "config/WebServer.config.xml". it can also be config table.
 function WebServer:LoadConfig(filename)
 	if(type(filename) == "table") then
-		self.server_configs[#self.server_configs+1] = config;
+		self.server_configs[#self.server_configs+1] = filename;
 		return self:GetServerConfig();
 	end
 
@@ -125,9 +136,39 @@ function WebServer:LoadConfig(filename)
 		end
 		return data;
 	end
+
+	local nocache = ParaEngine.GetAppCommandLineByParam("debug", "") ~= "";
+	if(nocache) then
+		LOG.std(nil, "info", "WebServer", "no cache headers is enabled");
+	end
+
+	-- read custom config 
+	local function LoadCustomConfig(node, targetTable)
+		local fieldname = node.attr and node.attr.name;
+		if(not fieldname) then return end
+
+		if(node.name == "table") then
+			local t = {};
+			targetTable[fieldname] = t;
+			for _, childnode in ipairs(node) do
+				LoadCustomConfig(childnode, t);
+			end
+		elseif(node.name == "string") then
+			targetTable[fieldname] = node[1];
+		elseif(node.name == "number") then
+			targetTable[fieldname] = tonumber(node[1]);
+		elseif(node.name == "bool") then
+			targetTable[fieldname] = node[1] == "true";
+		end
+	end
+	for node in commonlib.XPath.eachNode(xmlRoot, "//WebServer/config") do
+		for _, tablenode in ipairs(node) do
+			LoadCustomConfig(tablenode, self.config);
+		end
+	end
+
 	-- read all rules
 	local rules_map = {};
-	local node;
 	for node in commonlib.XPath.eachNode(xmlRoot, "//WebServer/rules") do
 		if(node.attr and node.attr.id) then
 			
@@ -140,6 +181,9 @@ function WebServer:LoadConfig(filename)
 					rule.match = deserialize_data(rule_node.attr.match);
 					rule.with = rule_node.attr.with;
 					rule.params = deserialize_data(rule_node.attr.params);
+					if(type(rule.params) == "table") then
+						rule.params.nocache = rule.params.nocache or nocache;
+					end
 					rules[#rules+1] = rule;
 				end
 			end
@@ -151,8 +195,6 @@ function WebServer:LoadConfig(filename)
 	end
 	self.rules_map = rules_map;
 	-- now read all servers, currently only one server exist
-
-	local node;
 	for node in commonlib.XPath.eachNode(xmlRoot, "//WebServer/servers/server") do
 		if(node.attr and node.attr.host) then
 			local config = {
@@ -327,8 +369,18 @@ local function activate()
 		return;
 	end
 	if(not msg) then
-		WebServer:Start("script/apps/WebServer/admin", "0.0.0.0", "8099");
-		ParaGlobal.ShellExecute("open", "http://localhost:8099/", "", "", 1);
+		local rootDir = ParaEngine.GetAppCommandLineByParam("root", "script/apps/WebServer/admin");
+		local ip = ParaEngine.GetAppCommandLineByParam("ip", "0.0.0.0");
+		local port = ParaEngine.GetAppCommandLineByParam("port", "8099");
+		-- commar separated list of packages like "npl_packages/paracraftwiki/"
+		local package = ParaEngine.GetAppCommandLineByParam("package", "");
+		if(package and package~="" and package:match("/$")) then
+			for folder in package:gmatch("[^;,]+") do
+				NPL.load(folder);
+			end
+		end
+		WebServer:Start(rootDir, ip, port);
+		ParaGlobal.ShellExecute("open", format("http://localhost:%s/", port), "", "", 1);
 	elseif(msg.type == "StartServerAsync") then
 		WebServer:StartDeprecatedHttpd(msg.configfile, true);
 	end

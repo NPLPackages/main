@@ -1,0 +1,28 @@
+<?npl
+--[[
+Title: client config
+Author: LiXizhi
+Date: 2016/6/7
+Desc:
+]]
+?>
+<script>
+angular.module('MyApp')
+.config(function ($authProvider) {
+	$authProvider.github({
+        url: "/ajax/wiki/auth/github",
+        clientId: '<?=site_config().wiki.clientid.GITHUB_CLIENTID?>',
+        redirectUri: window.location.origin + '/wiki/home',
+    });
+    $authProvider.google({
+        url: "/ajax/wiki/auth/google",
+        clientId: '<?=site_config().wiki.clientid.GOOGLE_CLIENTID?>',
+        redirectUri: window.location.origin + '/wiki/home',
+    });
+	$authProvider.facebook({
+        url: "/ajax/wiki/auth/facebook",
+        clientId: '<?=site_config().wiki.clientid.FACEBOOK_CLIENTID?>',
+        redirectUri: window.location.origin + '/wiki/home',
+    });
+});
+</script>

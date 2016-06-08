@@ -16,8 +16,7 @@
       </virtualhosts>
     </server>
   </servers>
-  
-  <!--rules used when starting a web server. Multiple rules with different id can be defined. --> 
+  <!--rules used when starting a web server. Multiple rules with different id can be defined. -->
   <rules id="simple_rule">
     <!--URI map everything without extension to index.page-->
     <rule match='{"^[^%./]*/$", "^[/%w_]+$", "robots.txt"}' with="WebServer.redirecthandler" params='{"/index.page"}'></rule>
@@ -32,7 +31,31 @@
     <rule match='^/?www/' with="WebServer.filehandler" params='{baseDir = "%world%"}'></rule>
     <!--serving static js files in runtime root directory. -->
     <rule match='^/?script/.+%.js' with="WebServer.filehandler" params='{baseDir = ""}'></rule>
-    <!--filehandler example, base dir is where the root file directory is. %CD% means current file's directory-->
-    <rule match="." with="WebServer.filehandler" params='{baseDir = "%CD%"}'></rule>
+    <!--wp framework related js, css, files-->
+    <rule match="^/?wp%-" with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/", }'></rule>
+    <!--filehandler example, base dir is where the root file directory is. 
+    @param %CD%:  means current file's directory, 
+    @param nocache: when to add no cache headers on client side, turn this on only on dev server
+    -->
+    <rule match="." with="WebServer.filehandler" params='{baseDir = "%CD%", }'></rule>
   </rules>
+  <config>
+    <table name='wiki'>
+      <table name='secrets'>
+        <!--token secret for this website-->
+        <string name='TOKEN_SECRET'>1234567890paracraftwiki</string>
+        <!--OAuth 2.0-->
+        <string name='GITHUB_SECRET'>c0ed1cc56931c99452c643a867d699d5657b4313</string>
+        <string name='GOOGLE_SECRET'>hvfQw1tFiaJ19ClqlNaBTlXQ</string>
+        <string name='FACEBOOK_SECRET'>6cac2f4d8f5fed008776a93d28369b5f</string>
+      </table>
+      <table name='clientid'>
+        <string name='GITHUB_CLIENTID'>44ed8acc9b71e36f47d8</string>
+        <string name='GOOGLE_CLIENTID'>638766295212-f99rcpljr68ld4pfmme4qrh2ru0ke4nd.apps.googleusercontent.com</string>
+        <string name='FACEBOOK_CLIENTID'>128754717528463</string>
+      </table>
+      <!--how many seconds to expire user token--> 
+      <number name='token_expire'>360000</number>
+    </table>
+  </config>
 </WebServer>

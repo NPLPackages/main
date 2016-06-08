@@ -6,7 +6,7 @@ Date: 2016/5/10
 ]]
 
 include_once("./wiki/website.page");
-RenderServerSide();
+RenderServerWikiScript();
 
 -- shared js libs
 wp_enqueue_script("angular", "/wp-includes/js/angular/angular.min.js");
@@ -19,6 +19,7 @@ wp_enqueue_script("highlight", "/wp-includes/js/highlight/highlight.pack.js");
 
 -- following is wiki angular app code, app.js must be included first followed by controllers.
 wp_enqueue_script("MyApp", "/wp-content/pages/wiki/app.js");
+include("./wiki/auth/clientconfig.page");
 wp_enqueue_script("authController", "/wp-content/pages/wiki/authController.js");
 wp_enqueue_script("wikiController", "/wp-content/pages/wiki/wikiController.js");
 wp_enqueue_style("wiki_style", "/wp-content/pages/wiki/wiki.css");
@@ -38,14 +39,20 @@ wp_enqueue_style("wiki_style", "/wp-content/pages/wiki/wiki.css");
             <div class="collapse navbar-collapse" id="top-navbar-collapse-1">
                 <ul class="nav navbar-nav">
                     <li>
-                        <div class="form-group form-inline" style="margin-left:5px;margin-top:10px;margin-bottom:0px;">
-                            <div class="input-group">
-                                <span class="input-group-addon"><a ng-click="showSiteInfo()">{{GetWikiPage().getSiteName()}}<span class="caret"></span></a></span>
-                                <span class="input-group-addon"><a ng-click="showPageInfo()">{{GetWikiPage().getPageName()}}<span class="caret"></span></a></span>
-                                <input type="text" style="width:100px" id="username" placeholder="搜索">
-                            </div>
+                        <a class="dropdown-toggle" data-toggle="dropdown" role="button">{{GetWikiPage().getSiteName()}}<span class="caret"></span></a>
+                        <div class="dropdown-menu menubox">
+                            <a href='{{"/"+GetWikiPage().getSiteName()}}'>访问主页</a>
                         </div>
                     </li>
+                    <li>
+                        <a class="dropdown-toggle" data-toggle="dropdown" role="button">{{GetWikiPage().getPageName()}}<span class="caret"></span></a>
+                        <div class="dropdown-menu menubox">
+                            编辑 | 源码 | 历史等 
+                        </div>
+                    </li>
+                    <!--<li>
+                        <input type="text" style="margin-top:10px;width:100px" id="username" placeholder="搜索" />
+                    </li>-->
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
                     <li ng-show="GetWikiPage().isPageExist() && isAuthenticated()">
@@ -88,21 +95,24 @@ wp_enqueue_style("wiki_style", "/wp-content/pages/wiki/wiki.css");
             </div>
         </div>
     </nav>
-    <div class="container">
-        <div class="row" ng-controller="MarkdownController">
-            <div id="indexbar" style="display:none" class="col-md-3 wiki-indexbar">
+    <div id="wikitop" class="container-fluid">
+    </div>
+    <div id="wikimain" class="container">
+        <div class="row" ng-controller="WikiController">
+            <div ng-non-bindable id="indexbar" style="display:none" class="col-md-3 wiki-indexbar">
             </div>
             <div id="content" class="col-md-12 wiki-content">
                 <div class="row">
+                    <?npl RenderServerWikiContent(); ?>
                     <div class="col-md-12" ng-if="GetWikiPage().isPageLoading()">
                         正在加载页面...
                     </div>
-                    <div class="col-md-12" ng-if="GetWikiPage().isPageNotFound()">
+                    <div class="col-md-12" ng-if="GetWikiPage().isPageNotFound() && GetWikiPage().getSiteName() != 'wiki'">
                         页面不存在
                     </div>
-                    <div class="col-md-8 wiki-page" id="wikipage">
+                    <div ng-non-bindable class="col-md-8 wiki-page" id="wikipage">
                     </div>
-                    <div class="col-md-4 wiki-sidebar" id="wikisidebar"></div>
+                    <div ng-non-bindable class="col-md-4 wiki-sidebar" id="wikisidebar"></div>
                 </div>
             </div>
         </div>

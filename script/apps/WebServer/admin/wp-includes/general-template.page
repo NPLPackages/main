@@ -130,7 +130,7 @@ function the_content(filename)
 		path = WP_CONTENT_DIR.."/pages/"..filename;
 	end
 
-	if(not path) then
+	if(not path and wp_query) then
 		path = wp_query:page_path();
 	end
 

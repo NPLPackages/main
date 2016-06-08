@@ -111,7 +111,7 @@ angular.module('MyApp')
     }
     return WikiPage;
 })
-.controller('MarkdownController', function ($scope, $http, WikiPage) {
+.controller('WikiController', function ($scope, $http, WikiPage) {
     var md = window.markdownit({
         html: true, // Enable HTML tags in source
         linkify: true, // Autoconvert URL-like text to links
@@ -141,6 +141,15 @@ angular.module('MyApp')
             $(idPage).removeClass("col-md-8");
             $(idPage).addClass("col-md-12");
         }
+    };
+    $scope.login = function () {
+        return WikiPage.login();
+    };
+    $scope.isAuthenticated = function () {
+        return WikiPage.isAuthenticated();
+    };
+    $scope.makeLayout = function () {
+        $('.wikitop').removeClass("wikitop").appendTo('#wikitop');
     };
     $scope.load = function (url, container_name) {
         $http({
@@ -180,6 +189,7 @@ angular.module('MyApp')
                 $(container_name).html("<p>load failed.</p>");
         });
     }
+    $scope.makeLayout();
     // load all pages
     $scope.load(WikiPage.getPageUrl(), idPage);
     $scope.load(WikiPage.getSidebarUrl(), idSidebar);

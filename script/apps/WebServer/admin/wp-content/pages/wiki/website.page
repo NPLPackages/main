@@ -44,14 +44,43 @@ function getSiteRootURL(site)
 	end
 end
 
+local siteName, pageName;
+function SetWikiPage(siteName_, pageName_)
+	siteName, pageName = siteName_ or siteName, pageName_ or pageName;
+end
+
+function GetSiteName()
+	return siteName;
+end
+
+function GetPageName()
+	return pageName;
+end
+
 -- server side pre-calculation here:
 -- calculate website name and page name from current url
-function RenderServerSide()
-	local siteName, pageName = request:url():match("^/?([^/]+)/?([^/]*)");
+function RenderServerWikiScript()
+	if(not siteName or not pageName) then
+		siteName, pageName = request:url():match("^/?([^/]+)/?([^/]*)");
+		if(not siteName) then
+			siteName, pageName = "wiki", "home"
+		end
+	end
 	if(siteName) then
 		local rootUrl, siteName = getSiteRootURL(getWebsite(siteName));
 		if(rootUrl) then
 			echo(format("<script>window.siteName = '%s'; window.pageName = '%s'; window.rootUrl = '%s';</script>", siteName, pageName, rootUrl));
+		end
+	end
+end
+
+-- server side cached content for google agent and special wiki/* pages, etc. 
+-- @note: `wiki/*` is mapped to predefined pages at `wiki/pages/*.page`
+function RenderServerWikiContent()
+	if(GetSiteName() == "wiki") then
+		local filename = WP_CONTENT_DIR .. '/pages/wiki/pages/' .. GetPageName() .. ".page";
+		if(file_exists(filename)) then
+			include(filename);
 		end
 	end
 end

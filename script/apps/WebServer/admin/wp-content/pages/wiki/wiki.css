@@ -40,6 +40,9 @@
     text-decoration:none;
     cursor:pointer;
 }
+.navbar{
+    border-radius: 0;
+}
 .navbar .indexbartrue {
     background-color: #4078c0;
 }
@@ -73,4 +76,26 @@
 .wiki img{
     max-width: 100%;
     height: auto;
+}
+.loginbox {
+    color: #355368;
+}
+.menubox {
+    padding:10px;
+}
+.loginbox .box {
+    float:left; 
+    width:250px;
+    padding-left:10px;
+    padding-right:10px;
+}
+.box-separator{
+    float:left;
+    background-color: #d3d3d3;
+    width: 1px;
+    height:150px;
+}
+#wikitop.container-fluid {
+    padding-left:0px;
+    padding-right:0px;
 }

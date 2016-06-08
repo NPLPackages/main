@@ -151,7 +151,7 @@ local function filehandler_in_zip (path, req, res, baseDir)
 end
 
 -- main handler
-local function filehandler (req, res, baseDir)
+local function filehandler (req, res, baseDir, nocache)
 	if req.cmd_mth ~= "GET" and req.cmd_mth ~= "HEAD" then
 		return WebServer.common_handlers.err_405 (req, res)
 	end
@@ -167,9 +167,14 @@ local function filehandler (req, res, baseDir)
 		path = baseDir..req.relpath;
 	end
 
-	res.headers ["Content-Type"] = minetypes:guess_type(path);
-	res.headers ["Content-Encoding"] = encodingfrompath (path)
+	res.headers["Content-Type"] = minetypes:guess_type(path);
+	res.headers["Content-Encoding"] = encodingfrompath (path)
     
+	if(nocache) then
+		res.headers['Expires'] = 'Wed, 11 Jan 1984 05:00:00 GMT';
+		res.headers['Cache-Control'] = 'no-cache, must-revalidate, max-age=0';
+		res.headers['Pragma'] = 'no-cache';
+	end
 	local attr = lfs.attributes (path)
 	if not attr then
 		if(not filehandler_in_zip(path, req, res, baseDir)) then
@@ -230,7 +235,9 @@ end
 -- @param baseDir: the directory from which to serve files. "%world%" is current world directory
 -- @return the actual handler function(request, response) end
 function WebServer.filehandler (baseDir)
+	local nocache;
 	if type(baseDir) == "table" then 
+		nocache = baseDir.nocache;
 		baseDir = baseDir.baseDir;
 	end
 
@@ -243,6 +250,6 @@ function WebServer.filehandler (baseDir)
 		if(bReplaceWorldDir) then
 			baseDir_ = baseDir_:gsub("^%%world%%", ParaWorld.GetWorldDirectory());
 		end
-		return filehandler (req, res, baseDir_)	
+		return filehandler (req, res, baseDir_, nocache)	
 	end
 end

@@ -18,6 +18,7 @@ following are exposed via meta class:
 	nplinfo():   output npl information.
 	exit(text), die():   end the request
 	dirname(__FILE__):   get directory name
+	site_config(): get the web site configuration table
 	site_url(path, scheme): 
 	addheader(name, value):
 	file_exists(filename):
@@ -250,6 +251,15 @@ end
 -- return the site url like http://localhost:8080/
 function npl_page_env.site_url(filename, scheme)
 	return WebServer:site_url(filename, scheme);
+end
+
+-- @param name: if nil, the root config table is returned. 
+function npl_page_env.site_config(name)
+	if(not name) then
+		return WebServer.config;
+	else
+		commonlib.gettable(name, WebServer.config)
+	end
 end
 
 -- add header, only possible when header is not sent yet. 

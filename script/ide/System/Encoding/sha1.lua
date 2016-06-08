@@ -4,12 +4,14 @@ Author(s): LiXizhi, code is based on https://gist.github.com/creationix/7ce3796e
 Desc: NOTE: only valid in luajit, not in standard lua 5.1
 Use Lib:
 -------------------------------------------------------
-NPL.load("(gl)script/ide/math/sha1.lua");
-assert(mathlib.sha1("The quick brown fox jumps over the lazy dog", "hex") == "2fd4e1c67a2d28fced849ee1bb76e7391b93eb12");
-assert(mathlib.sha1("The quick brown fox jumps over the lazy dog", "base64") == "L9ThxnotKPzthJ7hu3bnORuT6xI=");
+NPL.load("(gl)script/ide/System/Encoding/sha1.lua");
+local Encoding = commonlib.gettable("System.Encoding");
+assert(Encoding.sha1("The quick brown fox jumps over the lazy dog", "hex") == "2fd4e1c67a2d28fced849ee1bb76e7391b93eb12");
+assert(Encoding.sha1("The quick brown fox jumps over the lazy dog", "base64") == "L9ThxnotKPzthJ7hu3bnORuT6xI=");
 -------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/math/bit.lua");
+local Encoding = commonlib.gettable("System.Encoding");
 
 local byte, char = string.byte, string.char
 local floor = math.floor
@@ -121,7 +123,7 @@ end
 local bytes = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 -- return base64
-function mathlib.base64(s)
+function Encoding.base64(s)
 	local parts = {}
 	for i = 1, #s, 3 do
 		local a, b, c = byte(s, i, i + 3)
@@ -135,13 +137,13 @@ function mathlib.base64(s)
 end
 
 -- @param format: nil or "hex" or "base64". if nil it is in binary format
-function mathlib.sha1(message, format)
+function Encoding.sha1(message, format)
 	local hash = sha1(message);
 	if(not format) then
 		return hash;
 	elseif(format == "hex") then
 		return dump(hash);
 	elseif(format == "base64") then
-		return mathlib.base64(hash);
+		return Encoding.base64(hash);
 	end
 end

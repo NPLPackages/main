@@ -17,6 +17,8 @@ minetypes.types_map = {
 	["htm"] = "text/html",
 	["page"] = "text/html",
 	["lua"] = "text/html",
+	["css"] = "text/css",
+	["js"] = "application/javascript",
 };
 
 -- gets the mimetype from the filename's extension
