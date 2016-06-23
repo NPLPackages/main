@@ -31,6 +31,8 @@ following are exposed via meta class:
 	get_file_text(filename) 
 	util.GetUrl(url, function(err, msg, data) end): 
 	util.parse_str(query_string): 
+	err, msg = yield(bExitOnError)  pause execution until resume() is called.
+	resume(err, msg)  in async callback, call this function to resume execution from last yield() position.
 
 I may consider reimplement some handy functions from php reference below. 
 However, the exposed request and response object already contains everything you need. 
@@ -48,6 +50,8 @@ NPL.load("(gl)script/ide/System/Core/Filters.lua");
 NPL.load("(gl)script/ide/System/os/GetUrl.lua");
 NPL.load("(gl)script/ide/Json.lua");
 NPL.load("(gl)script/apps/WebServer/npl_util.lua");
+NPL.load("(gl)script/ide/System/Database/TableDatabase.lua");
+local TableDatabase = commonlib.gettable("System.Database.TableDatabase");
 local npl_http = commonlib.gettable("WebServer.npl_http");
 local npl_page_env = commonlib.gettable("WebServer.npl_page_env");
 -- static private implementation object. 
@@ -78,6 +82,9 @@ function npl_page_env:new(request, response)
 	setmetatable(o, self);
 	return o;
 end
+
+-- exposing table database
+npl_page_env.TableDatabase = TableDatabase;
 
 -- handy function to output using current request context
 -- @param text: string or number or nil or boolean. 
