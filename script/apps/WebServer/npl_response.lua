@@ -363,10 +363,13 @@ function response:Begin()
 end
 
 -- finish and send the asynchronous response. 
-function response:End()
+-- @param bIgnoreFinish: if true, we will not call finish to send the actual response. default to nil.
+function response:End(bIgnoreFinish)
 	if(self.is_begin) then
 		self.is_begin = false;
-		self:finish();
+		if(not bIgnoreFinish) then
+			self:finish();
+		end
 	end
 end
 

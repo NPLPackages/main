@@ -4,6 +4,7 @@ Author(s): http://www.dialectronics.com/Lua/, see below, ported to NPL by LXZ
 Date: 2008/4/22
 Desc: 2013.11.21: if LuaJit is found, use the luajit version. it is as fast as in C++
 see http://lua-users.org/lists/lua-l/2010-03/msg00757.html
+All integers are assumed to be 32bits, even for 64bits dll. 
 Use Lib:
 -------------------------------------------------------
 NPL.load("(gl)script/ide/math/bit.lua");
@@ -47,7 +48,7 @@ if(not mathlib.bit) then
 		-- if luajit is enabled use the jit version, which is faster. 
 		mathlib.bit = require("bit");
 	else
-		mathlib.bit = luaopen_bit() ;
+		mathlib.bit = luaopen_bit();
 	end
 end
 

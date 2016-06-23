@@ -1,7 +1,7 @@
 --[[
 Title: SHA1
 Author(s): LiXizhi, code is based on https://gist.github.com/creationix/7ce3796e65b66549c4b0
-Desc: NOTE: only valid in luajit, not in standard lua 5.1
+Desc: 
 Use Lib:
 -------------------------------------------------------
 NPL.load("(gl)script/ide/System/Encoding/sha1.lua");

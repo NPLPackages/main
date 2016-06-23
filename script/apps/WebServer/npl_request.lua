@@ -91,6 +91,12 @@ function request:parse_url()
 	--self.built_url = string.format ("http://%s%s", self.headers.host or "", self.headers.cmd_url or "")
 end
 
+-- headers actually is the raw message containing everything.
+-- just incase one wants to clone the request and forward it to some other threads or network process. 
+function request:GetMsg()
+	return self.headers;
+end
+
 -- get url parameters: both url post/get are supported
 function request:getparams()
 	if (not self.params) then 

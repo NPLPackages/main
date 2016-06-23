@@ -3,7 +3,7 @@
 Title: ajax api
 Author: LiXizhi
 Date: 2016/5/30
-Desc: 
+Desc: set/get user profile
 ]]
 include_once("api.page");
 
@@ -17,10 +17,35 @@ end
 if(request:GetMethod() == "GET") then
 	response:Begin();
 	db.User:findById(request.userid, function(err, user)
+		if(user) then
+			user.password = nil;
+		end
 		response:send(user);
 	end);
-	return;
-else
-	-- TODO: put request
-end
+elseif(request:GetMethod() == "PUT") then
+	response:Begin();
+	
+	local user = {
+		_id = request.userid,
+		publicemail = request:get("publicemail"),
+		displayName = request:get("displayName"),
+		bio = request:get("bio"),
+		company = request:get("company"),
+		url = request:get("url"),
+		location = request:get("location"),
+	};
+	user.publicemail = user.publicemail and user.publicemail:sub(1, 30);
+	user.displayName = user.displayName and user.displayName:sub(1, 30);
+	user.bio = user.bio and user.bio:sub(1, 300);
+	user.company = user.company and user.company:sub(1, 30);
+	user.url = user.url and user.url:sub(1, 150);
+	user.location = user.location and user.location:sub(1, 50);
 
+	db.User:updateOne(user, function(err, user)
+		if(user) then
+			response:send(user);
+		else
+			response:status(404):send({message="update failed"});
+		end
+	end);
+end

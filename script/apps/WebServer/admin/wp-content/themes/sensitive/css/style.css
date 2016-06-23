@@ -251,17 +251,6 @@ h1.title{
 .box.widget p{
     font-size: 11pt;
 }
- 
-.current-menu-item a, 
-.dropdown-menu a:hover{
-    background: #666 !important;     
-}
-.dropdown-menu a{
-     font-size: 11pt;
-     font-weight: 300 !important;
-     line-height: 25px !important;
-     border-bottom: 1px solid #f8f8f8;     
- }
  .arc-header{
      margin-left: 0px;     
       

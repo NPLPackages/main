@@ -3,6 +3,7 @@ Title: file handler
 Author: LiXizhi
 Date: 2015/6/8
 Desc: disk file is served first, then files in zip/pkg. 
+by default, all static files are served asynchrnously in a separate thread. 
 Please note: it may be inefficient to serve chunks of file in zip archives, since the whole file 
 is read/unzipped into memory each time a request is processed.
 -----------------------------------------------
@@ -10,14 +11,23 @@ NPL.load("(gl)script/apps/WebServer/npl_file_handler.lua");
 -- WebServer.filehandler
 -----------------------------------------------
 ]]
+NPL.load("(gl)script/ide/commonlib.lua");
 NPL.load("(gl)script/ide/Files.lua");
 NPL.load("(gl)script/ide/socket/url.lua");
 NPL.load("(gl)script/apps/WebServer/minetypes.lua");
+NPL.load("(gl)script/apps/WebServer/npl_request.lua");
+NPL.load("(gl)script/apps/WebServer/npl_common_handlers.lua");
+local common_handlers = commonlib.gettable("WebServer.common_handlers");
+local request = commonlib.gettable("WebServer.request");
 local minetypes = commonlib.gettable("WebServer.minetypes");
 local url = commonlib.gettable("commonlib.socket.url")
 local lfs = commonlib.Files.GetLuaFileSystem();
 
 if(not WebServer) then  WebServer = {} end
+
+local handlerThreadName = "wfh"; -- web file handler thread's npl thread name
+local targetFile = string.format("(%s)%s", handlerThreadName, "script/apps/WebServer/npl_file_handler.lua");
+local npl_thread_name = __rts__:GetName();
 
 -----------------------------------------------------------------------------
 -- NPL File handler
@@ -28,7 +38,7 @@ WebServer.encodings = WebServer.encodings or {}
 
 
 -- gets the encoding from the filename's extension
-local function encodingfrompath (path)
+local function encodingfrompath(path)
 	local _,_,exten = string.find (path, "%.([^.]*)$")
 	if exten then
 		return WebServer.encodings [exten]
@@ -41,7 +51,7 @@ end
 -- the start of the requested range and returns
 -- the number of bytes requested.
 -- on full requests returns nil
-local function getrange (req, f)
+local function getrange(req, f)
 	local range = req.headers["range"]
 	if not range then return nil end
 	
@@ -66,7 +76,7 @@ end
 -- to the response object res
 -- sends only numbytes, or until the end of f
 -- if numbytes is nil
-local function sendfile (f, res, numbytes)
+local function sendfile(f, res, numbytes)
 	local block
 	local whole = not numbytes
 	local left = numbytes
@@ -102,7 +112,7 @@ end
 -- serve data from zip file. it may be inefficient to serve chunks of data, since the whole file 
 -- is read into memory each time a request processed.
 -- return true if served
-local function filehandler_in_zip (path, req, res, baseDir)
+local function filehandler_in_zip(path, req, res, baseDir)
 	local file = ParaIO.open(path, "r");
 	if(file:IsValid()) then
 		local fileSize = file:GetFileSize();
@@ -151,7 +161,7 @@ local function filehandler_in_zip (path, req, res, baseDir)
 end
 
 -- main handler
-local function filehandler (req, res, baseDir, nocache)
+local function filehandler(req, res, baseDir, nocache)
 	if req.cmd_mth ~= "GET" and req.cmd_mth ~= "HEAD" then
 		return WebServer.common_handlers.err_405 (req, res)
 	end
@@ -164,7 +174,7 @@ local function filehandler (req, res, baseDir, nocache)
 	if(baseDir == "") then
 		path = req.relpath:gsub("^/", "");
 	else
-		path = baseDir..req.relpath;
+		path = baseDir..req.relpath:gsub("^/", "");
 	end
 
 	res.headers["Content-Type"] = minetypes:guess_type(path);
@@ -231,10 +241,20 @@ local function filehandler (req, res, baseDir, nocache)
 	return res
 end
 
+local nplThreadLoaded;
+local function CheckLoadFileThread()
+	if(not nplThreadLoaded) then
+		nplThreadLoaded = true;
+		NPL.CreateRuntimeState(handlerThreadName, 0):Start();
+		LOG.std(nil, "info", "npl_file_handler", "npl file handler thread (%s) is started", handlerThreadName);
+	end
+end
+
+
 -- public: file handler maker. it returns a handler that serves files in the baseDir dir
 -- @param baseDir: the directory from which to serve files. "%world%" is current world directory
 -- @return the actual handler function(request, response) end
-function WebServer.filehandler (baseDir)
+function WebServer.filehandler(baseDir)
 	local nocache;
 	if type(baseDir) == "table" then 
 		nocache = baseDir.nocache;
@@ -242,14 +262,38 @@ function WebServer.filehandler (baseDir)
 	end
 
 	local bReplaceWorldDir;
-	if(type(baseDir) == "string" and baseDir:match("^%%world%%")) then
-		bReplaceWorldDir = true;
+	if(type(baseDir) == "string") then
+		if(baseDir:match("^%%world%%")) then
+			bReplaceWorldDir = true;
+		end
+		if( baseDir~="" and not baseDir:match("/$") ) then
+			baseDir = baseDir .. "/";
+		end
 	end
 	return function (req, res)
 		local baseDir_ = baseDir;
 		if(bReplaceWorldDir) then
 			baseDir_ = baseDir_:gsub("^%%world%%", ParaWorld.GetWorldDirectory());
 		end
-		return filehandler (req, res, baseDir_, nocache)	
+		if(npl_thread_name == handlerThreadName) then
+			return filehandler(req, res, baseDir_, nocache)	
+		else
+			req:discard();
+			CheckLoadFileThread();
+			-- redirect request to handler thread.
+			local msg = {
+				req = req:GetMsg(), 
+				baseDir = baseDir_,
+				nocache = nocache, 
+			};
+			NPL.activate(targetFile, msg);
+		end
 	end
 end
+
+local function activate()
+	local req = request:new():init(msg.req);
+	local result = filehandler(req, req.response, msg.baseDir, msg.nocache);
+	req.response:finish();
+end
+NPL.this(activate)

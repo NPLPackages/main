@@ -5,18 +5,44 @@ Author: LiXizhi
 Date: 2016/5/30
 Desc: 
 ]]
-include_once("../db.page");
+include_once("api.page");
 
 response:Begin();
-db.User:findById(request:get("username"), function(err, user)
-	if(user) then
-		response:send({error="already registered"});
+db.User:findOne({email = request:get("email")}, function(err, existingUser)
+	if(existingUser) then
+		response:status(409):send({ message = 'Email is already taken' });
 	else
-		local username = request:get("username");		
+		local displayName = request:get("username");		
 		local password = request:get("password");
-		db.User:insertOne({username=username, password=password}, function(err, user)
-			if(user) then
-				response:send({user=user});
+		local email = request:get("email");
+		if(email) then
+			email = string.lower(email);
+		end
+		-- validate email
+		if(not email or not email:match("^[%w%._%-]+@[%w%.%-]+%.[%a]+$") or #email>50) then
+			response:status(409):send({ message = 'Email format incorrect' });	
+			return;
+		end
+		-- validate password 
+		if(type(password)~="string" or #password < 6 or #password>100) then
+			response:status(409):send({ message = 'Password too weak' });	
+			return;
+		end
+		if(type(displayName)~="string" or #displayName < 3 or #displayName>30) then
+			response:status(409):send({ message = 'name too long or short' });	
+			return;
+		end
+		password = ParaMisc.md5(password);
+
+		db.User:insertOne({
+			displayName = displayName, 
+			password = password,
+			email = email,
+		}, function(err, user)
+			if (not user) then
+				response:status(500):send({ message = err });
+			else
+				response:send({ token = createJWT(user) });
 			end
 		end);
 	end

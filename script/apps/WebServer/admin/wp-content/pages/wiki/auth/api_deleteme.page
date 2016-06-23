@@ -1,0 +1,27 @@
+<?npl
+--[[
+Title: ajax api
+Author: LiXizhi
+Date: 2016/5/30
+Desc: change password
+]]
+include_once("api.page");
+
+ensureAuthenticated();
+
+if(not request.userid) then
+	response:status(404):send({message="invalid userid"});
+	return
+end
+
+response:Begin();
+db.User:findById(request.userid, function(err, user)
+	-- we will keep a copy anyway
+	user._id = nil;
+	db.deletedUser:insertOne(user, function(err, user)
+		db.User:deleteOne({_id = request.userid,}, function(err)
+			response:send({ success = true });
+		end);	
+	end);
+end);
+	

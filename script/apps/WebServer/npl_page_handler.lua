@@ -48,7 +48,18 @@ local function npl_page_handler(req, res, root_dir, page_manager)
 				-- uncomment to show merged script
 				-- res:send(page.script);  
 				res:add_header()
-				page:run(npl_page_env:new(req, res));
+
+				if(true or WebServer.useCoroutine) then
+					local page_env = npl_page_env:new(req, res);
+					local co = coroutine.create(function()
+					   page:run(page_env);
+					   return nil, "finished";
+					end)
+					page_env.co = co;
+					coroutine.resume(co);
+				else
+					page:run(npl_page_env:new(req, res));
+				end
 			else
 				res:send(format("error parse file %s: %s", req.cmd_url, page:get_error_msg() or ""));	
 			end

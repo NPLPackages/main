@@ -50,6 +50,8 @@ NPL.load("(gl)script/ide/Json.lua");
 NPL.load("(gl)script/apps/WebServer/npl_util.lua");
 local npl_http = commonlib.gettable("WebServer.npl_http");
 local npl_page_env = commonlib.gettable("WebServer.npl_page_env");
+-- static private implementation object. 
+local env_imp = commonlib.gettable("WebServer.env_imp");
 local util = commonlib.gettable("WebServer.util");
 local tostring = tostring;
 
@@ -57,6 +59,7 @@ npl_page_env.__index = npl_page_env;
 
 -- SECURITY: expose global _G to server env, this can be useful and dangourous.
 setmetatable(npl_page_env, {__index = _G});
+
 
 
 -- expose: request, response, echo and print to npl script. 
@@ -78,70 +81,79 @@ end
 
 -- handy function to output using current request context
 -- @param text: string or number or nil or boolean. 
-local function echo(text)
-	local self = npl_http.code_env;
+function env_imp:echo(text)
 	self.echo(text);
+end
+
+function env_imp:print(...)
+	env_imp.echo(self, string.format(...));
 end
 
 -- same as self.echo(string.format(...))
 function npl_page_env.print(...)
-	local self = npl_http.code_env;
-	self.echo(string.format(...));
+	local self = getfenv(2);
+	env_imp.print(self, ...);
+end
+
+function env_imp:nplinfo()
+	env_imp.echo(self, "<p>NPL web server v1.0</p>");
+	env_imp.echo(self, format("<p>site url: %s</p>", env_imp.site_url(self) or ""))
+	env_imp.echo(self, format("<p>your ip: %s</p>", self.request:getpeername() or ""))
+	env_imp.echo(self, "<p>");
+	env_imp.echo(self, commonlib.serialize(self.request.headers, true):gsub("\n", "<br/>"));
+	env_imp.echo(self, "</p>");
 end
 
 -- similar to phpinfo()
 -- output everything about the environment and the request including all request headers.
 function npl_page_env.nplinfo()
-	local self = npl_http.code_env;
-	echo("<p>NPL web server v1.0</p>");
-	echo(format("<p>site url: %s</p>", self.site_url() or ""))
-	echo(format("<p>your ip: %s</p>", self.request:getpeername() or ""))
-	echo("<p>");
-	echo(commonlib.serialize(self.request.headers, true):gsub("\n", "<br/>"));
-	echo("</p>");
+	local self = getfenv(2);
+	return env_imp.nplinfo(self);
 end
 
--- similar to php.exit()
--- Output a message and terminate the current script
--- @param msg: output this message. usually nil. 
-function npl_page_env.exit(msg)
-	local self = npl_http.code_env;
+function env_imp:exit(msg)
 	-- the caller use xpcall with custom error function, so caller will catch it gracefully and end the request
 	self.is_exit_call = true;
 	self.exit_msg = msg;
 	error("exit_call");
 end
 
+-- similar to php.exit()
+-- Output a message and terminate the current script
+-- @param msg: output this message. usually nil. 
+function npl_page_env.exit(msg)
+	local self = getfenv(2);
+	env_imp.exit(self, msg);
+end
+
 -- alias for exit()
 npl_page_env.die = npl_page_env.exit;
 
--- similar to php.dirname() however with the trailing /
--- get the directory name of the given file with the trailing /. 
--- @param filename: if nil, self.__FILE__ is used. 
-function npl_page_env.dirname(filename)
-	local self = npl_http.code_env;
+
+function env_imp:dirname(filename)
 	filename = filename or self.__FILE__;
 	local dir = filename:gsub("[^/]+$", "");
 	return dir;
 end
 
--- @param filename: file path, relative or absolute. 
--- begin with './', relative to current file
--- begin with '/', relative to web root directory
--- begin with '../../../', up several directory to current file
--- no "/" in filename, relative to current file
--- otherwise, filename is absolute path. 
-function npl_page_env.getfilepath(filename)
-	local self = npl_http.code_env;
+-- similar to php.dirname() however with the trailing /
+-- get the directory name of the given file with the trailing /. 
+-- @param filename: if nil, self.__FILE__ is used. 
+function npl_page_env.dirname(filename)
+	local self = getfenv(2);
+	return env_imp.dirname(self, filename);
+end
+
+function env_imp:getfilepath(filename)
 	local firstByte = filename:byte(1);
 	if(firstByte == 46) then 
 		local secondByte = filename:byte(2);
 		if(secondByte == 47) then
 			-- begin with './', relative to current file
-			filename = self.dirname(self.__FILE__)..filename:sub(3, -1);
+			filename = env_imp.dirname(self, self.__FILE__)..filename:sub(3, -1);
 		elseif(secondByte == 46) then
 			if(filename:byte(3) == 47) then
-				local parentDir = self.dirname(self.__FILE__);
+				local parentDir = env_imp.dirname(self, self.__FILE__);
 				parentDir = parentDir:gsub("([^/]+)/$", "");
 				filename = filename:sub(3, -1);
 				while (filename:match("^%.%./")) do
@@ -155,11 +167,23 @@ function npl_page_env.getfilepath(filename)
 		-- begin with '/', relative to web root directory
 		filename = WebServer:webdir()..filename:sub(2, -1);
 	elseif(not string.find(filename, "/")) then
-		filename = self.dirname(self.__FILE__)..filename;
+		filename = env_imp.dirname(self, self.__FILE__)..filename;
 	else
 		filename = filename:gsub("/[/]+", "/");
 	end
 	return filename;
+end
+
+
+-- @param filename: file path, relative or absolute. 
+-- begin with './', relative to current file
+-- begin with '/', relative to web root directory
+-- begin with '../../../', up several directory to current file
+-- no "/" in filename, relative to current file
+-- otherwise, filename is absolute path. 
+function npl_page_env.getfilepath(filename)
+	local self = getfenv(2);
+	return env_imp.getfilepath(self, filename);
 end
 
 
@@ -169,7 +193,7 @@ function npl_page_env.file_exists(filename)
 end
 
 -- private: add file to be already included
-function npl_page_env:add_include_file(filename)
+function env_imp:add_include_file(filename)
 	-- self.__includes mapping from filename to true
 	local includes = self.__includes;
 	if(not includes) then
@@ -182,10 +206,29 @@ function npl_page_env:add_include_file(filename)
 end
 
 -- private: return true if file is already included in the environment. 
-function npl_page_env:has_include_file(filename)
+function env_imp:has_include_file(filename)
 	return (self.__includes and self.__includes[filename]);
 end
 
+function env_imp:include(filename, bReload)
+	filename = env_imp.getfilepath(self, filename);
+	local page, bNewlyLoaded = self.page.page_manager:get(filename);
+	if(page) then
+		if(bReload and not bNewlyLoaded) then
+			self.page.page_manager:refresh(filename);
+		end
+		env_imp.add_include_file(self, filename);
+		if(not page:get_error_msg()) then
+			return page:run(self);
+		else
+			LOG.std(nil, "error", "npl_env", "include() failed: error parse file %s: %s", filename, page:get_error_msg() or "");
+			env_imp.exit(self, page:get_error_msg());
+		end
+	else
+		LOG.std(nil, "error", "npl_env", "include() failed for file %s", filename);
+		env_imp.exit(self, string.format("include() failed for file %s", filename));
+	end
+end
 
 -- similar to php.include: http://php.net/manual/en/function.include.php
 -- The include statement includes and evaluates the specified file and return its result if any.
@@ -200,32 +243,34 @@ end
 -- @param bReload: true to reload the file. default to nil. files will be loaded only once.
 -- @return: result of the included function. 
 function npl_page_env.include(filename, bReload)
-	local self = npl_http.code_env;
-	filename = self.getfilepath(filename);
-	local page, bNewlyLoaded = self.page.page_manager:get(filename);
-	if(page) then
-		if(bReload and not bNewlyLoaded) then
-			self.page.page_manager:refresh(filename);
-		end
-		self:add_include_file(filename);
-		if(not page:get_error_msg()) then
-			return page:run(self);
-		else
-			LOG.std(nil, "error", "npl_env", "include() failed: error parse file %s: %s", filename, page:get_error_msg() or "");
-			self.exit(page:get_error_msg());
-		end
-	else
-		LOG.std(nil, "error", "npl_env", "include() failed for file %s", filename);
-		self.exit(string.format("include() failed for file %s", filename));
+	local self = getfenv(2);
+	return env_imp.include(self, filename, bReload);
+end
+
+function env_imp:include_once(filename)
+	filename = env_imp.getfilepath(self, filename);
+	if(not env_imp.has_include_file(self, filename)) then
+		return env_imp.include(self, filename);
 	end
 end
 
 -- same as include(), expect that this function only takes effect on first call for a given env.
 function npl_page_env.include_once(filename)
-	local self = npl_http.code_env;
-	filename = self.getfilepath(filename);
-	if(not self:has_include_file(filename)) then
-		return npl_page_env.include(filename);
+	local self = getfenv(2);
+	return env_imp.include_once(self, filename);
+end
+
+function env_imp:include_pagecode(code, filename)
+	filename = filename or (self.__FILE__.."#pagecode");
+	local page = self.page.page_manager:get_by_code(code, filename);
+	if(page) then
+		env_imp.add_include_file(self, filename);
+		if(not page:get_error_msg()) then
+			return page:run(self);
+		else
+			LOG.std(nil, "error", "npl_env", "include_pagecode() failed: error parse file %s: %s", filename, page:get_error_msg() or "");
+			env_imp.exit(self, page:get_error_msg());
+		end
 	end
 end
 
@@ -233,24 +278,21 @@ end
 -- @param code: the actual code string to include. 
 -- @param filename: nil to default to current file. only used for displaying error
 function npl_page_env.include_pagecode(code, filename)
-	local self = npl_http.code_env;
-	filename = filename or (self.__FILE__.."#pagecode");
-	local page = self.page.page_manager:get_by_code(code, filename);
-	if(page) then
-		self:add_include_file(filename);
-		if(not page:get_error_msg()) then
-			return page:run(self);
-		else
-			LOG.std(nil, "error", "npl_env", "include_pagecode() failed: error parse file %s: %s", filename, page:get_error_msg() or "");
-			self.exit(page:get_error_msg());
-		end
-	end
+	local self = getfenv(2);
+	return env_imp.include_pagecode(self, code, filename)
 end
 
+function env_imp:site_url(filename, scheme)
+	return npl_page_env.site_url(filename, scheme);
+end
 
 -- return the site url like http://localhost:8080/
 function npl_page_env.site_url(filename, scheme)
 	return WebServer:site_url(filename, scheme);
+end
+
+function env_imp:site_config(name)
+	return npl_page_env.site_config(name);
 end
 
 -- @param name: if nil, the root config table is returned. 
@@ -262,21 +304,37 @@ function npl_page_env.site_config(name)
 	end
 end
 
+function env_imp:addheader(name, value)
+	self.response:add_header(name, value);
+end
+
 -- add header, only possible when header is not sent yet. 
 function npl_page_env.addheader(name, value)
-	local self = npl_http.code_env;
-	self.response:add_header(name, value);
+	local self = getfenv(2);
+	return env_imp.addheader(self, name, value);
+end
+
+function env_imp:setheader(name, value)
+	self.response:set_header(name, value);
 end
 
 -- set header (replace previously set values), only possible when header is not sent yet. 
 function npl_page_env.setheader(name, value)
-	local self = npl_http.code_env;
-	self.response:set_header(name, value);
+	local self = getfenv(2);
+	return env_imp.setheader(self, name, value);
+end
+
+function env_imp:log(...)
+	return npl_page_env.log(...);
 end
 
 -- simple log any object, same as echo. 
 function npl_page_env.log(...)
 	commonlib.echo(...);
+end
+
+function env_imp:sanitize(text)
+	return npl_page_env.sanitize(text);
 end
 
 -- Sanitizes all HTML tags
@@ -286,6 +344,11 @@ function npl_page_env.sanitize(text)
 	end
 end
 
+
+function env_imp:json_encode(value, bUseEmptyArray)
+	return npl_page_env.json_encode(value, bUseEmptyArray);
+end
+
 -- Returns a string containing the JSON representation of value. 
 -- @param bUseEmptyArray: by default, empty table is serialized to json as object {}. 
 -- calling this function will be serialized to json as array []
@@ -293,8 +356,17 @@ function npl_page_env.json_encode(value, bUseEmptyArray)
 	return commonlib.Json.Encode(value, bUseEmptyArray);
 end
 
+function env_imp:json_decode(value)
+	return npl_page_env.json_decode(value);
+end
+
+-- json decode
 function npl_page_env.json_decode(value)
 	return commonlib.Json.Decode(value);
+end
+
+function env_imp:xml_encode(value)
+	return npl_page_env.xml_encode(value);
 end
 
 -- Returns a string containing the Xml representation of value. 
@@ -302,8 +374,7 @@ function npl_page_env.xml_encode(value)
 	return commonlib.Lua2XmlString(value);
 end
 
--- get file text
-function npl_page_env.get_file_text(filename)
+function env_imp:get_file_text(filename)
 	local file = ParaIO.open(filename, "r");
 	local text;
 	if(file and file:IsValid()) then
@@ -311,4 +382,53 @@ function npl_page_env.get_file_text(filename)
 		file:close();
 	end
 	return text;
+end
+
+-- get file text
+function npl_page_env.get_file_text(filename)
+	local self = getfenv(2);
+	return env_imp.get_file_text(self, filename);
+end
+
+function env_imp:yield(bExitOnError)
+	if(self.co) then
+		self.response:Begin();
+		local err, msg = coroutine.yield(self);
+		self.response:End(true);
+		if(err and bExitOnError) then
+			self.response:sendsome(tostring(msg));
+			env_imp.exit(self);
+		end
+		return err, msg;
+	end
+end
+
+-- yield control until all async jobs are completed
+-- @param bExitOnError: if true, this function will handle error 
+-- @return err, msg: err is true if there is error. 
+function npl_page_env.yield(bExitOnError)
+	local self = getfenv(2);
+	return env_imp.yield(self, bExitOnError);
+end
+
+function env_imp:resume(err, msg)
+	if(self.co) then
+		local res, err, msg = coroutine.resume(self.co, err, msg);
+		if(res) then
+			if(not err and msg=="finished") then
+				self.response:finish();
+			end
+		else
+			self.response:sendsome(tostring(err));
+			self.response:finish();
+		end
+	end
+end
+
+-- resume from where jobs are paused last. 
+-- @param err: if there is error, this is true, otherwise it is nil.
+-- @param msg: error message in case err=true
+function npl_page_env.resume(err, msg)
+	local self = getfenv(2);
+	return env_imp.resume(self, err, msg);
 end

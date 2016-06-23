@@ -1,8 +1,20 @@
 ﻿angular.module('MyApp')
 .factory('Account', function ($http) {
+    var user;
     return {
+        setUser: function (user_) {
+            user = user_;
+        },
+        getUser: function () {
+            return user;
+        },
         getProfile: function () {
-            return $http.get('/ajax/wiki/auth/api_me');
+            $http.get('/ajax/wiki/auth/api_me').then(function (response) {
+                user = response.data;
+            })
+			.catch(function (response) {
+			    user = null;
+			});
         },
         updateProfile: function (profileData) {
             return $http.put('/ajax/wiki/auth/api_me', profileData);
@@ -24,17 +36,44 @@
 				$uibModalInstance.dismiss("error", error);
 			});
 	};
+	$scope.loginUser = function (email, password) {
+	    $http.post("/ajax/wiki/auth/api_login", { email: email, password: password, })
+            .then(function (response) {
+                var token = response.data.token;
+                if (token) {
+                    $auth.setToken(token);
+                    $uibModalInstance.close();
+                }
+            }).catch(function (response) {
+                if (response.data.message == "Email or password wrong") {
+                    alert("Email不存在或密码错误");
+                }
+                else {
+                    alert("出错了：" + JSON.stringify(response));
+                }
+            });
+	};
 })
 .controller('ModalRegisterCtrl', function ($scope, $http, $auth, $uibModalInstance) {
     $scope.cancel = function () {
         $uibModalInstance.dismiss('cancel');
     };
     $scope.registerUser = function () {
-        $uibModalInstance.close();
-        // alert(JSON.stringify({ name: $scope.username, pw: $scope.password }));
-        $http.get("/ajax/wiki/auth/api_register?username=AAA&password=BBB").then(function (response) {
-            alert(JSON.stringify(response));
-        });
+        $http.post("/ajax/wiki/auth/api_register", { email: $scope.email, password: $scope.password, username: $scope.username })
+            .then(function (response) {
+                var token = response.data.token;
+                if (token) {
+                    $auth.setToken(token);
+                    $uibModalInstance.close();
+                }
+            }).catch(function (response) {
+                if (response.data.message == "Email is already taken") {
+                    alert("Email已经存在了");
+                }
+                else {
+                    alert("出错了：" + JSON.stringify(response));
+                }
+            });
     };
 })
 .controller('LoginCtrl', function ($scope, $auth, $uibModal, Account, WikiPage) {
@@ -43,18 +82,14 @@
 	$scope.GetWikiPage = function () {
 	    return WikiPage;
 	};
-	$scope.getProfile = function () {
-	    Account.getProfile()
-			.then(function (response) {
-				$scope.user = response.data;
-			})
-			.catch(function (response) {
-				$scope.user = null;
-				if (response.data)
-				    $scope.actiontip(response.data.message || "some error!");
-				$scope.logout();
-			});
-	};
+	$scope.$watch(function () { return Account.getUser(); }, function (newValue, oldValue) {
+	    if (newValue != oldValue) {
+	        $scope.user = newValue;
+	        if (!newValue) {
+	            $scope.logout();
+	        }
+	    }
+	});
 	$scope.logout = function () {
 	    if (!$auth.isAuthenticated()) { return; }
 	    $auth.logout().then(function () {
@@ -88,7 +123,7 @@
 	        controller: "ModalLoginCtrl",
 	    }).result.then(function (provider) {
 	        $scope.actiontip('You have successfully signed in with ' + provider + '!');
-	        $scope.getProfile();
+	        Account.getProfile();
 	    }, function (text, error) {
 	        if (error && error.error) {
 	            // Popup error - invalid redirect_uri, pressed cancel button, etc.
@@ -101,7 +136,7 @@
 	};
 	$scope.register = function () {
 	    $uibModal.open({
-	        templateUrl: "/wp-content/pages/wiki/auth/register.html?v=1",
+	        templateUrl: "/wp-content/pages/wiki/auth/register.html",
 	        controller: "ModalRegisterCtrl",
 	    }).result.then(function (provider) {
 	        
@@ -114,5 +149,5 @@
 	    WikiPage.ShowIndexBar(bShow);
 	};
 	if ($scope.isAuthenticated())
-	    $scope.getProfile();
+	    Account.getProfile();
 });

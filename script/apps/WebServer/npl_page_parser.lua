@@ -25,6 +25,7 @@ end
 -----------------------------------------------
 ]]
 local npl_http = commonlib.gettable("WebServer.npl_http");
+local env_imp = commonlib.gettable("WebServer.env_imp");
 local npl_page_parser = commonlib.inherit(nil, commonlib.gettable("WebServer.npl_page_parser"));
 
 function npl_page_parser:ctor()
@@ -204,7 +205,7 @@ function npl_page_parser:run(code_env)
 					code_env.is_exit_call = nil;
 				else
 					-- forward exit msg to up level run function. 
-					code_env.exit(code_env.exit_msg);
+					env_imp.exit(code_env, code_env.exit_msg);
 				end
 			end
 		end		

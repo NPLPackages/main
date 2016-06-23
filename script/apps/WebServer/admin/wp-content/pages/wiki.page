@@ -24,8 +24,8 @@ wp_enqueue_script("authController", "/wp-content/pages/wiki/authController.js");
 wp_enqueue_script("wikiController", "/wp-content/pages/wiki/wikiController.js");
 wp_enqueue_style("wiki_style", "/wp-content/pages/wiki/wiki.css");
 ?>
-<div ng-app="MyApp" class="form-horizontal wiki">
-    <nav class="navbar navbar-inverse" ng-controller="LoginCtrl as Login">
+<div ng-app="MyApp" class="wiki">
+    <nav style="<?=IsSingleSite() and 'display:none'?>" class="navbar navbar-inverse" ng-controller="LoginCtrl as Login">
         <div class="container">
             <div class="navbar-header">
                 <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#top-navbar-collapse-1" aria-expanded="false">
@@ -34,68 +34,69 @@ wp_enqueue_style("wiki_style", "/wp-content/pages/wiki/wiki.css");
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand indexbar{{bShowIndexBar}}" tooltip-placement="bottom" uib-tooltip="查看分类与推荐" ng-click="showIndexBar()">Paracraft<span class="caret"></span></a>
+                <a class="dropdown-toggle navbar-brand indexbar{{bShowIndexBar}}" data-toggle="dropdown" tooltip-placement="bottom" uib-tooltip="查看分类与推荐">Paracraft<span class="caret"></span></a>
+                <div ng-non-bindable id="indexbarpopup" class="dropdown-menu menubox wiki-indexbar">
+                </div>
             </div>
             <div class="collapse navbar-collapse" id="top-navbar-collapse-1">
-                <ul class="nav navbar-nav">
+                <ul class="nav navbar-nav" ng-show="! GetWikiPage().isServerPage()">
                     <li>
-                        <a class="dropdown-toggle" data-toggle="dropdown" role="button">{{GetWikiPage().getSiteName()}}<span class="caret"></span></a>
-                        <div class="dropdown-menu menubox">
-                            <a href='{{"/"+GetWikiPage().getSiteName()}}'>访问主页</a>
-                        </div>
+                        <a ng-click="GetWikiPage().showSitePopup()" role="button">{{GetWikiPage().getSiteName()}}<span class="caret"></span></a>
+                        <asidepage></asidepage>
                     </li>
                     <li>
-                        <a class="dropdown-toggle" data-toggle="dropdown" role="button">{{GetWikiPage().getPageName()}}<span class="caret"></span></a>
-                        <div class="dropdown-menu menubox">
-                            编辑 | 源码 | 历史等 
-                        </div>
+                        <a ng-click="GetWikiPage().showPagePopup()" role="button">{{GetWikiPage().getPageName()}}<span class="caret"></span></a>
+                        <asidesite></asidesite>
                     </li>
                     <!--<li>
                         <input type="text" style="margin-top:10px;width:100px" id="username" placeholder="搜索" />
                     </li>-->
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
-                    <li ng-show="GetWikiPage().isPageExist() && isAuthenticated()">
-                        <div class="btn-group" style="margin-right:30px;">
+                    <li>
+                        <div style="float:left;padding-top:1px;margin-right:30px;" ng-show="GetWikiPage().isPageExist() && isAuthenticated()" class="btn-group">
                             <button tooltip-placement="bottom" uib-tooltip="点击订阅{{GetWikiPage().getSiteName()}}" class="btn-subscribe btn btn-primary"><i class="glyphicon glyphicon-star"></i>订阅</button>
                             <button class="btn-subscribe btn">0</button>
                         </div>
-                    </li>
-                    <li ng-if="!isAuthenticated()">
-                        <div>
+                        <div style="float:left" ng-if="!isAuthenticated()">
                             <button type="button" class="btn" ng-click="login()">登录</button>
                             <button type="button" class="btn btn-primary" ng-click="register()">注册</button>
                         </div>
-                    </li>
-                    <li ng-if="isAuthenticated()">
-                        <a href="#" tooltip-placement="bottom" uib-tooltip="你有未读消息" class="notification-indicator">
-                            <span class="mail-status unread"></span>
-                            <svg class="octicon octicon-bell" aria-hidden="true" style="fill:grey" height="16" version="1.1" viewBox="0 0 14 16" width="14"><path d="M14 12v1H0v-1l0.73-0.58c0.77-0.77 0.81-2.55 1.19-4.42 0.77-3.77 4.08-5 4.08-5 0-0.55 0.45-1 1-1s1 0.45 1 1c0 0 3.39 1.23 4.16 5 0.38 1.88 0.42 3.66 1.19 4.42l0.66 0.58z m-7 4c1.11 0 2-0.89 2-2H5c0 1.11 0.89 2 2 2z"></path></svg>
-                        </a>
-                    </li>
-                    <li ng-if="isAuthenticated()" class="dropdown">
-                        <a href="#" tooltip-placement="bottom" uib-tooltip="查看你的信息或更多" style="padding-top:10px;padding-bottom:5px;" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
-                            <img style="width:32px;height:32px;" ng-src="{{user.picture || 'http://placehold.it/100x100'}}"> <span class="caret"></span>
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li>
-                                <a href="#">登录为: {{user.displayName}}</a>
-                            </li>
-                            <li role="separator" class="divider"></li>
-                            <li>
-                                <a href="#">设置...</a>
-                            </li>
-                            <li role="separator" class="divider"></li>
-                            <li>
-                                <a ng-click="logout()">退出登录</a>
-                            </li>
-                        </ul>
+                        <div style="float:left;margin-top:10px;margin-right:10px;" ng-if="isAuthenticated()">
+                            <a style="padding-bottom:18px;" href="#" tooltip-placement="bottom" uib-tooltip="你有未读消息" class="notification-indicator">
+                                <i class="mailicon glyphicon glyphicon-bell"></i>
+                                <span class="mail-status unread"></span>
+                            </a>
+                        </div>
+                        <div style="float:left;" ng-if="isAuthenticated()" class="dropdown">
+                            <a href="#" style="color:#9d9d9d" tooltip-placement="bottom" uib-tooltip="查看你的信息或更多" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                                <div style="margin-top:9px;margin-bottom:7px;">
+                                    <img class="img-rounded" style="width:32px;height:32px;" ng-src="{{user.picture || 'http://placehold.it/100x100'}}"> <span class="caret"></span>
+                                </div>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a href="#">登录为: {{user.displayName}}</a>
+                                </li>
+                                <li role="separator" class="divider"></li>
+                                <li>
+                                    <a ng-click="newWebsite()">创建新网站...</a>
+                                </li>
+                                <li>
+                                    <a href="/wiki/settings">设置...</a>
+                                </li>
+                                <li role="separator" class="divider"></li>
+                                <li>
+                                    <a ng-click="logout()">退出登录</a>
+                                </li>
+                            </ul>
+                        </div>
                     </li>
                 </ul>
             </div>
         </div>
     </nav>
-    <div id="wikitop" class="container-fluid">
+    <div id="wikitop">
     </div>
     <div id="wikimain" class="container">
         <div class="row" ng-controller="WikiController">
@@ -103,7 +104,7 @@ wp_enqueue_style("wiki_style", "/wp-content/pages/wiki/wiki.css");
             </div>
             <div id="content" class="col-md-12 wiki-content">
                 <div class="row">
-                    <?npl RenderServerWikiContent(); ?>
+                    <? RenderServerWikiContent() ?>
                     <div class="col-md-12" ng-if="GetWikiPage().isPageLoading()">
                         正在加载页面...
                     </div>
@@ -112,20 +113,21 @@ wp_enqueue_style("wiki_style", "/wp-content/pages/wiki/wiki.css");
                     </div>
                     <div ng-non-bindable class="col-md-8 wiki-page" id="wikipage">
                     </div>
-                    <div ng-non-bindable class="col-md-4 wiki-sidebar" id="wikisidebar"></div>
+                    <div ng-non-bindable style="display:none" class="col-md-4 wiki-sidebar" id="wikisidebar"></div>
                 </div>
             </div>
         </div>
     </div>
-    <div class="footer">
+    <div style="<?=IsSingleSite() and 'display:none'?>" class="footer">
         <div class="container">
             <div class="row" style="min-height:60px;">
                 <div class="col-md-12 content ftxt">
-                    <div style="font-size:14px">
-                        <a href="_edit">编辑</a> | <a href="_view">查看源码</a>
+                    <div>
+                        <a href="/wiki/terms">声明</a> | <a href="/wiki/privacy">隐私</a> | <a href="/wiki/contact">联系我们</a> | <a href="/wiki/about">关于我们</a>
                     </div>
-                    Copyright &copy; Tatfook Inc. Powered by ParaEngine and NPL |
-                    <a href="http://www.paracraft.cn">Official Website</a>
+                    <div>
+                        Copyright &copy; Tatfook Inc. 本网站服务器使用<a style="font-weight:bold" href="http://www.paracraft.wiki/npl">NPL语言</a>编写
+                    </div>
                 </div>
             </div>
         </div>

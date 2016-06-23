@@ -9,12 +9,13 @@ Reference:  https://developer.github.com/v3
 * siteName, pageName, rootUrl should be filled on server side
 */
 angular.module('MyApp')
-.factory('WikiPage', function ($window) {
+.factory('WikiPage', function ($window, $uibModal) {
     var WikiPage = {
         siteName: $window.siteName,
         pageName: $window.pageName,
         rootUrl: $window.rootUrl,
         pageExist: "loading",
+        isSingleSite: $window.isSingleSite,
     };
     
     WikiPage.ShowIndexBar =  function (bShow) {
@@ -28,13 +29,16 @@ angular.module('MyApp')
             $("#content").addClass("col-md-12");
         }
     };
+    WikiPage.getSiteRoot = function () {
+        return WikiPage.isSingleSite ? "/" : ("/" + this.getSiteName() + "/");
+    };
     // preprocess to support wiki words like [[a|b]] and flash video [video](a.swf)
     WikiPage.preprocessMarkdown = function (data) {
         if (!data) {
             return
         }
         var newstr = data;
-        var siteName = this.getSiteName();
+        var siteRoot = this.getSiteRoot();
         // [[a|b]] -->[a](b), and replace with wiki
         function replacer_1(match, p1, p2, offset, string) {
             return "[" + p1 + "](" + p2 + ")";
@@ -44,7 +48,7 @@ angular.module('MyApp')
 
         // [[a]] -->[a](a)
         function replacer_12(match, p1, offset, string) {
-            var wiki = "/" + siteName + "/" + p1;
+            var wiki = siteRoot + p1;
             var s = "[" + p1 + "](" + wiki + ")";
             return s;
         }
@@ -61,7 +65,7 @@ angular.module('MyApp')
 
         // []() --> []() with wikiword in our domain
         function replacer_2(match, p1, p2, offset, string) {
-            var wiki = "/" + siteName + "/" + p2;
+            var wiki = siteRoot + p2;
             var s = "[" + p1 + "](" + wiki + ")";
             return s;
         }
@@ -109,25 +113,55 @@ angular.module('MyApp')
     WikiPage.setPageExist = function (bExist) {
         this.pageExist = bExist ? "downloaded" : "notfound";
     }
+    WikiPage.isServerPage = function () {
+        return $window.skipClientWiki == true;
+    }
+    WikiPage.showPagePopup = function () {
+        $uibModal.open({
+            templateUrl: "/wp-content/pages/wiki/partials/page_popup.html",
+            controller: "PagePopupCtrl",
+            size: "sm",
+            //appendTo: angular.element(document).find('asidepage'),
+            windowTemplateUrl: "",
+        }).result.then(function (provider) {
+        }, function (text, error) {
+        });
+    }
+    WikiPage.showSitePopup = function () {
+        $uibModal.open({
+            templateUrl: "/wp-content/pages/wiki/partials/site_popup.html",
+            controller: "SitePopupCtrl",
+            size: "sm",
+            //appendTo: angular.element(document).find('asidesite'),
+        }).result.then(function (provider) {
+        }, function (text, error) {
+        });
+    }
+    if ($window.skipClientWiki)
+        WikiPage.setPageExist(true);
+    
     return WikiPage;
 })
+.controller('SitePopupCtrl', function ($scope, $http, Account, WikiPage, $uibModalInstance) {
+    $scope.cancel = function () {
+        $uibModalInstance.dismiss('cancel');
+    };
+    $scope.GetWikiPage = function () {
+        return WikiPage;
+    };
+})
+.controller('PagePopupCtrl', function ($scope, $http, Account, WikiPage, $uibModalInstance) {
+    $scope.cancel = function () {
+        $uibModalInstance.dismiss('cancel');
+    };
+    $scope.GetWikiPage = function () {
+        return WikiPage;
+    };
+})
 .controller('WikiController', function ($scope, $http, WikiPage) {
-    var md = window.markdownit({
-        html: true, // Enable HTML tags in source
-        linkify: true, // Autoconvert URL-like text to links
-        typographer: true, // Enable some language-neutral replacement + quotes beautification
-        breaks: false,        // Convert '\n' in paragraphs into <br>
-        highlight: function (str, lang) {
-            if (lang && window.hljs.getLanguage(lang)) {
-                try {
-                    return hljs.highlight(lang, str, true).value;
-                } catch (__) { }
-            }
-            return ''; // use external default escaping
-        }
-    });
     var idPage = "#wikipage";
     var idSidebar = "#wikisidebar";
+    var md;
     $scope.GetWikiPage = function () {
         return WikiPage;
     };
@@ -151,6 +185,25 @@ angular.module('MyApp')
     $scope.makeLayout = function () {
         $('.wikitop').removeClass("wikitop").appendTo('#wikitop');
     };
+    $scope.getMarkDownRenderer = function () {
+        if (md == null) {
+            md = window.markdownit({
+                html: true, // Enable HTML tags in source
+                linkify: true, // Autoconvert URL-like text to links
+                typographer: true, // Enable some language-neutral replacement + quotes beautification
+                breaks: false,        // Convert '\n' in paragraphs into <br>
+                highlight: function (str, lang) {
+                    if (lang && window.hljs.getLanguage(lang)) {
+                        try {
+                            return hljs.highlight(lang, str, true).value;
+                        } catch (__) { }
+                    }
+                    return ''; // use external default escaping
+                }
+            });
+        }
+        return md;
+    }
     $scope.load = function (url, container_name) {
         $http({
             method: 'GET',
@@ -165,7 +218,7 @@ angular.module('MyApp')
         }).then(function successCallback(response) {
             if (response.status == 200) {
                 var s = WikiPage.preprocessMarkdown(response.data);
-                s = md.render(s);
+                s = $scope.getMarkDownRenderer().render(s);
                 $(container_name).html(s);
             } else {
                 $(container_name).html("<p>error</p>");
@@ -174,6 +227,7 @@ angular.module('MyApp')
                 $scope.ShowSideBar(true);
             if (url == WikiPage.getPageUrl()) {
                 WikiPage.setPageExist(true);
+                $scope.makeLayout();
             }
         }, function errorCallback(response) {
             if (response.status == 404) {
@@ -190,8 +244,11 @@ angular.module('MyApp')
         });
     }
     $scope.makeLayout();
-    // load all pages
-    $scope.load(WikiPage.getPageUrl(), idPage);
-    $scope.load(WikiPage.getSidebarUrl(), idSidebar);
-    $scope.load("https://raw.githubusercontent.com/wiki/NPLPackages/wiki/index.md", "#indexbar");
+    if (!window.skipClientWiki) {
+        // load all pages
+        $scope.load(WikiPage.getPageUrl(), idPage);
+        $scope.load(WikiPage.getSidebarUrl(), idSidebar);
+    }
+    // $scope.load("https://raw.githubusercontent.com/wiki/NPLPackages/wiki/index.md", "#indexbar");
+    $scope.load("https://raw.githubusercontent.com/wiki/NPLPackages/wiki/index.md", "#indexbarpopup");
 })

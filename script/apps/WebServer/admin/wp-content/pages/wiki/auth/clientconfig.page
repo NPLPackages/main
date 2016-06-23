@@ -12,17 +12,17 @@ angular.module('MyApp')
 	$authProvider.github({
         url: "/ajax/wiki/auth/github",
         clientId: '<?=site_config().wiki.clientid.GITHUB_CLIENTID?>',
-        redirectUri: window.location.origin + '/wiki/home',
+        redirectUri: window.location.origin + '/wiki/login',
     });
     $authProvider.google({
         url: "/ajax/wiki/auth/google",
         clientId: '<?=site_config().wiki.clientid.GOOGLE_CLIENTID?>',
-        redirectUri: window.location.origin + '/wiki/home',
+        redirectUri: window.location.origin + '/wiki/login',
     });
 	$authProvider.facebook({
         url: "/ajax/wiki/auth/facebook",
         clientId: '<?=site_config().wiki.clientid.FACEBOOK_CLIENTID?>',
-        redirectUri: window.location.origin + '/wiki/home',
+        redirectUri: window.location.origin + '/wiki/login',
     });
 });
 </script>
