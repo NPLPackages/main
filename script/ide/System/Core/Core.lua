@@ -21,3 +21,4 @@ NPL.load("(gl)script/ide/System/Core/Namespace.lua");
 NPL.load("(gl)script/ide/System/Core/SceneContext.lua");
 NPL.load("(gl)script/ide/System/Core/TableAttribute.lua");
 NPL.load("(gl)script/ide/System/os/os.lua");
+NPL.load("(gl)script/ide/System/Concurrent/Concurrent.lua");
