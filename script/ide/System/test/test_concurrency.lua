@@ -31,6 +31,40 @@ function test_concurrency:testRuntimeError()
 	NPL.activate("tests/testRuntimeError", {name="1000"});
 end
 
+-- dummy() function force JIT compiled code to count one instruction.
+function test_concurrency:testPreemptiveCount()
+	NPL.this(function() 
+		local msg = msg;
+		while(true) do
+			dummy();
+		end
+	end, {PreemptiveCount = 100, MsgQueueSize=10, filename="tests/testPreemptiveCount"});
+	NPL.activate("tests/testPreemptiveCount", {name="1"});
+end
+
+function test_concurrency:testClearMessage()
+	NPL.this(function() 
+		local msg = msg;
+		echo(msg); 
+		local i=0;
+		while(true) do
+			dummy();
+			i=i+1;
+			if(i==1000) then
+				echo("cleared")
+
+				commonlib.TimerManager.SetTimeout(function()
+					NPL.activate("tests/testClearMessage", {name="2"});
+				end, 1000);
+
+				NPL.this(nil, {clear=true, filename="tests/testClearMessage"});
+			end
+		end
+	end, {PreemptiveCount = 100, MsgQueueSize=10, filename="tests/testClearMessage"});
+	NPL.activate("tests/testClearMessage", {name="1"});
+	NPL.activate("tests/testClearMessage", {name="should not be called"});
+end
+
 function test_concurrency:testLongTask()
 	NPL.this(function() 
 		local msg = msg; -- important to keep a copy on stack since we go preemptive.

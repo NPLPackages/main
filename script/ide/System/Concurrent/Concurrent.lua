@@ -16,6 +16,7 @@ in the next time slice. NPL time slice is by default about 16ms (i.e. 60FPS).
 
 To make file activate function preemptive, simply pass a second parameter `{PreemptiveCount, MsgQueueSize, [filename|name], clear}` to `NPL.this` like below:
 - PreemptiveCount: is the number of VM instructions to count before it yields. If nil or 0, it is non-preemptive.
+JIT-complied code by default does not count as instructions, so call `dummy()` to force one instruction count, but do not call it in tight loop.
 - MsgQueueSize: Max message queue size of this file, if not specified, it is same as the NPL thread's message queue size. 
 - filename|name: virtual filename, if not specified, the current file being loaded is used. 
 - clear: clear all memory used by the file, including its message queue. Normally one never needs to clear. 
@@ -29,6 +30,7 @@ NPL.this(function()
 	while(true) do
 		i = i + 1;
 		echo(tostring(msg.name)..i);
+		dummy(); -- this always count as one instruction.
 		if(i==400) then
 			error("test runtime error");
 		end
