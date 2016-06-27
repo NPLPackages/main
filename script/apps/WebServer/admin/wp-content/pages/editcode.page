@@ -294,6 +294,7 @@ wp_enqueue_script("jqueryui", "/wp-includes/js/jquery/jquery-ui.min.js");
 		$scope.getRelativePath = function (filename) {
 			filename = filename.replace(/\\/g, "/");
 			filename = filename.replace(workspaceDir, "");
+			filename = filename.replace(/.*npl_packages\/[^\/]+\//g, "");
 			return filename;
 		}
 		$scope.gotoline = function(){
