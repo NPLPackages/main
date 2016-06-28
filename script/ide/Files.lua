@@ -54,6 +54,17 @@ function Files.IsAbsolutePath(filename)
 	end
 end
 
+local dev_dir;
+-- @return "" if no dev directory is specified. 
+function Files.GetDevDirectory()
+	if(not dev_dir) then
+		dev_dir = ParaIO.GetCurDirectory(20) or "";
+	end
+	return dev_dir;
+end
+
+
+
 -- only return the sub folders of the current folder
 -- @param output: table of output. if nil, an empty one is created and returned. each item is {filename,filesize,writedate, createdate, fileattr, accessdate}
 -- @param rootfolder: the folder which will be searched. like "model", "worlds/MyWorlds/"

@@ -17,6 +17,7 @@ manager:clear();
 ]]
 NPL.load("(gl)script/apps/WebServer/npl_page_parser.lua");
 NPL.load("(gl)script/ide/FileSystemWatcher.lua");
+NPL.load("(gl)script/ide/Files.lua");
 local npl_page_parser = commonlib.gettable("WebServer.npl_page_parser");
 local npl_http = commonlib.gettable("WebServer.npl_http");
 
@@ -83,6 +84,18 @@ local monitored_files = {
 	["npl"] = true,
 }
 
+-- @return rootdir or ""
+function npl_page_manager:GetRootDirectory(dir)
+	if(not commonlib.Files.IsAbsolutePath(dir)) then
+		local dev = commonlib.Files.GetDevDirectory();
+		if(dev == "") then
+			dev = ParaIO.GetWritablePath();
+		end
+		return dev;
+	end
+	return "";
+end
+
 -- monitor file change and call refresh() automatically 
 function npl_page_manager:monitor_directory(dir)
 	if(dir) then
@@ -97,13 +110,15 @@ function npl_page_manager:monitor_directory(dir)
 		if(not string.find(dir, "/$")) then
 			dir = dir.."/";
 		end
-		watcher:AddDirectory(dir);
+		local root = self:GetRootDirectory(dir);
+		local rootSize = #root;
+		watcher:AddDirectory(root..dir);
 		-- also monitor other directories, such as in current world directory. 
 		watcher:SetMonitorAll(true);
 		watcher.OnFileChanged = function (msg)
 			if(msg.type == "modified" or msg.type == "added" or msg.type=="renamed_new_name") then
 				LOG.std(nil, "info", "npl_page_manager", "File %s: %s", msg.fullname, msg.type);
-				self:refresh(msg.fullname);
+				self:refresh(msg.fullname:sub(rootSize+1));
 			end
 		end
 	end

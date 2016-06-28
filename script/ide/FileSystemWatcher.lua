@@ -143,6 +143,10 @@ function FileSystemWatcher:DispatchEvent()
 	end
 end
 
+function FileSystemWatcher:NormalizeDirectory(dir)
+	return dir;
+end
+
 -- add a dir to monitor
 -- @param dir: such as "script/", "model/", "character"
 function FileSystemWatcher:AddDirectory(dir)
@@ -154,7 +158,7 @@ function FileSystemWatcher:AddDirectory(dir)
 		if(not watcher_dirs[self.name][dir]) then
 			watcher_dirs[self.name][dir] = 1;
 			local watcher = ParaIO.GetFileSystemWatcher(self.name);
-			watcher:AddDirectory(dir);
+			watcher:AddDirectory(self:NormalizeDirectory(dir));
 		else
 			watcher_dirs[self.name][dir] = watcher_dirs[self.name][dir]+ 1;	
 		end	
@@ -178,7 +182,7 @@ function FileSystemWatcher:RemoveDirectory(dir)
 		if(watcher_dirs[self.name][dir]>=1) then
 			if(watcher_dirs[self.name][dir] == 1) then
 				local watcher = ParaIO.GetFileSystemWatcher(self.name);
-				watcher:RemoveDirectory(dir);
+				watcher:RemoveDirectory(self:NormalizeDirectory(dir));
 			else
 				watcher_dirs[self.name][dir] = watcher_dirs[self.name][dir] -1;
 			end	

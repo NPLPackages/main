@@ -1,24 +1,7 @@
 ﻿<?npl
 
 include_once("../db.page");
-
-db.User:find({}, function(err, users)
-	resume(err, users);
-	--resume(true, "failed 11111");
-end)
-local err, users = yield(true);
-
-echo(commonlib.serialize_compact(users));
-
-db.User:find({}, function(err, users)
-	resume(err, users);
-	--resume(true, "failed 11111");
-end)
-local err, users = yield(true);
-
 ?>
 <p>
-<? 
-echo(commonlib.serialize_compact(users));
-?>
+新建12
 </p>
