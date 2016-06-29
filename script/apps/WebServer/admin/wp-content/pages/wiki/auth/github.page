@@ -4,77 +4,75 @@ Title: oauth handler for `satellizer oauth framework`
 Author: LiXizhi
 Date: 2016/5/10
 ]]
-if(is_ajax()) then
-	include_once("api.page");
-
-	local config = include("config.page");
+include_once("api.page");
+local config = include("config.page");
 	
-	local accessTokenUrl = 'https://github.com/login/oauth/access_token';
-	local userApiUrl = 'https://api.github.com/user';
-	local params = {
-		code = request:get("code"),
-		client_id = request:get("clientId"),
-		client_secret = config.GITHUB_SECRET,
-		redirect_uri = request:get("redirectUri"),
-	};
+local accessTokenUrl = 'https://github.com/login/oauth/access_token';
+local userApiUrl = 'https://api.github.com/user';
+local params = {
+	code = request:get("code"),
+	client_id = request:get("clientId"),
+	client_secret = config.GITHUB_SECRET,
+	redirect_uri = request:get("redirectUri"),
+};
 
-	response:Begin();
+response:Begin();
 
-	-- Step 1. Exchange authorization code for access token.
-	util.GetUrl({url = accessTokenUrl, qs = params }, function(err, msg, data)
-		local accessToken = util.parse_str(data);
+-- Step 1. Exchange authorization code for access token.
+util.GetUrl({url = accessTokenUrl, qs = params }, function(err, msg, data)
+	local accessToken = util.parse_str(data);
 		
-		if(accessToken and accessToken.error) then
-			response:send(accessToken);
-			return;
-		end
+	if(accessToken and accessToken.error) then
+		response:send(accessToken);
+		return;
+	end
 
-		local headers = { ['User-Agent'] = 'Satellizer' };
+	local headers = { ['User-Agent'] = 'Satellizer' };
 
-		-- Step 2. Retrieve profile information about the current user.
-		util.GetUrl({ url = userApiUrl, qs = accessToken, headers = headers, json = true }, function(err, msg, profile)
+	-- Step 2. Retrieve profile information about the current user.
+	util.GetUrl({ url = userApiUrl, qs = accessToken, headers = headers, json = true }, function(err, msg, profile)
 
-			--log(profile);
+		--log(profile);
 
-			if(request:header('Authorization')) then
-				-- Step 3a. Link user accounts.
-				db.User:findOne({ github = profile.id }, function(err, existingUser)
-					if (existingUser) then
-						return response:status(409):send({ message = 'There is already a GitHub account that belongs to you' });
+		if(request:header('Authorization')) then
+			-- Step 3a. Link user accounts.
+			db.User:findOne({ github = profile.id }, function(err, existingUser)
+				if (existingUser) then
+					return response:status(409):send({ message = 'There is already a GitHub account that belongs to you' });
+				end
+				local token = request:header('Authorization'):match("%s+(%S+)");
+				local payload, err = decodeJWT(token);
+				db.User:findById(payload.id, function(err, user)
+					if (not user) then
+						return response:status(400):send({ message= 'User not found' });
 					end
-					local token = request:header('Authorization'):match("%s+(%S+)");
-					local payload, err = decodeJWT(token);
-					db.User:findById(payload.id, function(err, user)
-						if (not user) then
-							return response:status(400):send({ message= 'User not found' });
-						end
-						user.github = profile.id;
-						user.picture = user.picture or profile.avatar_url;
-						user.displayName = user.displayName or profile.name;
-						db.User.updateOne(user, function(err, user)
-							local token = createJWT(user);
-							response:send({ token = token });
-						end)
-					end);
-				end);
-			else
-				-- Step 3b. Create a new user account or return an existing one.
-				db.User:findOne({ github = profile.id }, function(err, existingUser)
-					if (existingUser) then
-						local token, err = createJWT(existingUser);
-						response:send({ token = token });
-						return;
-					end
-					db.User:insertOne({
-						github = profile.id,
-						picture = profile.avatar_url,
-						displayName = profile.name,
-					}, function(err, user) 
+					user.github = profile.id;
+					user.picture = user.picture or profile.avatar_url;
+					user.displayName = user.displayName or profile.name;
+					db.User.updateOne(user, function(err, user)
 						local token = createJWT(user);
 						response:send({ token = token });
-					end);
+					end)
 				end);
-			end
-		end);
+			end);
+		else
+			-- Step 3b. Create a new user account or return an existing one.
+			db.User:findOne({ github = profile.id }, function(err, existingUser)
+				if (existingUser) then
+					local token, err = createJWT(existingUser);
+					response:send({ token = token });
+					return;
+				end
+				db.User:insertOne({
+					github = profile.id,
+					picture = profile.avatar_url,
+					displayName = profile.name,
+				}, function(err, user) 
+					local token = createJWT(user);
+					response:send({ token = token });
+				end);
+			end);
+		end
 	end);
-end
+end);
+

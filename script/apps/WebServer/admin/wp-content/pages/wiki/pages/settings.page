@@ -1,5 +1,5 @@
 ﻿<?npl
-wp_enqueue_script("settingsController", "/wp-content/pages/wiki/settingsController.js");
+wp_enqueue_script("settingsController", "/wp-content/pages/wiki/controllers/settingsController.js");
 ?>
 <div class="col-sm-12">
     <ul class="setting nav nav-tabs">

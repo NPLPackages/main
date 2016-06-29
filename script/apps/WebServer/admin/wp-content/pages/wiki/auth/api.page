@@ -2,7 +2,7 @@
 NPL.load("(gl)script/ide/System/Encoding/jwt.lua");
 local jwt = commonlib.gettable("System.Encoding.jwt");
 
-include_once("../db.page");
+include_once(WIKI_ROOT.."config/db.page");
 
 -- from user.id to site token
 function createJWT(user)

@@ -157,6 +157,7 @@ end
 
 function env_imp:getfilepath(filename)
 	local firstByte = filename:byte(1);
+	
 	if(firstByte == 46) then 
 		local secondByte = filename:byte(2);
 		if(secondByte == 47) then
@@ -166,17 +167,17 @@ function env_imp:getfilepath(filename)
 			if(filename:byte(3) == 47) then
 				local parentDir = env_imp.dirname(self, self.__FILE__);
 				parentDir = parentDir:gsub("([^/]+)/$", "");
-				filename = filename:sub(3, -1);
+				filename = filename:sub(4, -1);
 				while (filename:match("^%.%./")) do
 					parentDir = parentDir:gsub("([^/]+)/$", "");
-					filename = filename:sub(3, -1);
+					filename = filename:sub(4, -1);
 				end
 				filename = parentDir..filename;
 			end
 		end
 	elseif(firstByte == 47) then
 		-- begin with '/', relative to web root directory
-		filename = WebServer:webdir()..filename:sub(2, -1);
+		filename = WebServer:webdir()..filename;
 	elseif(not string.find(filename, "/")) then
 		filename = env_imp.dirname(self, self.__FILE__)..filename;
 	else
