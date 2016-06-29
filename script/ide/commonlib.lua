@@ -219,8 +219,8 @@ function commonlib.gettable(f, rootEnv)
 end
 
 -- create/get a table and init it with init_params
-function commonlib.createtable(f, init_params)
-	local tmp = commonlib.gettable(f);
+function commonlib.createtable(f, init_params, rootEnv)
+	local tmp = commonlib.gettable(f, rootEnv);
 	if(tmp and init_params) then
 		commonlib.partialcopy(tmp, init_params);
 	end

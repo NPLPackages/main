@@ -1,7 +1,16 @@
 ﻿<?npl
 
-include_once("../db.page");
+include_once("../models/userprojects.page");
+
+projects = models.userprojects:get() or {};
 ?>
 <p>
-新建12
+<? for _, project in ipairs(projects) do?>
+<div>
+<? echo(project.name) ?>
+</div>
+<? end?>
+<div>
+	<button class="btn btn-primary">新建网站</button>
+</div>
 </p>

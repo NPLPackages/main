@@ -18,9 +18,12 @@ function decodeJWT(token)
 	return jwt.decode(token, site_config().wiki.secrets.TOKEN_SECRET, true);
 end
 
--- call this function to ensure we are authenticated.
--- request.userid contains the userid
+-- call this function to ensure we are authenticated in json request
+-- @return userid, the request.userid also contains the userid
 function ensureAuthenticated()
+	if(request.userid) then
+		return request.userid;
+	end
 	if (not request:header('Authorization')) then
 		return response:status(401):send({ message = 'Please make sure your request has an Authorization header' });
 	end
@@ -38,4 +41,5 @@ function ensureAuthenticated()
 		exit();
 	end
 	request.userid = payload.id;
+	return request.userid;
 end

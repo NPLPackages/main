@@ -140,6 +140,7 @@ end
 function response:send(text, bUseEmptyArray)
 	if(type(text) == "table") then
 		self:set_header('Content-Type', 'application/json');
+		self:SetContent(nil); -- discard any previous text
 		text = commonlib.Json.Encode(text);
 	end
 	self:sendsome(text);

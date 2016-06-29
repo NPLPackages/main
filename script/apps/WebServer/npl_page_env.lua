@@ -14,6 +14,9 @@ Following objects and functions can be used inside page script:
 following are exposed via meta class:
 	include(filename, bReload):  inplace include another script
 	include_once(filename):  include only once, mostly for defining functions
+	gettable(tabNames): similar to commonlib.gettable() but in page scope.
+	createtable(tabNames, init_params): similar to commonlib.createtable() but in page scope.
+	inherit(baseClass, new_class): -- same as commonlib.inherit()
 	print(...):  output html with formated string.   
 	nplinfo():   output npl information.
 	exit(text), die():   end the request
@@ -33,6 +36,7 @@ following are exposed via meta class:
 	util.parse_str(query_string): 
 	err, msg = yield(bExitOnError)  pause execution until resume() is called.
 	resume(err, msg)  in async callback, call this function to resume execution from last yield() position.
+	
 
 I may consider reimplement some handy functions from php reference below. 
 However, the exposed request and response object already contains everything you need. 
@@ -438,4 +442,31 @@ end
 function npl_page_env.resume(err, msg)
 	local self = getfenv(2);
 	return env_imp.resume(self, err, msg);
+end
+
+function env_imp:gettable(tabNames)
+	return commonlib.gettable(tabNames, self);
+end
+
+-- similar to commonlib.gettable(tabNames) but in page scope.
+-- @param tabNames: table names like "models.users"
+function npl_page_env.gettable(tabNames)
+	local self = getfenv(2);
+	return env_imp.gettable(self, tabNames);
+end
+
+function env_imp:createtable(tabNames, init_params)
+	return commonlib.createtable(tabNames, self);
+end
+
+-- similar to commonlib.createtable(tabNames) but in page scope.
+-- @param tabNames: table names like "models.users"
+function npl_page_env.createtable(tabNames, init_params)
+	local self = getfenv(2);
+	return env_imp.createtable(self, tabNames, init_params);
+end
+
+-- same as commonlib.inherit()
+function npl_page_env.inherit(baseClass, new_class, ctor)
+	return commonlib.inherit(baseClass, new_class, ctor);
 end
