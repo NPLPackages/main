@@ -1,0 +1,6 @@
+<?npl
+
+local url = request:url();
+local pagename = url:match("^/*([^%?]+)");
+
+include(pagename..".page");

@@ -1,0 +1,12 @@
+<?npl
+--[[
+Title: review requests submitted by the user
+Author: LiXizhi
+Date: 2016/6/28
+]]
+include_once("base.page");
+
+local reviewrequest = inherit(models.base, gettable("models.reviewrequest"));
+
+reviewrequest.db_name = "reviewrequest";
+

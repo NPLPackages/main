@@ -1,0 +1,43 @@
+<?npl
+--[[
+Title: routing ajax/html requests
+Author: LiXizhi
+Date: 2016/6/29
+Reference: http://guides.rubyonrails.org/routing.html
+]]
+local path = pagename() or "";
+
+WIKI_ROOT = dirname(__FILE__).."/";
+
+local ajax_path = path:match("^/?api/wiki/(.+)");
+if(ajax_path) then	
+	-- Allow for cross-domain requests (from the frontend). 
+	send_origin_headers();
+	addheader( 'Content-Type', 'text/html'); 
+	addheader( 'X-Robots-Tag', 'noindex'); 
+	send_nosniff_header();
+	nocache_headers();	
+
+	-- only allow ajax in wiki folder
+	include( "./"..ajax_path..".page" );
+	return;
+end
+?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-CN">
+<head>
+ <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"  />
+<title><?npl wp_title(); ?></title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">      
+<?npl
+wp_enqueue_script("jquery", "/wp-includes/js/jquery/jquery.min.js", nil, "1.11.1"); 
+wp_enqueue_style("bootstrap", "/wp-includes/js/bootstrap/css/bootstrap.min.css");
+wp_enqueue_style("sensitive_style", "/wp-content/themes/sensitive/css/style.css"); 
+wp_enqueue_script("bootstrap", "/wp-includes/js/bootstrap/js/bootstrap.min.js");
+?>
+</head>
+<body>
+<? include(WIKI_ROOT.."wiki.page") ?>
+</body>
+</html>

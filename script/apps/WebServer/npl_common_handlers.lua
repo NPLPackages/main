@@ -230,14 +230,14 @@ end
 -----------------------------------------------------------------------------
 
 -- it will automatically add .lua extension. 
--- @param cmd_url: like "/helloworld.lua"
+-- @param relpath: like "/helloworld.lua"
 -- @return nil if not found. 
-function common_handlers.GetValidNPLFileName(docroot, cmd_url)
+function common_handlers.GetValidNPLFileName(docroot, relpath)
 	local filename;
-	if(cmd_url:match("%.lua")) then
-		filename = docroot..cmd_url;
+	if(relpath:match("%.lua") or relpath:match("%.npl")) then
+		filename = docroot..relpath;
 	else
-		filename = docroot..cmd_url..".lua";
+		filename = docroot..relpath..".lua";
 	end
 	filename = filename:gsub("/[/]+", "/");
 	if(ParaIO.DoesFileExist(filename, true)) then
@@ -246,10 +246,10 @@ function common_handlers.GetValidNPLFileName(docroot, cmd_url)
 end
 
 -- it will automatically add .lua extension. 
--- @param cmd_url: like "/helloworld.lua"
+-- @param relpath: like "/helloworld.lua"
 -- @return nil if not found. 
-function common_handlers.GetValidFileName(docroot, cmd_url)
-	local filename = docroot..cmd_url;
+function common_handlers.GetValidFileName(docroot, relpath)
+	local filename = docroot..relpath;
 	filename = filename:gsub("/[/]+", "/");
 	if(ParaIO.DoesFileExist(filename, true)) then
 		return filename;
@@ -259,7 +259,7 @@ function common_handlers.GetValidFileName(docroot, cmd_url)
 end
 
 local function wsapihandler(req, res, params, docroot, extra_vars)
-	local filename = common_handlers.GetValidNPLFileName(docroot, req.cmd_url);
+	local filename = common_handlers.GetValidNPLFileName(docroot, req.relpath);
 	if(filename) then
 		-- TODO: support multiple threads, and routing to remote computer. 
 		req:send(filename);

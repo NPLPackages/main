@@ -29,7 +29,7 @@ npl bootstrapper="script/apps/WebServer/WebServer.lua"  port="8099" root="paracr
 -----------------------------------------------
 NPL.load("(gl)script/apps/WebServer/WebServer.lua");
 WebServer:Start("script/apps/WebServer/admin", "0.0.0.0", 8099);
-WebServer:Start("script/apps/WebServer/test");
+WebServer:Start("script/apps/WebServer/test", "0.0.0.0", 8099);
 WebServer:StartDeprecatedHttpd("script/apps/WebServer/test/webserver.config.xml");
 
 -- alternatively to start in another thread. NPL state(gl or anything else) must be created beforehand

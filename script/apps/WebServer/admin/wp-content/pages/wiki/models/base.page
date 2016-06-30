@@ -1,0 +1,31 @@
+<?npl
+--[[
+Title: base class of all models
+Author: LiXizhi
+Date: 2016/6/28
+Desc: model converts from database to objects for rendering. 
+]]
+include_once("../auth/api.page");
+
+local base = inherit(nil, gettable("models.base"));
+base.db_name = "unnamed";
+
+function base:db()
+	return db[self.name];
+end
+
+function base:get(id)
+	id = id or ensureAuthenticated();
+	self:db():findById(id, resume);
+	local err, data = yield(true); 
+	return data;
+end
+
+function base:delete()
+end
+
+function base:create()
+end
+
+function base:update()
+end

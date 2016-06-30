@@ -38,7 +38,7 @@ function MySql:init(db_user, db_password, db_name, db_host, db_port)
 	-- connect to data source
 	-- env:connect(databasename[,username[,password[,hostname[,port]]]])
 	con = assert(env:connect(db_name, db_user, db_password, db_host or "localhost", db_port or 3306))
-	self.env = evn;
+	self.env = env;
 	self.con = con;
 
 	return self;

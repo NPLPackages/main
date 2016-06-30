@@ -1,0 +1,134 @@
+﻿<?npl
+--[[
+Title: wiki page
+Author: LiXizhi
+Date: 2016/5/10
+]]
+include_once(WIKI_ROOT.."helpers/website.page");
+RenderServerWikiScript();
+
+-- shared js libs
+wp_enqueue_script("angular", "/wp-includes/js/angular/angular.min.js");
+wp_enqueue_script("angular-route", "/wp-includes/js/angular/angular-route.min.js");
+wp_enqueue_script("angular-ui", "/wp-includes/js/angular/ui-bootstrap-tpls-1.3.3.min.js");
+wp_enqueue_script("satellizer", "/wp-includes/js/oauth/satellizer.min.js");
+wp_enqueue_script("markdown-it", "/wp-includes/js/markdown-it/markdown-it.min.js");
+wp_enqueue_style("highlight", "/wp-includes/js/highlight/default.css");
+wp_enqueue_script("highlight", "/wp-includes/js/highlight/highlight.pack.js");
+
+-- following is wiki angular app code, app.js must be included first followed by controllers.
+wp_enqueue_script("MyApp", "/wp-content/pages/wiki/app.js");
+include(WIKI_ROOT.."auth/clientconfig.page");
+wp_enqueue_script("authController", "/wp-content/pages/wiki/controllers/authController.js");
+wp_enqueue_script("wikiController", "/wp-content/pages/wiki/controllers/wikiController.js");
+wp_enqueue_style("wiki_style", "/wp-content/pages/wiki/assets/wiki.css");
+?>
+<div ng-app="MyApp" class="wiki">
+    <nav style="<?=IsSingleSite() and 'display:none'?>" class="navbar navbar-inverse" ng-controller="LoginCtrl as Login">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#top-navbar-collapse-1" aria-expanded="false">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="dropdown-toggle navbar-brand indexbar{{bShowIndexBar}}" data-toggle="dropdown" tooltip-placement="bottom" uib-tooltip="查看分类与推荐">Paracraft<span class="caret"></span></a>
+                <div ng-non-bindable id="indexbarpopup" class="dropdown-menu menubox wiki-indexbar">
+                </div>
+            </div>
+            <div class="collapse navbar-collapse" id="top-navbar-collapse-1">
+                <ul class="nav navbar-nav" ng-show="! GetWikiPage().isServerPage()">
+                    <li>
+                        <a ng-click="GetWikiPage().showSitePopup()" role="button">{{GetWikiPage().getSiteName()}}<span class="caret"></span></a>
+                        <asidepage></asidepage>
+                    </li>
+                    <li>
+                        <a ng-click="GetWikiPage().showPagePopup()" role="button">{{GetWikiPage().getPageName()}}<span class="caret"></span></a>
+                        <asidesite></asidesite>
+                    </li>
+                    <!--<li>
+                        <input type="text" style="margin-top:10px;width:100px" id="username" placeholder="搜索" />
+                    </li>-->
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <div style="float:left;padding-top:1px;margin-right:30px;" ng-show="GetWikiPage().isPageExist() && isAuthenticated()" class="btn-group">
+                            <button tooltip-placement="bottom" uib-tooltip="点击订阅{{GetWikiPage().getSiteName()}}" class="btn-subscribe btn btn-primary"><i class="glyphicon glyphicon-star"></i>订阅</button>
+                            <button class="btn-subscribe btn">0</button>
+                        </div>
+                        <div style="float:left" ng-if="!isAuthenticated()">
+                            <button type="button" class="btn" ng-click="login()">登录</button>
+                            <button type="button" class="btn btn-primary" ng-click="register()">注册</button>
+                        </div>
+                        <div style="float:left;margin-top:10px;margin-right:10px;" ng-if="isAuthenticated()">
+                            <a style="padding-bottom:18px;" href="#" tooltip-placement="bottom" uib-tooltip="你有未读消息" class="notification-indicator">
+                                <i class="mailicon glyphicon glyphicon-bell"></i>
+                                <span class="mail-status unread"></span>
+                            </a>
+                        </div>
+                        <div style="float:left;" ng-if="isAuthenticated()" class="dropdown">
+                            <a href="#" style="color:#9d9d9d" tooltip-placement="bottom" uib-tooltip="查看你的信息或更多" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                                <div style="margin-top:9px;margin-bottom:7px;">
+                                    <img class="img-rounded" style="width:32px;height:32px;" ng-src="{{user.picture || 'http://placehold.it/100x100'}}"> <span class="caret"></span>
+                                </div>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a href="#">登录为: {{user.displayName}}</a>
+                                </li>
+                                <li role="separator" class="divider"></li>
+                                <li>
+                                    <a ng-click="newWebsite()">创建新网站...</a>
+                                </li>
+                                <li>
+                                    <a href="/wiki/settings">设置...</a>
+                                </li>
+                                <li role="separator" class="divider"></li>
+                                <li>
+                                    <a ng-click="logout()">退出登录</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div id="wikitop">
+    </div>
+    <div id="wikimain" class="container">
+        <div class="row" ng-controller="WikiController">
+            <div ng-non-bindable id="indexbar" style="display:none" class="col-md-3 wiki-indexbar">
+            </div>
+            <div id="content" class="col-md-12 wiki-content">
+                <div class="row">
+                    <? RenderServerWikiContent() ?>
+                    <div class="col-md-12" ng-if="GetWikiPage().isPageLoading()">
+                        正在加载页面...
+                    </div>
+                    <div class="col-md-12" ng-if="GetWikiPage().isPageNotFound() && GetWikiPage().getSiteName() != 'wiki'">
+                        页面不存在
+                    </div>
+                    <div ng-non-bindable class="col-md-8 wiki-page" id="wikipage">
+                    </div>
+                    <div ng-non-bindable style="display:none" class="col-md-4 wiki-sidebar" id="wikisidebar"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div style="<?=IsSingleSite() and 'display:none'?>" class="footer">
+        <div class="container">
+            <div class="row" style="min-height:60px;">
+                <div class="col-md-12 content ftxt">
+                    <div>
+                        <a href="/wiki/terms">声明</a> | <a href="/wiki/privacy">隐私</a> | <a href="/wiki/contact">联系我们</a> | <a href="/wiki/about">关于我们</a>
+                    </div>
+                    <div>
+                        Copyright &copy; Tatfook Inc. 本网站服务器使用<a style="font-weight:bold" href="http://www.paracraft.wiki/npl">NPL语言</a>编写
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

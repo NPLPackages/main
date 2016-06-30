@@ -1,0 +1,11 @@
+<?npl
+--[[
+Title: user's projects(websites)
+Author: LiXizhi
+Date: 2016/6/28
+]]
+include_once("base.page");
+
+local userprojects = inherit(models.base, gettable("models.userprojects"));
+
+userprojects.db_name = "userprojects";
