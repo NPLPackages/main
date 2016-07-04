@@ -26,7 +26,7 @@ function TestSQLOperations()
 	-- insert another one
 	db.User:insertOne({name="LXZ2", password="123", email="lixizhi@yeah.net"}, function(err, data)  echo(data) 	end)
 	-- update one
-	db.User:updateOne({name="LXZ2", password="2", email="lixizhi@yeah.net"}, function(err, data)  echo(data) end)
+	db.User:updateOne({name="LXZ2",}, {name="LXZ2", password="2", email="lixizhi@yeah.net"}, function(err, data)  echo(data) end)
 	-- force flush to disk, otherwise the db IO thread will do this at fixed interval
     db.User:flush({}, function(err, bFlushed) echo("flushed: "..tostring(bFlushed)) end);
 	-- select one, this will automatically create `name` index
@@ -63,6 +63,8 @@ function TestPerformance()
 	
 	-- this will start both db client and db server if not.
 	local db = TableDatabase:new():connect("temp/mydatabase/");
+
+	db.User:exec({QueueSize=10001}, function(err, data) end);
 
 	-- uncomment to test aggressive mode
 	-- db.User:exec({CacheSize=-2000, IgnoreOSCrash=true, IgnoreAppCrash=true}, function(err, data) end);
@@ -149,7 +151,7 @@ function TestPerformance()
 			elseif(nCrudType == 3) then
 				db.PerfTest:deleteOne({count=math.random(1,nTimes)}, next);
 			else
-				db.PerfTest:updateOne({count=math.random(1,nTimes), data="updated"}, next);
+				db.PerfTest:updateOne({count=math.random(1,nTimes)}, {data="updated"}, next);
 			end
 		end
 	end
@@ -173,6 +175,37 @@ function TestPerformance()
 
 end
 
+function TestBulkOperations()
+	NPL.load("(gl)script/ide/System/Database/TableDatabase.lua");
+	local TableDatabase = commonlib.gettable("System.Database.TableDatabase");
+	local db = TableDatabase:new():connect("temp/mydatabase/");
+	db.TestBulkOps:makeEmpty({}, function()  end);
+
+	local total_records = 100000;
+	local chunk_size = 1000;
+
+	local count = 0;
+	local function DoNextChunk()
+		local finished = 0;
+		for i=1, chunk_size do
+			count = count + 1;
+			if(count > total_records) then
+				break;
+			end
+			db.TestBulkOps:insertOne({count=count, data=math.random(), }, function(err, data)
+				finished = finished +1;
+				if(count == total_records) then
+					echo({"all operations are finished"});
+				elseif(finished == chunk_size) then
+					echo({"a chunk is done", count});
+					DoNextChunk();
+				end
+			end)
+		end
+	end
+	DoNextChunk();
+end
+
 function TestTimeout()
 	NPL.load("(gl)script/ide/System/Database/TableDatabase.lua");
 	local TableDatabase = commonlib.gettable("System.Database.TableDatabase");
@@ -187,9 +220,13 @@ end
 function TestBlockingAPI()
 	NPL.load("(gl)script/ide/System/Database/TableDatabase.lua");
 	local TableDatabase = commonlib.gettable("System.Database.TableDatabase");
+
 	-- this will start both db client and db server if not.
 	local db = TableDatabase:new():connect("temp/mydatabase/");
 	
+	-- enable sync mode once and for all in current thread.
+    db:EnableSyncMode(true);
+
 	-- clear all data
 	local err, data = db.User:makeEmpty({});
 
@@ -202,6 +239,34 @@ function TestBlockingAPI()
 	local user = db.User:new({name="LXZ", password="1", email="lixizhi@yeah.net"});
 	local err, data = user:save();   
 	echo(data);
+end
+
+-- it can do about 12000/s with sync API. 
+function TestBlockingAPILatency()
+	NPL.load("(gl)script/ide/System/Database/TableDatabase.lua");
+	local TableDatabase = commonlib.gettable("System.Database.TableDatabase");
+
+    -- this will start both db client and db server if not.
+	local db = TableDatabase:new():connect("temp/mydatabase/");
+	-- enable sync mode once and for all in current thread.
+    db:EnableSyncMode(true);
+
+	db.blockingAPI:makeEmpty({});
+	db.blockingAPI:flush({});
+	db.blockingAPI:exec({QueueSize=10001});
+		
+	NPL.load("(gl)script/ide/Debugger/NPLProfiler.lua");
+	local npl_profiler = commonlib.gettable("commonlib.npl_profiler");
+	npl_profiler.perf_reset();
+
+	npl_profiler.perf_begin("tableDB_BlockingAPILatency", true)
+	local count = 10000;
+	for i=1, count do
+		local err, data = db.blockingAPI:insertOne({count=i, data=math.random()})
+		-- echo(data);
+	end
+	npl_profiler.perf_end("tableDB_BlockingAPILatency", true)
+	log(commonlib.serialize(npl_profiler.perf_get(), true));		
 end
 
 function TestSqliteStore()

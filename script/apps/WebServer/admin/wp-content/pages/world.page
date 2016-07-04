@@ -67,7 +67,7 @@ if(is_ajax()) then
 	curPath = commonlib.Encoding.DefaultToUtf8(curPath);
     NPL.load("(gl)script/ide/Files.lua");
 
-    local result = commonlib.Files.Find({}, path, 0, 500, "*.");
+	local result = commonlib.Files.Find({}, path, 0, 500, "*.");
     for _, item in ipairs(result) do
       if(item.filesize == 0) then
         item.state = "closed"; -- this is a folder
@@ -84,7 +84,7 @@ if(is_ajax()) then
 		output[#output+1] = item;
       end
     end
-    wp_send_json(output);
+	wp_send_json(output, true);
   end)
   return;
 end

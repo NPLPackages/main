@@ -12,6 +12,7 @@
             {id="worldmap", title="World Map", url="worldmap", menu_item_parent = "Tools"},
             {id="blocklist", title="Block List", url="blocklist", menu_item_parent = "Tools"},
             {id="package_maker", title="Package Maker", url="package_maker", menu_item_parent = "Tools"},
+            {id="db_manager", title="DB Manager", url="db_manager", menu_item_parent = "Tools"},
             {id="debugger", title="NPL Debugger", url="debugger", menu_item_parent = "Tools"},
             
           {id="Help", title="Help", url="#", },

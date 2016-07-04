@@ -19,7 +19,7 @@ Averaged value from 10000 operations in each test:
    * i.e. same as above, but with findOne operation. 
 * Randomly mixing CRUD operations: 7518 query/s
    * i.e. same as above, but randomly calling Create/Read/Update/Delete (CRUD) on the same auto-indexed table.
-* Round trip latency: 11ms or 85 query/s
+* Round trip latency call: 12000 query/s (sync mode),  11ms or 85 query/s (async mode due to NPL time slice)
    * i.e. Round strip means start next operation after previous one is returned. This is latency test.
 
 ### Run With Aggressive Mode
@@ -45,7 +45,7 @@ Code Examples:
 	-- insert another one
 	db.User:insertOne({name="LXZ2", password="123", email="lixizhi@yeah.net"}, function(err, data)  echo(data) 	end)
 	-- update one
-	db.User:updateOne({name="LXZ2", password="2", email="lixizhi@yeah.net"}, function(err, data)  echo(data) end)
+	db.User:updateOne({name="LXZ2",}, {name="LXZ2", password="2"}, function(err, data)  echo(data) end)
 	-- force flush to disk, otherwise the db IO thread will do this at fixed interval
     db.User:flush({}, function(err, bFlushed) echo("flushed: "..tostring(bFlushed)) end);
 	-- select one, this will automatically create `name` index
@@ -60,8 +60,8 @@ Code Examples:
 	db.User:waitflush({}, function(err, data) echo({data, "data is flushed"}) end);
 	-- find all rows
 	db.User:find({}, function(err, rows) echo(rows); end);
-	-- set cache to 2000KB, turn synchronous IO off, and use in-memory journal and 
-	db.User:exec({CacheSize=-2000, IgnoreOSCrash=true, IgnoreAppCrash=true}, function(err, data) end);
+	-- set cache to 2000KB, turn synchronous IO off, and use in-memory journal and api queue size to 10001
+	db.User:exec({CacheSize=-2000, IgnoreOSCrash=true, IgnoreAppCrash=true, QueueSize=10001}, function(err, data) end);
 	-- run sql command 
 	db.User:exec("PRAGMA synchronous = ON", function(err, data) echo("mode changed") end);
 	-- run select command from Collection 
@@ -117,6 +117,19 @@ To scale up to even more data and requests, we devide data with machines and use
 programming logics for communications. In this way, we control all the logics with our own code, 
 rather than using general-purpose solutions like memcached, MangoDB(NoSQL), or SQLServer, etc. 
 
+## Sync Mode API
+Table database provides both sync and asynchronous API, and they can be use simultaneously. 
+However, sync interface is disabled by default. One has to manually enable it, such as during initialization.
+In sync interface, if you do not provide a callback function, then the API block until result is returned, otherwise the API return AsyncTask object immediately. See following example:
+
+```lua
+-- enable sync mode once and for all in current thread.
+db:EnableSyncMode(true);
+-- synchronous call will block until data is fetched. 
+local err, data = db.User:insertOne({name="LXZ2", email="sync mode"})
+-- async call return a task object immediately without waiting result. 
+local task = db.User:insertOne({name="LXZ2", email="sync mode"}, function(err, data) end)
+```
 ------------------------------------------------------------
 NPL.load("(gl)script/ide/System/Database/TableDatabase.lua");
 local TableDatabase = commonlib.gettable("System.Database.TableDatabase");
@@ -171,6 +184,11 @@ end
 
 function TableDatabase:GetWriterThreadName()
 	return self.writerThread;
+end
+
+function TableDatabase:EnableSyncMode(bEnabled)
+	IORequest.EnableSyncMode = bEnabled;
+	LOG.std(nil, "system", "TableDatabase", "sync mode api is %s in thread %s", bEnabled and "enabled" or "disabled", __rts__:GetName());
 end
 
 -- create or get a collection on the client

@@ -10,7 +10,7 @@ DOING_AJAX = true;
 
 if(not WP_USE_MINI_LOADER) then
 	-- Load Bootstrap
-	include_once( dirname( dirname( __FILE__ ) ) .. '/wp-load.page' );
+	include_once( ABSPATH .. '/wp-load.page' );
 end
 
 -- Allow for cross-domain requests (from the frontend). 

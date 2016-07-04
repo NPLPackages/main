@@ -93,9 +93,10 @@ function HTTPDebugger.WaitForDebugEvent()
 				HTTPDebugger.Write(out_msg);
 				return out_msg;
 			end
-			thread:WaitForMessage();	
+			if(thread:GetCurrentQueueSize() == nSize) then
+				thread:WaitForMessage(nSize);
+			end
 		end
-		
 	end
 
 	if(debug_msg) then

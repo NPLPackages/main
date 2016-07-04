@@ -3,7 +3,7 @@
 Title: base class of all models
 Author: LiXizhi
 Date: 2016/6/28
-Desc: model converts from database to objects for rendering. 
+Desc: model converts from database rows to objects. 
 ]]
 include_once("../auth/api.page");
 
@@ -11,21 +11,49 @@ local base = inherit(nil, gettable("models.base"));
 base.db_name = "unnamed";
 
 function base:db()
-	return db[self.name];
+	return db[self.db_name];
 end
 
-function base:get(id)
-	id = id or ensureAuthenticated();
-	self:db():findById(id, resume);
-	local err, data = yield(true); 
-	return data;
+-- resume previous call.
+function base.resume(err, data)
+	resume(err, data);
+end
+
+function base:get(params)
+	if(params._id) then
+		self:db():findById(params._id, self.resume);
+		local err, data = yield(true); 
+		return data;
+	else
+		
+	end
 end
 
 function base:delete()
+	ensureAuthenticated();
+	if(params._id) then
+		self:db():deleteOne(params, self.resume);
+		local err, data = yield(true); 
+		return data;
+	end
 end
 
-function base:create()
+function base:create(params)
+	ensureAuthenticated();
+	if(params) then
+		self:db():insertOne(params, self.resume);
+		local err, data = yield(true); 
+		return data;
+	end
 end
 
-function base:update()
+function base:update(params)
+	ensureAuthenticated();
+	local id = params._id;
+	if(id) then
+		params._id = nil;
+		self:db():update({_id = id}, params, self.resume);
+		local err, data = yield(true); 
+		return data;
+	end
 end

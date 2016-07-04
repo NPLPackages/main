@@ -114,7 +114,9 @@ function IORequest:WaitForSyncModeReply(timeout)
 			if(ParaEngine.GetAttributeObject():GetField("HasClosingRequest", false) == true) then
 				return "app_exit", nil;
 			end
-			thread:WaitForMessage();
+			if(thread:GetCurrentQueueSize() == nSize) then
+				thread:WaitForMessage(nSize);
+			end
 		end
 	end
 	if(reply_msg) then

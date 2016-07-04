@@ -198,10 +198,15 @@ function npl_page_env.getfilepath(filename)
 	return env_imp.getfilepath(self, filename);
 end
 
+function env_imp:file_exists(filename)
+	filename = env_imp.getfilepath(self, filename);
+	return ParaIO.DoesFileExist(filename, true);
+end
 
 -- Checks whether a file exists
 function npl_page_env.file_exists(filename)
-	return ParaIO.DoesFileExist(filename, true);
+	local self = getfenv(2);
+	return env_imp.file_exists(self, filename);
 end
 
 -- private: add file to be already included

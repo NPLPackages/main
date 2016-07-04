@@ -170,12 +170,28 @@ end
 
 -- this is usually used for changing database settings, such as cache size and sync mode. 
 -- this function is specific to store implementation. 
--- @param query: string or {sql=string, CacheSize=number, IgnoreOSCrash=bool, IgnoreAppCrash=bool} 
+-- @param query: string or {sql=string, CacheSize=number, IgnoreOSCrash=bool, IgnoreAppCrash=bool, QueueSize=number, SyncMode=boolean} 
+-- query.QueueSize: set the message queue size for both the calling thread and db processor thread. 
+-- query.SyncMode: default to false. if true, table api is will pause until data arrives.
 -- @param callbackFunc: function(err, data)  end
 function Collection:exec(query, callbackFunc, timeout)
 	if(self:IsServer()) then
 		return self.storageProvider:exec(query, callbackFunc);
 	else
+		if(type(query) == "table") then
+			-- also make the caller's message queue size twice as big at least
+			if(query.QueueSize) then
+				local value = query.QueueSize*2;
+				if(__rts__:GetMsgQueueSize() < value) then
+					__rts__:SetMsgQueueSize(value);
+					LOG.std(nil, "system", "NPL", "NPL input queue size of thread (%s) is changed to %d", __rts__:GetName(), value);
+				end
+			end
+			if(query.SyncMode~=nil) then
+				IORequest.EnableSyncMode = query.SyncMode;
+				LOG.std(nil, "system", "TableDatabase", "sync mode api is %s in thread %s", query.SyncMode and "enabled" or "disabled", __rts__:GetName());
+			end
+		end
 		return IORequest:Send("exec", self, query, callbackFunc, timeout);
 	end
 end

@@ -305,7 +305,9 @@ end
 
 -- this is usually used for changing database settings, such as cache size and sync mode. 
 -- this function is specific to store implementation. 
--- @param query: string or {sql=string, CacheSize=number, IgnoreOSCrash=bool, IgnoreAppCrash=bool} 
+-- @param query: string or {sql=string, CacheSize=number, IgnoreOSCrash=bool, IgnoreAppCrash=bool, QueueSize=number, SyncMode=boolean} 
+-- query.QueueSize: set the message queue size for both the calling thread and db processor thread. 
+-- query.SyncMode: default to false. if true, table api is will pause until data arrives.
 function SqliteStore:exec(query, callbackFunc)
 	self:AddStat("exec", 1);
 	local err, data, _;
@@ -328,6 +330,10 @@ function SqliteStore:exec(query, callbackFunc)
 			self:FlushAll();
 			_, err = self._db:exec("PRAGMA journal_mode="..(query.IgnoreAppCrash and "MEMORY" or "PERSIST")); -- skip app crash
 			LOG.std(nil, "debug", "SqliteStore", "db: %s PRAGMA journal_mode", self.kFileName);
+		end
+		if(query.QueueSize) then
+			__rts__:SetMsgQueueSize(query.QueueSize);
+			LOG.std(nil, "system", "NPL", "NPL input queue size of thread (%s) is changed to %d", __rts__:GetName(), query.QueueSize);
 		end
 	end
 	if(sql) then

@@ -132,8 +132,8 @@ end
 -- @param bUseEmptyArray: by default, empty table is serialized to json as object {}. 
 -- set this to true will be serialized to json as array []
 function wp_send_json(value, bUseEmptyArray)
-	response:set_header('Content-Type', 'application/json');
-	echo(json_encode(value, bUseEmptyArray));
+	-- response:set_header('Content-Type', 'application/json');
+	response:send(value, bUseEmptyArray);
 end
 
 --Serialize data, if needed.

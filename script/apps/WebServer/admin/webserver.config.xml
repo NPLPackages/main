@@ -55,7 +55,7 @@
         <string name='FACEBOOK_CLIENTID'>128754717528463</string>
       </table>
       <!--how many seconds to expire user token--> 
-      <number name='token_expire'>360000</number>
+      <number name='token_expire'>3600000</number>
     </table>
   </config>
 </WebServer>

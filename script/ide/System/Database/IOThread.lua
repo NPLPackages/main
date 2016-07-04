@@ -18,6 +18,9 @@ local TableDatabase = commonlib.gettable("System.Database.TableDatabase");
 local IOThread = commonlib.inherit(nil, commonlib.gettable("System.Database.IOThread"));
 local cbThreadName = "(%s)script/ide/System/Database/IORequest.lua";
 local g_threadName = __rts__:GetName();
+-- make the queue size bigger so that we can cache more queries. 
+__rts__:SetMsgQueueSize(10000);
+-- NPL.activate("(tdb)script/ide/config/NPLStateConfig.lua", {type="SetAttribute", attr={MsgQueueSize=5000,}});
 
 local g_singleton;
 
