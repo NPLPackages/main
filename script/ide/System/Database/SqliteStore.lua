@@ -15,6 +15,7 @@ local IndexTable = commonlib.gettable("System.Database.SqliteStore.IndexTable");
 
 local SqliteStore = commonlib.inherit(commonlib.gettable("System.Database.Store"), commonlib.gettable("System.Database.SqliteStore"));
 SqliteStore.kCurrentVersion = 3;
+SqliteStore.journelMode = "WAL";
 
 -- SQL create table command columns
 SqliteStore.kTables ={
@@ -43,7 +44,10 @@ SqliteStore.kTables ={
 function SqliteStore:ctor()
 	self.indexes = {};
 	self.info = {};
-	self.transaction_count_ = 0
+	-- total number of commands executed
+	self.totalCmd = 0; 
+	self.lastTickCount = 0;
+	self.transaction_count_ = 0; -- nested transaction count
 	self.transaction_labels_ = {}
 	self.queued_transaction_count = 0;
 	self.waitflush_queue = {};
@@ -52,6 +56,36 @@ function SqliteStore:ctor()
 			timer:Change();
 		end
 	end})
+	self.checkpoint_timer = self.checkpoint_timer or commonlib.Timer:new({callbackFunc = function(timer)
+		self:exec({checkpoint=true});
+		timer:Change();
+	end})
+end
+
+-- called when a single command is finished. 
+function SqliteStore:CommandTick(commandname)
+	if(commandname) then
+		self:AddStat(commandname, 1);
+	end
+	self.totalCmd = self.totalCmd + 1;
+
+	-- tick timers every 1 thousand operation. 
+	if((self.totalCmd - self.lastTickCount) > 1000) then
+		self.lastTickCount = self.totalCmd;
+		self:TickTimers();
+	end
+end
+
+-- sometimes timer is not accurate when server is very busy, such as during bulk operations. 
+-- this function is called every 1 thousand operations to make the timer accurate. 
+function SqliteStore:TickTimers()
+	local nTickCount = ParaGlobal.timeGetTime();
+	if(self.timer:IsEnabled()) then
+		self.timer:Tick(nTickCount);
+	end
+	if(self.checkpoint_timer:IsEnabled()) then
+		self.checkpoint_timer:Tick(nTickCount);
+	end
 end
 
 -- When sqlite_master table(schema) is changed, such as when new index table is created, 
@@ -86,12 +120,7 @@ function SqliteStore:init(collection)
 
 	if(self._db) then
 		-- http://stackoverflow.com/questions/1711631/improve-insert-per-second-performance-of-sqlite
-		if(self.IgnoreOSCrash) then
-			self:exec({IgnoreOSCrash = true});
-		end
-		if(self.IgnoreAppCrash) then
-			self:exec({IgnoreAppCrash = true});
-		end
+		self:exec({journelMode = self.journelMode, IgnoreOSCrash = self.IgnoreOSCrash, IgnoreAppCrash = self.IgnoreAppCrash});
 		if(self.CacheSize and self.CacheSize~=-2000) then
 			self:exec({CacheSize = self.CacheSize});
 		end
@@ -290,8 +319,8 @@ end
 
 -- auto indexed
 function SqliteStore:findOne(query, callbackFunc)
-	self:AddStat("select", 1);
-
+	self:CommandTick("select");
+	
 	local err, data;
 	if(query) then
 		data = self:findCollectionRow(query, true);
@@ -309,7 +338,7 @@ end
 -- query.QueueSize: set the message queue size for both the calling thread and db processor thread. 
 -- query.SyncMode: default to false. if true, table api is will pause until data arrives.
 function SqliteStore:exec(query, callbackFunc)
-	self:AddStat("exec", 1);
+	self:CommandTick("exec");
 	local err, data, _;
 	local sql;
 	if(type(query) == "string") then
@@ -321,15 +350,37 @@ function SqliteStore:exec(query, callbackFunc)
 			_, err = self._db:exec("PRAGMA cache_size="..tostring(query.CacheSize)); -- skip app crash
 			LOG.std(nil, "debug", "SqliteStore", "db: %s set cache_size= %d", self.kFileName, query.CacheSize);
 		end
-		if(query.IgnoreOSCrash~=nil) then
+		if(query.checkpoint) then
 			self:FlushAll();
-			_, err = self._db:exec("PRAGMA synchronous="..(query.IgnoreOSCrash and "OFF" or "ON")); -- skip OS crash 
-			LOG.std(nil, "debug", "SqliteStore", "db: %s PRAGMA synchronous", self.kFileName);
+			local nBeginTime = ParaGlobal.timeGetTime();
+			_, err = self._db:exec("PRAGMA wal_checkpoint;"); 
+			local nDuration = ParaGlobal.timeGetTime() - nBeginTime;
+			LOG.std(nil, "debug", "SqliteStore", "db: %s CHECKPOINT takes %dms", self.kFileName, nDuration);
 		end
-		if(query.IgnoreAppCrash~=nil) then
+		if(query.journelMode == "WAL") then
+			-- https://www.sqlite.org/pragma.html#pragma_wal_checkpoint
 			self:FlushAll();
-			_, err = self._db:exec("PRAGMA journal_mode="..(query.IgnoreAppCrash and "MEMORY" or "PERSIST")); -- skip app crash
-			LOG.std(nil, "debug", "SqliteStore", "db: %s PRAGMA journal_mode", self.kFileName);
+			_, err = self._db:exec("PRAGMA journal_mode=WAL;"); -- ignore durability of trasactions. 
+			_, err = self._db:exec("PRAGMA synchronous=NORMAL;"); 
+			-- auto checkpoint off?
+			-- _, err = self._db:exec("PRAGMA wal_autocheckpoint=0;"); 
+			-- _, err = self._db:exec("PRAGMA wal_autocheckpoint=1000;"); 
+			
+			-- Do checkpoint every 60 seconds or 1000 pages?
+			-- _, err = self._db:exec("PRAGMA wal_checkpoint;"); 
+
+			LOG.std(nil, "debug", "SqliteStore", "db: %s PRAGMA journal_mode WAL", self.kFileName);
+		else
+			if(query.IgnoreOSCrash~=nil) then
+				self:FlushAll();
+				_, err = self._db:exec("PRAGMA synchronous="..(query.IgnoreOSCrash and "OFF" or "ON")); -- skip OS crash 
+				LOG.std(nil, "debug", "SqliteStore", "db: %s PRAGMA synchronous", self.kFileName);
+			end
+			if(query.IgnoreAppCrash~=nil) then
+				self:FlushAll();
+				_, err = self._db:exec("PRAGMA journal_mode="..(query.IgnoreAppCrash and "MEMORY" or "PERSIST")); -- skip app crash
+				LOG.std(nil, "debug", "SqliteStore", "db: %s PRAGMA journal_mode", self.kFileName);
+			end
 		end
 		if(query.QueueSize) then
 			__rts__:SetMsgQueueSize(query.QueueSize);
@@ -395,10 +446,6 @@ function SqliteStore:find(query, callbackFunc)
 	end
 end
 
-function SqliteStore:deleteOne(query, callbackFunc)
-	self:AddStat("select", 1);
-end
-
 -- get just one row id from query string.
 -- @param bAutoCreateIndex: if true, index is automatically created.
 -- @return nil if there is no index. false if the record does not exist in collection. otherwise return the row id.
@@ -423,7 +470,7 @@ function SqliteStore:GetRowId(query, bAutoCreateIndex)
 end
 
 function SqliteStore:updateOne(query, update, callbackFunc)
-	self:AddStat("update", 1);
+	self:CommandTick("update");
 	update = update or query;
 	local err, data;
 	local id = self:GetRowId(query, false);
@@ -484,7 +531,7 @@ function SqliteStore:insertOne(query, callbackFunc)
 		return self:updateOne(query_by_id, query, callbackFunc);
 	end
 	
-	self:AddStat("insert", 1);
+	self:CommandTick("insert");
 	local err, data;
 	self.insert_stat = self.insert_stat or self._db:prepare([[INSERT INTO Collection (value) VALUES (?)]]);
 	
@@ -511,7 +558,7 @@ function SqliteStore:insertOne(query, callbackFunc)
 end
 
 function SqliteStore:deleteOne(query, callbackFunc)
-	self:AddStat("delete", 1);
+	self:CommandTick("delete");
 	local _, err, data;
 	local id = self:GetRowId(query, false);
 	if(id) then
@@ -639,6 +686,9 @@ function SqliteStore:End(bRollback, bForceFlush)
 			else
 				_,err = self._db:exec("END");
 				self:NotifyEndTransaction(err);
+			end
+			if(not self.checkpoint_timer:IsEnabled()) then
+				self.checkpoint_timer:Change(self.AutoCheckPointInterval, self.AutoCheckPointInterval);
 			end	
 		else
 			-- Rollback is necessary, 

@@ -172,7 +172,38 @@ function TestPerformance()
 			end)
 		end
 	end
+end
 
+function TestInsertThroughputNoIndex()
+	NPL.load("(gl)script/ide/System/Database/TableDatabase.lua");
+	local TableDatabase = commonlib.gettable("System.Database.TableDatabase");
+
+    -- this will start both db client and db server if not.
+	local db = TableDatabase:new():connect("temp/mydatabase/");
+	
+	db.insertNoIndex:makeEmpty({});
+	db.insertNoIndex:flush({});
+	db.insertNoIndex:exec({QueueSize=200001});
+		
+	NPL.load("(gl)script/ide/Debugger/NPLProfiler.lua");
+	local npl_profiler = commonlib.gettable("commonlib.npl_profiler");
+	npl_profiler.perf_reset();
+
+	npl_profiler.perf_begin("tableDB_BlockingAPILatency", true)
+	local count = 100000;
+	local finished_count = 0;
+	for i=1, count do
+		db.insertNoIndex:insertOne({count=i, data=math.random()}, function(err, data)
+			finished_count = finished_count + 1;
+			if(err) then
+				echo({err, data});
+			end
+			if(finished_count == count) then
+				npl_profiler.perf_end("tableDB_BlockingAPILatency", true)
+				log(commonlib.serialize(npl_profiler.perf_get(), true));			
+			end
+		end)
+	end
 end
 
 function TestBulkOperations()

@@ -19,7 +19,7 @@ Averaged value from 10000 operations in each test:
    * i.e. same as above, but with findOne operation. 
 * Randomly mixing CRUD operations: 7518 query/s
    * i.e. same as above, but randomly calling Create/Read/Update/Delete (CRUD) on the same auto-indexed table.
-* Round trip latency call: 12000 query/s (sync mode),  11ms or 85 query/s (async mode due to NPL time slice)
+* Round trip latency call: 20000 inserts/s (sync mode),  11ms or 85 query/s (async mode due to NPL time slice)
    * i.e. Round strip means start next operation after previous one is returned. This is latency test.
 
 ### Run With Aggressive Mode

@@ -28,12 +28,11 @@ Store.IgnoreAppCrash = false;
 -- cache size per database table, default to 2000KB. Positive value means page size, negative is KB
 Store.CacheSize = -2000;
 
-
 -- how many logs to write to log.txt. default to 0, which output the least logs.
 Store.LogLevel = 0;
 -- We will wait for this many milliseconds when meeting the first non-queued command before commiting to disk. So if there are many commits in quick succession, it will not be IO bound. 
-Store.AutoFlushInterval = 3000;
-
+Store.AutoFlushInterval = 100;
+Store.AutoCheckPointInterval = 5000;
 function Store:ctor()
 	self.stats = {
 		select = 0,
@@ -46,6 +45,13 @@ end
 function Store:init(collection)
 	self.collection = collection;
 	return self;
+end
+
+-- called when a single command is finished. 
+function Store:CommandTick(commandname)
+	if(commandname) then
+		self:AddStat(commandname, 1);
+	end
 end
 
 function Store:GetCollection()
