@@ -49,6 +49,41 @@ function TestSQLOperations()
 	db.User:exec("Select * from Collection", function(err, rows) echo(rows) end);
 end
 
+
+-- takes 23 seconds with 1 million record, on my HDD, CPU i7.
+function TestInsertThroughputNoIndex()
+	NPL.load("(gl)script/ide/System/Database/TableDatabase.lua");
+	local TableDatabase = commonlib.gettable("System.Database.TableDatabase");
+
+    -- this will start both db client and db server if not.
+	local db = TableDatabase:new():connect("temp/mydatabase/");
+	
+	db.insertNoIndex:makeEmpty({});
+	db.insertNoIndex:flush({});
+		
+	NPL.load("(gl)script/ide/Debugger/NPLProfiler.lua");
+	local npl_profiler = commonlib.gettable("commonlib.npl_profiler");
+	npl_profiler.perf_reset();
+
+	npl_profiler.perf_begin("tableDB_BlockingAPILatency", true)
+	local total_times = 1000000; -- a million non-indexed insert operation
+	local max_jobs = 1000; -- concurrent jobs count
+	NPL.load("(gl)script/ide/System/Concurrent/Parallel.lua");
+	local Parallel = commonlib.gettable("System.Concurrent.Parallel");
+	local p = Parallel:new():init()
+	p:RunManyTimes(function(count)
+		db.insertNoIndex:insertOne({count=count, data=math.random()}, function(err, data)
+			if(err) then
+				echo({err, data});
+			end
+			p:Next();
+		end)
+	end, total_times, max_jobs):OnFinished(function(total)
+		npl_profiler.perf_end("tableDB_BlockingAPILatency", true)
+		log(commonlib.serialize(npl_profiler.perf_get(), true));			
+	end);
+end
+
 function TestPerformance()
 	NPL.load("(gl)script/ide/Debugger/NPLProfiler.lua");
 	local npl_profiler = commonlib.gettable("commonlib.npl_profiler");
@@ -58,16 +93,24 @@ function TestPerformance()
 	local TableDatabase = commonlib.gettable("System.Database.TableDatabase");
 	
 	-- how many times for each CRUD operations.
-	local nTimes = 10000;
+	local nTimes = 10000; 
+	local max_jobs = 1000; -- concurrent jobs count
 	local insertFlush, testRoundTrip, randomCRUD, findMany;
 	
 	-- this will start both db client and db server if not.
 	local db = TableDatabase:new():connect("temp/mydatabase/");
 
+	-- this not necessary now, but put here as an example.
 	db.User:exec({QueueSize=10001}, function(err, data) end);
+
+	-- use at most 200MB memory, instead of the default 2MB
+	-- db.User:exec({CacheSize=-200000}, function(err, data) end);
 
 	-- uncomment to test aggressive mode
 	-- db.User:exec({CacheSize=-2000, IgnoreOSCrash=true, IgnoreAppCrash=true}, function(err, data) end);
+
+	NPL.load("(gl)script/ide/System/Concurrent/Parallel.lua");
+	local Parallel = commonlib.gettable("System.Concurrent.Parallel");
 
     db.PerfTest:makeEmpty({}, function() 
 		echo("emptied");
@@ -88,20 +131,16 @@ function TestPerformance()
 	end
 	insertFlush = function()
 		npl_profiler.perf_begin("insertFlush", true)
-		local resultNum = 0;
-		for count=1, nTimes do
+		local p = Parallel:new():init();
+		p:RunManyTimes(function(count)
 			db.PerfTest:insertOne({count=count, data=math.random(), }, function(err, data)
-				resultNum = resultNum +1;
-				CheckTickLog("flushInsert", "%d %s", count, err);
-				if(resultNum >= nTimes) then
-					-- force flush
-					db.PerfTest:flush({}, function()
-						npl_profiler.perf_end("insertFlush", true)
-						testRoundTrip();
-					end)
-				end
+				if(err) then echo({err, data}) end
+				p:Next();
 			end)
-		end
+		end, nTimes, max_jobs):OnFinished(function(total)
+			npl_profiler.perf_end("insertFlush", true)
+			testRoundTrip();
+		end);
 	end
 	
 	local nRoundTimes = 100;
@@ -130,82 +169,49 @@ function TestPerformance()
 	-- randome CRUD operations
 	randomCRUD = function()
 		npl_profiler.perf_begin("randomCRUD", true)
-		local resultNum = 0;
+
+		local p = Parallel:new():init();
+
 		local function next(err, data)
-			resultNum = resultNum +1;
-			CheckTickLog("randomCRUD", "%d %s", count, err);
-			if(resultNum >= nTimes) then
-				-- force flush
-				db.PerfTest:flush({}, function()
-					npl_profiler.perf_end("randomCRUD", true)
-					findMany();
-				end)
-			end
+			p:Next();
 		end
-		for count=1, nTimes do
+		p:RunManyTimes(function(count)
 			local nCrudType = math.random(1, 4);
 			if(nCrudType == 1) then
-				db.PerfTest:findOne({count=math.random(1,nTimes)}, next);
+				db.PerfTest:updateOne({count=math.random(1,nTimes)}, {data="updated"}, next);
 			elseif(nCrudType == 2) then
 				db.PerfTest:insertOne({count=nTimes+math.random(1,nTimes)}, next);
 			elseif(nCrudType == 3) then
 				db.PerfTest:deleteOne({count=math.random(1,nTimes)}, next);
 			else
-				db.PerfTest:updateOne({count=math.random(1,nTimes)}, {data="updated"}, next);
+				db.PerfTest:findOne({count=math.random(1,nTimes)}, next);
 			end
-		end
+		end, nTimes, max_jobs):OnFinished(function(total)
+			npl_profiler.perf_end("randomCRUD", true)
+			findMany();
+		end);
 	end
 
 	findMany = function()
 		npl_profiler.perf_begin("findMany", true)
-		local resultNum = 0;
-		for count=1, nTimes do
+
+		local p = Parallel:new():init();
+		p:RunManyTimes(function(count)
 			db.PerfTest:findOne({count=math.random(1,nTimes)}, function(err, data)
-				resultNum = resultNum +1;
-				CheckTickLog("findMany", "%d %s", count, err);
-				if(resultNum >= nTimes) then
-					echo("finished.......")
-					npl_profiler.perf_end("findMany", true)
-
-					log(commonlib.serialize(npl_profiler.perf_get(), true));
-				end
+				if(err) then echo({err, data}) end
+				p:Next();
 			end)
-		end
+		end, nTimes, max_jobs):OnFinished(function(total)
+			echo("finished.......")
+			npl_profiler.perf_end("findMany", true)
+			log(commonlib.serialize(npl_profiler.perf_get(), true));
+		end);
 	end
 end
 
-function TestInsertThroughputNoIndex()
-	NPL.load("(gl)script/ide/System/Database/TableDatabase.lua");
-	local TableDatabase = commonlib.gettable("System.Database.TableDatabase");
-
-    -- this will start both db client and db server if not.
-	local db = TableDatabase:new():connect("temp/mydatabase/");
-	
-	db.insertNoIndex:makeEmpty({});
-	db.insertNoIndex:flush({});
-	db.insertNoIndex:exec({QueueSize=200001});
-		
-	NPL.load("(gl)script/ide/Debugger/NPLProfiler.lua");
-	local npl_profiler = commonlib.gettable("commonlib.npl_profiler");
-	npl_profiler.perf_reset();
-
-	npl_profiler.perf_begin("tableDB_BlockingAPILatency", true)
-	local count = 100000;
-	local finished_count = 0;
-	for i=1, count do
-		db.insertNoIndex:insertOne({count=i, data=math.random()}, function(err, data)
-			finished_count = finished_count + 1;
-			if(err) then
-				echo({err, data});
-			end
-			if(finished_count == count) then
-				npl_profiler.perf_end("tableDB_BlockingAPILatency", true)
-				log(commonlib.serialize(npl_profiler.perf_get(), true));			
-			end
-		end)
-	end
-end
-
+-- This is example of bulk operation. 
+-- Please use 'System.Concurrent.Parallel' in real world test case
+-- See above `TestInsertThroughputNoIndex()` code.
 function TestBulkOperations()
 	NPL.load("(gl)script/ide/System/Database/TableDatabase.lua");
 	local TableDatabase = commonlib.gettable("System.Database.TableDatabase");

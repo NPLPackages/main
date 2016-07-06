@@ -614,7 +614,7 @@ end
 -- return true if committed. 
 function SqliteStore:FlushAll()
 	if(self._db and self.queued_transaction_count > 0 and self.transaction_count_ == 0) then
-		LOG.std(nil, "debug", "SqliteStore", "flushing %d queued database transactions :%s", self.queued_transaction_count, self.kFileName);
+		-- LOG.std(nil, "debug", "SqliteStore", "flushing %d queued database transactions :%s", self.queued_transaction_count, self.kFileName);
 		self.queued_transaction_count = 0;
 		-- flush now
 		local _, err = self._db:exec("END");

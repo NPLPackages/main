@@ -8,19 +8,22 @@ A schema-less, server-less, NoSQL database able to process big data in multiple 
 automatic indexing and extremly fast searching, keeping data and algorithm in one system *just like how the human brain works*.
 
 ## Performance
-Following is tested on my Intel-i7-3GHZ CPU. See `test` folder for details.
+Following is tested on my Intel-i7-3GHZ CPU with HDD. See `test` folder for details.
 
 ### Run With Conservative Mode
-Averaged value from 10000 operations in each test:
+Following is averaged value from 100000+ operations in a single thread
 
-* Random inserts: 6329 query/s
-   * i.e. start next operation immediately, without waiting for the first one to return.
-* Random select with auto-index: 7000 query/s
-   * i.e. same as above, but with findOne operation. 
-* Randomly mixing CRUD operations: 7518 query/s
-   * i.e. same as above, but randomly calling Create/Read/Update/Delete (CRUD) on the same auto-indexed table.
+* Random non-index insert: 43478 inserts/second
+   * Async API tested with default configuration with 1 million records on a single thread.
 * Round trip latency call: 20000 inserts/s (sync mode),  11ms or 85 query/s (async mode due to NPL time slice)
    * i.e. Round strip means start next operation after previous one is returned. This is latency test.
+* Random indexed inserts: 17953 query/s
+   * i.e. start next operation immediately, without waiting for the first one to return.
+* Random select with auto-index: 18761 query/s
+   * i.e. same as above, but with findOne operation. 
+* Randomly mixing CRUD operations: 965-7518 query/s
+   * i.e. same as above, but randomly calling Create/Read/Update/Delete (CRUD) on the same auto-indexed table.
+   * Mixing read/write can be very slow when database much bigger than cache size (default 2MB). 
 
 ### Run With Aggressive Mode
 One can also use in-memory journal file or ignore OS disk write feedback to further increase DB throughput by 30-100% percent.

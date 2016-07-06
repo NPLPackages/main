@@ -31,7 +31,7 @@ Store.CacheSize = -2000;
 -- how many logs to write to log.txt. default to 0, which output the least logs.
 Store.LogLevel = 0;
 -- We will wait for this many milliseconds when meeting the first non-queued command before commiting to disk. So if there are many commits in quick succession, it will not be IO bound. 
-Store.AutoFlushInterval = 100;
+Store.AutoFlushInterval = 50;
 Store.AutoCheckPointInterval = 5000;
 function Store:ctor()
 	self.stats = {
