@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="script">
+      <UniqueIdentifier>{5b7c3849-c83d-4f1b-82c8-52bc5b8da3e6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="script\ide">
+      <UniqueIdentifier>{d44ba20b-e990-4799-98a0-93810031bbc8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Documentation">
+      <UniqueIdentifier>{c2828057-2b77-4471-b312-d39b81332b55}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="script\ide\commonlib.lua">
+      <Filter>script\ide</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="Documentation\NplDocumentation.xml">
+      <Filter>Documentation</Filter>
+    </Xml>
+    <Xml Include="Documentation\paracraft.docgen.xml">
+      <Filter>Documentation</Filter>
+    </Xml>
+    <Xml Include="Documentation\Globals.xml">
+      <Filter>Documentation</Filter>
+    </Xml>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="Documentation\paracraft.docgen.txt">
+      <Filter>Documentation</Filter>
+    </Text>
+  </ItemGroup>
+</Project>
