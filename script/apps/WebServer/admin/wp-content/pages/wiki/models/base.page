@@ -9,50 +9,138 @@ include_once("../auth/api.page");
 
 local base = inherit(nil, gettable("models.base"));
 base.db_name = "unnamed";
+base.default_max_string_length = 500;
+
+function base:ctor()
+	self:addfield("_id", "number", true);
+end
+
+function base:getfields()
+	local fields = rawget(self, "fields");
+	if(not fields) then
+		fields = {};
+		self.fields = fields;
+	end
+	return fields;
+end
+
+--@param uniqueIndex: boolean, whether it is unique index. 
+--@param max_length: max length of the string or table after serialized to string.
+-- if ommited it is self.default_max_string_length
+function base:addfield(name, type, uniqueIndex, max_length)
+	local fields = self:getfields();
+	fields[name] = {name=name, type=type, uniqueIndex=uniqueIndex, max_length=max_length};
+end
+
+function base:hasIndex(name)
+	return self:getfields()[name]~=nil;
+end
+
+-- @param params: query parameters table.
+-- @return the first found index name in query parameter. 
+function base:findIndexName(params)
+	if(not params) then
+		return;
+	end
+	if(params._id) then
+		return "_id";
+	end
+	local fields = self:getfields();
+	for name, _ in pairs(params) do
+		if(fields[name] and fields[name].uniqueIndex) then
+			return name;
+		end
+	end
+end
+
+-- @param params: query parameters table.
+-- @return err, query: if there is error, err is true. otherwise it is nil. query contains a validated table.
+function base:validateParams(params)
+	local query = {};
+	local fields = self:getfields();
+	local err;
+	for name, value in pairs(params) do
+		if(fields[name]) then
+			local field_type = fields[name].type;
+			if(field_type == "number") then
+				value = tonumber(value);
+			elseif(field_type == "string") then
+				if(type(value) ~= "string") then
+					value = tostring(value);
+				end
+				local max_length = fields[name].max_length or self.default_max_string_length;
+				if(#value > max_length) then
+					value = value:sub(1, max_length);
+					err = true;
+				end
+			elseif(field_type == "table") then
+				if(type(value) == "string") then
+					local max_length = fields[name].max_length or self.default_max_string_length;
+					if(#value < max_length) then
+						value = NPL.LoadTableFromString(value);
+					else
+						value = nil;
+						err = true;
+					end
+				else
+					value = nil;
+					err = true;
+				end
+			else
+				value = nil;
+			end
+			query[name] = value;
+		end
+	end
+	return err, query;
+end
 
 function base:db()
 	return db[self.db_name];
 end
 
--- resume previous call.
-function base.resume(err, data)
-	resume(err, data);
+function base:ensureAuthenticated()
+	ensureAuthenticated();
 end
 
 function base:get(params)
-	if(params._id) then
-		self:db():findById(params._id, self.resume);
+	local err, query = self:validateParams(params);
+	local name = self:findIndexName(query);
+	if(name) then
+		self:db():findById(query[name], resume);
 		local err, data = yield(true); 
 		return data;
-	else
-		
 	end
 end
 
-function base:delete()
-	ensureAuthenticated();
-	if(params._id) then
-		self:db():deleteOne(params, self.resume);
+function base:delete(params)
+	self:ensureAuthenticated();
+	local err, query = self:validateParams(params);
+	local name = self:findIndexName(query);
+	if(name) then
+		self:db():deleteOne({[name] = query[name]}, resume);
 		local err, data = yield(true); 
 		return data;
 	end
 end
 
 function base:create(params)
-	ensureAuthenticated();
-	if(params) then
-		self:db():insertOne(params, self.resume);
+	self:ensureAuthenticated();
+	local err, query = self:validateParams(params);
+	if(query) then
+		self:db():insertOne(query, resume);
 		local err, data = yield(true); 
 		return data;
 	end
 end
 
 function base:update(params)
-	ensureAuthenticated();
-	local id = params._id;
+	self:ensureAuthenticated();
+	local err, query = self:validateParams(params);
+	local id = query._id;
 	if(id) then
-		params._id = nil;
-		self:db():update({_id = id}, params, self.resume);
+		query._id = nil;
+		self:db():updateOne({_id = id}, query, resume);
 		local err, data = yield(true); 
 		return data;
 	end

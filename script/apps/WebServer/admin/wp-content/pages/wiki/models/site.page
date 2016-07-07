@@ -10,3 +10,7 @@ local site = inherit(models.base, gettable("models.site"));
 
 site.db_name = "site";
 
+function site:ctor()
+	self:addfield("desc", "string", false);
+end
+

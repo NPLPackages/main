@@ -81,8 +81,13 @@ function npl_page_env:new(request, response)
 			end
 		end,
 		util = util,
+		resume = function(err, msg)
+			local self = getfenv(1);
+			return env_imp.resume(self, err, msg);
+		end,
 	};
 	o._GLOBAL = o;
+	setfenv(o.resume, o);
 	setmetatable(o, self);
 	return o;
 end
@@ -428,6 +433,9 @@ function npl_page_env.yield(bExitOnError)
 	return env_imp.yield(self, bExitOnError);
 end
 
+-- resume from where jobs are paused last. 
+-- @param err: if there is error, this is true, otherwise it is nil.
+-- @param msg: error message in case err=true
 function env_imp:resume(err, msg)
 	if(self.co) then
 		local res, err, msg = coroutine.resume(self.co, err, msg);
@@ -440,14 +448,6 @@ function env_imp:resume(err, msg)
 			self.response:finish();
 		end
 	end
-end
-
--- resume from where jobs are paused last. 
--- @param err: if there is error, this is true, otherwise it is nil.
--- @param msg: error message in case err=true
-function npl_page_env.resume(err, msg)
-	local self = getfenv(2);
-	return env_imp.resume(self, err, msg);
 end
 
 function env_imp:gettable(tabNames)
