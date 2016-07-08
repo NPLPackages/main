@@ -472,6 +472,10 @@ end
 function SqliteStore:updateOne(query, update, callbackFunc)
 	self:CommandTick("update");
 	update = update or query;
+	local _unset = update and update._unset;
+	if(_unset) then
+		update._unset = nil;
+	end
 	local err, data;
 	local id = self:GetRowId(query, false);
 	if(id) then
@@ -493,6 +497,15 @@ function SqliteStore:updateOne(query, update, callbackFunc)
 
 			-- update row
 			commonlib.partialcopy(data, update);
+
+			-- unset rows if requested by user
+			if(_unset) then
+				for name, value in pairs(_unset) do
+					name = (type(name) == "number") and value or name;
+					data[name] = nil;
+				end
+			end
+
 			self.update_stat = self.update_stat or self._db:prepare([[UPDATE Collection Set value=? Where id=?]]);
 			if(self.update_stat) then
 				local data_str = commonlib.serialize_compact(data);

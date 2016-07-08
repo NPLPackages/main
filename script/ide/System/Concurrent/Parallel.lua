@@ -7,8 +7,7 @@ use the lib:
 ------------------------------------------------------------
 NPL.load("(gl)script/ide/System/Concurrent/Parallel.lua");
 local Parallel = commonlib.gettable("System.Concurrent.Parallel");
-local p = Parallel:new():init()
-p:RunManyTimes(function(count)
+Parallel:new():RunManyTimes(function(count, p)
 	if(count%10 == 2) then
 		commonlib.TimerManager.SetTimeout(function()
 			echo(count)
@@ -35,7 +34,7 @@ end
 
 -- run functions many times. Please note, this function does not create real system thread. 
 -- you need to make sure func is reentrant on the same thread. 
--- @param func: function(count) end, where count is the current number of times. This function 
+-- @param func: function(count, self) end, where count is the current number of times, self is the parallel object itself. This function 
 -- must call p:Next() when the job is finished. 
 -- @param total_times: total number of times to run the func. 
 -- @param max_concurrent_jobs: we will ensure there are at most max_concurrent_jobs. 
@@ -81,7 +80,7 @@ function Parallel:Next(finished_count)
 				self.unfinished = self.unfinished + 1;
 				self.count = self.count + 1;
 				if(self.func) then
-					self.func(self.count);
+					self.func(self.count, self);
 				end
 			end
 		end

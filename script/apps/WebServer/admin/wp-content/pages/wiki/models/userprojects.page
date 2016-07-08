@@ -1,6 +1,6 @@
 <?npl
 --[[
-Title: user's projects(websites)
+Title: All projects of a given user
 Author: LiXizhi
 Date: 2016/6/28
 ]]
@@ -9,5 +9,21 @@ include_once("base.page");
 local userprojects = inherit(models.base, gettable("models.userprojects"));
 
 userprojects.db_name = "userprojects";
+
+function userprojects:ctor()
+	-- unique name of the user
+	self:addfield("name", "string", true, 30);
+	-- commar separated lists of web site names.
+	self:addfield("projects", "string", false, 1000);
+end
+
+function userprojects:get(params)
+	local err, data = userprojects._super.get(self, params);
+	if(not err and not data) then
+		-- create on first use
+		return self:create(params);
+	end
+end
+
 
 

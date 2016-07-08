@@ -42,7 +42,7 @@ if(ajax_path) then
 			model = model:new();
 		end
 
-		-- redirect CRUB URL to method in model.
+		-- redirect CRUD URL to method in model.
 		if(request:GetMethod() == "GET") then
 			if(model.get) then
 				local result = model:get(request:getparams());

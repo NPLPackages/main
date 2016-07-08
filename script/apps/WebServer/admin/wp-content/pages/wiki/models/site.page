@@ -11,6 +11,13 @@ local site = inherit(models.base, gettable("models.site"));
 site.db_name = "site";
 
 function site:ctor()
-	self:addfield("desc", "string", false);
+	-- unique name of the website, usually same as owner name
+	self:addfield("name", "string", true, 30);
+	-- markdown text description
+	self:addfield("desc", "string");
+	-- such as "https://github.com/LiXizhi/wiki"
+	self:addfield("store", "string", false, 200);
+	-- owner name, not unique
+	self:addfield("owner", "string", false, 30);
 end
 

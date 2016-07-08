@@ -108,7 +108,8 @@ end
 
 -- this function will assume query contains at least one valid index key. 
 -- it will not auto create index if key does not exist.
--- @param query: key, value pair table, such as {name="abc"}. 
+-- @param query: key, value pair table, such as {name="abc", _unset={"fieldname_to_remove", "another_name"}}. 
+--  _unset may contain array or map of field names to remove. 
 -- @param update: additional fields to be merged with existing data; this can also be callbackFunc
 function Collection:updateOne(query, update, callbackFunc, timeout)
 	if(type(update) == "function") then
