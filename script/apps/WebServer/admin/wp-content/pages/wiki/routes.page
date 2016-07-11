@@ -71,6 +71,9 @@ if(ajax_path) then
 		include( "./"..ajax_path..".page" );
 	end
 	return;
+else
+	-- dynamic page has no cache headers
+	response:nocache_headers();
 end
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 

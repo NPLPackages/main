@@ -111,14 +111,7 @@ end
 -- headers must be sent so that all of them get the point that no
 -- caching should occur.
 function nocache_headers()
-	local headers = wp_get_nocache_headers();
-
-	-- remove this header
-	response:set_header('Last-Modified', nil);
-
-	for name, field_value in pairs(headers) do
-		addheader(name, field_value);
-	end
+	response:nocache_headers();
 end
 
 -- Send a HTTP header to disable content type sniffing in browsers which support it.

@@ -109,6 +109,13 @@ local function in_base(path)
   return true
 end
 
+local firstCallData;
+local function getFirstInvocationDate()
+	if(not firstCallData) then
+		firstCallData = os.date("!%a, %d %b %Y %H:%M:%S GMT");
+	end
+	return firstCallData;
+end
 -- serve data from zip file. it may be inefficient to serve chunks of data, since the whole file 
 -- is read into memory each time a request processed.
 -- return true if served
@@ -118,6 +125,20 @@ local function filehandler_in_zip(path, req, res, baseDir)
 		local fileSize = file:GetFileSize();
 		res.headers["Content-Length"] = fileSize;
 
+		res.headers["Last-Modified"] = getFirstInvocationDate();
+
+		local lms = req.headers["If-Modified-Since"] or 0
+		local lm = res.headers["Last-Modified"] or 1
+		if lms == lm then
+			res.headers["Content-Length"] = 0
+			res.statusline = "HTTP/1.1 304 Not Modified"
+			res.content = ""
+			res.chunked = false
+			res:send_headers()
+			file:close()
+			return res
+		end
+
 		if req.cmd_mth == "GET" then
 			local from = 0;
 			local range_len;
@@ -125,7 +146,7 @@ local function filehandler_in_zip(path, req, res, baseDir)
 			-- check if only range of data is requested.
 			local range = req.headers["range"]
 			if range then 
-				local s,e, r_A, r_B = string.find (range, "(%d*)%s*-%s*(%d*)")
+				local s,e, r_A, r_B = string.find(range, "(%d*)%s*-%s*(%d*)")
 				if s and e then
 					r_A = tonumber (r_A)
 					r_B = tonumber (r_B)
@@ -163,11 +184,11 @@ end
 -- main handler
 local function filehandler(req, res, baseDir, nocache)
 	if req.cmd_mth ~= "GET" and req.cmd_mth ~= "HEAD" then
-		return WebServer.common_handlers.err_405 (req, res)
+		return WebServer.common_handlers.err_405(req, res)
 	end
 
 	if not in_base(req.relpath) then
-		return WebServer.common_handlers.err_403 (req, res)
+		return WebServer.common_handlers.err_403(req, res)
 	end
 
 	local path;
@@ -178,7 +199,7 @@ local function filehandler(req, res, baseDir, nocache)
 	end
 
 	res.headers["Content-Type"] = minetypes:guess_type(path);
-	res.headers["Content-Encoding"] = encodingfrompath (path)
+	res.headers["Content-Encoding"] = encodingfrompath(path)
     
 	if(nocache) then
 		res.headers['Expires'] = 'Wed, 11 Jan 1984 05:00:00 GMT';
@@ -188,7 +209,7 @@ local function filehandler(req, res, baseDir, nocache)
 	local attr = lfs.attributes (path)
 	if not attr then
 		if(not filehandler_in_zip(path, req, res, baseDir)) then
-			return WebServer.common_handlers.err_404 (req, res)
+			return WebServer.common_handlers.err_404(req, res)
 		end
 		return;
 	end
@@ -197,23 +218,23 @@ local function filehandler(req, res, baseDir, nocache)
 	if attr.mode == "directory" then
 		req.parsed_url.path = req.parsed_url.path .. "/"
 		res.statusline = "HTTP/1.1 301 Moved Permanently"
-		res.headers["Location"] = url.build (req.parsed_url)
+		res.headers["Location"] = url.build(req.parsed_url)
 		res.content = "redirect"
 		return res
 	end
 
 	res.headers["Content-Length"] = attr.size
 	
-	local f = io.open (path, "rb")
+	local f = io.open(path, "rb")
 	if not f then
-		return WebServer.common_handlers.err_404 (req, res)
+		return WebServer.common_handlers.err_404(req, res)
 	end
 	
-	res.headers["last-modified"] = os.date ("!%a, %d %b %Y %H:%M:%S GMT",
+	res.headers["Last-Modified"] = os.date("!%a, %d %b %Y %H:%M:%S GMT",
 					attr.modification)
 
-	local lms = req.headers["if-modified-since"] or 0
-	local lm = res.headers["last-modified"] or 1
+	local lms = req.headers["If-Modified-Since"] or 0
+	local lm = res.headers["Last-Modified"] or 1
 	if lms == lm then
 		res.headers["Content-Length"] = 0
 		res.statusline = "HTTP/1.1 304 Not Modified"
@@ -226,18 +247,18 @@ local function filehandler(req, res, baseDir, nocache)
 
 	
 	if req.cmd_mth == "GET" then
-		local range_len = getrange (req, f)
+		local range_len = getrange(req, f)
 		if range_len then
 			res.statusline = "HTTP/1.1 206 Partial Content"
 			res.headers["Content-Length"] = range_len
 		end
 		
-		sendfile (f, res, range_len)
+		sendfile(f, res, range_len)
 	else
 		res.content = ""
-		res:send_headers ()
+		res:send_headers()
     end
-    f:close ()
+    f:close()
 	return res
 end
 

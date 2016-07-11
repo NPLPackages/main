@@ -17,6 +17,8 @@ response:End();
 -----------------------------------------------
 ]]
 NPL.load("(gl)script/apps/WebServer/npl_util.lua");
+NPL.load("(gl)script/apps/WebServer/npl_http.lua");
+local npl_http = commonlib.gettable("WebServer.npl_http");
 local util = commonlib.gettable("WebServer.util");
 local tostring = tostring;
 local type = type;
@@ -98,27 +100,38 @@ function response:SetReturnCode(return_code)
 	return self;
 end
 
+-- Set the headers to prevent caching for the different browsers.
+-- Different browsers support different nocache headers, so several
+-- headers must be sent so that all of them get the point that no
+-- caching should occur.
+function response:nocache_headers()
+	self:set_header("Expires", 'Wed, 11 Jan 1984 05:00:00 GMT');
+	self:set_header("Cache-Control", 'no-cache, must-revalidate, max-age=0');
+	self:set_header("Pragma", 'no-cache');
+	self:set_header('Last-Modified', nil);
+end
+
 -- it will replace value
 function response:set_header(h, v)
 	if(not h) then
 		return 
 	end
-	self.headers [h] = v;
+	self.headers[h] = v;
 end
 
 -- there can be duplicated names 
-function response:add_header (h, v)
+function response:add_header(h, v)
 	if(not h) then
 		return 
 	end
     if string.lower(h) == "status" then
         self.statusline = "HTTP/1.1 "..v
     else
-        local prevval = self.headers [h]
+        local prevval = self.headers[h]
         if (prevval  == nil) then
             self.headers[h] = v
-        elseif type (prevval) == "table" then
-            table.insert (prevval, v)
+        elseif type(prevval) == "table" then
+            table.insert(prevval, v)
         else
             self.headers[h] = {prevval, v}
         end
@@ -135,7 +148,7 @@ end
 
 -- send response and finish the request now. 
 -- @param bUseEmptyArray: by default, empty table is serialized to json as object {}. 
--- calling this function will be serialized to json as array []
+-- calling this function will be serialized to json as array[]
 -- @param pure HTML text or json table
 function response:send(text, bUseEmptyArray)
 	if(type(text) == "table") then
@@ -188,6 +201,16 @@ function response:sendsome(text)
 	end
 end
 
+local plainTextTypes = {
+["application/javascript"] = true,
+["application/json"] = true,
+["text/css"] = true,
+["text/html; charset=utf-8"] = true,
+};
+
+function response:isContentTypePlainText(contentType)
+	return contentType and (plainTextTypes[contentType] or contentType:match("^text"));
+end
 -- sends prebuilt content to the client
 -- 		if possible, sets Content-Length: header field
 -- uses:
@@ -201,10 +224,10 @@ function response:send_response()
 	
 	if self.content then
 		if not self.sent_headers then
-			if (type (self.content) == "table" and not self.chunked) then
-				self.content = table.concat (self.content)
+			if (type(self.content) == "table" and not self.chunked) then
+				self.content = table.concat(self.content)
 			end
-			if type (self.content) == "string" then
+			if type(self.content) == "string" then
 				self.headers["Content-Length"] = #(self.content)
 			end
 		end
@@ -216,22 +239,45 @@ function response:send_response()
 	end
 	
     if self.chunked then
-        self:add_header ("Transfer-Encoding", "chunked")
+        self:add_header("Transfer-Encoding", "chunked")
     end
     
-	if self.chunked or ((self.headers ["Content-Length"]) and self.headers ["connection"] == "Keep-Alive") then
-		self.headers ["Connection"] = "Keep-Alive"
+	for h,v in pairs(npl_http.GetCommonHeaders()) do
+		self:set_header(h, v);
+	end
+
+	if self.chunked or ((self.headers["Content-Length"] and self.req.headers["Connection"])) then
+		self:set_header("Connection", "keep-alive");
 		self.keep_alive = true
 	else
 		self.keep_alive = nil
 	end
 	
 	if self.content then
-		if type (self.content) == "table" then
-			for _, v in ipairs (self.content) do 
-				self:send_data (v) 
+		if type(self.content) == "table" then
+			for _, v in ipairs(self.content) do 
+				self:send_data(v) 
 			end
 		else
+			-- compress if content-type is text-based 
+			if (not self.sent_headers and NPL.Compress) then
+				local minCompressSize = 12000;
+				local cSize = self.headers["Content-Length"];
+				if(cSize and cSize > minCompressSize and not self.headers["Content-Encoding"]) then
+					if(self:isContentTypePlainText(self.headers["Content-Type"])) then
+						local acceptEncoding = self.req.headers["Accept-Encoding"];
+						if(acceptEncoding and acceptEncoding:match("gzip")) then
+							local dataIO = {content=self.content, method="gzip"};
+							if(NPL.Compress(dataIO)) then
+								self.headers["Content-Encoding"] = "gzip";
+								self.content = dataIO.result;
+								self.headers["Content-Length"] = #(self.content);
+							end
+						end
+					end
+				end
+			end
+
 			self:send_data(self.content)
 		end
 	else
@@ -241,6 +287,15 @@ function response:send_response()
 	if self.chunked then
 		self.sendInternal("0\r\n\r\n")
 	end
+
+	if(not self.keep_alive) then
+		self:CloseAfterSend();
+	end
+
+	-- test non-keep alive. 
+	--if(not self.chunked and self.headers["Content-Length"]) then
+		--self:CloseAfterSend();
+	--end
 end
 
 -- sends the response headers directly to client 
@@ -287,7 +342,7 @@ function response:send_data(data)
 	
 	if data then
 		if self.chunked then
-			self.sendInternal(string.format ("%X\r\n", #(data)));
+			self.sendInternal(string.format("%X\r\n", #(data)));
 			self.sendInternal(data);
 			self.sendInternal("\r\n");
 		else
@@ -296,7 +351,7 @@ function response:send_data(data)
 	end
 end
 
-local function optional (what, name)
+local function optional(what, name)
 	if name ~= nil and name ~= "" then
 		return format("; %s=%s", what, name)
 	else
@@ -380,6 +435,10 @@ function response:GetAddress()
 		self.addr = format("%s:http", self.req.nid);
 	end
 	return self.addr;
+end
+
+function response:CloseAfterSend()
+	NPL.reject({nid = self.req.nid, reason = -1});
 end
 
 -- private: 

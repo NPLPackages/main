@@ -47,7 +47,7 @@ local function npl_page_handler(req, res, root_dir, page_manager)
 			if(not page:get_error_msg()) then
 				-- uncomment to show merged script
 				-- res:send(page.script);  
-				res:add_header()
+				res:set_header('Content-Type', 'text/html; charset=utf-8');
 
 				if(true or WebServer.useCoroutine) then
 					local page_env = npl_page_env:new(req, res);

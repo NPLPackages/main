@@ -19,6 +19,9 @@ local npl_http = commonlib.gettable("WebServer.npl_http");
 local stats = {
 	request_received = 0,
 }
+local common_headers = {
+	["Server"] = "NPL/1.1",
+};
 
 function npl_http.LoadBuildinHandlers()
 	NPL.load("(gl)script/apps/WebServer/npl_common_handlers.lua");
@@ -56,6 +59,19 @@ function npl_http.LoadConfig(config)
 
 	npl_http.SetRequestHandler(common_handlers.vhostshandler(vhosts_table));
 end
+
+-- it will replace value
+function npl_http.SetCommonHeader(h, v)
+	if(not h) then
+		return 
+	end
+	common_headers[h] = v;
+end
+
+function npl_http.GetCommonHeaders()
+	return common_headers;
+end
+
 
 -- start server with config
 --  do not call this directly, use WebServer.Start() to start your server. 

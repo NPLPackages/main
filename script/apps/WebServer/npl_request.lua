@@ -28,6 +28,7 @@ local url = commonlib.gettable("commonlib.socket.url")
 local response = commonlib.gettable("WebServer.response");
 
 local tostring = tostring;
+local lower = string.lower;
 local type = type;
 
 local request = commonlib.inherit(nil, commonlib.gettable("WebServer.request"));
@@ -205,6 +206,35 @@ function request:clear_cookie()
 	end
 end
 
+-- mapping from lower case to case-sensitive headers
+local lowercase_headers = {
+["connection"] = "Connection",
+["accept-encoding"] = "Accept-Encoding",
+["cache-control"] = "Cache-Control",
+["if-modified-since"] = "If-Modified-Since",
+["user-agent"] = "User-Agent",
+["referer"] = "Referer",
+}
+
+-- from case insensitive to case sensitive. 
+function request:NormalizeHeaders(headers)
+	local values;
+	for name, value in pairs(headers) do
+		local rightName = lowercase_headers[lower(name)];
+		if(rightName and rightName~=name) then
+			values = values or {};
+			values[name] = rightName;
+		end
+	end
+	if(values) then
+		for name, newName in pairs(values) do
+			headers[newName] = headers[name];
+			headers[name] = nil;
+		end
+	end
+	return headers;
+end
+
 -- request can be reused by calling this function. 
 -- the request object is returned if succeed.
 function request:init(msg)
@@ -213,7 +243,7 @@ function request:init(msg)
 			echo(msg);
 		end
 		self.nid = msg.tid or msg.nid;
-		self.headers= msg;
+		self.headers= self:NormalizeHeaders(msg);
 		self.cmd_url = msg.url;
 		self.cmd_mth = msg.method;
 		self:parse_url();
