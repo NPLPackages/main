@@ -1,35 +1,2395 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<?xml version="1.0" encoding="Windows-1252"?>
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="script">
-      <UniqueIdentifier>{5b7c3849-c83d-4f1b-82c8-52bc5b8da3e6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="script\ide">
-      <UniqueIdentifier>{d44ba20b-e990-4799-98a0-93810031bbc8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Documentation">
-      <UniqueIdentifier>{c2828057-2b77-4471-b312-d39b81332b55}</UniqueIdentifier>
-    </Filter>
+    <CustomBuild Include="CMakeLists.txt" />
+    <CustomBuild Include="CMakeFiles\64f4b28db957bfa861f0547a2ec5b17a\NPLPackageMain.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
+    <None Include="CMakeFiles\NPLPackageMain" />
+    <None Include="script\apps\WebServer\admin\wp-content\pages\demos\drawsomething.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\demos\helloworld.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\apps\WebServer\httpd\common_handlers.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\apps\WebServer\httpd\copas.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\apps\WebServer\httpd\file_handler.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\apps\WebServer\httpd\httpd.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\apps\WebServer\httpd\monitor_http.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\apps\WebServer\httpd\wsapi_common.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\apps\WebServer\httpd\wsapi_mock.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\apps\WebServer\httpd\wsapi_request.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\apps\WebServer\httpd\wsapi_response.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\apps\WebServer\httpd\wsapi_util.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\apps\WebServer\mem_cache.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\apps\WebServer\minetypes.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\apps\WebServer\npl_common_handlers.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\apps\WebServer\npl_file_handler.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\apps\WebServer\npl_http.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\apps\WebServer\npl_page_env.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\apps\WebServer\npl_page_handler.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\apps\WebServer\npl_page_manager.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\apps\WebServer\npl_page_parser.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\apps\WebServer\npl_request.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\apps\WebServer\npl_response.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\apps\WebServer\npl_script_handler.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\apps\WebServer\npl_util.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\apps\WebServer\rules.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\apps\WebServer\shell_loop_webserver.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\apps\WebServer\test\helloworld.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\apps\WebServer\test\helloworld_cgi.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\apps\WebServer\WebServer.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\action_table.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\AI.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\AnimationUsingKeyFrames.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\CurtainLib.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\DoubleAnimationUsingKeyFrames.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\KeyFrame.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\KeySpline.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\Motion\AnimationEditor\AnimationEditor.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\Motion\Animator.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\Motion\KeyFrames\AnimationUsingKeyFrames.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\Motion\KeyFrames\DoubleAnimationUsingKeyFrames.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\Motion\KeyFrames\KeyFrame.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\Motion\KeyFrames\KeySpline.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\Motion\KeyFrames\ObjectAnimationUsingKeyFrames.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\Motion\KeyFrames\Point3DAnimationUsingKeyFrames.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\Motion\KeyFrames\Point3DAnimationUsingPath.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\Motion\KeyFrames\Reverse.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\Motion\KeyFrames\StringAnimationUsingKeyFrames.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\Motion\KeyFrames\TargetAnimationUsingKeyFrames.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\Motion\KeyFrames\TimeSpan.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\Motion\LayerManager.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\Motion\McPlayer.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\Motion\MovieClip.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\Motion\MovieClipBase.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\Motion\MovieClipHelper.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\Motion\PreLoader.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\Motion\Target\ActorTarget.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\Motion\Target\BaseTarget.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\Motion\Target\BuildingTarget.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\Motion\Target\CameraTarget.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\Motion\Target\CaptionTarget.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\Motion\Target\ControlTarget.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\Motion\Target\EffectTarget.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\Motion\Target\LandTarget.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\Motion\Target\OceanTarget.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\Motion\Target\PlantTarget.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\Motion\Target\SkyTarget.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\Motion\Target\SoundTarget.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\Motion\Target\Sprite3DTarget.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\Motion\Target\TargetResourceManager.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\Motion\test\animation_editor_test_page.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\Motion\test\animator_test.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\ObjectAnimationUsingKeyFrames.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\Point3DAnimationUsingKeyFrames.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\Point3DAnimationUsingPath.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\PreLoader.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\Reverse.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\Storyboard.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\StoryBoardPlayer.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\StoryboardRecorder.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\StringAnimationUsingKeyFrames.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\test\storyboardPlayer_test.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\test\StoryboardRecorder_test.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Animation\TimeSpan.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\app_ipc.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\AssetPreloader.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\AudioEngine\AriesSoundEffect.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\AudioEngine\AudioEngine.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\AudioEngine\AudioSource.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\AudioEngine\SoundEmitter.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\AudioEngine\SoundInfoProvider.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\AudioEngine\SoundManager.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\AudioEngine\SoundTest.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\AudioEngine\TestAudioEngine.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\AutoCompleteBox.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\AutoCompleteList.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\AutoHide.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ButtonStyles.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Canvas3D.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Canvas3DUI.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\CanvasCamConfig.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\chat_display.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\CheckBox.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Codec\ChineseSimpleToTrad.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Codec\TableCodec.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\coloreditor_control.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\colorpicker.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\commonfunctions.lua">
+      <Filter>script</Filter>
+    </None>
     <None Include="script\ide\commonlib.lua">
-      <Filter>script\ide</Filter>
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\common_control.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\common_validators.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\config\NPLStateConfig.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ContextMenu.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ContextMenu2.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\CSG\CSG.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\CSG\CSGNode.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\CSG\CSGPlane.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\CSG\CSGPolygon.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\CSG\CSGVector.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\CSG\CSGVertex.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\CSG\test\csg_test.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\DataBinding.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\DateTime.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\debug.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Debugger\ConsoleDebugger.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Debugger\HTTPDebugger.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Debugger\IOConsole.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Debugger\IPCDebugger.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Debugger\MCMLConsole.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Debugger\NPLCompiler.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Debugger\NPLProfiler.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Director\CardMovieHelper.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Director\DirectorToolPage.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Director\Movie.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Director\MovieClip.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Director\MovieRender_Arena.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Director\MovieRender_Audio.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Director\MovieRender_Camera.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Director\MovieRender_Image.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Director\MovieRender_Mcml.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Director\MovieRender_Model.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Director\MovieRender_Script.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Director\MovieRender_Spell.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Director\MovieRender_SpellCamera.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Director\MovieRender_Text.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Director\SpellCameraHelper.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Display\Containers\MiniScene.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Display\Containers\MovieMiniScene.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Display\Containers\Scene.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Display\Containers\Sprite3D.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Display\DisplayObject.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Display\DisplayObjectContainer.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Display\EventDispatcher.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Display\InteractiveObject.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Display\Object.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Display\Objects\Actor3D.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Display\Objects\Building3D.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Display\Objects\Flower.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Display\Objects\Pet.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Display\Objects\PetE.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Display\Objects\PlantE.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Display\Objects\RoomEntry.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Display\Test\Sprite3D_Test.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Display\Util\ObjectsCreator.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Display\Util\ObjectsMcmlParser.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Display2D\Bitmap2D.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Display2D\Button2D.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Display2D\DisplayObject2D.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Display2D\Rectangle2D.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Display2D\Scene2DManager.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Display2D\Sprite2D.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Display2D\test\test_viewport2d.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Display2D\TextField2D.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Display2D\texture_grid.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Display2D\viewport2d.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Display3D\AvatarQueue.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Display3D\AvatarQueue_Test.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Display3D\Example\SceneCanvasExample.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Display3D\Example\SceneNodeProcessorExample.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Display3D\HomeLandCommonNode.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Display3D\HouseNode.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Display3D\SceneCanvas.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Display3D\SceneManager.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Display3D\SceneNode.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Display3D\SceneNodeHeadonSpeech.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Display3D\SceneNodeProcessor.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Display3D\SeedGridNode.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Dock.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Document\CSVDocReader.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Document\ExcelDocReader.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Document\LocalSingleDocument.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Document\LocalSingleDocumentFrame.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Document\RemoteSingleDocument.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\DoubleView.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\dropdownlistbox.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\dropdownlistbox_control.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Effect\FilmScratchProcessor.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Effect\frozenEffect.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Effect\motionBlurProcessor.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Effect\stoneEffect.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Effect\test.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Effect\transparentEffect.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Encoding.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\EventDispatcher.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\event_mapping.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ExternalInterface.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\FileDialog.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\FileExplorerCtrl.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\FileLoader.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Files.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\fileselector_control.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\FileSystemWatcher.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\FileViewCtrl.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\FlashExternalInterface.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\FlashPlayerControl.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\FlashPlayerWindow.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Graph.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\GraphHelp.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\GridView.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\GridView3D.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\GUIEngine\test\test_touch_api.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\GUIEngine\TouchEvent.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\GUIEngine\TouchManager.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\gui_helper.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\GUI_inspector_simple.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\headon_speech.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\HTMLRenderer.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\IDE.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\integereditor_control.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\IPC.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\IPCBinding\BindableObject.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\IPCBinding\coxpcall.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\IPCBinding\EntityBase.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\IPCBinding\EntityDesign.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\IPCBinding\EntityHelper.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\IPCBinding\EntityHelperCircleEditor.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\IPCBinding\EntityHelperEditorBase.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\IPCBinding\EntityHelperFacingEditor.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\IPCBinding\EntityHelperPointEditor.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\IPCBinding\EntityHelperSerializer.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\IPCBinding\EntityTemplate.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\IPCBinding\EntityView.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\IPCBinding\Framework.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\IPCBinding\InstanceView.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\IPCBinding\IPCBinding.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\IPCBinding\IPCBindingContext.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\IPCBinding\IPCClassBuilder.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\IPCBinding\Test\TestBindableObject.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\IPCBinding\Test\TestFramework.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\itemlist_control.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Json.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\KeyboardShortcut\KeyboardShortcut.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\KeyLineBox.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\LibStub.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\LoaderUI.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\loadworld.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Locale.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\locals.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\log.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\LuaXML.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\MainMenu.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\math\AABBPool.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\math\bit.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\math\complex.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\math\find_bit_limits.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\math\fit.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\math\math3d.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\math\matrix.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\math\Matrix4.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\math\MD5.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\math\Plane.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\math\Point.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\math\Quaternion.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\math\Rect.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\math\ShapeAABB.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\math\ShapeBox.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\math\ShapeRay.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\math\StringUtil.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\math\TEA.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\math\test\test_bit.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\math\test\test_complex.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\math\test\test_fit.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\math\test\test_matrix.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\math\test\test_MD5.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\math\test\test_TEA.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\math\vector.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\math\VectorPool.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\mathlib.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\MessageBox.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\MiniKeyboard.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\MinisceneManager.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\modifiers\CharacterSentientField.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\modifiers\DummyNPCEmpty.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\modifiers\DummyNPCLineWalker.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\modifiers\GreatView.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\modifiers\sampleModifier.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\modifierui_control.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\modifier_control.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\modifier_items.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Motion\AEManager.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Motion\AnimativeMenu\AnimativeMenu.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Motion\AnimativeMenu\TipAEMenu.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Motion\AnimativeMenu\TipMenu.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Motion\Animator.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Motion\AnimatorEngine.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Motion\AnimatorManager.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Motion\AnimatorPlayer.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Motion\BezierEase.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Motion\BezierSegment.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Motion\Color.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Motion\ColorTransform.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Motion\CustomEase.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Motion\DisplayObject.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Motion\ITween.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Motion\Keyframe.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Motion\LayerManager.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Motion\Motion.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Motion\Point.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Motion\RotateDirection.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Motion\SimpleEase.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Motion\Source.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Motion\test\animativeMenu_test.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Motion\test\autotips_test.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Motion\test\motion_test.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Motion\test\motion_test_2.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Motion\test\motion_test_xaml.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Motion\Tweenables.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\MotionEx\CameraMotions\CameraMotionPage.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\MotionEx\MotionFactory.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\MotionEx\MotionLine.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\MotionEx\MotionLineBase.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\MotionEx\MotionPlayer.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\MotionEx\MotionRender.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\MotionEx\MotionRender_Arena.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\MotionEx\MotionRender_Audio.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\MotionEx\MotionRender_Camera.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\MotionEx\MotionRender_Image.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\MotionEx\MotionRender_Mcml.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\MotionEx\MotionRender_Model.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\MotionEx\MotionRender_Script.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\MotionEx\MotionRender_Spell.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\MotionEx\MotionRender_SpellCastViewer.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\MotionEx\MotionRender_Text.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\MotionEx\MotionTypes.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\MotionEx\MotionXmlToTable.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\MotionEx\MovieController.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\MotionEx\StaticMoviePreloaderPage.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\MotionEx\Test\TestMotionPlayer.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\MotionView.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\MultiLineEditbox.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\MultiLineEditbox_old.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\mysql\mysql.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\mysql\sqlite3.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\mysql\test\test_mysql.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\mysql\test\test_sqlite3.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Network\StreamRateController.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\NPLDocGen.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\NPLExtension.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\NPLFlashTest\CallbackTest.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\NPLFlashTest\FlashDataTransitionTestPage.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\NPLFlashTest\FlashGameTest.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\NPLStatesMonitor.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\NumericUpDown.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ObjectOriented\base.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ObjectOriented\cached.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ObjectOriented\class.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ObjectOriented\collection\MapWithArrayOfKeys.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ObjectOriented\collection\ObjectCache.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ObjectOriented\collection\OrderedSet.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ObjectOriented\collection\PriorityQueue.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ObjectOriented\collection\UnorderedArray.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ObjectOriented\collection\UnorderedArraySet.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ObjectOriented\compiler\Arguments.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ObjectOriented\compiler\Conditional.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ObjectOriented\compiler\Expression.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ObjectOriented\component\base.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ObjectOriented\component\contained.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ObjectOriented\component\dynamic.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ObjectOriented\component\intercepted.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ObjectOriented\component\wrapped.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ObjectOriented\debug\Inspector.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ObjectOriented\debug\Matcher.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ObjectOriented\debug\Verbose.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ObjectOriented\debug\Viewer.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ObjectOriented\multiple.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ObjectOriented\object\Exception.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ObjectOriented\object\Publisher.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ObjectOriented\object\Wrapper.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ObjectOriented\scoped.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ObjectOriented\serial\FileStream.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ObjectOriented\serial\Serializer.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ObjectOriented\serial\SocketStream.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ObjectOriented\serial\StringStream.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ObjectOriented\simple.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ObjectOriented\table.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ObjectOriented\thread\CoSocket.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ObjectOriented\thread\IOScheduler.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ObjectOriented\thread\Scheduler.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ObjectOriented\thread\SocketScheduler.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ObjectOriented\thread\Timer.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\object_editor.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\object_editor_v1.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\OneTimeAsset.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\oo.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\OpenFileDialog.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\OpenFolderDialog.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\os.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\package\moduleEmu.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\package\package.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ParaEngineExtension.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ParaEngineLuaJitFFI.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ParaEngineSettings.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\popupmenu_control.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\PostProcessor.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\profiler.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\progressbar.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ProjectTemplates\TemplateProcessor.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ProjectTemplates\Templates\InstallApps\Startup.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\property_control.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\RadioBox.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\RibbonControl.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\rulemapping.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\sandbox.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\SaveFileDialog.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\scripttextbox_control.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\ScrollView.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\serialization.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\SliderBar.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\socket\ltn12.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\socket\socket.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\socket\url.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\SpriteAnimation_control.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\StateMachine.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\STL\Array.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\STL\ArrayMap.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\STL\LinkedList.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\STL\List.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\STL\OrderedArraySet.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\STL\Queue.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\STL\RingBuffer.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\STL\Stack.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\STL\UnorderedArray.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\STL\UnorderedArraySet.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\STL.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Storyboard\KeyFrame.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Storyboard\KeyFrames.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Storyboard\LayerManager.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Storyboard\Storyboard.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Storyboard\StoryboardParser.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Storyboard\Target.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Storyboard\Test\Test.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Storyboard\TimeSpan.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\stringmap.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Concurrent\Async.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Concurrent\Concurrent.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Concurrent\onlyOnce.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Concurrent\Parallel.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Concurrent\waterfall.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Core\Action.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Core\ActionGroup.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Core\Attribute.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Core\AttributeObject.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Core\Classes.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Core\Color.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Core\Core.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Core\DOM.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Core\Event.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Core\Filters.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Core\Namespace.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Core\ObjectPath.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Core\PainterContext.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Core\PostEventList.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Core\SceneContext.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Core\SceneContextManager.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Core\TableAttribute.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Core\ToolBase.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Core\ToolBaseAttributeObject.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Core\ToolBase_p.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Core\UniString.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Core\Variable.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Database\Collection.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Database\ErrorCode.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Database\IORequest.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Database\IOThread.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Database\Item.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Database\MemStore.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Database\SqliteIndexTable.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Database\SqliteStore.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Database\StorageProvider.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Database\Store.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Database\TableDatabase.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Database\test\test_TableDatabase.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Database\XmlDatabase.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Encoding\base64.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Encoding\hmac.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Encoding\jwt.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Encoding\sha1.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\os\GetUrl.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\os\os.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\os\run.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Scene\Animations\Bones\BoneProxy.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Scene\Animations\Bones\IKTwoBoneResolver.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Scene\BufferPicking.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Scene\Cameras\AutoCamera.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Scene\Cameras\Camera.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Scene\Cameras\Cameras.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Scene\Manipulators\BlockPivotManipContainer.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Scene\Manipulators\BoneIKManip.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Scene\Manipulators\BonesManip.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Scene\Manipulators\BonesManipContainer.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Scene\Manipulators\ManipContainer.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Scene\Manipulators\Manipulator.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Scene\Manipulators\MoveManipContainer.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Scene\Manipulators\RotateManip.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Scene\Manipulators\RotateManipContainer.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Scene\Manipulators\ScaleManip.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Scene\Manipulators\ScaleManipContainer.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Scene\Manipulators\TranslateManip.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Scene\Overlays\Overlay.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Scene\Overlays\OverlayPicking.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Scene\Overlays\ShapesDrawer.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\System.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\test\test_concurrency.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\test\test_Overlay.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\test\test_pe_custom.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\test\test_ToolBase.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\test\test_Windows.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Util\CmdParser.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Windows\Application.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Windows\Controls\Button.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Windows\Controls\Canvas.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Windows\Controls\EditBox.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Windows\Controls\Identicon.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Windows\Controls\Label.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Windows\Controls\Primitives\ButtonBase.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Windows\Events.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Windows\InputMethod.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Windows\Keyboard.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Windows\KeyEvent.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Windows\Layout.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Windows\LayoutItem.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Windows\mcml\DOM.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Windows\mcml\Elements\pe_button.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Windows\mcml\Elements\pe_container.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Windows\mcml\Elements\pe_custom.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Windows\mcml\Elements\pe_div.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Windows\mcml\Elements\pe_editbox.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Windows\mcml\Elements\pe_font.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Windows\mcml\Elements\pe_identicon.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Windows\mcml\Elements\pe_if.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Windows\mcml\Elements\pe_input.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Windows\mcml\Elements\pe_script.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Windows\mcml\Elements\pe_span.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Windows\mcml\Elements\pe_text.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Windows\mcml\Elements\pe_unknown.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Windows\mcml\mcml.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Windows\mcml\Page.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Windows\mcml\PageElement.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Windows\mcml\PageLayout.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Windows\mcml\Style.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Windows\mcml\StyleDefault.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Windows\mcml\StyleItem.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Windows\Mouse.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Windows\MouseEvent.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Windows\Screen.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Windows\Shapes\Rectangle.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Windows\Tooltip.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Windows\UIElement.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Windows\UIElement_p.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\System\Windows\Window.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\TabControl.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\terrain_editor.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\test\test_commonlib.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\test\test_FileExplorerCtrl.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\test\test_LibStub.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\test\test_multiline_editbox.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\test\test_ParaEngineExtension.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\test\test_rulemapping.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\test\test_timer.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\test\test_TreeView.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\test\test_WindowFrame.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\textdialog.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\TextSprite.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\timer.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\TimeSeries\AnimBlock.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\TimeSeries\TimeSeries.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\TipsStack.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\TooltipHelper.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Transitions\Tween.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Transitions\TweenEquations.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Transitions\TweenLite.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Transitions\TweenUtil.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\Transitions\Tween_test.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\TreeNode.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\TreeView.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\UIAnim\UIAnimation.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\UIAnim\UIAnimBlock.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\UIAnim\UIAnimFile.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\UIAnim\UIAnimIndex.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\UIAnim\UIAnimInstance.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\UIAnim\UIAnimManager.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\UIAnim\UIAnimSeq.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\UnitTest\luaunit.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\UnitTest\sample_test_file.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\UnitTest\sample_test_file1.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\UnitTest\unit_test.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\UnitTest\unit_test_case.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\UnitTest\unit_test_dlg.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\user_action.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\vectoreditor_control.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\VideoRecorder.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\visibilityGroup.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\WindowFrame.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\ide\XPath.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\sqlite\examples\aggregate.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\sqlite\examples\function.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\sqlite\examples\order.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\sqlite\examples\simple.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\sqlite\examples\smart.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\sqlite\examples\statement.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\sqlite\examples\tracing.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\sqlite\libluasqlite3-loader.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\sqlite\luasql-sqlite3.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\sqlite\lunit.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\sqlite\sqlite3.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\sqlite\tests-luasql.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\sqlite\tests-sqlite3.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\sqlite\tests.lua">
+      <Filter>script</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\readme.html">
+      <Filter>html</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\auth\login.html">
+      <Filter>html</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\auth\register.html">
+      <Filter>html</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\partials\page_popup.html">
+      <Filter>html</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\partials\site_popup.html">
+      <Filter>html</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-includes\js\ace\demo.html">
+      <Filter>html</Filter>
+    </None>
+    <None Include="script\ide\Animation\Motion\test\animation_editor_test_page.html">
+      <Filter>html</Filter>
+    </None>
+    <None Include="script\ide\Director\CardMovieTest.html">
+      <Filter>html</Filter>
+    </None>
+    <None Include="script\ide\Director\DirectorToolPage.html">
+      <Filter>html</Filter>
+    </None>
+    <None Include="script\ide\Display3D\Example\SceneCanvasExample.html">
+      <Filter>html</Filter>
+    </None>
+    <None Include="script\ide\IPCBinding\EntitySamplePlaceableTemplate.newinstance.html">
+      <Filter>html</Filter>
+    </None>
+    <None Include="script\ide\IPCBinding\IPCClassBuilderPage.html">
+      <Filter>html</Filter>
+    </None>
+    <None Include="script\ide\KeyboardShortcut\KeyboardShortcut_page.html">
+      <Filter>html</Filter>
+    </None>
+    <None Include="script\ide\MotionEx\CameraMotions\CameraMotionPage.html">
+      <Filter>html</Filter>
+    </None>
+    <None Include="script\ide\MotionEx\StaticMoviePreloaderPage.html">
+      <Filter>html</Filter>
+    </None>
+    <None Include="script\ide\MotionEx\Test\Test_MotionXmlToTable_Page.html">
+      <Filter>html</Filter>
+    </None>
+    <None Include="script\ide\NPLFlashTest\FlashDataTransitionTestPage.html">
+      <Filter>html</Filter>
+    </None>
+    <None Include="script\ide\ProjectTemplates\Templates\InstallApps\Startup.html">
+      <Filter>html</Filter>
+    </None>
+    <None Include="script\ide\ProjectTemplates\Templates\MCMLPage\Startup.html">
+      <Filter>html</Filter>
+    </None>
+    <None Include="script\ide\ProjectTemplates\Templates\NPL_File\Startup.html">
+      <Filter>html</Filter>
+    </None>
+    <None Include="script\ide\ProjectTemplates\Templates\ProjectTemplate\Startup.html">
+      <Filter>html</Filter>
+    </None>
+    <None Include="script\ide\styles\DefaultMessageBox.html">
+      <Filter>html</Filter>
+    </None>
+    <None Include="script\ide\styles\ThinFrameMessageBox.html">
+      <Filter>html</Filter>
+    </None>
+    <None Include="script\ide\System\test\test_mcml_page.html">
+      <Filter>html</Filter>
+    </None>
+    <None Include="script\ide\System\test\test_pe_custom.html">
+      <Filter>html</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\index.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-admin\admin-ajax.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-config.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\aboutus.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\blocklist.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\console.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\db_manager.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\debugger.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\demos\create_circle_form.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\editcode.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\index.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\learn.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\markdown.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\nopage.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\object_browser.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\open.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\package_maker.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\propertywindow.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\viewsource.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\vscode_debugger.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\auth\api.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\auth\api_changepw.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\auth\api_deleteme.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\auth\api_login.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\auth\api_me.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\auth\api_register.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\auth\clientconfig.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\auth\config.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\auth\facebook.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\auth\github.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\auth\google.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\config\buildin.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\config\db.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\helpers\website.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\models\base.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\models\page.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\models\recommended.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\models\reviewrequest.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\models\site.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\models\userprojects.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\pages\home.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\pages\login.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\pages\projects.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\pages\settings.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\routes.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\wiki.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\world.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\worldmap.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\themes\sensitive\404.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\themes\sensitive\category.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\themes\sensitive\footer.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\themes\sensitive\front_page.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\themes\sensitive\functions.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\themes\sensitive\header.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\themes\sensitive\index.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\themes\sensitive\nav-menu-walker.class.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\themes\sensitive\page.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-includes\cache.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-includes\class-wp-error.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-includes\class-wp-theme.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-includes\class-wp-user.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-includes\class-wp-walker.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-includes\class-wp-xmlrpc-server.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-includes\default-constants.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-includes\default-filters.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-includes\formatting.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-includes\functions.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-includes\general-template.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-includes\http.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-includes\link-template.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-includes\load.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-includes\meta.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-includes\nav-menu-template.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-includes\nav-menu.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-includes\option.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-includes\pluggable.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-includes\plugin.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-includes\query.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-includes\session.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-includes\taxonomy.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-includes\template-loader.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-includes\template.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-includes\theme.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-includes\user.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-includes\version.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-includes\wp-db.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-load.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-login.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-main.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-settings.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\xmlrpc.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\test\helloworld.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\test\index.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\test\test_include.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="Documentation\paracraft.docgen.txt">
+      <Filter>Documetation</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Xml Include="Documentation\NplDocumentation.xml">
-      <Filter>Documentation</Filter>
-    </Xml>
-    <Xml Include="Documentation\paracraft.docgen.xml">
-      <Filter>Documentation</Filter>
-    </Xml>
-    <Xml Include="Documentation\Globals.xml">
-      <Filter>Documentation</Filter>
-    </Xml>
+    <XML Include="script\apps\WebServer\admin\webserver.config.xml">
+      <Filter>xml</Filter>
+    </XML>
+    <XML Include="script\apps\WebServer\admin\wp-content\database\table_nav_menu.xml">
+      <Filter>xml</Filter>
+    </XML>
+    <XML Include="script\apps\WebServer\admin\wp-content\database\table_sitemeta.xml">
+      <Filter>xml</Filter>
+    </XML>
+    <XML Include="script\apps\WebServer\admin\wp-content\database\table_users.xml">
+      <Filter>xml</Filter>
+    </XML>
+    <XML Include="script\apps\WebServer\default.webserver.config.xml">
+      <Filter>xml</Filter>
+    </XML>
+    <XML Include="script\apps\WebServer\test\webserver.config.xml">
+      <Filter>xml</Filter>
+    </XML>
+    <XML Include="script\ide\Animation\test\movieScript.xml">
+      <Filter>xml</Filter>
+    </XML>
+    <XML Include="script\ide\Animation\test\storyboardPlayer_test.xml">
+      <Filter>xml</Filter>
+    </XML>
+    <XML Include="script\ide\AudioEngine\SampleSoundBank.xml">
+      <Filter>xml</Filter>
+    </XML>
+    <XML Include="script\ide\AudioEngine\SampleSoundInstance.xml">
+      <Filter>xml</Filter>
+    </XML>
+    <XML Include="script\ide\IPCBinding\EntitySamplePlaceableTemplate.entity.xml">
+      <Filter>xml</Filter>
+    </XML>
+    <XML Include="script\ide\IPCBinding\EntitySampleTemplate.entity.xml">
+      <Filter>xml</Filter>
+    </XML>
+    <XML Include="script\ide\KeyboardShortcut\commands_bak.xml">
+      <Filter>xml</Filter>
+    </XML>
+    <XML Include="script\ide\Motion\AnimativeMenu\MotionLib\tipmenu_bg.xml">
+      <Filter>xml</Filter>
+    </XML>
+    <XML Include="script\ide\Motion\AnimativeMenu\MotionLib\tipmenu_closebtn.xml">
+      <Filter>xml</Filter>
+    </XML>
+    <XML Include="script\ide\Motion\AnimativeMenu\MotionLib\tipmenu_side.xml">
+      <Filter>xml</Filter>
+    </XML>
+    <XML Include="script\ide\Motion\AnimativeMenu\MotionLib\tipmenu_text.xml">
+      <Filter>xml</Filter>
+    </XML>
+    <XML Include="script\ide\Motion\test\motionData.xml">
+      <Filter>xml</Filter>
+    </XML>
+    <XML Include="script\ide\Motion\test\motionData_2.xml">
+      <Filter>xml</Filter>
+    </XML>
+    <XML Include="script\ide\Motion\test\motionData_3.xml">
+      <Filter>xml</Filter>
+    </XML>
+    <XML Include="script\ide\MotionEx\CameraMotions\CameraMotion_1.xml">
+      <Filter>xml</Filter>
+    </XML>
+    <XML Include="script\ide\MotionEx\CameraMotions\CameraMotion_2.xml">
+      <Filter>xml</Filter>
+    </XML>
+    <XML Include="script\ide\MotionEx\CameraMotions\CameraMotion_3.xml">
+      <Filter>xml</Filter>
+    </XML>
+    <XML Include="script\ide\MotionEx\Motion.xml">
+      <Filter>xml</Filter>
+    </XML>
+    <XML Include="script\ide\MotionEx\Movie.xml">
+      <Filter>xml</Filter>
+    </XML>
+    <XML Include="script\ide\ProjectTemplates\Template.xml">
+      <Filter>xml</Filter>
+    </XML>
+    <XML Include="script\ide\Storyboard\Test\Test.xml">
+      <Filter>xml</Filter>
+    </XML>
+    <XML Include="script\ide\styles\BackgroundGreyOutMotionData.xml">
+      <Filter>xml</Filter>
+    </XML>
+    <XML Include="script\ide\styles\WindowPopupMotionData.xml">
+      <Filter>xml</Filter>
+    </XML>
+    <XML Include="script\ide\WindowFrameMotion\BottomHide.xml">
+      <Filter>xml</Filter>
+    </XML>
+    <XML Include="script\ide\WindowFrameMotion\BottomShow.xml">
+      <Filter>xml</Filter>
+    </XML>
+    <XML Include="script\ide\WindowFrameMotion\FreeHide.xml">
+      <Filter>xml</Filter>
+    </XML>
+    <XML Include="script\ide\WindowFrameMotion\FreeShow.xml">
+      <Filter>xml</Filter>
+    </XML>
+    <XML Include="script\ide\WindowFrameMotion\LeftHide.xml">
+      <Filter>xml</Filter>
+    </XML>
+    <XML Include="script\ide\WindowFrameMotion\LeftShow.xml">
+      <Filter>xml</Filter>
+    </XML>
+    <XML Include="script\ide\WindowFrameMotion\RightHide.xml">
+      <Filter>xml</Filter>
+    </XML>
+    <XML Include="script\ide\WindowFrameMotion\RightShow.xml">
+      <Filter>xml</Filter>
+    </XML>
+    <XML Include="Documentation\NplDocumentation.xml">
+      <Filter>Documetation</Filter>
+    </XML>
+    <XML Include="Documentation\paracraft.docgen.xml">
+      <Filter>Documetation</Filter>
+    </XML>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="Documentation\paracraft.docgen.txt">
-      <Filter>Documentation</Filter>
-    </Text>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{63F03C60-6952-4A25-9928-62567BF70930}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="script">
+      <UniqueIdentifier>{9BA39831-D402-4372-97F8-A436CDD6D0A6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="xml">
+      <UniqueIdentifier>{F306582A-7A48-4D03-B557-A02AF4D1CB56}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="html">
+      <UniqueIdentifier>{BFFB16C7-5CA7-4604-9D6E-16B6A1AFD6FB}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="page">
+      <UniqueIdentifier>{CCE0C982-58E9-4CFA-BAC3-6919A6DF8B1F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Documetation">
+      <UniqueIdentifier>{BE28C168-A380-4020-AB86-AE9458CD6F5E}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>
