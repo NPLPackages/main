@@ -356,6 +356,9 @@ function WebServer:Start(root_dir, ip, port)
 	if(config) then
 		config.server.ip = ip or config.server.ip or "0.0.0.0";
 		config.server.port = port or config.server.port or "8080"; -- if port is "0", we will not listen for incoming connection
+		config.NPLRuntime = self.config.NPLRuntime;
+		config.gc = self.config.gc;
+		config.log_level = self.config.log_level;
 		self:GetServer("npl_http").start(config);
 		return true;
 	end

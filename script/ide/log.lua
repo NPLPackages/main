@@ -508,3 +508,13 @@ end
 LOG = commonlib.logging.GetLogger("");
 LOG.level = "TRACE";
 
+-- @param level: string of FATAL, ERROR, WARN, INFO, DEBUG, TRACE
+function LOG.SetLogLevel(level)
+	if(level) then
+		level = string.lower(level);
+		if(level~=LOG.level) then
+			LOG.level = level;
+			LOG.std(nil, "info", "Log", "log level is set to %s", LOG.level);
+		end
+	end
+end

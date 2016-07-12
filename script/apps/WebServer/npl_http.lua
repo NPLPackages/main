@@ -31,12 +31,73 @@ function npl_http.LoadBuildinHandlers()
 	-- TODO: add your buildin handlers here. 
 end
 
+function npl_http.LoadNPLRuntimeConfig(config)
+	if(not config) then
+		return;
+	end
+	-- set NPL attributes before starting the server. 
+	local att = NPL.GetAttributeObject();
+	if(config.TCPKeepAlive) then
+		att:SetField("TCPKeepAlive", config.TCPKeepAlive==true);
+	end
+	if(config.KeepAlive) then
+		att:SetField("KeepAlive", config.KeepAlive==true);
+	end
+	if(config.IdleTimeout) then
+		att:SetField("IdleTimeout", config.IdleTimeout==true);
+	end
+	if(config.IdleTimeoutPeriod) then
+		att:SetField("IdleTimeoutPeriod", tonumber(config.IdleTimeoutPeriod));
+	end
+	if(config.MaxPendingConnections) then
+		att:SetField("MaxPendingConnections", tonumber(config.MaxPendingConnections));
+	end
+	local npl_queue_size = config.npl_queue_size;
+	if(npl_queue_size) then
+		__rts__:SetMsgQueueSize(npl_queue_size);
+	end
+
+	-- whether use compression on incoming connections, the current compression method is super light-weighted and is mostly for data encrption purposes. 
+	local compress_incoming;
+	if (config.compress_incoming and config.compress_incoming=="true") then
+		compress_incoming = true;
+	else
+		compress_incoming = false;
+	end
+	NPL.SetUseCompression(compress_incoming, false);
+	
+	if(config.CompressionLevel) then
+		att:SetField("CompressionLevel", tonumber(config.CompressionLevel));
+	end
+	if(config.CompressionThreshold) then
+		att:SetField("CompressionThreshold", tonumber(config.CompressionThreshold));
+	end
+	if(config.HTTPCompressionThreshold) then
+		npl_http.HTTPCompressionThreshold = config.HTTPCompressionThreshold;
+	end
+end
+
+-- Start a garbage collection timer, that does a full garbage collection of all worker threads every few seconds. 
+function npl_http.LoadGCConfig(config)
+	if(not config) then return end
+	local interval = config.gc_interval;
+	-- TODO: start a timer to go explicit GC.
+end
+
+function npl_http.GetCompressionThreshold()
+	return npl_http.HTTPCompressionThreshold or 12000;
+end
+
 -- set request handler according to configuration
 function npl_http.LoadConfig(config)
 	-- set a really big message queue for http server. 
 	local MsgQueueSize = config.MsgQueueSize or 20000;
 	__rts__:SetMsgQueueSize(MsgQueueSize);
 	LOG.std(nil, "system", "NPL", "NPL input queue size is changed to %d", MsgQueueSize);
+
+	LOG.SetLogLevel(config.log_level);
+	npl_http.LoadNPLRuntimeConfig(config.NPLRuntime);
+	npl_http.LoadGCConfig(config.gc);
 
 	npl_http.LoadBuildinHandlers();
 

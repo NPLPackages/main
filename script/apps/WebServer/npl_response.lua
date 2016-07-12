@@ -218,8 +218,12 @@ end
 -- sets:
 --		self.keep_alive : if possible to keep using the same connection
 function response:send_response()
-	if(not self.content and self.buffer) then
-		self.content = table.concat(self.buffer);
+	if(self.req:GetMethod() == "HEAD") then
+		self.content = "";
+	else
+		if(not self.content and self.buffer) then
+			self.content = table.concat(self.buffer);
+		end	
 	end
 	
 	if self.content then
@@ -261,7 +265,7 @@ function response:send_response()
 		else
 			-- compress if content-type is text-based 
 			if (not self.sent_headers and NPL.Compress) then
-				local minCompressSize = 12000;
+				local minCompressSize = npl_http.GetCompressionThreshold();
 				local cSize = self.headers["Content-Length"];
 				if(cSize and cSize > minCompressSize and not self.headers["Content-Encoding"]) then
 					if(self:isContentTypePlainText(self.headers["Content-Type"])) then
@@ -332,14 +336,14 @@ end
 -- sends content directly to client. sends headers first, if not
 -- @param data : content data to send
 function response:send_data(data)
+	if (not self.sent_headers) then
+		self:send_headers(res);
+	end
+
 	if (not data or data == "") then
 		return
 	end
 
-	if (not self.sent_headers) then
-		self:send_headers(res);
-	end
-	
 	if data then
 		if self.chunked then
 			self.sendInternal(string.format("%X\r\n", #(data)));

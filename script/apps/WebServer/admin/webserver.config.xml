@@ -39,6 +39,50 @@
     -->
     <rule match="." with="WebServer.filehandler" params='{baseDir = "%CD%", }'></rule>
   </rules>
+  
+  <!--global NPL runtime config-->
+  <config>
+    <!--log level: FATAL, ERROR, WARN, INFO, DEBUG, TRACE -->
+    <string name='log_level'>DEBUG</string>
+    <!--HTTP server related-->
+    <table name='NPLRuntime'>
+      <!--whether to use compression for incoming connections. This must be true in order for CompressionLevel and CompressionThreshold to take effect--> 
+      <bool name='compress_incoming'>true</bool>
+      <!---1, 0-9: Set the zlib compression level to use in case compresssion is enabled. 
+      Compression level is an integer in the range of -1 to 9. 
+		  Lower compression levels result in faster execution, but less compression. Higher levels result in greater compression, 
+		  but slower execution. The zlib constant -1, provides a good compromise between compression and speed and is equivalent to level 6.--> 
+      <number name='CompressionLevel'>-1</number>
+      <!--when the NPL message size is bigger than this number of bytes, we will use m_nCompressionLevel for compression. 
+		  For message smaller than the threshold, we will not compress even m_nCompressionLevel is not 0.--> 
+      <number name='CompressionThreshold'>204800</number>
+      <!--if plain text http content is requested, we will compress it with gzip when its size is over this number of bytes.-->
+      <number name='HTTPCompressionThreshold'>12000</number>
+      <!--the default npl queue size for each npl thread. defaults to 500. may set to something like 5000 for busy servers-->
+      <number name='npl_queue_size'>20000</number>
+      <!--whether socket's SO_KEEPALIVE is enabled.--> 
+      <bool name='TCPKeepAlive'>true</bool>
+      <!--enable application level keep alive. we will use a global idle timer to detect if a connection has been inactive for IdleTimeoutPeriod-->
+      <bool name='KeepAlive'>false</bool>
+      <!--Enable idle timeout. This is the application level timeout setting.--> 
+      <bool name='IdleTimeout'>false</bool>
+      <!--how many milliseconds of inactivity to assume this connection should be timed out. if 0 it is never timed out.-->
+      <number name='IdleTimeoutPeriod'>1200000</number>
+      <!--queue size of pending socket acceptor-->
+      <number name='MaxPendingConnections'>1000</number>
+    </table>
+    <!--garbage collection interval for memory. No need to change-->
+    <table name='gc'>
+      <number name='gc_interval'>20000</number>
+      <string name='gc_opt'>none</string>
+      <bool name='print_gc_info'>false</bool>
+      <!--automatic garbage collection parameters-->
+      <number name='gc_setpause'>90</number>
+      <number name='gc_setstepmul'>500</number>
+    </table>
+  </config>
+  
+  <!-- "wiki" site configurations-->
   <config>
     <table name='wiki'>
       <table name='secrets'>
