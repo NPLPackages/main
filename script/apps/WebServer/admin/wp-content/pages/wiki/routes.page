@@ -7,10 +7,10 @@ Desc: redirect AJAX URL to model functions
 Reference: http://guides.rubyonrails.org/routing.html
 
 Mapping of CRUD AJAX operations: 
-- PUT "/api/wiki/modesl/userprojects/new" --> wiki/models/userprojects:create()
-- GET "/api/wiki/modesl/userprojects" --> wiki/models/userprojects:get()
-- PUT "/api/wiki/modesl/userprojects" --> wiki/models/userprojects:update()
-- DELETE "/api/wiki/modesl/userprojects" --> wiki/models/userprojects:delete()
+- PUT "/api/wiki/models/userprojects/new" --> wiki/models/userprojects:create()
+- GET "/api/wiki/models/userprojects" --> wiki/models/userprojects:get()
+- PUT "/api/wiki/models/userprojects" --> wiki/models/userprojects:update()
+- DELETE "/api/wiki/models/userprojects" --> wiki/models/userprojects:delete()
 
 Everything else is mapped to `wiki.page` as standard html file.
 ]]
