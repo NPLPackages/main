@@ -260,8 +260,15 @@ end
 function IPCDebugger.SetBreakpointAsync(filename, line)
 	if(filename and line) then
 		filename = IPCDebugger.NormalizeFileName(filename)
-		IPCDebugger.set_breakpoint(IPCDebugger.NormalizeFileName(filename), line);
+		IPCDebugger.set_breakpoint(filename, line);
 		IPCDebugger.WriteDebugOutput("Breakpoint async set in file "..filename..' line '..line..'\n')
+	end
+end
+
+-- RemoveBreakpoint async
+function IPCDebugger.RemoveBreakpointAsync(filename, line)
+	if(filename and line) then
+		IPCDebugger.remove_breakpoint(IPCDebugger.NormalizeFileName(filename), line);
 	end
 end
 
@@ -490,6 +497,8 @@ local function GetRelativeNPLPath(file)
 		file = string.gsub(file, "^.*/script/", "script/");
 		file = string.gsub(file, "^.*/source/", "source/");
 	end
+	-- remove npl packages/../ if any	
+	file = file:gsub("npl_packages/[^/]+/", "");
 	return file;
 end
 
@@ -498,6 +507,7 @@ local function set_breakpoint(file, line)
 		breakpoints[line] = {} 
 	end  
 	file = GetRelativeNPLPath(file);
+	log(format("set bp: %s:%d\n", file, line));
 	breakpoints[line][file] = true;
 end
 
@@ -879,11 +889,14 @@ function IPCDebugger.SetDebugger(debugger)
 end
 
 function IPCDebugger.ListBreakpoints()
+	local bp = {};
 	for i, v in pairs(breakpoints) do
 		for ii, vv in pairs(v) do
 			write("Break at: "..i..' in '..ii..'\n')
+			bp[#bp+1] = {filename=ii, line = i};
 		end
 	end
+	IPCDebugger.GetDebugger().Write({filename="listBreakpoint", type=debug_events_enum.DEBUG_OUTPUT, code = bp});
 end
 
 -- this is the coroutine main loop when process is paused, we will wait on messages from the debugger IDE. 

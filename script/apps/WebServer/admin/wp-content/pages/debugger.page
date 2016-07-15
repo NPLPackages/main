@@ -112,6 +112,9 @@ wp_enqueue_style("jqueryui_css", "/wp-includes/js/jquery/jquery-ui.min.css");
             openedfiles: [], // {filename, line}
             currentFilename: "",
         });
+
+        if (!Array.isArray($scope.$storage.breakpoints))
+            $scope.$storage.breakpoints = [];
 		var workspaceDir = "<?=ParaIO.GetCurDirectory(0)?>";
         var pollTimer;
 
@@ -125,12 +128,14 @@ wp_enqueue_style("jqueryui_css", "/wp-includes/js/jquery/jquery-ui.min.css");
                 uploadBreakpoints();
             });
             $scope.startTimer();
+            $scope.status = "running";
         }
         $scope.pause = function () {
             $http.get("ajax/debugger?action=pause").then(function (response) {
                 uploadBreakpoints();
             });
             $scope.startTimer();
+            $scope.status = "running";
         }
         $scope.stepover = function () {
             $http.get("ajax/debugger?action=stepover").then(function (response) { });
@@ -143,7 +148,9 @@ wp_enqueue_style("jqueryui_css", "/wp-includes/js/jquery/jquery-ui.min.css");
         }
         $scope.stop = function () {
             $http.get("ajax/debugger?action=stop").then(function (response) { });
-            $scope.stopTimer();
+            // $scope.stopTimer();
+            $scope.status = "detached";
+            $scope.stackinfo = [];
         }
         $scope.continue = function () {
 			if($scope.status == "paused")
@@ -170,15 +177,12 @@ wp_enqueue_style("jqueryui_css", "/wp-includes/js/jquery/jquery-ui.min.css");
                     }
                 });
             }, 500);
-            $scope.status = "running";
         }
         $scope.stopTimer = function () {
             if (angular.isDefined(pollTimer)) {
                 $interval.cancel(pollTimer);
                 pollTimer = undefined;
             }
-            $scope.status = "detached";
-            $scope.stackinfo = [];
         }
         $scope.$watchCollection('msgs', function () {
             var $list = $('#log');
@@ -187,7 +191,6 @@ wp_enqueue_style("jqueryui_css", "/wp-includes/js/jquery/jquery-ui.min.css");
         });
 
         $scope.listBreakpoint = function () {
-            $scope.$storage.breakpoints = [];
             $http.get("ajax/debugger?action=listbreakpoint").then(function (response) { });
         }
 
@@ -258,6 +261,7 @@ wp_enqueue_style("jqueryui_css", "/wp-includes/js/jquery/jquery-ui.min.css");
 		$scope.getRelativePath = function (filename) {
 			filename = filename.replace(/\\/g, "/");
 			filename = filename.replace(workspaceDir, "");
+			filename = filename.replace(workspaceDir.toLowerCase(), "");
 			filename = filename.replace(/.*npl_packages\/[^\/]+\//g, "");
 			return filename;
 		}
@@ -374,7 +378,16 @@ wp_enqueue_style("jqueryui_css", "/wp-includes/js/jquery/jquery-ui.min.css");
             }
 			else if (cmd == "exit") {
                 $scope.stop();
-            }
+			}
+			else if (cmd == "listBreakpoint" && msg.code != null) {
+			    //for (var i = 0; i < $scope.$storage.breakpoints.length; i++) {
+			    //    $scope.$storage.breakpoints[i].filename;
+			    //}
+			    if (Array.isArray(msg.code))
+			        $scope.$storage.breakpoints = msg.code;
+			    else
+			        $scope.$storage.breakpoints = [];
+			}
             else if (cmd == "DebuggerOutput" && msg.code != null) {
                 if (msg.code == "[DEBUG]> ") {
                     $scope.status = "paused";
@@ -385,6 +398,20 @@ wp_enqueue_style("jqueryui_css", "/wp-includes/js/jquery/jquery-ui.min.css");
                         var line = Number(msg.code.substr(10, lineEnd - 10));
                         var filename = msg.code.substr(lineEnd + 4, msg.code.length - lineEnd - 4).trim();
                         $scope.addBreakpoint(filename, line);
+                    }
+                }
+                else if (msg.code.substring(0, 29) == "Breakpoint async set in file ")
+                {
+                    var lineEnd = msg.code.indexOf(" line ", 29);
+                    if (lineEnd > 0) {
+                        var line = Number(msg.code.substr(lineEnd + 6, msg.code.length - lineEnd - 6).trim());
+                        var filename = msg.code.substr(29, lineEnd - 29).trim();
+                        filename = $scope.getRelativePath(filename);
+                        var bpIndex = $scope.getBreakpointIndex(filename, line);
+                        if (bpIndex < 0) {
+                            $scope.addBreakpoint(filename, line);
+                            $scope.gotoSourceLine(filename, line);
+                        }
                     }
                 }
             }
@@ -535,7 +562,9 @@ wp_enqueue_style("jqueryui_css", "/wp-includes/js/jquery/jquery-ui.min.css");
         }
         initEditor();
 		if(Page)
-            Page.ShowSideBar(false);
+		    Page.ShowSideBar(false);
+        // start timer
+		$scope.startTimer();
     });
 </script>
 <h1>NPL Debugger</h1>

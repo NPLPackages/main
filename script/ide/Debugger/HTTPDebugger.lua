@@ -134,6 +134,8 @@ local function activate()
 		HTTPDebugger.AttachAsync();
 	elseif(command == "setb") then
 		HTTPDebugger.SetBreakpointAsync(msg.code.filename, msg.code.line);
+	elseif(command == "delb") then
+		HTTPDebugger.RemoveBreakpointAsync(msg.code.filename, msg.code.line);
 	elseif(command == "listb") then
 		HTTPDebugger.ListBreakpoints();
 	elseif(command == "exec") then
