@@ -73,6 +73,22 @@ function PageElement:createFromXmlNode(o)
 	return o;
 end
 
+function PageElement:clone()
+	local o = self:new();
+	o.name = self.name;
+	o.attr = commonlib.copy(self.attr);
+	if(#self ~= 0) then
+		for i, child in ipairs(self) do
+			if(type(child) == "table" and child.clone) then
+				o:AddChild(child:clone());
+			else
+				o:AddChild(commonlib.copy(child));
+			end
+		end
+	end
+	return o;
+end
+
 -- static public function
 function PageElement:createChildRecursive_helper()
 	if(#self ~= 0) then
@@ -147,14 +163,16 @@ function PageElement:LoadComponent(parentElem, parentLayout, style)
 
 	local css = self:CreateStyle(mcml:GetStyleItem(self.class_name or self.name), style);
 
+	-- apply models
+	self:ApplyPreValues();
 	self:OnLoadComponentBeforeChild(parentElem, parentLayout, css);
 
 	for childnode in self:next() do
 		childnode:LoadComponent(parentElem, parentLayout, css);
 	end
-
+	
 	self:OnLoadComponentAfterChild(parentElem, parentLayout, css);
-
+	
 	-- call onload(self) function if any. 
 	local onloadFunc = self:GetString("onload");
 	if(onloadFunc and onloadFunc~="") then
@@ -167,6 +185,7 @@ function PageElement:LoadComponent(parentElem, parentLayout, style)
 		end
 		Elements.pe_script.EndCode(rootName, self, bindingContext, _parent, left, top, width, height,style, parentLayout);
 	end
+	self:UnapplyPreValues();
 end
 
 -- private: redirector
@@ -939,6 +958,27 @@ function PageElement:ClearAllChildren()
 	commonlib.resize(self, 0);
 end
 
+-- remove all child nodes and move them to an internal template node
+function PageElement:MoveChildrenToTemplate()
+	local templateNode;
+	if(#self == 1) then
+		templateNode = self[1];
+	else
+		-- use anonymous parent element if multiple nodes in the template 
+		templateNode = PageElement:new(); 
+		for child in self:next() do
+			templateNode:AddChild(child);
+		end
+	end
+	self.templateNode = templateNode;
+	self:ClearAllChildren();
+end
+
+-- this may return nil if self:MoveChildrenToTemplate is never called. 
+function PageElement:GetTemplateNode()
+	return self.templateNode;
+end
+
 -- generate a less compare function according to a node field name. 
 -- @param fieldName: the name of the field, such as "text", "name", etc
 function PageElement.GenerateLessCFByField(fieldName)
@@ -1220,6 +1260,13 @@ function PageElement:GetAllChildWithAttribute(attrName, attrValue, output)
 	return output;
 end
 
+-- get code value in NPL code script. 
+-- @param name: can be any name with commmar 
+function PageElement:GetScriptValue(name)
+	local pageScope = self:GetPageCtrl():GetPageScope();
+	return commonlib.getfield(name, pageScope);
+end
+
 -- this function will apply self.pre_values to current page scope during rendering.
 -- making it accessible to XPath and Eval function.  
 function PageElement:ApplyPreValues()
@@ -1228,6 +1275,18 @@ function PageElement:ApplyPreValues()
 		if(pageScope) then
 			for name, value in pairs(self.pre_values) do
 				pageScope[name] = value;
+			end
+		end
+	end
+end
+
+-- pop page script 
+function PageElement:UnapplyPreValues()
+	if(type(self.pre_values) == "table") then
+		local pageScope = self:GetPageCtrl():GetPageScope();
+		if(pageScope) then
+			for name, value in pairs(self.pre_values) do
+				pageScope[name] = nil;
 			end
 		end
 	end

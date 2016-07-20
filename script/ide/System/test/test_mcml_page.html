@@ -14,6 +14,11 @@ function OnButtonClick()
         Page:Refresh(0);
     end);
 end
+
+repeat_data = { {a=1}, {a=2} };
+function GetDS()
+    return repeat_data;
+end
 ]]>
 </script>
     <div align="right" style="background-color:#ff0000;margin:10px;padding:10px;min-width:400px;min-height:150px">
@@ -44,6 +49,12 @@ end
         editbox:<input type="text" name="myEditbox" value="" style="margin-left:2px;width:64px;height:25px"/><br/>
         pe_if: <pe:if condition='<%=globalVar=="test global var"%>'>true</pe:if>
     </pe:container>
+    <pe:repeat value="item in repeat_data" style="float:left">
+        <div style="float:left;"><%=item.a%></div>
+    </pe:repeat>
+    <pe:repeat value="item in GetDS()" style="float:left">
+        <div style="float:left;"><%=item.a%></div>
+    </pe:repeat>
 </pe:mcml>
 </html>
 

@@ -100,8 +100,11 @@ function mcml:LoadAllElements()
 		Elements.pe_button:RegisterAs("button");
 	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_if.lua");
 	Elements.pe_if:RegisterAs("pe:if");
+	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_repeat.lua");
+	Elements.pe_repeat:RegisterAs("pe:repeat");
 	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_identicon.lua");
 	Elements.pe_identicon:RegisterAs("pe:identicon");
+
 	-- TODO: add all system defined page element here
 end
 

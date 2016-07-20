@@ -14,12 +14,12 @@ NPL.load("(gl)script/apps/WebServer/npl_file_handler.lua");
 NPL.load("(gl)script/ide/commonlib.lua");
 NPL.load("(gl)script/ide/Files.lua");
 NPL.load("(gl)script/ide/socket/url.lua");
-NPL.load("(gl)script/apps/WebServer/minetypes.lua");
+NPL.load("(gl)script/apps/WebServer/mimetypes.lua");
 NPL.load("(gl)script/apps/WebServer/npl_request.lua");
 NPL.load("(gl)script/apps/WebServer/npl_common_handlers.lua");
 local common_handlers = commonlib.gettable("WebServer.common_handlers");
 local request = commonlib.gettable("WebServer.request");
-local minetypes = commonlib.gettable("WebServer.minetypes");
+local mimetypes = commonlib.gettable("WebServer.mimetypes");
 local url = commonlib.gettable("commonlib.socket.url")
 local lfs = commonlib.Files.GetLuaFileSystem();
 
@@ -198,7 +198,7 @@ local function filehandler(req, res, baseDir, nocache)
 		path = baseDir..req.relpath:gsub("^/", "");
 	end
 
-	res.headers["Content-Type"] = minetypes:guess_type(path);
+	res.headers["Content-Type"] = mimetypes:guess_type(path);
 	res.headers["Content-Encoding"] = encodingfrompath(path)
     
 	if(nocache) then

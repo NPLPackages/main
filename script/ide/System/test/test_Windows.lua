@@ -132,6 +132,8 @@ end
 
 -- test loading componets via url
 function test_Windows:TestMCMLPage()
+	NPL.load("(gl)script/ide/System/Windows/Window.lua");
+	local Window = commonlib.gettable("System.Windows.Window")
 	local window = Window:new();
 	window:Show({
 		url="script/ide/System/test/test_mcml_page.html", 
