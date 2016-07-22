@@ -55,6 +55,9 @@ end
     <pe:repeat value="item in GetDS()" style="float:left">
         <div style="float:left;"><%=item.a%></div>
     </pe:repeat>
+    <pe:repeat DataSource='<%=GetDS()%>' style="float:left">
+        <div style="float:left;"><%=a%></div>
+    </pe:repeat>
 </pe:mcml>
 </html>
 

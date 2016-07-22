@@ -33,6 +33,9 @@ commonlib.TimerManager.DumpTimerCount()
 
 -- get the current time in millisecond. This may be faster than ParaGlobal_timeGetTime() since it is updated only at rendering frame rate. 
 commonlib.TimerManager.GetCurrentTime();
+
+-- one time timer
+commonlib.TimerManager.SetTimeout(function()  end, 1000)
 ------------------------------------------------------------
 ]]
 

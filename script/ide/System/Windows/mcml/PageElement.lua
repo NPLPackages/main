@@ -152,6 +152,9 @@ function PageElement:LoadComponent(parentElem, parentLayout, style)
 	if(self:GetAttribute("display") == "none") then 
 		return 
 	end
+	-- apply models
+	self:ApplyPreValues();
+
 	-- process any variables that is taking place. 
 	self:ProcessVariables();
 	
@@ -163,8 +166,6 @@ function PageElement:LoadComponent(parentElem, parentLayout, style)
 
 	local css = self:CreateStyle(mcml:GetStyleItem(self.class_name or self.name), style);
 
-	-- apply models
-	self:ApplyPreValues();
 	self:OnLoadComponentBeforeChild(parentElem, parentLayout, css);
 
 	for childnode in self:next() do

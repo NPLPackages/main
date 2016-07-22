@@ -24,6 +24,8 @@ function pe_button:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	_this:SetText(self:GetAttributeWithCode("value", nil, true));
 	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
 
+	local buttonName = self:GetAttributeWithCode("name"); -- touch name
+
 	local onclick = self.onclickscript or self:GetString("onclick");
 	if(onclick == "")then
 		onclick = nil;
