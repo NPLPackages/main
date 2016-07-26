@@ -125,8 +125,11 @@ end
 
 -- @param bDestroy: if true, it will destroy the window, otherwise it will just hide it.
 function Window:CloseWindow(bDestroy)
-	-- TODO: destroy on close?
-	self:hide();
+	if(not bDestroy) then
+		self:hide();
+	else
+		self:destroy();
+	end
 end
 
 function Window:GetNativeWindow()
@@ -141,6 +144,14 @@ function Window:SetSizeToUsedSize()
 			local width, height = layout:GetUsedSize();
 			self:setGeometry_sys(self.screen_x, self.screen_y, width, height);
 		end
+	end
+end
+
+-- virtual: if this element is a native window, destroy it. 
+function Window:destroy_sys()
+	if(self.native_ui_obj) then
+		ParaUI.Destroy(self.native_ui_obj.id);
+		self.native_ui_obj = nil;
 	end
 end
 

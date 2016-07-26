@@ -13,6 +13,7 @@ NPL.load("(gl)script/ide/System/Windows/Controls/EditBox.lua");
 local EditBox = commonlib.gettable("System.Windows.Controls.EditBox");
 
 local pe_editbox = commonlib.inherit(commonlib.gettable("System.Windows.mcml.PageElement"), commonlib.gettable("System.Windows.mcml.Elements.pe_editbox"));
+pe_editbox:Property({"class_name", "pe:editbox"});
 
 function pe_editbox:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	css.float = css.float or true;
@@ -21,6 +22,20 @@ function pe_editbox:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	self:SetControl(_this);
 	_this:ApplyCss(css);
 	_this:SetText(self:GetAttributeWithCode("value", nil, true));
+	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
+
+	local onchange = self:GetString("onchange");
+	if(onchange) then
+		_this:Connect("textChanged", self, self.OnTextChanged)
+	end
+end
+
+function pe_editbox:OnTextChanged(actualText)
+	local onchange = self:GetString("onchange");
+	if(onchange) then
+		local result = self:DoPageEvent(onchange, actualText, self);
+		return result;
+	end
 end
 
 function pe_editbox:OnAfterChildLayout(layout, left, top, right, bottom)

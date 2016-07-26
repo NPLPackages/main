@@ -257,7 +257,11 @@ function UIElement:deactivateWidgetCleanup()
 	end
 end
 
--- TODO: not tested
+-- virtual: if this element is a native window, destroy it. 
+function UIElement:destroy_sys()
+end
+
+-- @param destroyWindow: default to true. true to destroy system level window.
 function UIElement:destroy(destroyWindow)
     self:aboutToDestroy();
 	self:deactivateWidgetCleanup();
@@ -270,8 +274,8 @@ function UIElement:destroy(destroyWindow)
 	end
     self:setAttribute("WA_WState_Created", false);
 
-	if (destroyWindow) then
-        self:deleteTLSysExtra();
+	if (destroyWindow~=false) then
+        self:destroy_sys();
     else
         if (self:parentWidget() and self:parentWidget():testAttribute("WA_WState_Created")) then
             self:hide_sys();
