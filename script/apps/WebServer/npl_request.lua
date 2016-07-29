@@ -99,6 +99,7 @@ function request:GetMsg()
 end
 
 -- get url parameters: both url post/get are supported
+-- return a table of name, value pairs
 function request:getparams()
 	if (not self.params) then 
 		if(self.headers.body~="") then
@@ -112,6 +113,7 @@ function request:getparams()
 		if (self.parsed_url.query) then 
 			self.params = util.parse_str(self.parsed_url.query, self.params);	
 		end
+		self.params = self.params or {};
 	end
 	return self.params;
 end

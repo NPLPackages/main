@@ -16,19 +16,7 @@ local params = {
 	redirect_uri = request:get("redirectUri"),
 };
 
--- only return access token
-if(request:get("action") == "gettoken") then
-	response:Begin();	
-	util.GetUrl({url = accessTokenUrl, qs = params }, function(err, msg, data)
-		local accessToken = util.parse_str(data);
-		-- accessToken == {scope="user:email",access_token="25b6511fb14eacd48106ab16261dd01bdb1fe54e",token_type="bearer",}	
-		response:send(accessToken);
-	end);
-	return;
-end
-
-
-
+response:Begin();
 -- Step 1. Exchange authorization code for access token.
 util.GetUrl({url = accessTokenUrl, qs = params }, function(err, msg, data)
 	local accessToken = util.parse_str(data);

@@ -1,5 +1,5 @@
 ﻿angular.module('MyApp')
-.factory('Account', function ($http) {
+.factory('Account', function ($http, $auth) {
     var user;
     return {
         setUser: function (user_) {
@@ -9,7 +9,7 @@
             return user;
         },
         getProfile: function () {
-            $http.get('/api/wiki/auth/api_me').then(function (response) {
+            $http.get('/api/wiki/models/user').then(function (response) {
                 user = response.data;
             })
 			.catch(function (response) {
@@ -17,8 +17,27 @@
 			});
         },
         updateProfile: function (profileData) {
-            return $http.put('/api/wiki/auth/api_me', profileData);
-        }
+            return $http.put('/api/wiki/models/user', profileData);
+        },
+        linkGithub: function () {
+            if ($auth.isAuthenticated()) {
+                if (user && (user.github == null || user.github == 0)) {
+                    $auth.authenticate("github").then(function () {
+                        this.getProfile();
+                    })
+                    .catch(function (error) {
+                        alert(error.data && error.data.message);
+                    });
+                }
+            }
+        },
+        unlinkGithub: function () {
+            if ($auth.isAuthenticated()) {
+                if (user && (user.github && user.github != 0)) {
+                    this.updateProfile(user);
+                }
+            }
+        },
     };
 })
 .controller('ModalLoginCtrl', function ($scope, $http, $auth, $uibModalInstance) {
@@ -37,7 +56,7 @@
 			});
 	};
 	$scope.loginUser = function (email, password) {
-	    $http.post("/api/wiki/auth/api_login", { email: email, password: password, })
+	    $http.post("/api/wiki/models/user/login", { email: email, password: password, })
             .then(function (response) {
                 var token = response.data.token;
                 if (token) {
@@ -59,7 +78,7 @@
         $uibModalInstance.dismiss('cancel');
     };
     $scope.registerUser = function () {
-        $http.post("/api/wiki/auth/api_register", { email: $scope.email, password: $scope.password, username: $scope.username })
+        $http.post("/api/wiki/models/user/register", { email: $scope.email, password: $scope.password, username: $scope.username })
             .then(function (response) {
                 var token = response.data.token;
                 if (token) {

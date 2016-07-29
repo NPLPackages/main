@@ -1,13 +1,13 @@
 ﻿<?npl
 wp_enqueue_script("settingsController", "/wp-content/pages/wiki/controllers/settingsController.js");
 ?>
-<div class="col-sm-12">
+<div class="col-sm-12" ng-controller="settingsController">
     <ul class="setting nav nav-tabs">
         <li class="active"><a data-toggle="tab" href="#profile">个人信息</a></li>
         <li><a data-toggle="tab" href="#account">账户</a></li>
         <li><a data-toggle="tab" href="#projects">我的网站</a></li>
     </ul>
-    <div class="tab-content" ng-controller="settingsController">
+    <div class="tab-content" >
         <div id="profile" class="tab-pane fade in active"  style="padding-top:10px;">
             <div class="boxed-group">
                 <h3>公开信息</h3>
@@ -25,8 +25,8 @@ wp_enqueue_script("settingsController", "/wp-content/pages/wiki/controllers/sett
                             </div>
                         </div>
                         <div class="form-group" ng-class="{ 'has-error': !profileform.username.$valid }">
-                            <h4>名字</h4>
-                            <input id="username" name="username" type="text" placeholder="名字至少3个字" class="form-control" ng-minlength="3" ng-maxlength="30" ng-model="user.displayName" required />
+							<h4>姓名</h4>
+                            <input id="username" name="username" type="text" placeholder="姓名，至少3个字" class="form-control" ng-minlength="3" ng-maxlength="30" ng-model="user.displayName" required />
                             <span ng-show="!profileform.username.$valid" class="help-block">名字至少3个字</span>
                         </div>
                         <div class="form-group">
@@ -110,6 +110,18 @@ wp_enqueue_script("settingsController", "/wp-content/pages/wiki/controllers/sett
             </div>
         </div>
         <div id="projects" class="tab-pane fade"  style="padding-top:10px;">
+		    <div ng-if="user.github==null || user.github==0">
+			    <blockquote class="bg-danger">
+                    尚未开通Github数据备份服务，强烈建议开通数据备份.
+                    <button class="btn bg-success" ng-click="linkGithub()">开启备份</button>
+                </blockquote>
+			</div>
+			<div ng-if="user.github">
+				<blockquote class="bg-success">
+                    Github数据备份已经开启. 用户id:{{user.github}}. 
+                    <button class="btn btn-danger" ng-click="unlinkGithub()">关闭备份</button>
+                </blockquote>
+			</div>
             <h2>还没有创建过个人网站</h2>
         </div>
     </div>

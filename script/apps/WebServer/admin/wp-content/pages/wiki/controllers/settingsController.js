@@ -19,9 +19,9 @@
 
     $scope.$watch(function () { return Account.getUser(); }, function (newValue, oldValue) { $scope.user = angular.copy(newValue); });
 	$scope.changePassword = function (oldpassword, newpassword) {
-	    $http.post("/api/wiki/auth/api_changepw", { oldpassword: oldpassword, newpassword: newpassword, })
+	    $http.post("/api/wiki/models/user/changepw", { oldpassword: oldpassword, newpassword: newpassword, })
             .then(function (response) {
-                if (response.data) {
+                if (response.data && response.data.success) {
                     alert("保存完毕!");
                 }
             }).catch(function (response) {
@@ -30,11 +30,13 @@
 	};
 	$scope.updateProfile = function () {
 	    if ($scope.user && $scope.user.displayName) {
-	        $http.put("/api/wiki/auth/api_me", $scope.user)
+	        $http.put("/api/wiki/models/user", $scope.user)
                 .then(function (response) {
                     if (response.data) {
                         Account.setUser(response.data);
                         alert("保存完毕!");
+                    } else {
+                        alert("保存出错了，也许旧密码不对!");
                     }
                 }).catch(function (response) {
                     alert("保存出错了，也许旧密码不对!");
@@ -48,7 +50,7 @@
 	    }
 	    else if ($scope.account.confirmname == $scope.user.displayName)
 	    {
-	        $http.post("/api/wiki/auth/api_deleteme", {})
+	        $http.delete("/api/wiki/models/user", {})
             .then(function (response) {
                 if (response.data) {
                     alert("用户已经删除!");
@@ -57,6 +59,12 @@
                 alert("无法删除，请先删除你所有的网站!");
             });
 	    }
+	};
+	$scope.linkGithub = function () {
+	    Account.linkGithub();
+	};
+	$scope.unlinkGithub = function () {
+	    Account.unlinkGithub();
 	};
     // support #account, #profile in the url for nav tabs
 	var hash = window.location.hash;

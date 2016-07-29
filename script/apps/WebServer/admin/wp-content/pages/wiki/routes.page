@@ -11,6 +11,7 @@ Mapping of CRUD AJAX operations:
 - GET "/api/wiki/models/userprojects" --> wiki/models/userprojects:get()
 - PUT "/api/wiki/models/userprojects" --> wiki/models/userprojects:update()
 - DELETE "/api/wiki/models/userprojects" --> wiki/models/userprojects:delete()
+- XXX "/api/wiki/models/userprojects/[anyfunc]" --> wiki/models/userprojects:api_[anyfunc]()
 
 Everything else is mapped to `wiki.page` as standard html file.
 ]]
@@ -42,25 +43,35 @@ if(ajax_path) then
 			model = model:new();
 		end
 
-		-- redirect CRUD URL to method in model.
-		if(request:GetMethod() == "GET") then
-			if(model.get) then
-				local result = model:get(request:getparams());
-				return response:send(result);
-			end
-		elseif(request:GetMethod() == "PUT") then
-			if(params and params:match("^new")) then
+		local func_name = params and params:match("^(%w+)");
+		if(func_name) then
+			if(func_name == "new") then
 				if(model.create) then
 					local result = model:create(request:getparams());
 					return response:send(result);
 				end
 			else
-				if(model.update) then
-					local result = model:update(request:getparams());
+				local name = "api_"..func_name;
+				if(model[name]) then
+					local result = model[name](model, request:getparams())
 					return response:send(result);
 				end
 			end
-		elseif(request:GetMethod() == "DELETE") then
+		end
+
+		-- redirect CRUD URL to method in model.
+		local req_method = request:GetMethod();
+		if(req_method == "GET" or req_method == "POST") then
+			if(model.get) then
+				local result = model:get(request:getparams());
+				return response:send(result);
+			end
+		elseif(req_method == "PUT") then
+			if(model.update) then
+				local result = model:update(request:getparams());
+				return response:send(result);
+			end
+		elseif(req_method == "DELETE") then
 			if(model.delete) then
 				local result = model:delete(request:getparams());
 				return response:send(result);

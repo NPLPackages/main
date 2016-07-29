@@ -4,15 +4,13 @@ Title: All projects of a given user
 Author: LiXizhi
 Date: 2016/6/28
 ]]
-include_once("base.page");
+include_once("./abstract/per_user_base.page");
 
-local userprojects = inherit(models.base, gettable("models.userprojects"));
+local userprojects = inherit(models.abstract.per_user_base, gettable("models.userprojects"));
 
 userprojects.db_name = "userprojects";
 
 function userprojects:ctor()
-	-- unique name of the user
-	self:addfield("name", "string", true, 30);
 	-- commar separated lists of web site names.
 	self:addfield("projects", "string", false, 1000);
 end

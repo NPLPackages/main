@@ -4,15 +4,13 @@ Title: a single web site of a user
 Author: LiXizhi
 Date: 2016/6/28
 ]]
-include_once("base.page");
+include_once("./abstract/per_user_base.page");
 
-local site = inherit(models.base, gettable("models.site"));
+local site = inherit(models.abstract.per_user_base, gettable("models.site"));
 
 site.db_name = "site";
 
 function site:ctor()
-	-- unique name of the website, usually same as owner name
-	self:addfield("name", "string", true, 30);
 	-- markdown text description
 	self:addfield("desc", "string");
 	-- such as "https://github.com/LiXizhi/wiki"

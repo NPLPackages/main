@@ -4,9 +4,9 @@ Title: a single page in a site
 Author: LiXizhi
 Date: 2016/6/28
 ]]
-include_once("base.page");
+include_once("./abstract/per_user_base.page");
 
-local page = inherit(models.base, gettable("models.page"));
+local page = inherit(models.abstract.per_user_base, gettable("models.page"));
 
 page.db_name = "page";
 

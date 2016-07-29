@@ -4,9 +4,9 @@ Title: review requests submitted by the user
 Author: LiXizhi
 Date: 2016/6/28
 ]]
-include_once("base.page");
+include_once("./abstract/per_user_base.page");
 
-local reviewrequest = inherit(models.base, gettable("models.reviewrequest"));
+local reviewrequest = inherit(models.abstract.per_user_base, gettable("models.reviewrequest"));
 
 reviewrequest.db_name = "reviewrequest";
 
