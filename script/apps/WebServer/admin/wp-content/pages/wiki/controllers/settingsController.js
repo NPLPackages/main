@@ -13,11 +13,13 @@
         }
     }
 }])
-.controller('settingsController', function ($scope, $http, Account) {
+.controller('settingsController', function ($scope, $http, Account, github) {
     $scope.user = {};
     $scope.account = {};
 
-    $scope.$watch(function () { return Account.getUser(); }, function (newValue, oldValue) { $scope.user = angular.copy(newValue); });
+    $scope.$watch(function () { return Account.getUser(); }, function (newValue, oldValue) {
+        $scope.user = angular.copy(newValue);
+    });
 	$scope.changePassword = function (oldpassword, newpassword) {
 	    $http.post("/api/wiki/models/user/changepw", { oldpassword: oldpassword, newpassword: newpassword, })
             .then(function (response) {
@@ -25,22 +27,12 @@
                     alert("保存完毕!");
                 }
             }).catch(function (response) {
-                alert("保存出错了!");
+                alert("保存出错了!" + response.data.message);
             });
 	};
 	$scope.updateProfile = function () {
 	    if ($scope.user && $scope.user.displayName) {
-	        $http.put("/api/wiki/models/user", $scope.user)
-                .then(function (response) {
-                    if (response.data) {
-                        Account.setUser(response.data);
-                        alert("保存完毕!");
-                    } else {
-                        alert("保存出错了，也许旧密码不对!");
-                    }
-                }).catch(function (response) {
-                    alert("保存出错了，也许旧密码不对!");
-                });
+	        Account.updateProfile($scope.user);
 	    }
 	};
 	$scope.deleteAccount = function () {
@@ -60,11 +52,28 @@
             });
 	    }
 	};
+	$scope.setEmail = function (email) {
+	    $http.post("/api/wiki/models/user/setemail", { email: email,})
+            .then(function (response) {
+                if (response.data && response.data.email == email) {
+                    Account.getUser().email = email;
+                    alert("设置成功, 你可以用Email和密码登录了!");
+                }
+            }).catch(function (response) {
+                alert("保存出错了!"+response.data.message);
+            });
+	}
 	$scope.linkGithub = function () {
 	    Account.linkGithub();
 	};
 	$scope.unlinkGithub = function () {
 	    Account.unlinkGithub();
+	};
+	$scope.fetchGithubUser = function () {
+	    github.getUserInfo();
+	};
+	$scope.fetchGithubRepos = function () {
+	    github.getRepos();
 	};
     // support #account, #profile in the url for nav tabs
 	var hash = window.location.hash;

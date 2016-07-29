@@ -37,6 +37,10 @@ util.GetUrl({url = accessTokenUrl, qs = params }, function(err, msg, data)
 			-- Step 3a. Link user accounts.
 			db.User:findOne({ github = profile.id }, function(err, existingUser)
 				if (existingUser) then
+					-- refresh access token
+					if(not commonlib.partialcompare(accessToken, existingUser.github_token)) then
+						local err, user = db.User:updateOne({_id = existingUser._id}, {github_token=accessToken}, resume);
+					end
 					return response:status(409):send({ message = 'There is already a GitHub account that belongs to you' });
 				end
 				local token = request:header('Authorization'):match("%s+(%S+)");
@@ -48,7 +52,8 @@ util.GetUrl({url = accessTokenUrl, qs = params }, function(err, msg, data)
 					user.github = profile.id;
 					user.picture = user.picture or profile.avatar_url;
 					user.displayName = user.displayName or profile.name;
-					db.User.updateOne(user, function(err, user)
+					user.github_token = accessToken;
+					db.User:updateOne(user, function(err, user)
 						local token = createJWT(user);
 						response:send({ token = token });
 					end)
@@ -58,6 +63,9 @@ util.GetUrl({url = accessTokenUrl, qs = params }, function(err, msg, data)
 			-- Step 3b. Create a new user account or return an existing one.
 			db.User:findOne({ github = profile.id }, function(err, existingUser)
 				if (existingUser) then
+					if(not commonlib.partialcompare(accessToken, existingUser.github_token)) then
+						local err, user = db.User:updateOne({_id = existingUser._id}, {github_token=accessToken}, resume);
+					end
 					local token, err = createJWT(existingUser);
 					response:send({ token = token });
 					return;
@@ -66,6 +74,7 @@ util.GetUrl({url = accessTokenUrl, qs = params }, function(err, msg, data)
 					github = profile.id,
 					picture = profile.avatar_url,
 					displayName = profile.name,
+					github_token = accessToken,
 				}, function(err, user) 
 					local token = createJWT(user);
 					response:send({ token = token });

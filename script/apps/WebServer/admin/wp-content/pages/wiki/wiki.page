@@ -79,7 +79,7 @@ wp_enqueue_style("wiki_style", "/wp-content/pages/wiki/assets/wiki.css");
                                 </li>
                                 <li role="separator" class="divider"></li>
                                 <li>
-                                    <a ng-click="newWebsite()">创建新网站...</a>
+                                    <a href="/wiki/projects">我的作品...</a>
                                 </li>
                                 <li>
                                     <a href="/wiki/settings">设置...</a>

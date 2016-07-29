@@ -51,6 +51,8 @@ Code Examples:
 	db.User:insertOne({name="LXZ2", password="123", email="lixizhi@yeah.net"}, function(err, data)  echo(data) 	end)
 	-- update one
 	db.User:updateOne({name="LXZ2",}, {name="LXZ2", password="2"}, function(err, data)  echo(data) end)
+	-- remove and update fields
+	db.User:updateOne({name="LXZ2",}, {_unset = {"password"}, email="2@yeah.net"}, function(err, data)  echo(data) end)
 	-- force flush to disk, otherwise the db IO thread will do this at fixed interval
     db.User:flush({}, function(err, bFlushed) echo("flushed: "..tostring(bFlushed)) end);
 	-- select one, this will automatically create `name` index

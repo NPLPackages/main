@@ -17,13 +17,24 @@
 			});
         },
         updateProfile: function (profileData) {
-            return $http.put('/api/wiki/models/user', profileData);
+            var self = this;
+            $http.put('/api/wiki/models/user', profileData).then(function (response) {
+                if (response.data) {
+                    self.setUser(response.data);
+                    alert("保存完毕!");
+                } else {
+                    alert("保存出错了");
+                }
+            }).catch(function (response) {
+                alert("保存出错了");
+            });;
         },
         linkGithub: function () {
             if ($auth.isAuthenticated()) {
-                if (user && (user.github == null || user.github == 0)) {
+                var self = this;
+                if (user) {
                     $auth.authenticate("github").then(function () {
-                        this.getProfile();
+                        self.getProfile();
                     })
                     .catch(function (error) {
                         alert(error.data && error.data.message);
@@ -34,7 +45,10 @@
         unlinkGithub: function () {
             if ($auth.isAuthenticated()) {
                 if (user && (user.github && user.github != 0)) {
-                    this.updateProfile(user);
+                    var userData = angular.copy(user);
+                    delete userData.github;
+                    userData._unset = ["github"];
+                    this.updateProfile(userData);
                 }
             }
         },

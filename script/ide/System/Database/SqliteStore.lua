@@ -502,6 +502,13 @@ function SqliteStore:updateOne(query, update, callbackFunc)
 			if(_unset) then
 				for name, value in pairs(_unset) do
 					name = (type(name) == "number") and value or name;
+					local indexTable = self.indexes[name];
+					if(indexTable) then
+						local oldIndexValue = data[name];
+						if(oldIndexValue and oldIndexValue~="") then
+							indexTable:removeIndex(oldIndexValue, id);
+						end
+					end
 					data[name] = nil;
 				end
 			end

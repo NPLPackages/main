@@ -1,4 +1,5 @@
 ﻿<?npl
+wp_enqueue_script("githubService", "/wp-content/pages/wiki/controllers/githubService.js");
 wp_enqueue_script("settingsController", "/wp-content/pages/wiki/controllers/settingsController.js");
 ?>
 <div class="col-sm-12" ng-controller="settingsController">
@@ -59,14 +60,27 @@ wp_enqueue_script("settingsController", "/wp-content/pages/wiki/controllers/sett
             </div>
         </div>
         <div id="account" class="tab-pane fade" style="padding-top:10px;">
+            <div ng-if="user.github==null || user.github==0">
+                <blockquote class="bg-danger">
+                    尚未开通Github数据备份服务，强烈建议开通数据备份.
+                    <button class="btn btn-primary" ng-click="linkGithub()">开启备份</button>
+                </blockquote>
+            </div>
+            <div ng-if="user.github">
+                <blockquote class="bg-success">
+                    <p>Github数据备份已经开启. 用户id:{{user.github}} 授权范围:{{user.github_token.scope}}.</p>
+                    <button class="btn" ng-click="linkGithub()" uib-tooltip="access_token: {{user.github_token.access_token}}">重新认证</button>
+                    <button class="btn btn-danger" ng-click="unlinkGithub()">关闭备份</button>
+                </blockquote>
+            </div>
             <div class="boxed-group">
                 <h3>更改密码</h3>
                 <div class="boxed-group-inner">
                     <form name="form">
                         <div class="form-group" ng-class="{ 'has-error': form.oldpassword.$dirty && !form.oldpassword.$valid }">
                             <div>旧密码</div>
-                            <input type="password" id="oldpassword" name="oldpassword" placeholder="" ng-minlength="6" ng-maxlength="20" class="form-control" ng-model="account.oldpassword" required />
-                            <span ng-show="form.oldpassword.$dirty && !form.oldpassword.$valid" class="help-block">请输入密码，6位以上</span>
+                            <input type="password" id="oldpassword" name="oldpassword" placeholder="" ng-maxlength="20" class="form-control" ng-model="account.oldpassword" />
+                            <span ng-show="form.oldpassword.$dirty && !form.oldpassword.$valid" class="help-block">请输入旧密码，如果没有设置过可为空</span>
                         </div>
                         <div class="form-group" ng-class="{ 'has-error': form.password.$dirty && !form.password.$valid }">
                             <div>新密码</div>
@@ -84,6 +98,25 @@ wp_enqueue_script("settingsController", "/wp-content/pages/wiki/controllers/sett
                             <button class="btn" ng-click="changePassword(account.oldpassword, account.password)" ng-disabled="!form.$valid">更改密码</button>
                         </div>
                     </form>
+                </div>
+            </div>
+            <div class="boxed-group">
+                <h3>更改登录Email</h3>
+                <div class="boxed-group-inner">
+                    <div ng-if="!user.email">
+                        <form name="emailform">
+                            <div class="form-group" ng-class="{ 'has-error': emailform.email.$dirty && !emailform.email.$valid }">
+                                <input id="email" type="email" name="email" placeholder="只用于登录，其他用户不可见" class="form-control" ng-model="Account.email" required />
+                                <span ng-show="emailform.email.$dirty && emailform.email.$error.email" class="help-block">Email格式例如:abc@example.com</span>
+                            </div>
+                            <div class="form-actions">
+                                <button class="btn" ng-click="setEmail(Account.email)" ng-disabled="!emailform.$valid">设置登录Email</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div ng-if="user.email">
+                        {{user.email}}
+                    </div>
                 </div>
             </div>
             <div class="boxed-group dangerzone">
@@ -110,19 +143,10 @@ wp_enqueue_script("settingsController", "/wp-content/pages/wiki/controllers/sett
             </div>
         </div>
         <div id="projects" class="tab-pane fade"  style="padding-top:10px;">
-		    <div ng-if="user.github==null || user.github==0">
-			    <blockquote class="bg-danger">
-                    尚未开通Github数据备份服务，强烈建议开通数据备份.
-                    <button class="btn bg-success" ng-click="linkGithub()">开启备份</button>
-                </blockquote>
-			</div>
-			<div ng-if="user.github">
-				<blockquote class="bg-success">
-                    Github数据备份已经开启. 用户id:{{user.github}}. 
-                    <button class="btn btn-danger" ng-click="unlinkGithub()">关闭备份</button>
-                </blockquote>
-			</div>
             <h2>还没有创建过个人网站</h2>
+            <div>
+                <button class="btn" ng-click="fetchGithubUser()">Fetch Github User</button>
+            </div>
         </div>
     </div>
 </div>

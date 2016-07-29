@@ -1,0 +1,32 @@
+<?npl
+--[[
+Title: each userid has multiple rows in the table
+Author: LiXizhi
+Date: 2016/7/28
+Desc: all CRUD operations use `userid` as key. 
+Only the owner can `update/delete/create` record; anyone can get by `userid`.
+]]
+include_once("base.page");
+
+local multi_user_base = inherit(models.abstract.base, gettable("models.abstract.multi_user_base"));
+
+function multi_user_base:ctor()
+	-- non-unique user id
+	self:addfield("userid", "number", false);
+end
+
+-- TODO: 
+function multi_user_base:get(params)
+end
+
+-- TODO: 
+function multi_user_base:create(params)
+end
+
+-- TODO: 
+function multi_user_base:update(params)
+end
+
+-- TODO: 
+function multi_user_base:delete(params)
+end
