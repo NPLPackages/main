@@ -5,7 +5,6 @@ Date: 2016/5/11
 Desc: 
 ]]
 
-
 function TestSQLOperations()
 	NPL.load("(gl)script/ide/System/Database/TableDatabase.lua");
 	local TableDatabase = commonlib.gettable("System.Database.TableDatabase");
@@ -15,38 +14,45 @@ function TestSQLOperations()
 	-- Note: `db.User` will automatically create the `User` collection table if not.
 	-- clear all data
 	db.User:makeEmpty({}, function(err, count) echo("deleted"..(count or 0)) end);
-	-- this will automatically create `name` index
-	db.User:findOne({name="this will create auto index"}, function(err, user) end)
-	-- add record
-	local user = db.User:new({name="LXZ", password="123"});
-	user:save(function(err, data)  echo(data) end);
-	-- implicit update record
-	local user = db.User:new({name="LXZ", password="1", email="lixizhi@yeah.net"});
-	user:save(function(err, data)  echo(data) end);
+	-- insert 1
+	db.User:insertOne(nil, {name="1", email="1@1",}, function(err, data)  echo(data) 	end)
+	-- insert 1 with duplicate name
+	db.User:insertOne(nil, {name="1", email="1@1.dup",}, function(err, data)  echo(data) 	end)
+	
+	-- find or findOne will automatically create index on `name` and `email` field.
+	-- indices are NOT forced to be unique. The caller needs to ensure this see `insertOne` below. 
+	db.User:find({name="1",}, function(err, rows) echo(rows); end);
+	db.User:find({name="1", email="1@1"}, function(err, rows) echo(rows); end);
+	
+	-- force insert
+	db.User:insertOne(nil, {name="LXZ", password="123"}, function(err, data)  echo(data) 	end)
+	-- this is an update or insert command, if the query has result, it will actually update first matching row rather than inserting one. 
+	-- this is usually a good way to force uniqueness on key or compound keys, 
+	db.User:insertOne({name="LXZ"}, {name="LXZ", password="1", email="lixizhi@yeah.net"}, function(err, data)  echo(data) 	end)
+
 	-- insert another one
-	db.User:insertOne({name="LXZ2", password="123", email="lixizhi@yeah.net"}, function(err, data)  echo(data) 	end)
+	db.User:insertOne({name="LXZ2"}, {name="LXZ2", password="123", email="lixizhi@yeah.net"}, function(err, data)  echo(data) 	end)
 	-- update one
 	db.User:updateOne({name="LXZ2",}, {name="LXZ2", password="2", email="lixizhi@yeah.net"}, function(err, data)  echo(data) end)
 	-- remove and update fields
-	db.User:updateOne({name="LXZ2",}, {_unset = {"password"}, email="2@yeah.net"}, function(err, data)  echo(data) end)
+	db.User:updateOne({name="LXZ2",}, {_unset = {"password"}, updated="with unset"}, function(err, data)  echo(data) end)
 	-- force flush to disk, otherwise the db IO thread will do this at fixed interval
     db.User:flush({}, function(err, bFlushed) echo("flushed: "..tostring(bFlushed)) end);
 	-- select one, this will automatically create `name` index
 	db.User:findOne({name="LXZ"}, function(err, user) echo(user);	end)
-	-- search on non-indexed rows
-	db.User:find({password="2"}, function(err, rows) echo(rows); end);
+	-- array field such as {"password", "1"} are additional checks, but does not use index. 
+	db.User:findOne({name="LXZ", {"password", "1"}, {"email", "lixizhi@yeah.net"}}, function(err, user) echo(user);	end)
+	-- search on non-unqiue-indexed rows, this will create index `email` (not-unique index)
+	db.User:find({email="lixizhi@yeah.net"}, function(err, rows) echo(rows); end);
+	db.User:find({name="LXZ", email="lixizhi@yeah.net", {"password", "1"}, }, function(err, rows) echo(rows); end);
 	-- find all rows with custom timeout 1 second
 	db.User:find({}, function(err, rows) echo(rows); end, 1000);
 	-- remove item
 	db.User:deleteOne({name="LXZ2"}, function(err, count) echo(count);	end);
 	-- wait flush may take up to 3 seconds
 	db.User:waitflush({}, function(err, data) echo({data, "data is flushed"}) end);
-	-- find all rows
-	db.User:find({}, function(err, rows) echo(rows); end);
-	-- set cache to 2000KB, turn synchronous IO off, and use in-memory journal and 
-	db.User:exec({CacheSize=-2000, IgnoreOSCrash=true, IgnoreAppCrash=true}, function(err, data) end);
-	-- run sql command 
-	db.User:exec("PRAGMA synchronous = ON", function(err, data) echo("mode changed") end);
+	-- set cache to 2000KB
+	db.User:exec({CacheSize=-2000}, function(err, data) end);
 	-- run select command from Collection 
 	db.User:exec("Select * from Collection", function(err, rows) echo(rows) end);
 end
@@ -74,7 +80,7 @@ function TestInsertThroughputNoIndex()
 	local Parallel = commonlib.gettable("System.Concurrent.Parallel");
 	local p = Parallel:new():init()
 	p:RunManyTimes(function(count)
-		db.insertNoIndex:insertOne({count=count, data=math.random()}, function(err, data)
+		db.insertNoIndex:insertOne(nil, {count=count, data=math.random()}, function(err, data)
 			if(err) then
 				echo({err, data});
 			end
@@ -135,7 +141,7 @@ function TestPerformance()
 		npl_profiler.perf_begin("insertFlush", true)
 		local p = Parallel:new():init();
 		p:RunManyTimes(function(count)
-			db.PerfTest:insertOne({count=count, data=math.random(), }, function(err, data)
+			db.PerfTest:insertOne(nil, {count=count, data=math.random(), }, function(err, data)
 				if(err) then echo({err, data}) end
 				p:Next();
 			end)
@@ -155,7 +161,7 @@ function TestPerformance()
 		if(count < nRoundTimes) then
 			count = count + 1;
 			
-			db.PerfTest:insertOne({count=count, data=math.random(), }, function(err, data)
+			db.PerfTest:insertOne(nil, {count=count, data=math.random(), }, function(err, data)
 				CheckTickLog("roundtrip", "%d %s", count, err);
 				testRoundTrip();
 			end)
@@ -182,7 +188,8 @@ function TestPerformance()
 			if(nCrudType == 1) then
 				db.PerfTest:updateOne({count=math.random(1,nTimes)}, {data="updated"}, next);
 			elseif(nCrudType == 2) then
-				db.PerfTest:insertOne({count=nTimes+math.random(1,nTimes)}, next);
+				local id = nTimes+math.random(1,nTimes);
+				db.PerfTest:insertOne({count=id}, {count=id}, next);
 			elseif(nCrudType == 3) then
 				db.PerfTest:deleteOne({count=math.random(1,nTimes)}, next);
 			else
@@ -231,7 +238,7 @@ function TestBulkOperations()
 			if(count > total_records) then
 				break;
 			end
-			db.TestBulkOps:insertOne({count=count, data=math.random(), }, function(err, data)
+			db.TestBulkOps:insertOne({count=count}, {count=count, data=math.random(), }, function(err, data)
 				finished = finished +1;
 				if(count == total_records) then
 					echo({"all operations are finished"});
@@ -301,7 +308,7 @@ function TestBlockingAPILatency()
 	npl_profiler.perf_begin("tableDB_BlockingAPILatency", true)
 	local count = 10000;
 	for i=1, count do
-		local err, data = db.blockingAPI:insertOne({count=i, data=math.random()})
+		local err, data = db.blockingAPI:insertOne(nil, {count=i, data=math.random()})
 		-- echo(data);
 	end
 	npl_profiler.perf_end("tableDB_BlockingAPILatency", true)

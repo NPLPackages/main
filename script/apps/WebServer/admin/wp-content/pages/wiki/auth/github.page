@@ -70,7 +70,7 @@ util.GetUrl({url = accessTokenUrl, qs = params }, function(err, msg, data)
 					response:send({ token = token });
 					return;
 				end
-				db.User:insertOne({
+				db.User:insertOne({github = profile.id}, {
 					github = profile.id,
 					picture = profile.avatar_url,
 					displayName = profile.name,

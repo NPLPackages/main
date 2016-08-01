@@ -38,6 +38,20 @@ function base:hasIndex(name)
 	return self:getfields()[name]~=nil;
 end
 
+-- get unique query in key, value params
+-- @param params: all key, value pairs
+-- return query table containing only unique key value pairs.
+function base:getUniqueQuery(params)
+	local query = {};
+	local fields = self:getfields();
+	for name, _ in pairs(params) do
+		if(fields[name].uniqueIndex and params[name]) then
+			query[name] = params[name];
+		end
+	end
+	return query;
+end
+
 -- @param params: query parameters table.
 -- @return the first found index name in query parameter. 
 function base:findIndexName(params)
@@ -176,7 +190,7 @@ function base:get(params)
 	local err, query = self:validateQuery(params);
 	local name = self:findIndexName(query);
 	if(name) then
-		self:db():findById(query[name], resume);
+		self:db():findOne(query, resume);
 		local err, data = yield(true); 
 		if(not err) then
 			data = self:validateRow(data);
@@ -201,7 +215,8 @@ function base:create(params)
 	params._id = nil;
 	local err, query = self:validateQuery(params);
 	if(query) then
-		self:db():insertOne(query, resume);
+		-- TODO: check uniqueness
+		self:db():insertOne(nil, query, resume);
 		local err, data = yield(true); 
 		return data;
 	end

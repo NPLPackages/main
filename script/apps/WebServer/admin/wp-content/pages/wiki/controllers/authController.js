@@ -8,6 +8,9 @@
         getUser: function () {
             return user;
         },
+        isAuthenticated: function () {
+            return $auth.isAuthenticated();
+        },
         getProfile: function () {
             $http.get('/api/wiki/models/user').then(function (response) {
                 user = response.data;

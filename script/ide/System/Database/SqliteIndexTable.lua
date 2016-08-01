@@ -10,10 +10,10 @@ local IndexTable = commonlib.gettable("System.Database.SqliteStore.IndexTable");
 ------------------------------------------------------------
 ]]
 local IndexTable = commonlib.inherit(nil, commonlib.gettable("System.Database.SqliteStore.IndexTable"));
-
+local tostring = tostring;
 local kIndexTableColumns = [[
 	(name TEXT UNIQUE PRIMARY KEY,
-	cid INTEGER)]];
+	cid TEXT)]];
 
 function IndexTable:ctor()
 end
@@ -36,47 +36,61 @@ function IndexTable:GetTableName()
 	return self.tableName;
 end
 
+function IndexTable:CloseSQLStatement(name)
+	if(self[name]) then
+		self[name]:close();
+		self[name] = nil;
+	end
+end
+
 -- When sqlite_master table(schema) is changed, such as when new index table is created, 
 -- all cached statements becomes invalid. And this function should be called to purge all statements created before.
 function IndexTable:ClearStatementCache()
-	self.add_stat = nil;
-	self.del_stat = nil;
-	self.del_stat_if = nil;
-	self.sel_row_stat = nil;
-	self.select_stat = nil;
-	self.sel_all_stat = nil;
+	self:CloseSQLStatement("add_stat");
+	self:CloseSQLStatement("del_stat");
+	self:CloseSQLStatement("sel_row_stat");
+	self:CloseSQLStatement("select_stat");
+	self:CloseSQLStatement("select_ids_stat");
+	self:CloseSQLStatement("sel_all_stat");
+	self:CloseSQLStatement("update_stat");
 end
 
--- get collection row id
+-- get first matching row id
 -- @param value: value of the key to get
--- @return collection id or nil if not found. 
+-- @return id: where id is the collection id number or nil if not found
 function IndexTable:getId(value)
+	local ids = self:getIds(value);
+	if(ids) then
+		return tonumber(ids:match("^%d+"));
+	end
+end
+
+-- return all ids as commar separated string
+function IndexTable:getIds(value)
 	if(value) then
 		value = tostring(value);
-		local id;
-		self.select_stat = self.select_stat or self:GetDB():prepare([[SELECT * FROM ]]..self:GetTableName()..[[ WHERE name=?]]);
+		self.select_stat = self.select_stat or self:GetDB():prepare([[SELECT cid FROM ]]..self:GetTableName()..[[ WHERE name=?]]);
 		if(self.select_stat) then
 			self.select_stat:bind(value);
 			self.select_stat:reset();
 			local row = self.select_stat:first_row();
 			if(row) then
-				id = row.cid;
+				return row.cid;
 			end
 		else
 			LOG.std(nil, "error", "IndexTable", "failed to create select statement");
 		end
-		return id;
 	end
 end
 
--- return collection row
--- return {id=numner, value=string}. or nil if not exist.
+-- return the first matching row
+-- return {id=number, value=string}. or nil if not exist.
 function IndexTable:getRow(value)
-	if(value) then
-		value = tostring(value);
-		self.sel_row_stat = self.sel_row_stat or self:GetDB():prepare([[SELECT * FROM Collection WHERE id IS (SELECT cid FROM ]]..self:GetTableName()..[[ WHERE name=?)]]);
+	local id = self:getId(value);
+	if(id) then
+		self.sel_row_stat = self.sel_row_stat or self:GetDB():prepare([[SELECT * FROM Collection WHERE id=?]]);
 		if(self.sel_row_stat) then
-			self.sel_row_stat:bind(value);
+			self.sel_row_stat:bind(id);
 			self.sel_row_stat:reset();
 			return self.sel_row_stat:first_row();
 		else
@@ -93,12 +107,25 @@ function IndexTable:removeIndex(value, cid)
 	if(value) then
 		value = tostring(value);
 		if(cid) then
-			self.del_stat_if = self.del_stat_if or self:GetDB():prepare([[DELETE FROM ]]..self:GetTableName()..[[ WHERE name=? AND cid=?]]);
-			if(self.del_stat_if) then
-				self.del_stat_if:bind(value, cid);
-				self.del_stat_if:exec();
-			else
-				LOG.std(nil, "error", "IndexTable", "failed to create delete if statement");
+			cid = tostring(cid);
+			local ids = self:getIds(value);
+			if(ids) then
+				if(ids == cid) then
+					self:removeIndex(value);
+				else
+					local new_ids = self:removeIdInIds(cid, ids);
+					if(new_ids ~= ids) then
+						if(new_ids ~= "") then
+							self.update_stat = self.update_stat or self:GetDB():prepare([[UPDATE ]]..self:GetTableName()..[[  Set cid=? Where name=?]]);
+							self.update_stat:bind(new_ids, value);
+							self.update_stat:exec();
+						else
+							self:removeIndex(value);
+						end
+					else
+						-- no index found
+					end
+				end
 			end
 		else
 			self.del_stat = self.del_stat or self:GetDB():prepare([[DELETE FROM ]]..self:GetTableName()..[[ WHERE name=?]]);
@@ -112,20 +139,90 @@ function IndexTable:removeIndex(value, cid)
 	end
 end
 
+-- private:
+-- @param cid, ids: must be string
+-- return true if cid string is in ids string.
+function IndexTable:hasIdInIds(cid, ids)
+	if(cid == ids) then
+		return true;
+	else
+		-- TODO: optimize this function with C++
+		ids = ","..ids..",";
+		return ids:match(","..cid..",") ~= nil;
+	end
+end
+
+-- private:
+-- @param cid, ids: must be string
+-- @return ids: new ids with cid removed
+function IndexTable:removeIdInIds(cid, ids)
+	if(cid == ids) then
+		return "";
+	else
+		-- TODO: optimize this function with C++
+		local tmp_ids = ","..ids..",";
+		local new_ids = tmp_ids:gsub(",("..cid..",)", "");
+		if(new_ids~=tmp_ids) then
+			return new_ids:gsub("^,", ""):gsub(",$", "");
+		else
+			return ids;
+		end
+	end
+end
+
+function IndexTable:addIdToIds(cid, ids)
+	return ids..(","..cid)
+end
+
+-- private:
+-- get id maps from ids string
+-- @param ids: must be string
+-- @return a table containing mapping from number cid to true
+function IndexTable:getMapFromIds(ids)
+	local map = {};
+	for id in ids:gmatch("%d+") do
+		map[tonumber(id)] = true;
+	end
+	return map;
+end
+
+-- private: 
+-- get array from ids string
+-- @param ids: must be string
+-- @return a array table containing all number cid
+function IndexTable:getArrayFromIds(ids)
+	local array= {};
+	for id in ids:gmatch("%d+") do
+		array[#array+1] = tonumber(id);
+	end
+	return array;
+end
+
 -- add index to collection row id
 -- @param value: value of the key 
 -- @param cid: collection row id
 function IndexTable:addIndex(value, cid)
 	if(value and cid) then
 		value = tostring(value);
-		self.add_stat = self.add_stat or self:GetDB():prepare([[INSERT INTO ]]..self:GetTableName()..[[(name, cid) VALUES (?, ?)]]);
-		self.add_stat:bind(value, cid);
-		self.add_stat:exec();
+		cid = tostring(cid);
+		local ids = self:getIds(value);
+		if(not ids) then
+			self.add_stat = self.add_stat or self:GetDB():prepare([[INSERT INTO ]]..self:GetTableName()..[[(name, cid) VALUES (?, ?)]]);
+			self.add_stat:bind(value, cid);
+			self.add_stat:exec();
+		elseif(ids ~= cid and not self:hasIdInIds(cid, ids)) then
+			ids = self:addIdToIds(cid, ids);
+			self.update_stat = self.update_stat or self:GetDB():prepare([[UPDATE ]]..self:GetTableName()..[[  Set cid=? Where name=?]]);
+			self.update_stat:bind(ids, value);
+			self.update_stat:exec();
+		end
 	end
 end
 
 -- creating index for existing rows
 function IndexTable:CreateTable()
+	self.parent:FlushAll();
+
 	local stat = self:GetDB():prepare([[INSERT INTO Indexes (name, tablename) VALUES (?, ?)]]);
 	stat:bind(self.name, self:GetTableName());
 	stat:exec();
@@ -143,13 +240,17 @@ function IndexTable:CreateTable()
 	
 	local indexmap = {};
 	local name = self.name;
-	self.parent:find(query, function(err, rows)
+	self.parent:find({}, function(err, rows)
 		if(rows) then
 			for _, row in ipairs(rows) do
 				if(row and row[name]) then
 					local keyValue = tostring(row[name])
 					if(keyValue~="") then
-						indexmap[keyValue] = row._id;
+						if(not indexmap[keyValue]) then
+							indexmap[keyValue] = tostring(row._id);
+						else
+							indexmap[keyValue] = indexmap[keyValue]..(","..tostring(row._id));
+						end
 					end
 				end
 			end
@@ -168,5 +269,16 @@ function IndexTable:CreateTable()
 	LOG.std(nil, "info", "SqliteStore", "index table is created for `%s` with %d records", self.name, count);
 	self.parent:End();
 	self.parent:FlushAll();
+	self.parent:ClearStatementCache();
+end
+
+function IndexTable:Destroy()
+	self.parent:FlushAll();
+	self:GetDB():exec(format("DELETE FROM Indexes WHERE name='%s'", self.name));
+	-- NOTE: for unknown reasons, if we drop table, the next find operation return nothing, even we reopen the database. 
+	-- self:GetDB():exec("DROP TABLE "..self:GetTableName()); self.parent:Reopen();
+	-- so instead of dropping tables, we simply remove all data in it. 
+	self:GetDB():exec("DELETE FROM "..self:GetTableName());
+	LOG.std(nil, "info", "SqliteStore", "index `%s` removed from %s", self.name, self.parent:GetFileName());
 	self.parent:ClearStatementCache();
 end

@@ -32,12 +32,12 @@ end
 -- @param timeout: default to 5 seconds
 function Item:save(callbackFunc, timeout)
 	if(callbackFunc) then
-		return self.parent:insertOne(self.data, function(err, data)
+		return self.parent:insertOne({_id=self.data._id}, self.data, function(err, data)
 				self:Merge(data);
 				callbackFunc(err, data);
 			end, timeout);
 	else
-		local err, data = self.parent:insertOne(self.data, nil, timeout);
+		local err, data = self.parent:insertOne({_id=self.data._id}, self.data, nil, timeout);
 		self:Merge(data);
 		return err, data;
 	end

@@ -123,7 +123,7 @@ function IOThread:HandleRequest(msg)
 					self:SendResponse(err, data, msg);
 				end);
 			elseif(query_type == "insertOne") then
-				collection:insertOne(msg.query, function(err, data)
+				collection:insertOne(msg.query.query, msg.query.update, function(err, data)
 					self:SendResponse(err, data, msg);
 				end);
 			elseif(query_type == "updateOne") then
@@ -140,6 +140,10 @@ function IOThread:HandleRequest(msg)
 				end);
 			elseif(query_type == "flush") then
 				collection:flush(msg.query, function(err, data)
+					self:SendResponse(err, data, msg);
+				end);
+			elseif(query_type == "removeIndex") then
+				collection:removeIndex(msg.query, function(err, data)
 					self:SendResponse(err, data, msg);
 				end);
 			elseif(query_type == "waitflush") then

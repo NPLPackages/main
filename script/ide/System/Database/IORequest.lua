@@ -124,7 +124,7 @@ function IORequest:WaitForSyncModeReply(timeout)
 	end
 end
 
--- @param query_method: the query method: can be "findOne", "find", "deleteOne", "updateOne", "insertOne", "connect"
+-- @param query_method: the query method: can be "findOne", "find", "deleteOne", "updateOne", "insertOne", "connect","removeIndex"
 -- @param collection: the source collection object or tabledatabase object.
 -- @param query: the query object
 -- @param callbackFunc: function(err, ...)  end, if nil it will go in sync mode

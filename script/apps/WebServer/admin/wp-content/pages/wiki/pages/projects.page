@@ -4,7 +4,7 @@ wp_enqueue_script("projectsController", "/wp-content/pages/wiki/controllers/proj
 ?>
 <div class="col-sm-12" ng-controller="projectsController as projCtrl">
     <div>
-        <button class="btn btn-primary">新建网站</button>
+        <button class="btn btn-primary" ng-click="ShowCreateProjectDialog()">新建网站</button>
     </div>
     <h4>你有{{projects.length}}个网站</h4>
     <div ng-repeat="project in projects">

@@ -66,7 +66,7 @@ function user:delete()
 	self:ensureAuthenticated();
 	self:db():findById(request.userid, resume);
 	local err, user = yield(true);
-	db.deletedUser:insertOne(user, resume);
+	db.deletedUser:insertOne(nil, user, resume);
 	yield();
 	self:db():deleteOne({_id = request.userid}, resume);
 	local err, data = yield(true); 
@@ -199,7 +199,7 @@ function user:api_register(params)
 		end
 		password = self:encode_password(password);
 
-		self:db():insertOne({
+		self:db():insertOne({email = email}, {
 			displayName = displayName, 
 			password = password,
 			email = email,

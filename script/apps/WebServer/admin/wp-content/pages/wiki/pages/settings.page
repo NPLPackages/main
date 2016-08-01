@@ -144,9 +144,6 @@ wp_enqueue_script("settingsController", "/wp-content/pages/wiki/controllers/sett
         </div>
         <div id="projects" class="tab-pane fade"  style="padding-top:10px;">
             <h2>还没有创建过个人网站</h2>
-            <div>
-                <button class="btn" ng-click="fetchGithubUser()">Fetch Github User</button>
-            </div>
         </div>
     </div>
 </div>

@@ -9,6 +9,7 @@ virtual functions:
 	deleteOne
 	updateOne
 	insertOne
+	removeIndex
 
 use the lib:
 ------------------------------------------------------------
@@ -116,10 +117,11 @@ function Store:updateOne(query, update, callbackFunc)
 end
 
 -- virtual: 
--- if there is already a record with valid index, this function falls back to updateOne().
+-- if there is already one ore more records with query, this function falls back to updateOne().
 -- otherwise it will insert and return full data with internal row _id.
--- @param query: key, value pair table, such as {name="abc"}. it will return the full record with _id.
-function Store:insertOne(query, callbackFunc)
+-- @param query: nil or query fields. if it contains query fields, it will first do a findOne(), 
+-- if there is record, this function actually falls back to updateOne. 
+function Store:insertOne(query, update, callbackFunc)
 end
 
 -- virtual: 
@@ -128,6 +130,13 @@ end
 -- @param callbackFunc: function(err, fFlushed) end
 function Store:flush(query, callbackFunc)
 end
+
+-- virtual:
+-- @param query: {"indexName"}
+-- @param callbackFunc: function(err, bRemoved) end
+function Store:removeIndex(query, callbackFunc)
+end
+
 
 -- virtual:
 -- after issuing an really important group of commands, and you want to ensure that 
@@ -153,17 +162,24 @@ end
 
 -- virtual: 
 function Store:makeEmpty(query, callbackFunc)
-	self:find({}, function(err, rows)
-		local count = 0;
-		if(rows) then
-			for _, row in ipairs(rows) do
-				self:deleteOne(row, function() 
-					count = count + 1;
-				end)
+	self:removeIndex({}, function(err, bRemoved)
+		self:find({}, function(err, rows)
+			local count = 0;
+			if(rows) then
+				for _, row in ipairs(rows) do
+					self:deleteOne(row, function() 
+						count = count + 1;
+					end)
+				end
 			end
-		end
-		if(callbackFunc) then
-			callbackFunc(nil, count);
-		end
-	end)
+			self:flush({}, function(err, bFlushed)
+				if(not bFlushed) then
+					LOG.std(nil, "warn", "makeEmpty", "failed to flush");
+				end
+				if(callbackFunc) then
+					callbackFunc(nil, count);
+				end
+			end)
+		end)
+	end);
 end

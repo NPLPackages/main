@@ -18,6 +18,7 @@ local Store = commonlib.gettable("System.Database.Store");
 local IORequest = commonlib.gettable("System.Database.IORequest");
 local StorageProvider = commonlib.gettable("System.Database.StorageProvider");
 local Item = commonlib.gettable("System.Database.Item");
+local type = type;
 
 local Collection = commonlib.gettable("System.Database.Collection");
 Collection.__index = Collection;
@@ -74,8 +75,13 @@ function Collection:findById(id, callbackFunc, timeout)
 	return self:findOne({_id = id}, callbackFunc, timeout);
 end
 
--- please note, index will be automatically created for query field if not exist.
---@param query: key, value pair table, such as {name="abc"}
+-- Similar to `find` except that it just return one row.
+-- Find will automatically create index on query fields. 
+-- To force not-using index on query field, please use array table. e.g. 
+-- query = {name="a", {"email", "a@abc.com"}}, field `name` is indexed, whereas "email" is NOT. 
+-- @param query: key, value pair table, such as {name="abc"}. if nil or {}, it will return all the rows
+-- it may also contain array items which means non-indexed query fields, which is used to filter the result after
+-- fetching other queried fields. 
 --@param callbackFunc: function(err, row) end, where row._id is the internal row id.
 function Collection:findOne(query, callbackFunc, timeout)
 	if(self:IsServer()) then
@@ -85,9 +91,12 @@ function Collection:findOne(query, callbackFunc, timeout)
 	end
 end
 
--- find will not automatically create index on query fields. 
--- Use findOne for fast index-based search. This function simply does a raw search, if no index is found on query string.
+-- Find will automatically create index on query fields. 
+-- To force not-using index on query fields, please use array table. e.g. 
+-- query = {name="a", {"email", "a@abc.com"}}, field `name` is indexed, whereas "email" is NOT. 
 -- @param query: key, value pair table, such as {name="abc"}. if nil or {}, it will return all the rows
+-- it may also contain array items which means non-indexed query fields, which is used to filter the result after
+-- fetching other queried fields. 
 -- @param callbackFunc: function(err, rows) end, where rows is array of rows found
 function Collection:find(query, callbackFunc, timeout)
 	if(self:IsServer()) then
@@ -123,14 +132,32 @@ function Collection:updateOne(query, update, callbackFunc, timeout)
 	end
 end
 
--- if there is already a record with valid index, this function falls back to updateOne().
+-- if there is already one ore more records with query, this function falls back to updateOne().
 -- otherwise it will insert and return full data with internal row _id.
--- @param query: key, value pair table, such as {name="abc"}. it will return the full record with _id.
-function Collection:insertOne(query, callbackFunc, timeout)
+-- @param query: nil or query fields. if nil, it will insert a new record regardless of key uniqueness check. 
+-- if it contains query fields, it will first do a findOne() first, and turns into updateOne if a row is found. 
+-- please note, index-fields are created for queried fields just like in `find` command. 
+-- @param update: the actuall fields
+function Collection:insertOne(query, update, callbackFunc, timeout)
+	if(type(update) == "function") then
+		callbackFunc = update;
+		update = query;
+		query = nil;
+	end
 	if(self:IsServer()) then
-		return self.storageProvider:insertOne(query, callbackFunc);
+		return self.storageProvider:insertOne(query, update, callbackFunc);
 	else
-		return IORequest:Send("insertOne", self, query, callbackFunc, timeout);
+		return IORequest:Send("insertOne", self, {query = query, update = update}, callbackFunc, timeout);
+	end
+end
+
+-- remove one or more or all index
+-- @param query: array of keys {keyname, ...}
+function Collection:removeIndex(query, callbackFunc, timeout)
+	if(self:IsServer()) then
+		return self.storageProvider:removeIndex(query, callbackFunc);
+	else
+		return IORequest:Send("removeIndex", self, query, callbackFunc, timeout);
 	end
 end
 
@@ -159,7 +186,7 @@ function Collection:waitflush(query, callbackFunc, timeout)
 	end
 end
 
--- danger: call this function will remove everything, but preserve indexes (index data is cleared)
+-- danger: call this function will remove everything, including indices
 -- @param callbackFunc: function(err, rowDeletedCount)  end
 function Collection:makeEmpty(query, callbackFunc, timeout)
 	if(self:IsServer()) then

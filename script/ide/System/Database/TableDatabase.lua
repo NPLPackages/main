@@ -40,37 +40,46 @@ Code Examples:
 	
 	-- Note: `db.User` will automatically create the `User` collection table if not.
 	-- clear all data
-	db.User:makeEmpty({}, function(err, count) end);
-	-- add record
-	local user = db.User:new({name="LXZ", password="123"});
-	user:save(function(err, data)  echo(data) end);
-	-- implicit update record
-	local user = db.User:new({name="LXZ", password="1", email="lixizhi@yeah.net"});
-	user:save(function(err, data)  echo(data) end);
+	db.User:makeEmpty({}, function(err, count) echo("deleted"..(count or 0)) end);
+	-- insert 1
+	db.User:insertOne(nil, {name="1", email="1@1",}, function(err, data)  echo(data) 	end)
+	-- insert 1 with duplicate name
+	db.User:insertOne(nil, {name="1", email="1@1.dup",}, function(err, data)  echo(data) 	end)
+	
+	-- find or findOne will automatically create index on `name` and `email` field.
+	-- indices are NOT forced to be unique. The caller needs to ensure this see `insertOne` below. 
+	db.User:find({name="1",}, function(err, rows) echo(rows); end);
+	db.User:find({name="1", email="1@1"}, function(err, rows) echo(rows); end);
+	
+	-- force insert
+	db.User:insertOne(nil, {name="LXZ", password="123"}, function(err, data)  echo(data) 	end)
+	-- this is an update or insert command, if the query has result, it will actually update first matching row rather than inserting one. 
+	-- this is usually a good way to force uniqueness on key or compound keys, 
+	db.User:insertOne({name="LXZ"}, {name="LXZ", password="1", email="lixizhi@yeah.net"}, function(err, data)  echo(data) 	end)
+
 	-- insert another one
-	db.User:insertOne({name="LXZ2", password="123", email="lixizhi@yeah.net"}, function(err, data)  echo(data) 	end)
+	db.User:insertOne({name="LXZ2"}, {name="LXZ2", password="123", email="lixizhi@yeah.net"}, function(err, data)  echo(data) 	end)
 	-- update one
-	db.User:updateOne({name="LXZ2",}, {name="LXZ2", password="2"}, function(err, data)  echo(data) end)
+	db.User:updateOne({name="LXZ2",}, {name="LXZ2", password="2", email="lixizhi@yeah.net"}, function(err, data)  echo(data) end)
 	-- remove and update fields
-	db.User:updateOne({name="LXZ2",}, {_unset = {"password"}, email="2@yeah.net"}, function(err, data)  echo(data) end)
+	db.User:updateOne({name="LXZ2",}, {_unset = {"password"}, updated="with unset"}, function(err, data)  echo(data) end)
 	-- force flush to disk, otherwise the db IO thread will do this at fixed interval
     db.User:flush({}, function(err, bFlushed) echo("flushed: "..tostring(bFlushed)) end);
 	-- select one, this will automatically create `name` index
 	db.User:findOne({name="LXZ"}, function(err, user) echo(user);	end)
-	-- search on non-indexed rows
-	db.User:find({password="2"}, function(err, rows) echo(rows); end);
+	-- array field such as {"password", "1"} are additional checks, but does not use index. 
+	db.User:findOne({name="LXZ", {"password", "1"}, {"email", "lixizhi@yeah.net"}}, function(err, user) echo(user);	end)
+	-- search on non-unqiue-indexed rows, this will create index `email` (not-unique index)
+	db.User:find({email="lixizhi@yeah.net"}, function(err, rows) echo(rows); end);
+	db.User:find({name="LXZ", email="lixizhi@yeah.net", {"password", "1"}, }, function(err, rows) echo(rows); end);
 	-- find all rows with custom timeout 1 second
 	db.User:find({}, function(err, rows) echo(rows); end, 1000);
 	-- remove item
 	db.User:deleteOne({name="LXZ2"}, function(err, count) echo(count);	end);
 	-- wait flush may take up to 3 seconds
 	db.User:waitflush({}, function(err, data) echo({data, "data is flushed"}) end);
-	-- find all rows
-	db.User:find({}, function(err, rows) echo(rows); end);
-	-- set cache to 2000KB, turn synchronous IO off, and use in-memory journal and api queue size to 10001
-	db.User:exec({CacheSize=-2000, IgnoreOSCrash=true, IgnoreAppCrash=true, QueueSize=10001}, function(err, data) end);
-	-- run sql command 
-	db.User:exec("PRAGMA synchronous = ON", function(err, data) echo("mode changed") end);
+	-- set cache to 2000KB
+	db.User:exec({CacheSize=-2000}, function(err, data) end);
 	-- run select command from Collection 
 	db.User:exec("Select * from Collection", function(err, rows) echo(rows) end);
 ```
