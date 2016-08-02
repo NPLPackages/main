@@ -37,6 +37,9 @@
                     <div class="form-actions">
                         <button class="btn btn-primary btn-block" ng-click="loginUser(email, password)" ng-disabled="!loginform.$valid || loading" ng-class="{loading: loading}">登录</button>
                     </div>
+                    <div class="mt-1">
+                        <a ng-click="register()" style="cursor:pointer">没有账户? 马上注册</a>
+                    </div>
                 </form>
             </div>
             <div style="clear:both"></div>

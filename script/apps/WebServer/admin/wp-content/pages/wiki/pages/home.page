@@ -26,7 +26,7 @@
                                     <div class="col-sm-12 carousel-frontpage">
                                         <h3>"免费"，"数据安全"</h3>
                                         <div>
-                                            <a class="btn btn-start" href="/wiki/login">开始创作</a>
+                                            <a class="btn btn-start" href="/wiki/projects">开始创作</a>
                                         </div>
                                         <div class="center-block" style="max-width:500px;text-align:left">
                                             <p>
@@ -236,7 +236,7 @@
     <div class="container">
         <div class="row mt-4 mb-4">
             <div class="col-sm-4">
-                <a class="btn btn-lg btn-block btn-primary" style="margin:10px">注册新用户</a>
+                <a href="/wiki/projects" class="btn btn-lg btn-block btn-primary" style="margin:10px">注册新用户</a>
             </div>
             <div class="col-sm-8">
                 <p>马上注册新用户，创建你的首个个人作品网站</p>

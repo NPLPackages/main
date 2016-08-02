@@ -148,32 +148,40 @@ function npl_page_parser:set_error_msg(msg)
 end
 
 function npl_page_parser:send_page_error(msg, code_env)
-	code_env = code_env or npl_http.code_env;
-	code_env.response:sendsome(string.format("fatal error occurs when running page %s, %s: ", code_env.request:url(), self.filename or ""))
-	code_env.response:sendsome(tostring(msg));
+	if(code_env) then
+		code_env.response:sendsome(string.format("fatal error occurs when running page %s, %s: ", code_env.request:url(), self.filename or ""))
+		code_env.response:sendsome(tostring(msg));
+	end
 end
 
 -- return the call depth
 function npl_page_parser:enter_env(code_env)
-	local call_depth = (code_env._calldepth_ or 0) + 1;
-	code_env._calldepth_ = call_depth;
-	if(call_depth == 1) then
-		npl_http.code_env = code_env;
+	-- push to page stack
+	local page_stack = code_env.page_stack;
+	local count = #page_stack;
+	page_stack[count+1] = self;
+
+	if(count == 0) then
 		code_env.is_exit_call = nil;
 	end
 	code_env.__FILE__ = self.filename;
 	code_env.page = self;
+	
 	return call_depth;
 end
 
 -- return the call depth
 function npl_page_parser:leave_env(code_env)
-	local call_depth = (code_env._calldepth_ or 0) - 1;
-	code_env._calldepth_ = call_depth;
-	if(call_depth <= 0) then
-		npl_http.code_env = nil;
+	-- pop page stack
+	local page_stack = code_env.page_stack;
+	local count = #page_stack;
+	page_stack[count] = nil;
+	if(count > 1) then
+		local page = page_stack[count-1];
+		code_env.__FILE__ = page.filename;
+		code_env.page = page;
 	end
-	return call_depth;
+	return count-1;
 end
 
 

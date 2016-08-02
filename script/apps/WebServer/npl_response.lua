@@ -154,7 +154,7 @@ function response:send(text, bUseEmptyArray)
 	if(type(text) == "table") then
 		self:set_header('Content-Type', 'application/json');
 		self:SetContent(nil); -- discard any previous text
-		text = commonlib.Json.Encode(text);
+		text = commonlib.Json.Encode(text, bUseEmptyArray);
 	end
 	self:sendsome(text);
 	self:finish();	self:End();
@@ -402,7 +402,20 @@ end
 -- drop this request, so that nothing is sent to client at the moment. 
 -- we use this function to delegate a request from one thread to another in npl script handler
 function response:discard()
+	self:SetFinished();
+end
+
+-- set on finished callback
+function response:SetOnFinished(callbackFunc)
+	self.onFinished = callbackFunc;
+end
+
+-- call this to actually make this request finished.  It will invoke OnFinished callback. 
+function response:SetFinished()
 	self.finished = true;
+	if(self.onFinished) then
+		self.onFinished(self);
+	end
 end
 
 -- call this function to actually send cached response to client.
@@ -411,7 +424,7 @@ end
 function response:finish()
 	if(not self.finished and not self.is_begin) then
 		self:send_response();
-		self.finished = true;
+		self:SetFinished();
 	end
 end
 
@@ -433,6 +446,10 @@ function response:End(bIgnoreFinish)
 	end
 end
 
+function response:GetNid()
+	return self.req.nid;
+end
+
 function response:GetAddress()
 	-- if file name is "http",  the message body is raw http stream
 	if(not self.addr) then
@@ -447,6 +464,5 @@ end
 
 -- private: 
 function response:sendInternal(text)
-	-- echo(text);
 	return NPL.activate(self:GetAddress(), text);
 end

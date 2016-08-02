@@ -17,7 +17,7 @@
     $scope.user = {};
     $scope.account = {};
 
-    $scope.$watch(function () { return Account.getUser(); }, function (newValue, oldValue) {
+    $scope.$watch(Account.getUser, function (newValue, oldValue) {
         $scope.user = angular.copy(newValue);
     });
 	$scope.changePassword = function (oldpassword, newpassword) {
@@ -78,4 +78,6 @@
     // support #account, #profile in the url for nav tabs
 	var hash = window.location.hash;
 	hash && $('ul.nav a[href="' + hash + '"]').tab('show');
+
+	Account.setRequireSignin(true);
 });

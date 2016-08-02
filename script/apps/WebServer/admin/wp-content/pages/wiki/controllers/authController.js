@@ -1,6 +1,7 @@
 ﻿angular.module('MyApp')
-.factory('Account', function ($http, $auth) {
+.factory('Account', function ($http, $auth, $rootScope) {
     var user;
+    var requireSignin = false;
     return {
         setUser: function (user_) {
             user = user_;
@@ -8,8 +9,18 @@
         getUser: function () {
             return user;
         },
+        send: function(msg, data) {
+            $rootScope.$broadcast(msg, data);
+        },
         isAuthenticated: function () {
             return $auth.isAuthenticated();
+        },
+        isRequireSignin: function() {
+            return requireSignin;
+        },
+        // call this function if a page requires signin. 
+        setRequireSignin: function (bNeedSignin) {
+            requireSignin = bNeedSignin;
         },
         getProfile: function () {
             $http.get('/api/wiki/models/user').then(function (response) {
@@ -57,11 +68,17 @@
         },
     };
 })
-.controller('ModalLoginCtrl', function ($scope, $http, $auth, $uibModalInstance) {
+.controller('ModalLoginCtrl', function ($scope, $http, $auth, Account, $uibModalInstance) {
     $scope.isAuthenticating = false;
     $scope.cancel = function () {
-        $uibModalInstance.dismiss('cancel');
+        if (!Account.isRequireSignin())
+            $uibModalInstance.dismiss('cancel');
+        else
+            alert("这个网页需要你登陆后才能访问");
     };
+    $scope.register = function() {
+        $uibModalInstance.close("login");
+    }
 	$scope.authenticate = function (provider) {
 	    $scope.isAuthenticating = true;
 	    $auth.authenticate(provider)
@@ -69,7 +86,10 @@
 				$uibModalInstance.close(provider);
 			})
 			.catch(function (error) {
-				$uibModalInstance.dismiss("error", error);
+			    if (!Account.isRequireSignin())
+			        $uibModalInstance.dismiss("error", error);
+                else
+			        alert(JSON.stringify(error));
 			});
 	};
 	$scope.loginUser = function (email, password) {
@@ -90,9 +110,15 @@
             });
 	};
 })
-.controller('ModalRegisterCtrl', function ($scope, $http, $auth, $uibModalInstance) {
+.controller('ModalRegisterCtrl', function ($scope, $http, $auth, Account, $uibModalInstance) {
     $scope.cancel = function () {
-        $uibModalInstance.dismiss('cancel');
+        if (!Account.isRequireSignin())
+            $uibModalInstance.dismiss('cancel');
+        else
+            alert("这个网页需要你注册后才能访问");
+    };
+    $scope.login = function () {
+        $uibModalInstance.close('login');
     };
     $scope.registerUser = function () {
         $http.post("/api/wiki/models/user/register", { email: $scope.email, password: $scope.password, username: $scope.username })
@@ -118,7 +144,7 @@
 	$scope.GetWikiPage = function () {
 	    return WikiPage;
 	};
-	$scope.$watch(function () { return Account.getUser(); }, function (newValue, oldValue) {
+	$scope.$watch(Account.getUser, function (newValue, oldValue) {
 	    if (newValue != oldValue) {
 	        $scope.user = newValue;
 	        if (!newValue) {
@@ -126,10 +152,16 @@
 	        }
 	    }
 	});
+	$scope.$watch(Account.isRequireSignin, function (newValue, oldValue) {
+	    if (newValue && !$auth.isAuthenticated())
+	        $scope.register();
+	});
 	$scope.logout = function () {
 	    if (!$auth.isAuthenticated()) { return; }
 	    $auth.logout().then(function () {
 	        $scope.actiontip("you are signed out!")
+	        if (Account.isRequireSignin())
+	            $scope.login();
 	    });
 	};
 	$scope.isAuthenticated = function () {
@@ -158,8 +190,14 @@
 	        templateUrl: "/wp-content/pages/wiki/auth/login.html",
 	        controller: "ModalLoginCtrl",
 	    }).result.then(function (provider) {
-	        $scope.actiontip('You have successfully signed in with ' + provider + '!');
-	        Account.getProfile();
+	        if (provider == "login") {
+	            $scope.register();
+	        }
+	        else {
+	            $scope.actiontip('You have successfully signed in with ' + provider + '!');
+	            Account.getProfile();
+	            Account.send("authenticated");
+	        }
 	    }, function (text, error) {
 	        if (error && error.error) {
 	            // Popup error - invalid redirect_uri, pressed cancel button, etc.
@@ -174,8 +212,9 @@
 	    $uibModal.open({
 	        templateUrl: "/wp-content/pages/wiki/auth/register.html",
 	        controller: "ModalRegisterCtrl",
-	    }).result.then(function (provider) {
-	        
+	    }).result.then(function (text) {
+	        if (text == "login")
+	            $scope.login();
 	    });
 	};
 	$scope.showIndexBar = function (bShow) {
@@ -184,6 +223,17 @@
 	    $scope.bShowIndexBar = bShow;
 	    WikiPage.ShowIndexBar(bShow);
 	};
-	if ($scope.isAuthenticated())
+	$scope.$on('login', function (event, args) {
+	    $scope.login();
+	});
+	$scope.$on('register', function (event, args) {
+	    $scope.register();
+	});
+
+	if ($scope.isAuthenticated()) {
 	    Account.getProfile();
+	    Account.send("authenticated");
+	}
+	if (Account.isRequireSignin())
+	    $scope.login();
 });

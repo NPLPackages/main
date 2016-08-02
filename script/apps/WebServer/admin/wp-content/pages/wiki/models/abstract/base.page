@@ -40,13 +40,18 @@ end
 
 -- get unique query in key, value params
 -- @param params: all key, value pairs
+-- @param bForceAll: if true, we will return nil if any unique key is not present in params
 -- return query table containing only unique key value pairs.
-function base:getUniqueQuery(params)
+function base:getUniqueQuery(params, bForceAll)
 	local query = {};
 	local fields = self:getfields();
 	for name, _ in pairs(params) do
-		if(fields[name].uniqueIndex and params[name]) then
-			query[name] = params[name];
+		if(fields[name].uniqueIndex) then
+			if(params[name]) then
+				query[name] = params[name];
+			elseif(bForceAll) then
+				return nil;
+			end
 		end
 	end
 	return query;

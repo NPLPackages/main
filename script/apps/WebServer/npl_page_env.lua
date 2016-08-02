@@ -85,6 +85,7 @@ function npl_page_env:new(request, response)
 			local self = getfenv(1);
 			return env_imp.resume(self, err, msg);
 		end,
+		page_stack = {},
 	};
 	o._GLOBAL = o;
 	setfenv(o.resume, o);
@@ -94,6 +95,16 @@ end
 
 -- exposing table database
 npl_page_env.TableDatabase = TableDatabase;
+
+-- internal function: never call this in page code
+function npl_page_env:push_page(page)
+	self.page_stack[#(self.page_stack)+1] = page;
+end
+
+-- internal function: never call this in page code
+function npl_page_env:pop_page(page)
+	self.page_stack[#(self.page_stack)] = nil;
+end
 
 -- handy function to output using current request context
 -- @param text: string or number or nil or boolean. 
@@ -425,12 +436,23 @@ function env_imp:yield(bExitOnError)
 	end
 end
 
+function env_imp:restore_page_env()
+	-- restore all parent page stack env to self
+	for _, page in ipairs(self.page_stack) do
+		if(page.code_func) then
+			setfenv(page.code_func, self);
+		end
+	end
+end
+
 -- yield control until all async jobs are completed
 -- @param bExitOnError: if true, this function will handle error 
 -- @return err, msg: err is true if there is error. 
 function npl_page_env.yield(bExitOnError)
 	local self = getfenv(2);
-	return env_imp.yield(self, bExitOnError);
+	local err, msg = env_imp.yield(self, bExitOnError);
+	env_imp.restore_page_env(self);
+	return err, msg;
 end
 
 -- resume from where jobs are paused last. 

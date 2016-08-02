@@ -30,7 +30,6 @@ function user:get(params)
 		self:ensureAuthenticated();
 		params._id = request.userid;
 	end
-
 	local data = user._super.get(self, params);
 	if(type(data) == "table") then
 		-- never return password

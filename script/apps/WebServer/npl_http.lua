@@ -8,12 +8,19 @@ NPL.load("(gl)script/apps/WebServer/npl_http.lua");
 local npl_http = commonlib.gettable("WebServer.npl_http");
 -----------------------------------------------
 ]]
+NPL.load("(gl)script/ide/event_mapping.lua");
 NPL.load("(gl)script/apps/WebServer/npl_request.lua");
 NPL.load("(gl)script/apps/WebServer/npl_common_handlers.lua");
+local NPLReturnCode = commonlib.gettable("NPLReturnCode");
 local common_handlers = commonlib.gettable("WebServer.common_handlers");
 local request = commonlib.gettable("WebServer.request");
 
 local npl_http = commonlib.gettable("WebServer.npl_http");
+
+-- In HTTP1.1's persistent connection: 
+-- in case the client send multiple requests on the same connection without waiting for the previous message to return
+-- the server also need to pipeline all requests. This feature is currently disabled. 
+local enable_http_pipeline = false;
 
 -- keep statistics
 local stats = {
@@ -141,6 +148,9 @@ function npl_http.start(config)
 	LOG.std(nil, "system", "WebServer", "NPL Web Server is started. ");
 	NPL.AddPublicFile("script/apps/WebServer/npl_http.lua", -10);
 	NPL.StartNetServer(tostring(config.server.ip or ""), tostring(config.server.port or 8080));
+	if(enable_http_pipeline) then
+		NPL.RegisterEvent(0, "_n_npl_http_network", ";npl_http_event();");
+	end
 end
 
 -- replace the default request handler
@@ -169,8 +179,50 @@ function npl_http.handleRequest(req)
 	end
 end
 
+local connections = {};
+
+function npl_http_event()
+	local msg = msg;
+	local code = msg.code;
+	if(code == NPLReturnCode.NPL_ConnectionDisconnected) then
+		local nid = msg.tid or msg.nid;
+		if(connections[nid]) then
+			local req = connections[nid];
+			req.response:SetOnFinished(nil);
+			req.response:SetFinished();
+			connections[nid] = nil;
+			LOG.std(nil, "warn", "npl_http", "connection %s ended prematurally", nid);
+		end
+		LOG.std(nil, "info", "npl_http", "connection %s ended", nid);
+	end
+end
+
+function npl_http.OnFinishedCallback(response)
+	local req = response.req.next_req;
+	if(not req) then
+		connections[response:GetNid()] = nil;
+	else
+		response.req.next_req = nil;
+		connections[response:GetNid()] = req;
+		npl_http.handleRequest(req);
+	end
+end
+
 local function activate()
-	local req = request:new():init(msg);
-	npl_http.handleRequest(req);
+	if(enable_http_pipeline) then
+		local req = request:new():init(msg);
+		local last_req = connections[req.nid];
+		if(not last_req) then
+			connections[req.nid] = req;
+			req.response:SetOnFinished(npl_http.OnFinishedCallback);
+			npl_http.handleRequest(req);
+		else
+			-- append request
+			last_req.next_req = req;
+		end
+	else
+		local req = request:new():init(msg);
+		npl_http.handleRequest(req);
+	end
 end
 NPL.this(activate)
