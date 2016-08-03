@@ -25,9 +25,22 @@ function project:ctor()
 	self:addfield("fork", "string", false, 200);
 	-- creation date
 	self:addfield("createdate", "string", false, 64);
+	-- number of stars 
+	self:addfield("stars", "number");
+	-- 1 for private, null or 0 for public one
+	self:addfield("private", "number");
 end
 
 function project:create(params)
 	params.createdate = ParaGlobal.GetDateFormat("yyyy-MM-dd");
+	params.stars = 0;
 	return project._super.create(self, params);
+end
+
+function project:update(params)
+	-- ignore these fields
+	params.stars = nil;
+	params.createdate = nil;
+	params.name = nil;
+	return project._super.update(self, params);
 end

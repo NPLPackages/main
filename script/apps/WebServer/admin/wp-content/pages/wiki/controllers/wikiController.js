@@ -16,6 +16,8 @@ angular.module('MyApp')
         rootUrl: $window.rootUrl,
         pageExist: "loading",
         isSingleSite: $window.isSingleSite,
+        project_id: $window.project_id,
+        project_stars: $window.project_stars,
     };
     
     WikiPage.ShowIndexBar =  function (bShow) {
@@ -84,6 +86,12 @@ angular.module('MyApp')
         if (!this.pageName)
             this.pageName = window.location.pathname.split("/")[2] || "Home";
         return this.pageName;
+    };
+    WikiPage.getProjId = function () {
+        return this.project_id;
+    };
+    WikiPage.getStars = function () {
+        return this.project_stars || 0;
     };
     WikiPage.getRootRawUrl = function () {
         // default to `SiteName/wiki` project

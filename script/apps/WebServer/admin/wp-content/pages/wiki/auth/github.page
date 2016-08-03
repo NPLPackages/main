@@ -78,6 +78,7 @@ util.GetUrl({url = accessTokenUrl, qs = params }, function(err, msg, data)
 					picture = profile.avatar_url,
 					displayName = profile.name,
 					github_token = accessToken,
+					joindate = ParaGlobal.GetDateFormat("yyyy-MM-dd"),
 				}, function(err, user) 
 					local token = createJWT(user);
 					response:send({ token = token });

@@ -9,20 +9,34 @@ if(not db) then
 	include_once(WIKI_ROOT.."config/db.page");
 end
 include_once(WIKI_ROOT.."config/buildin.page");
+include_once(WIKI_ROOT.."models/project.page");
+
+-- current project
+local current_proj = {};
 
 -- get website url and host from name
--- @param callbackFunc: function(err, website) end. if nil, it will always return from buildin
 -- @return buildin_site {url, host}
-function getWebsite(sitename, callbackFunc)
+-- such as {url="LiXizhi/wiki", host="github", name=string}
+-- it can also be the project's wiki {url="LiXizhi/NPLRuntime/wiki", host="github"}
+function getWebsite(sitename)
 	sitename = sitename or "wiki";
 	local site = buildin_website[string.lower(sitename)];
-	if(site or not callbackFunc) then
-		if(callbackFunc) then
-			callbackFunc(nil, site);
-		end
+	if(site) then
 		return site;
 	else
-		return db.website:FindOne({name=sitename}, callbackFunc);
+		local model = models.project:new();
+		local projs = model:get({name=sitename});
+		if(projs and projs[1]) then
+			local proj = projs[1];
+			local store = proj.store;
+			if(store) then
+				local url = store:match("^%w+://github%.com/(.+)$")
+				if(url) then
+					current_proj = proj;
+					return {url=url, host="github", name=proj.name};
+				end
+			end
+		end
 	end
 end
 
@@ -37,7 +51,7 @@ function getSiteRootURL(site)
 			else
 				rootUrl = "https://raw.githubusercontent.com/"..siteName.."/"..projectName.."/master/";
 			end
-			return rootUrl, projectName;
+			return rootUrl, projectName, (site.name or projectName);
 		else
 			-- TODO other database store like coding.net?
 		end
@@ -62,6 +76,11 @@ function IsSingleSite()
 	return isSingleSite;
 end
 
+-- get the current project or just return an empty table
+function GetProject()
+	return current_proj;
+end
+
 -- server side pre-calculation here:
 -- calculate website name and page name from current url
 function RenderServerWikiScript()
@@ -73,16 +92,18 @@ function RenderServerWikiScript()
 			siteName = siteName_;
 			pageName = request:url():match("^/?([^/]*)");	
 		else
-			siteName, pageName = request:url():match("^/?([^/]+)/?([^/]*)");	
+			local url = commonlib.Encoding.url_decode(request:url());
+			siteName, pageName = url:match("^/?([^/]+)/?([^/]*)");	
 			if(not siteName) then
 				siteName, pageName = "wiki", "home"
 			end
 		end
 	end
 	if(siteName) then
-		local rootUrl, siteName = getSiteRootURL(getWebsite(siteName));
+		local rootUrl, projectName, siteName = getSiteRootURL(getWebsite(siteName));
 		if(rootUrl) then
-			echo(format("<script>window.siteName = '%s'; window.pageName = '%s'; window.rootUrl = '%s'; window.isSingleSite = %s;</script>", siteName, pageName, rootUrl, tostring(isSingleSite)));
+			echo(format("<script>window.siteName = '%s'; window.pageName = '%s'; window.rootUrl = '%s'; window.isSingleSite = %s; window.project_id=%s; window.project_stars=%s;</script>", 
+				siteName, pageName, rootUrl, tostring(isSingleSite), tostring(GetProject()._id or -1), tostring(GetProject().stars or 0)));
 		end
 	end
 end

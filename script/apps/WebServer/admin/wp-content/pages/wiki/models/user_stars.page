@@ -1,0 +1,26 @@
+<?npl
+--[[
+Title: user stars
+Author: LiXizhi
+Date: 2016/8/2
+]]
+include_once("./abstract/per_user_base.page");
+
+local user_stars = inherit(models.abstract.per_user_base, gettable("models.user_stars"));
+
+user_stars.db_name = "user_stars";
+user_stars.max_stars = 1000;
+
+function user_stars:ctor()
+	-- commar separated string or userid
+	self:addfield("stars", "string", nil);
+end
+
+function user_stars:create(params)
+end
+
+function user_stars:update(params)
+end
+
+function user_stars:delete(params)
+end

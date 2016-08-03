@@ -22,6 +22,7 @@ function user:ctor()
 	self:addfield("company", "string", false, 30);
 	self:addfield("url", "string", false, 150);
 	self:addfield("location", "string", false, 50);
+	self:addfield("joindate", "string", false, 30);
 end
 
 function user:get(params)
@@ -202,6 +203,7 @@ function user:api_register(params)
 			displayName = displayName, 
 			password = password,
 			email = email,
+			joindate = ParaGlobal.GetDateFormat("yyyy-MM-dd"),
 		}, resume);
 
 		local err, user = yield();

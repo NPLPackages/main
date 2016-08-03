@@ -654,10 +654,8 @@ function SqliteStore:updateOne(query, update, callbackFunc)
 					indexTable:addIndex(newIndexValue, id);
 				end
 			end
-
 			-- update row
 			commonlib.partialcopy(data, update);
-
 			-- unset rows if requested by user
 			if(_unset) then
 				for name, value in pairs(_unset) do

@@ -54,6 +54,7 @@ NPL.load("(gl)script/ide/System/Core/Filters.lua");
 NPL.load("(gl)script/ide/System/os/GetUrl.lua");
 NPL.load("(gl)script/ide/Json.lua");
 NPL.load("(gl)script/apps/WebServer/npl_util.lua");
+NPL.load("(gl)script/ide/Encoding.lua");
 NPL.load("(gl)script/ide/System/Database/TableDatabase.lua");
 local TableDatabase = commonlib.gettable("System.Database.TableDatabase");
 local npl_http = commonlib.gettable("WebServer.npl_http");

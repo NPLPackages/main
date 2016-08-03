@@ -67,21 +67,19 @@ function multi_user_base:update(params)
 	self:ensureAuthenticated();
 	local err, query = self:validateQuery(params);
 	local name = self:findIndexName(query);
+	
 	if(name) then
-		local err, query = self:validateQuery(params);
-		if(query) then
-			self:db():updateOne({name=query[name], {"userid", request.userid}}, query, resume);
-			local err, data = yield(true); 
-			return data;
-		end
+		self:db():updateOne({[name]=query[name], {"userid", request.userid}}, query, resume);
+		local err, data = yield(true); 
+		return data;
 	end
 end
 
-function multi_user_base:delete(params)
+function multi_user_base:delete(query)
 	self:ensureAuthenticated();
 	local name = self:findIndexName(query);
 	if(name) then
-		self:db():deleteOne({name=query[name], {"userid", request.userid}}, resume);
+		self:db():deleteOne({[name]=query[name], {"userid", request.userid}}, resume);
 		local err, data = yield(true); 
 		return data;
 	end

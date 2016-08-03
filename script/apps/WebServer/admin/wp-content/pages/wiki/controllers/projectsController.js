@@ -42,6 +42,7 @@
     $scope.projects = [];
     $scope.message = null;
     $scope.max_free_count = 3;
+    $scope.loading = false;
     
     $scope.getProjects = function () {
         $http.post("/api/wiki/models/project", {})
@@ -81,6 +82,52 @@
         }, function (text, error) {
 
         });
+    };
+    $scope.selectProj = function (index) {
+        $scope.selected_index = index;
+    };
+    $scope.deleteProj = function (index) {
+        var proj = $scope.projects[index];
+        if (proj) {
+            var retVal = confirm("你确定要删除网站:"+proj.name+ "?");
+            if (retVal == true) {
+                $scope.loading = true;
+                $http.delete("/api/wiki/models/project", {
+                    params: { _id: proj._id },
+                })
+                .then(function (response) {
+                    $scope.loading = false;
+                    $scope.selectProj();
+                    $scope.projects.slice(index, 1);
+                    $scope.getProjects();
+                }).catch(function (response) {
+                    console.log("error:" + response.data.message);
+                    $scope.loading = false;
+                });
+            }
+        }
+    };
+    $scope.saveProj = function (index) {
+        var proj = $scope.projects[index];
+        if(proj)
+        {
+            $scope.loading = true;
+            $http.put("/api/wiki/models/project", {
+                _id: proj._id,
+                desc: proj.desc,
+                color: proj.color,
+                store: proj.store,
+                fork: proj.fork,
+            })
+            .then(function (response) {
+                console.log(JSON.stringify(response));
+                $scope.loading = false;
+                $scope.selectProj();
+            }).catch(function (response) {
+                console.log("error:" + response.data.message);
+                $scope.loading = false;
+            });
+        }
     };
     $scope.login = function () {
         Account.send("login");
