@@ -181,7 +181,7 @@ function user:api_register(params)
 		response:status(409); 
 		return { message = 'Email is already taken' };
 	else
-		local displayName = params.username;		
+		local displayName = params.displayName;		
 		local password = params.password;
 		local email = self:validate_email(params.email);
 		if(not email) then
@@ -194,6 +194,7 @@ function user:api_register(params)
 			return { message = 'Password too weak' };	
 		end
 		if(type(displayName)~="string" or #displayName < 3 or #displayName>30) then
+			log({"1111111111111", params, displayName})
 			response:status(409); 
 			return { message = 'name too long or short' };	
 		end

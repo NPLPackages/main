@@ -121,7 +121,7 @@
         $uibModalInstance.close('login');
     };
     $scope.registerUser = function () {
-        $http.post("/api/wiki/models/user/register", { email: $scope.email, password: $scope.password, username: $scope.username })
+        $http.post("/api/wiki/models/user/register", { email: $scope.email, password: $scope.password, displayName: $scope.username })
             .then(function (response) {
                 var token = response.data.token;
                 if (token) {
