@@ -13,10 +13,8 @@ angular.module('MyApp')
         url: "/api/wiki/auth/github",
         clientId: '<?=site_config().wiki.clientid.GITHUB_CLIENTID?>',
         redirectUri: window.location.origin + '/wiki/login',
-
-	------------added by LiZhiqiang----------------
-	scope: ["public_repo", "delete_repo"], 
-
+		// scope: ["public_repo", "delete_repo"], 
+		scope: ["public_repo"], 
     });
     $authProvider.google({
         url: "/api/wiki/auth/google",
