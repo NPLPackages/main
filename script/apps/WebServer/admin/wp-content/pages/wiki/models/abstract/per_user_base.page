@@ -15,22 +15,29 @@ function per_user_base:ctor()
 	self:addfield("userid", "number", true);
 end
 
+function per_user_base:getUserId()
+	return request.userid;
+end
+
 -- `userid` is automatically injected if no other field is found. 
 function per_user_base:findIndexName(params)
 	local name = per_user_base._super.findIndexName(self, params);
 	if(not name) then
 		-- `userid` is automatically injected if no other field is found. 
 		self:ensureAuthenticated();
+		name = "userid";
 		params.userid = request.userid;
 	end
+	return name;
 end
 
 -- virtual:  
 function per_user_base:get(params)
+	params = params or {};
 	local err, query = self:validateQuery(params);
 	local name = self:findIndexName(query);
 	if(name) then
-		self:db():findById(query[name], resume);
+		self:db():findOne({[name] = query[name]}, resume);
 		local err, data = yield(true); 
 		if(not err) then
 			data = self:validateRow(data);

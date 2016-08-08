@@ -17,8 +17,12 @@ function multi_user_base:ctor()
 	self:addfield("userid", "number", false);
 end
 
+function multi_user_base:getUserId()
+	return request.userid;
+end
+
 function multi_user_base:get(params)
-	local err, query = self:validateQuery(params);
+	local err, query = self:validateQuery(params or {});
 	local name = self:findIndexName(query);
 	if(name) then
 		self:db():findOne(query, resume);
@@ -67,7 +71,6 @@ function multi_user_base:update(params)
 	self:ensureAuthenticated();
 	local err, query = self:validateQuery(params);
 	local name = self:findIndexName(query);
-	
 	if(name) then
 		self:db():updateOne({[name]=query[name], {"userid", request.userid}}, query, resume);
 		local err, data = yield(true); 
