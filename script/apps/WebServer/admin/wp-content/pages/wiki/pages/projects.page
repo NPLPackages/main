@@ -40,7 +40,7 @@ wp_enqueue_script("projectsController", "/wp-content/pages/wiki/controllers/proj
                                 未开启数据备份
                             </span>
                             <div uib-tooltip="查看订阅用户" class="pull-right" style="margin-top:5px;min-height:20px;min-width:50px">
-                                <a ng-href="/{{proj.name}}/subscribers"><i class="glyphicon glyphicon-star"></i>{{proj.stars || 0}}</a>
+                                <a ng-href="/{{proj.name}}/_subscribers"><i class="glyphicon glyphicon-star"></i>{{proj.stars || 0}}</a>
                             </div>
                         </div>
                         <div style="color:#808080" class="mt-2">

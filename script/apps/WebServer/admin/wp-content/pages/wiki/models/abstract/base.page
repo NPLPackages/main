@@ -59,7 +59,7 @@ end
 
 -- @param params: query parameters table.
 -- @return the first found index name in query parameter. 
-function base:findIndexName(params)
+function base:findUnqiueIndexName(params)
 	if(not params) then
 		return;
 	end
@@ -174,7 +174,7 @@ function base:validateRow(data)
 			data[name] = nil;
 		end
 		-- also remove non-exist fields from database, this will auto-fix schema
-		local name = self:findIndexName(data);
+		local name = self:findUnqiueIndexName(data);
 		if(name) then
 			self:db():updateOne({[name] = data[name]}, {_unset=invalid_fields}, resume);
 			local err = yield(true); 
@@ -193,7 +193,7 @@ end
 
 function base:get(params)
 	local err, query = self:validateQuery(params);
-	local name = self:findIndexName(query);
+	local name = self:findUnqiueIndexName(query);
 	if(name) then
 		self:db():findOne(query, resume);
 		local err, data = yield(true); 
@@ -207,7 +207,7 @@ end
 function base:delete(params)
 	self:ensureAuthenticated();
 	local err, query = self:validateQuery(params);
-	local name = self:findIndexName(query);
+	local name = self:findUnqiueIndexName(query);
 	if(name) then
 		self:db():deleteOne({[name] = query[name]}, resume);
 		local err, data = yield(true); 

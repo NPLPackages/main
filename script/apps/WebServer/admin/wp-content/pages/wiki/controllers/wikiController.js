@@ -9,17 +9,21 @@ Reference:  https://developer.github.com/v3
 * siteName, pageName, rootUrl should be filled on server side
 */
 angular.module('MyApp')
-.factory('WikiPage', function ($window, $uibModal) {
+.factory('WikiPage', function ($window, $uibModal, $http, $rootScope) {
+    var siteInfo = $window.siteInfo || {};
     var WikiPage = {
-        siteName: $window.siteName,
-        pageName: $window.pageName,
-        rootUrl: $window.rootUrl,
+        siteName: siteInfo.siteName,
+        pageName: siteInfo.pageName,
+        rootUrl: siteInfo.rootUrl,
         pageExist: "loading",
-        isSingleSite: $window.isSingleSite,
-        project_id: $window.project_id,
-        project_stars: $window.project_stars,
+        isSingleSite: siteInfo.isSingleSite,
+        project_id: siteInfo.project_id,
+        project_stars: siteInfo.stars,
+        is_stared: false,
     };
-    
+    WikiPage.send = function (msg, data) {
+        $rootScope.$broadcast(msg, data);
+    };
     WikiPage.ShowIndexBar =  function (bShow) {
         if (bShow) {
             $("#content").addClass("col-md-9");
@@ -114,6 +118,20 @@ angular.module('MyApp')
     }
     WikiPage.isPageExist = function () {
         return this.pageExist == "downloaded";
+    }
+    WikiPage.isStared = function () {
+        return this.is_stared == true;
+    }
+    WikiPage.refreshIsStared = function () {
+        $http.post("/api/wiki/models/user_stars/hasproject", {
+            name: this.siteName,
+        })
+        .then(function (response) {
+            if (response.data) {
+                WikiPage.is_stared = response.data.result;
+            }
+        }).catch(function (response) {
+        });
     }
     WikiPage.isPageNotFound = function () {
         return this.pageExist == "notfound";

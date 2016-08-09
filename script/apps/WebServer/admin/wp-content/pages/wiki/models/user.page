@@ -142,6 +142,7 @@ function user:api_login(params)
 	
 	self:db():findOne({email = email}, resume);
 	local err, user = yield();
+
 	if(not user or (user.password or "") == "") then
 		response:status(409); return { message = 'Email or password wrong' };
 	else

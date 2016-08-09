@@ -54,8 +54,9 @@ wp_enqueue_style("wiki_style", "/wp-content/pages/wiki/assets/wiki.css");
                 <ul class="nav navbar-nav navbar-right">
                     <li>
                         <div style="float:left;padding-top:1px;margin-right:30px;" ng-show="GetWikiPage().isPageExist() && isAuthenticated()" class="btn-group">
-                            <button tooltip-placement="bottom" ng-click="starProject()" uib-tooltip="点击订阅{{GetWikiPage().getSiteName()}}" class="btn-subscribe btn btn-primary"><i class="glyphicon glyphicon-star"></i>订阅</button>
-                            <button class="btn-subscribe btn">{{GetWikiPage().getStars()}}</button>
+							<button ng-show="! GetWikiPage().isStared()" tooltip-placement="bottom" ng-click="starProject()" uib-tooltip="点击订阅{{GetWikiPage().getSiteName()}}" class="btn-subscribe btn btn-primary"><i class="glyphicon glyphicon-star"></i>订阅</button>
+							<button ng-show="GetWikiPage().isStared()" tooltip-placement="bottom" ng-click="unstarProject()" uib-tooltip="点击取消订阅{{GetWikiPage().getSiteName()}}" class="btn-subscribe btn btn-primary"><i class="glyphicon glyphicon-star"></i>已订阅</button>
+                            <button class="btn-subscribe btn" tooltip-placement="bottom" ng-click="showSubscribers()" uib-tooltip="点击查看全部订阅用户">{{GetWikiPage().getStars()}}</button>
                         </div>
                         <div style="float:left" ng-if="!isAuthenticated()">
                             <button type="button" class="btn" ng-click="login()">登录</button>
@@ -70,7 +71,7 @@ wp_enqueue_style("wiki_style", "/wp-content/pages/wiki/assets/wiki.css");
                         <div style="float:left;" ng-if="isAuthenticated()" class="dropdown">
                             <a href="#" style="color:#9d9d9d" tooltip-placement="bottom" uib-tooltip="查看你的信息或更多" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
                                 <div style="margin-top:9px;margin-bottom:7px;">
-                                    <img class="img-rounded" style="width:32px;height:32px;" ng-src="{{user.picture || 'http://placehold.it/100x100'}}"> <span class="caret"></span>
+                                    <img class="img-rounded" style="width:32px;height:32px;background-color:#ffffff" ng-src="{{user.picture || '/wp-includes/js/jeasyui/themes/icons/man.png'}}"> <span class="caret"></span>
                                 </div>
                             </a>
                             <ul class="dropdown-menu">
@@ -92,6 +93,12 @@ wp_enqueue_style("wiki_style", "/wp-content/pages/wiki/assets/wiki.css");
                         </div>
                     </li>
                 </ul>
+            </div>
+        </div>
+		<div ng-repeat="notification in notifications">
+            <div class="alert alert-{{notification.type}} fade in" style="margin-bottom:0px;">
+                <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                {{notification.text}}
             </div>
         </div>
     </nav>
@@ -125,7 +132,7 @@ wp_enqueue_style("wiki_style", "/wp-content/pages/wiki/assets/wiki.css");
                         <a href="/wiki/terms">声明</a> | <a href="/wiki/privacy">隐私</a> | <a href="/wiki/contact">联系我们</a> | <a href="/wiki/about">关于我们</a>
                     </div>
                     <div>
-                        Copyright &copy; Tatfook Inc. 本网站服务器使用<a style="font-weight:bold" href="http://www.paracraft.wiki/npl">NPL语言</a>编写
+                        Copyright &copy; Tatfook Inc. 本网站服务器和数据库使用<a style="font-weight:bold" href="http://www.paracraft.wiki/npl">NPL语言</a>编写
                     </div>
                 </div>
             </div>

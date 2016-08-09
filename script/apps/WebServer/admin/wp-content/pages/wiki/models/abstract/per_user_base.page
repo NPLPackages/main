@@ -20,10 +20,10 @@ function per_user_base:getUserId()
 end
 
 -- `userid` is automatically injected if no other field is found. 
-function per_user_base:findIndexName(params)
-	local name = per_user_base._super.findIndexName(self, params);
+function per_user_base:findUnqiueIndexName(params)
+	local name = per_user_base._super.findUnqiueIndexName(self, params);
 	if(not name) then
-		-- `userid` is automatically injected if no other field is found. 
+		-- `userid` is automatically injected if no other unique index-field is found. 
 		self:ensureAuthenticated();
 		name = "userid";
 		params.userid = request.userid;
@@ -35,7 +35,7 @@ end
 function per_user_base:get(params)
 	params = params or {};
 	local err, query = self:validateQuery(params);
-	local name = self:findIndexName(query);
+	local name = self:findUnqiueIndexName(query);
 	if(name) then
 		self:db():findOne({[name] = query[name]}, resume);
 		local err, data = yield(true); 

@@ -14,18 +14,18 @@ include_once(WIKI_ROOT.."models/project.page");
 -- current project
 local current_proj = {};
 
+-- current website {url="", host="", stars=number, is_stared=boolean}
+local curSite;
+
 -- get website url and host from name
 -- @return buildin_site {url, host}
 -- such as {url="LiXizhi/wiki", host="github", name=string}
--- it can also be the project's wiki {url="LiXizhi/NPLRuntime/wiki", host="github"}
+-- it can also be the project's wiki {url="LiXizhi/NPLRuntime/wiki", host="github", stars=number, is_stared=boolean}
 function getWebsite(sitename)
 	sitename = sitename or "wiki";
 	local site = buildin_website[string.lower(sitename)];
-	if(site) then
-		return site;
-	else
-		local model = models.project:new();
-		local projs = model:get({name=sitename});
+	if(not site) then
+		local projs = models.project:new():get({name=sitename});
 		if(projs and projs[1]) then
 			local proj = projs[1];
 			local store = proj.store;
@@ -33,11 +33,13 @@ function getWebsite(sitename)
 				local url = store:match("^%w+://github%.com/(.+)$")
 				if(url) then
 					current_proj = proj;
-					return {url=url, host="github", name=proj.name};
+					site = {url=url, host="github", name=proj.name, stars=proj.stars};
 				end
 			end
 		end
 	end
+	curSite = site;
+	return site;
 end
 
 -- @return rootUrl, projectName
@@ -102,17 +104,29 @@ function RenderServerWikiScript()
 	if(siteName) then
 		local rootUrl, projectName, siteName = getSiteRootURL(getWebsite(siteName));
 		if(rootUrl) then
-			echo(format("<script>window.siteName = '%s'; window.pageName = '%s'; window.rootUrl = '%s'; window.isSingleSite = %s; window.project_id=%s; window.project_stars=%s;</script>", 
-				siteName, pageName, rootUrl, tostring(isSingleSite), tostring(GetProject()._id or -1), tostring(GetProject().stars or 0)));
+			curSite.siteName = siteName;
+			curSite.pageName = pageName;
+			curSite.rootUrl = rootUrl;
+			curSite.isSingleSite = isSingleSite;
+			curSite.project_id = GetProject()._id or -1;
+			echo(format("<script>window.siteInfo = %s;</script>", json_encode(curSite)));
 		end
 	end
 end
 
 -- server side cached content for google agent and special wiki/* pages, etc. 
 -- @note: `wiki/*` is mapped to predefined pages at `wiki/pages/*.page`
+-- @note: `[name]/_XXX` is mapped to predefined pages at `wiki/pages/special/_XXX.page`
 function RenderServerWikiContent()
 	if(GetSiteName() == "wiki") then
 		local filename = WP_CONTENT_DIR .. '/pages/wiki/pages/' .. GetPageName() .. ".page";
+		if(file_exists(filename)) then
+			include(filename);
+			echo("<script>window.skipClientWiki = true;</script>")
+		end
+	end
+	if(pageName and pageName:match("^_")) then
+		local filename = WP_CONTENT_DIR .. '/pages/wiki/pages/special/' .. pageName:gsub("^_", "") .. ".page";
 		if(file_exists(filename)) then
 			include(filename);
 			echo("<script>window.skipClientWiki = true;</script>")
