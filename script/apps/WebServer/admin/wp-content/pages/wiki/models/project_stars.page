@@ -34,29 +34,26 @@ end
 -- protected: 
 -- @return true if added;
 function project_stars:addUser(project_name, user_id)
-	if(not user_id or project_name) then
+	if(not user_id or not project_name) then
 		return
 	end
-	local projs = self:get({name=project_name});
-	if(projs and #projs == 1) then
-		local proj = projs[1];
-		if(proj) then
-			local stars = proj.stars;
-			if(stars:match(tostring(user_id)..",")) then
-				return true;
-			end
-			-- add to project
-			if(#stars > max_length) then
-				-- add to front, pop the last.
-				stars = stars:gsub("[%d]+,$", "");
-				stars = (tostring(user_id)..",")..stars;
-			else
-				stars = (tostring(user_id)..",")..stars;
-			end
-			local err, data = self:db():updateOne(self, {name = project_name}, {stars = stars}, resume)
-			if(data) then
-				return true;
-			end
+	local proj = self:get({name=project_name});
+	if(proj) then
+		local stars = proj.stars;
+		if(stars:match(tostring(user_id)..",")) then
+			return true;
+		end
+		-- add to project
+		if(#stars > max_length) then
+			-- add to front, pop the last.
+			stars = stars:gsub("[%d]+,$", "");
+			stars = (tostring(user_id)..",")..stars;
+		else
+			stars = (tostring(user_id)..",")..stars;
+		end
+		local err, data = self:db():updateOne(self, {name = project_name}, {stars = stars}, resume)
+		if(data) then
+			return true;
 		end
 	else
 		local stars = (tostring(user_id)..",");
@@ -70,24 +67,21 @@ end
 -- protected: 
 -- @return true if removed
 function project_stars:removeUser(project_name, user_id)
-	if(not user_id or project_name) then
+	if(not user_id or not project_name) then
 		return
 	end
-	local projs = self:get({name=proj_name});
-	if(projs and #projs == 1) then
-		local proj = projs[1];
-		if(proj) then
-			local stars = proj.stars;
-			-- remove user from project
-			local new_stars = stars:gsub(tostring(user_id)..",", "");
-			if(new_stars ~= stars) then
-				local res = project_stars._super.update(self, {name = project_name, stars = new_stars})
-				if(res) then
-					return true;
-				end
-			else
+	local proj = self:get({name=proj_name});
+	if(proj) then
+		local stars = proj.stars;
+		-- remove user from project
+		local new_stars = stars:gsub(tostring(user_id)..",", "");
+		if(new_stars ~= stars) then
+			local res = project_stars._super.update(self, {name = project_name, stars = new_stars})
+			if(res) then
 				return true;
 			end
+		else
+			return true;
 		end
 	else
 		return true;

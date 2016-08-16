@@ -1,3 +1,13 @@
-﻿<div class="col-sm-12">
-TODO: 
+﻿<?npl
+wp_enqueue_script("subscribersController", "/wp-content/pages/wiki/controllers/subscribersController.js");
+?>
+<div class="col-sm-12" ng-controller="SubscribersCtrl">
+    <div>
+        <h2 class="mt-2 mb-2">
+            共{{users.length || 0}}人订阅了作品`{{getSiteName()}}`
+        </h2>
+        <div class="col-sm-4" ng-repeat="user in users">
+            {{user}}
+        </div>
+    </div>
 </div>

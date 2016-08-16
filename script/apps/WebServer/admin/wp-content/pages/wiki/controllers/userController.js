@@ -74,7 +74,7 @@
         if (!Account.isRequireSignin())
             $uibModalInstance.dismiss('cancel');
         else
-            $scope.actiontip("这个网页需要你登陆后才能访问");
+            alert("这个网页需要你登陆后才能访问");
     };
     $scope.register = function() {
         $uibModalInstance.close("login");
@@ -115,7 +115,7 @@
         if (!Account.isRequireSignin())
             $uibModalInstance.dismiss('cancel');
         else
-            $scope.actiontip("这个网页需要你注册后才能访问");
+            alert("这个网页需要你注册后才能访问");
     };
     $scope.login = function () {
         $uibModalInstance.close('login');
