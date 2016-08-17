@@ -22,6 +22,19 @@ function project_stars:ctor()
 	self:addfield("stars", "string", nil);
 end
 
+-- return {name, stars=userid string}
+function project_stars:get(params)
+	local proj = project_stars._super.get(self, params);
+	if(proj and proj.stars) then
+		--local users = {};
+		--for userid in proj.stars:gmatch("%d+") do
+			--users[#users+1] = tonumber(userid);
+		--end
+		--return next(users) and users;
+		return proj;
+	end
+end
+
 function project_stars:create(params)
 end
 

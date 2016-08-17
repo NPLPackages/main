@@ -195,7 +195,7 @@ function base:get(params)
 	local err, query = self:validateQuery(params);
 	local name = self:findUnqiueIndexName(query);
 	if(name) then
-		self:db():findOne(query, resume);
+		self:db():findOne({[name] = query[name]}, resume);
 		local err, data = yield(true); 
 		if(not err) then
 			data = self:validateRow(data);

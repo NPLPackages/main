@@ -7,7 +7,7 @@ wp_enqueue_script("subscribersController", "/wp-content/pages/wiki/controllers/s
             共{{users.length || 0}}人订阅了作品`{{getSiteName()}}`
         </h2>
         <div class="col-sm-4" ng-repeat="user in users">
-            {{user}}
+            {{user.userid}} {{user.name}}
         </div>
     </div>
 </div>
