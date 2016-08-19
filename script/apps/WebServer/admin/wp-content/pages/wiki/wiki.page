@@ -76,11 +76,14 @@ wp_enqueue_style("wiki_style", "/wp-content/pages/wiki/assets/wiki.css");
                             </a>
                             <ul class="dropdown-menu">
                                 <li>
-                                    <a href="#">登录为: {{user.displayName}}</a>
+                                    <a href="/wiki/settings">登录为: {{user.displayName}}</a>
                                 </li>
                                 <li role="separator" class="divider"></li>
                                 <li>
                                     <a href="/wiki/projects">我的作品...</a>
+                                </li>
+								<li>
+                                    <a href="/wiki/userstars">我的订阅...</a>
                                 </li>
                                 <li>
                                     <a href="/wiki/settings">设置...</a>

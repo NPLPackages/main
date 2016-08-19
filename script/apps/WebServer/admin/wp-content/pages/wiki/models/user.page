@@ -215,5 +215,3 @@ function user:api_register(params)
 		end
 	end
 end
-
-function user:api_get
