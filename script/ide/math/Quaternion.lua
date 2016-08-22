@@ -43,7 +43,7 @@ function Quaternion:identity()
 	return self:set(Quaternion.IDENTITY);
 end
 
-function Quaternion:equals(mat)
+function Quaternion:equals(v)
 	return (self[1] == v[1] and self[2] == v[2] and self[3] == v[3] and self[4] == v[4]);
 end
 
