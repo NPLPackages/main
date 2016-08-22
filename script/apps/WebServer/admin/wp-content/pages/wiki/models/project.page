@@ -69,3 +69,14 @@ function project:addStarCount(proj_name, bIsAdding)
 		--end
 	end
 end
+
+-- return minimum info about the project
+function project:api_getminiproject(params)
+	if(not params.name) then
+		return;
+	end
+	local projs = project._super.get(self, params);
+	if(projs and #projs == 1) then
+		return projs[1];
+	end
+end

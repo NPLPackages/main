@@ -1,10 +1,16 @@
-﻿angular.module('MyApp')
+﻿/**
+Author: LiXizhi@yeah.net
+Date: 2016.8.22
+*/
+angular.module('MyApp')
+/** signal: "onUserProfile" */
 .factory('Account', function ($http, $auth, $rootScope) {
     var user;
     var requireSignin = false;
     return {
         setUser: function (user_) {
             user = user_;
+            this.send("onUserProfile", user);
         },
         getUser: function () {
             return user;
@@ -23,8 +29,9 @@
             requireSignin = bNeedSignin;
         },
         getProfile: function () {
+            var self = this;
             $http.get('/api/wiki/models/user').then(function (response) {
-                user = response.data;
+                self.setUser(response.data);
             })
 			.catch(function (response) {
 			    user = null;

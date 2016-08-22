@@ -18,6 +18,7 @@ local max_length = 5000;
 function user_stars:ctor()
 	-- commar separated string of project names
 	self:addfield("stars", "string", nil);
+	-- TODO: add date when star is added. 
 end
 
 function user_stars:create(params)

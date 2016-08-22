@@ -53,7 +53,10 @@ wp_enqueue_style("wiki_style", "/wp-content/pages/wiki/assets/wiki.css");
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
                     <li>
-                        <div style="float:left;padding-top:1px;margin-right:30px;" ng-show="GetWikiPage().isPageExist() && isAuthenticated()" class="btn-group">
+						<div style="float:left;padding-top:1px;margin-right:30px;" ng-show="GetWikiPage().isOfficialSite()">
+							<a tooltip-placement="bottom" ng-href="/wiki/projects" uib-tooltip="点击创建你的个人作品网站" class="btn btn-primary"><i class="glyphicon glyphicon-plus"></i> 新建</a>
+                        </div>
+                        <div style="float:left;padding-top:1px;margin-right:30px;" ng-show="GetWikiPage().isPageExist() && isAuthenticated() && !GetWikiPage().isOfficialSite()" class="btn-group">
 							<button ng-show="! GetWikiPage().isStared()" tooltip-placement="bottom" ng-click="starProject()" uib-tooltip="点击订阅{{GetWikiPage().getSiteName()}}" class="btn-subscribe btn btn-primary"><i class="glyphicon glyphicon-star"></i>订阅</button>
 							<button ng-show="GetWikiPage().isStared()" tooltip-placement="bottom" ng-click="unstarProject()" uib-tooltip="点击取消订阅{{GetWikiPage().getSiteName()}}" class="btn-subscribe btn btn-primary"><i class="glyphicon glyphicon-star"></i>已订阅</button>
                             <button class="btn-subscribe btn" tooltip-placement="bottom" ng-click="showSubscribers()" uib-tooltip="点击查看全部订阅用户">{{GetWikiPage().getStars()}}</button>
@@ -62,12 +65,14 @@ wp_enqueue_style("wiki_style", "/wp-content/pages/wiki/assets/wiki.css");
                             <button type="button" class="btn" ng-click="login()">登录</button>
                             <button type="button" class="btn btn-primary" ng-click="register()">注册</button>
                         </div>
+						<!--
                         <div style="float:left;margin-top:10px;margin-right:10px;" ng-if="isAuthenticated()">
                             <a style="padding-bottom:18px;" href="#" tooltip-placement="bottom" uib-tooltip="你有未读消息" class="notification-indicator">
                                 <i class="mailicon glyphicon glyphicon-bell"></i>
                                 <span class="mail-status unread"></span>
                             </a>
                         </div>
+						-->
                         <div style="float:left;" ng-if="isAuthenticated()" class="dropdown">
                             <a href="#" style="color:#9d9d9d" tooltip-placement="bottom" uib-tooltip="查看你的信息或更多" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
                                 <div style="margin-top:9px;margin-bottom:7px;">

@@ -81,6 +81,9 @@ angular.module('MyApp')
         return newstr;
     };
     
+    WikiPage.isOfficialSite = function() {
+        return this.getSiteName() == "wiki";
+    }
     WikiPage.getSiteName = function () {
         if (!this.siteName)
             this.siteName = (window.location.pathname.split("/")[1] || "Paracraft");
