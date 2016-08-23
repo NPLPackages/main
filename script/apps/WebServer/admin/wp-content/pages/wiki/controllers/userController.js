@@ -10,6 +10,9 @@ angular.module('MyApp')
     return {
         setUser: function (user_) {
             user = user_;
+            if (user) {
+                user.loaded = true;
+            }
             this.send("onUserProfile", user);
         },
         getUser: function () {
@@ -42,12 +45,12 @@ angular.module('MyApp')
             $http.put('/api/wiki/models/user', profileData).then(function (response) {
                 if (response.data) {
                     self.setUser(response.data);
-                    $scope.actiontip("保存完毕!", null, "success");
+                    self.send("actiontip", "保存完毕!", null, "success");
                 } else {
-                    $scope.actiontip("保存出错了", -1, "error");
+                    self.send("actiontip", "保存出错了", -1, "error");
                 }
             }).catch(function (response) {
-                $scope.actiontip("保存出错了", -1, "error");
+                self.send("actiontip", "保存出错了", -1, "error");
             });;
         },
         linkGithub: function () {

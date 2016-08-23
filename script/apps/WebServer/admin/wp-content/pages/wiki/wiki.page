@@ -81,7 +81,7 @@ wp_enqueue_style("wiki_style", "/wp-content/pages/wiki/assets/wiki.css");
                             </a>
                             <ul class="dropdown-menu">
                                 <li>
-                                    <a href="/wiki/settings">登录为: {{user.displayName}}</a>
+                                    <a href="/wiki/profile">登录为: {{user.displayName}}</a>
                                 </li>
                                 <li role="separator" class="divider"></li>
                                 <li>

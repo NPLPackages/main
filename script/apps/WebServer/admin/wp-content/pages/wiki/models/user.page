@@ -23,10 +23,11 @@ function user:ctor()
 	self:addfield("url", "string", false, 150);
 	self:addfield("location", "string", false, 50);
 	self:addfield("joindate", "string", false, 30);
+	self:addfield("isadmin", "boolean", false);
 end
 
 -- return minimum infor about the user
--- return {_id, displayName, picture, joindata, location, }
+-- return {_id, displayName, picture, joindate, location, }
 function user:api_getminiprofile(params)
 	if(not params._id) then
 		-- `_id` is automatically injected if no other field is found. 
@@ -53,7 +54,6 @@ function user:get(params)
 		-- hide non-owner fields
 		if(data._id ~= request.userid) then
 			data.email = nil;
-			data.github = nil;
 			data.github_token = nil;
 		end
 	end

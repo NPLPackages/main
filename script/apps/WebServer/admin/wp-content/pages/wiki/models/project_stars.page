@@ -64,7 +64,7 @@ function project_stars:addUser(project_name, user_id)
 		else
 			stars = (tostring(user_id)..",")..stars;
 		end
-		local err, data = self:db():updateOne(self, {name = project_name}, {stars = stars}, resume)
+		local err, data = self:db():updateOne({name = project_name}, {stars = stars}, resume)
 		if(data) then
 			return true;
 		end
