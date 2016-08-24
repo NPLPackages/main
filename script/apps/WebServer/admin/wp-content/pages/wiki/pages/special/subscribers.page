@@ -8,7 +8,7 @@ wp_enqueue_script("subscribersController", "/wp-content/pages/wiki/controllers/s
         </h2>
         <div class="col-sm-4 mt-2" ng-repeat="user in getUsersInPage()">
             <a class="pull-left" ng-href="/wiki/profile#?userid={{getUser($index)._id}}">
-                <img class="img-rounded" style="width:72px;height:72px;" ng-src="{{user.picture || 'http://placehold.it/100x100'}}" />
+                <wiki-identicon userid="user._id" size="72" imageurl="user.picture"></wiki-identicon>
             </a>
             <div style="padding-left:10px;float:left;" >
                 <a ng-href="/wiki/profile#?userid={{user._id}}"><big>{{user.displayName}}</big></a><br />

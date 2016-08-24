@@ -40,9 +40,10 @@
 })
 .controller('projectsController', function ($scope, $http, $uibModal, Account, github) {
     $scope.projects = [];
-    $scope.message = null;
     $scope.max_free_count = 3;
     $scope.loading = false;
+    $scope.lastCreatedProjName = null;
+    $scope.isCreateBtnClicked = false;
     
     $scope.getProjects = function () {
         $http.post("/api/wiki/models/project", {})
@@ -65,6 +66,7 @@
         return Account.isAuthenticated();
     }
     $scope.ShowCreateProjectDialog = function () {
+        $scope.isCreateBtnClicked = true;
         $uibModal.open({
             templateUrl: "/wp-content/pages/wiki/partials/create_project.html",
             controller: "ModelCreateProjectCtrl",
@@ -74,8 +76,8 @@
                 fork: proj.fork,
                 color: proj.color,
             }).then(function (response) {
+                $scope.lastCreatedProjName = proj.name;
                 $scope.getProjects();
-                $scope.message = proj.name + "创建成功";
             }).catch(function (response) {
                 console.log("error:" + response.data.message);
             });

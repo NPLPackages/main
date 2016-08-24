@@ -82,24 +82,26 @@
     </table>
   </config>
   
-  <!-- "wiki" site configurations-->
+  <!-- site configurations-->
   <config>
-    <table name='wiki'>
-      <table name='secrets'>
-        <!--token secret for this website-->
-        <string name='TOKEN_SECRET'>1234567890paracraftwiki</string>
-        <!--OAuth 2.0-->
-        <string name='GITHUB_SECRET'>c0ed1cc56931c99452c643a867d699d5657b4313</string>
-        <string name='GOOGLE_SECRET'>hvfQw1tFiaJ19ClqlNaBTlXQ</string>
-        <string name='FACEBOOK_SECRET'>6cac2f4d8f5fed008776a93d28369b5f</string>
-      </table>
-      <table name='clientid'>
-        <string name='GITHUB_CLIENTID'>44ed8acc9b71e36f47d8</string>
-        <string name='GOOGLE_CLIENTID'>638766295212-f99rcpljr68ld4pfmme4qrh2ru0ke4nd.apps.googleusercontent.com</string>
-        <string name='FACEBOOK_CLIENTID'>128754717528463</string>
-      </table>
-      <!--how many seconds to expire user token--> 
-      <number name='token_expire'>3600000</number>
+    <table name='default'>
+      <table name='wiki'>
+        <table name='secrets'>
+          <!--token secret for this website-->
+          <string name='TOKEN_SECRET'>1234567890paracraftwiki</string>
+          <!--OAuth 2.0-->
+          <string name='GITHUB_SECRET'>c0ed1cc56931c99452c643a867d699d5657b4313</string>
+        </table>
+        <table name='clientid'>
+          <string name='GITHUB_CLIENTID'>44ed8acc9b71e36f47d8</string>
+        </table>
+        <!--how many seconds to expire user token-->
+        <number name='token_expire'>3600000</number>
+      </table>  
+    </table>
+    <table name='paracraft.wiki'>
+    </table>
+    <table name='wikicraft.cn'>
     </table>
   </config>
 </WebServer>

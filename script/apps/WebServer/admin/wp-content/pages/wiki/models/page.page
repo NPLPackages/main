@@ -7,6 +7,7 @@ TODO: sharded by website name in future.
 ]]
 include_once("./abstract/base.page");
 include_once("./project.page");
+include_once("./project_pages.page");
 
 local page = inherit(models.abstract.base, gettable("models.page"));
 
@@ -68,16 +69,29 @@ end
 
 function page:create(params)
 	local err, query = self:validateWriteQuery(params);
-	if(not err) then
-		query.modifydate = ParaGlobal.GetDateFormat("yyyy-MM-dd");
-		query.createdate = query.modifydate;
-		return page._super.create(self, query);
+	if(not err and query.url) then
+		local sitename, pagename = query.url:match("^(%w+)/(%w+)$");
+		if(sitename and pagename) then
+			if(models.project_pages:new():addPage(sitename, pagename)) then
+				query.modifydate = ParaGlobal.GetDateFormat("yyyy-MM-dd");
+				query.createdate = query.modifydate;
+				return page._super.create(self, query);
+			end
+		end
 	end
 end
 
 function page:delete(params)
 	local err, query = self:validateWriteQuery(params);
-	if(not err) then
-		return page._super.delete(self, query);
+	if(not err and query.url) then
+		local sitename, pagename = query.url:match("^(%w+)/(%w+)$");
+		if(sitename and pagename) then
+			local data = page._super.delete(self, query);
+			if(data) then
+				if(models.project_pages:new():removePage(sitename, pagename)) then
+					return data;
+				end
+			end
+		end
 	end
 end

@@ -4,6 +4,7 @@ Title: wiki page
 Author: LiXizhi
 Date: 2016/5/10
 ]]
+include_once("./auth/api.page");
 include_once(WIKI_ROOT.."helpers/website.page");
 RenderServerWikiScript();
 
@@ -21,6 +22,7 @@ wp_enqueue_script("MyApp", "/wp-content/pages/wiki/app.js");
 include(WIKI_ROOT.."auth/clientconfig.page");
 wp_enqueue_script("authController", "/wp-content/pages/wiki/controllers/userController.js");
 wp_enqueue_script("wikiController", "/wp-content/pages/wiki/controllers/wikiController.js");
+wp_enqueue_script("angular-identicon", "/wp-content/pages/wiki/controllers/angular-identicon.js");
 wp_enqueue_style("wiki_style", "/wp-content/pages/wiki/assets/wiki.css");
 ?>
 <div ng-app="MyApp" class="wiki">
@@ -74,9 +76,9 @@ wp_enqueue_style("wiki_style", "/wp-content/pages/wiki/assets/wiki.css");
                         </div>
 						-->
                         <div style="float:left;" ng-if="isAuthenticated()" class="dropdown">
-                            <a href="#" style="color:#9d9d9d" tooltip-placement="bottom" uib-tooltip="查看你的信息或更多" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                            <a href="#" style="color:#9d9d9d;text-decoration:none" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
                                 <div style="margin-top:9px;margin-bottom:7px;">
-                                    <img class="img-rounded" style="width:32px;height:32px;background-color:#ffffff" ng-src="{{user.picture || '/wp-includes/js/jeasyui/themes/icons/man.png'}}"> <span class="caret"></span>
+                                    <wiki-identicon userid="user._id" size="32" imageurl="user.picture"></wiki-identicon> {{user.displayName}}<span class="caret"></span>
                                 </div>
                             </a>
                             <ul class="dropdown-menu">
@@ -140,7 +142,7 @@ wp_enqueue_style("wiki_style", "/wp-content/pages/wiki/assets/wiki.css");
                         <a href="/wiki/terms">声明</a> | <a href="/wiki/privacy">隐私</a> | <a href="/wiki/contact">联系我们</a> | <a href="/wiki/about">关于我们</a>
                     </div>
                     <div>
-                        Copyright &copy; Tatfook Inc. 本网站服务器和数据库使用<a style="font-weight:bold" href="http://www.paracraft.wiki/npl">NPL语言</a>编写
+                        Copyright &copy; Tatfook Inc. 本网站服务器和数据库使用<a style="font-weight:bold" href="https://github.com/LiXizhi/NPLRuntime/wiki">NPL语言</a>编写
                     </div>
                 </div>
             </div>

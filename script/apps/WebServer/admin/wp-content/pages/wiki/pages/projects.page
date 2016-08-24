@@ -7,14 +7,14 @@ wp_enqueue_script("projectsController", "/wp-content/pages/wiki/controllers/proj
         <div class="mt-2 mb-2" ng-if="!isAuthenticated()">
             <button class="btn btn-primary" ng-click="login()">请先登录</button>
         </div>
-        <button ng-disabled="projects.length>=max_free_count" class="btn btn-lg btn-primary" ng-click="ShowCreateProjectDialog()">新建网站</button>
+        <button tooltip-trigger="'none'" tooltip-is-open="isAuthenticated() && projects.length==0 && !lastCreatedProjName && !isCreateBtnClicked" uib-tooltip="请点击这里" tooltip-placement="left" ng-disabled="projects.length>=max_free_count" class="btn btn-lg btn-primary" ng-click="ShowCreateProjectDialog()">新建网站</button>
         <div class="mt-2 mb-2" ng-show="projects.length==0">
             马上拥有你的个人作品网站，永久免费
         </div>
         <div class="mt-2 mb-2" ng-show="projects.length>=max_free_count">
             每个用户最多可创建{{max_free_count}}个免费个人作品网站
         </div>
-        <div>{{message}}</div>
+        <div ng-show="lastCreatedProjName" class="mt-2" style="color:green">恭喜！ `{{lastCreatedProjName}}`创建成功！</div>
         <table class="table table-hover mt-4" style="text-align:left">
             <thead>
                 <tr style="font-weight:bold">
@@ -32,6 +32,7 @@ wp_enqueue_script("projectsController", "/wp-content/pages/wiki/controllers/proj
                 <tr ng-repeat="proj in projects" ng-click="selectProj($index)">
                     <td>
                         <div>
+                            <blockquote ng-show="lastCreatedProjName==proj.name" class="bg-success"><big><i class="glyphicon glyphicon-arrow-down"></i> 请点击`{{proj.name}}`访问网站</big></blockquote>
                             <div uib-tooltip="内部id: {{proj._id}} 派生自: {{proj.fork}}" class="img-rounded" ng-style="{'background-color':proj.color || '#808080' }" style="float:left;width:32px;height:32px;margin-right:5px;"></div>
                             <a ng-href="/{{proj.name}}">
                                 <big>{{proj.name}}</big>

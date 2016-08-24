@@ -5,4 +5,4 @@ Author: LiXizhi
 Date: 2016/5/10
 Desc: This only gives an example. *Do not distribute your secrets to clients!*
 ]]
-return site_config().wiki.secrets;
+return wiki_config().wiki.secrets;

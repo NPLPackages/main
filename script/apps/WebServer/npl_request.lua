@@ -216,6 +216,9 @@ local lowercase_headers = {
 ["if-modified-since"] = "If-Modified-Since",
 ["user-agent"] = "User-Agent",
 ["referer"] = "Referer",
+["content-type"] = "Content-Type",
+["method"] = "method",
+["host"] = "Host",
 }
 
 -- from case insensitive to case sensitive. 

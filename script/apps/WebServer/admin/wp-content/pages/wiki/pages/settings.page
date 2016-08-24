@@ -18,7 +18,7 @@ wp_enqueue_script("settingsController", "/wp-content/pages/wiki/controllers/sett
                             <h4>个人头像</h4>
                             <div>
                                 <div class="pull-left" style="padding-bottom:10px">
-                                    <img class="img-rounded" style="width:64px;height:64px;" ng-src="{{user.picture || 'http://placehold.it/100x100'}}">
+									<wiki-identicon userid="user._id" size="64" imageurl="user.picture"></wiki-identicon>
                                 </div>
                                 <div class="pull-left" style="padding-left:20px">
                                     <button class="btn">上传新图片</button>
@@ -32,7 +32,7 @@ wp_enqueue_script("settingsController", "/wp-content/pages/wiki/controllers/sett
                         </div>
                         <div class="form-group">
                             <h4>网址</h4>
-                            <input id="url" ng-model="user.url" class="form-control" placeholder="默认为: http://paracraft.wiki/{{user.displayName}}/" />
+                            <input id="url" ng-model="user.url" class="form-control" placeholder="默认为: <?=request:GetHost()?>/{{user.displayName}}/" />
                         </div>
                         <div class="form-group" ng-class="{ 'has-error': profileform.publicemail.$dirty && !profileform.publicemail.$valid }">
                             <h4>公开的Email</h4>

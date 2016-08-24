@@ -4,18 +4,28 @@ local jwt = commonlib.gettable("System.Encoding.jwt");
 
 include_once(WIKI_ROOT.."config/db.page");
 
+local wiki_config_;
+function wiki_config()
+	if(not wiki_config_) then
+		local config = site_config();
+		local mainhost = (request:GetHost() or ""):match("^[^%.]+%.[^%.]+$");
+		wiki_config_ = config[mainhost] or config["default"] or config;
+	end
+	return wiki_config_;
+end
+
 -- from user.id to site token
 function createJWT(user)
 	local id = user and user._id;
 	if(id) then
 		-- hash func "HA256"
-		return jwt.encode({id=id}, site_config().wiki.secrets.TOKEN_SECRET, nil,  site_config().wiki.token_expire or 3600);
+		return jwt.encode({id=id}, wiki_config().wiki.secrets.TOKEN_SECRET, nil,  wiki_config().wiki.token_expire or 3600);
 	end
 end
 
 -- @return user:{id}, err: 
 function decodeJWT(token)
-	return jwt.decode(token, site_config().wiki.secrets.TOKEN_SECRET, true);
+	return jwt.decode(token, wiki_config().wiki.secrets.TOKEN_SECRET, true);
 end
 
 -- call this function to ensure we are authenticated in json request
