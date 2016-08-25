@@ -19,6 +19,9 @@ mimetypes.types_map = {
 	["lua"] = "text/html",
 	["css"] = "text/css",
 	["js"] = "application/javascript",
+	["woff"] = "application/octet-stream",
+	["woff2"] = "application/octet-stream",
+	["ttf"] = "application/octet-stream",
 };
 
 -- gets the mimetype from the filename's extension
