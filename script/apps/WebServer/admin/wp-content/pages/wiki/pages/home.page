@@ -155,22 +155,22 @@
     <div class="container-fluid shade-gray tile-block">
         <div class="row" style="text-align:center;">
             <div class="col-sm-3 tile-bordered" >
-                <img src="https://assets-cdn.github.com/images/modules/site/home-ill-build.png?sn" class="featurette-sm mb-4 mt-4">
+                <img src="https://assets-cdn.github.com/images/modules/site/home-ill-build.png" class="featurette-sm mb-4 mt-4">
                 <h3>用自然语言写网页</h3>
                 <p>你可以用WIKI的形式写网页和超链接。也可以混合HTML语言。</p>
             </div>
             <div class="col-sm-3 tile-bordered">
-                <img src="https://assets-cdn.github.com/images/modules/site/home-ill-work.png?sn" class="featurette-sm mb-4 mt-4">
+                <img src="https://assets-cdn.github.com/images/modules/site/home-ill-work.png" class="featurette-sm mb-4 mt-4">
                 <h3>可嵌入3D交互世界</h3>
                 <p>通过NPL语言或Paracraft在网页中嵌入可交互的代码，3D世界或电影。不断加入新的扩展模块。</p>
             </div>
             <div class="col-sm-3 tile-bordered">
-                <img src="https://assets-cdn.github.com/images/modules/site/home-ill-projects.png?sn" class="featurette-sm mb-4 mt-4">
+                <img src="https://assets-cdn.github.com/images/modules/site/home-ill-projects.png" class="featurette-sm mb-4 mt-4">
                 <h3>分布式存储</h3>
                 <p>Github分布式中央数据源，可靠，持久。记录你的所有编辑历史。可免费架设NPL网站私服或自定义1级域名。</p>
             </div>
             <div class="col-sm-3 tile-bordered">
-                <img src="https://assets-cdn.github.com/images/modules/site/home-ill-platform.png?sn" class="featurette-sm mb-4 mt-4">
+                <img src="https://assets-cdn.github.com/images/modules/site/home-ill-platform.png" class="featurette-sm mb-4 mt-4">
                 <h3>免费，开源</h3>
                 <p>
                     任何人可观看任何人订阅的网站； 任何人可观看任何人的网页源码，作品是最好的老师。
