@@ -5,11 +5,8 @@
   <servers>
     <!--
     @param host, port: which ip port to listen to. if * it means all.
-    @param polling_interval: time in milliseconds to poll(socket.select) to sending/receiving data. default to 10 milliseconds, which is as fast as possible.
-    @param thread_name: which NPL host_state_name (thread) this server runs on. if "" or omitted, it means the calling thread. 
-     one thread can only host one http server. 
     -->
-    <server host="*" port="8080" polling_interval="100" host_state_name="">
+    <server host="*" port="8080" host_state_name="">
       <defaultHost rules_id="simple_rule"></defaultHost>
       <virtualhosts>
         <host name="www.sitename.com" rules_id="simple_rule"></host>
@@ -26,24 +23,29 @@
     <!--npl server page example-->
     <rule match="%.page$" with="WebServer.npl_page_handler" params='%CD%'></rule>
     <!--Serve files statically in Textures, model, character directory, so that we can use any available png textures. -->
-    <rule match='{"^/?Texture/", "^/?model/", "^/?character/"}' with="WebServer.filehandler" params='{baseDir = ""}'></rule>
+    <rule match='{"^/?Texture/", "^/?model/", "^/?character/"}' with="WebServer.filehandler" params='{baseDir = "", nocache=true}'></rule>
     <!--serving static files in current world directory %world%. -->
-    <rule match='^/?www/' with="WebServer.filehandler" params='{baseDir = "%world%"}'></rule>
+    <rule match='^/?www/' with="WebServer.filehandler" params='{baseDir = "%world%", nocache=true}'></rule>
     <!--serving static js files in runtime root directory. -->
     <rule match='^/?script/.+%.js' with="WebServer.filehandler" params='{baseDir = ""}'></rule>
     <!--wp framework related js, css, files-->
-    <rule match="^/?wp%-" with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/", }'></rule>
+    <rule match="^/?wp%-" with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/"}'></rule>
     <!--filehandler example, base dir is where the root file directory is. 
     @param %CD%:  means current file's directory, 
-    @param nocache: when to add no cache headers on client side, turn this on only on dev server
+    @param nocache: boolean, whether to disable static file caching on server. by default, cache is always enabled for static files. 
+    @param BrowserCacheExpire: duration in seconds to cache a static document
     -->
-    <rule match="." with="WebServer.filehandler" params='{baseDir = "%CD%", }'></rule>
+    <rule match="." with="WebServer.filehandler" params='{baseDir = "%CD%", BrowserCacheExpire=3600 }'></rule>
   </rules>
   
   <!--global NPL runtime config-->
   <config>
     <!--log level: FATAL, ERROR, WARN, INFO, DEBUG, TRACE -->
     <string name='log_level'>DEBUG</string>
+    <string name='AccessLog'>log/access.log</string>
+    <number name='max_log_lines'>1000000</number>
+    <!--The default duration in seconds to cache a static document when no expiry date is specified.-->
+    <number name='CacheDefaultExpire'>86400</number>
     <!--HTTP server related-->
     <table name='NPLRuntime'>
       <!--whether to use compression for incoming connections. This must be true in order for CompressionLevel and CompressionThreshold to take effect--> 
@@ -70,6 +72,8 @@
       <number name='IdleTimeoutPeriod'>1200000</number>
       <!--queue size of pending socket acceptor-->
       <number name='MaxPendingConnections'>1000</number>
+      <!--default to 1, set to 0 to silence some connection verbose log. -->
+      <number name='LogLevel'>0</number>
     </table>
     <!--garbage collection interval for memory. No need to change-->
     <table name='gc'>

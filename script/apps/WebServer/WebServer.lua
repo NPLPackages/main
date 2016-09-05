@@ -59,6 +59,15 @@ function WebServer:setwebdir(dir)
 	LOG.std(nil, "info", "WebServer", "web root directory is changed to : %s", dir);
 end
 
+function WebServer:GetLogger()
+	if(not WebServer.logger) then
+		NPL.load("(gl)script/apps/WebServer/log_service.lua");
+		local log_service = commonlib.gettable("WebServer.log_service");
+		WebServer.logger = log_service:GetLogger("access"):SetParams(self.config.AccessLog, self.config.max_log_lines);
+	end
+	return WebServer.logger;
+end
+
 --[[ Register the server configuration
 -- @param config: {server={host="*", port=80}, defaultHost={rules={}, virtualhosts={hostname=host, }}}
 
@@ -124,7 +133,9 @@ function WebServer:LoadConfig(filename)
 	self.config.IdleTimeoutPeriod = tonumber(self.config.IdleTimeoutPeriod) or 10000
 	self.config.compress_incoming = self.config.compress_incoming=="true";
 	self.config.debug = self.config.debug=="true"
+	self.config.CacheDefaultExpire = self.config.CacheDefaultExpire or 86400;
 	
+
 	-- de-serialize string or table
 	local function deserialize_data(data)
 		if(type(data) == "string") then
@@ -135,11 +146,6 @@ function WebServer:LoadConfig(filename)
 			end
 		end
 		return data;
-	end
-
-	local nocache = ParaEngine.GetAppCommandLineByParam("debug", "") ~= "";
-	if(nocache) then
-		LOG.std(nil, "info", "WebServer", "no cache headers is enabled");
 	end
 
 	-- read custom config 
@@ -181,9 +187,6 @@ function WebServer:LoadConfig(filename)
 					rule.match = deserialize_data(rule_node.attr.match);
 					rule.with = rule_node.attr.with;
 					rule.params = deserialize_data(rule_node.attr.params);
-					if(type(rule.params) == "table") then
-						rule.params.nocache = rule.params.nocache or nocache;
-					end
 					rules[#rules+1] = rule;
 				end
 			end
@@ -359,6 +362,7 @@ function WebServer:Start(root_dir, ip, port)
 		config.NPLRuntime = self.config.NPLRuntime;
 		config.gc = self.config.gc;
 		config.log_level = self.config.log_level;
+		config.CacheDefaultExpire = self.config.CacheDefaultExpire;
 		self:GetServer("npl_http").start(config);
 		return true;
 	end

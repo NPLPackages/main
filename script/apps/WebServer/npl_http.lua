@@ -14,6 +14,7 @@ NPL.load("(gl)script/apps/WebServer/npl_common_handlers.lua");
 local NPLReturnCode = commonlib.gettable("NPLReturnCode");
 local common_handlers = commonlib.gettable("WebServer.common_handlers");
 local request = commonlib.gettable("WebServer.request");
+local WebServer = commonlib.gettable("WebServer");
 
 local npl_http = commonlib.gettable("WebServer.npl_http");
 
@@ -58,6 +59,9 @@ function npl_http.LoadNPLRuntimeConfig(config)
 	end
 	if(config.MaxPendingConnections) then
 		att:SetField("MaxPendingConnections", tonumber(config.MaxPendingConnections));
+	end
+	if(config.LogLevel) then
+		att:SetField("LogLevel", tonumber(config.LogLevel) or 1);
 	end
 	local npl_queue_size = config.npl_queue_size;
 	if(npl_queue_size) then
@@ -161,6 +165,7 @@ end
 
 function npl_http.handleRequest(req)
 	stats.request_received = stats.request_received + 1;
+	WebServer:GetLogger():log("%s \"%s %s\" \"%s\"", req:getpeername(), req:GetMethod(), req:url(), req:header("User-Agent") or "");
 
 	if(npl_http.request_handler) then
 		local result = npl_http.request_handler(req, req.response);
