@@ -655,7 +655,10 @@ function SqliteStore:updateOne(query, update, callbackFunc)
 				end
 			end
 			-- update row
-			commonlib.partialcopy(data, update);
+			for key, value in pairs(update) do
+				data[key] = value	
+			end
+
 			-- unset rows if requested by user
 			if(_unset) then
 				for name, value in pairs(_unset) do

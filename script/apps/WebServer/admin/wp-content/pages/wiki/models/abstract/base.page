@@ -111,8 +111,15 @@ function base:validateQuery(params)
 					err = true;
 				end
 			elseif(field_type == "table") then
-				if(type(value) == "string") then
-					local max_length = fields[name].max_length or self.default_max_string_length;
+				local max_length = fields[name].max_length or self.default_max_string_length;
+				
+				if(type(value) == "table") then
+					local strValue = commonlib.serialize_compact2(value);
+					if(#strValue > max_length) then
+						value = nil;
+						err = true;
+					end
+				elseif(type(value) == "string") then
 					if(#value < max_length) then
 						value = NPL.LoadTableFromString(value);
 					else
@@ -160,7 +167,7 @@ function base:validateRow(data)
 			end
 			if(value) then
 				if(new_value~=value) then
-					data[name] = value;
+					data[name] = new_value;
 				end
 			else
 				invalid_fields = invalid_fields or {};

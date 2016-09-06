@@ -140,7 +140,7 @@ angular.module('MyApp')
                 }
             }).catch(function (response) {
                 if (response.data.message == "Email is already taken") {
-                    $scope.actiontip("Email已经存在了");
+                    alert("Email已经存在了");
                 }
                 else {
                     alert("出错了：" + JSON.stringify(response));

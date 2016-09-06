@@ -81,6 +81,8 @@ util.GetUrl({url = accessTokenUrl, qs = params }, function(err, msg, data)
 					joindate = ParaGlobal.GetDateFormat("yyyy-MM-dd"),
 				}, function(err, user) 
 					local token = createJWT(user);
+					include_once("../models/stats.page");
+					models.stats:new():addUser(user._id, true);
 					response:send({ token = token });
 				end);
 			end);

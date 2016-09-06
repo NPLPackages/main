@@ -95,7 +95,7 @@
             if (retVal == true) {
                 $scope.loading = true;
                 $http.delete("/api/wiki/models/project", {
-                    params: { _id: proj._id },
+                    params: { _id: proj._id, name: proj.name },
                 })
                 .then(function (response) {
                     $scope.loading = false;

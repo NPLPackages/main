@@ -5,6 +5,7 @@ Author: LiXizhi
 Date: 2016/7/28
 ]]
 include_once("./abstract/base.page");
+include_once("./stats.page");
 
 local user = inherit(models.abstract.base, gettable("models.user"));
 
@@ -226,6 +227,7 @@ function user:api_register(params)
 		if (not user) then
 			response:status(500); return { message = err };
 		else
+			models.stats:new():addUser(user._id, true);
 			return { token = createJWT(user) };
 		end
 	end

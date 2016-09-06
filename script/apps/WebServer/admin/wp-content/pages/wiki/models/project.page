@@ -5,6 +5,7 @@ Author: LiXizhi
 Date: 2016/7/31
 ]]
 include_once("./abstract/multi_user_base.page");
+include_once("./stats.page");
 
 local project = inherit(models.abstract.multi_user_base, gettable("models.project"));
 
@@ -37,8 +38,20 @@ function project:create(params)
 	local name = params.name;
 	-- name should contain no non-word letters like `,` 
 	if(name and #name>=3 and #name <30 and not name:match("%W")) then
-		return project._super.create(self, params);
+		local data = project._super.create(self, params);
+		if(data) then
+			models.stats:new():addProject(name, true);
+		end
+		return data;
 	end
+end
+
+function project:delete(params)
+	local data = project._super.delete(self, params);
+	if(data and params.name) then
+		models.stats:new():addProject(params.name, false);
+	end
+	return data;
 end
 
 function project:update(params)

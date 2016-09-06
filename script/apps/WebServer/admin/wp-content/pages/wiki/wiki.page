@@ -139,7 +139,7 @@ wp_enqueue_style("wiki_style", "/wp-content/pages/wiki/assets/wiki.css");
             <div class="row" style="min-height:60px;">
                 <div class="col-md-12 content ftxt">
                     <div>
-                        <a href="/wiki/terms">声明</a> | <a href="/wiki/privacy">隐私</a> | <a href="/wiki/contact">联系我们</a> | <a href="/wiki/about">关于我们</a>
+                        <a href="/wiki/stats">网站统计</a> | <a href="/wiki/terms">声明</a> | <a href="/wiki/privacy">隐私</a> | <a href="/wiki/contact">联系我们</a> | <a href="/wiki/about">关于我们</a>
                     </div>
                     <div>
                         Copyright &copy; Tatfook Inc. 本网站服务器和数据库使用<a style="font-weight:bold" href="https://github.com/LiXizhi/NPLRuntime/wiki">NPL语言</a>编写
