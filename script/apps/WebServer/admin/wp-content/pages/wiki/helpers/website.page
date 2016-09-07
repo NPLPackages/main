@@ -87,7 +87,7 @@ end
 -- calculate website name and page name from current url
 function RenderServerWikiScript()
 	if(not siteName or not pageName) then
-		local siteName_ = request:GetHost():match("([%w]+)%.[%w]+%.[%w]+");
+		local siteName_ = (request:GetHost() or ""):match("([%w]+)%.[%w]+%.[%w]+");
 		isSingleSite = false;
 		if(siteName_ and siteName_~="www") then
 			isSingleSite = true;
