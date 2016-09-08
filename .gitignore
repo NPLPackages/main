@@ -2,6 +2,7 @@
 /*
 !/.git*
 !/*.md
+!/CMakeLists.txt
 !/LICENSE
 !/script/
 /script/*
