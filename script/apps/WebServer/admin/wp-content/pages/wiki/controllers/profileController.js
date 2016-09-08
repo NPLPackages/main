@@ -66,5 +66,5 @@ angular.module('MyApp')
             $scope.user = user;
         }
     });
-    Account.setRequireSignin(true);
+    // Account.setRequireSignin(true);
 });
