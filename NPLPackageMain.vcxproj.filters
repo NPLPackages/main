@@ -44,10 +44,13 @@
     <None Include="script\apps\WebServer\httpd\wsapi_util.lua">
       <Filter>script</Filter>
     </None>
+    <None Include="script\apps\WebServer\log_service.lua">
+      <Filter>script</Filter>
+    </None>
     <None Include="script\apps\WebServer\mem_cache.lua">
       <Filter>script</Filter>
     </None>
-    <None Include="script\apps\WebServer\minetypes.lua">
+    <None Include="script\apps\WebServer\mimetypes.lua">
       <Filter>script</Filter>
     </None>
     <None Include="script\apps\WebServer\npl_common_handlers.lua">
@@ -1661,6 +1664,9 @@
     <None Include="script\ide\System\Windows\mcml\Elements\pe_input.lua">
       <Filter>script</Filter>
     </None>
+    <None Include="script\ide\System\Windows\mcml\Elements\pe_repeat.lua">
+      <Filter>script</Filter>
+    </None>
     <None Include="script\ide\System\Windows\mcml\Elements\pe_script.lua">
       <Filter>script</Filter>
     </None>
@@ -1901,10 +1907,16 @@
     <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\auth\register.html">
       <Filter>html</Filter>
     </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\partials\create_project.html">
+      <Filter>html</Filter>
+    </None>
     <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\partials\page_popup.html">
       <Filter>html</Filter>
     </None>
     <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\partials\site_popup.html">
+      <Filter>html</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\partials\userRepos.html">
       <Filter>html</Filter>
     </None>
     <None Include="script\apps\WebServer\admin\wp-includes\js\ace\demo.html">
@@ -2030,21 +2042,6 @@
     <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\auth\api.page">
       <Filter>page</Filter>
     </None>
-    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\auth\api_changepw.page">
-      <Filter>page</Filter>
-    </None>
-    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\auth\api_deleteme.page">
-      <Filter>page</Filter>
-    </None>
-    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\auth\api_login.page">
-      <Filter>page</Filter>
-    </None>
-    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\auth\api_me.page">
-      <Filter>page</Filter>
-    </None>
-    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\auth\api_register.page">
-      <Filter>page</Filter>
-    </None>
     <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\auth\clientconfig.page">
       <Filter>page</Filter>
     </None>
@@ -2069,22 +2066,37 @@
     <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\helpers\website.page">
       <Filter>page</Filter>
     </None>
-    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\models\base.page">
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\models\abstract\base.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\models\abstract\multi_user_base.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\models\abstract\per_user_base.page">
       <Filter>page</Filter>
     </None>
     <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\models\page.page">
       <Filter>page</Filter>
     </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\models\project.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\models\project_pages.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\models\project_stars.page">
+      <Filter>page</Filter>
+    </None>
     <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\models\recommended.page">
       <Filter>page</Filter>
     </None>
-    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\models\reviewrequest.page">
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\models\stats.page">
       <Filter>page</Filter>
     </None>
-    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\models\site.page">
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\models\user.page">
       <Filter>page</Filter>
     </None>
-    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\models\userprojects.page">
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\models\user_stars.page">
       <Filter>page</Filter>
     </None>
     <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\pages\home.page">
@@ -2093,10 +2105,22 @@
     <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\pages\login.page">
       <Filter>page</Filter>
     </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\pages\profile.page">
+      <Filter>page</Filter>
+    </None>
     <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\pages\projects.page">
       <Filter>page</Filter>
     </None>
     <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\pages\settings.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\pages\special\subscribers.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\pages\stats.page">
+      <Filter>page</Filter>
+    </None>
+    <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\pages\userstars.page">
       <Filter>page</Filter>
     </None>
     <None Include="script\apps\WebServer\admin\wp-content\pages\wiki\routes.page">
