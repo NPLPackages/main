@@ -158,7 +158,8 @@ end
 
 -- get ip address as string
 function request:getpeername()
-	return NPL.GetIP(self.nid);
+	self.ip = self.ip or NPL.GetIP(self.nid);
+	return self.ip;
 end
 
 -- drop this request, so that nothing is sent to client at the moment. 
