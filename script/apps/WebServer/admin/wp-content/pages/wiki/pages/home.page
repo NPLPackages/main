@@ -145,7 +145,7 @@
     <div class="container">
         <div class="row">
             <div class="col-md-12  mt-4 mb-4" style="text-align:center;">
-                <h1>欢迎加入Paracraft</h1>
+                <h1>欢迎加入WikiCraft</h1>
                 <p>
                     我们致力于为个人，老师，企业提供免费，可靠的作品创作与分享平台。
                 </p>
@@ -181,20 +181,20 @@
     <div class="container">
         <div class="row">
             <div class="col-sm-12 mt-4 mb-4">
-                <h2>谁在使用Paracraft?</h2>
+                <h2>谁在使用WikiCraft?</h2>
                 <hr class="triband-hr">
                 <div class="row">
                     <div class="col-sm-4">
                         <h3 class=""><a href="#" style="color:#0094ff">个人 <svg aria-hidden="true" class="octicon-right" height="16" version="1.1" viewBox="0 0 8 16" width="8"><path d="M7.5 8l-5 5L1 11.5 4.75 8 1 4.5 2.5 3z"></path></svg></a></h3>
-                        <p>上万名中小学生，使用Paracraft建立了自己的3D作品。</p>
+                        <p>上万名中小学生，使用WikiCraft建立了自己的3D作品。</p>
                     </div>
                     <div class="col-sm-4">
                         <h3 class=""><a href="#" style="color:#1b8203">老师 <svg aria-hidden="true" class="octicon-right" height="16" version="1.1" viewBox="0 0 8 16" width="8"><path d="M7.5 8l-5 5L1 11.5 4.75 8 1 4.5 2.5 3z"></path></svg></a></h3>
-                        <p>优秀的老师与企业CTO使用Paracraft创建了可交互的教学课件。</p>
+                        <p>优秀的老师与企业CTO使用WikiCraft创建了可交互的教学课件。</p>
                     </div>
                     <div class="col-sm-4">
                         <h3 class=""><a href="#" style="color:#6602b4">企业 <svg aria-hidden="true" class="octicon-right" height="16" version="1.1" viewBox="0 0 8 16" width="8"><path d="M7.5 8l-5 5L1 11.5 4.75 8 1 4.5 2.5 3z"></path></svg></a></h3>
-                        <p>幼儿园，私立学校，培训机构用Paracraft创建了连结学生，家长，老师的公司网站。</p>
+                        <p>幼儿园，私立学校，培训机构用WikiCraft创建了连结学生，家长，老师的公司网站。</p>
                     </div>
                 </div>
                 <hr class="triband-hr">

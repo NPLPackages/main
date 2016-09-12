@@ -14,11 +14,19 @@ angular.module('MyApp')
     var WikiPage = {
         siteName: siteInfo.siteName,
         pageName: siteInfo.pageName,
-        rootUrl: siteInfo.rootUrl,
+        rootUrl: (siteInfo.rootUrl ? siteInfo.rootUrl : null),
+        userid: (siteInfo.userid ? siteInfo.userid : null),
         pageExist: "loading",
         isSingleSite: siteInfo.isSingleSite,
         project_id: siteInfo.project_id,
         project_stars: siteInfo.stars,
+        name: siteInfo.name,
+        store: siteInfo.store,
+        is_private: siteInfo.private,
+        createdate: siteInfo.createdate,
+        color: siteInfo.color,
+        fork: siteInfo.fork,
+        site_exist : (siteInfo.rootUrl ? true : false),
         is_stared: false,
     };
     WikiPage.send = function (msg, data) {
@@ -35,6 +43,16 @@ angular.module('MyApp')
             $("#content").addClass("col-md-12");
         }
     };
+    // whether the web site exists
+    WikiPage.siteExists = function () {
+        return WikiPage.site_exist;
+    }
+    WikiPage.getOwnerId = function() {
+        return WikiPage.userid;
+    }
+    WikiPage.hasOwner = function () {
+        return (WikiPage.userid != null) ? true : false;
+    }
     WikiPage.getSiteRoot = function () {
         return WikiPage.isSingleSite ? "/" : ("/" + this.getSiteName() + "/");
     };
@@ -102,8 +120,8 @@ angular.module('MyApp')
     };
     WikiPage.getRootRawUrl = function () {
         // default to `SiteName/wiki` project
-        if (!this.rootUrl)
-            this.rootUrl = ("https://raw.githubusercontent.com/wiki/" + this.getSiteName() + "/wiki/");
+        // if (!this.rootUrl)
+        //   this.rootUrl = ("https://raw.githubusercontent.com/wiki/" + this.getSiteName() + "/wiki/");
         return this.rootUrl;
     };
     WikiPage.getPageUrl = function () {
@@ -273,7 +291,7 @@ angular.module('MyApp')
         });
     }
     $scope.makeLayout();
-    if (!window.skipClientWiki) {
+    if (!window.skipClientWiki && WikiPage.siteExists()) {
         // load all pages
         $scope.load(WikiPage.getPageUrl(), idPage);
         $scope.load(WikiPage.getSidebarUrl(), idSidebar);

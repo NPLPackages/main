@@ -17,23 +17,37 @@ local current_proj = {};
 -- current website {url="", host="", stars=number, is_stared=boolean}
 local curSite;
 
--- get website url and host from name
+-- get website information by name
 -- @return buildin_site {url, host}
 -- such as {url="LiXizhi/wiki", host="github", name=string}
 -- it can also be the project's wiki {url="LiXizhi/NPLRuntime/wiki", host="github", stars=number, is_stared=boolean}
-function getWebsite(sitename)
+local function fetchWebsite(sitename)
 	sitename = sitename or "wiki";
 	local site = buildin_website[string.lower(sitename)];
 	if(not site) then
 		local projs = models.project:new():get({name=sitename});
 		if(projs and projs[1]) then
 			local proj = projs[1];
+			current_proj = proj;
+			site = {
+				name = proj.name, 
+				project_id = proj._id,
+				userid=proj.userid, 
+				store = proj.store,
+				stars=proj.stars, 
+				createdate=proj.createdate, 
+				desc=proj.desc, 
+				color=proj.color, 
+				fork=proj.fork, 
+				private=proj.private
+			};
+
 			local store = proj.store;
 			if(store) then
 				local url = store:match("^%w+://github%.com/(.+)$")
 				if(url) then
-					current_proj = proj;
-					site = {url=url, host="github", name=proj.name, stars=proj.stars};
+					site.url = url;
+					site.host = "github";
 				end
 			end
 		end
@@ -42,20 +56,29 @@ function getWebsite(sitename)
 	return site;
 end
 
--- @return rootUrl, projectName
+-- get the root url where we will query raw content of the web site. 
+-- rootUrl must be url that can be freely downloaded by appending [pagename] to it.
+-- @return rootUrl
 function getSiteRootURL(site)
-	if(site and site.url) then
-		if(not site.host or site.host == "github") then
-			local rootUrl;
-			local siteName, projectName, wiki = site.url:match("^/?([^/]+)/([^/]+)/?(.*)")
-			if(wiki == "wiki") then
-				rootUrl = "https://raw.githubusercontent.com/wiki/"..siteName.."/"..projectName.."/";
+	if(site) then
+		if(site.url) then
+			if(not site.host or site.host == "github") then
+				local rootUrl;
+				local siteName, projectName, wiki = site.url:match("^/?([^/]+)/([^/]+)/?(.*)")
+				if(wiki == "wiki") then
+					rootUrl = "https://raw.githubusercontent.com/wiki/"..siteName.."/"..projectName.."/";
+				else
+					rootUrl = "https://raw.githubusercontent.com/"..siteName.."/"..projectName.."/master/";
+				end
+				return rootUrl;
 			else
-				rootUrl = "https://raw.githubusercontent.com/"..siteName.."/"..projectName.."/master/";
+				-- TODO other database store like coding.net?
 			end
-			return rootUrl, projectName, (site.name or projectName);
-		else
-			-- TODO other database store like coding.net?
+		end
+		if(site.name and site.userid) then
+			-- our own site provider. "/api/wiki/models/rawdata/[siteName]/"..[pagename]
+			local rootUrl = "/api/wiki/models/raw/"..site.name.."/";
+			return rootUrl;
 		end
 	end
 end
@@ -101,14 +124,14 @@ function RenderServerWikiScript()
 			end
 		end
 	end
+	-- siteName = siteName or "wiki";
 	if(siteName) then
-		local rootUrl, projectName, siteName = getSiteRootURL(getWebsite(siteName));
-		if(rootUrl) then
+		curSite = fetchWebsite(siteName);
+		if(curSite) then
+			curSite.rootUrl = getSiteRootURL(curSite);
 			curSite.siteName = siteName;
 			curSite.pageName = pageName;
-			curSite.rootUrl = rootUrl;
 			curSite.isSingleSite = isSingleSite;
-			curSite.project_id = GetProject()._id or -1;
 			echo(format("<script>window.siteInfo = %s;</script>", json_encode(curSite)));
 		end
 	end

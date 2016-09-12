@@ -35,7 +35,7 @@ wp_enqueue_style("wiki_style", "/wp-content/pages/wiki/assets/wiki.css");
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="dropdown-toggle navbar-brand indexbar{{bShowIndexBar}}" data-toggle="dropdown" tooltip-placement="bottom" uib-tooltip="查看分类与推荐">Paracraft<span class="caret"></span></a>
+                <a class="dropdown-toggle navbar-brand indexbar{{bShowIndexBar}}" data-toggle="dropdown" tooltip-placement="bottom" uib-tooltip="查看分类与推荐">WikiCraft<span class="caret"></span></a>
                 <div ng-non-bindable id="indexbarpopup" class="dropdown-menu menubox wiki-indexbar">
                 </div>
             </div>
@@ -58,7 +58,7 @@ wp_enqueue_style("wiki_style", "/wp-content/pages/wiki/assets/wiki.css");
 						<div style="float:left;padding-top:1px;margin-right:30px;" ng-show="GetWikiPage().isOfficialSite()">
 							<a tooltip-placement="bottom" ng-href="/wiki/projects" uib-tooltip="点击创建你的个人作品网站" class="btn btn-primary"><i class="glyphicon glyphicon-plus"></i> 新建</a>
                         </div>
-                        <div style="float:left;padding-top:1px;margin-right:30px;" ng-show="GetWikiPage().isPageExist() && isAuthenticated() && !GetWikiPage().isOfficialSite()" class="btn-group">
+                        <div style="float:left;padding-top:1px;margin-right:30px;" ng-show="GetWikiPage().hasOwner() && isAuthenticated() && !GetWikiPage().isOfficialSite()" class="btn-group">
 							<button ng-show="! GetWikiPage().isStared()" tooltip-placement="bottom" ng-click="starProject()" uib-tooltip="点击订阅{{GetWikiPage().getSiteName()}}" class="btn-subscribe btn btn-primary"><i class="glyphicon glyphicon-star"></i>订阅</button>
 							<button ng-show="GetWikiPage().isStared()" tooltip-placement="bottom" ng-click="unstarProject()" uib-tooltip="点击取消订阅{{GetWikiPage().getSiteName()}}" class="btn-subscribe btn btn-primary"><i class="glyphicon glyphicon-star"></i>已订阅</button>
                             <button class="btn-subscribe btn" tooltip-placement="bottom" ng-click="showSubscribers()" uib-tooltip="点击查看全部订阅用户">{{GetWikiPage().getStars()}}</button>
@@ -121,11 +121,14 @@ wp_enqueue_style("wiki_style", "/wp-content/pages/wiki/assets/wiki.css");
             <div id="content" class="col-md-12 wiki-content">
                 <div class="row">
                     <? RenderServerWikiContent() ?>
-                    <div class="col-md-12" ng-if="GetWikiPage().isPageLoading()">
+                    <div class="col-md-12" ng-if="GetWikiPage().siteExists() && GetWikiPage().isPageLoading()">
                         正在加载页面...
                     </div>
-                    <div class="col-md-12" ng-if="GetWikiPage().isPageNotFound() && GetWikiPage().getSiteName() != 'wiki'">
+                    <div class="col-md-12" ng-if="GetWikiPage().siteExists() && GetWikiPage().isPageNotFound() && GetWikiPage().getSiteName() != 'wiki'">
                         页面不存在
+                    </div>
+					<div class="col-md-12" ng-if="!GetWikiPage().siteExists()">
+                       网站: `{{GetWikiPage().getSiteName()}}` 还没有人使用
                     </div>
                     <div ng-non-bindable class="col-md-8 wiki-page" id="wikipage">
                     </div>
