@@ -217,7 +217,7 @@ wp_enqueue_script("jqueryui", "/wp-includes/js/jquery/jquery-ui.min.js");
                 $scope.openFile($scope.$storage.currentFilename, null, true);
         }
         initEditor();
-        if(Page)
+        if(typeof Page != 'undefined')
             Page.ShowSideBar(false);
 	});
 </script>

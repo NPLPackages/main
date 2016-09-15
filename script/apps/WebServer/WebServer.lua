@@ -48,6 +48,15 @@ WebServer.server_configs = {}
 
 local _webdir;
 
+-- internal rules
+local internal_rules = {
+	["npl_code_wiki"] = {
+		{match = "^[^%.]+$", with="WebServer.redirecthandler", params={"/index.page"}},
+		{match = "%.page$", with="WebServer.npl_page_handler", params="script/apps/WebServer/admin/"},
+		{match = ".", with="WebServer.filehandler", params={baseDir = "script/apps/WebServer/admin/"}},
+	},
+}
+
 -- get web root directory without trailing /
 function WebServer:webdir()
 	return _webdir
@@ -174,7 +183,7 @@ function WebServer:LoadConfig(filename)
 	end
 
 	-- read all rules
-	local rules_map = {};
+	local rules_map = commonlib.copy(internal_rules);
 	for node in commonlib.XPath.eachNode(xmlRoot, "//WebServer/rules") do
 		if(node.attr and node.attr.id) then
 			
@@ -222,17 +231,22 @@ function WebServer:LoadConfig(filename)
 				end
 			end
 			-- get virtual host
-			local virtualhosts = {};
-			local virtual_host_node
+			local virtualhosts;
 			for virtual_host_node in commonlib.XPath.eachNode(node, "/virtualhosts/host") do
 				if(virtual_host_node.attr.name) then
-					virtualhosts[virtual_host_node.attr.name] = rules_map[virtual_host_node.attr.rules_id];
-					virtualhosts[virtual_host_node.attr.name].allow = deserialize_data(virtual_host_node.attr.allow);
-					if(not virtualhosts[virtual_host_node.attr.name]) then
+					virtualhosts = virtualhosts or {};
+					local host = {};
+					virtualhosts[virtual_host_node.attr.name] = host;
+					host.rules = rules_map[virtual_host_node.attr.rules_id];
+					host.allow = deserialize_data(virtual_host_node.attr.allow);
+					if(host.rules) then
+						config.virtualhosts = virtualhosts;
+					else
 						LOG.std(nil, "warn", "WebServer", "rules_id %s not found in virtual host", virtual_host_node.attr.rules_id);
 					end
 				end
 			end
+
 			-- current only one server in the current thread is supported. 
 			self.server_configs[#self.server_configs+1] = config;
 			break;

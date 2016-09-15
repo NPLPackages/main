@@ -561,7 +561,7 @@ wp_enqueue_style("jqueryui_css", "/wp-includes/js/jquery/jquery-ui.min.css");
                 $scope.gotoSourceLine($scope.$storage.currentFilename, null, true);
         }
         initEditor();
-		if(Page)
+		if(typeof Page != 'undefined')
 		    Page.ShowSideBar(false);
         // start timer
 		$scope.startTimer();

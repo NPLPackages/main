@@ -14,10 +14,10 @@ local common_handlers = commonlib.gettable("WebServer.common_handlers");
 
 local tostring = tostring;
 
-function common_handlers.err_404 (req, res)
+function common_handlers.err_404(req, res)
 	res.statusline = "HTTP/1.1 404 Not Found"
 	res.headers["Content-Type"] = "text/html"
-	res.content = string.format ([[
+	res.content = string.format([[
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
 <HTML><HEAD>
 <TITLE>404 Not Found</TITLE>
@@ -28,10 +28,10 @@ The requested URL %s was not found on this server.<P>
 	return res
 end
 
-function common_handlers.err_403 (req, res)
+function common_handlers.err_403(req, res)
 	res.statusline = "HTTP/1.1 403 Forbidden"
 	res.headers ["Content-Type"] = "text/html"
-	res.content = string.format ([[
+	res.content = string.format([[
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
 <HTML><HEAD>
 <TITLE>403 Forbidden</TITLE>
@@ -42,9 +42,9 @@ You are not allowed to access the requested URL %s .<P>
 	return res
 end
 
-function common_handlers.err_405 (req, res)
+function common_handlers.err_405(req, res)
 	res.statusline = "HTTP/1.1 405 Method Not Allowed"
-	res.content = string.format ([[
+	res.content = string.format([[
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
 <HTML><HEAD>
 <TITLE>405 Method Not Allowed</TITLE>
@@ -58,11 +58,11 @@ end
 -----------------------------------------------------------------------------
 -- URL patterns handler
 -----------------------------------------------------------------------------
-local function path_iterator (path)
+local function path_iterator(path)
 	return path_p, path
 end
 
-local function match_url (req, conf)
+local function match_url(req, conf)
   local path = req.relpath
   for _, rule in ipairs(conf) do
     for _, pat in ipairs(rule.pattern) do
@@ -76,49 +76,49 @@ local function match_url (req, conf)
 end
 
 function common_handlers.patternhandler(conf)
-	if not conf or type (conf) ~= "table" then return nil end
+	if not conf or type(conf) ~= "table" then return nil end
 
-	return function (req, res)
-		local cap = match_url (req, conf) or {}
+	return function(req, res)
+		local cap = match_url(req, conf) or {}
 		local h = req.handler or common_handlers.err_404;
-		return h (req, res, cap)
+		return h(req, res, cap)
 	end
+end
+
+local function IsIPAllow(allowip, judgeip)
+	local judgeip = tostring(judgeip)
+	for _,ip in pairs(allowip) do
+		--LOG.std(nil, "debug", "WebServer ip",string.format("ip:%s, judgeip:%s", ip, judgeip));
+		if(ip==judgeip) then
+			return true;
+		end
+	end
+	return false;
 end
 
 -----------------------------------------------------------------------------
 -- virtual hosts handler
 -----------------------------------------------------------------------------
 function common_handlers.vhostshandler(vhosts)
-	return function (req, res)
+	return function(req, res)
 		local h;
 		local allow;
 
-		if (vhosts[req.headers.host]) then
-			allow = vhosts[req.headers.host].allow;
-			h = vhosts[req.headers.host].rule
-		elseif (vhosts[""]) then
+		local hostname = req.headers.host or req.headers.Host or req.headers.HOST;
+		if(vhosts[hostname]) then
+			allow = vhosts[hostname].allow;
+			h = vhosts[hostname].rule
+		elseif(vhosts[""]) then
 			allow = vhosts[""].allow
 			h = vhosts[""].rule
 		end
 
 		local isAllow = true;
-		
-		local function IsIPAllow(allowip, judgeip)
-			local ip;
-			local judgeip = tostring(judgeip)
-			for _,ip in pairs(allowip) do
-				--LOG.std(nil, "debug", "WebServer ip",string.format("ip:%s, judgeip:%s", ip, judgeip));
-				if (ip==judgeip) then
-					return true;
-				end
-			end
-			return false;
-		end
 
-		local remote_ip=string.gsub (req:getpeername(), ":%d*$", "")
+		local remote_ip = string.gsub(req:getpeername(), ":%d*$", "")
 		--LOG.std(nil, "debug", "WebServer allowip", allow);
 		--LOG.std(nil, "debug", "WebServer remoteip", remote_ip);
-		if (allow and type(allow)=="table") then
+		if(allow and type(allow)=="table") then
 			isAllow = IsIPAllow(allow,remote_ip);
 		end
 
@@ -126,7 +126,7 @@ function common_handlers.vhostshandler(vhosts)
 			h = common_handlers.err_403; 
 			LOG.std(nil, "warn", "WebServer Deny", remote_ip);
 		end
-		return h (req, res)
+		return h(req, res)
 	end
 end
 
@@ -134,20 +134,20 @@ end
 -- URL paths handler
 -----------------------------------------------------------------------------
 
-local function path_p (s, p)
+local function path_p(s, p)
 	if not p then return s end
 	if p=="" then return nil end
-	return string.gsub (p, "[^/]*/?$", "")
+	return string.gsub(p, "[^/]*/?$", "")
 end 
 
-local function path_iterator (path)
+local function path_iterator(path)
 	return path_p, path
 end
 
-local function match_url (req, conf)
+local function match_url(req, conf)
 	local path = req.relpath
 	local h = nil
-	for p in path_iterator (path) do
+	for p in path_iterator(path) do
 		h = conf [p]
 		if h then
 			req.match = p
@@ -156,20 +156,20 @@ local function match_url (req, conf)
 	end
 	
 	if req.match then
-		local _,_,pfx = string.find (req.match, "^(.*/)[^/]-$")
-		assert (string.sub (path, 1, string.len (pfx)) == pfx)
-		req.relpath = string.sub (path, string.len (pfx)+1)
+		local _,_,pfx = string.find(req.match, "^(.*/)[^/]-$")
+		assert(string.sub(path, 1, string.len(pfx)) == pfx)
+		req.relpath = string.sub(path, string.len(pfx)+1)
 	end
 	req.handler = h
 end
 
-function WebServer.urlhandler (conf)
-	if not conf or type (conf) ~= "table" then return nil end
+function WebServer.urlhandler(conf)
+	if not conf or type(conf) ~= "table" then return nil end
 	
-	return function (req, res)
-		match_url (req, conf)
+	return function(req, res)
+		match_url(req, conf)
 		local h = req.handler or WebServer.common_handlers.err_404
-		return h (req, res)
+		return h(req, res)
 	end
 end
 
@@ -184,31 +184,31 @@ end
 -- if used with patternhandler, dest can use the captures with %1, %2 etc.
 -- action can be "redirect" or "rewrite", default is "rewrite", except when
 --      dest starts with a protocol string
-local function redirect (req, res, dest, action, cap)
-	dest = string.gsub(dest, "%%(%d)", function (capn) return cap[tonumber(capn)] or "" end)
+local function redirect(req, res, dest, action, cap)
+	dest = string.gsub(dest, "%%(%d)", function(capn) return cap[tonumber(capn)] or "" end)
 	dest = string.gsub(dest, "%%%%", "%")
   
 	local path = req.parsed_url.path
-	local pfx = string.sub (dest, 1,1)
+	local pfx = string.sub(dest, 1,1)
   
 	if pfx == "/" then
 		path = dest
 	elseif pfx == ":" then
-		path = path .. string.sub (dest, 2)
+		path = path .. string.sub(dest, 2)
 	elseif dest:find("^[%w]+://") then
 		path = dest
 		action = "redirect"
 	else
-		path = string.gsub (path, "/[^/]*$", "") .. "/" .. dest
+		path = string.gsub(path, "/[^/]*$", "") .. "/" .. dest
 	end
 
 	local path, query = path:match("^([^?]+)(%??.*)$")  
 	req.parsed_url.path = path
-	req.built_url = url.build (req.parsed_url) .. (query or "")
-	req.cmd_url = string.gsub (req.built_url, "^[^:]+://[^/]+", "")
+	req.built_url = url.build(req.parsed_url) ..(query or "")
+	req.cmd_url = string.gsub(req.built_url, "^[^:]+://[^/]+", "")
   
 	if action == "redirect" then
-		res:redirect(path .. (query or ""));
+		res:redirect(path ..(query or ""));
 		return res    
 	elseif type(action) == "function" then
 		return action(req, res, cap)
@@ -219,9 +219,9 @@ end
 
 if(not WebServer.redirecthandler) then WebServer.redirecthandler={} end
 
-function WebServer.redirecthandler.makeHandler (params)
-	return function (req, res, cap)
-		return redirect (req, res, params[1], params[2], cap)
+function WebServer.redirecthandler.makeHandler(params)
+	return function(req, res, cap)
+		return redirect(req, res, params[1], params[2], cap)
 	end
 end
 
@@ -276,7 +276,7 @@ function WebServer.makeGenericHandler(docroot, params, extra_vars)
 		docroot, params, extra_vars = docroot.docroot, docroot.params, docroot.extra_vars;
 	end
 	params = params or { isolated = true }
-	return function (req, res)
+	return function(req, res)
 		return wsapihandler(req, res, params, docroot, extra_vars);
 	end
 end

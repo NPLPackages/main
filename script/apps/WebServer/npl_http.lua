@@ -125,7 +125,7 @@ function npl_http.LoadConfig(config)
 
     if type(config.virtualhosts) == "table" then
         for hostname, host in pairs(config.virtualhosts) do
-			vhosts_table[hostname] = {rule= common_handlers.patternhandler(Rules:new():init(host.rules)),allow = config.virtualhosts[hostname].allow};
+			vhosts_table[hostname] = {rule= common_handlers.patternhandler(Rules:new():init(host.rules)),allow = host.allow};
         end
     end
 

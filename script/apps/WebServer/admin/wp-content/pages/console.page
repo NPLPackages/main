@@ -168,7 +168,7 @@ wp_enqueue_script("ngSanitize", "/wp-includes/js/angular/angular-sanitize.min.js
 				$scope.openFile($scope.$storage.currentFileIndex, null, true);
 		}
 		initEditor();
-		if(Page)
+		if(typeof Page != 'undefined')
             Page.ShowSideBar(false);
 	 });
 </script>

@@ -3,16 +3,22 @@
 <WebServer>
   <!--which HTTP ip and port this server listens to. -->
   <servers>
-    <!--
-    @param host, port: which ip port to listen to. if * it means all.
-    -->
-    <server host="*" port="8080" host_state_name="">
+    <!-- @param host, port: which ip port to listen to. if * it means all. -->
+    <server host="*" port="8099" host_state_name="">
       <defaultHost rules_id="simple_rule"></defaultHost>
       <virtualhosts>
-        <host name="www.sitename.com" rules_id="simple_rule"></host>
+        <!-- force "http://127.0.0.1/" to match to iternal npl_code_wiki site for debugging  -->
+        <host name="127.0.0.1:8099" rules_id="npl_code_wiki" allow='{"127.0.0.1"}'></host>
+        <host name="www.example.com" rules_id="simple_rule"></host>
       </virtualhosts>
     </server>
   </servers>
+  <!--"npl_code_wiki" is an internal rule, but we can also overwrite it here.--> 
+  <rules id="npl_code_wiki">
+    <rule match='{"^[^%.]+$", "robots.txt"}' with="WebServer.redirecthandler" params='{"/index.page"}'></rule>
+    <rule match="%.page$" with="WebServer.npl_page_handler" params='script/apps/WebServer/admin/'></rule>
+    <rule match="." with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/"}'></rule>
+  </rules>
   <!--rules used when starting a web server. Multiple rules with different id can be defined. -->
   <rules id="simple_rule">
     <!--URI map everything without extension to index.page-->
