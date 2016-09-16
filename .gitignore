@@ -17,5 +17,5 @@ Documentation/*
 !Documentation/Global.xml
 !Documentation/Npl*
 !Documentation/paracraft*
-!NPLPackageMain.vcxproj
-!NPLPackageMain.vcxproj.filters
+!NPLPackageMain.csproj
+!NPLPackageMain.sln
