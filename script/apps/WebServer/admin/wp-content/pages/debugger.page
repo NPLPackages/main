@@ -5,6 +5,7 @@ Author: LiXizhi
 Date: 2016/4/13
 Desc: for demostration of a custom debugger UI, everything is written in one file.
 ]]
+
 if(is_ajax()) then
 	NPL.load("(gl)script/ide/Debugger/HTTPDebugger.lua");
 	local HTTPDebugger = commonlib.gettable("commonlib.Debugger.HTTPDebugger");
@@ -65,6 +66,7 @@ wp_enqueue_style("easyui_icon", "/wp-includes/js/jeasyui/themes/icon.css");
 wp_enqueue_script("easyui", "/wp-includes/js/jeasyui/jquery.easyui.min.js");
 wp_enqueue_script("jqueryui", "/wp-includes/js/jquery/jquery-ui.min.js"); 
 wp_enqueue_style("jqueryui_css", "/wp-includes/js/jquery/jquery-ui.min.css");
+
 ?>
 <script>
     angular.module('Debugger', ['ngStorage'])
@@ -116,6 +118,7 @@ wp_enqueue_style("jqueryui_css", "/wp-includes/js/jquery/jquery-ui.min.css");
         if (!Array.isArray($scope.$storage.breakpoints))
             $scope.$storage.breakpoints = [];
 		var workspaceDir = "<?=ParaIO.GetCurDirectory(0)?>";
+		$scope.workspaceDir = workspaceDir;
         var pollTimer;
 
         function uploadBreakpoints() {
@@ -591,6 +594,7 @@ wp_enqueue_style("jqueryui_css", "/wp-includes/js/jquery/jquery-ui.min.css");
 <div ng-app="Debugger" ng-controller="DebuggerController as Debugger" style="margin-top:10px;" class="form-horizontal">
     <div class="row" style="min-height:500px" >
         <div class="col-md-4">
+			<div>{{workspaceDir}}</div>
             <table id="filedir" style="height:500px;overflow: auto;width:100%" class="easyui-treegrid"
                    url="ajax/world?action=get_world_files&filter=*.lua&rootdir="
                    idField="id" treeField="filename" remoteSort="false" singleSelect="true">
