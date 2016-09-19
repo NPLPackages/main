@@ -247,9 +247,9 @@ function CSG.cylinder(options)
 	for i = 0,slices-1 do
 		local t0 = i / slices;
 		local t1 = (i + 1) / slices;
-		table.insert(polygons,CSGPolygon:new():init({start_value, point(0, t0, -1), point(0, t1, -1)}));
+		table.insert(polygons,CSGPolygon:new():init({start_value:clone(), point(0, t0, -1), point(0, t1, -1)}));
 		table.insert(polygons,CSGPolygon:new():init({point(0, t1, 0), point(0, t0, 0), point(1, t0, 0), point(1, t1, 0)}));
-		table.insert(polygons,CSGPolygon:new():init({end_value, point(1, t1, 1), point(1, t0, 1)}));
+		table.insert(polygons,CSGPolygon:new():init({end_value:clone(), point(1, t1, 1), point(1, t0, 1)}));
 	end
   return CSG.fromPolygons(polygons);
 end
