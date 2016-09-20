@@ -223,21 +223,7 @@ end
 function IndexTable:CreateTable()
 	self.parent:FlushAll();
 
-	local stat = self:GetDB():prepare([[INSERT INTO Indexes (name, tablename) VALUES (?, ?)]]);
-	stat:bind(self.name, self:GetTableName());
-	stat:exec();
-	stat:close();
-
-	local sql = "CREATE TABLE IF NOT EXISTS ";
-	sql = sql..self:GetTableName().." "
-	sql = sql..kIndexTableColumns;
-	self:GetDB():exec(sql);
-	
-	-- rebuild all indices
-	NPL.load("(gl)script/ide/System/Database/Item.lua");
-	local Item = commonlib.gettable("System.Database.Item");
-	local item = Item:new();
-	
+	-- fetch all index before creating table, otherwise  we will need to call ClearStatementCache twice. 
 	local indexmap = {};
 	local name = self.name;
 	self.parent:find({}, function(err, rows)
@@ -257,6 +243,18 @@ function IndexTable:CreateTable()
 		end
 	end)
 
+	-- create table
+	local stat = self:GetDB():prepare([[INSERT INTO Indexes (name, tablename) VALUES (?, ?)]]);
+	stat:bind(self.name, self:GetTableName());
+	stat:exec();
+	stat:close();
+
+	local sql = "CREATE TABLE IF NOT EXISTS ";
+	sql = sql..self:GetTableName().." "
+	sql = sql..kIndexTableColumns;
+	self:GetDB():exec(sql);
+	
+	-- rebuild all indices
 	self.parent:Begin();
 	local count = 0;
 	local stmt = self:GetDB():prepare([[INSERT INTO ]]..self:GetTableName()..[[ (name, cid) VALUES (?, ?)]]);
@@ -269,6 +267,8 @@ function IndexTable:CreateTable()
 	LOG.std(nil, "info", "SqliteStore", "index table is created for `%s` with %d records", self.name, count);
 	self.parent:End();
 	self.parent:FlushAll();
+
+	-- after inserting tables, all statements shoudl be purged
 	self.parent:ClearStatementCache();
 end
 
