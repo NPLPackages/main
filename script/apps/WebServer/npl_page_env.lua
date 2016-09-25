@@ -159,7 +159,7 @@ npl_page_env.die = npl_page_env.exit;
 
 
 function env_imp:dirname(filename)
-	filename = filename or self.__FILE__;
+	filename = filename or self.__FILE__ or "";
 	local dir = filename:gsub("[^/]+$", "");
 	return dir;
 end
