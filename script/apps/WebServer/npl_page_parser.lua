@@ -98,10 +98,25 @@ function npl_page_parser:page_to_npl(text)
 		else
 			ni,j = string.find(text, "<[%%%?]n?p?l?=?", i)
 			local html_text;
-			if(ni and ni > 1) then
+			if(ni==1 and j == ni+1 and string.match(text, "^(%w+)%s", j+1) == "xml") then
+				-- check for tags like <?xml ?> on first line only
+				ni,j = string.find(text, "[%%%?]>\r?\n?", j+1)
+				html_text = string.sub(text, i, (j or 0)-1);
+				if(html_text) then
+					o[#o+1] = "echo[["..html_text.."]];";
+				end
+				if(ni) then
+					i = j + 1;
+					ni,j = string.find(text, "<[%%%?]n?p?l?=?", i)
+				else
+					break;
+				end
+			end
+
+			if(ni) then
 				is_equal_mode = (j == ni + 2);
-				html_text = string.sub(text, i, ni-1);
-			elseif(not ni) then
+				html_text = string.sub(text, i, ni-1);	
+			else
 				html_text = string.sub(text, i, -1);
 			end
 			if(html_text) then
