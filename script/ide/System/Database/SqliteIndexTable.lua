@@ -67,7 +67,7 @@ function IndexTable:getId(value)
 end
 
 -- @param value: any number or string value. or table { gt = value, lt=value, limit = number, offset|skip=number }.
--- value.gt: greater than this value
+-- value.gt: greater than this value, result in accending order
 -- value.lt: less than this value
 -- value.limit: max number of rows to return, default to 20. if there are duplicated items, it may exceed this number. 
 -- value.offset|skip: default to 0.
@@ -101,8 +101,14 @@ function IndexTable:getIds(value)
 			local limit = value.limit or 20;
 			local offset = value.offset or value.skip or 0;
 			
-			greaterthan = tostring(greaterthan);
-			self.select_gt_stat = self.select_gt_stat or self:GetDB():prepare([[SELECT cid FROM ]]..self:GetTableName()..[[ WHERE name>? LIMIT ?,?]]);
+			if(not self.select_gt_stat) then
+				if(type(greaterthan) == "number") then
+					self.select_gt_stat = self:GetDB():prepare([[SELECT cid FROM ]]..self:GetTableName()..[[ WHERE CAST(name AS INTEGER)>? ORDER BY CAST(name AS INTEGER) ASC LIMIT ?,?]]);
+				else
+					self.select_gt_stat = self:GetDB():prepare([[SELECT cid FROM ]]..self:GetTableName()..[[ WHERE name>? ORDER BY name ASC LIMIT ?,?]]);
+				end
+			end
+			
 			if(self.select_gt_stat) then
 				self.select_gt_stat:bind(greaterthan, offset, limit);
 				self.select_gt_stat:reset();
@@ -211,7 +217,7 @@ function IndexTable:addIdToIds(cid, ids)
 	return ids..(","..cid)
 end
 
--- private:
+-- public static:
 -- get id maps from ids string
 -- @param ids: must be string
 -- @return a table containing mapping from number cid to true

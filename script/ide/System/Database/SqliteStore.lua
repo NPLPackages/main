@@ -106,6 +106,7 @@ function SqliteStore:ClearStatementCache()
 	self:CloseSQLStatement("select_stat");
 	self:CloseSQLStatement("sel_row_stat");
 	self:CloseSQLStatement("sel_all_stat");
+	self:CloseSQLStatement("select_gt_stat");
 	self:CloseSQLStatement("update_stat");
 	self:CloseSQLStatement("insert_stat");
 	
@@ -488,45 +489,99 @@ function SqliteStore:InjectID(data, id)
 	return data;
 end
 
--- return nil or {} or array of row ids. 
-function SqliteStore:findRowIds(query, bAutoCreateIndex)
-	if(query._id) then
-		return {query._id};
+-- @param value: any number or string value. or table { gt = value, lt=value, limit = number, offset|skip=number }.
+-- value.gt: greater than this value, result in accending order
+-- value.lt: less than this value
+-- value.limit: max number of rows to return, default to 20. if there are duplicated items, it may exceed this number. 
+-- value.offset|skip: default to 0.
+-- return all ids as commar separated string
+function SqliteStore:getIds(value)
+	if(type(value) == "table") then
+		local greaterthan, lessthan;
+		greaterthan = value["gt"];
+		lessthan = value["lt"];
+		if(not greaterthan and not lessthan) then
+			LOG.std(nil, "error", "IndexTable", "operator not found");
+			return;
+		end
+		
+		if(greaterthan) then
+			local limit = value.limit or 20;
+			local offset = value.offset or value.skip or 0;
+			
+			greaterthan = tostring(greaterthan);
+			self.select_gt_stat = self.select_gt_stat or self._db:prepare([[SELECT id FROM Collection WHERE id>? ORDER BY id LIMIT ?,?]]);
+			if(self.select_gt_stat) then
+				self.select_gt_stat:bind(greaterthan, offset, limit);
+				self.select_gt_stat:reset();
+				local cid;
+				for row in self.select_gt_stat:rows() do
+					cid = cid and (cid .. "," .. row.id) or row.id;
+				end
+				return cid;
+			else
+				LOG.std(nil, "error", "IndexTable", "failed to create select statement");
+			end
+		else
+			LOG.std(nil, "error", "IndexTable", "unknown operator %s", tostring(operator));
+		end
 	else
-		local final_ids;
-		-- if no index, return nil to inform brutal force search
-		local hasIndex; 
-		for name, value in pairs(query) do
-			if(type(name)=="string" and name~="_unset" and value and value~="") then
-				local indexTable = self:GetIndex(name, bAutoCreateIndex);
-				if(indexTable) then
-					hasIndex = true;
-					local ids = indexTable:getIds(value);
-					if(ids) then
-						if(not final_ids) then
-							final_ids = indexTable:getMapFromIds(ids);
-						else
-							-- `AND` intersection of ids.
-							ids = indexTable:getMapFromIds(ids);
-							for id, _ in pairs(final_ids) do
-								if(not ids[id]) then
-									final_ids[id] = nil;
-								end
-							end
-						end
-					end
+		return tostring(value);
+	end
+end
+
+-- merge ids to final_ids
+-- @return final_ids;
+local function mergeIds(ids, final_ids)
+	if(ids) then
+		if(not final_ids) then
+			final_ids = IndexTable:getMapFromIds(ids);
+		else
+			-- `AND` intersection of ids.
+			ids = IndexTable:getMapFromIds(ids);
+			for id, _ in pairs(final_ids) do
+				if(not ids[id]) then
+					final_ids[id] = nil;
 				end
 			end
 		end
-		if(final_ids) then
-			local array = {}
-			for id, _ in pairs(final_ids) do
-				array[#array+1] = id;
-			end
-			return array;
+	end
+	return final_ids;
+end
+
+-- return nil or {} or array of row ids. 
+function SqliteStore:findRowIds(query, bAutoCreateIndex)
+	local final_ids;
+	local hasIndex;
+	if(query._id) then
+		if(type(query._id) == "table") then
+			hasIndex = true;
+			local ids = self:getIds(query._id);
+			final_ids = mergeIds(ids, final_ids);
 		else
-			return hasIndex and {} or nil;
+			return {query._id};
 		end
+	end
+	
+	-- if no index, return nil to inform brutal force search
+	for name, value in pairs(query) do
+		if(type(name)=="string" and name~="_unset" and value and value~="") then
+			local indexTable = self:GetIndex(name, bAutoCreateIndex);
+			if(indexTable) then
+				hasIndex = true;
+				local ids = indexTable:getIds(value);
+				final_ids = mergeIds(ids, final_ids);
+			end
+		end
+	end
+	if(final_ids) then
+		local array = {}
+		for id, _ in pairs(final_ids) do
+			array[#array+1] = id;
+		end
+		return array;
+	else
+		return hasIndex and {} or nil;
 	end
 end
 
@@ -536,7 +591,7 @@ end
 -- if no indexed field is found, we will return nil and the caller should fallback to brutal force linear search
 -- return array of rows {} or nil.
 function SqliteStore:findRows(query, bAutoCreateIndex)
-	if(query._id) then
+	if(type(query._id) == "number") then
 		local data = self:findCollectionRow(query);
 		return {data};
 	else

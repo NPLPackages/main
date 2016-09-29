@@ -404,8 +404,13 @@ function TestRangedQuery()
 		db.rangedTest:insertOne({i=i}, {i=i, data="data"..i}, function() end)
 	end
 
-	-- return 5 records with i > 90, skipping 2. 
-	db.rangedTest:find({ i = { gt = 90, limit = 5, offset=2} }, function(err, rows)
-		echo(rows); --> 93,94,95
+	-- return at most 5 records with i > 90, skipping 2. result in accending order
+	db.rangedTest:find({ i = { gt = 95, limit = 5, offset=2} }, function(err, rows)
+		echo(rows); --> 98,99,100
+	end);
+
+	-- return at most 20 records with _id > 98, result in accending order
+	db.rangedTest:find({ _id = { gt = 98, limit = 20} }, function(err, rows)
+		echo(rows); --> 99,100
 	end);
 end
