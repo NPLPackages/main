@@ -50,6 +50,7 @@ function IndexTable:ClearStatementCache()
 	self:CloseSQLStatement("del_stat");
 	self:CloseSQLStatement("sel_row_stat");
 	self:CloseSQLStatement("select_stat");
+	self:CloseSQLStatement("select_gt_stat");
 	self:CloseSQLStatement("select_ids_stat");
 	self:CloseSQLStatement("sel_all_stat");
 	self:CloseSQLStatement("update_stat");
@@ -65,20 +66,56 @@ function IndexTable:getId(value)
 	end
 end
 
+-- @param value: any number or string value. or table { gt = value, lt=value, limit = number, offset|skip=number }.
+-- value.gt: greater than this value
+-- value.lt: less than this value
+-- value.limit: max number of rows to return, default to 20. if there are duplicated items, it may exceed this number. 
+-- value.offset|skip: default to 0.
 -- return all ids as commar separated string
 function IndexTable:getIds(value)
 	if(value) then
-		value = tostring(value);
-		self.select_stat = self.select_stat or self:GetDB():prepare([[SELECT cid FROM ]]..self:GetTableName()..[[ WHERE name=?]]);
-		if(self.select_stat) then
-			self.select_stat:bind(value);
-			self.select_stat:reset();
-			local row = self.select_stat:first_row();
-			if(row) then
-				return row.cid;
+		local greaterthan, lessthan;
+		if(type(value) == "table") then
+			greaterthan = value["gt"];
+			lessthan = value["lt"];
+			if(not greaterthan and not lessthan) then
+				LOG.std(nil, "error", "IndexTable", "operator not found");
+				return;
+			end
+		end
+		
+		if(not greaterthan and not lessthan) then
+			value = tostring(value);
+			self.select_stat = self.select_stat or self:GetDB():prepare([[SELECT cid FROM ]]..self:GetTableName()..[[ WHERE name=?]]);
+			if(self.select_stat) then
+				self.select_stat:bind(value);
+				self.select_stat:reset();
+				local row = self.select_stat:first_row();
+				if(row) then
+					return row.cid;
+				end
+			else
+				LOG.std(nil, "error", "IndexTable", "failed to create select statement");
+			end
+		elseif(greaterthan) then
+			local limit = value.limit or 20;
+			local offset = value.offset or value.skip or 0;
+			
+			greaterthan = tostring(greaterthan);
+			self.select_gt_stat = self.select_gt_stat or self:GetDB():prepare([[SELECT cid FROM ]]..self:GetTableName()..[[ WHERE name>? LIMIT ?,?]]);
+			if(self.select_gt_stat) then
+				self.select_gt_stat:bind(greaterthan, offset, limit);
+				self.select_gt_stat:reset();
+				local cid;
+				for row in self.select_gt_stat:rows() do
+					cid = cid and (cid .. "," .. row.cid) or row.cid;
+				end
+				return cid;
+			else
+				LOG.std(nil, "error", "IndexTable", "failed to create select statement");
 			end
 		else
-			LOG.std(nil, "error", "IndexTable", "failed to create select statement");
+			LOG.std(nil, "error", "IndexTable", "unknown operator %s", tostring(operator));
 		end
 	end
 end

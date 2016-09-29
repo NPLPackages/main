@@ -390,3 +390,22 @@ function TestTableDatabase()
 
 	User:updateOne({name="LXZ"}, {password="312"}, function(err)	end);
 end
+
+
+function TestRangedQuery()
+	NPL.load("(gl)script/ide/System/Database/TableDatabase.lua");
+	local TableDatabase = commonlib.gettable("System.Database.TableDatabase");
+
+    -- this will start both db client and db server if not.
+	local db = TableDatabase:new():connect("temp/mydatabase/");	
+
+	-- add some data
+	for i=1, 100 do
+		db.rangedTest:insertOne({i=i}, {i=i, data="data"..i}, function() end)
+	end
+
+	-- return 5 records with i > 90, skipping 2. 
+	db.rangedTest:find({ i = { gt = 90, limit = 5, offset=2} }, function(err, rows)
+		echo(rows); --> 93,94,95
+	end);
+end
