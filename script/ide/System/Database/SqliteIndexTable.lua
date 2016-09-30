@@ -114,7 +114,7 @@ function IndexTable:getIds(value)
 				self.select_gt_stat:reset();
 				local cid;
 				for row in self.select_gt_stat:rows() do
-					cid = cid and (cid .. "," .. row.cid) or row.cid;
+					cid = cid and (cid .. "," .. row.cid) or tostring(row.cid);
 				end
 				return cid;
 			else

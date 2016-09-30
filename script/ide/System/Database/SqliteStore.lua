@@ -516,7 +516,7 @@ function SqliteStore:getIds(value)
 				self.select_gt_stat:reset();
 				local cid;
 				for row in self.select_gt_stat:rows() do
-					cid = cid and (cid .. "," .. row.id) or row.id;
+					cid = cid and (cid .. "," .. row.id) or tostring(row.id);
 				end
 				return cid;
 			else
