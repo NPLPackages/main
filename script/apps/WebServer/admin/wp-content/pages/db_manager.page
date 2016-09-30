@@ -18,7 +18,54 @@ if(is_ajax()) then
 	local obj_cache = commonlib.gettable("WebServer.mem_cache"):GetInstance();
 	local params = request:getparams();
 	local getDBPath = function() return obj_cache:get("db_path") end
- 
+	
+	local getTables = function()
+		local tableNames = {};
+		local databaseDir = getDBPath();
+		local files = commonlib.Files.Find(nil, databaseDir, 0, 500, "*.db", nil);
+		if files then
+			for i, file in ipairs(files) do
+				tableNames[#tableNames+1] = string.match(file.filename,"(.*)%.");
+			end
+		end
+		return tableNames;
+	end
+
+	local getIndexes = function() 
+		local db_handle = TableDatabase:new():connect(getDBPath(), function() end);
+		--local db_handle = TableDatabase:new():connect('D:/NPL/NPLProject/wikicraft/database/npl/', function() end);
+		local tableName = params.tableName;
+		local table = db_handle:collection(tableName);
+		table:exec("SELECT name as indexName FROM indexes;", function(err, rows) resume(err, rows) end)
+		-- table:find({}, function(err,rows) resume(err,rows) end);
+		err, rows = yield();
+		local indexes = {};
+		for i, obj in pairs(rows) do
+			for j, value in pairs(obj) do
+				indexes[#indexes + 1] = value;
+			end
+		end
+			
+		return indexes;
+	end
+
+	local getTableRecord = function() 
+		local db_handle = TableDatabase:new():connect(getDBPath(), function() end);
+		-- local db_handle = TableDatabase:new():connect('D:/NPL/NPLProject/wikicraft/database/npl/', function() end);
+		local tableName = params.tableName;
+		local skip = (params.page - 1) * params.pageSize;
+		local sqlStr = "select count(*) as count from Collection;";
+		local table = db_handle:collection(tableName);
+		table:exec(sqlStr, function(err, data) resume(err, data) end)
+		err, data = yield();
+		local count = data[1].count;
+		sqlStr = string.format("select * from Collection limit %d, %d;", skip, params.pageSize);
+		table:exec(sqlStr, function(err, data) resume(err, data) end)
+		err, data = yield();
+
+		return {total=count, table = data};
+	end
+
 	-- db_handle:EnableSyncMode(true);
 	add_action('wp_ajax_curd',function()
 		local db_handle = TableDatabase:new():connect(getDBPath(), function() end);
@@ -41,34 +88,31 @@ if(is_ajax()) then
 		end
 
 		err, rows = yield();
-		if err then
-			wp_send_json(err);
-		else
-			wp_send_json(rows);
-		end
+		wp_send_json(rows);
 	end)
 
-	add_action('wp_ajax_tableIndexes', function()
+	add_action('wp_ajax_removeIndex', function() 
 		local db_handle = TableDatabase:new():connect(getDBPath(), function() end);
+		--local db_handle = TableDatabase:new():connect('D:/NPL/NPLProject/wikicraft/database/npl/', function() end);
 		local tableName = params.tableName;
 		local table = db_handle:collection(tableName);
-		table:exec("SELECT name as indexName FROM indexes;", function(err, rows) resume(err, rows) end)
-		-- table:find({}, function(err,rows) resume(err,rows) end);
-		err, rows = yield();
-		if err then
-			wp_send_json(err);
-		else
-			wp_send_json(rows);
-		end
+		table:removeIndex({params.index}, function() resume() end);
+		yield();
+		wp_send_json(getIndexes());
+	end)
+
+	add_action('wp_ajax_getIndexes', function()
+		wp_send_json(getIndexes());
 	end)
 
 	add_action('wp_ajax_setDBPath', function() 
 		local dbPath = params.dbPath;
+		string.gsub(dbPath,"\\","/");
 		if (string.sub(dbPath, string.len(dbPath)) ~= '/') then
 			dbPath = dbPath .. '/';
 		end
 		obj_cache:set("db_path", dbPath);
-		db_handle = TableDatabase:new():connect(dbPath, function() end);
+		wp_send_json(getTables());
 	end)
 
 	add_action('wp_ajax_getDBPath', function()
@@ -76,218 +120,276 @@ if(is_ajax()) then
 	end)
 
 	add_action('wp_ajax_tables', function() 
-		local tableNames = {};
-		local databaseDir = getDBPath();
-		local files = commonlib.Files.Find(nil, databaseDir, 0, 500, "*.db", nil);
-		if files then
-			for i, file in ipairs(files) do
-				tableNames[#tableNames+1] = string.match(file.filename,"(.*)%.");
-			end
-		end
-		wp_send_json(tableNames);
+		wp_send_json(getTables());
 	end) 
+	
+	add_action('wp_ajax_getTableRecord', function() 
+		--local db_handle = TableDatabase:new():connect(getDBPath(), function() end);
+		wp_send_json(getTableRecord());
+	end)
+	--[[
+	add_action('wp_ajax_updateRecord', function() 
+		--local db_handle = TableDatabase:new():connect(getDBPath(), function() end);
+		local db_handle = TableDatabase:new():connect('D:/NPL/NPLProject/wikicraft/database/npl/', function() end);
+		local tableName = params.tableName;
+		local sqlStr = string.format("update Collection set value = %s where id = %d;", params.value, params.id);
+		local table = db_handle:collection(tableName);
+		table:exec(sqlStr, function(err, data) resume(err, data) end)
+		err, data = yield();
+		wp_send_json(getTableRecord());
+
+	end)
+
+	add_action('wp_ajax_deleteRecord', function() 
+		--local db_handle = TableDatabase:new():connect(getDBPath(), function() end);
+		local db_handle = TableDatabase:new():connect('D:/NPL/NPLProject/wikicraft/database/npl/', function() end);
+		local tableName = params.tableName;
+		local sqlStr = string.format("delete from Collection where id = %d;", params.id);
+		local table = db_handle:collection(tableName);
+		table:exec(sqlStr, function(err, data) resume(err, data) end)
+		err, data = yield();
+		wp_send_json(getTableRecord());
+	end)
+	]]--
+	
+
 	return;
 end
 wp_enqueue_script("jqueryui", "/wp-includes/js/jquery/jquery-ui.min.js"); 
 wp_enqueue_script("bootstrap", "/wp-includes/js/bootstrap/js/bootstrap.min.js");
 wp_enqueue_script("angular", "/wp-includes/js/angular/angular.min.js");
+wp_enqueue_script("angular-ui", "/wp-includes/js/angular/ui-bootstrap-tpls-1.3.3.min.js");
 ?>
-<div style="width:100%;">
-    <div ng-app="DBManager" ng-controller="DBManagerCtrl">
-        <div>
-            <form class="form-horizontal" role="form">
-                <div class="form-group">
-                    <label class="control-label col-md-5">DB路径设置: </label>
-                    <div class="col-md-2">
-                        <input type="text" class="form-control" ng-model="dbPath" placeholder="数据库文件所在目录"/>
+<div ng-app="TableDBClient" ng-controller="TableDBClientCtrl">
+    <div class="row">
+        <div class="col-md-12 form-group">
+            <div>
+                <form class="form-horizontal" role="form">
+                    <label class="control-label col-md-1">DB目录:</label>
+                    <div class="col-md-3">
+                        <input type="text" class="form-control" ng-model="dbPath" ng-blur="setDBPath()">
                     </div>
-                    <button class="btn" ng-click="setDBPath()">设置</button>
-                </div>
-                <div class="form-group">
-                    <label class="control-label col-md-5">请选择表:</label>
-                    <div class="col-md-2">
-                        <select class="form-control" ng-model="selectedTable"
-                                ng-options="table for table in tables"></select>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="control-label col-md-5">操作:</label>
-                    <div class="col-md-2">
-                        <select class="form-control" ng-model="selectedOperation">
-                            <option ng-repeat="x in operations" value="{{x.value}}">{{x.display}}</option>
+                    <label class="control-label col-md-1">表:</label>
+                    <div class="col-md-3">
+                        <select class="form-control" ng-model="selectedTable" ng-change="getTableRecord()">
+                            <option ng-repeat="table in tables" value="{{table}}">{{table}}</option>
                         </select>
                     </div>
+                </form>
+            </div>
+            <div class="col-md-12" style="padding: 10px;">
+                <div class="dropdown col-md-1">
+                    <button type="button" class="btn dropdown-toggle" id="dropdownMenu" data-toggle="dropdown">索引
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu">
+                        <li role="presentation" ng-repeat="index in indexes">
+                            <a role="menuitem" tabindex="-1" ng-click="editIndex(index)">{{index}}</a>
+                        </li>
+                    </ul>
                 </div>
-                <div class="form-group">
-                    <label class="control-label col-md-5">参数</label>
-                    <div class="col-md-1">
-                        <input type="text" class="form-control" ng-model="key" placeholder="key">
-                    </div>
-                    <div class="col-md-1">
-                        <input type="text" class="form-control" ng-model="value" placeholder="value">
-                    </div>
-                    <div class="col-md-1"><button class="btn"  ng-click="addParam()">添加</button></div>
+
+                <div class="btn-group" ng-repeat="editIndex in editIndexes">
+                    <button type="button" class="btn">{{editIndex}}</button>
+                    <button type="button" class="btn" ng-click="hideIndex(editIndex)">隐藏<span class="glyphicon glyphicon-pushpin"></span></button>
+                    <button type="button" class="btn" ng-click="removeIndex(editIndex)">删除<span class="glyphicon glyphicon-remove"></span></button>
                 </div>
-                <div class="form-group" ng-repeat="param in params">
-                    <label class="control-label col-md-5">{{"参数"+($index+1)+": "}}</label>
-                    <div class="col-md-1">
-                        <input type="text" class="form-control" ng-model="param.key">
-                    </div>
-                    <div class="col-md-1">
-                        <input type="text" class="form-control"ng-model="param.value">
-                    </div>
-                    <div class="col-md-1"><button class="btn"  ng-click="deleteParam(param)">删除</button></div>
+                <button type="button" class="btn" ng-click="newRecord()">新增记录<span class="glyphicon glyphicon-plus"></span></button>
+            </div>
+            <div class="col-md-12">
+                <!--
+                <div>
+                    <div ui-ace ng-model="aceModel"></div>
                 </div>
-                <div class="form-group">
-                    <div class="col-md-offset-5 col-md-2">
-                        <button class="btn form-control" style="background: gainsboro" ng-click="select()">提交</button>
-                    </div>
+                -->
+                <div class="col-md-8">
+                    <table class="table table-striped ">
+                        <th>记录ID</th>
+                        <th>记录对象</th>
+                        <th>操作</th>
+                        <tr ng-repeat="obj in tableRecord">
+                            <td>{{obj.id}}</td>
+                            <td>{{obj.value}}</td>
+                            <td>
+                                <button type="button" class="btn btn-default" ng-click="editRecord(obj.id)">编辑<span class="glyphicon glyphicon-edit"></span></button>
+                                <button type="button" class="btn btn-default" ng-click="deleteRecord(obj.id)">删除<span class="glyphicon glyphicon-trash"></span></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><ul uib-pagination total-items="totalItems" ng-model="page" ng-change="pageChanged()" max-size="5" class="pagination-sm" boundary-links="true" items-per-page="pageSize"></ul></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    </table>
                 </div>
-            </form>
-        </div>
-        <div>
-            <div class="col-md-offset-5 col-md-2"><h4>结果：</h4></div>
-            <table class="table table-striped">
-                <tr ng-repeat="record in tableRecord">
-                    <td ng-if="isEdit">
-                        <button class="btn" ng-click="update(record)">修改</button>
-                        <button class="btn" ng-click="delete(record)">删除</button>
-                    </td>
-                    <td ng-repeat="field in record"><span>{{field.key}}:<input ng-model="field.value"/></span></td>
-                </tr>
-            </table>
+                <div class="col-md-4">
+                    <div class="col-md-offset-3">
+                        <h4>{{operation == 'insert' ? '添加' : '修改'}}记录</h4>
+                    </div>
+                    <form class="form-horizontal" role="form">
+                        <div class="form-group">
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" ng-model="key" placeholder="key">
+                            </div>
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" ng-model="value" placeholder="value">
+                            </div>
+                            <div class="btn-group">
+                                <button type="button" class="btn" ng-click="addField()"><span class="glyphicon glyphicon-ok"></span></button>
+                            </div>
+                        </div>
+
+                        <div class="form-group" ng-repeat="field in fields">
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" ng-model="field.key">
+                            </div>
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" ng-model="field.value">
+                            </div>
+                            <div class="btn-group">
+                                <button type="button" class="btn" ng-click="deleteField(field)"><span class="glyphicon glyphicon-remove"></span></button>
+                            </div>
+                        </div>
+                        <div class="form-group col-md-8">
+                            <button type="button" ng-click="submitRecord()" class="btn btn-default form-control">{{operation == 'insert' ? '添加' : '修改'}}</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 </div>
-
 <script>
-    var app = angular.module("DBManager", []);
-    var urlPrefix = '/ajax/db_manager?action=';
-    app.controller("DBManagerCtrl", function ($scope, $http) {
-		if(typeof Page != 'undefined')
-            Page.ShowSideBar(false);
-        $scope.operations = [{value: "select", display: '查询'}, {
-            value: "insert",
-            display: '添加'
-        }, {
-            value: "selectIndex",
-            display: '查询索引'
-        }/*, {value:"update",display:'修改'}, {value:"delete", display:'删除'}*/];
-        $scope.selectedOperation = "select";
-        $scope.isEdit = true;
-        $scope.selectedTable = "";
+    var app = angular.module('TableDBClient', ['ui.bootstrap']);
+    app.controller('TableDBClientCtrl', function ($scope, $http) {
         $scope.tables = [];
-        $scope.params = [];
-        $scope.output = undefined;
+        $scope.tableRecord = [];
+        $scope.indexes = [];
+        $scope.editIndexes = [];
+        $scope.fields = [];
+        $scope.pageSize = 10;
+        $scope.page = 1;
+        $scope.totalItems = 0;
+        $scope.operation = 'insert';
+        var urlPrefix =  '/ajax/db_manager?action=';
 
-        $scope.getTables = function () {
-            $http({url: urlPrefix + 'tables', method: "POST"}).then(function (response) {
-                $scope.tables = response.data;
-            }).catch(function (response) {
-                console.log("http request error")
-            });
+		$http.post(urlPrefix+'getDBPath').then(function(response) {
+			$scope.dbPath = response.data;
+			$scope.setDBPath();
+		});
+		$scope.pageChanged = function() {
+			$scope.getTableRecord();
+        };
+        $scope.newRecord = function () {
+            $scope.fields = [];
+            $scope.operation = 'insert';
         }
-        $scope.getTables();
-
-        $http({url: urlPrefix + 'getDBPath', method: "POST"}).then(function (response) {
-            $scope.dbPath = response.data;
-        }).catch(function (response) {
-            console.log("http request error")
-        });
-
-        $scope.setDBPath = function () {
-            $http({url: urlPrefix + 'setDBPath', method: "POST", data: {dbPath: $scope.dbPath}});
-            $scope.getTables();
+        $scope.editRecord = function (id) {
+            $scope.operation = 'update';
+            $scope.getRecord(id);
         }
-
-        $scope.select = function () {
-            /*
-             if ($scope.selectedOperation == "selectIndex") {
-             return $scope.selectIndex();
-             }*/
-            if ($scope.selectedOperation == "insert") {
-                return $scope.insert();
+        $scope.submitRecord = function () {
+            if ($scope.operation == 'insert') {
+                $scope.addRecord();
+            } else {
+                $scope.updateRecord();
             }
-            var params = {operation: "select", tableName: $scope.selectedTable, query: {}, update: {}}
-            for (i = 0; i < $scope.params.length; i++) {
-                params["query"][$scope.params[i].key] = getJsonObject($scope.params[i].value);
-            }
-            var url = urlPrefix + 'curd';
-            $scope.isEdit = true;
-            if ($scope.selectedOperation == "selectIndex") {
-                params.operation = "selectIndex";
-                url = urlPrefix + 'tableIndexes';
-                $scope.isEdit = false;
-            }
-            $http({url: url, method: "POST", data: params})
-                    .then(function (response) {
-                        //console.log(response.data);
-                        $scope.tableRecord = response.data.map(function (record) {
-                            return $scope.objectToArray(record);
-                        });
-                    }).catch(function (response) {
-                console.log("http request error")
-            });
+			$scope.newRecord();
         }
-
-        $scope.selectIndex = function () {
-            var params = {operation: "selectIndex", tableName: $scope.selectedTable, query: {}, update: {}}
-            $http({url: urlPrefix + 'curd', method: "POST", data: params}).then(function (response) {
-                $scope.indexes = response.data;
-            }).catch(function (response) {
-                console.log("http request error")
-            });
-        }
-
-        $scope.insert = function () {
-            var params = {operation: "insert", tableName: $scope.selectedTable, query: {}, update: {}}
-            for (i = 0; i < $scope.params.length; i++) {
-                params["update"][$scope.params[i].key] = getJsonObject($scope.params[i].value);
-            }
-            $http({url: urlPrefix + 'curd', method: "POST", data: params});
-            $scope.selectedOperation = "select";
-            $scope.params = [];
-            $scope.select();
-        }
-        $scope.update = function (record) {
-            var params = {operation: "update", tableName: $scope.selectedTable, query: {}, update: {}}
-            for (i = 0; i < record.length; i++) {
-                params["update"][record[i].key] = record[i].value;
-                if (record[i].key == "_id") {
-                    params["query"][record[i].key] = record[i].value;
-                }
-            }
-            $http({url: urlPrefix + 'curd', method: "POST", data: params});
-            $scope.select();
-        }
-
-        $scope.delete = function (record) {
-            var recordObj = $scope.arrayToObject(record);
-            var params = {operation: "delete", tableName: $scope.selectedTable, query: {}}
-            params["query"]["_id"] = recordObj._id;
-            $http({url: urlPrefix + 'curd', method: "POST", data: params});
-            $scope.select();
-        }
-
-        $scope.addParam = function () {
-            $scope.params.push({key: $scope.key, value: $scope.value});
+        $scope.addField = function () {
+            $scope.fields.push({key: $scope.key, value: $scope.value});
             $scope.key = "";
             $scope.value = "";
         }
 
-        $scope.deleteParam = function (param) {
-            let params = [];
-            for (i = 0; i < $scope.params.length; i++) {
-                if ($scope.params[i].key == param.key && $scope.params[i].value == param.value) {
+        $scope.deleteField = function(field) {
+            var fields = [];
+            for (i = 0; i < $scope.fields.length; i++) {
+                if ($scope.fields[i].key == field.key /* && $scope.fields[i].value == field.value */) {
                     continue;
                 } else {
-                    params.push($scope.params[i]);
+                    fields.push($scope.fields[i]);
                 }
             }
-            $scope.params = params;
+            $scope.fields = fields;
         }
 
-        $scope.objectToArray = function (obj) {
+        $scope.editIndex = function (index) {
+            if ($scope.editIndexes.indexOf(index) < 0) {
+                $scope.editIndexes.push(index);
+            }
+        }
+        $scope.hideIndex = function (index) {
+            $scope.editIndexes.splice($scope.editIndexes.indexOf(index),1);
+        }
+        $scope.removeIndex = function (index) {
+            $scope.editIndexes.splice($scope.editIndexes.indexOf(index),1);
+            $http.post(urlPrefix+'removeIndex',{tableName:$scope.selectedTable,index}).then(function (response) {
+                $scope.indexes = response.data;
+            });
+        }
+        $scope.onBlur = function () {
+            console.log($scope.aceModel);
+        }
+        $scope.setDBPath = function () {
+            $http.post(urlPrefix+'setDBPath', {dbPath:$scope.dbPath}).then(function(response){
+                $scope.tables = response.data;
+            });
+        }
+        
+        $scope.getTableRecord = function () {
+			$scope.tableRecord = [];
+            var params = {tableName:$scope.selectedTable, page:$scope.page, pageSize:$scope.pageSize}
+            $http.post(urlPrefix+"getTableRecord", params).then(function (response) {
+                $scope.tableRecord = response.data.table;
+				$scope.totalItems = response.data.total;
+            });
+			$scope.getIndexes();
+        }
+
+        $scope.getIndexes = function () {
+            $http.post(urlPrefix+'getIndexes',{tableName:$scope.selectedTable}).then(function (response) {
+                $scope.indexes = response.data;
+            });
+        }
+
+        $scope.updateRecord = function (id) {
+            var params = {operation: "update", tableName: $scope.selectedTable, query: {}, update: {}}
+            for (i = 0; i < $scope.fields.length; i++) {
+                params["update"][$scope.fields[i].key] = $scope.fields[i].value;
+                if ($scope.fields[i].key == "_id") {
+                    params["query"][$scope.fields[i].key] = $scope.fields[i].value;
+                }
+            }
+            $http.post(urlPrefix+'curd', params);
+			$scope.getTableRecord();
+        }
+
+        $scope.deleteRecord = function (id) {
+            var params = {operation: "delete", tableName: $scope.selectedTable, query: {_id:id}, update: {}}
+            $http.post(urlPrefix+'curd', params);
+			$scope.getTableRecord();
+        }
+
+        $scope.getRecord = function (id) {
+            $http.post(urlPrefix+'curd',{tableName:$scope.selectedTable, operation:'select', query:{_id:id}}).then(function (response) {
+                $scope.fields = objectToArray(response.data[0]);
+            });
+        }
+        
+        $scope.addRecord = function () {
+            var params = {operation: "insert", tableName: $scope.selectedTable, query: {}, update: {}}
+            for (i = 0; i < $scope.fields.length; i++) {
+                params["update"][$scope.fields[i].key] = $scope.fields[i].value;
+                if ($scope.fields[i].key == "_id") {
+                    params["query"][$scope.fields[i].key] = $scope.fields[i].value;
+                }
+            }
+            $http.post(urlPrefix+'curd', params);
+			$scope.getTableRecord();
+        }
+
+        function objectToArray(obj) {
             var arr = [];
             for (key in obj) {
                 arr.push({key: key, value: obj[key], _id: obj._id});
@@ -295,20 +397,15 @@ wp_enqueue_script("angular", "/wp-includes/js/angular/angular.min.js");
             return arr;
         }
 
-        $scope.arrayToObject = function (arr) {
+        function arrayToObject(arr) {
             var obj = {};
             for (i = 0; i < arr.length; i++) {
                 obj[arr[i].key] = arr[i].value;
             }
             return obj;
         }
-
-        function getJsonObject(str) {
-            try{
-                return JSON.parse(str);
-            } catch(e) {
-                return str;
-            }
-        }
+		if(typeof Page != 'undefined') {
+			Page.ShowSideBar(false);
+		}
     });
 </script>
