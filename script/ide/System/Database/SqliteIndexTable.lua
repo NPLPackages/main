@@ -223,8 +223,10 @@ end
 -- @return a table containing mapping from number cid to true
 function IndexTable:getMapFromIds(ids)
 	local map = {};
-	for id in ids:gmatch("%d+") do
-		map[tonumber(id)] = true;
+	if(ids) then
+		for id in ids:gmatch("%d+") do
+			map[tonumber(id)] = true;
+		end
 	end
 	return map;
 end

@@ -404,13 +404,57 @@ function TestRangedQuery()
 		db.rangedTest:insertOne({i=i}, {i=i, data="data"..i}, function() end)
 	end
 
-	-- return at most 5 records with i > 90, skipping 2. result in accending order
+	-- return at most 5 records with i > 90, skipping 2. result in ascending  order
 	db.rangedTest:find({ i = { gt = 95, limit = 5, offset=2} }, function(err, rows)
 		echo(rows); --> 98,99,100
 	end);
 
-	-- return at most 20 records with _id > 98, result in accending order
+	-- return at most 20 records with _id > 98, result in ascending order
 	db.rangedTest:find({ _id = { gt = 98, limit = 20} }, function(err, rows)
 		echo(rows); --> 99,100
+	end);
+end
+
+
+function TestPagination()
+	NPL.load("(gl)script/ide/System/Database/TableDatabase.lua");
+	local TableDatabase = commonlib.gettable("System.Database.TableDatabase");
+	local db = TableDatabase:new():connect("temp/mydatabase/");	
+
+	-- add some data
+	for i=1, 10000 do
+		db.pagedUsers:insertOne({name="name"..i}, 
+			{name="name"..i, company="company"..i, state="state"..i}, function() end)
+	end
+
+	-- Approach One: using offset
+	-- page 1
+	db.pagedUsers:find({_id = {gt=-1, limit=10, skip=0}}, function(err, users)  echo(users) end);
+	-- page 2
+	db.pagedUsers:find({_id = {gt=-1, limit=10, skip=10}}, function(err, users)  echo(users) end);
+	-- page 3
+	db.pagedUsers:find({_id = {gt=-1, limit=10, skip=20}}, function(err, users)  echo(users) end);
+
+	-- page n
+	local pagesize = 10; local n = 10;
+	db.pagedUsers:find({_id = {gt=-1, limit=pagesize, skip=(n-1)*pagesize}}, function(err, users)  echo(users) end);
+
+
+	-- Approach two: Using find Recursively
+
+	-- page 1
+	db.pagedUsers:find({_id = { gt = -1, limit=10}}, function(err, users)  
+		echo(users)
+		-- Find the id of the last document in this page
+		local last_id = users[#users]._id;
+
+		-- page 2
+		db.pagedUsers:find({_id = { gt = last_id, limit=10}}, function(err, users)  
+			echo(users)
+		   -- Find the id of the last document in this page
+		   local last_id = users[#users]._id;
+		   -- page 3
+		   -- ...
+		end);
 	end);
 end
