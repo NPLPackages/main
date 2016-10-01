@@ -8,7 +8,7 @@ get_header(); ?>
       <?npl the_content(); ?>
     </div>
     <div id="sidebar" class="col-md-4">
-      <?npl dynamic_sidebar('propertywindow.page'); ?>
+      <?npl if(not PAGE_NO_SIDE_BAR) then dynamic_sidebar('propertywindow.page'); end ?>
     </div>
   </div>
 </div>
