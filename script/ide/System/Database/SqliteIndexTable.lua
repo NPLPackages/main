@@ -12,7 +12,7 @@ local IndexTable = commonlib.gettable("System.Database.SqliteStore.IndexTable");
 local IndexTable = commonlib.inherit(nil, commonlib.gettable("System.Database.SqliteStore.IndexTable"));
 local tostring = tostring;
 local kIndexTableColumns = [[
-	(name TEXT UNIQUE PRIMARY KEY,
+	(name BLOB UNIQUE PRIMARY KEY,
 	cid TEXT)]];
 
 function IndexTable:ctor()
@@ -85,7 +85,6 @@ function IndexTable:getIds(value)
 		end
 		
 		if(not greaterthan and not lessthan) then
-			value = tostring(value);
 			self.select_stat = self.select_stat or self:GetDB():prepare([[SELECT cid FROM ]]..self:GetTableName()..[[ WHERE name=?]]);
 			if(self.select_stat) then
 				self.select_stat:bind(value);
@@ -102,11 +101,7 @@ function IndexTable:getIds(value)
 			local offset = value.offset or value.skip or 0;
 			
 			if(not self.select_gt_stat) then
-				if(type(greaterthan) == "number") then
-					self.select_gt_stat = self:GetDB():prepare([[SELECT cid FROM ]]..self:GetTableName()..[[ WHERE CAST(name AS INTEGER)>? ORDER BY CAST(name AS INTEGER) ASC LIMIT ?,?]]);
-				else
-					self.select_gt_stat = self:GetDB():prepare([[SELECT cid FROM ]]..self:GetTableName()..[[ WHERE name>? ORDER BY name ASC LIMIT ?,?]]);
-				end
+				self.select_gt_stat = self:GetDB():prepare([[SELECT cid FROM ]]..self:GetTableName()..[[ WHERE name>? ORDER BY name ASC LIMIT ?,?]]);
 			end
 			
 			if(self.select_gt_stat) then
@@ -148,7 +143,6 @@ end
 -- @param cid: default to nil. if not nil we will only remove when collection row id matches this one. 
 function IndexTable:removeIndex(value, cid)
 	if(value) then
-		value = tostring(value);
 		if(cid) then
 			cid = tostring(cid);
 			local ids = self:getIds(value);
@@ -248,7 +242,6 @@ end
 -- @param cid: collection row id
 function IndexTable:addIndex(value, cid)
 	if(value and cid) then
-		value = tostring(value);
 		cid = tostring(cid);
 		local ids = self:getIds(value);
 		if(not ids) then
@@ -275,8 +268,8 @@ function IndexTable:CreateTable()
 		if(rows) then
 			for _, row in ipairs(rows) do
 				if(row and row[name]) then
-					local keyValue = tostring(row[name])
-					if(keyValue~="") then
+					local keyValue = row[name]
+					if(keyValue) then
 						if(not indexmap[keyValue]) then
 							indexmap[keyValue] = tostring(row._id);
 						else

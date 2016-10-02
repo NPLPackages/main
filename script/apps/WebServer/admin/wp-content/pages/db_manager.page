@@ -70,6 +70,24 @@ if(is_ajax()) then
 		return {total=count, table = data};
 	end
 
+	add_action('wp_ajax_beautify',function()
+		if(params.code) then
+			local o = NPL.LoadTableFromString(params.code);
+			if(o) then
+				response:send({code=commonlib.serialize(o, true)});
+				return;
+			end
+		end
+		response:send({});
+	end);
+	add_action('wp_ajax_tojson',function()
+		local o = params.code and NPL.LoadTableFromString(params.code);
+		if(o) then
+			response:send(o);
+		else
+			response:status(404):send({});
+		end
+	end);
 	-- db_handle:EnableSyncMode(true);
 	add_action('wp_ajax_curd',function()
 		local db_handle = TableDatabase:new():connect(getDBPath(), function() end);
@@ -136,32 +154,6 @@ if(is_ajax()) then
 		--local db_handle = TableDatabase:new():connect(getDBPath(), function() end);
 		wp_send_json(getTableRecord());
 	end)
-	--[[
-	add_action('wp_ajax_updateRecord', function() 
-		--local db_handle = TableDatabase:new():connect(getDBPath(), function() end);
-		local db_handle = TableDatabase:new():connect('D:/NPL/NPLProject/wikicraft/database/npl/', function() end);
-		local tableName = params.tableName;
-		local sqlStr = string.format("update Collection set value = %s where id = %d;", params.value, params.id);
-		local table = db_handle:collection(tableName);
-		table:exec(sqlStr, function(err, data) resume(err, data) end)
-		err, data = yield();
-		wp_send_json(getTableRecord());
-
-	end)
-
-	add_action('wp_ajax_deleteRecord', function() 
-		--local db_handle = TableDatabase:new():connect(getDBPath(), function() end);
-		local db_handle = TableDatabase:new():connect('D:/NPL/NPLProject/wikicraft/database/npl/', function() end);
-		local tableName = params.tableName;
-		local sqlStr = string.format("delete from Collection where id = %d;", params.id);
-		local table = db_handle:collection(tableName);
-		table:exec(sqlStr, function(err, data) resume(err, data) end)
-		err, data = yield();
-		wp_send_json(getTableRecord());
-	end)
-	]]--
-	
-
 	return;
 end
 wp_enqueue_script("jqueryui", "/wp-includes/js/jquery/jquery-ui.min.js"); 
@@ -169,6 +161,7 @@ wp_enqueue_script("bootstrap", "/wp-includes/js/bootstrap/js/bootstrap.min.js");
 wp_enqueue_script("angular", "/wp-includes/js/angular/angular.min.js");
 wp_enqueue_script("angular-ui", "/wp-includes/js/angular/ui-bootstrap-tpls-1.3.3.min.js");
 wp_enqueue_script("ngStorage", "/wp-includes/js/angular/ngStorage.js");
+wp_enqueue_script("ace", "/wp-includes/js/ace/ace.js"); 
 PAGE_NO_SIDE_BAR = true;
 ?>
 <div ng-app="TableDBClient" ng-controller="TableDBClientCtrl">
@@ -209,11 +202,6 @@ PAGE_NO_SIDE_BAR = true;
 				</div>
             </div>
             <div class="col-md-12 row"  style="margin-top:10px;">
-                <!--
-                <div>
-                    <div ui-ace ng-model="aceModel"></div>
-                </div>
-                -->
                 <div class="col-md-8">
 					<table class="table table-striped" style="word-wrap: break-word;table-layout: fixed;">
 						<th class="col-md-2">id</th>
@@ -224,7 +212,7 @@ PAGE_NO_SIDE_BAR = true;
 							<td><div>{{obj.value}}<div></td>
 							<td>
 								<button type="button" class="btn btn-default pull-right" ng-click="deleteRecord(obj.id)"><span class="glyphicon glyphicon-trash"></span></button>
-								<button type="button" class="btn btn-default pull-right" ng-click="editRecord(obj.id)"><span class="glyphicon glyphicon-edit"></span></button>
+								<button type="button" class="btn btn-default pull-right" ng-click="editRecord(obj)"><span class="glyphicon glyphicon-edit"></span></button>
 							</td>
 						</tr>
 					</table>
@@ -236,24 +224,11 @@ PAGE_NO_SIDE_BAR = true;
 							{{operation == 'insert' ? 'Add' : 'Modify'}} Record
 						</div>
 						<div class="panel-body">
-							<form class="form-inline" role="form">
-								<div class="form-group">
-									<input type="text" class="form-control" ng-model="key" placeholder="key">
-									<input type="text" class="form-control" ng-model="value" placeholder="value">
-									<button type="button" class="btn pull-right" ng-click="addField()"><span class="glyphicon glyphicon-plus"></span></button>
-									<hr/>
-								</div>
-								<div class="form-group" ng-repeat="field in fields">
-									<input type="text" class="form-control" ng-model="field.key">
-									<input type="text" class="form-control" ng-model="field.value">
-									<button type="button" class="btn pull-right" ng-click="deleteField(field)"><span class="glyphicon glyphicon-remove"></span></button>
-									<hr/>
-								</div>
-								<div>
-									<hr/>
-									<button type="button" ng-click="submitRecord()" class="btn btn-default">{{operation == 'insert' ? 'Add' : 'Modify'}}</button>
-								</div>
-							</form>
+							<div id="editor">{}</div>
+							<div style="padding:10px 10px">
+								<button type="button" ng-click="submitRecord()" class="btn btn-default" style="width:100%">{{operation == 'insert' ? 'Add' : 'Modify'}}</button>
+							</div>
+							<div style="color: red;width:100%;">{{errMsg}}</div>
 						</div>
 					</div>
 				</div>
@@ -271,11 +246,12 @@ PAGE_NO_SIDE_BAR = true;
         $scope.tableRecord = [];
         $scope.indexes = [];
         $scope.editIndexes = [];
-        $scope.fields = [];
         $scope.pageSize = 10;
         $scope.page = 1;
         $scope.totalItems = 0;
         $scope.operation = 'insert';
+		$scope.editRecordId = '';
+		$scope.errMsg = "";
 		$scope.$storage = $localStorage.$default({
 			dbPath: "database/npl",
 			selectedTable: "",
@@ -291,41 +267,39 @@ PAGE_NO_SIDE_BAR = true;
 			$location.search("selectedTable", $scope.selectedTable)
 			$scope.getTableRecord();
 		};
+
 		$scope.pageChanged = function() {
 			$scope.getTableRecord();
         };
+
         $scope.newRecord = function () {
-            $scope.fields = [];
             $scope.operation = 'insert';
+			$scope.errMsg = "";
+			ace.edit("editor").setValue('{}');
         }
-        $scope.editRecord = function (id) {
+        $scope.editRecord = function (obj) {
+			$scope.errMsg = "";
             $scope.operation = 'update';
-            $scope.getRecord(id);
+			$scope.editRecordId = obj.id;
+			$http.post(urlPrefix+'beautify',{code:obj.value}).then(function (response) {
+				var code = response.data.code;
+				ace.edit("editor").setValue(code);
+			})
         }
         $scope.submitRecord = function () {
-            if ($scope.operation == 'insert') {
-                $scope.addRecord();
-            } else {
-                $scope.updateRecord();
-            }
-			$scope.newRecord();
-        }
-        $scope.addField = function () {
-            $scope.fields.push({key: $scope.key, value: $scope.value});
-            $scope.key = "";
-            $scope.value = "";
-        }
-
-        $scope.deleteField = function(field) {
-            var fields = [];
-            for (i = 0; i < $scope.fields.length; i++) {
-                if ($scope.fields[i].key == field.key /* && $scope.fields[i].value == field.value */) {
-                    continue;
-                } else {
-                    fields.push($scope.fields[i]);
-                }
-            }
-            $scope.fields = fields;
+			var code = ace.edit("editor").getValue();
+			$http.post(urlPrefix+'tojson',{code:code}).then(function (response) {
+				var obj = response.data;
+				if ($scope.operation == 'insert') {
+					$scope.addRecord(obj);
+				} else {
+					$scope.updateRecord($scope.editRecordId, obj);
+				}
+				$scope.newRecord();
+				$scope.errMsg = "";
+			}).catch(function (response) {
+			    $scope.errMsg = "data format error";
+			});
         }
 
         $scope.editIndex = function (index) {
@@ -336,6 +310,7 @@ PAGE_NO_SIDE_BAR = true;
         $scope.hideIndex = function (index) {
             $scope.editIndexes.splice($scope.editIndexes.indexOf(index),1);
         }
+
         $scope.removeIndex = function (index) {
 			if(confirm("are you sure to delete the index `"+index+"`?")){
 				$scope.editIndexes.splice($scope.editIndexes.indexOf(index),1);
@@ -344,9 +319,7 @@ PAGE_NO_SIDE_BAR = true;
 				})
 			}
         }
-        $scope.onBlur = function () {
-            console.log($scope.aceModel);
-        }
+
         $scope.setDBPath = function () {
 			$scope.$storage.dbPath = $scope.dbPath;
 			$location.search("dbPath", $scope.dbPath);
@@ -371,14 +344,8 @@ PAGE_NO_SIDE_BAR = true;
             });
         }
 
-        $scope.updateRecord = function (id) {
-            var params = {operation: "update", dbPath:$scope.dbPath, tableName: $scope.selectedTable, query: {}, update: {}}
-            for (i = 0; i < $scope.fields.length; i++) {
-                params["update"][$scope.fields[i].key] = $scope.fields[i].value;
-                if ($scope.fields[i].key == "_id") {
-                    params["query"][$scope.fields[i].key] = $scope.fields[i].value;
-                }
-            }
+        $scope.updateRecord = function (id, obj) {
+            var params = {operation: "update", dbPath:$scope.dbPath, tableName: $scope.selectedTable, query: {_id:id}, update: obj}
             $http.post(urlPrefix+'curd', params);
 			$scope.getTableRecord();
         }
@@ -388,45 +355,112 @@ PAGE_NO_SIDE_BAR = true;
             $http.post(urlPrefix+'curd', params);
 			$scope.getTableRecord();
         }
-
-        $scope.getRecord = function (id) {
-            $http.post(urlPrefix+'curd',{dbPath:$scope.dbPath, tableName:$scope.selectedTable, operation:'select', query:{_id:id}}).then(function (response) {
-                $scope.fields = objectToArray(response.data[0]);
-            });
-        }
         
-        $scope.addRecord = function () {
-            var params = {operation: "insert", dbPath:$scope.dbPath, tableName: $scope.selectedTable, query: {}, update: {}}
-            for (i = 0; i < $scope.fields.length; i++) {
-                params["update"][$scope.fields[i].key] = $scope.fields[i].value;
-                if ($scope.fields[i].key == "_id") {
-                    params["query"][$scope.fields[i].key] = $scope.fields[i].value;
-                }
-            }
+        $scope.addRecord = function (obj) {
+            var params = {operation: "insert", dbPath:$scope.dbPath, tableName: $scope.selectedTable, query: {}, update: obj}
             $http.post(urlPrefix+'curd', params);
 			$scope.getTableRecord();
         }
 
-        function objectToArray(obj) {
-            var arr = [];
-            for (key in obj) {
-                arr.push({key: key, value: obj[key], _id: obj._id});
-            }
-            return arr;
-        }
-
-        function arrayToObject(arr) {
-            var obj = {};
-            for (i = 0; i < arr.length; i++) {
-                obj[arr[i].key] = arr[i].value;
-            }
-            return obj;
-        }
 		if(typeof Page != 'undefined') {
 			Page.ShowSideBar(false);
 		}
 		// fetch last result
 		$scope.setDBPath();
 		$scope.getTableRecord();
+        initEditor();
+
+
+		function initEditor() {
+            var editor = ace.edit("editor");
+            editor.setTheme("ace/theme/github");
+            editor.session.setMode("ace/mode/lua");
+            editor.setAutoScrollEditorIntoView(true);
+            editor.setOption("maxLines", 200);
+            editor.setOption("minLines", 5);
+			editor.renderer.setShowGutter(false);
+        }
+
+		// lua object str convert to json str 
+		function parse(text) {
+			return function (text) {
+				var result = "";
+				var index = 0;
+				while (text[index] != '{' && index < text.length) {
+					index++;
+				}
+				while (index < text.length) {
+					// 去key左侧空白
+					do {
+						result += text[index];  // { , }
+						index++;
+						if (index >= text.length) {
+							return result;
+						}
+						while (text[index] == ' ' || text[index] == '\t' || text[index] == '\r' || text[index] == '\n') {
+							index++
+							if (index >= text.length) {
+								return result;
+							}
+						}
+					} while (text[index] == '}' || text[index] == ',');
+
+					result += '"'; // key 左 "
+					while (text[index] != ' ' && text[index] != '\t' && text[index] != '\r' && text[index] != '\n' && text[index] != '=') {
+						result += text[index];  // key
+						index++;
+						if (index >= text.length) {
+							return result;
+						}
+					}
+					result += '"'; // key 右 "
+					// 去=左侧空白
+					while (text[index] == ' ' || text[index] == '\t' || text[index] == '\r' || text[index] == '\n') {
+						index++;
+						if (index >= text.length) {
+							return result;
+						}
+					}
+					if (text[index] == '=') {
+						result += ':';
+						index++;
+					} else {
+						console.log("数据格式错误");
+						//return;
+					}
+					// 去value左侧空白
+					while (text[index] == ' ' || text[index] == '\t' || text[index] == '\r' || text[index] == '\n') {
+						index++
+						if (index >= text.length) {
+							return result;
+						}
+						;
+					}
+
+					if (text[index] >= '0' && text[index] <= '9') { // value = number
+						while (text[index] >= '0' && text[index] <= '9') {
+							result += text[index];  // value
+							index++;
+						}
+					} else if (text[index] == '"' || text[index] == "'") {   // value = string
+						strFlag = text[index];
+						result += text[index];
+						index++;
+						while (!(text[index - 1] != '\\' && text[index] == strFlag)) {
+							result += text[index];
+							index++;
+							if (index >= text.length) {
+								return result;
+							}
+						}
+						result += text[index];
+						index++;
+					} else {                                        // string = object
+						continue;
+					}
+				}
+				return result;
+			}(text).replace(/,}/g, '}');
+		}
     });
 </script>

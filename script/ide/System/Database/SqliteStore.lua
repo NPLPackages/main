@@ -14,7 +14,7 @@ NPL.load("(gl)script/ide/System/Database/SqliteIndexTable.lua");
 local IndexTable = commonlib.gettable("System.Database.SqliteStore.IndexTable");
 local type = type;
 local SqliteStore = commonlib.inherit(commonlib.gettable("System.Database.Store"), commonlib.gettable("System.Database.SqliteStore"));
-SqliteStore.kCurrentVersion = 4;
+SqliteStore.kCurrentVersion = 5;
 SqliteStore.journelMode = "WAL";
 
 -- SQL create table command columns
@@ -585,12 +585,13 @@ function SqliteStore:findRowIds(query, bAutoCreateIndex)
 	end
 end
 
+-- try to execute query with indices. 
 -- return rows that satisfied one or more indexed query fields. 
 -- Please note: non-indexed fields are not verified and caller must filter them afterwards. 
 -- In case of multiple query fields, we will return rows with the intersection of ids.
 -- if no indexed field is found, we will return nil and the caller should fallback to brutal force linear search
 -- return array of rows {} or nil.
-function SqliteStore:findRows(query, bAutoCreateIndex)
+function SqliteStore:findRowsViaIndex(query, bAutoCreateIndex)
 	if(type(query._id) == "number") then
 		local data = self:findCollectionRow(query);
 		return {data};
@@ -615,49 +616,50 @@ function SqliteStore:findRows(query, bAutoCreateIndex)
 	end
 end
 
+-- find by linear full table scan
+function SqliteStore:findRowsViaTableScan(query)
+	local rows = {};
+	local name = self.name;
+	self.sel_all_stat = self.sel_all_stat or self._db:prepare([[SELECT * FROM Collection]]);
+	if(self.sel_all_stat) then
+		self.sel_all_stat:reset();
+		if(not next(query)) then
+			for row in self.sel_all_stat:rows() do
+				local obj = NPL.LoadTableFromString(row.value) or {};
+				rows[#rows+1] = self:InjectID(obj, row.id);		
+			end
+		else
+			for row in self.sel_all_stat:rows() do
+				local obj = NPL.LoadTableFromString(row.value) or {};
+				obj = self:filterRowByQuery(obj, query);
+				if(obj) then
+					local bMatched = true;
+					for name, value in pairs(query) do
+						if(type(name)=="string" and obj[name] ~= value) then
+							bMatched = false;
+						end
+					end
+					if(bMatched) then
+						rows[#rows+1] = self:InjectID(obj, row.id);		
+					end
+				end
+			end
+		end
+	else
+		LOG.std(nil, "error", "SqliteStore",  "failed to create select all statement");
+	end
+	return rows;
+end
+
 -- find will not automatically create index on query fields. 
 -- Use findOne for fast index-based search. It simply does a raw search.
 -- @param query: if nil or {}, it will return all the rows
 function SqliteStore:find(query, callbackFunc)
 	query = query or {};
 	local err, data;
-	local rows = self:findRows(query, true);
-	if(rows) then
-		return self:InvokeCallback(callbackFunc, err, rows);
-	else
-		-- full linear search. this is slow!!!
-		local rows = {};
-		local name = self.name;
-		self.sel_all_stat = self.sel_all_stat or self._db:prepare([[SELECT * FROM Collection]]);
-		if(self.sel_all_stat) then
-			self.sel_all_stat:reset();
-			if(not next(query)) then
-				for row in self.sel_all_stat:rows() do
-					local obj = NPL.LoadTableFromString(row.value) or {};
-					rows[#rows+1] = self:InjectID(obj, row.id);		
-				end
-			else
-				for row in self.sel_all_stat:rows() do
-					local obj = NPL.LoadTableFromString(row.value) or {};
-					obj = self:filterRowByQuery(obj, query);
-					if(obj) then
-						local bMatched = true;
-						for name, value in pairs(query) do
-							if(type(name)=="string" and obj[name] ~= value) then
-								bMatched = false;
-							end
-						end
-						if(bMatched) then
-							rows[#rows+1] = self:InjectID(obj, row.id);		
-						end
-					end
-				end
-			end
-		else
-			LOG.std(nil, "error", "SqliteStore",  "failed to create select all statement");
-		end
-		return self:InvokeCallback(callbackFunc, err, rows);
-	end
+	local rows = self:findRowsViaIndex(query, true) or 
+				self:findRowsViaTableScan(query);
+	return self:InvokeCallback(callbackFunc, err, rows);
 end
 
 -- get just one row id from query string.

@@ -48,15 +48,33 @@ local watcher_dirs = {}
 -- mapping from watcher name to a list of instances. 
 local call_backs = {}
 
-local function registerCallback(o)
-	local instances = call_backs[o.name];
-	if(not instances) then
-		instances = {};
-		call_backs[o.name] = instances;
-		local watcher = ParaIO.GetFileSystemWatcher(o.name);
-		watcher:AddCallback(string.format("commonlib.FileSystemWatcher.OnFileCallback(%q);", o.name));
+local function registerCallback(name, o)
+	local instances = call_backs[name];
+	if(o) then
+		if(not instances) then
+			instances = {};
+			call_backs[name] = instances;
+			local watcher = ParaIO.GetFileSystemWatcher(name);
+			watcher:AddCallback(string.format("commonlib.FileSystemWatcher.OnFileCallback(%q);", name));
+		end
+		instances[#instances + 1] = o;
 	end
-	instances[#instances + 1] = o;
+end
+
+local function unregisterCallback(name, o)
+	local instances = call_backs[name];
+	if(instances) then
+		for i, instance in ipairs(instances) do
+			if(instance == o) then
+				commonlib.removeArrayItem(instances, i);
+				break;
+			end
+		end
+		if(#instances == 0) then
+			ParaIO.DeleteFileSystemWatcher(name);
+			call_backs[name] = nil;
+		end
+	end
 end
 
 -- a new watcher class, do not create too many of this class, since they are never deleted. 
@@ -70,9 +88,16 @@ function FileSystemWatcher:new(o)
 	end});
 	
 	-- add to call back instances
-	registerCallback(o);
+	registerCallback(o.name, o);
 	return o
 end
+
+-- remove this file watcher. 
+function FileSystemWatcher:Destroy()
+	unregisterCallback(self.name, self);
+	watcher_dirs[self.name] = nil;
+end
+
 
 local type_to_name = {
 	[0] = "null", 
@@ -113,7 +138,8 @@ end
 -- add message 
 function FileSystemWatcher:AddMessage(msg)
 	local bAcceptFile;
-	if(self.dirs[msg.dirname] or self:IsMonitorAll()) then
+	local dir = self:NormalizeDirectory(msg.dirname);
+	if(self:IsMonitorAll() or self:hasParentDirectory(dir)) then
 		-- filter the message.
 		if(type(self.filter) == "function") then
 			bAcceptFile = self.filter(msg.filename);
@@ -143,32 +169,53 @@ function FileSystemWatcher:DispatchEvent()
 	end
 end
 
+-- always ends with `/`
 function FileSystemWatcher:NormalizeDirectory(dir)
+	if(dir) then
+		if(#dir>=1 and not dir:match("[/]$")) then
+			dir = dir.."/";
+		end
+	end
 	return dir;
+end
+
+-- see if any parent directory that is already being watched.
+function FileSystemWatcher:hasParentDirectory(dir)
+	self.dirs = self.dirs or {};
+	if(self.dirs[dir]) then
+		return true;
+	else
+		while (dir) do
+			local dirParent = dir:gsub("[^/]+/$", "")
+			if(dir ~= dirParent) then
+				if(self.dirs[dirParent]) then
+					return true;
+				else
+					dir = dirParent;
+				end
+			else
+				break;
+			end
+		end
+	end
 end
 
 -- add a dir to monitor
 -- @param dir: such as "script/", "model/", "character"
 function FileSystemWatcher:AddDirectory(dir)
-	self.dirs = self.dirs or {};
-	if(not self.dirs[dir]) then
+	dir = self:NormalizeDirectory(dir);
+	if(not self:hasParentDirectory(dir)) then
 		self.dirs[dir] = true;
 		
 		watcher_dirs[self.name] = watcher_dirs[self.name] or {};
 		if(not watcher_dirs[self.name][dir]) then
 			watcher_dirs[self.name][dir] = 1;
 			local watcher = ParaIO.GetFileSystemWatcher(self.name);
-			watcher:AddDirectory(self:NormalizeDirectory(dir));
+			watcher:AddDirectory(dir);
 		else
 			watcher_dirs[self.name][dir] = watcher_dirs[self.name][dir]+ 1;	
 		end	
 	end
-end
-
--- remove this file watcher. 
-function FileSystemWatcher:Destroy()
-	watcher_dirs[self.name] = nil;
-	ParaIO.DeleteFileSystemWatcher(self.name);
 end
 
 -- remove a dir to watch 

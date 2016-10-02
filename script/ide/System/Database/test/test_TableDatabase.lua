@@ -413,6 +413,11 @@ function TestRangedQuery()
 	db.rangedTest:find({ _id = { gt = 98, limit = 20} }, function(err, rows)
 		echo(rows); --> 99,100
 	end);
+	
+	db.rangedTest:exec("EXPLAIN QUERY PLAN select * from iIndex where name > 95 limit 3", function(err, rows)
+		echo(rows); 
+	end);
+
 end
 
 
