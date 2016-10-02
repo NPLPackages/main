@@ -267,6 +267,7 @@ PAGE_NO_SIDE_BAR = true;
 	.config(['$localStorageProvider', function ($localStorageProvider) {
         $localStorageProvider.setKeyPrefix('NPLDBManager');
     }]);
+
     app.controller('TableDBClientCtrl', function ($scope, $http, $localStorage, $location) {
         $scope.tables = [];
         $scope.tableRecord = [];
@@ -403,86 +404,95 @@ PAGE_NO_SIDE_BAR = true;
             editor.setOption("minLines", 5);
         }
 
-		// lua object str convert to json str 
 		function parse(text) {
-			return function (text) {
-				var result = "";
-				var index = 0;
-				while (text[index] != '{' && index < text.length) {
-					index++;
-				}
-				while (index < text.length) {
-					// 去key左侧空白
-					do {
-						result += text[index];  // { , }
-						index++;
-						if (index >= text.length) {
-							return result;
-						}
-						while (text[index] == ' ' || text[index] == '\t' || text[index] == '\r' || text[index] == '\n') {
-							index++
-							if (index >= text.length) {
-								return result;
-							}
-						}
-					} while (text[index] == '}' || text[index] == ',');
+            var result = "";
+            var index = 0;
+            while (text[index] != '{' && index < text.length) {
+                index++;
+            }
+            while (index < text.length) {
+                while (text[index] == ' ' || text[index] == '\t' || text[index] == '\r' || text[index] == '\n') {
+                    index++
+                    if (index >= text.length) {
+                        return result;
+                    }
+                }
+                // 去key左侧空白
+                do {
+                    if (result.length > 0  && result[result.length-1] == ',' && text[index] == '}') {
+                        result = result.substr(0, result.length-1);
+                    }
 
-					result += '"'; // key 左 "
-					while (text[index] != ' ' && text[index] != '\t' && text[index] != '\r' && text[index] != '\n' && text[index] != '=') {
-						result += text[index];  // key
-						index++;
-						if (index >= text.length) {
-							return result;
-						}
-					}
-					result += '"'; // key 右 "
-					// 去=左侧空白
-					while (text[index] == ' ' || text[index] == '\t' || text[index] == '\r' || text[index] == '\n') {
-						index++;
-						if (index >= text.length) {
-							return result;
-						}
-					}
-					if (text[index] == '=') {
-						result += ':';
-						index++;
-					} else {
-						console.log("数据格式错误");
-						//return;
-					}
-					// 去value左侧空白
-					while (text[index] == ' ' || text[index] == '\t' || text[index] == '\r' || text[index] == '\n') {
-						index++
-						if (index >= text.length) {
-							return result;
-						}
-						;
-					}
+                    result += text[index];  // { , }
+                    index++;
+                    if (index >= text.length) {
+                        return result;
+                    }
 
-					if (text[index] >= '0' && text[index] <= '9') { // value = number
-						while (text[index] >= '0' && text[index] <= '9') {
-							result += text[index];  // value
-							index++;
-						}
-					} else if (text[index] == '"' || text[index] == "'") {   // value = string
-						strFlag = text[index];
-						result += text[index];
-						index++;
-						while (!(text[index - 1] != '\\' && text[index] == strFlag)) {
-							result += text[index];
-							index++;
-							if (index >= text.length) {
-								return result;
-							}
-						}
-						result += text[index];
-						index++;
-					} else {                                        // string = object
-						continue;
-					}
-				}
-				return result;
-			}(text).replace(/,}/g, '}');
-		}
+                    while (text[index] == ' ' || text[index] == '\t' || text[index] == '\r' || text[index] == '\n') { // 去key左侧空白
+                        index++
+                        if (index >= text.length) {
+                            return result;
+                        }
+                    }
+                } while (text[index] == '}' || text[index] == ',');
+
+
+                result += '"'; // key 左 "
+                while (text[index] != ' ' && text[index] != '\t' && text[index] != '\r' && text[index] != '\n' && text[index] != '=') {
+                    result += text[index];  // key
+                    index++;
+                    if (index >= text.length) {
+                        return result;
+                    }
+                }
+                result += '"'; // key 右 "
+                // 去=左侧空白
+                while (text[index] == ' ' || text[index] == '\t' || text[index] == '\r' || text[index] == '\n') {
+                    index++;
+                    if (index >= text.length) {
+                        return result;
+                    }
+                }
+                if (text[index] == '=') {
+                    result += ':';
+                    index++;
+                } else {
+                    console.log("数据格式错误");
+                    //return;
+                }
+                // 去value左侧空白
+                while (text[index] == ' ' || text[index] == '\t' || text[index] == '\r' || text[index] == '\n') {
+                    index++
+                    if (index >= text.length) {
+                        return result;
+                    }
+                    ;
+                }
+
+                if (text[index] >= '0' && text[index] <= '9') { // value = number
+                    while (text[index] >= '0' && text[index] <= '9') {
+                        result += text[index];  // value
+                        index++;
+                    }
+                } else if (text[index] == '"' || text[index] == "'") {   // value = string
+                    strFlag = text[index];
+                    result += text[index];
+                    index++;
+                    while (!(text[index - 1] != '\\' && text[index] == strFlag)) {
+                        result += text[index];
+                        index++;
+                        if (index >= text.length) {
+                            return result;
+                        }
+                    }
+                    result += text[index];
+                    index++;
+                } else {                                        // string = object
+                    continue;
+                }
+            }
+            return result;
+        }
     });
 </script>
