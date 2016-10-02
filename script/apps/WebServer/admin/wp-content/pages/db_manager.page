@@ -16,14 +16,11 @@ if(is_ajax()) then
 	local TableDatabase = commonlib.gettable("System.Database.TableDatabase");
 	local params = request:getparams();
 	local function getDBPath() 
-		return 'D:/NPL/NPLProject/wikicraft/database/npl/';
-		--[[
 		local dbPath = params.dbPath or "database/npl/";
 		if(not dbPath:match("[/\\]$")) then
 			dbPath = dbPath .. "/";
 		end
 		return dbPath;
-		]]--
 	end
 	
 	local getTables = function()
@@ -73,6 +70,24 @@ if(is_ajax()) then
 		return {total=count, table = data};
 	end
 
+	add_action('wp_ajax_beautify',function()
+		if(params.code) then
+			local o = NPL.LoadTableFromString(params.code);
+			if(o) then
+				response:send({code=commonlib.serialize(o, true)});
+				return;
+			end
+		end
+		response:send({});
+	end);
+	add_action('wp_ajax_tojson',function()
+		local o = params.code and NPL.LoadTableFromString(params.code);
+		if(o) then
+			response:send(o);
+		else
+			response:status(404):send({});
+		end
+	end);
 	-- db_handle:EnableSyncMode(true);
 	add_action('wp_ajax_curd',function()
 		local db_handle = TableDatabase:new():connect(getDBPath(), function() end);
@@ -139,47 +154,6 @@ if(is_ajax()) then
 		--local db_handle = TableDatabase:new():connect(getDBPath(), function() end);
 		wp_send_json(getTableRecord());
 	end)
-	--[[
-	add_action('wp_ajax_execSql', function() 
-		local tableName = params.tableName;
-		local sqlStr = params.sqlStr;
-		local db_handle = TableDatabase:new():connect('D:/NPL/NPLProject/wikicraft/database/npl/', function() end);
-		local table = db_handle:collection(tableName);
-		table:exec(sqlStr, function(err, data) resume() end)
-		yield();
-		wp_send_json(getTableRecord());
-	end)
-
-	add_action('wp_ajax_updateRecord', function() 
-		--local db_handle = TableDatabase:new():connect(getDBPath(), function() end);
-		local db_handle = TableDatabase:new():connect('D:/NPL/NPLProject/wikicraft/database/npl/', function() end);
-		local tableName = params.tableName;
-		local sqlStr = string.format("update Collection set value = %s where id = %d;", params.value, params.id);
-		local table = db_handle:collection(tableName);
-		table:exec(sqlStr, function(err, data) resume(err, data) end)
-		err, data = yield();
-		wp_send_json(getTableRecord());
-
-	end)
-
-	add_action('wp_ajax_deleteRecord', function() 
-		--local db_handle = TableDatabase:new():connect(getDBPath(), function() end);
-		local db_handle = TableDatabase:new():connect('D:/NPL/NPLProject/wikicraft/database/npl/', function() end);
-		local tableName = params.tableName;
-		local sqlStr = string.format("delete from Collection where id = %d;", params.id);
-		local table = db_handle:collection(tableName);
-		table:exec(sqlStr, function(err, data) resume(err, data) end)
-		err, data = yield();
-		wp_send_json(getTableRecord());
-	end)
-
-	add_action('wp_ajax_test', function() 
-		local db_handle = TableDatabase:new():connect('D:/NPL/NPLProject/wikicraft/database/npl/', function() end);
-		db_handle.TestUser:find({name="user11"}, function(err, rows) resume(err, rows) end);
-		err, rows = yield();
-		wp_send_json(rows);
-	end)
-	]]--
 	return;
 end
 wp_enqueue_script("jqueryui", "/wp-includes/js/jquery/jquery-ui.min.js"); 
@@ -250,7 +224,7 @@ PAGE_NO_SIDE_BAR = true;
 							{{operation == 'insert' ? 'Add' : 'Modify'}} Record
 						</div>
 						<div class="panel-body">
-							<div id="editor">object={}</div>
+							<div id="editor">{}</div>
 							<div style="padding:10px 10px">
 								<button type="button" ng-click="submitRecord()" class="btn btn-default" style="width:100%">{{operation == 'insert' ? 'Add' : 'Modify'}}</button>
 							</div>
@@ -301,28 +275,31 @@ PAGE_NO_SIDE_BAR = true;
         $scope.newRecord = function () {
             $scope.operation = 'insert';
 			$scope.errMsg = "";
-			ace.edit("editor").setValue('object={}');
+			ace.edit("editor").setValue('{}');
         }
         $scope.editRecord = function (obj) {
 			$scope.errMsg = "";
             $scope.operation = 'update';
 			$scope.editRecordId = obj.id;
-			ace.edit("editor").setValue("object="+obj.value);
+			$http.post(urlPrefix+'beautify',{code:obj.value}).then(function (response) {
+				var code = response.data.code;
+				ace.edit("editor").setValue(code);
+			})
         }
         $scope.submitRecord = function () {
-			try {
-				var obj = JSON.parse(parse(ace.edit("editor").getValue()));
-            } catch(e) {
-				$scope.errMsg = "data format error";
-				return;
-			}
-			if ($scope.operation == 'insert') {
-                $scope.addRecord(obj);
-            } else {
-                $scope.updateRecord($scope.editRecordId, obj);
-            }
-			$scope.newRecord();
-			$scope.errMsg = "";
+			var code = ace.edit("editor").getValue();
+			$http.post(urlPrefix+'tojson',{code:code}).then(function (response) {
+				var obj = response.data;
+				if ($scope.operation == 'insert') {
+					$scope.addRecord(obj);
+				} else {
+					$scope.updateRecord($scope.editRecordId, obj);
+				}
+				$scope.newRecord();
+				$scope.errMsg = "";
+			}).catch(function (response) {
+			    $scope.errMsg = "data format error";
+			});
         }
 
         $scope.editIndex = function (index) {
@@ -399,8 +376,9 @@ PAGE_NO_SIDE_BAR = true;
             editor.setTheme("ace/theme/github");
             editor.session.setMode("ace/mode/lua");
             editor.setAutoScrollEditorIntoView(true);
-            editor.setOption("maxLines", 20);
+            editor.setOption("maxLines", 200);
             editor.setOption("minLines", 5);
+			editor.renderer.setShowGutter(false);
         }
 
 		// lua object str convert to json str 
