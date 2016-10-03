@@ -24,6 +24,8 @@ function TestSQLOperations()
 	-- indices are NOT forced to be unique. The caller needs to ensure this see `insertOne` below. 
 	db.User:find({name="1",}, function(err, rows) assert(#rows==2); end);
 	db.User:find({name="1", email="1@1"}, function(err, rows) assert(rows[1].email=="1@1"); end);
+	-- find with compound index of name and email
+	db.User:find({ ["+name+email"] = {"1", "1@1"} }, function(err, rows) assert(#rows==1); end);
 	
 	-- force insert
 	db.User:insertOne(nil, {name="LXZ", password="123"}, function(err, data)  assert(data.password=="123") 	end)
@@ -61,6 +63,8 @@ function TestSQLOperations()
 	db.User:removeIndex({"email", "name"}, function(err, bSucceed) assert(bSucceed == true) end)
 	-- full table scan without using index by query with array items.
 	db.User:find({ {"name", "LXZ"}, {"password", "1"} }, function(err, rows) assert(#rows==1 and rows[1].name=="LXZ"); end);
+	-- find with left subset of previously created compound key "+name+email"
+	db.User:find({ ["+name"] = {"1", limit=2} }, function(err, rows) assert(#rows==2); end);
 	-- return at most 1 row whose id is greater than -1
 	db.User:find({ _id = { gt = -1, limit = 1, skip == 1} }, function(err, rows) assert(#rows==1); echo("all tests succeed!") end);
 end
@@ -504,22 +508,28 @@ function TestCompoundIndex()
 			state = (i%3 == 0) and "china" or "usa"}, function() end)
 	end
 
-	-- let us create a compound key on +company+name (only the right most key can be paged)
-	-- `+` means index should use ascending order, `-` means descending. so "+company-name"
+	-- compound key can also be created on single field "+company". it differs from standard key "company". 
+	db.compoundTest:find({["+company"] = {"paraengine", limit=5, skip=3}}, function(err, users)  
+		assert(#users == 5)
+	end);
+
+	-- create a compound key on +company+name (only the right most key can be paged)
+	-- `+` means index should use ascending order, `-` means descending. such as "+company-name"
+	-- it will remove "+company" key, since the new component key already contains the "+company". 
 	db.compoundTest:find({["+company+name"] = {"tatfook", gt="", limit=5, skip=3}}, function(err, users)  
-		echo(users) 
+		assert(#users == 5)
 	end);
 
 	-- a query of exact same left keys after a compound key is created will automatically use 
 	-- the previously created compound key, so "+company",  "+company+name" in following query are the same.
 	db.compoundTest:find({["+company"] = {"tatfook", limit=5, skip=3}}, function(err, users)  
-		echo(users) 
+		assert(#users == 5)
 	end);
 
 	-- the order of key names in compound index is important. for example:
 	-- "+company+state+name" shares the same compound index with "+company" and "+company+state"
 	-- "+state+name+company" shares the same compound index with "+state" and "+state+name"
 	db.compoundTest:find({["+state+name+company"] = {"china", gt="name50", limit=5, skip=3}}, function(err, users)  
-		echo(users) 
+		assert(#users == 5)
 	end);
 end

@@ -673,8 +673,8 @@ function stmt_class.bind(stmt, ...)
   if type(arg[1]) == "table" and arg.n == 1 and stmt.mapping and stmt.paranames then
     bind_by_names(arg[1])
   else
-    if arg.n < stmt.parameter_count then error("stmt:bind: to few parameters.") end
-    if arg.n > stmt.parameter_count then error("stmt:bind: to many parameters.") end
+    if arg.n < stmt.parameter_count then error("stmt:bind: too few parameters.") end
+    if arg.n > stmt.parameter_count then error("stmt:bind: too many parameters.") end
     
     if stmt.mapping then
       bind_with_mapping(arg)

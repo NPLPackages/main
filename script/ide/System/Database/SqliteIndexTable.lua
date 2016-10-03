@@ -17,6 +17,7 @@ local kIndexTableColumns = [[
 
 function IndexTable:ctor()
 	self.names = {};
+	self.statements = {};
 end
 
 function IndexTable:init(name, parent)
@@ -63,6 +64,20 @@ function IndexTable:CloseSQLStatement(name)
 	end
 end
 
+-- get cached sql statement
+function IndexTable:GetStatement(sql)
+	local stat = self.statements[sql];
+	if(not stat) then
+		local err;
+		stat, err = self:GetDB():prepare(sql);
+		if(not stat and err) then
+			LOG.std(nil, "error", "SqliteStore", "error for sql statement %s, reason: %s", sql, tostring(err));
+		end
+		self.statements[sql] = stat;
+	end
+	return stat;
+end
+
 -- When sqlite_master table(schema) is changed, such as when new index table is created, 
 -- all cached statements becomes invalid. And this function should be called to purge all statements created before.
 function IndexTable:ClearStatementCache()
@@ -73,6 +88,13 @@ function IndexTable:ClearStatementCache()
 	self:CloseSQLStatement("select_ids_stat");
 	self:CloseSQLStatement("sel_all_stat");
 	self:CloseSQLStatement("update_stat");
+
+	if(next(self.statements)) then
+		for name, stat in pairs(self.statements) do
+			stat:close();
+		end
+		self.statements = {};
+	end
 end
 
 -- get first matching row id

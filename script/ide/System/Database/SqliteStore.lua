@@ -309,7 +309,7 @@ function SqliteStore:AddIndexTableImp(indexTable)
 			local oldIndex = self.indexes[key];
 			if(oldIndex and oldIndex~=indexTable) then
 				-- destroy old index.
-				LOG.std(nil, "info", "SqliteStore", "old index %s should be replaced by new index %s", oldIndex:GetName(),  indexTable:GetName());
+				LOG.std(nil, "info", "SqliteStore", "old index %s will be replaced by new index %s", oldIndex:GetName(),  indexTable:GetName());
 				self:RemoveIndexImp(oldIndex:GetName());
 			end
 			self.indexes[key] = indexTable;
