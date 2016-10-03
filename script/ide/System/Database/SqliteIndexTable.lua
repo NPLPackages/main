@@ -2,7 +2,7 @@
 Title: Index table for sqlitestore
 Author(s): LiXizhi, 
 Date: 2016/5/11
-Desc: 
+Desc: mostly for index-intersection, this is very different from CompoundIndex.
 use the lib:
 ------------------------------------------------------------
 NPL.load("(gl)script/ide/System/Database/SqliteIndexTable.lua");
@@ -16,12 +16,32 @@ local kIndexTableColumns = [[
 	cid TEXT)]];
 
 function IndexTable:ctor()
+	self.names = {};
 end
 
 function IndexTable:init(name, parent)
 	self.name = name;
+	self:AddKeyName(name);
 	self.parent = parent;
 	return self;
+end
+
+function IndexTable:GetName()
+	return self.name;
+end
+
+-- get all key names {name=true, ...}, where this index can be used for query
+function IndexTable:GetKeyNames()
+	return self.names;
+end
+
+function IndexTable:AddKeyName(name)
+	self.names[name] = true;
+end
+
+-- return true if this index support query for the given key name
+function IndexTable:HasKeyName(name)
+	return name and self.names[name];
 end
 
 function IndexTable:GetDB()
@@ -48,7 +68,6 @@ end
 function IndexTable:ClearStatementCache()
 	self:CloseSQLStatement("add_stat");
 	self:CloseSQLStatement("del_stat");
-	self:CloseSQLStatement("sel_row_stat");
 	self:CloseSQLStatement("select_stat");
 	self:CloseSQLStatement("select_gt_stat");
 	self:CloseSQLStatement("select_ids_stat");
@@ -121,34 +140,68 @@ function IndexTable:getIds(value)
 	end
 end
 
--- return the first matching row
--- return {id=number, value=string}. or nil if not exist.
-function IndexTable:getRow(value)
-	local id = self:getId(value);
-	if(id) then
-		self.sel_row_stat = self.sel_row_stat or self:GetDB():prepare([[SELECT * FROM Collection WHERE id=?]]);
-		if(self.sel_row_stat) then
-			self.sel_row_stat:bind(id);
-			self.sel_row_stat:reset();
-			return self.sel_row_stat:first_row();
-		else
-			LOG.std(nil, "error", "IndexTable", "failed to create select row statement");
+-- @param cid: collection id
+-- @param newRow: can be partial row containing the changed value
+-- @param oldRow: can be partial row containing the old value
+function IndexTable:updateIndex(cid, newRow, oldRow)
+	if(newRow) then
+		local newIndexValue = newRow[self.name];
+		if(newIndexValue~=nil) then
+			if(newRow and oldRow) then
+				local oldIndexValue = oldRow[self.name];
+				if(newIndexValue ~= oldIndexValue) then
+					if(oldIndexValue~=nil) then
+						self:removeIndex(oldRow, cid);
+					end
+					self:addIndex(newRow, cid);
+				end
+			else
+				self:addIndex(newRow, cid);
+			end
+		end
+	end
+end
+
+-- add index to collection row id
+-- @param row: row data
+-- @param cid: collection row id
+function IndexTable:addIndex(row, cid)
+	local value;
+	if(type(row) == "table") then
+		value = row[self.name];
+	end
+	if(value~=nil and cid) then
+		cid = tostring(cid);
+		local ids = self:getIds(value);
+		if(not ids) then
+			self.add_stat = self.add_stat or self:GetDB():prepare([[INSERT INTO ]]..self:GetTableName()..[[(name, cid) VALUES (?, ?)]]);
+			self.add_stat:bind(value, cid);
+			self.add_stat:exec();
+		elseif(ids ~= cid and not self:hasIdInIds(cid, ids)) then
+			ids = self:addIdToIds(cid, ids);
+			self.update_stat = self.update_stat or self:GetDB():prepare([[UPDATE ]]..self:GetTableName()..[[  Set cid=? Where name=?]]);
+			self.update_stat:bind(ids, value);
+			self.update_stat:exec();
 		end
 	end
 end
 
 -- this will remove the index to collection db for the given keyvalue. 
 -- but it does not remove the real data item in collection db.
--- @param value: value of the key to remove
+-- @param row: table row
 -- @param cid: default to nil. if not nil we will only remove when collection row id matches this one. 
-function IndexTable:removeIndex(value, cid)
-	if(value) then
+function IndexTable:removeIndex(row, cid)
+	local value;
+	if(type(row) == "table") then
+		value = row[self.name];
+	end
+	if(value~=nil) then
 		if(cid) then
 			cid = tostring(cid);
 			local ids = self:getIds(value);
 			if(ids) then
 				if(ids == cid) then
-					self:removeIndex(value);
+					self:removeIndex(row);
 				else
 					local new_ids = self:removeIdInIds(cid, ids);
 					if(new_ids ~= ids) then
@@ -157,7 +210,7 @@ function IndexTable:removeIndex(value, cid)
 							self.update_stat:bind(new_ids, value);
 							self.update_stat:exec();
 						else
-							self:removeIndex(value);
+							self:removeIndex(row);
 						end
 					else
 						-- no index found
@@ -237,26 +290,6 @@ function IndexTable:getArrayFromIds(ids)
 	return array;
 end
 
--- add index to collection row id
--- @param value: value of the key 
--- @param cid: collection row id
-function IndexTable:addIndex(value, cid)
-	if(value and cid) then
-		cid = tostring(cid);
-		local ids = self:getIds(value);
-		if(not ids) then
-			self.add_stat = self.add_stat or self:GetDB():prepare([[INSERT INTO ]]..self:GetTableName()..[[(name, cid) VALUES (?, ?)]]);
-			self.add_stat:bind(value, cid);
-			self.add_stat:exec();
-		elseif(ids ~= cid and not self:hasIdInIds(cid, ids)) then
-			ids = self:addIdToIds(cid, ids);
-			self.update_stat = self.update_stat or self:GetDB():prepare([[UPDATE ]]..self:GetTableName()..[[  Set cid=? Where name=?]]);
-			self.update_stat:bind(ids, value);
-			self.update_stat:exec();
-		end
-	end
-end
-
 -- creating index for existing rows
 function IndexTable:CreateTable()
 	self.parent:FlushAll();
@@ -312,11 +345,11 @@ end
 
 function IndexTable:Destroy()
 	self.parent:FlushAll();
+	self:ClearStatementCache();
+
 	self:GetDB():exec(format("DELETE FROM Indexes WHERE name='%s'", self.name));
-	-- NOTE: for unknown reasons, if we drop table, the next find operation return nothing, even we reopen the database. 
-	-- self:GetDB():exec("DROP TABLE "..self:GetTableName()); self.parent:Reopen();
-	-- so instead of dropping tables, we simply remove all data in it. 
-	self:GetDB():exec("DELETE FROM "..self:GetTableName());
+	self:GetDB():exec("DROP TABLE "..self:GetTableName()); 
+	-- self:GetDB():exec("DELETE FROM "..self:GetTableName());
 	LOG.std(nil, "info", "SqliteStore", "index `%s` removed from %s", self.name, self.parent:GetFileName());
 	self.parent:ClearStatementCache();
 end

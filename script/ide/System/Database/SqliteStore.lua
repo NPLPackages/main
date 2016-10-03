@@ -11,6 +11,7 @@ local SqliteStore = commonlib.gettable("System.Database.SqliteStore");
 ]]
 NPL.load("(gl)script/ide/System/Database/Store.lua");
 NPL.load("(gl)script/ide/System/Database/SqliteIndexTable.lua");
+NPL.load("(gl)script/ide/System/Database/SqliteCompoundIndex.lua");
 local IndexTable = commonlib.gettable("System.Database.SqliteStore.IndexTable");
 local type = type;
 local SqliteStore = commonlib.inherit(commonlib.gettable("System.Database.Store"), commonlib.gettable("System.Database.SqliteStore"));
@@ -111,7 +112,9 @@ function SqliteStore:ClearStatementCache()
 	self:CloseSQLStatement("insert_stat");
 	
 	for name, indexTable in pairs(self.indexes) do
-		indexTable:ClearStatementCache();
+		if(indexTable:GetName() == name) then
+			indexTable:ClearStatementCache();
+		end
 	end
 end
 
@@ -267,11 +270,21 @@ function SqliteStore:DropAllMetaTables()
 	self:End(); -- commit changes
 end
 
+function SqliteStore:LoadIndexByName(name)
+	local indexTable;
+	if(name:match("^[%+%-]")) then
+		indexTable = SqliteStore.CompoundIndexTable:new():init(name, self);
+	else
+		indexTable = SqliteStore.IndexTable:new():init(name, self);
+	end
+	return indexTable;
+end
+
 function SqliteStore:FetchIndexes()
 	local stmt = assert(self._db:prepare([[SELECT * FROM Indexes]]));
 	for row in stmt:rows() do
 		if(row.name) then
-			self.indexes[row.name] = IndexTable:new(row):init(row.name, self);
+			self:AddIndexTableImp(self:LoadIndexByName(row.name))
 		end
 	end
 	stmt:close();
@@ -282,12 +295,26 @@ function SqliteStore:GetIndex(name, bCreateIfNotExist)
 	local indexTable = self.indexes[name];
 	if(not indexTable) then
 		if(bCreateIfNotExist and name~="_id") then
-			indexTable = IndexTable:new():init(name, self);
+			indexTable = self:LoadIndexByName(name);
 			indexTable:CreateTable();
-			self.indexes[name] = indexTable;
+			self:AddIndexTableImp(indexTable);
 		end
 	end
 	return indexTable;
+end
+
+function SqliteStore:AddIndexTableImp(indexTable)
+	if(indexTable) then	
+		for key, _ in pairs(indexTable:GetKeyNames()) do
+			local oldIndex = self.indexes[key];
+			if(oldIndex and oldIndex~=indexTable) then
+				-- destroy old index.
+				LOG.std(nil, "info", "SqliteStore", "old index %s should be replaced by new index %s", oldIndex:GetName(),  indexTable:GetName());
+				self:RemoveIndexImp(oldIndex:GetName());
+			end
+			self.indexes[key] = indexTable;
+		end
+	end
 end
 
 -- @param name: if nil all indices are removed. 
@@ -295,31 +322,37 @@ function SqliteStore:RemoveIndexImp(name)
 	if(not name) then
 		-- remove all indices
 		local names = {};
-		for name, _ in pairs(self.indexes) do
-			names[#names+1] = name;
+		for name, indexTable in pairs(self.indexes) do
+			names[indexTable:GetName()] = true;
 		end
-		for _, name in ipairs(names) do
+		for name, _ in pairs(names) do
 			self:RemoveIndexImp(name);
 		end
 	else
 		local indexTable = self:GetIndex(name);
 		if(indexTable) then
-			indexTable:Destroy()
-			self.indexes[name] = nil;
+			indexTable:Destroy();
+			for key, _ in pairs(indexTable:GetKeyNames()) do
+				if(self.indexes[key] == indexTable) then
+					self.indexes[key] = nil;
+				end
+			end
 		end
 	end
 end
 
+
 -- get index Table from query
 -- @param bAutoCreateIndex: if true, index is automatically created.
--- @return:  indexTable, value: indexTable is nil if there is no index found or _id is found in query. 
-function SqliteStore:GetIndexFromQuery(query, bAutoCreateIndex)
+-- @return: indexTable, queryValue: indexTable is nil if there is no index found or _id is found in query. 
+-- queryValue can be the value or a table containing more query info. 
+function SqliteStore:FindIndexFromQuery(query, bAutoCreateIndex)
 	local id = query._id;
 	if(id) then
 		return nil, id;
 	else
 		for name, value in pairs(query) do
-			if(type(name)=="string" and value and value~="") then
+			if(type(name)=="string") then
 				local indexTable = self:GetIndex(name, bAutoCreateIndex);
 				if(indexTable) then
 					return indexTable, value;
@@ -329,17 +362,31 @@ function SqliteStore:GetIndexFromQuery(query, bAutoCreateIndex)
 	end
 end
 
--- check additional fields in query's array fields. 
--- return row if row matched all query field, otherwise it will return nil.
-function SqliteStore:filterRowByQuery(row, query)
-	if(row and query) then
-		for i, item in ipairs(query) do
-			if(type(item) == "table" and item[1] and row[item[1]] ~= item[2]) then
-				return;
-			end
+-- get just one row id from query string.
+-- @param bAutoCreateIndex: if true, index is automatically created.
+-- @return nil if there is no index. false if the record does not exist in collection. otherwise return the row id.
+function SqliteStore:FindRowId(query, bAutoCreateIndex)
+	local indexTable, queryValue = self:FindIndexFromQuery(query, bAutoCreateIndex)
+	if(queryValue) then
+		local id;
+		if(indexTable) then
+			id = indexTable:getId(queryValue);
+		else
+			id = queryValue;
 		end
+		return id;
 	end
-	return row;
+end
+
+-- internally it will use just a single statement to search both index and collection table.
+-- so it is faster than using two statements for each table.
+-- return nil or the row object. _id is injected.
+function SqliteStore:findCollectionRow(query, bAutoIndex)
+	local id = self:FindRowId(query, bAutoCreateIndex)
+	if(id) then
+		local row = self:InjectID(self:getCollectionRow(id), id);
+		return self:filterRowByQuery(row, query);
+	end
 end
 
 function SqliteStore:getCollectionRow(id)
@@ -361,26 +408,6 @@ function SqliteStore:getCollectionRow(id)
 	end
 end
 
--- internally it will use just a single statement to search both index and collection table.
--- so it is faster than using two statements for each table.
--- return nil or the row object. _id is injected.
-function SqliteStore:findCollectionRow(query, bAutoIndex)
-	local indexTable, value = self:GetIndexFromQuery(query, bAutoIndex);
-	local err, data;
-	if(value) then
-		if(indexTable) then
-			local row = indexTable:getRow(value);
-			if(row) then
-				local row = self:InjectID(NPL.LoadTableFromString(row.value) or {}, row.id);
-				return self:filterRowByQuery(row, query);
-			end
-		else
-			local id = value;
-			local row = self:InjectID(self:getCollectionRow(id), id);
-			return self:filterRowByQuery(row, query);
-		end
-	end
-end
 
 -- auto indexed
 function SqliteStore:findOne(query, callbackFunc)
@@ -489,6 +516,78 @@ function SqliteStore:InjectID(data, id)
 	return data;
 end
 
+-- convert right to typeLeft, where typeLeft is "number" or "string"
+local function convertToType(typeLeft, right)
+	if(typeLeft ~= type(right) and right) then
+		if(typeLeft == "number") then
+			right = tonumber(right) or -1;
+		else
+			right = tostring(right);
+		end
+	end
+	return right;
+end
+
+-- return true if equal. currently only number and string type can use ranged compare 
+local function compareValue_(left, right, greaterthan, lessthan)
+	if(not greaterthan and not lessthan) then
+		return left == right;
+	else
+		local typeLeft = type(left);
+		if((typeLeft=="number" or typeLeft=="string")) then
+			return (not greaterthan or left>convertToType(typeLeft, greaterthan)) and 
+			       (not lessthan or left<convertToType(typeLeft, lessthan));
+		else
+			return false; -- can not be compared
+		end
+	end
+end
+
+-- only the limit and offset is honored, all others are ignored. 
+function SqliteStore:getQueryLimit(query)
+	local limit, offset;
+	for name, item in pairs(query) do
+		if(type(item) == "table") then
+			if(type(name) == "number")then
+				if(type(item[2]) == "table") then
+					limit = limit or item[2].limit;
+					offset = offset or item[2].offset;
+				end
+			else
+				limit = limit or item.limit;
+				offset = offset or item.offset;
+			end
+		end
+	end
+	return limit, offset;
+end
+
+-- check additional fields in query's array fields. 
+-- return row if row matched all query field, otherwise it will return nil.
+function SqliteStore:filterRowByQuery(row, query)
+	if(row and query) then
+		for i, item in ipairs(query) do
+			if(type(item) == "table")then
+				local key = item[1];
+				local value = item[2];
+				if(key) then
+					if(type(value) == "table") then
+						local greaterthan, lessthan;
+						greaterthan = value["gt"];
+						lessthan = value["lt"];
+						if(compareValue_(row[key], value["eq"], greaterthan, lessthan)) then
+						else
+							return;
+						end
+					elseif(row[key] ~= value) then
+						return;
+					end
+				end
+			end
+		end
+	end
+	return row;
+end
 -- @param value: any number or string value. or table { gt = value, lt=value, limit = number, offset|skip=number }.
 -- value.gt: greater than this value, result in accending order
 -- value.lt: less than this value
@@ -565,7 +664,7 @@ function SqliteStore:findRowIds(query, bAutoCreateIndex)
 	
 	-- if no index, return nil to inform brutal force search
 	for name, value in pairs(query) do
-		if(type(name)=="string" and name~="_unset" and value and value~="") then
+		if(type(name)=="string" and name~="_unset") then
 			local indexTable = self:GetIndex(name, bAutoCreateIndex);
 			if(indexTable) then
 				hasIndex = true;
@@ -629,6 +728,9 @@ function SqliteStore:findRowsViaTableScan(query)
 				rows[#rows+1] = self:InjectID(obj, row.id);		
 			end
 		else
+			local limit, offset = self:getQueryLimit(query)
+
+			local matchCount = 0;
 			for row in self.sel_all_stat:rows() do
 				local obj = NPL.LoadTableFromString(row.value) or {};
 				obj = self:filterRowByQuery(obj, query);
@@ -640,7 +742,14 @@ function SqliteStore:findRowsViaTableScan(query)
 						end
 					end
 					if(bMatched) then
-						rows[#rows+1] = self:InjectID(obj, row.id);		
+						matchCount = matchCount + 1;
+						if(not offset or matchCount > offset) then
+							if(not limit or #rows < limit) then
+								rows[#rows+1] = self:InjectID(obj, row.id);		
+							else
+								break;
+							end
+						end
 					end
 				end
 			end
@@ -662,29 +771,6 @@ function SqliteStore:find(query, callbackFunc)
 	return self:InvokeCallback(callbackFunc, err, rows);
 end
 
--- get just one row id from query string.
--- @param bAutoCreateIndex: if true, index is automatically created.
--- @return nil if there is no index. false if the record does not exist in collection. otherwise return the row id.
-function SqliteStore:GetRowId(query, bAutoCreateIndex)
-	local id = query._id;
-	if(id) then
-		return id;
-	else
-		for name, value in pairs(query) do
-			if(type(name)=="string" and value and value~="") then
-				local indexTable = self:GetIndex(name, bAutoCreateIndex);
-				if(indexTable) then
-					local id = indexTable:getId(value);
-					if(id) then
-						return id;
-					end
-					return false;
-				end
-			end
-		end
-	end
-end
-
 function SqliteStore:updateOne(query, update, callbackFunc)
 	self:CommandTick("update");
 	update = update or query;
@@ -693,22 +779,33 @@ function SqliteStore:updateOne(query, update, callbackFunc)
 		update._unset = nil;
 	end
 	local err, data;
-	local id = self:GetRowId(query, false);
+	local id = self:FindRowId(query, false);
 	if(id) then
 		update._id = nil;
 		data = self:getCollectionRow(id);
+		
+		if(not data) then
+			-- remove index, since row does not exist. This should only happen for corrupted index table.
+			if(not query._id) then
+				for name, value in pairs(query) do
+					if(type(name)=="string") then
+						local indexTable = self:GetIndex(name, false);
+						if(indexTable) then
+							indexTable:removeIndex(query, id);
+							LOG.std(nil, "warn", "SqliteStore",  "corrupted index: remove index for non-exist row %d", id);
+						end
+					end
+				end
+			end
+		end
+
 		data = self:filterRowByQuery(data, query);
 		if(data) then
 			self:Begin();
 			-- just in case some index value is changed, update index first
 			for name, indexTable in pairs(self.indexes) do
-				local oldIndexValue = data[name];
-				local newIndexValue = update[name];
-				if(newIndexValue~= oldIndexValue and newIndexValue and newIndexValue~="") then
-					if(oldIndexValue and oldIndexValue~="") then
-						indexTable:removeIndex(oldIndexValue, id);
-					end
-					indexTable:addIndex(newIndexValue, id);
+				if(indexTable:GetName() == name) then
+					indexTable:updateIndex(id, update, data)
 				end
 			end
 			-- update row
@@ -722,10 +819,7 @@ function SqliteStore:updateOne(query, update, callbackFunc)
 					name = (type(name) == "number") and value or name;
 					local indexTable = self.indexes[name];
 					if(indexTable) then
-						local oldIndexValue = data[name];
-						if(oldIndexValue and oldIndexValue~="") then
-							indexTable:removeIndex(oldIndexValue, id);
-						end
+						indexTable:removeIndex(data, id);
 					end
 					data[name] = nil;
 				end
@@ -741,20 +835,6 @@ function SqliteStore:updateOne(query, update, callbackFunc)
 			end
 
 			self:End();
-		else
-			-- remove index, since row does not exist. This should only happen for corrupted index table.
-			if(not query._id) then
-				for name, value in pairs(query) do
-					local keyValue = query[name];
-					if(type(name)=="string" and keyValue and keyValue~="") then
-						local indexTable = self:GetIndex(name, false);
-						if(indexTable) then
-							indexTable:removeIndex(keyValue, id);
-							break;
-						end
-					end
-				end
-			end
 		end
 	end
 	return self:InvokeCallback(callbackFunc, err, self:InjectID(data, id));
@@ -789,9 +869,8 @@ function SqliteStore:insertOne(query, update, callbackFunc)
 		data = update;
 		-- update all index
 		for name, indexTable in pairs(self.indexes) do
-			local keyValue = update[name];
-			if(keyValue and keyValue~="") then
-				indexTable:addIndex(keyValue, id);
+			if(indexTable:GetName() == name) then
+				indexTable:addIndex(update, id);
 			end
 		end
 		self:End();
@@ -804,7 +883,7 @@ end
 function SqliteStore:deleteOne(query, callbackFunc)
 	self:CommandTick("delete");
 	local _, err, data;
-	local id = self:GetRowId(query, false);
+	local id = self:FindRowId(query, false);
 	if(id) then
 		local obj = self:getCollectionRow(id);
 		obj = self:filterRowByQuery(obj, query);
@@ -825,9 +904,8 @@ function SqliteStore:deleteOne(query, callbackFunc)
 
 			-- delete all indexes
 			for name, indexTable in pairs(self.indexes) do
-				local keyValue = obj[name];
-				if(keyValue and keyValue~="") then
-					indexTable:removeIndex(keyValue, id);
+				if(indexTable:GetName() == name) then
+					indexTable:removeIndex(obj, id);
 				end
 			end
 			

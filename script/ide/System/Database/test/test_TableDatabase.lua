@@ -5,6 +5,7 @@ Date: 2016/5/11
 Desc: 
 ]]
 
+-- basic tabledb command testing with asserts
 function TestSQLOperations()
 	NPL.load("(gl)script/ide/System/Database/TableDatabase.lua");
 	local TableDatabase = commonlib.gettable("System.Database.TableDatabase");
@@ -15,46 +16,53 @@ function TestSQLOperations()
 	-- clear all data
 	db.User:makeEmpty({}, function(err, count) echo("deleted"..(count or 0)) end);
 	-- insert 1
-	db.User:insertOne(nil, {name="1", email="1@1",}, function(err, data)  echo(data) 	end)
+	db.User:insertOne(nil, {name="1", email="1@1",}, function(err, data)  assert(data.email=="1@1") 	end)
 	-- insert 1 with duplicate name
-	db.User:insertOne(nil, {name="1", email="1@1.dup",}, function(err, data)  echo(data) 	end)
+	db.User:insertOne(nil, {name="1", email="1@1.dup",}, function(err, data)  assert(data.email=="1@1.dup") 	end)
 	
 	-- find or findOne will automatically create index on `name` and `email` field.
 	-- indices are NOT forced to be unique. The caller needs to ensure this see `insertOne` below. 
-	db.User:find({name="1",}, function(err, rows) echo(rows); end);
-	db.User:find({name="1", email="1@1"}, function(err, rows) echo(rows); end);
+	db.User:find({name="1",}, function(err, rows) assert(#rows==2); end);
+	db.User:find({name="1", email="1@1"}, function(err, rows) assert(rows[1].email=="1@1"); end);
 	
 	-- force insert
-	db.User:insertOne(nil, {name="LXZ", password="123"}, function(err, data)  echo(data) 	end)
+	db.User:insertOne(nil, {name="LXZ", password="123"}, function(err, data)  assert(data.password=="123") 	end)
 	-- this is an update or insert command, if the query has result, it will actually update first matching row rather than inserting one. 
 	-- this is usually a good way to force uniqueness on key or compound keys, 
-	db.User:insertOne({name="LXZ"}, {name="LXZ", password="1", email="lixizhi@yeah.net"}, function(err, data)  echo(data) 	end)
+	db.User:insertOne({name="LXZ"}, {name="LXZ", password="1", email="lixizhi@yeah.net"}, function(err, data)  assert(data.password=="1") 	end)
 
 	-- insert another one
-	db.User:insertOne({name="LXZ2"}, {name="LXZ2", password="123", email="lixizhi@yeah.net"}, function(err, data)  echo(data) 	end)
+	db.User:insertOne({name="LXZ2"}, {name="LXZ2", password="123", email="lixizhi@yeah.net"}, function(err, data)  assert(data.password=="123") 	end)
 	-- update one
-	db.User:updateOne({name="LXZ2",}, {name="LXZ2", password="2", email="lixizhi@yeah.net"}, function(err, data)  echo(data) end)
+	db.User:updateOne({name="LXZ2",}, {name="LXZ2", password="2", email="lixizhi@yeah.net"}, function(err, data)  assert(data.password=="2") end)
 	-- remove and update fields
-	db.User:updateOne({name="LXZ2",}, {_unset = {"password"}, updated="with unset"}, function(err, data)  echo(data) end)
+	db.User:updateOne({name="LXZ2",}, {_unset = {"password"}, updated="with unset"}, function(err, data)  assert(data.password==nil and data.updated=="with unset") end)
 	-- force flush to disk, otherwise the db IO thread will do this at fixed interval
-    db.User:flush({}, function(err, bFlushed) echo("flushed: "..tostring(bFlushed)) end);
+    db.User:flush({}, function(err, bFlushed) assert(bFlushed==true) end);
 	-- select one, this will automatically create `name` index
-	db.User:findOne({name="LXZ"}, function(err, user) echo(user);	end)
+	db.User:findOne({name="LXZ"}, function(err, user) assert(user.password=="1");	end)
 	-- array field such as {"password", "1"} are additional checks, but does not use index. 
-	db.User:findOne({name="LXZ", {"password", "1"}, {"email", "lixizhi@yeah.net"}}, function(err, user) echo(user);	end)
+	db.User:findOne({name="LXZ", {"password", "1"}, {"email", "lixizhi@yeah.net"}}, function(err, user) assert(user.password=="1");	end)
 	-- search on non-unqiue-indexed rows, this will create index `email` (not-unique index)
-	db.User:find({email="lixizhi@yeah.net"}, function(err, rows) echo(rows); end);
-	db.User:find({name="LXZ", email="lixizhi@yeah.net", {"password", "1"}, }, function(err, rows) echo(rows); end);
+	db.User:find({email="lixizhi@yeah.net"}, function(err, rows) assert(#rows==2); end);
+	-- search and filter result with password=="1"
+	db.User:find({name="LXZ", email="lixizhi@yeah.net", {"password", "1"}, }, function(err, rows) assert(#rows==1 and rows[1].password=="1"); end);
 	-- find all rows with custom timeout 1 second
-	db.User:find({}, function(err, rows) echo(rows); end, 1000);
+	db.User:find({}, function(err, rows) assert(#rows==4); end, 1000);
 	-- remove item
-	db.User:deleteOne({name="LXZ2"}, function(err, count) echo(count);	end);
+	db.User:deleteOne({name="LXZ2"}, function(err, count) assert(count==1);	end);
 	-- wait flush may take up to 3 seconds
-	db.User:waitflush({}, function(err, data) echo({data, "data is flushed"}) end);
+	db.User:waitflush({}, function(err, bFlushed) assert(bFlushed==true) end);
 	-- set cache to 2000KB
 	db.User:exec({CacheSize=-2000}, function(err, data) end);
 	-- run select command from Collection 
-	db.User:exec("Select * from Collection", function(err, rows) echo(rows) end);
+	db.User:exec("Select * from Collection", function(err, rows) assert(#rows==3) end);
+	-- remove index fields
+	db.User:removeIndex({"email", "name"}, function(err, bSucceed) assert(bSucceed == true) end)
+	-- full table scan without using index by query with array items.
+	db.User:find({ {"name", "LXZ"}, {"password", "1"} }, function(err, rows) assert(#rows==1 and rows[1].name=="LXZ"); end);
+	-- return at most 1 row whose id is greater than -1
+	db.User:find({ _id = { gt = -1, limit = 1, skip == 1} }, function(err, rows) assert(#rows==1); echo("all tests succeed!") end);
 end
 
 
@@ -342,6 +350,14 @@ function TestConnect()
 	db1.User:findOne({name="npl"}, function(err, data) echo(data) end);
 end
 
+function TestRemoveIndex()
+	NPL.load("(gl)script/ide/System/Database/TableDatabase.lua");
+	local TableDatabase = commonlib.gettable("System.Database.TableDatabase");
+	local db = TableDatabase:new():connect("temp/mydatabase/");	
+	db.testIndex:findOne({subkey1 = "", subkey2 = "", subkey3 = ""}, function() end)
+	db.testIndex:removeIndex({"subkey1"}, function() end)
+end
+
 function TestTable()
 	NPL.load("(gl)script/ide/System/Database/TableDatabase.lua");
 	local TableDatabase = commonlib.gettable("System.Database.TableDatabase");
@@ -414,6 +430,15 @@ function TestRangedQuery()
 		echo(rows); --> 99,100
 	end);
 	
+	-- do a full table scan without using index
+	db.rangedTest:find({ {"i", { gt = 55, limit=2, offset=1} }, {"data", {lt="data60"} }, }, function(err, rows)
+		echo(rows); --> 57,58
+	end);
+
+	db.rangedTest:find({ {"i", { gt = 55} }, {"data", "data60"}, }, function(err, rows)
+		echo(rows); --> 60
+	end);
+
 	db.rangedTest:exec("EXPLAIN QUERY PLAN select * from iIndex where name > 95 limit 3", function(err, rows)
 		echo(rows); 
 	end);
@@ -461,5 +486,40 @@ function TestPagination()
 		   -- page 3
 		   -- ...
 		end);
+	end);
+end
+
+function TestCompoundIndex()
+	NPL.load("(gl)script/ide/System/Database/TableDatabase.lua");
+	local TableDatabase = commonlib.gettable("System.Database.TableDatabase");
+	local db = TableDatabase:new():connect("temp/mydatabase/");	
+	
+	db.compoundTest:removeIndex({}, function(err, bRemoved) end);
+
+	-- compound keys
+	for i=1, 100 do
+		db.compoundTest:insertOne({name="name"..i}, { 
+			name="name"..i, 
+			company = (i%2 == 0) and "tatfook" or "paraengine", 
+			state = (i%3 == 0) and "china" or "usa"}, function() end)
+	end
+
+	-- let us create a compound key on +company+name (only the right most key can be paged)
+	-- `+` means index should use ascending order, `-` means descending. so "+company-name"
+	db.compoundTest:find({["+company+name"] = {"tatfook", gt="", limit=5, skip=3}}, function(err, users)  
+		echo(users) 
+	end);
+
+	-- a query of exact same left keys after a compound key is created will automatically use 
+	-- the previously created compound key, so "+company",  "+company+name" in following query are the same.
+	db.compoundTest:find({["+company"] = {"tatfook", limit=5, skip=3}}, function(err, users)  
+		echo(users) 
+	end);
+
+	-- the order of key names in compound index is important. for example:
+	-- "+company+state+name" shares the same compound index with "+company" and "+company+state"
+	-- "+state+name+company" shares the same compound index with "+state" and "+state+name"
+	db.compoundTest:find({["+state+name+company"] = {"china", gt="name50", limit=5, skip=3}}, function(err, users)  
+		echo(users) 
 	end);
 end
