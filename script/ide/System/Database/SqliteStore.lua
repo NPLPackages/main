@@ -382,7 +382,7 @@ end
 -- so it is faster than using two statements for each table.
 -- return nil or the row object. _id is injected.
 function SqliteStore:findCollectionRow(query, bAutoIndex)
-	local id = self:FindRowId(query, bAutoCreateIndex)
+	local id = self:FindRowId(query, bAutoIndex)
 	if(id) then
 		local row = self:InjectID(self:getCollectionRow(id), id);
 		return self:filterRowByQuery(row, query);
