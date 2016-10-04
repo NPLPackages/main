@@ -54,6 +54,53 @@ function IndexTable:GetTableName()
 	return self.tableName;
 end
 
+-- get total key count. 
+-- @param value: value of the key to get
+function IndexTable:getCount(value)
+	local count = 0;
+	if(type(value) ~= "table") then
+		value = {value}
+	end
+	if(value) then
+		local params = {};
+		local greaterthan, lessthan;
+		greaterthan = value["gt"];
+		lessthan = value["lt"];
+		local rangedKeyIndex = 1;
+		local sql = "SELECT count(*) as count FROM "..self:GetTableName().." WHERE ";
+		for i, subkey in ipairs(self.subkeys) do
+			if(value[i] ~= nil) then
+				sql = sql..format("%sname%d=? ", i==1 and "" or "AND ",  i);
+				params[#params+1] = value[i];
+				rangedKeyIndex = rangedKeyIndex+1;
+			else
+				break;
+			end
+		end
+		rangedKeyIndex = math.min(rangedKeyIndex, self:GetSubKeyCount());
+
+		if(greaterthan or lessthan) then
+			if(greaterthan) then
+				sql = sql..format("%sname%d>? ", #params==0 and "" or "AND ", rangedKeyIndex);
+				params[#params+1] = greaterthan;
+			end
+			if(lessthan) then
+				sql = sql..format("%sname%d<? ",  greaterthan and "AND " or "", rangedKeyIndex);
+				params[#params+1] = lessthan;
+			end
+		end
+
+		local stat = self:GetStatement(sql);
+		stat:bind(unpack(params));
+		local row, err = stat:first_row();
+		if(row) then
+			count = row.count;
+		end
+		stat:reset();
+	end
+	return count;
+end
+
 -- @param value: any number or string value. or table {value1, value2,  gt = value, lt=value, limit = number, offset|skip=number }.
 -- value.gt: greater than this value, result in accending order
 -- value.lt: less than this value
@@ -81,7 +128,7 @@ function IndexTable:getIds(value)
 			end
 		end
 		rangedKeyIndex = math.min(rangedKeyIndex, self:GetSubKeyCount());
-
+		
 		if(greaterthan or lessthan) then
 			if(greaterthan) then
 				sql = sql..format("%sname%d>? ", #params==0 and "" or "AND ", rangedKeyIndex);
@@ -94,7 +141,8 @@ function IndexTable:getIds(value)
 		end
 		local limit = value.limit or default_limit;
 		local offset = value.offset or value.skip or 0;
-		sql = sql..format(" ORDER BY name%d LIMIT ?,?", rangedKeyIndex);
+		local order =  self.subkeys[rangedKeyIndex].order > 0 and "ASC" or "DESC";
+		sql = sql..format(" ORDER BY name%d %s LIMIT ?,?", rangedKeyIndex, order);
 		params[#params+1] = offset;
 		params[#params+1] = limit;
 
@@ -210,10 +258,12 @@ function IndexTable:CreateTable()
 	stat:exec();
 	stat:close();
 	
-	local names, namefields, values;
+	local names, namefields, values, nameindices;
 	for i, subkey in ipairs(self.subkeys) do
 		names = names and (names..",name"..i) or ("name"..i);
 		namefields = namefields and (namefields..",name"..i.." BLOB") or ("name"..i.." BLOB");
+		local order = subkey.order > 0 and " ASC" or " DESC";
+		nameindices = nameindices and (nameindices..",name"..i..order) or ("name"..i..order);
 		values = values and (values..",?") or "?";
 	end
 
@@ -223,7 +273,7 @@ function IndexTable:CreateTable()
 	self:GetDB():exec(sql);
 	
 	-- also create compositive key on sqlite
-	local sql = format([[CREATE INDEX IF NOT EXISTS tabledb_%s_cpIdx on %s(%s)]], self:GetTableName(), self:GetTableName(), names);
+	local sql = format([[CREATE INDEX IF NOT EXISTS tabledb_%s_cpIdx on %s(%s)]], self:GetTableName(), self:GetTableName(), nameindices);
 	self:GetDB():exec(sql);
 	
 	-- rebuild all indices

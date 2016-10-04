@@ -232,3 +232,12 @@ function Collection:silient(query, callbackFunc, timeout)
 		return IORequest:Send("silient", self, query, callbackFunc, timeout);
 	end
 end
+
+-- calling this function will always timeout, since the server will not reply 
+function Collection:count(query, callbackFunc, timeout)
+	if(self:IsServer()) then
+		return self.storageProvider:count(query, callbackFunc);
+	else
+		return IORequest:Send("count", self, query, callbackFunc, timeout);
+	end
+end

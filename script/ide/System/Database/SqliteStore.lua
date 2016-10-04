@@ -12,10 +12,12 @@ local SqliteStore = commonlib.gettable("System.Database.SqliteStore");
 NPL.load("(gl)script/ide/System/Database/Store.lua");
 NPL.load("(gl)script/ide/System/Database/SqliteIndexTable.lua");
 NPL.load("(gl)script/ide/System/Database/SqliteCompoundIndex.lua");
+NPL.load("(gl)script/ide/System/Database/IdSet.lua");
+local IdSet = commonlib.gettable("System.Database.IdSet");
 local IndexTable = commonlib.gettable("System.Database.SqliteStore.IndexTable");
 local type = type;
 local SqliteStore = commonlib.inherit(commonlib.gettable("System.Database.Store"), commonlib.gettable("System.Database.SqliteStore"));
-SqliteStore.kCurrentVersion = 5;
+SqliteStore.kCurrentVersion = 6;
 SqliteStore.journelMode = "WAL";
 
 -- SQL create table command columns
@@ -308,9 +310,11 @@ function SqliteStore:AddIndexTableImp(indexTable)
 		for key, _ in pairs(indexTable:GetKeyNames()) do
 			local oldIndex = self.indexes[key];
 			if(oldIndex and oldIndex~=indexTable) then
-				-- destroy old index.
-				LOG.std(nil, "info", "SqliteStore", "old index %s will be replaced by new index %s", oldIndex:GetName(),  indexTable:GetName());
-				self:RemoveIndexImp(oldIndex:GetName());
+				if(indexTable:isSuperSetOf(oldIndex)) then
+					-- destroy old index.
+					LOG.std(nil, "info", "SqliteStore", "old index %s will be replaced by new index %s", oldIndex:GetName(),  indexTable:GetName());
+					self:RemoveIndexImp(oldIndex:GetName());
+				end
 			end
 			self.indexes[key] = indexTable;
 		end
@@ -381,8 +385,8 @@ end
 -- internally it will use just a single statement to search both index and collection table.
 -- so it is faster than using two statements for each table.
 -- return nil or the row object. _id is injected.
-function SqliteStore:findCollectionRow(query, bAutoIndex)
-	local id = self:FindRowId(query, bAutoIndex)
+function SqliteStore:findCollectionRow(query, bAutoCreateIndex)
+	local id = self:FindRowId(query, bAutoCreateIndex)
 	if(id) then
 		local row = self:InjectID(self:getCollectionRow(id), id);
 		return self:filterRowByQuery(row, query);
@@ -494,7 +498,8 @@ function SqliteStore:exec(query, callbackFunc)
 	end
 	if(sql) then
 		local firstCmd = string.lower(sql:match("^%w+") or "");
-		if(firstCmd == "select") then
+		firstCmd = string.lower(firstCmd);
+		if(firstCmd == "select" or firstCmd == "explain") then
 			data = {};
 			for row in self._db:rows(sql) do
 				data[#data+1] = row;
@@ -629,34 +634,16 @@ function SqliteStore:getIds(value)
 	end
 end
 
--- merge ids to final_ids
--- @return final_ids;
-local function mergeIds(ids, final_ids)
-	if(ids) then
-		if(not final_ids) then
-			final_ids = IndexTable:getMapFromIds(ids);
-		else
-			-- `AND` intersection of ids.
-			ids = IndexTable:getMapFromIds(ids);
-			for id, _ in pairs(final_ids) do
-				if(not ids[id]) then
-					final_ids[id] = nil;
-				end
-			end
-		end
-	end
-	return final_ids;
-end
 
 -- return nil or {} or array of row ids. 
 function SqliteStore:findRowIds(query, bAutoCreateIndex)
-	local final_ids;
+	local final_set = IdSet:new();
 	local hasIndex;
 	if(query._id) then
 		if(type(query._id) == "table") then
 			hasIndex = true;
 			local ids = self:getIds(query._id);
-			final_ids = mergeIds(ids, final_ids);
+			final_set:union(ids);
 		else
 			return {query._id};
 		end
@@ -669,19 +656,11 @@ function SqliteStore:findRowIds(query, bAutoCreateIndex)
 			if(indexTable) then
 				hasIndex = true;
 				local ids = indexTable:getIds(value);
-				final_ids = mergeIds(ids, final_ids);
+				final_set:intersect(ids);
 			end
 		end
 	end
-	if(final_ids) then
-		local array = {}
-		for id, _ in pairs(final_ids) do
-			array[#array+1] = id;
-		end
-		return array;
-	else
-		return hasIndex and {} or nil;
-	end
+	return hasIndex and final_set:getArray();
 end
 
 -- try to execute query with indices. 
@@ -698,18 +677,32 @@ function SqliteStore:findRowsViaIndex(query, bAutoCreateIndex)
 		local ids = self:findRowIds(query, bAutoCreateIndex)
 		if(ids) then
 			if(#ids>0) then
-				local ids = table.concat(ids, ",");
+				local sIds = table.concat(ids, ",");
 				local rows = {};
-				for row in self._db:rows("SELECT * FROM Collection WHERE id IN ("..ids..")") do
+				for row in self._db:rows("SELECT * FROM Collection WHERE id IN ("..sIds..")") do
 					local row = self:InjectID(NPL.LoadTableFromString(row.value) or {}, row.id);
 					row = self:filterRowByQuery(row, query);
 					if(row) then
 						rows[#rows+1] = row;
 					end
 				end
+				-- sort result in the same order of ids
+				if(#rows == #ids) then
+					local count = #rows;
+					for i = 1, count do
+						if(rows[i]._id ~= ids[i]) then
+							local tid = ids[i];
+							for j = i+1, count do
+								if(rows[j]._id == tid) then
+									rows[i], rows[j] = rows[j], rows[i];
+								end
+							end
+						end
+					end
+				end
 				return rows;
 			else
-				return ids;
+				return ids; -- this is empty {}
 			end
 		end
 	end
@@ -758,6 +751,33 @@ function SqliteStore:findRowsViaTableScan(query)
 		LOG.std(nil, "error", "SqliteStore",  "failed to create select all statement");
 	end
 	return rows;
+end
+
+
+-- virtual: 
+-- counting the number of rows in a query. this will always do a table scan using an index. 
+-- avoiding calling this function for big table. 
+-- @param callbackFunc: function(err, count) end
+function SqliteStore:count(query, callbackFunc)
+	query = query or {};
+	local err, count;
+	
+	local indexTable, queryValue = self:FindIndexFromQuery(query, true)
+	if(queryValue) then
+		local id;
+		if(indexTable) then
+			count = indexTable:getCount(queryValue);
+		else
+			id = queryValue;
+			count = self:getCollectionRow(id) and 1 or 0;
+		end
+	else
+		local row, err = self._db:first_row("SELECT count(*) as count FROM Collection");
+		if(row) then
+			count = row.count;
+		end
+	end
+	return self:InvokeCallback(callbackFunc, err, count or 0);
 end
 
 -- find will not automatically create index on query fields. 

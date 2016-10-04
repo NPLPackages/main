@@ -156,6 +156,10 @@ function IOThread:HandleRequest(msg)
 				end);
 			elseif(query_type == "silient") then
 				collection:silient(msg.query);
+			elseif(query_type == "count") then
+				collection:count(msg.query, function(err, data)
+					self:SendResponse(err, data, msg);
+				end);
 			end
 		end
 	elseif(query_type == "connect") then

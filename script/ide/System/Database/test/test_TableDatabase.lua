@@ -532,4 +532,39 @@ function TestCompoundIndex()
 	db.compoundTest:find({["+state+name+company"] = {"china", gt="name50", limit=5, skip=3}}, function(err, users)  
 		assert(#users == 5)
 	end);
+
+	-- compound keys with descending order. Notice the "-" sign before `name`.
+	db.compoundTest:find({["+state-name+company"] = {"china", limit=5, skip=3}}, function(err, users)  
+		echo(users)
+		assert(#users == 5)
+	end);
+end
+
+function TestCountAPI()
+	NPL.load("(gl)script/ide/System/Database/TableDatabase.lua");
+	local TableDatabase = commonlib.gettable("System.Database.TableDatabase");
+	local db = TableDatabase:new():connect("temp/mydatabase/");	
+	
+	db.countTest:removeIndex({}, function(err, bRemoved) end);
+
+	-- compound keys
+	for i=1, 100 do
+		db.countTest:insertOne({name="name"..i}, { 
+			name="name"..i, 
+			company = (i%2 == 0) and "tatfook" or "paraengine", 
+			state = (i%3 == 0) and "china" or "usa"}, function() end)
+	end
+
+	-- count all rows
+	db.countTest:count({}, function(err, count)  
+		assert(count == 100) 
+	end);
+	-- count with compound keys
+	db.countTest:count({["+company"] = {"tatfook"}}, function(err, count)  
+		assert(count == 50) 
+	end);
+	-- count with complex query
+	db.countTest:count({["+state+name+company"] = {"china", gt="name50"}}, function(err, count)  
+		assert(count == 19) 
+	end);
 end

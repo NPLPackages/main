@@ -125,6 +125,13 @@ function Store:insertOne(query, update, callbackFunc)
 end
 
 -- virtual: 
+-- counting the number of rows in a query. this will always do a table scan using an index. 
+-- avoiding calling this function for big table. 
+-- @param callbackFunc: function(err, count) end
+function Store:count(query, callbackFunc)
+end
+
+-- virtual: 
 -- normally one does not need to call this function.
 -- the store should flush at fixed interval.
 -- @param callbackFunc: function(err, fFlushed) end

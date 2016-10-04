@@ -45,6 +45,16 @@ function IndexTable:HasKeyName(name)
 	return name and self.names[name];
 end
 
+-- check if this index fully contains another index. 
+function IndexTable:isSuperSetOf(otherIndex)
+	for name, _ in pairs(otherIndex:GetKeyNames()) do
+		if(not self:HasKeyName(name)) then
+			return false;
+		end
+	end
+	return true;
+end
+
 function IndexTable:GetDB()
 	return self.parent._db;
 end
@@ -104,6 +114,21 @@ function IndexTable:getId(value)
 	local ids = self:getIds(value);
 	if(ids) then
 		return tonumber(ids:match("^%d+"));
+	end
+end
+
+-- get total key count. 
+-- @param value: value of the key to get
+function IndexTable:getCount(value)
+	local ids = self:getIds(value);
+	if(ids) then
+		local count = 1;
+		for _ in ids:gmatch(",") do
+			count = count + 1;
+		end
+		return count
+	else
+		return 0;
 	end
 end
 
@@ -284,32 +309,6 @@ end
 
 function IndexTable:addIdToIds(cid, ids)
 	return ids..(","..cid)
-end
-
--- public static:
--- get id maps from ids string
--- @param ids: must be string
--- @return a table containing mapping from number cid to true
-function IndexTable:getMapFromIds(ids)
-	local map = {};
-	if(ids) then
-		for id in ids:gmatch("%d+") do
-			map[tonumber(id)] = true;
-		end
-	end
-	return map;
-end
-
--- private: 
--- get array from ids string
--- @param ids: must be string
--- @return a array table containing all number cid
-function IndexTable:getArrayFromIds(ids)
-	local array= {};
-	for id in ids:gmatch("%d+") do
-		array[#array+1] = tonumber(id);
-	end
-	return array;
 end
 
 -- creating index for existing rows
