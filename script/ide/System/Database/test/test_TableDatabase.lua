@@ -535,8 +535,12 @@ function TestCompoundIndex()
 
 	-- compound keys with descending order. Notice the "-" sign before `name`.
 	db.compoundTest:find({["+state-name+company"] = {"china", limit=5, skip=3}}, function(err, users)  
-		echo(users)
 		assert(#users == 5)
+	end);
+
+	-- updateOne with compound key
+	db.compoundTest:updateOne({["+state-name+company"] = {"usa", "name1", "paraengine"}}, {name="name0_modified"}, function(err, user)  
+		assert(user.name == "name0_modified")
 	end);
 end
 
