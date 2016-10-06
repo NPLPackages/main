@@ -45,7 +45,11 @@ local function RunWithResult(output)
 				end
 			end
 			output.success = ok;
-			output.result = result;
+			if(not ok) then
+				output.error = result;
+			else
+				output.result = result or ParaGlobal.GetLog(fromLogPos, -1);
+			end
 		else
 			if(ok) then
 			  echo("<p style='color:green'>success!</p>")
@@ -57,7 +61,7 @@ local function RunWithResult(output)
 		end
     else
 		if(output) then
-			output.compile_error = errormsg;
+			output.error = errormsg;
 		else
 			echo("<p style='color:red'>Syntax error: </p>")
 			echo(sanitize(errormsg));
@@ -72,9 +76,13 @@ end
 
 if(is_ajax()) then
 	add_action('wp_ajax_runcode', function()
-		local output = {};
-	    RunWithResult(output);
-		wp_send_json(output);
+		if(request:get("btnRunPage")) then
+			include_pagecode(code);
+		else
+			local output = {};
+			RunWithResult(output);
+			wp_send_json(output);
+		end
     end)
 	return;
 end
@@ -139,16 +147,17 @@ wp_enqueue_script("ngSanitize", "/wp-includes/js/angular/angular-sanitize.min.js
 				}
             }
         }
+
+		var editor = ace.edit("editor");
 		// binding editor
         function initEditor() {
-			var editor = ace.edit("editor");
 			editor.setTheme("ace/theme/github");
 			editor.session.setMode("ace/mode/lua");
 			editor.setAutoScrollEditorIntoView(true);
 			editor.setOption("maxLines", 30);
 			editor.setOption("minLines", 5);
-			editor.commands.addCommand({name: 'myRunCode', bindKey: {win: 'F5'}, exec: function(editor) { $('#runcode').trigger('click'); }, readOnly: true });
-			editor.commands.addCommand({name: 'myRunCode1', bindKey: {win: 'Ctrl+R'}, exec: function(editor) { $('#runcode').trigger('click'); }, readOnly: true });
+			editor.commands.addCommand({name: 'myRunCode', bindKey: {win: 'F5'}, exec: function(editor) { $scope.runcode(); }, readOnly: true });
+			editor.commands.addCommand({name: 'myRunCode1', bindKey: {win: 'Ctrl+R'}, exec: function(editor) { $scope.runcode(); }, readOnly: true });
 			editor.commands.addCommand({name: 'mySave', bindKey: {win: 'Ctrl+S'}, exec: function(editor) { $scope.save();$scope.$apply(); }, readOnly: true });
 			editor.on("input", function () {
 				if($scope.isModified != !editor.session.getUndoManager().isClean()){
@@ -156,18 +165,35 @@ wp_enqueue_script("ngSanitize", "/wp-includes/js/angular/angular-sanitize.min.js
 					$scope.$apply();
 				}
             });
-
-			$("#code").submit(function() {
-				var text = editor.getValue();
-				$scope.save(text);
-				$("#text").val(text);
-				return true;
-			});
 			var hasCode = <?=GetCode()~=""?>;
 			if(!hasCode)
 				$scope.openFile($scope.$storage.currentFileIndex, null, true);
 		}
 		initEditor();
+
+		$scope.runcode = function(){
+			var text = editor.getValue();
+			$scope.save(text);
+			$.post("/ajax/console?action=runcode", {text:text})
+			.done(function(data){
+				$scope.success = data.success;
+				$scope.error = data.error;
+				$("#result").html(data.result || "");
+				$scope.$apply();
+			})
+		}
+		$scope.runpage = function(){
+			var text = editor.getValue();
+			$scope.save(text);
+			$.post("/ajax/console?action=runcode", {text:text, btnRunPage:true})
+			.done(function(data){
+				$scope.success = data.success;
+				$scope.error = data.error;
+				$("#result").html(data || "");
+				$scope.$apply();
+			})
+		}
+
 		if(typeof Page != 'undefined')
             Page.ShowSideBar(false);
 	 });
@@ -180,13 +206,15 @@ wp_enqueue_script("ngSanitize", "/wp-includes/js/angular/angular-sanitize.min.js
         </li>
     </ul>
 	<div id="editor"><?npl echo(sanitize(GetCode())); ?></div>
-	<form id="code" name="code" method="post" action="">
+	<div>
 	  <p>
-		<input id="text" type="hidden" name="text" value=""/>
-		<button type="submit" id="runcode" name="btnRunCode" title="Run code (Ctrl+R)">Run as code (F5)</button>
-		<button id="runpage" name="btnRunPage" >Run as page</button>
+		<button class="btn btn-primary" name="btnRunCode" ng-click='runcode()' title="Run code (Ctrl+R)">Run as code (F5)</button>
+		<button class="btn" name="btnRunPage" ng-click='runpage()'>Run as page</button>
 	  </p>
-	</form>
+	</div>
+	<p style='color:green' ng-show="success==true">success!</p>
+	<p style='color:red' ng-show="error">{{error}}</p>
 </div>
+<div id="result"></div>
 <hr/>
-<?npl RunWithResult();?>
+<? include("log.page") ?>

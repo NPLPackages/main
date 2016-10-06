@@ -255,11 +255,11 @@ function env_imp:include(filename, bReload)
 		if(not page:get_error_msg()) then
 			return page:run(self);
 		else
-			LOG.std(nil, "error", "npl_env", "include() failed: error parse file %s: %s", filename, page:get_error_msg() or "");
+			LOG.std(nil, "error", "npl_env", "include() failed: <page error> parse file %s: %s", filename, page:get_error_msg() or "");
 			env_imp.exit(self, page:get_error_msg());
 		end
 	else
-		LOG.std(nil, "error", "npl_env", "include() failed for file %s", filename);
+		LOG.std(nil, "error", "npl_env", "<page error> include() failed for file %s", filename);
 		env_imp.exit(self, string.format("include() failed for file %s", filename));
 	end
 end
@@ -302,7 +302,7 @@ function env_imp:include_pagecode(code, filename)
 		if(not page:get_error_msg()) then
 			return page:run(self);
 		else
-			LOG.std(nil, "error", "npl_env", "include_pagecode() failed: error parse file %s: %s", filename, page:get_error_msg() or "");
+			LOG.std(nil, "error", "npl_env", "include_pagecode() failed: <page error> parse file %s: %s", filename, page:get_error_msg() or "");
 			env_imp.exit(self, page:get_error_msg());
 		end
 	end
