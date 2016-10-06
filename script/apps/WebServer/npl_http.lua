@@ -163,9 +163,18 @@ function npl_http.SetRequestHandler(handler)
 	npl_http.request_handler = handler;
 end
 
+-- ignore access log for following ips, mostly for NPL code wiki site or proxy site. 
+local ignoreAccessLogIps = {
+	["127.0.0.1"] = true, 
+	["localhost"] = true,
+}
+
 function npl_http.handleRequest(req)
 	stats.request_received = stats.request_received + 1;
-	WebServer:GetLogger():log("%s \"%s %s\" \"%s\"", req:getpeername(), req:GetMethod(), req:url(), req:header("User-Agent") or "");
+	local ip = req:getpeername();
+	if(not ignoreAccessLogIps[ip]) then
+		WebServer:GetLogger():log("%s \"%s %s\" \"%s\"", ip, req:GetMethod(), req:url(), req:header("User-Agent") or "");
+	end
 
 	if(npl_http.request_handler) then
 		local result = npl_http.request_handler(req, req.response);

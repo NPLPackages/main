@@ -5,7 +5,7 @@
             {id="code", title="Code Editor", url="editcode", menu_item_parent = "View"},
             {id="object_browser", title="Object Browser", url="object_browser", menu_item_parent = "View"},
             {id="world", title="World", url="world", menu_item_parent = "View"},
-            -- {id="options", title="Options", url="options", menu_item_parent = "View"},
+            {id="log", title="log", url="log", menu_item_parent = "View"},
             
           {id="Tools", title="Tools", url="#", },
             {id="console", title="Console", url="console", menu_item_parent = "Tools"},

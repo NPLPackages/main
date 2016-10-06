@@ -542,6 +542,18 @@ function TestCompoundIndex()
 	db.compoundTest:updateOne({["+state-name+company"] = {"usa", "name1", "paraengine"}}, {name="name0_modified"}, function(err, user)  
 		assert(user.name == "name0_modified")
 	end);
+
+	-- this query is ineffient since it uses intersection of single keys (with many duplications). 
+	-- one should consider use "+state+company", instead of this. 
+	db.compoundTest:find({state="china", company="tatfook"}, function(err, users)  
+		assert(#users == 16)
+	end);
+
+	-- this query is ineffient since it uses intersection of single keys. 
+	-- one should consider use "+state+company", instead of this. 
+	db.compoundTest:count({state="china", company="tatfook"}, function(err, count)  
+		assert(count == 16)
+	end);
 end
 
 function TestCountAPI()

@@ -77,6 +77,16 @@ function WebServer:GetLogger()
 	return WebServer.logger;
 end
 
+-- web server internal system filters.
+function WebServer:GetFilters()
+	if(not self.filters) then
+		NPL.load("(gl)script/ide/System/Core/Filters.lua");
+		local Filters = commonlib.gettable("System.Core.Filters");
+		self.filters = Filters:new();
+	end
+	return self.filters;
+end
+
 --[[ Register the server configuration
 -- @param config: {server={host="*", port=80}, defaultHost={rules={}, virtualhosts={hostname=host, }}}
 

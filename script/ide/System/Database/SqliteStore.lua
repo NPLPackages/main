@@ -345,21 +345,29 @@ function SqliteStore:RemoveIndexImp(name)
 	end
 end
 
-
--- get index Table from query
+-- get index Table from query skipping first nSkipCount
 -- @param bAutoCreateIndex: if true, index is automatically created.
+-- @param nSkipCount: skip this number of index, default to 0, which returns the first index found. 
 -- @return: indexTable, queryValue: indexTable is nil if there is no index found or _id is found in query. 
 -- queryValue can be the value or a table containing more query info. 
-function SqliteStore:FindIndexFromQuery(query, bAutoCreateIndex)
+function SqliteStore:FindIndexFromQuery(query, bAutoCreateIndex, nSkipCount)
+	nSkipCount = nSkipCount or 0;
 	local id = query._id;
 	if(id) then
-		return nil, id;
+		if(nSkipCount == 0) then
+			return nil, id;
+		end
 	else
+		local count = 0;
 		for name, value in pairs(query) do
-			if(type(name)=="string") then
+			if(type(name)=="string" and name~="_unset") then
 				local indexTable = self:GetIndex(name, bAutoCreateIndex);
 				if(indexTable) then
-					return indexTable, value;
+					if(nSkipCount == count) then
+						return indexTable, value;
+					else
+						count = count + 1;
+					end
 				end
 			end
 		end
@@ -370,15 +378,17 @@ end
 -- @param bAutoCreateIndex: if true, index is automatically created.
 -- @return nil if there is no index. false if the record does not exist in collection. otherwise return the row id.
 function SqliteStore:FindRowId(query, bAutoCreateIndex)
-	local indexTable, queryValue = self:FindIndexFromQuery(query, bAutoCreateIndex)
-	if(queryValue) then
-		local id;
-		if(indexTable) then
-			id = indexTable:getId(queryValue);
-		else
-			id = queryValue;
+	if(type(query._id) == "number") then
+		return query._id;
+	else
+		local ids = self:findRowIds(query, bAutoCreateIndex)
+		if(ids) then
+			if(#ids>0) then
+				return ids[1];
+			else
+				return false;
+			end
 		end
-		return id;
 	end
 end
 
@@ -634,7 +644,7 @@ function SqliteStore:getIds(value)
 	end
 end
 
-
+-- if return nil, it means no index is found, so a table scan may be used later
 -- return nil or {} or array of row ids. 
 function SqliteStore:findRowIds(query, bAutoCreateIndex)
 	local final_set = IdSet:new();
@@ -766,7 +776,16 @@ function SqliteStore:count(query, callbackFunc)
 	if(queryValue) then
 		local id;
 		if(indexTable) then
-			count = indexTable:getCount(queryValue);
+			-- support multiple query fields
+			if(self:FindIndexFromQuery(query, true, 1)) then
+				-- this one should be avoided as much as possible and use single ids instead. 
+				local ids = self:findRowIds(query, true);
+				if(ids) then
+					count = #ids;
+				end
+			else
+				count = indexTable:getCount(queryValue);
+			end
 		else
 			id = queryValue;
 			count = self:getCollectionRow(id) and 1 or 0;
@@ -791,6 +810,7 @@ function SqliteStore:find(query, callbackFunc)
 	return self:InvokeCallback(callbackFunc, err, rows);
 end
 
+-- update one will not create index
 function SqliteStore:updateOne(query, update, callbackFunc)
 	self:CommandTick("update");
 	update = update or query;

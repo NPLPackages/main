@@ -7,6 +7,7 @@ Desc:
 ]]
 local Filters = commonlib.gettable("System.Core.Filters");
 local filter = Filters:new();
+local WebServer = commonlib.gettable("WebServer");
 
 function do_action(name, ...)
 	filter:apply_filters(name, ...);
@@ -87,5 +88,6 @@ end
 -- @param value The value on which the filters hooked to <tt>tag</tt> are applied on.
 -- @return mixed The filtered value after all hooked functions are applied to it.
 function apply_filters( tag, value, ... ) 
+	value = WebServer:GetFilters():apply_filters("wp_apply_filters", value, tag, ...)
 	return filter:apply_filters( tag, value, ... ) ;
 end
