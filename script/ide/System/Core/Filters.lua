@@ -181,7 +181,9 @@ end
 function Filters:apply_filters( tag, value, ... ) 
 	
 	-- Do 'all' actions first.
-	self:_wp_call_all_hook(...);
+	if ( self.wp_filter['all'] ) then
+		self:_wp_call_all_hook(...);
+	end
 	
 	if ( not self.wp_filter[tag] ) then
 		if ( self.wp_filter['all'] ) then

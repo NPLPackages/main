@@ -88,6 +88,6 @@ end
 -- @param value The value on which the filters hooked to <tt>tag</tt> are applied on.
 -- @return mixed The filtered value after all hooked functions are applied to it.
 function apply_filters( tag, value, ... ) 
-	value = WebServer:GetFilters():apply_filters("wp_apply_filters", value, tag, ...)
+	value = WebServer:GetFilters():apply_filters(tag, value, ...);
 	return filter:apply_filters( tag, value, ... ) ;
 end
