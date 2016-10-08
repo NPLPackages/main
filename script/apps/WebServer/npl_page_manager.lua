@@ -86,40 +86,52 @@ local monitored_files = {
 
 -- @return rootdir or ""
 function npl_page_manager:GetRootDirectory(dir)
-	if(not commonlib.Files.IsAbsolutePath(dir)) then
-		local dev = commonlib.Files.GetDevDirectory();
-		if(dev == "") then
-			dev = ParaIO.GetWritablePath();
-		end
-		return dev;
+	local dev = commonlib.Files.GetDevDirectory();
+	if(dev == "") then
+		dev = ParaIO.GetWritablePath();
 	end
-	return "";
+	return dev or "";
 end
 
 -- monitor file change and call refresh() automatically 
+-- this function can be called many times for different or same directory path. 
 function npl_page_manager:monitor_directory(dir)
 	if(dir) then
-		self.watcher = self.watcher or commonlib.FileSystemWatcher:new();
-		local watcher = self.watcher;
-		watcher.filter = function(filename)
-			local ext = filename:match("%.(%w+)$");
-			if(ext) then
-				return monitored_files[ext];
-			end
-		end
 		if(not string.find(dir, "/$")) then
 			dir = dir.."/";
 		end
-		local root = self:GetRootDirectory(dir);
+		local root = self:GetRootDirectory();
 		local rootSize = #root;
-		watcher:AddDirectory(root..dir);
-		-- also monitor other directories, such as in current world directory. 
-		watcher:SetMonitorAll(true);
-		watcher.OnFileChanged = function (msg)
-			if(msg.type == "modified" or msg.type == "added" or msg.type=="renamed_new_name") then
-				LOG.std(nil, "info", "npl_page_manager", "File %s: %s", msg.fullname, msg.type);
-				self:refresh(msg.fullname:sub(rootSize+1));
+
+		local watcher = self.watcher;
+		if(not watcher) then
+			watcher = commonlib.FileSystemWatcher:new();
+			self.watcher = watcher;
+
+			watcher.filter = function(filename)
+				local ext = filename:match("%.(%w+)$");
+				if(ext) then
+					return monitored_files[ext];
+				end
 			end
+			-- also monitor other directories, such as in current world directory. 
+			watcher:SetMonitorAll(true);
+			watcher.OnFileChanged = function (msg)
+				if(msg.type == "modified" or msg.type == "added" or msg.type=="renamed_new_name") then
+					LOG.std(nil, "info", "npl_page_manager", "File %s: %s", msg.fullname, msg.type);
+					if(rootSize>0 and string.lower(msg.fullname:sub(1, rootSize)) ~= string.lower(root)) then
+						self:refresh(msg.fullname);
+					else
+						self:refresh(msg.fullname:sub(rootSize+1));
+					end
+				end
+			end
+		end
+		
+		if(commonlib.Files.IsAbsolutePath(dir)) then
+			watcher:AddDirectory(dir);
+		else
+			watcher:AddDirectory(root..dir);
 		end
 	end
 end
