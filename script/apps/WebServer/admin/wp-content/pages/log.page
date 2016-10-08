@@ -39,6 +39,10 @@ wp_enqueue_script("ace", "/wp-includes/js/ace/ace.js");
 		<button id="btnClearLog" title="clear log" class="btn btn-default"><span class="glyphicon glyphicon-ban-circle"></span></button>
 	</div>
 	<div class="pull-left" style="margin-left:10px;">
+		<div class="btn-group">
+			<button id="btnGotoBegin" class="btn btn-default"><i class="glyphicon glyphicon-fast-backward"></i></button>
+			<button id="btnGotoEnd" class="btn btn-default"><i class="glyphicon glyphicon-fast-forward"></i></button>
+		</div>
 		<input id="txtSearchText" type="text" placeholder="Enter Search Text" style="max-width:300px" />
 		<div class="btn-group">
 			<button id="btnSearchBackward" class="btn btn-default"><i class="glyphicon glyphicon-arrow-up"></i></button>
@@ -125,7 +129,7 @@ $(function(){
 	var findNext = function (backwords) {
 		var word = $("#txtSearchText").val();
 		if(word != "") {
-			editor.find(word,{
+			var range = editor.find(word,{
 				backwards: backwords == true,
 				wrap: false,
 				caseSensitive: false,
@@ -134,6 +138,14 @@ $(function(){
 			});
 		}
     }
+	$("#btnGotoBegin").click(function () {
+	    editor.gotoLine(1, 0)
+	});
+	$("#btnGotoEnd").click(function () {
+	    var row = editor.session.getLength() - 1
+		var column = editor.session.getLine(row).length 
+		editor.gotoLine(row + 1, column)
+	});
 	$( "#btnSearchBackward" ).click(function() {
 		findNext(true);
 	});
@@ -153,6 +165,11 @@ $(function(){
 	});
 	$("#preservelog").click(function () {
 	    bPreserveLog = $("#preservelog").is(":checked");
+	});
+	$("#txtSearchText").keyup(function(event){
+		if(event.keyCode == 13){
+			findNext(true);
+		}
 	});
 });
 </script>
