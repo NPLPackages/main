@@ -35,6 +35,7 @@ end
 wp_enqueue_script("ace", "/wp-includes/js/ace/ace.js"); 
 ?>
 <div class="row">
+<div class="col-md-12">
 	<div class="pull-left">
 		<button id="btnClearLog" title="clear log" class="btn btn-default"><span class="glyphicon glyphicon-ban-circle"></span></button>
 	</div>
@@ -58,8 +59,9 @@ wp_enqueue_script("ace", "/wp-includes/js/ace/ace.js");
         <label style="font-weight:normal;margin-left:5px;"><input type="checkbox" id="wordwrap" />word wrap</label>
     </div>
 </div>
-<div class="row" style="margin-top:5px">
+<div class="col-md-12" style="margin-top:5px">
 	<div id="logwindow"></div>
+</div>
 </div>
 <script>
 $(function(){

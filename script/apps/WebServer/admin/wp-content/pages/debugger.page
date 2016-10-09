@@ -690,6 +690,11 @@ wp_enqueue_style("jqueryui_css", "/wp-includes/js/jquery/jquery-ui.min.css");
                     </div>
                 </div>
             </div>
+			<div title="Log">
+                <div id="logwin" style="overflow: hidden;">
+                    <? include("./log.page") ?>
+                </div>
+            </div>
         </div>
 		</div>
     </div>

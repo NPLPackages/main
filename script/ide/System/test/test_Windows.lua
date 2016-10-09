@@ -132,13 +132,22 @@ end
 
 -- test loading componets via url
 function test_Windows:TestMCMLPage()
+	-- remove old window
+	local window = commonlib.gettable("test.window")
+	if(window and window.CloseWindow) then
+		window:CloseWindow(true);
+	end
+
+	-- create a new window
 	NPL.load("(gl)script/ide/System/Windows/Window.lua");
 	local Window = commonlib.gettable("System.Windows.Window")
 	local window = Window:new();
 	window:Show({
 		url="script/ide/System/test/test_mcml_page.html", 
-		alignment="_mt", left = 0, top = 0, width = 200, height = 400,
+		alignment="_lt", left = 0, top = 0, width = 200, height = 400,
 	});
+	-- keep a reference for refresh
+	test.window = window;
 
 	-- testing loading another mcml layout after window is created.  
 	-- window:LoadComponent("script/ide/System/test/test_mcml_page.html?page=2");
