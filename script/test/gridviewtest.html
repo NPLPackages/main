@@ -1,0 +1,102 @@
+<!-- "script/test/gridviewtest.html" -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title></title>
+</head>
+<body>
+<pe:mcml>
+<script type="text/npl" ><![CDATA[
+NPL.load("(gl)script/test/gridviewtest.lua");
+test.gridviewtest.OnInit();
+
+local pageCtrl = document:GetPageCtrl();
+function closePage()
+    pageCtrl:CloseWindow();
+end
+function DS_Func(index)
+    return test.gridviewtest.DS_Func(index);
+end
+
+test.gridviewtest.count = 1;
+function countadd()
+    test.gridviewtest.count = test.gridviewtest.count + 1;
+    pageCtrl:SetValue("count",test.gridviewtest.count)
+end
+
+function countsub()
+    test.gridviewtest.count = test.gridviewtest.count - 1;
+    if(test.gridviewtest.count <= 0) then test.gridviewtest.count = 1 end
+    pageCtrl:SetValue("count",test.gridviewtest.count)    
+end
+
+function onclick(icon)
+    test.gridviewtest.onclick(icon);
+end
+
+]]></script>
+
+<div style="float:left;width:361px;height:469px;background:url(Texture/Aries/Profile/Profile_BG_32bits.png# 0 0 361 469);">
+    <div style="height:60px;">
+        <div style="float:left;margin-left:70px;margin-top:55px;width:250px;color:#ffffff;font-size:12;">
+           请从右边列表里选出你想要出售的物品吧，<br />我会给你最公道的价格！
+        </div>
+        <input style="margin-left:3px;margin-top:10px;width:54px;height:54px;background:url(Texture/Aries/Common/Close_Big_54_32bits.png#0 0 54 54);" type="button" name="close" 
+                onclick="closePage()" value=""/>
+    </div>
+
+    <div style="margin-left:65px;margin-top:60px;width:230px;height:160px;background:url(Texture/Aries/Inventory/item_slot_32bits.png)">
+        <img name="fruiticon" style="margin-left:70px;margin-top:30px;width:64px;height:64px;" />
+    </div>
+    
+    <div style="margin-left:80px;margin-top:25px;margin-right:45px;height:100px;">
+        <div style="margin-left:50px;margin-top:-20px;">
+            收购价:20
+        </div>
+        <div style="margin-left:-30px;height:10px;" />
+        <input type="button" style="width:38px;height:42px;background:url(Texture/Aries/Inventory/PurchaseItem/count_down_32bits.png)" onclick="countadd" />
+        
+        <div style="float:right;padding-left:50px;padding-top:8px;width:119px;height:40px;background:url(Texture/Aries/Inventory/PurchaseItem/count_input_32bits.png#0 0 119 40)" >
+            <input type="text" name="count" value="1" style="width:40px;height:26px;background:" />
+        </div>
+        
+        <input type="button" style="width:38px;height:42px;background:url(Texture/Aries/Inventory/PurchaseItem/count_up_32bits.png);" onclick="countsub"/>
+        
+    </div>
+    
+    <div style="margin-top:0px;">
+        <input type="button" name ="OK" style="margin-left:28px;width:153px;height:49px;background:url(Texture/Aries/Common/DealImmediately_32bits.png#0 0 153 49)" />
+    </div>
+    
+</div>
+
+<div style="float:left;margin-left:-8px;margin-top:30px;width:322px;height:400px;background:url(Texture/Aries/Inventory/right_panel2_32bits.png# 16 0 48 436: 20 64 20 64);">
+    <pe:gridview DataSource="<%=DS_Func%>" name="ItemView" style="height:350px;margin-left:30px;margin-top:25px;" CellPadding="0" ItemsPerLine="3" AllowPaging="True" pagesize="12">
+        <Columns>
+            <div style="padding:8px;width:80px;height:80px;background:url(Texture/Aries/Inventory/item_slot_32bits.png#3 3 100 95:24 24 24 24)">
+                <input onclick="onclick()" type="button" name="<%=Eval('icon') %>" Replace_BG="<%=Eval('icon') %>" style="float:left;margin-left:5px;margin-top:5px;width:64px;height:64px;background:" />
+            </div>
+        </Columns>
+        <EmptyDataTemplate>
+            <b>没有果实可以出售哦</b>
+        </EmptyDataTemplate>
+        <FetchingDataTemplate>
+            <b>正在获取数据, 请稍候...</b>
+        </FetchingDataTemplate>
+        <PagerSettings Position="Bottom" style="margin-left:50px;" PreviousPageText="previous page" NextPageText="next page"/>
+        <PagerTemplate>
+            <form>
+                <input type="button" name="pre" style="width:42px;height:41px;background:url(Texture/Aries/Inventory/itemview_pageleft_32bits.png#0 0 42 41);"/>
+                <div style="float:left;margin-top:4px;width:64px;">
+                    <label name="page" style="color:#FFFFFF;text-align:center;width:64px;height:18px;margin:4px"/>
+                </div>
+                <input type="button" name="next" style="width:42px;height:41px;background:url(Texture/Aries/Inventory/itemview_pageright_32bits.png#0 0 42 41)"/>
+            </form>
+        </PagerTemplate>
+    </pe:gridview>
+</div>
+
+</pe:mcml> 
+</body>
+</html>

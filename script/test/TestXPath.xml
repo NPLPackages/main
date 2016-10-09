@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--Sample Poke Application; client integration point XML file -->
+<mcml:mcml xmlns:mcml="http://www.paraengine.com/mcml/10.xsd">
+  <!--package list: this is optional if we already downloaded the module files. -->
+  <mcml:packageList>
+    <mcml:package>
+      <mcml:URL>www.paraengine.com/apps/sample_models.zip</mcml:URL>
+      <mcml:InstallPath>model/apps/</mcml:InstallPath>
+      <mcml:AuthorName>ParaEngine</mcml:AuthorName>
+    </mcml:package>
+    <mcml:package>
+      <mcml:URL>www.paraengine.com/apps/sample_script.zip</mcml:URL>
+      <mcml:InstallPath>scripts/apps/</mcml:InstallPath>
+      <mcml:AuthorName>ParaEngine</mcml:AuthorName>
+    </mcml:package>
+    <mcml:package>
+      <mcml:URL>www.paraengine.com/apps/sample_texture.zip</mcml:URL>
+      <mcml:InstallPath>scripts/textures/</mcml:InstallPath>
+      <mcml:AuthorName>ParaEngine</mcml:AuthorName>
+    </mcml:package>
+  </mcml:packageList>
+
+
+  <!-- TODO: file list -->
+
+  <!-- TODO: ID for application description -->
+
+  <!--application description: 
+  version: must be 1
+  name: it should be a unique application, so that we can send messages with it.
+  lang: the file may contain multiple language versions of this application block 
+  mainfile: file to be activated when game starts. On the first activation call, it must create an app with the same name and a "main" window inside the app to receive messages like MSG_APP_INIT, MSG_APP_ON_ADD, etc
+  -->
+  <mcml:app version="1" name="Poke" lang="enUS" mainfile="script/apps/Poke/main.lua" >
+    <mcml:IPList>
+      <!--IPs for mainbar: we can specify onclick, text, background. or we can use a data table for this-->
+
+      <mcml:load onload = ";apps.Poke.OnApplicationLoad();">
+      </mcml:load>
+
+      <mcml:IP category = "mainbar/" version = "5" >
+        <mcml:onrun>";apps.Poke.OnRunApplication();"</mcml:onrun>
+        <mcml:displaytext>"Poke"</mcml:displaytext>
+        <mcml:icon>"textures/whitedot.dds"</mcml:icon>
+        <mcml:iconsize>48</mcml:iconsize>
+      </mcml:IP>
+
+      <mcml:IP category="mainbar/" onclick=";apps.Poke.OnClickMainBarIP();" text="Level1" background="textures/whitedot.dds"></mcml:IP>
+      <!--IPs for mainbar: or we can use a data table for menu item, in case it has more specifications like mouse over, mouse leave, etc. -->
+      <mcml:IP category="mainbar/KidsMovie/" text="Level2_1" datatable="apps.sample.mainbarKidsMovie.SubIconSet[1]"></mcml:IP>
+      <mcml:IP category="mainbar/KidsMovie/" text="Level2_2" datatable="apps.sample.mainbarKidsMovie.SubIconSet[2]"></mcml:IP>
+      <!--IPs for BCS: datatable is an NPL table array describing the data in this IP category-->
+      <mcml:IP category="creations/BCS/" datatable="apps.sample.db_assets.BCS"></mcml:IP>
+      <!--IPs for CCS: datatable is an NPL table array describing the data in this IP category-->
+      <mcml:IP category="creations/CCS/" datatable="apps.sample.db_assets.CCS"></mcml:IP>
+      <!--IPs for CCS: datatable is an NPL table array describing the data in this IP category-->
+      <mcml:IP category="creations/NormalModel/" datatable="apps.sample.db_assets.normalmodel"></mcml:IP>
+    </mcml:IPList>
+
+  </mcml:app>
+
+</mcml:mcml>

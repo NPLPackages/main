@@ -8,6 +8,7 @@
 !/script/
 /script/*
 !/script/ide
+!/script/test
 script/ide/ObjectOriented/
 !/script/sqlite
 !/script/apps

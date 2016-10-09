@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mesh version="1" type="0">
+  <boundingbox minx="0" miny="0" minz="0" maxx="1" maxy="1" maxz="1"/>
+  <shader index="3"/>
+  <submesh loddist="10" filename="LOD_10.x"/>
+  <submesh loddist="50" filename="LOD_50.x"/>
+</mesh>

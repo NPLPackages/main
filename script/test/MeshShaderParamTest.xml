@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mesh version="1" type="0">
+  <boundingbox minx="0" miny="0" minz="0" maxx="1" maxy="1" maxz="1"/>
+  <shader index="1001">
+    <param name="0" type="texture">script/test/media/bumpMap.dds</param>
+    <param name="1" type="texture">script/test/media/cloud.dds</param>
+    <param name="time" type="float">0</param>
+    <param name="shallowWaterColor" type="vector3">0.64,0.8,0.96</param>
+    <param name="deepWaterColor" type="vector3">0.08,0.36,0.6</param>
+    <!--<param name="a" type="int">10</param>
+    <param name="b" type="boolean">1</param>
+    <param name="d" type="float">0.1</param>
+    <param name="e" type="vector2">1,1</param>
+    <param name="f" type="vector3">1,1,1</param>
+    <param name="g" type="vector4">1,1,1</param>
+    <param name="h" type="matrix43">1,0,0,0,1,0,0,0,1,0,0,0</param>-->
+  </shader>
+  <submesh loddist="10" filename="model/06props/shared/pops/huaban.x"/>
+</mesh>

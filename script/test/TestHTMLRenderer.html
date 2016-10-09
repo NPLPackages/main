@@ -1,0 +1,81 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=gb2312" />
+<title>HTML renderer Sample page</title>
+</head>
+<body>
+
+<h1> &lt;h1&gt; A simple HTML renderer</h1>
+    <p>
+        Title: A simple HTML renderer in NPL</p>
+    <p>
+        Author(s): LiXizhi 
+    </p>
+    <p>
+        Date: 2007/10/3 
+    </p>
+    <p>
+        <br />
+        Desc: It only support formatting to the following tag and their attributes: h1,
+        h2,h3, h4, li, img(attr: src,height, width, title), a(href), anyTag(attr: style="color:
+        #006699; left: -60px; position: relative; top: 30px;width: 100px;height: 100px"),title
+        It also support relative image path as well as HTTP file path. In addition to per
+        tag css, it also support global CSS via a table called css during initialization.
+        All images are displayed on the left block, where all text are displayed in the
+        right block. images is aligned vertically at the its normal text flow position.
+    </p>
+    <ul>
+        <li>Note1: the HTML must use ansi encoding. Unicode or UTF8 encoding will render Chinese
+            text unreadable. 中文字 中文字 中文字</li>
+        <li>Note2: all HTML tag and attribute must use lower case. </li>
+        <li>Note3: we can use tag css to position a text or image any where relative to its
+            normal text flow. We can also specify fixed block size.</li>
+    </ul>
+    <h1>
+        &lt;h1&gt; sample HTML effects</h1>
+    <h2>
+        &lt;h2&gt; image effect</h2>
+    <p>
+    image can be embeded inside div tag that contains width and height css styles. width and height in css took precedence over properties inside img tag. see below</p>
+    <div style="color: #006699; width: 72px; height: 72px; position: relative; top: 0px;left:200px;">
+        <img width="64" height="64" src="Movie_2.png" title="image inside text"/>
+    </div>
+    <p>
+        </p>
+        <div style="color: #006699; left: 0px; position: relative; top: -10px;">
+            <img width="64" height="64" src="Movie_2.png" title="Displayed sideways, always single line"/>
+        </div>
+    Image path is relative to the HTML path. It can also be HTTP image from a remote
+    server. One can also specify NPL 9 tile texture file or a sub region of texture,
+    like "filename;0 0 100 100:10 10 10 10", swf texture is also supported<br />
+    <h3>
+        &lt;h3&gt; Text Effects</h3>
+    <h4>
+        &lt;h4&gt; Text Color and Alignment</h4>
+    <p style="color: #006699; left: -60px; position: relative; top: 0px;">
+        style="color: #006699; left: -60px; position: relative; top: 0px;" </p>
+    <h4>
+        &lt;h4&gt; HREF &lt;a&gt;</h4>    
+    <p>
+        We can link to both internal or external link. try below</p>
+    <div  style="height: 40px"><a href="http://www.paraengine.com">
+        href node: external: This also uses fixed height DIV with height: 40px</a>
+    </div>
+    <a href="AnotherPage.html">
+        href node: internal link</a>
+    <h4>
+        &lt;h4&gt; list items &lt;li&gt;</h4>
+    <ul>
+        <li>List item 1: Author: LiXizhi</li>
+        <li>List item 2: Date: 2007.10.4</li>
+        <li>List item 3</li>
+    </ul>
+    
+    <h4>
+        &lt;h4&gt;&nbsp; nbsp is not parsed. So do not use it</h4>
+    <h4>
+        &lt;h4&gt; scrolling is supported</h4>
+    <p>Copyright &copy; ParaEngine Corporation. 2004-2007 All Rights Reserved</p>
+</body>
+</html>

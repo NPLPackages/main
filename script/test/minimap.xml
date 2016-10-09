@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--Sample XML file for minimap-->
+<minimap>
+  <tile centerx="20000" centery="20000" radius="533.333" file="minimap.png"></tile>
+</minimap>
