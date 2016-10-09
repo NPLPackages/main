@@ -6,6 +6,9 @@ Use Lib:
 -------------------------------------------------------
 NPL.load("(gl)script/ide/System/Plugins/PluginManager.lua");
 local PluginManager = commonlib.gettable("System.Plugins.PluginManager");
+local manager = PluginManager.CreateGetInstance("Paracraft");
+echo(manager:GetLoader():RebuildModuleList())  --> list of installed plugins
+manager:GetLoader():LoadAllPlugins() --> load plugins, see PluginLoader for details
 -------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/System/Core/ToolBase.lua");
@@ -22,16 +25,26 @@ function PluginManager:ctor()
 	self.mods_name_map = {};
 	-- mapping mod object to true
 	self.mods_map = {};
-	-- plugin manager
-	self:AddInstance(self);
 end
 
 -- static method
 function PluginManager.GetInstance(name)
-	return allInstances[name or "PluginManager"];
+	return allInstances[name or ""];
 end
 
-function PluginManager:AddInstance(self)
+-- static method: it will try to create the instance if it does not exist. 
+function PluginManager.CreateGetInstance(name)
+	name = name or "";
+	local manager = PluginManager.GetInstance(name);
+	if(not manager) then
+		manager = PluginManager:new();
+		manager:SetName(name);
+		PluginManager.AddInstance(manager);
+	end
+	return manager;
+end
+
+function PluginManager.AddInstance(self)
 	for name, instance in pairs(allInstances) do
 		if(instance == self and self:GetName() ~= name) then
 			allInstances[name] = nil;
