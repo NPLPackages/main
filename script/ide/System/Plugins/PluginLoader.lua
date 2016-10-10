@@ -123,6 +123,11 @@ function PluginLoader:SearchAllModules()
 			local filename = format("%s%s/main.lua", folderPath, item.filename);
 			if(ParaIO.DoesFileExist(filename, false)) then
 				self:AddModuleToList(item.filename, modList);
+			--else
+				--local filename = format("%s%s/%s%s/main.lua", folderPath, item.filename, folderPath, item.filename);
+				--if(ParaIO.DoesFileExist(filename, false)) then
+					--self:AddModuleToList(format("%s/%s%s", item.filename, folderPath, item.filename), modList);
+				--end
 			end
 		end
 	end

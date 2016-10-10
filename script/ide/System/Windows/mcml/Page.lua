@@ -27,7 +27,7 @@ local Page = commonlib.inherit(commonlib.gettable("System.Core.ToolBase"), commo
 	-- a function to be called when a new page is downloaded. 
 	OnPageDownloaded = nil,
 	-- default policy if no one is specified. 
-	cache_policy = Map3DSystem.localserver.CachePolicy:new("access plus 1 hour"),
+	cache_policy = System.localserver.CachePolicy:new("access plus 1 hour"),
 	-- default refresh page delay time in seconds. More information, please see Refresh() method. 
 	DefaultRefreshDelayTime = 1,
 	-- default page redirect delay time in seconds. More information, please see Redirect() method. 
@@ -88,7 +88,7 @@ function Page:Init(url, cache_policy, bRefresh)
 		self.status_line = "正在刷新页面请等待......";
 		self:OnRefresh();
 		-- for remote url, use the local server to retrieve the data
-		local ls = Map3DSystem.localserver.CreateStore(nil, 2);
+		local ls = System.localserver.CreateStore(nil, 2);
 		if(ls)then
 			ls:CallXML(cache_policy or self.cache_policy, url, Page.OnPageDownloaded_CallBack, self)
 		end
@@ -369,7 +369,7 @@ function Page:GetRequestParam(paramName)
 	local request_url = self:GetRequestURL();
 	local params = self.mcmlNode:GetAttribute("request_params");
 	if(not params or params.url__ ~= request_url) then
-		params = Map3DSystem.localserver.UrlHelper.url_getparams_table(request_url) or {};
+		params = System.localserver.UrlHelper.url_getparams_table(request_url) or {};
 		params.url__ = request_url;
 		self.mcmlNode:SetAttribute("request_params", params);
 	end

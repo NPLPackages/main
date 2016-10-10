@@ -251,14 +251,14 @@ function ParaCamera.SwitchPerspectiveView()
 	att:SetField("IsPerspectiveView", true);
 end
 
-NPL.load("(gl)script/kids/3DMapSystemApp/localserver/factory.lua");
-ParaAsset.RemoteTexture_cache_policy = Map3DSystem.localserver.CachePolicy:new("access plus 1 hour");
+NPL.load("(gl)script/ide/System/localserver/factory.lua");
+ParaAsset.RemoteTexture_cache_policy = System.localserver.CachePolicy:new("access plus 1 hour");
 --[[ 
 An internal ResourceStore (local server) called "_default_" is used to serve http textures. 
 An internal time is also used so that we can sequence downloader threads. 
 ]]
 function ParaAsset.GetRemoteTexture(url)
-	local ls = Map3DSystem.localserver.CreateStore();
+	local ls = System.localserver.CreateStore();
 	if(not ls) then
 		log("error: failed creating local server resource store \n")
 		return
@@ -277,7 +277,7 @@ end
 
 -- clear all cached textures. 
 function ParaAsset.ClearTextureCache()
-	local ls = Map3DSystem.localserver.CreateStore();
+	local ls = System.localserver.CreateStore();
 	if(not ls) then
 		log("error: failed creating local server resource store\n")
 		return

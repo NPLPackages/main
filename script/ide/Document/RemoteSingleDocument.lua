@@ -47,7 +47,7 @@ function RemoteSingleDocument:Load(uid)
 			if(self.loadFunc)then
 				self.loadFunc(bSucceed);
 			end
-		end,Map3DSystem.localserver.CachePolicies["never"])
+		end,System.localserver.CachePolicies["never"])
 end
 function RemoteSingleDocument:Save()
 	local static_canvas_str =  self:GetStr(self.static_canvas);

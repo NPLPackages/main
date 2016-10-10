@@ -37,7 +37,7 @@ local PageElement = commonlib.gettable("System.Windows.mcml.PageElement");
 local elem = PageElement:new();
 ------------------------------------------------------------
 ]]
-NPL.load("(gl)script/kids/3DMapSystemApp/localserver/UrlHelper.lua");
+NPL.load("(gl)script/ide/System/localserver/UrlHelper.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/StyleItem.lua");
 local StyleItem = commonlib.gettable("System.Windows.mcml.StyleItem");
 local mcml = commonlib.gettable("System.Windows.mcml");
@@ -901,7 +901,7 @@ end
 -- @return: nil or string value.
 function PageElement:GetRequestParam(paramName)
 	local request_url = self:GetRequestURL();
-	return Map3DSystem.localserver.UrlHelper.url_getparams(request_url, paramName)
+	return System.localserver.UrlHelper.url_getparams(request_url, paramName)
 end
 
 -- convert a url to absolute path using "request_url" if present
@@ -919,8 +919,8 @@ function PageElement:GetAbsoluteURL(url)
 	else	
 		local request_url = self:GetRequestURL();
 		if(request_url) then
-			NPL.load("(gl)script/kids/3DMapSystemApp/localserver/security_model.lua");
-			local secureOrigin = Map3DSystem.localserver.SecurityOrigin:new(request_url)
+			NPL.load("(gl)script/ide/System/localserver/security_model.lua");
+			local secureOrigin = System.localserver.SecurityOrigin:new(request_url)
 			
 			if(string_find(url, "^/\\")) then
 				-- relative to site root.
