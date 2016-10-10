@@ -10,6 +10,8 @@ NPL.load("(gl)script/ide/System/localserver/WebCacheDB_def.lua");
 System.localserver.WebCacheDB:Flush();
 -------------------------------------------------------
 ]]
+NPL.load("(gl)script/sqlite/sqlite3.lua");
+
 local WebCacheDB = commonlib.gettable("System.localserver.WebCacheDB");
 
 local LOG = LOG;
