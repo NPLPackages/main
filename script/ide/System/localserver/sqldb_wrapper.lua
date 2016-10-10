@@ -12,8 +12,7 @@ table:MaybeCreateTable();
 -------------------------------------------------------
 ]]
 
-local SqlDb = {};
-commonlib.setfield("System.localserver.SqlDb", SqlDb);
+local SqlDb = commonlib.gettable("System.localserver.SqlDb");
 
 -- drop all tables in the given database. 
 function SqlDb.DropAllObjects(_db)
@@ -43,14 +42,12 @@ end
 ----------------------------
 -- a table with just name value pairs. 
 ----------------------------
-local NameValueTable = 
-{
+local NameValueTable = commonlib.createtable("System.localserver.NameValueTable", {
 	-- A pointer to the SQLDatabase our table will be created in.
 	_db, 
 	-- The name of the table we will be storing name/value pairs in.
 	table_name,
-}
-System.localserver.NameValueTable = NameValueTable;
+});
 
 -- Creates an instance for the specified database and table name.
 function NameValueTable:new(db, table_name)

@@ -17,7 +17,7 @@ NPL.load("(gl)script/ide/System/localserver/UrlHelper.lua");
 -- Class that represents the origin of a URL. The origin includes the scheme, host, and port.
 --------------------------
 
-local SecurityOrigin = {
+local SecurityOrigin = commonlib.createtable("System.localserver.SecurityOrigin", {
 	-- whether initialized from an URL
 	initialized = false,
 	-- string:  A url that contains the information representative of the security
@@ -34,9 +34,9 @@ local SecurityOrigin = {
 	port_string,
 	-- private: string:  The full url the origin was initialized with. This should be removed in future. 
 	full_url,
-};
+});
 
-commonlib.setfield("System.localserver.SecurityOrigin", SecurityOrigin);
+
 
 function SecurityOrigin:new(full_url)
 	local o = {}   -- create object if user does not provide one

@@ -23,7 +23,7 @@ local WebCacheDB = commonlib.gettable("System.localserver.WebCacheDB");
 -- A CaptureRequest encapslates the parameters to a ResourceStore.capture() API call. Multiple urls can be specified in a single API call.
 -- Note: Use TaskManager:new_request() to create an instance of this class
 ------------------------------------------------------------------------------
-local CaptureRequest  = {
+local CaptureRequest = {
 	-- int: captureId assigned by ResourceStore for this request
 	id,
 	-- request type, if nil, it is auto determined. this is 1 for URL request; and 2 for file request. 

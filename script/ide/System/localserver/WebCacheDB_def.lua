@@ -10,7 +10,8 @@ NPL.load("(gl)script/ide/System/localserver/WebCacheDB_def.lua");
 System.localserver.WebCacheDB:Flush();
 -------------------------------------------------------
 ]]
-local WebCacheDB = System.localserver.WebCacheDB;
+local WebCacheDB = commonlib.gettable("System.localserver.WebCacheDB");
+
 local LOG = LOG;
 NPL.load("(gl)script/ide/System/localserver/sqldb_wrapper.lua");
 
@@ -55,7 +56,7 @@ WebCacheDB.UpdateStatus = {
 -----------------------------
 -- a server is a set of dynamic or static web entries that are managed as a group. 
 -- entries in a group usually shares the same server settings like minUpdateTime, etc. 
-local ServerInfo = {
+local ServerInfo = commonlib.createtable("System.localserver.WebCacheDB.ServerInfo", {
 	-- int64 server id. 
 	id = nil,
 	-- temporarily enable or disable this server. 
@@ -79,8 +80,7 @@ local ServerInfo = {
     last_update_check_time=0,
     -- string
     manifest_date_header=nil,
-}
-WebCacheDB.ServerInfo = ServerInfo;
+});
 
 function ServerInfo:new(o)
 	o = o or {}   -- create object if user does not provide one
@@ -95,7 +95,7 @@ end
 -- an URL resource may has be a version that is already downloaded, while having another newer version being downloaded. 
 -- Hence, the same url has two version states. One can access the downloaded version while a newer version is being downloaded. 
 -- usually after the newer version is downloaded, the old version is deleted, so that there is only one downloaded version left in the db thereafterwards. 
-local VersionInfo = {
+local VersionInfo = commonlib.createtable("System.localserver.WebCacheDB.VersionInfo", {
 	-- int64
     id,
     -- int64
@@ -106,9 +106,8 @@ local VersionInfo = {
     ready_state = WebCacheDB.VersionReadyState.VERSION_DOWNLOADING,
     -- string
     session_redirect_url="",
-};
+});
 
-WebCacheDB.VersionInfo = VersionInfo; 
 function VersionInfo:new(o)
 	o = o or {}   -- create object if user does not provide one
 	setmetatable(o, self)
@@ -120,7 +119,7 @@ end
 -- WebCacheDB.EntryInfo class
 -----------------------------
 -- an URL web resource entry
-local EntryInfo = {
+local EntryInfo = commonlib.createtable("System.localserver.WebCacheDB.EntryInfo", {
 	-- int64 
 	id,
 	-- int64 
@@ -134,9 +133,8 @@ local EntryInfo = {
     ignore_query = false,
     -- int64 
     payload_id = nil,
-};
+});
 
-WebCacheDB.EntryInfo = EntryInfo; 
 function EntryInfo:new(o)
 	o = o or {}   -- create object if user does not provide one
 	setmetatable(o, self)
@@ -149,7 +147,7 @@ end
 -- WebCacheDB.PayloadInfo class
 -----------------------------
 -- the body data of the web resource entry
-local PayloadInfo = {
+local PayloadInfo = commonlib.createtable("System.localserver.WebCacheDB.PayloadInfo", {
 	-- int64 
 	id,
 	-- int64 
@@ -168,9 +166,8 @@ local PayloadInfo = {
     -- the body response data itself. Only applicable to webservices where the response is stored as strings in the database instead of local file system. 
     data = nil,
     is_synthesized_http_redirect = false,
-};
+});
 
-WebCacheDB.PayloadInfo = PayloadInfo; 
 function PayloadInfo:new(o)
 	o = o or {}   -- create object if user does not provide one
 	setmetatable(o, self)

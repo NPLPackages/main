@@ -12,7 +12,6 @@ use the lib:
 NPL.load("(gl)script/ide/System/localserver/localserver.lua");
 -------------------------------------------------------
 ]]
-
 NPL.load("(gl)script/ide/System/localserver/WebCacheDB.lua");
 NPL.load("(gl)script/ide/System/localserver/cache_policy.lua");
 
@@ -26,7 +25,7 @@ local Item = {
 	payload = nil,
 }
   
-local localserver = {
+local localserver = commonlib.createtable("System.localserver.localserver", {
 	-- the web database name. if nil, it will use the default database file at "Database/localserver.db"
 	-- otherwise, it will use "Database/[db_name].db"
 	db_name,
@@ -46,10 +45,11 @@ local localserver = {
 	store_might_exist_ = true,
 	-- Represents an item in the store
 	Item = Item,
-	-- default policy
-	Cache_policy = System.localserver.CachePolicy:new("access plus 1 hour"),
-};
-commonlib.setfield("System.localserver.localserver", localserver);
+});
+
+-- default policy
+localserver.Cache_policy = System.localserver.CachePolicy:new("access plus 1 hour");
+
 
 function localserver:new(o)
 	o = o or {}   -- create object if user does not provide one

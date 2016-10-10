@@ -35,8 +35,7 @@ local cp = System.localserver.CachePolicies["1 day"];
 --------------------------
 -- CachePolicy class
 --------------------------
-
-local CachePolicy = {
+local CachePolicy = commonlib.createtable("System.localserver.CachePolicy", {
 	-- The base time is either the last modification time of the file, or the time of the client's access to the document.
 	-- 0 means that the file's last modification time should be used as the base time, 
 	-- 1 means the client's access time should be used.
@@ -44,9 +43,7 @@ local CachePolicy = {
 	BaseTime = 1,
 	-- Time in seconds to expire relative to BaseTime. e.g. 2592000 is a month, which is good for asset and images.  604800 is a week which is good for profile and content pages. 
 	ExpireTime = 604800,
-};
-
-commonlib.setfield("System.localserver.CachePolicy", CachePolicy);
+});
 
 -- create the object and init from initCode. 
 -- format of initCode, please see Init() function. 

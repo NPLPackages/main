@@ -20,15 +20,14 @@ local WebCacheDB = System.localserver.WebCacheDB;
 ------------------------------------------
 -- WebserviceStore : public <localserver>
 ------------------------------------------
-local WebserviceStore = commonlib.inherit(System.localserver.ResourceStore, {
-	-- type of WebCacheDB.ServerType
-	server_type_ = WebCacheDB.ServerType.WEBSERVICE_STORE,
-	-- default policy
-	Cache_policy = System.localserver.CachePolicy:new("access plus 1 hour"),
-	Cache_policy_REST = System.localserver.CachePolicy:new("access plus 1 week"),
-});
+local WebserviceStore = commonlib.inherit(commonlib.gettable("System.localserver.ResourceStore"), commonlib.gettable("System.localserver.WebserviceStore"));
 
-commonlib.setfield("System.localserver.WebserviceStore", WebserviceStore);
+-- type of WebCacheDB.ServerType
+WebserviceStore.server_type_ = WebCacheDB.ServerType.WEBSERVICE_STORE;
+-- default policy
+WebserviceStore.Cache_policy = System.localserver.CachePolicy:new("access plus 1 hour");
+WebserviceStore.Cache_policy_REST = System.localserver.CachePolicy:new("access plus 1 week");
+
 
 ----------------------------------
 -- functions: 

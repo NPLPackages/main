@@ -24,20 +24,19 @@ NPL.load("(gl)script/ide/System/localserver/ResourceStore.lua");
 NPL.load("(gl)script/ide/System/localserver/capture_task.lua");
 NPL.load("(gl)script/ide/System/localserver/UrlHelper.lua");
 
-local WebCacheDB = System.localserver.WebCacheDB;
+local WebCacheDB = commonlib.gettable("System.localserver.WebCacheDB");
 
 ------------------------------------------
 -- URLResourceStore : public <localserver>
 ------------------------------------------
-local URLResourceStore = commonlib.inherit(System.localserver.ResourceStore, {
-	-- type of WebCacheDB.ServerType
-	server_type_ = WebCacheDB.ServerType.URLRESOURCE_STORE,
-	-- default policy
-	Cache_policy = System.localserver.CachePolicy:new("access plus 1 hour"),
-	Cache_policy_REST = System.localserver.CachePolicy:new("access plus 1 week"),
-});
+local URLResourceStore = commonlib.inherit(commonlib.gettable("System.localserver.ResourceStore"), commonlib.gettable("System.localserver.URLResourceStore"));
 
-commonlib.setfield("System.localserver.URLResourceStore", URLResourceStore);
+-- type of WebCacheDB.ServerType
+URLResourceStore.server_type_ = WebCacheDB.ServerType.URLRESOURCE_STORE;
+-- default policy
+URLResourceStore.Cache_policy = System.localserver.CachePolicy:new("access plus 1 hour");
+URLResourceStore.Cache_policy_REST = System.localserver.CachePolicy:new("access plus 1 week");
+
 
 ----------------------------------
 -- functions: 

@@ -9,14 +9,11 @@ use the lib:
 NPL.load("(gl)script/ide/System/localserver/update_task.lua");
 -------------------------------------------------------
 ]]
-
-if(not System.localserver) then System.localserver = {} end
-
 NPL.load("(gl)script/ide/System/localserver/WebCacheDB.lua");
 NPL.load("(gl)script/ide/System/localserver/capture_task.lua");
 
-local WebCacheDB = System.localserver.WebCacheDB;
-local TaskManager = System.localserver.TaskManager;
+local WebCacheDB = commonlib.gettable("System.localserver.WebCacheDB");
+local TaskManager = commonlib.gettable("System.localserver.TaskManager");
 
 -- Returns true if an UpdateTask for the managed store is running
 -- @param store_id: server id of the managed store. 
@@ -28,7 +25,7 @@ end
 -- A UpdateTask processes a CaptureRequest asynchronously in the background. 
 -- Notification messages are sent to the listener as each url in the request is completed.
 ------------------------------------------------------------------------------
-local UpdateTask = {
+local UpdateTask = commonlib.createtable("System.localserver.UpdateTask", {
 	-- a reference to the ResourceStore making this capture
 	store_ = nil,
 	-- type of CaptureRequest
@@ -42,8 +39,8 @@ local UpdateTask = {
 	-- whether initialized
 	is_initialized_ = nil,
 	is_aborted_ = nil,
-};
-System.localserver.UpdateTask = UpdateTask;
+});
+ 
 
 -- return the task object if succeed. otherwise nil.
 -- upon created it will be automatically added to the TaskManager. The capture task can be accessed via its request id, 
