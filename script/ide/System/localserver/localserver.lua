@@ -14,8 +14,10 @@ NPL.load("(gl)script/ide/System/localserver/localserver.lua");
 ]]
 NPL.load("(gl)script/ide/System/localserver/WebCacheDB.lua");
 NPL.load("(gl)script/ide/System/localserver/cache_policy.lua");
+NPL.load("(gl)script/ide/System/localserver/factory.lua");
+NPL.load("(gl)script/ide/System/localserver/UrlHelper.lua");
 
-local WebCacheDB = System.localserver.WebCacheDB;
+local WebCacheDB = commonlib.gettable("System.localserver.WebCacheDB");
 
 -- Represents an item in the store
 local Item = {

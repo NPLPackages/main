@@ -15,11 +15,10 @@ local CookieMap = System.localserver.CookieMap:new("www.paraengine.com/get.asmx?
 -- Class that represents the origin of a URL. The origin includes the scheme, host, and port.
 --------------------------
 -- A collection of cookie name and optional value pairs
-local CookieMap = {
+local CookieMap = commonlib.createtable("System.localserver.CookieMap", {
 	-- an table of name to value map
 	data = nil,
-};
-commonlib.setfield("System.localserver.CookieMap", CookieMap);
+});
 
 function CookieMap:new(full_url)
 	local o = {}   -- create object if user does not provide one

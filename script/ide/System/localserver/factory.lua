@@ -11,11 +11,10 @@ local store = System.localserver.CreateStore("ResourceStore_sample", 1)
 local store = System.localserver.CreateStore("ManagedResourceStore_sample", 0)
 -------------------------------------------------------
 ]]
-
-if(not Map3DSystem) then Map3DSystem = {} end
-if(not System.localserver) then System.localserver = {} end
-
 NPL.load("(gl)script/ide/System/localserver/cache_policy.lua");
+
+local localserver = commonlib.gettable("System.localserver");
+
 
 local _Stores = {};
 local _Stores_pools = {};

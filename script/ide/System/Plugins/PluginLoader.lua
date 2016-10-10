@@ -23,6 +23,7 @@ loader:LoadAllPlugins();
 NPL.load("(gl)script/ide/System/Core/ToolBase.lua");
 NPL.load("(gl)script/ide/System/Plugins/PluginConfig.lua");
 NPL.load("(gl)script/ide/System/Plugins/PluginManager.lua");
+NPL.load("(gl)script/ide/System/localserver/factory.lua");
 local PluginManager = commonlib.gettable("System.Plugins.PluginManager");
 local PluginConfig = commonlib.gettable("System.Plugins.PluginConfig");
 

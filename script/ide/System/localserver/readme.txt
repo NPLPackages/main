@@ -33,6 +33,7 @@ One can use local server as a simple (name, value) pair database with cache_poli
 
 To query a database entry call below, here we will use web service store
 <verbatim>
+	NPL.load("(gl)script/ide/System/localserver/factory.lua");
 	local ls = System.localserver.CreateStore(nil, 2);
 	if(not ls) then
 		return 
@@ -54,6 +55,7 @@ To query a database entry call below, here we will use web service store
 
 To add(update) a database entry call below
 <verbatim>
+	NPL.load("(gl)script/ide/System/localserver/factory.lua");
 	local ls = System.localserver.CreateStore(nil, 2);
 	if(not ls) then
 		return 
