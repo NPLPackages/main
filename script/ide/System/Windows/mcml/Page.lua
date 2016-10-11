@@ -294,7 +294,7 @@ end
 -- it calls this Refresh method of the associated page with a delay time. Hence, when the last delay time is reached, the page is rebuilt 
 -- and the dynamic content will be accessible by then. 
 -- @param DelayTime: if nil, it will default to self.DefaultRefreshDelayTime (usually 1.5 second). 
--- tip: If one set this to a nagative value, it may causes an immediate page refresh. 
+-- tip: If one set this to a negative value, it may causes an immediate page refresh. 
 function Page:Refresh(DelayTime)
 	
 	DelayTime = DelayTime or self.DefaultRefreshDelayTime;

@@ -42,6 +42,17 @@ function PluginLoader:ctor()
 	self.modTable = {};
 	-- the world where plugins are used in. if "nil"  or "global", the plugins are used in global range;
 	self.curWorld = nil;
+	-- current download info {...}
+	self.currentDownload = {};
+end
+
+
+function PluginLoader:GetDownloadInfo()
+	return self.currentDownload;
+end
+
+function PluginLoader:SetDownloadInfo(downloadInfo)
+	self.currentDownload = downloadInfo or {};
 end
 
 -- @param pluginFolder: if nil, default to "Mod/"
