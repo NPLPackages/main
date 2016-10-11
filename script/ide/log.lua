@@ -84,6 +84,18 @@ local nLastDateTime = 0;
 local date_str = ParaGlobal.GetDateFormat("yyyy-MM-dd");
 local time_str = ParaGlobal.GetTimeFormat(nil);
 
+-- replace the native log with advanced log 
+-- Please note there is maximum length of 2048 bytes to be logged. 
+-- to print longer log, please use `echo` or `commonlib.log`
+-- @param text: table or string, table recursion is checked
+function log(text)
+	if(	type(text) == "string" ) then
+		WriteToLogFile(text);
+	else
+		WriteToLogFile(commonlib.serialize_compact(text));
+	end
+end
+
 -- get the standard time format string. 
 -- return the date_str, time_str, and the tick count. 
 local function GetLogTimeString()

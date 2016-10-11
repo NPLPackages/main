@@ -20,11 +20,14 @@ local type = type
 local string_format = string.format;
 local pairs = pairs
 local ipairs = ipairs
-local log = log;
--- output input to log safely in a single echo line. Only used in debugging or testing
--- Internally it uses commonlib.dump which handles recursive tables.
+
+local log = ParaGlobal.WriteToLogFile;
+-- output input to log safely in a single echo line (recursion is handled). Only used in debugging or testing
 -- @param p1: anything to echo, table, nil, value, function, etc. 
--- @param handleRecursion: if true, table recursion is handled. it may cause stack overflow if set to nil with recursive table
+-- @param handleRecursion[obsoleted]: 
+-- Note: recursion is handled by C++ side even if this is nil or false.
+-- if true, table recursion is handled. it may cause stack overflow if set to nil with recursive table
+-- Internally it uses commonlib.dump which handles recursive tables.
 function commonlib.echo(p1, handleRecursion)
 	log("echo:")
 	if(handleRecursion) then

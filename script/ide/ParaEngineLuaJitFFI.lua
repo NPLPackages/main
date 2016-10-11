@@ -130,9 +130,9 @@ if(use_ffi) then
 			end
 		end
 		if(libNamespace) then
-			log(string.format("ffi loaded shared lib: %s\n", libName))
+			ParaGlobal.WriteToLogFile(string.format("ffi loaded shared lib: %s\n", libName))
 		else
-			log(string.format("warn: ffi failed to load shared lib: %s\n", libName))
+			ParaGlobal.WriteToLogFile(string.format("warn: ffi failed to load shared lib: %s\n", libName))
 		end
 		return libNamespace;
 	end
