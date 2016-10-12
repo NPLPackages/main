@@ -144,7 +144,7 @@ function test_Windows:TestMCMLPage()
 	local window = Window:new();
 	window:Show({
 		url="script/ide/System/test/test_mcml_page.html", 
-		alignment="_lt", left = 0, top = 0, width = 200, height = 400,
+		alignment="_lt", left = 0, top = 0, width = 800, height = 400,
 	});
 	-- keep a reference for refresh
 	test.window = window;

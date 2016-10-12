@@ -316,4 +316,32 @@ function TestGUI:test_mobile_applyanim()
 	_this:ApplyAnim();
 end
 
+function TestGUI:test_NonClientArea()
+	-- users can drag the non client area to move the window
+	local _parent, _this;
+	_this = ParaUI.CreateUIObject("container", "test_nc_test", "_mt", 0, 0, 0, 64);
+	_this:AttachToRoot();
+	_this.background = "Texture/alphadot.png";
+	-- This line will allow the user to drag this container to move the window. 
+	_this:SetField("EnableClientTest", true);
+	_this.zorder = 1002;
+	_parent = _this;
+
+	-- sub controls can not be dragged. 
+	_this = ParaUI.CreateUIObject("button", "b", "_rt", -10-32, 10, 32, 22);
+	_this.text= "X"
+	_this.background = "";
+	_parent:AddChild(_this);
+
+	-- test toggle title bar
+	_this = ParaUI.CreateUIObject("button", "b", "_rt", -10-32-5-128, 10, 128, 22);
+	_this.text= "Toggle TitleBar";
+	_this.background = "";
+	_this:SetScript("onclick", function()
+		local bShowTitle = ParaEngine.GetAttributeObject():GetField("ShowWindowTitleBar", true)
+		ParaEngine.GetAttributeObject():SetField("ShowWindowTitleBar", not bShowTitle);
+	end);
+	_parent:AddChild(_this);
+end
+
 -- LuaUnit:run('TestGUIHelper:test_gui_trim_text')

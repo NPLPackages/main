@@ -148,7 +148,7 @@ end
 --  OnLoadComponentBeforeChild and OnLoadComponentAfterChild instead. 
 -- @param parentLayout: only for casual initial layout. 
 -- @return used_width, used_height
-function PageElement:LoadComponent(parentElem, parentLayout, style)
+function PageElement:LoadComponent(parentElem, parentLayout, styleItem)
 	if(self:GetAttribute("display") == "none") then 
 		return 
 	end
@@ -164,7 +164,7 @@ function PageElement:LoadComponent(parentElem, parentLayout, style)
 		self:TranslateMe();
 	end
 
-	local css = self:CreateStyle(mcml:GetStyleItem(self.class_name or self.name), style);
+	local css = self:CreateStyle(nil, styleItem);
 
 	self:OnLoadComponentBeforeChild(parentElem, parentLayout, css);
 
@@ -543,6 +543,8 @@ function PageElement:GetPureText()
 		if(node) then
 			if(type(node) == "string") then
 				text = text..node;
+			elseif(node.name== "text" and type(node.value) == "string") then
+				text = text..node.value;
 			end
 		end
 	end
@@ -766,8 +768,29 @@ function PageElement:InvalidateStyle()
 	self.style = nil;
 end
 
+-- get style item
 function PageElement:GetStyle()
 	return self.style;
+end
+
+-- apply any css classnames in class attribute
+function PageElement:ApplyClasses()
+	local pageStyle = self:GetPageStyle();
+	if(pageStyle) then
+		local style = self:GetStyle();
+		-- apply name first such as "pe:button"
+		style:Merge(pageStyle:GetItem(self.class_name or self.name));
+
+		-- apply attribute class names
+		if(self.attr and self.attr.class) then
+			local class_names = self:GetAttributeWithCode("class", nil, true);
+			if(class_names) then
+				for class_name in class_names:gmatch("[^ ]+") do
+					style:Merge(pageStyle:GetItem(class_name));
+				end
+			end
+		end
+	end
 end
 
 -- get the css style object if any. Style will only be evaluated once and saved to self.style as a table object, 
@@ -782,13 +805,9 @@ function PageElement:CreateStyle(baseStyle, base_baseStyle)
 
 	style:MergeInheritable(base_baseStyle);
 	style:Merge(baseStyle);
-	--
-	-- apply class if any
-	--
-	if(self.attr and self.attr.class) then
-		local class_name = self:GetAttributeWithCode("class", nil, true);
-		style:Merge(mcml:GetStyleItem(class_name));
-	end
+
+	self:ApplyClasses();
+	
 	--
 	-- apply instance if any
 	--
@@ -875,6 +894,14 @@ end
 function PageElement:GetPageCtrl()
 	return self:GetAttribute("page_ctrl") or self:GetParentAttribute("page_ctrl");
 end	
+
+-- get the page style object shared by all page elements.
+function PageElement:GetPageStyle()
+	local page = self:GetPageCtrl();
+	if(page) then
+		return page:GetStyle();
+	end
+end
 
 -- search all parent with a given attribute name. It will search recursively for all ancesters.  
 -- this function is usually used for getting the "request_url" field which is inserted by MCML web browser to the top level node. 

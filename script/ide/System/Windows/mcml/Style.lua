@@ -22,12 +22,23 @@ local Style = commonlib.inherit(nil, commonlib.gettable("System.Windows.mcml.Sty
 
 function Style:ctor()
 	self.items = {};
+	self.references = {};
 end
 
 -- @param name: the css class name
 function Style:GetItem(name)
 	if(name) then
-		return self.items[name];
+		local item = self.items[name];
+		if(not item) then
+			local references = self.references;
+			for i=#(references), 1, -1 do
+				item = references[i]:GetItem(name);
+				if(item) then
+					break;
+				end
+			end
+		end
+		return item;
 	end
 end
 
@@ -39,6 +50,7 @@ function Style:SetItem(name, style, bOverwrite)
 	end
 end
 
+-- merge styleitems from table
 function Style:LoadFromTable(styles)
 	if(styles) then
 		for name, style in pairs(styles) do
@@ -48,7 +60,70 @@ function Style:LoadFromTable(styles)
 	return self;
 end
 
+-- merge styleitems from table string
+function Style:LoadFromString(code)
+	if(code~=nil and code~="") then
+		local styles = commonlib.LoadTableFromString(code);
+		if(styles) then
+			self:LoadFromTable(styles);
+		end
+	end
+end
+
+-- @param filename: file content should be a pure NPL table like { ["div"] = {background="", },  }
+-- see also: script/ide/System/test/test_file_style.mcss
+function Style:LoadFromFile(filename)
+	self:SetFileName(filename);
+	local styles = commonlib.LoadTableFromFile(filename);
+	if(styles) then
+		self:LoadFromTable(styles)
+	else
+		LOG.std(nil, "warn", "mcml style", "style file %s not found", filename);
+	end
+end
+
 -- TODO: touch all textures used in the style. 
 function Style:PreloadAllTextures()
-	
+end
+
+local auto_id = 1;
+
+-- get filename, if no filename is given a default unqiue name will be created. 
+function Style:GetFileName()
+	if(not self.filename) then
+		self.filename = "inline_"..tostring(auto_id);
+		auto_id = auto_id + 1;
+	end
+	return self.filename;
+end
+
+-- set file name of this style. 
+function Style:SetFileName(filename)
+	self.filename = filename;
+end
+
+-- it does not copy and merge items in the given style, it simply add a reference to the given style
+function Style:AddReference(style)
+	if(style) then
+		local references = self.references;
+		for i=1, #(references) do
+			if(references[i] == style) then
+				break;
+			end
+		end
+		references[#references+1] = style;
+	end
+end
+
+-- remove a given reference
+function Style:RemoveReference(style)
+	local references = self.references;
+	local index;
+	for i=1, #(references) do
+		if(references[i] == style) then
+			index = i;
+			break;
+		end
+	end
+	commonlib.removeArrayItem(references, index);
 end

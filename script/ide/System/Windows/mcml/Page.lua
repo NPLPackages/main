@@ -12,6 +12,8 @@ local page = Page:new();
 ]]
 NPL.load("(gl)script/ide/System/Core/ToolBase.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/PageLayout.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/Style.lua");
+local Style = commonlib.gettable("System.Windows.mcml.Style");
 local mcml = commonlib.gettable("System.Windows.mcml");
 local Elements = commonlib.gettable("System.Windows.mcml.Elements");
 local PageLayout = commonlib.gettable("System.Windows.mcml.PageLayout");
@@ -71,6 +73,7 @@ function Page:Init(url, cache_policy, bRefresh)
 		-- clear all 
 		self.status = nil;
 		self.mcmlNode = nil;
+		self.style = nil;
 		self:OnRefresh();
 		return
 	elseif(type(url) == "table" and table.getn(url)>0) then
@@ -685,6 +688,7 @@ end
 function Page:LoadFromXmlNode(xmlNode)
 	-- ready status
 	self.status=1;
+	self.style = nil;
 	self.mcmlNode = mcml:createFromXmlNode(xmlNode);
 	self._PAGESCRIPT = nil; -- clear page scope
 	-- rebuild UI
@@ -755,9 +759,18 @@ function Page:LoadComponent()
 	if(layout and self.mcmlNode) then
 		local parentElem = layout:widget();	
 		if(parentElem) then
-			self.mcmlNode:LoadComponent(parentElem, layout, self.style);
+			self.mcmlNode:LoadComponent(parentElem, layout, nil);
 		end
 	end
+end
+
+-- Get the page style object
+function Page:GetStyle()
+	if(not self.style) then
+		self.style = Style:new();
+		self.style:AddReference(mcml:GetStyle());
+	end
+	return self.style;
 end
 
 -- create (instance) the page UI. It will create UI immediately after the page is downloaded. If page is local, it immediately load.
