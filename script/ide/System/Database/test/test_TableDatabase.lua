@@ -563,7 +563,6 @@ function TestCountAPI()
 	
 	db.countTest:removeIndex({}, function(err, bRemoved) end);
 
-	-- compound keys
 	for i=1, 100 do
 		db.countTest:insertOne({name="name"..i}, { 
 			name="name"..i, 
@@ -583,4 +582,32 @@ function TestCountAPI()
 	db.countTest:count({["+state+name+company"] = {"china", gt="name50"}}, function(err, count)  
 		assert(count == 19) 
 	end);
+end
+
+function TestDeleteOne()
+	NPL.load("(gl)script/ide/System/Database/TableDatabase.lua");
+	local TableDatabase = commonlib.gettable("System.Database.TableDatabase");
+	local db = TableDatabase:new():connect("temp/mydatabase/");	
+	
+	db.deleteTest:makeEmpty({}, function(err, count) echo("deleted"..(count or 0)) end);
+	
+	for i=1, 100 do
+		db.deleteTest:insertOne(nil, { 
+			name="name"..i, 
+			company = (i%2 == 0) and "tatfook" or "paraengine", 
+			state = (i%3 == 0) and "china" or "usa"}, function() end)
+	end
+
+	-- delete using any key
+	db.deleteTest:deleteOne({name="name1"}, function(err, count)  
+		assert(count == 1) 
+	end);
+
+	-- delete any
+	for i=1, 97 do
+		-- delete any one
+		db.deleteTest:deleteOne({}, function(err, count)  
+			assert(count == 1) 
+		end);
+	end
 end

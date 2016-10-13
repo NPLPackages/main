@@ -1,0 +1,11 @@
+-- Testing mcml css: script/ide/System/test/test_file_style.mcss
+{
+["default"] = { color="#ffffff" },
+["mobile_button"] = {
+	background = "Texture/Aries/Creator/Mobile/blocks_UI_32bits.png;1 1 34 34:12 12 12 12", 
+},
+color_red = { color = "#ff0000" },
+color_blue = { color = "#0000ff", ["margin-left"] = 10, ["font-size"] = 16 },
+bold = { ["font-weight"] = "bold"    },
+["pe:button"] = {padding = 10, color="#00ff00"},
+}

@@ -42,6 +42,15 @@ function Style:GetItem(name)
 	end
 end
 
+-- apply to styleItem for all matching classes
+function Style:ApplyToStyleItem(styleItem, name)
+	local references = self.references;
+	for i=1, #(references) do
+		references[i]:ApplyToStyleItem(styleItem, name);
+	end
+	styleItem:Merge(self.items[name]);
+end
+
 -- @param name: the css class name
 -- @param bOverwrite: true to overwrite if exist
 function Style:SetItem(name, style, bOverwrite)

@@ -110,6 +110,7 @@ function SqliteStore:ClearStatementCache()
 	self:CloseSQLStatement("sel_row_stat");
 	self:CloseSQLStatement("sel_all_stat");
 	self:CloseSQLStatement("select_gt_stat");
+	self:CloseSQLStatement("select_any_stat");
 	self:CloseSQLStatement("update_stat");
 	self:CloseSQLStatement("insert_stat");
 	
@@ -558,6 +559,29 @@ local function compareValue_(left, right, greaterthan, lessthan)
 	end
 end
 
+-- transform the input query into select one query that return only one result. 
+-- @return the input query
+function SqliteStore:makeSelectOneQuery(query)
+	if(query and not query._id)then
+		local bFoundIndex;
+		for name, item in pairs(query) do
+			if(type(name) == "string" and name~="_unset")then
+				if(type(item) == "table") then
+					item.limit = item.limit or 1;
+				else
+					query[name] = {item, limit = 1};
+				end
+				bFoundIndex = true;
+				break;
+			end
+		end
+		if(not bFoundIndex) then
+			query._id = { limit=1 };
+		end
+	end
+	return query;
+end
+
 -- only the limit and offset is honored, all others are ignored. 
 function SqliteStore:getQueryLimit(query)
 	local limit, offset;
@@ -614,15 +638,10 @@ function SqliteStore:getIds(value)
 		local greaterthan, lessthan;
 		greaterthan = value["gt"];
 		lessthan = value["lt"];
-		if(not greaterthan and not lessthan) then
-			LOG.std(nil, "error", "IndexTable", "operator not found");
-			return;
-		end
-		
+		local limit = value.limit or 20;
+		local offset = value.offset or value.skip or 0;
+
 		if(greaterthan) then
-			local limit = value.limit or 20;
-			local offset = value.offset or value.skip or 0;
-			
 			greaterthan = tostring(greaterthan);
 			self.select_gt_stat = self.select_gt_stat or self._db:prepare([[SELECT id FROM Collection WHERE id>? ORDER BY id LIMIT ?,?]]);
 			if(self.select_gt_stat) then
@@ -637,7 +656,19 @@ function SqliteStore:getIds(value)
 				LOG.std(nil, "error", "IndexTable", "failed to create select statement");
 			end
 		else
-			LOG.std(nil, "error", "IndexTable", "unknown operator %s", tostring(operator));
+			self.select_any_stat = self.select_any_stat or self._db:prepare([[SELECT id FROM Collection ORDER BY id LIMIT ?,?]]);
+			if(self.select_any_stat) then
+				self.select_any_stat:bind(offset, limit);
+				self.select_any_stat:reset();
+				local cid;
+				for row in self.select_any_stat:rows() do
+					cid = cid and (cid .. "," .. row.id) or tostring(row.id);
+				end
+				return cid;
+			else
+				LOG.std(nil, "error", "IndexTable", "failed to create select statement");
+			end
+			-- LOG.std(nil, "error", "IndexTable", "unknown operator %s", tostring(operator));
 		end
 	else
 		return tostring(value);
@@ -819,7 +850,8 @@ function SqliteStore:updateOne(query, update, callbackFunc)
 		update._unset = nil;
 	end
 	local err, data;
-	local id = self:FindRowId(query, false);
+	query = self:makeSelectOneQuery(query);
+	local id = self:FindRowId(query, true);
 	if(id) then
 		update._id = nil;
 		data = self:getCollectionRow(id);
@@ -922,8 +954,10 @@ end
 
 function SqliteStore:deleteOne(query, callbackFunc)
 	self:CommandTick("delete");
+	query = query or {};
 	local _, err, data;
-	local id = self:FindRowId(query, false);
+	query = self:makeSelectOneQuery(query);
+	local id = self:FindRowId(query, true);
 	if(id) then
 		local obj = self:getCollectionRow(id);
 		obj = self:filterRowByQuery(obj, query);

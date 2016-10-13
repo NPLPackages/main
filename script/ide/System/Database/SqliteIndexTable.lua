@@ -132,28 +132,35 @@ function IndexTable:getCount(value)
 	end
 end
 
--- @param value: any number or string value. or table { gt = value, lt=value, limit = number, offset|skip=number }.
+-- @param value: any number or string value. or table { [1]=value, gt = value, lt=value, limit = number, offset|skip=number }.
 -- value.gt: greater than this value, result in accending order
 -- value.lt: less than this value
+-- value[1]: equal to this value
 -- value.limit: max number of rows to return, default to 20. if there are duplicated items, it may exceed this number. 
 -- value.offset|skip: default to 0.
 -- return all ids as commar separated string
 function IndexTable:getIds(value)
 	if(value) then
-		local greaterthan, lessthan;
+		local greaterthan, lessthan, eq, limit, offset;
 		if(type(value) == "table") then
 			greaterthan = value["gt"];
 			lessthan = value["lt"];
-			if(not greaterthan and not lessthan) then
+			eq = value[1];
+			limit = value.limit or 20;
+			offset = value.offset or value.skip or 0;
+
+			if(not greaterthan and not lessthan and not eq) then
 				LOG.std(nil, "error", "IndexTable", "operator not found");
 				return;
 			end
+		else
+			eq = value;
 		end
 		
-		if(not greaterthan and not lessthan) then
+		if(eq~=nil and not greaterthan and not lessthan) then
 			self.select_stat = self.select_stat or self:GetDB():prepare([[SELECT cid FROM ]]..self:GetTableName()..[[ WHERE name=?]]);
 			if(self.select_stat) then
-				self.select_stat:bind(value);
+				self.select_stat:bind(eq);
 				self.select_stat:reset();
 				local row = self.select_stat:first_row();
 				if(row) then
@@ -163,8 +170,6 @@ function IndexTable:getIds(value)
 				LOG.std(nil, "error", "IndexTable", "failed to create select statement");
 			end
 		elseif(greaterthan) then
-			local limit = value.limit or 20;
-			local offset = value.offset or value.skip or 0;
 			
 			if(not self.select_gt_stat) then
 				self.select_gt_stat = self:GetDB():prepare([[SELECT cid FROM ]]..self:GetTableName()..[[ WHERE name>? ORDER BY name ASC LIMIT ?,?]]);

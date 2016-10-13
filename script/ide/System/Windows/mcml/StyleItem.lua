@@ -62,6 +62,7 @@ local number_fields = {
 	["left"] = true,
 	["top"] = true,
 	["font-size"] = true,
+	["spacing"] = true,
 	["base-font-size"] = true,
 };
 

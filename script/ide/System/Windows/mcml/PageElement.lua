@@ -779,14 +779,14 @@ function PageElement:ApplyClasses()
 	if(pageStyle) then
 		local style = self:GetStyle();
 		-- apply name first such as "pe:button"
-		style:Merge(pageStyle:GetItem(self.class_name or self.name));
+		pageStyle:ApplyToStyleItem(style, self.class_name or self.name);
 
 		-- apply attribute class names
 		if(self.attr and self.attr.class) then
 			local class_names = self:GetAttributeWithCode("class", nil, true);
 			if(class_names) then
 				for class_name in class_names:gmatch("[^ ]+") do
-					style:Merge(pageStyle:GetItem(class_name));
+					pageStyle:ApplyToStyleItem(style, class_name);
 				end
 			end
 		end

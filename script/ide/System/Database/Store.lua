@@ -170,23 +170,25 @@ end
 -- virtual: 
 function Store:makeEmpty(query, callbackFunc)
 	self:removeIndex({}, function(err, bRemoved)
-		self:find({}, function(err, rows)
-			local count = 0;
-			if(rows) then
-				for _, row in ipairs(rows) do
-					self:deleteOne(row, function() 
-						count = count + 1;
-					end)
-				end
-			end
-			self:flush({}, function(err, bFlushed)
-				if(not bFlushed) then
-					LOG.std(nil, "warn", "makeEmpty", "failed to flush");
-				end
-				if(callbackFunc) then
-					callbackFunc(nil, count);
+		local count = 0;
+		local deleteSucceed = true;
+		while(deleteSucceed) do
+			self:deleteOne({}, function(err, cnt) 
+				if(cnt ~= nil) then
+					count = count + 1;
+				else
+					deleteSucceed = false;
 				end
 			end)
+		end
+
+		self:flush({}, function(err, bFlushed)
+			if(not bFlushed) then
+				LOG.std(nil, "warn", "makeEmpty", "failed to flush");
+			end
+			if(callbackFunc) then
+				callbackFunc(nil, count);
+			end
 		end)
 	end);
 end
