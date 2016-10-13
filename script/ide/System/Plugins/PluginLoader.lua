@@ -24,6 +24,7 @@ NPL.load("(gl)script/ide/System/Core/ToolBase.lua");
 NPL.load("(gl)script/ide/System/Plugins/PluginConfig.lua");
 NPL.load("(gl)script/ide/System/Plugins/PluginManager.lua");
 NPL.load("(gl)script/ide/System/localserver/factory.lua");
+
 local PluginManager = commonlib.gettable("System.Plugins.PluginManager");
 local PluginConfig = commonlib.gettable("System.Plugins.PluginConfig");
 
@@ -44,15 +45,8 @@ function PluginLoader:ctor()
 	self.curWorld = nil;
 	-- current download info {...}
 	self.currentDownload = {};
-end
-
-
-function PluginLoader:GetDownloadInfo()
-	return self.currentDownload;
-end
-
-function PluginLoader:SetDownloadInfo(downloadInfo)
-	self.currentDownload = downloadInfo or {};
+	-- current download status
+	self.currentDownloadLock = true;
 end
 
 -- @param pluginFolder: if nil, default to "Mod/"
@@ -64,6 +58,23 @@ function PluginLoader:init(pluginManager, pluginFolder)
 		self:SetPluginFolder(pluginFolder);
 	end
 	return self;
+end
+
+function PluginLoader:GetDownloadLock()
+	return self.currentDownloadLock;
+end
+
+function PluginLoader:SetDownloadLock(_downloadLock)
+	self.currentDownloadLock = _downloadLock;
+end
+
+function PluginLoader:GetDownloadInfo()
+	return self.currentDownload;
+end
+
+function PluginLoader:SetDownloadInfo(downloadInfo)
+	--echo(downloadInfo);
+	self.currentDownload = downloadInfo or {};
 end
 
 function PluginLoader:GetPluginManager()
@@ -345,17 +356,19 @@ function PluginLoader:StartDownloader(src, dest, callbackFunc, cachePolicy)
 		end
 	end
 	
-	local ls = System.localserver.CreateStore(nil, 1);
 	
+	local ls = System.localserver.CreateStore(nil, 1);
+
 	if(self.isFetching) then
 		OnFail("a previous download is not finished");
 		return;
 	end
 	self.isFetching = true;
-
+	
 	local res = ls:GetFile(System.localserver.CachePolicy:new(cachePolicy or "access plus 5 days"),
 		src,
 		function (entry)
+			echo("entry");
 			if(dest) then
 				if(ParaIO.CopyFile(entry.payload.cached_filepath, dest, true)) then
 					local cached_filepath = entry.payload.cached_filepath;
@@ -374,8 +387,12 @@ function PluginLoader:StartDownloader(src, dest, callbackFunc, cachePolicy)
 		end,
 		nil,
 		function (msg, url)
+			echo("msg");
+			echo(msg);
+			echo(url);
 			local text;
 			self.DownloadState = self.DownloadState;
+
 			if(msg.DownloadState == "") then
 				text = "Downloading ..."
 				if(msg.totalFileSize) then
@@ -389,11 +406,14 @@ function PluginLoader:StartDownloader(src, dest, callbackFunc, cachePolicy)
 				text = "Download terminated";
 				OnFail(text);
 			end
+
 			if(text) then
-				echo(text); -- TODO: display in UI?
+				self:SetDownloadInfo(text);
+				--log({"text",text}); -- TODO: display in UI?
 			end
 		end
 	);
+
 	if(not res) then
 		OnFail("Duplicated download");
 	end
@@ -415,22 +435,34 @@ end
 -- if "auto" or nil, we will compare Last-Modified or Content-Length in http headers, before download full file. 
 -- if "force", we will always download the file. 
 function PluginLoader:InstallFromUrl(url, callbackFunc, refreshMode)
+	
 	refreshMode = refreshMode or "auto";
 	callbackFunc = callbackFunc or echo;
-
+	
 	-- destination file path
 	local dest = self:ComputeLocalFileName(url);
-
+	
 	-- get http headers only
 	System.os.GetUrl(url, function(err, msg)
+		--echo(url);
+		--echo("FFFFF");
+		--echo(msg);
+
 		if(msg.rcode ~= 200 or not msg.header) then
 			LOG.std(nil, "info", "PluginLoader", "remote plugin can not be fetched from %s, a previous downloaded one at %s is used", url, dest);
 			callbackFunc(true, dest);
 		else
+			
 			local content_length = msg.header:match("Content%-Length: (%d+)");
+			--echo("content_length");
+			--echo(content_length);
 			if(content_length) then
 				local local_filesize = ParaIO.GetFileSize(dest);
-				if(local_filesize == content_length) then
+
+				--echo("local_filesize");
+				--echo(local_filesize);
+
+				if(local_filesize == tonumber(content_length)) then
 					-- we will only compare file size: since github/master does not provide "Last-Modified: " header.
 					LOG.std(nil, "info", "PluginLoader", "remote plugin size not changed, previously downloaded one %s is used", dest);
 					callbackFunc(true, dest);
