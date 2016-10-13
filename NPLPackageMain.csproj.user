@@ -5,10 +5,9 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
     <StartAction>Program</StartAction>
-    <StartProgram>D:\lxzsrc\ParaCraftSDKGit\redist\ParaEngineClient.exe</StartProgram>
-    <StartWorkingDirectory>
-    </StartWorkingDirectory>
-    <StartArguments>bootstrapper="script/apps/WebServer/WebServer.lua"  port="8099" servermode="true"</StartArguments>
+    <StartProgram>W:\ParaCraftSDK\redist\paraengineclient.exe</StartProgram>
+    <StartWorkingDirectory>W:/wikicraft/</StartWorkingDirectory>
+    <StartArguments>bootstrapper="script/apps/WebServer/WebServer.lua" port="8099" root="www/" servermode="false" dev="W:/wikicraft/"</StartArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
     <StartArguments>bootstrapper="script/apps/WebServer/WebServer.lua"  port="8099" servermode="true"</StartArguments>
