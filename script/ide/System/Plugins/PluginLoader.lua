@@ -46,7 +46,7 @@ function PluginLoader:ctor()
 	-- current download info {...}
 	self.currentDownload = {};
 	-- current download status
-	self.currentDownloadLock = true;
+	self.downloadQueue	 = {};
 end
 
 -- @param pluginFolder: if nil, default to "Mod/"
@@ -60,12 +60,12 @@ function PluginLoader:init(pluginManager, pluginFolder)
 	return self;
 end
 
-function PluginLoader:GetDownloadLock()
-	return self.currentDownloadLock;
+function PluginLoader:GetDownloadQueue()
+	return self.downloadQueue;
 end
 
-function PluginLoader:SetDownloadLock(_downloadLock)
-	self.currentDownloadLock = _downloadLock;
+function PluginLoader:SetDownloadQueue(_downloadQueue)
+	self.downloadQueue = _downloadQueue;
 end
 
 function PluginLoader:GetDownloadInfo()
