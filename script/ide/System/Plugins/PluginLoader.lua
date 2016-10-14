@@ -44,7 +44,7 @@ function PluginLoader:ctor()
 	-- the world where plugins are used in. if "nil"  or "global", the plugins are used in global range;
 	self.curWorld = nil;
 	-- current download info {...}
-	self.currentDownload = {};
+	self.currentDownload = {status=-1,currentFileSize=0,totalFileSize=0};
 	-- current download status
 	self.downloadQueue	 = {};
 end
@@ -387,9 +387,19 @@ function PluginLoader:StartDownloader(src, dest, callbackFunc, cachePolicy)
 		end,
 		nil,
 		function (msg, url)
-			echo("msg");
-			echo(msg);
-			echo(url);
+			local totalFileSize   = msg['totalFileSize'];
+			local currentFileSize = msg['currentFileSize'];
+			local DownloadState   = msg['DownloadState'];
+			local status		  = 0;
+
+			if(DownloadState == 'complete') then
+				status = 1;
+			end
+
+			self:SetDownloadInfo({status=status,currentFileSize=currentFileSize,totalFileSize=totalFileSize});
+
+			-----------
+
 			local text;
 			self.DownloadState = self.DownloadState;
 
@@ -408,7 +418,6 @@ function PluginLoader:StartDownloader(src, dest, callbackFunc, cachePolicy)
 			end
 
 			if(text) then
-				self:SetDownloadInfo(text);
 				--log({"text",text}); -- TODO: display in UI?
 			end
 		end
