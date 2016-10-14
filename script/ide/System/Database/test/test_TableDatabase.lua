@@ -584,7 +584,7 @@ function TestCountAPI()
 	end);
 end
 
-function TestDeleteOne()
+function TestDelete()
 	NPL.load("(gl)script/ide/System/Database/TableDatabase.lua");
 	local TableDatabase = commonlib.gettable("System.Database.TableDatabase");
 	local db = TableDatabase:new():connect("temp/mydatabase/");	
@@ -610,4 +610,17 @@ function TestDeleteOne()
 			assert(count == 1) 
 		end);
 	end
+	-- delete remaining ones
+	db.deleteTest:delete({}, function(err, count)
+		assert(count == 2);
+	end)
+
+	-- insert duplicates
+	db.deleteTest:insertOne(nil, {duplicated_name="1" }, function() end);
+	db.deleteTest:insertOne(nil, {duplicated_name="1" }, function() end);
+
+	-- remove multiple ones
+	db.deleteTest:delete({duplicated_name="1"}, function(err, count)
+		assert(count == 2);
+	end)
 end

@@ -952,6 +952,24 @@ function SqliteStore:insertOne(query, update, callbackFunc)
 	return self:InvokeCallback(callbackFunc, err, self:InjectID(data, id));
 end
 
+function SqliteStore:delete(query, callbackFunc)
+	local count = 0;
+	local deleteSucceed = true;
+	local err;
+	local function callback_(err, cnt)
+		if(cnt ~= nil) then
+			count = count + 1;
+		else
+			deleteSucceed = false;
+		end
+	end
+	query = self:makeSelectOneQuery(query);
+	while(deleteSucceed) do
+		self:deleteOne(query, callback_)
+	end
+	return self:InvokeCallback(callbackFunc, err, count);
+end
+
 function SqliteStore:deleteOne(query, callbackFunc)
 	self:CommandTick("delete");
 	query = query or {};

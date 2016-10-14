@@ -93,6 +93,7 @@ end
 --@param query: key, value pair table, such as {name="abc"}
 --@param callbackFunc: function(err, row) end, where row._id is the internal row id.
 function Store:findOne(query, callbackFunc)
+	return self:InvokeCallback(callbackFunc, "NotImplemented", nil);
 end
 
 -- virtual: 
@@ -101,11 +102,21 @@ end
 -- @param query: key, value pair table, such as {name="abc"}. if nil or {}, it will return all the rows
 -- @param callbackFunc: function(err, rows) end, where rows is array of rows found
 function Store:find(query, callbackFunc)
+	return self:InvokeCallback(callbackFunc, "NotImplemented", nil);
 end
 
 -- virtual: 
 -- @param query: key, value pair table, such as {name="abc"}. 
+-- @param callbackFunc: function(err, count) end
 function Store:deleteOne(query, callbackFunc)
+	return self:InvokeCallback(callbackFunc, "NotImplemented", nil);
+end
+
+-- virtual: delete multiple records
+-- @param query: key, value pair table, such as {name="abc"}. 
+-- @param callbackFunc: function(err, count) end
+function Store:delete(query, callbackFunc)
+	return self:InvokeCallback(callbackFunc, "NotImplemented", nil);
 end
 
 -- virtual: 
@@ -114,6 +125,12 @@ end
 -- @param query: key, value pair table, such as {name="abc"}. 
 -- @param update: additional fields to be merged with existing data; this can also be callbackFunc
 function Store:updateOne(query, update, callbackFunc)
+	return self:InvokeCallback(callbackFunc, "NotImplemented", nil);
+end
+
+-- virtual: update multiple records, see also updateOne()
+function Store:update(query, update, callbackFunc)
+	return self:InvokeCallback(callbackFunc, "NotImplemented", nil);
 end
 
 -- virtual: 
@@ -122,6 +139,7 @@ end
 -- @param query: nil or query fields. if it contains query fields, it will first do a findOne(), 
 -- if there is record, this function actually falls back to updateOne. 
 function Store:insertOne(query, update, callbackFunc)
+	return self:InvokeCallback(callbackFunc, "NotImplemented", nil);
 end
 
 -- virtual: 
@@ -129,6 +147,7 @@ end
 -- avoiding calling this function for big table. 
 -- @param callbackFunc: function(err, count) end
 function Store:count(query, callbackFunc)
+	return self:InvokeCallback(callbackFunc, "NotImplemented", nil);
 end
 
 -- virtual: 
@@ -136,12 +155,14 @@ end
 -- the store should flush at fixed interval.
 -- @param callbackFunc: function(err, fFlushed) end
 function Store:flush(query, callbackFunc)
+	return self:InvokeCallback(callbackFunc, "NotImplemented", nil);
 end
 
 -- virtual:
 -- @param query: {"indexName"}
 -- @param callbackFunc: function(err, bRemoved) end
 function Store:removeIndex(query, callbackFunc)
+	return self:InvokeCallback(callbackFunc, "NotImplemented", nil);
 end
 
 
@@ -152,7 +173,7 @@ end
 -- may take up to 3 seconds or Store.AutoFlushInterval to return. 
 -- @param callbackFunc: function(err, fFlushed) end
 function Store:waitflush(query, callbackFunc, timeout)
-	
+	return self:InvokeCallback(callbackFunc, "NotImplemented", nil);
 end
 
 -- virtual:
@@ -160,6 +181,7 @@ end
 -- this function is specific to store implementation. 
 -- @param query: string or {sql=string, CacheSize=number, IgnoreOSCrash=bool, IgnoreAppCrash=bool} 
 function Store:exec(query, callbackFunc)
+	return self:InvokeCallback(callbackFunc, "NotImplemented", nil);
 end
 
 -- virtual:
@@ -171,17 +193,10 @@ end
 function Store:makeEmpty(query, callbackFunc)
 	self:removeIndex({}, function(err, bRemoved)
 		local count = 0;
-		local deleteSucceed = true;
-		while(deleteSucceed) do
-			self:deleteOne({}, function(err, cnt) 
-				if(cnt ~= nil) then
-					count = count + 1;
-				else
-					deleteSucceed = false;
-				end
-			end)
-		end
-
+		self:delete({}, function(err, cnt) 
+			count = cnt or 0;
+		end)
+		
 		self:flush({}, function(err, bFlushed)
 			if(not bFlushed) then
 				LOG.std(nil, "warn", "makeEmpty", "failed to flush");
