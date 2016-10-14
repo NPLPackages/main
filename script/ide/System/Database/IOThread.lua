@@ -130,8 +130,16 @@ function IOThread:HandleRequest(msg)
 				collection:updateOne(msg.query.query, msg.query.update, function(err, data)
 					self:SendResponse(err, data, msg);
 				end);
+			elseif(query_type == "update") then
+				collection:update(msg.query.query, msg.query.update, function(err, data)
+					self:SendResponse(err, data, msg);
+				end);
 			elseif(query_type == "deleteOne") then
 				collection:deleteOne(msg.query, function(err, data)
+					self:SendResponse(err, data, msg);
+				end);
+			elseif(query_type == "delete") then
+				collection:delete(msg.query, function(err, data)
 					self:SendResponse(err, data, msg);
 				end);
 			elseif(query_type == "makeEmpty") then

@@ -132,6 +132,18 @@ function Collection:updateOne(query, update, callbackFunc, timeout)
 	end
 end
 
+function Collection:update(query, update, callbackFunc, timeout)
+	if(type(update) == "function") then
+		callbackFunc = update;
+		update = nil;
+	end
+	if(self:IsServer()) then
+		return self.storageProvider:update(query, update, callbackFunc);
+	else
+		return IORequest:Send("update", self, {query = query, update = update}, callbackFunc, timeout);
+	end
+end
+
 -- if there is already one ore more records with query, this function falls back to updateOne().
 -- otherwise it will insert and return full data with internal row _id.
 -- @param query: nil or query fields. if nil, it will insert a new record regardless of key uniqueness check. 
@@ -239,5 +251,14 @@ function Collection:count(query, callbackFunc, timeout)
 		return self.storageProvider:count(query, callbackFunc);
 	else
 		return IORequest:Send("count", self, query, callbackFunc, timeout);
+	end
+end
+
+-- calling this function will always timeout, since the server will not reply 
+function Collection:delete(query, callbackFunc, timeout)
+	if(self:IsServer()) then
+		return self.storageProvider:delete(query, callbackFunc);
+	else
+		return IORequest:Send("delete", self, query, callbackFunc, timeout);
 	end
 end
