@@ -426,14 +426,20 @@ end
 
 function env_imp:yield(bExitOnError)
 	if(self.co) then
-		self.response:Begin();
-		local err, msg = coroutine.yield(self);
-		self.response:End(true);
-		if(err and bExitOnError) then
-			self.response:sendsome(tostring(msg));
-			env_imp.exit(self);
+		if(self.fake_resume_res) then
+			local err, msg = unpack(self.fake_resume_res);
+			self.fake_resume_res = nil;
+			return err, msg;
+		else
+			self.response:Begin();
+			local err, msg = coroutine.yield(self);
+			self.response:End(true);
+			if(err and bExitOnError) then
+				self.response:sendsome(tostring(msg));
+				env_imp.exit(self);
+			end
+			return err, msg;
 		end
-		return err, msg;
 	end
 end
 
@@ -461,6 +467,13 @@ end
 -- @param msg: error message in case err=true
 function env_imp:resume(err, msg)
 	if(self.co) then
+		if(coroutine.status(self.co) == "running") then
+			self.fake_resume_res = {err, msg};
+			return;
+		else
+			self.fake_resume_res = nil;
+		end
+
 		local res, err, msg = coroutine.resume(self.co, err, msg);
 		if(res) then
 			if(not err and msg=="finished") then
