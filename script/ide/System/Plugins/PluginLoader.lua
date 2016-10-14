@@ -46,7 +46,7 @@ function PluginLoader:ctor()
 	-- current download info {...}
 	self.currentDownload = {status=-1,currentFileSize=0,totalFileSize=0};
 	-- current download status
-	self.downloadQueue	 = {};
+	self.downloadQueue	 = {waitCount=0,downloadStatus=0,currentPackagesId=0,waitPackages={}};
 end
 
 -- @param pluginFolder: if nil, default to "Mod/"
@@ -368,7 +368,8 @@ function PluginLoader:StartDownloader(src, dest, callbackFunc, cachePolicy)
 	local res = ls:GetFile(System.localserver.CachePolicy:new(cachePolicy or "access plus 5 days"),
 		src,
 		function (entry)
-			echo("entry");
+			log({"entry",entry});
+
 			if(dest) then
 				if(ParaIO.CopyFile(entry.payload.cached_filepath, dest, true)) then
 					local cached_filepath = entry.payload.cached_filepath;
@@ -444,6 +445,7 @@ end
 -- if "auto" or nil, we will compare Last-Modified or Content-Length in http headers, before download full file. 
 -- if "force", we will always download the file. 
 function PluginLoader:InstallFromUrl(url, callbackFunc, refreshMode)
+
 	refreshMode = refreshMode or "auto";
 	callbackFunc = callbackFunc or echo;
 	
@@ -452,12 +454,11 @@ function PluginLoader:InstallFromUrl(url, callbackFunc, refreshMode)
 
 	-- get http headers only
 	System.os.GetUrl(url, function(err, msg)
-
+		echo({url,dest});
 		if(msg.rcode ~= 200 or not msg.header) then
 			LOG.std(nil, "info", "PluginLoader", "remote plugin can not be fetched from %s, a previous downloaded one at %s is used", url, dest);
 			callbackFunc(false, dest);
 		else
-			
 			local content_length = msg.header:match("Content%-Length: (%d+)");
 
 			if(content_length) then
@@ -466,18 +467,18 @@ function PluginLoader:InstallFromUrl(url, callbackFunc, refreshMode)
 				if(local_filesize == tonumber(content_length)) then
 					-- we will only compare file size: since github/master does not provide "Last-Modified: " header.
 					LOG.std(nil, "info", "PluginLoader", "remote plugin size not changed, previously downloaded one %s is used", dest);
+
 					callbackFunc(false, dest);
 				else
+
 					callbackFunc(true , dest);
+					
 					--LOG.std(nil, "info", "PluginLoader", "remote(%d) and local(%d) file size differs", content_length, local_filesize);
 					--self:StartDownloader(url, dest, callbackFunc);
 				end
 			end
 		end
 	end, "-I");
-
-	callbackFunc(true , dest);
-	log({"++++++++++++++++++++"});
 end
 
 -- install from raw binary content to Mod/ folder
