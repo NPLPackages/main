@@ -620,7 +620,6 @@ function TestDelete()
 	db.deleteTest:insertOne(nil, {duplicated_name="1" }, function() end);
 
 	-- remove multiple ones
-	-- TODO: index not created!!!!!!!!!!!!!!
 	db.deleteTest:delete({duplicated_name="1"}, function(err, count)
 		assert(count == 2);
 	end)
