@@ -444,44 +444,40 @@ end
 -- if "auto" or nil, we will compare Last-Modified or Content-Length in http headers, before download full file. 
 -- if "force", we will always download the file. 
 function PluginLoader:InstallFromUrl(url, callbackFunc, refreshMode)
-	
 	refreshMode = refreshMode or "auto";
 	callbackFunc = callbackFunc or echo;
 	
 	-- destination file path
 	local dest = self:ComputeLocalFileName(url);
-	
+
 	-- get http headers only
 	System.os.GetUrl(url, function(err, msg)
-		--echo(url);
-		--echo("FFFFF");
-		--echo(msg);
 
 		if(msg.rcode ~= 200 or not msg.header) then
 			LOG.std(nil, "info", "PluginLoader", "remote plugin can not be fetched from %s, a previous downloaded one at %s is used", url, dest);
-			callbackFunc(true, dest);
+			callbackFunc(false, dest);
 		else
 			
 			local content_length = msg.header:match("Content%-Length: (%d+)");
-			--echo("content_length");
-			--echo(content_length);
+
 			if(content_length) then
 				local local_filesize = ParaIO.GetFileSize(dest);
-
-				--echo("local_filesize");
-				--echo(local_filesize);
 
 				if(local_filesize == tonumber(content_length)) then
 					-- we will only compare file size: since github/master does not provide "Last-Modified: " header.
 					LOG.std(nil, "info", "PluginLoader", "remote plugin size not changed, previously downloaded one %s is used", dest);
-					callbackFunc(true, dest);
+					callbackFunc(false, dest);
 				else
-					LOG.std(nil, "info", "PluginLoader", "remote(%d) and local(%d) file size differs", content_length, local_filesize);
-					self:StartDownloader(url, dest, callbackFunc);
+					callbackFunc(true , dest);
+					--LOG.std(nil, "info", "PluginLoader", "remote(%d) and local(%d) file size differs", content_length, local_filesize);
+					--self:StartDownloader(url, dest, callbackFunc);
 				end
 			end
 		end
 	end, "-I");
+
+	callbackFunc(true , dest);
+	log({"++++++++++++++++++++"});
 end
 
 -- install from raw binary content to Mod/ folder
