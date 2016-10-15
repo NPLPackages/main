@@ -46,7 +46,7 @@ function PluginLoader:ctor()
 	-- current download info {...}
 	self.currentDownload = {status=-1,currentFileSize=0,totalFileSize=0};
 	-- current download status
-	self.downloadQueue	 = {waitCount=0,downloadStatus=0,currentPackagesId=0,currentProjectName='',waitPackages={}};
+	self.downloadQueue	 = {lock=0,waitCount=0,downloadStatus=0,currentPackagesId=0,currentProjectName='',waitPackages={}};
 end
 
 -- @param pluginFolder: if nil, default to "Mod/"
@@ -395,21 +395,13 @@ function PluginLoader:StartDownloader(src, dest, callbackFunc, cachePolicy)
 			if(DownloadState == 'complete') then
 				local downloadQueue = self:GetDownloadQueue();
 
-				for i=1,#downloadQueue.waitPackages do
-					if(downloadQueue.waitPackages[i].packagesId == downloadQueue.currentPackagesId) then
-						downloadQueue.waitPackages[i] = nil;
-						break;
-					end
-				end
-
-				downloadQueue.downloadStatus = 0;
-				downloadQueue.currentPackagesId = 0;
+				downloadQueue.downloadStatus	 = 0;
+				downloadQueue.currentPackagesId  = 0;
+				downloadQueue.currentProjectName = 'Not yet!';
 
 				self:SetDownloadQueue(downloadQueue);
 
 				status = 1;
-				currentFileSize = 0;
-				totalFileSize = 0;
 			end
 
 			self:SetDownloadInfo({status=status,currentFileSize=currentFileSize,totalFileSize=totalFileSize});
@@ -486,7 +478,7 @@ function PluginLoader:InstallFromUrl(url, callbackFunc, refreshMode)
 					callbackFunc(0, dest);
 				else
 
-					callbackFunc(1 , dest);
+					callbackFunc(1, dest);
 					
 					--LOG.std(nil, "info", "PluginLoader", "remote(%d) and local(%d) file size differs", content_length, local_filesize);
 					--self:StartDownloader(url, dest, callbackFunc);
