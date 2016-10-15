@@ -24,6 +24,7 @@ NPL.load("(gl)script/ide/System/Core/ToolBase.lua");
 NPL.load("(gl)script/ide/System/Plugins/PluginConfig.lua");
 NPL.load("(gl)script/ide/System/Plugins/PluginManager.lua");
 NPL.load("(gl)script/ide/System/localserver/factory.lua");
+
 local PluginManager = commonlib.gettable("System.Plugins.PluginManager");
 local PluginConfig = commonlib.gettable("System.Plugins.PluginConfig");
 
@@ -43,16 +44,9 @@ function PluginLoader:ctor()
 	-- the world where plugins are used in. if "nil"  or "global", the plugins are used in global range;
 	self.curWorld = nil;
 	-- current download info {...}
-	self.currentDownload = {};
-end
-
-
-function PluginLoader:GetDownloadInfo()
-	return self.currentDownload;
-end
-
-function PluginLoader:SetDownloadInfo(downloadInfo)
-	self.currentDownload = downloadInfo or {};
+	self.currentDownload = {status=-1,currentFileSize=0,totalFileSize=0};
+	-- current download status
+	self.downloadQueue	 = {lock=0,waitCount=0,downloadStatus=0,currentPackagesId=0,currentProjectName='',waitPackages={}};
 end
 
 -- @param pluginFolder: if nil, default to "Mod/"
@@ -64,6 +58,23 @@ function PluginLoader:init(pluginManager, pluginFolder)
 		self:SetPluginFolder(pluginFolder);
 	end
 	return self;
+end
+
+function PluginLoader:GetDownloadQueue()
+	return self.downloadQueue;
+end
+
+function PluginLoader:SetDownloadQueue(_downloadQueue)
+	self.downloadQueue = _downloadQueue;
+end
+
+function PluginLoader:GetDownloadInfo()
+	return self.currentDownload;
+end
+
+function PluginLoader:SetDownloadInfo(downloadInfo)
+	--echo(downloadInfo);
+	self.currentDownload = downloadInfo or {};
 end
 
 function PluginLoader:GetPluginManager()
@@ -346,7 +357,7 @@ function PluginLoader:StartDownloader(src, dest, callbackFunc, cachePolicy)
 	end
 	
 	local ls = System.localserver.CreateStore(nil, 1);
-	
+
 	if(self.isFetching) then
 		OnFail("a previous download is not finished");
 		return;
@@ -356,6 +367,8 @@ function PluginLoader:StartDownloader(src, dest, callbackFunc, cachePolicy)
 	local res = ls:GetFile(System.localserver.CachePolicy:new(cachePolicy or "access plus 5 days"),
 		src,
 		function (entry)
+			--log({"entry",entry});
+
 			if(dest) then
 				if(ParaIO.CopyFile(entry.payload.cached_filepath, dest, true)) then
 					local cached_filepath = entry.payload.cached_filepath;
@@ -374,8 +387,30 @@ function PluginLoader:StartDownloader(src, dest, callbackFunc, cachePolicy)
 		end,
 		nil,
 		function (msg, url)
+			local totalFileSize   = msg['totalFileSize'];
+			local currentFileSize = msg['currentFileSize'];
+			local DownloadState   = msg['DownloadState'];
+			local status		  = 0;
+
+			if(DownloadState == 'complete') then
+				local downloadQueue = self:GetDownloadQueue();
+
+				downloadQueue.downloadStatus	 = 0;
+				downloadQueue.currentPackagesId  = 0;
+				downloadQueue.currentProjectName = 'Not yet!';
+
+				self:SetDownloadQueue(downloadQueue);
+
+				status = 1;
+			end
+
+			self:SetDownloadInfo({status=status,currentFileSize=currentFileSize,totalFileSize=totalFileSize});
+
+			-----------
+
 			local text;
 			self.DownloadState = self.DownloadState;
+
 			if(msg.DownloadState == "") then
 				text = "Downloading ..."
 				if(msg.totalFileSize) then
@@ -389,11 +424,13 @@ function PluginLoader:StartDownloader(src, dest, callbackFunc, cachePolicy)
 				text = "Download terminated";
 				OnFail(text);
 			end
+
 			if(text) then
-				echo(text); -- TODO: display in UI?
+				--log({"text",text}); -- TODO: display in UI?
 			end
 		end
 	);
+
 	if(not res) then
 		OnFail("Duplicated download");
 	end
@@ -415,29 +452,40 @@ end
 -- if "auto" or nil, we will compare Last-Modified or Content-Length in http headers, before download full file. 
 -- if "force", we will always download the file. 
 function PluginLoader:InstallFromUrl(url, callbackFunc, refreshMode)
+
 	refreshMode = refreshMode or "auto";
 	callbackFunc = callbackFunc or echo;
-
+	
 	-- destination file path
 	local dest = self:ComputeLocalFileName(url);
 
 	-- get http headers only
 	System.os.GetUrl(url, function(err, msg)
+		echo({"GetUrl",url,dest});
 		if(msg.rcode ~= 200 or not msg.header) then
 			LOG.std(nil, "info", "PluginLoader", "remote plugin can not be fetched from %s, a previous downloaded one at %s is used", url, dest);
-			callbackFunc(true, dest);
+			callbackFunc(-1, dest);
 		else
 			local content_length = msg.header:match("Content%-Length: (%d+)");
+
 			if(content_length) then
 				local local_filesize = ParaIO.GetFileSize(dest);
-				if(local_filesize == content_length) then
+
+				if(local_filesize == tonumber(content_length)) then
 					-- we will only compare file size: since github/master does not provide "Last-Modified: " header.
 					LOG.std(nil, "info", "PluginLoader", "remote plugin size not changed, previously downloaded one %s is used", dest);
-					callbackFunc(true, dest);
+
+					callbackFunc(0, dest);
 				else
-					LOG.std(nil, "info", "PluginLoader", "remote(%d) and local(%d) file size differs", content_length, local_filesize);
-					self:StartDownloader(url, dest, callbackFunc);
+
+					callbackFunc(1, dest);
+					
+					--LOG.std(nil, "info", "PluginLoader", "remote(%d) and local(%d) file size differs", content_length, local_filesize);
+					--self:StartDownloader(url, dest, callbackFunc);
 				end
+			else
+				LOG.std(nil, "info", "PluginLoader", "content_length is empty");
+				callbackFunc(-1, dest);
 			end
 		end
 	end, "-I");
