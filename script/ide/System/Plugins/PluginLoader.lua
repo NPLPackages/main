@@ -46,7 +46,7 @@ function PluginLoader:ctor()
 	-- current download info {...}
 	self.currentDownload = {status=-1,currentFileSize=0,totalFileSize=0};
 	-- current download status
-	self.downloadQueue	 = {waitCount=0,downloadStatus=0,currentPackagesId=0,waitPackages={}};
+	self.downloadQueue	 = {waitCount=0,downloadStatus=0,currentPackagesId=0,currentProjectName='',waitPackages={}};
 end
 
 -- @param pluginFolder: if nil, default to "Mod/"
@@ -356,7 +356,6 @@ function PluginLoader:StartDownloader(src, dest, callbackFunc, cachePolicy)
 		end
 	end
 	
-	
 	local ls = System.localserver.CreateStore(nil, 1);
 
 	if(self.isFetching) then
@@ -364,11 +363,11 @@ function PluginLoader:StartDownloader(src, dest, callbackFunc, cachePolicy)
 		return;
 	end
 	self.isFetching = true;
-	
+
 	local res = ls:GetFile(System.localserver.CachePolicy:new(cachePolicy or "access plus 5 days"),
 		src,
 		function (entry)
-			log({"entry",entry});
+			--log({"entry",entry});
 
 			if(dest) then
 				if(ParaIO.CopyFile(entry.payload.cached_filepath, dest, true)) then
@@ -394,7 +393,23 @@ function PluginLoader:StartDownloader(src, dest, callbackFunc, cachePolicy)
 			local status		  = 0;
 
 			if(DownloadState == 'complete') then
+				local downloadQueue = self:GetDownloadQueue();
+
+				for i=1,#downloadQueue.waitPackages do
+					if(downloadQueue.waitPackages[i].packagesId == downloadQueue.currentPackagesId) then
+						downloadQueue.waitPackages[i] = nil;
+						break;
+					end
+				end
+
+				downloadQueue.downloadStatus = 0;
+				downloadQueue.currentPackagesId = 0;
+
+				self:SetDownloadQueue(downloadQueue);
+
 				status = 1;
+				currentFileSize = 0;
+				totalFileSize = 0;
 			end
 
 			self:SetDownloadInfo({status=status,currentFileSize=currentFileSize,totalFileSize=totalFileSize});
@@ -454,10 +469,10 @@ function PluginLoader:InstallFromUrl(url, callbackFunc, refreshMode)
 
 	-- get http headers only
 	System.os.GetUrl(url, function(err, msg)
-		echo({url,dest});
+		echo({"GetUrl",url,dest});
 		if(msg.rcode ~= 200 or not msg.header) then
 			LOG.std(nil, "info", "PluginLoader", "remote plugin can not be fetched from %s, a previous downloaded one at %s is used", url, dest);
-			callbackFunc(false, dest);
+			callbackFunc(-1, dest);
 		else
 			local content_length = msg.header:match("Content%-Length: (%d+)");
 
@@ -468,14 +483,17 @@ function PluginLoader:InstallFromUrl(url, callbackFunc, refreshMode)
 					-- we will only compare file size: since github/master does not provide "Last-Modified: " header.
 					LOG.std(nil, "info", "PluginLoader", "remote plugin size not changed, previously downloaded one %s is used", dest);
 
-					callbackFunc(false, dest);
+					callbackFunc(0, dest);
 				else
 
-					callbackFunc(true , dest);
+					callbackFunc(1 , dest);
 					
 					--LOG.std(nil, "info", "PluginLoader", "remote(%d) and local(%d) file size differs", content_length, local_filesize);
 					--self:StartDownloader(url, dest, callbackFunc);
 				end
+			else
+				LOG.std(nil, "info", "PluginLoader", "content_length is empty");
+				callbackFunc(-1, dest);
 			end
 		end
 	end, "-I");
