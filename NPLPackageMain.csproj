@@ -4,7 +4,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{09FA02CB-98DC-46D3-9D5B-C83AB92F8E1D}</ProjectGuid>
+    <ProjectGuid>{ABA4D99F-E00E-4E6C-AF4D-BE7BE091C438}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>NPLPackageMain</RootNamespace>
