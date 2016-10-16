@@ -1,0 +1,61 @@
+<?npl
+--[[
+Title: show interactive log
+Author: LiXizhi
+Date: 2015/6/23
+Desc: ajax/console?action=runcode&text=poststring&src=filename
+]]
+if(not is_admin()) then
+  exit("access denied")
+end
+
+if(is_ajax()) then
+	-- upload file
+	add_action('wp_ajax_upload', function()
+		-- log(request:getparams()) --> echo:{action="upload",fileToUpload={contents="BinaryContentHere",["content-type"]="text/plain",name="NPL.txt",size=3403,},submit="Upload",}
+		local fileToUpload = request:getparams()["fileToUpload"]
+		if(fileToUpload and request:getparams()["submit"] and fileToUpload.name and fileToUpload.contents) then
+			local target_dir = "temp/uploads/" .. ParaGlobal.GetDateFormat("yyyyMMdd") .. "/";
+			local target_file = target_dir .. fileToUpload.name;
+			local fileType = fileToUpload.name:match("%.(%w+)$"); -- file extension
+			
+			-- check if file already exists
+			if(file_exists(target_file)) then
+				response:send({err = "Sorry, file already exists."});
+				return
+			end
+			-- check file size
+			if (fileToUpload.size and fileToUpload.size> 5000000) then
+				response:send({err = "Sorry, your file is too large."});
+				return
+			end
+
+			-- Allow certain file formats
+			if(false and fileType ~= "jpg" and fileType ~= "png" and fileType~="txt" ) then
+				response:send({err = "Sorry, only JPG, PNG & TXT files are allowed."});
+				return
+			end
+
+			-- if everything is ok, try to save file to target directory
+			ParaIO.CreateDirectory(target_dir);
+			local file = ParaIO.open(commonlib.Encoding.Utf8ToDefault(target_file), "w");
+			if(file:IsValid()) then
+				file:write(fileToUpload.contents, #fileToUpload.contents);
+				file:close();
+				response:send({contents = target_file, name = fileToUpload.name, size = fileToUpload.size, ["content-type"] = fileToUpload["content-type"], });
+				return;
+			else
+				response:send({err = "can not create file on disk. file name invalid or disk is full."});
+			end
+		end
+		response:send({err = "unknown err"});
+    end)
+	return;
+end
+?>
+<div class="col-md-12">
+	<form name="uploader" enctype="multipart/form-data" class="form-horizontal" method="post" action="/ajax/fileuploader?action=upload">
+		<input name="fileToUpload" id="fileToUpload" type="file" class="form-control"/>
+		<input name="submit" type="submit" class="btn btn-primary" value="Upload"/>
+	</form>
+</div>
