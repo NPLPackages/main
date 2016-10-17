@@ -1,6 +1,6 @@
 --[[
 Title: PluginLoader
-Author(s): LiXizhi
+Author(s): LiXizhi, onedou
 Desc: Download or Load plugins from local folders
 Plugins are usually loaded from sub folders or zip files in "Mod/" directory.
 "Mod/ModsConfig.xml" contains latest plugin options and where they should be enabled.
