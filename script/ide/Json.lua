@@ -20,7 +20,7 @@ local t = {
 name3 = commonlib.Json.Null() 
 }
 
-local json = commonlib.Json.Encode (t)
+local json = commonlib.Json.Encode(t)
 print (json) 
 --> {"name1":"value1","name3":null,"name2":[1,false,true,23.54,"a \u0015 string"]}
 

@@ -3,7 +3,11 @@
 Title: run any NPL code from web page
 Author: LiXizhi
 Date: 2015/6/23
-Desc: ajax/console?action=runcode&text=poststring&src=filename
+Desc: 
+- ajax/console?action=runcode&text=poststring&src=filename
+
+Print all url params
+- ajax/console?action=getparams 
 ]]
 if(not is_admin()) then
   exit("access denied")
@@ -83,6 +87,9 @@ if(is_ajax()) then
 			RunWithResult(output);
 			wp_send_json(output);
 		end
+    end)
+	add_action('wp_ajax_getparams', function()
+		wp_send_json(request:getparams());
     end)
 	return;
 end
