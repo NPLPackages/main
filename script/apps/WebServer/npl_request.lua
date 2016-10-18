@@ -13,6 +13,7 @@ Methods:
 	request:discard()
 	request:GetHost()
 	request:GetMethod()
+	request:GetBody()
 -----------------------------------------------
 NPL.load("(gl)script/apps/WebServer/npl_request.lua");
 local request = commonlib.gettable("WebServer.request");
@@ -224,11 +225,18 @@ function request:ParsePostData()
 			elseif(input_type_lower:find("application/json", 1, true)) then
 				-- please note: this will overwrite parameters in url.
 				self.params = commonlib.Json.Decode(body) or self.params or {};
+				self.data = self.params;
 			else
 				self.params = util.parse_str(body, self.params);	
 			end
 		end
 	end
+end
+
+-- get the request body. if the body is known datetype, such as "application/json", it may already be converted to table
+-- One can always get the raw http request body string using self.headers.body. 
+function request:GetBody()
+	return self.data or self.headers.body;
 end
 
 -- get url parameters: both url post/get are supported

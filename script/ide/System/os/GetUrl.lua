@@ -12,6 +12,7 @@ NPL.load("(gl)script/ide/System/os/GetUrl.lua");
 System.os.GetUrl("https://github.com/LiXizhi/HourOfCode/archive/master.zip", function(err, msg, data)  echo(msg) end, "-I");
 System.os.GetUrl("https://github.com/LiXizhi/HourOfCode/archive/master.zip", echo);
 System.os.GetUrl({url = string, json = true, form = {key="value", key2 ={subtable="subvalue"} } }, function(err, msg, data)		echo(data)	end);
+System.os.GetUrl({url = "http://localhost:8099/ajax/console?action=getparams", json = true, form = {key="value", key2 ={subtable="subvalue"} } }, function(err, msg, data)		echo(data)  end);
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/Json.lua");
@@ -54,7 +55,7 @@ function Request:init(options, callbackFunc)
 		self:SetHeader('content-type', 'application/json');
 		if(options.form and not options.postfields) then
 			-- encoding data in json and sent via postfields
-			options.postfields = commonlib.Json.Encode({data = options.form});
+			options.postfields = commonlib.Json.Encode(options.form);
 		end
 	end
 	if(options.qs) then
