@@ -7,7 +7,10 @@ Desc:
 - ajax/console?action=runcode&text=poststring&src=filename
 
 Print all url params
-- ajax/console?action=getparams 
+- ajax/?action=getparams 
+
+-- print request
+- ajax/console?action=printrequest
 ]]
 if(not is_admin()) then
   exit("access denied")
@@ -90,6 +93,22 @@ if(is_ajax()) then
     end)
 	add_action('wp_ajax_getparams', function()
 		wp_send_json(request:getparams());
+    end)
+
+	-- print raw http request to log. url: "ajax/console?action=printrequest"
+	add_action('wp_ajax_printrequest', function()
+		log("request url:" .. request:url());
+		log("http method:" .. request:GetMethod());
+		log("http headers:");
+		log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+		for name, value in pairs(request.headers) do
+			if(name ~= "body") then
+				log(name .. ": " .. value); 
+			end
+		end
+		log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+		log(request.headers.body);
+		response:status(200):send({"please check log.txt"});
     end)
 	return;
 end

@@ -8,10 +8,17 @@ However, this function can be useful to get URL headers only for large HTTP file
 use the lib:
 ------------------------------------------------------------
 NPL.load("(gl)script/ide/System/os/GetUrl.lua");
+-- down file or making standard request
+System.os.GetUrl("https://github.com/LiXizhi/HourOfCode/archive/master.zip", echo);
 -- get headers only with "-I" option. 
 System.os.GetUrl("https://github.com/LiXizhi/HourOfCode/archive/master.zip", function(err, msg, data)  echo(msg) end, "-I");
-System.os.GetUrl("https://github.com/LiXizhi/HourOfCode/archive/master.zip", echo);
-System.os.GetUrl({url = string, json = true, form = {key="value", key2 ={subtable="subvalue"} } }, function(err, msg, data)		echo(data)	end);
+-- send form KV pairs with http post
+System.os.GetUrl({url = "http://localhost:8099/ajax/console?action=getparams", form = {key="value",} }, function(err, msg, data)		echo(data)	end);
+-- send multi-part binary forms with http post
+System.os.GetUrl({url = "http://localhost:8099/ajax/console?action=printrequest", form = {name = {file="dummy.html",	data="<html><bold>bold</bold></html>", type="text/html"}, } }, function(err, msg, data)		echo(data)	end);
+-- To send any binary data, one can use 
+System.os.GetUrl({url = "http://localhost:8099/ajax/console?action=printrequest", headers={["content-type"]="application/json"}, postfields='{"key":"value"}' }, function(err, msg, data)		echo(data)	end);
+-- To simplify json encoding, we can send form as json string using following shortcut
 System.os.GetUrl({url = "http://localhost:8099/ajax/console?action=getparams", json = true, form = {key="value", key2 ={subtable="subvalue"} } }, function(err, msg, data)		echo(data)  end);
 ------------------------------------------------------------
 ]]
@@ -133,9 +140,11 @@ end
 -- if .json is true, code will be decoded as json.
 -- if .qs is query string table
 -- if .postfields is a binary string to be passed in the request body. If this is present, form parameter will be ignored. 
--- @param callbackFunc: a function(err, msg, data) end, 
---  where msg is the raw HTTP message {header, code=0, rcode=200, data}
---  if nil, the function will not return until result is returned(sync call).
+-- @param callbackFunc: a function(rcode, msg, data) end, if nil, the function will not return until result is returned(sync call).
+--  `rcode` is http return code, such as 200 for success, which is same as `msg.rcode`
+--  `msg` is the raw HTTP message {header, code=0, rcode=200, data}
+--  `data` contains the translated response data if data format is a known format like json
+--    or it contains the binary response body from server, which is same as `msg.data`
 -- @param option: mostly nil. "-I" for headers only
 -- @return: return nil if callbackFunc is a function. or the string content in sync call. 
 function os.GetUrl(url, callbackFunc, option)
