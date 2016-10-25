@@ -25,11 +25,6 @@ System.os.GetUrl({url = "http://localhost:8099/ajax/console?action=getparams", j
 NPL.load("(gl)script/ide/Json.lua");
 local os = commonlib.gettable("System.os");
 
-local npl_thread_name = __rts__:GetName();
-if(npl_thread_name == "main") then
-	npl_thread_name = "";
-end
-
 local function GetUrlSync(url)
 	local c = cURL.easy_init()
 	local result;
@@ -158,5 +153,5 @@ function os.GetUrl(url, callbackFunc, option)
 	local req = Request:new():init(options, callbackFunc);
 
 	-- async call. 
-	NPL.AppendURLRequest(options, format("(%s)CallbackURLRequest__(%d)", npl_thread_name, req.id), nil, "r");
+	NPL.AppendURLRequest(options, format("(%s)CallbackURLRequest__(%d)", nil, req.id), nil, "r");
 end

@@ -8,14 +8,6 @@ use the lib:
 NPL.load("(gl)script/ide/System/localserver/capture_task.lua");
 -------------------------------------------------------
 ]]
-
-if(not System.localserver) then System.localserver = {} end
-
-local npl_thread_name = __rts__:GetName();
-if(npl_thread_name == "main") then
-	npl_thread_name = "";
-end
-
 NPL.load("(gl)script/ide/System/localserver/WebCacheDB.lua");
 local WebCacheDB = commonlib.gettable("System.localserver.WebCacheDB");
 
@@ -23,7 +15,7 @@ local WebCacheDB = commonlib.gettable("System.localserver.WebCacheDB");
 -- A CaptureRequest encapslates the parameters to a ResourceStore.capture() API call. Multiple urls can be specified in a single API call.
 -- Note: Use TaskManager:new_request() to create an instance of this class
 ------------------------------------------------------------------------------
-local CaptureRequest = {
+local CaptureRequest = commonlib.createtable("System.localserver.CaptureRequest", {
 	-- int: captureId assigned by ResourceStore for this request
 	id,
 	-- request type, if nil, it is auto determined. this is 1 for URL request; and 2 for file request. 
@@ -41,23 +33,21 @@ local CaptureRequest = {
 	-- nil or function to call when the all urls in the request are completed. function(succeed, callbackContext) end
 	OnTaskComplete = nil,
 	
-};
-System.localserver.CaptureRequest = CaptureRequest;
+});
 
 ------------------------------------------------------------------------------
 -- TaskManager keeps a list of active task, one should use the task manager to add new request/task. 
 -- the task manager will only start a new task if there is no previous same task or the previous one times out. 
 -- this is a singleton class. 
 ------------------------------------------------------------------------------
-local TaskManager = {
+local TaskManager = commonlib.createtable("System.localserver.TaskManager", {
 	-- mapping from request id to their associated CaptureTask. 
 	tasks = {},
 	-- urls that is currently being processed. mapping from url to true. 
 	urls={},
 	-- next request id, increased by one when each new request is created. 
 	next_request_id = 0,
-};
-System.localserver.TaskManager = TaskManager;
+});
 
 -- create a new request for urls. it will return nil if there is already a same request being processed.
 -- Note: this function will add urls to self.urls
@@ -300,7 +290,7 @@ end
 -- A CaptureTask processes a CaptureRequest asynchronously in the background. 
 -- Notification messages are sent to the listener as each url in the request is completed.
 ------------------------------------------------------------------------------
-local CaptureTask = {
+local CaptureTask = commonlib.createtable("System.localserver.CaptureTask", {
 	-- Notification message codes sent to listeners
 	CAPTURE_TASK_COMPLETE = 0,
 	CAPTURE_URL_SUCCEEDED = 1,
@@ -319,8 +309,7 @@ local CaptureTask = {
 	-- whether initialized
 	is_initialized_ = nil,
 	is_aborted_ = nil,
-};
-System.localserver.CaptureTask = CaptureTask;
+});
 
 -- return the task object if succeed. otherwise nil.
 -- upon created it will be automatically added to the TaskManager. The capture task can be accessed via its request id, 
@@ -403,7 +392,7 @@ function CaptureTask:Run(index)
 			end	
 		elseif(self.capture_request_.type== 1) then
 			-- URL request
-			NPL.AppendURLRequest(url, format("(%s)System.localserver.ProcessURLRequest_result(%d, %d)", npl_thread_name, self.capture_request_.id, i), nil, "r");
+			NPL.AppendURLRequest(url, format("(%s)System.localserver.ProcessURLRequest_result(%d, %d)", nil, self.capture_request_.id, i), nil, "r");
 		elseif(self.capture_request_.type== 2) then
 			-- FILE download request
 		end	
