@@ -146,7 +146,8 @@ $(function(){
 	$("#btnGotoEnd").click(function () {
 	    var row = editor.session.getLength() - 1
 		var column = editor.session.getLine(row).length 
-		editor.gotoLine(row + 1, column)
+		editor.gotoLine(row + 1, column);
+		$('html, body').animate({scrollTop: $("#logwindow").offset().top}, 300);
 	});
 	$( "#btnSearchBackward" ).click(function() {
 		findNext(true);

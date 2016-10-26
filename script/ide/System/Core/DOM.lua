@@ -60,6 +60,8 @@ function DOM.GetDOM(name)
 		dom = ParaScene.GetPlayer():GetAttributeObject();
 	elseif(name == "npl") then
 		dom = NPL.GetAttributeObject();
+	elseif(name == "camera") then
+		dom = ParaCamera.GetAttributeObject();
 	elseif(name == "GLOBALS") then
 		-- this could be slow and memory consuming.
 		NPL.load("(gl)script/ide/System/Core/TableAttribute.lua");
@@ -94,7 +96,7 @@ end
 -- get all builtin and registed doms names in a newly created table array. 
 -- @return table array, such as {"scene", "gui", ...}
 function DOM.GetAllDOMNames()
-	local doms = {"all", "scene", "gui", "asset", "viewport", "player", "npl", "GLOBALS"};
+	local doms = {"all", "scene", "gui", "asset", "viewport", "player", "npl", "camera", "GLOBALS"};
 	for name, _ in pairs(registered_doms) do
 		doms[#doms+1] = name;
 	end
