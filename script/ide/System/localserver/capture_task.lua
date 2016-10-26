@@ -11,6 +11,10 @@ NPL.load("(gl)script/ide/System/localserver/capture_task.lua");
 NPL.load("(gl)script/ide/System/localserver/WebCacheDB.lua");
 local WebCacheDB = commonlib.gettable("System.localserver.WebCacheDB");
 
+local npl_thread_name = __rts__:GetName();
+if(npl_thread_name == "main") then
+	npl_thread_name = "";
+end
 ------------------------------------------------------------------------------
 -- A CaptureRequest encapslates the parameters to a ResourceStore.capture() API call. Multiple urls can be specified in a single API call.
 -- Note: Use TaskManager:new_request() to create an instance of this class
@@ -392,7 +396,7 @@ function CaptureTask:Run(index)
 			end	
 		elseif(self.capture_request_.type== 1) then
 			-- URL request
-			NPL.AppendURLRequest(url, format("(%s)System.localserver.ProcessURLRequest_result(%d, %d)", nil, self.capture_request_.id, i), nil, "r");
+			NPL.AppendURLRequest(url, format("(%s)System.localserver.ProcessURLRequest_result(%d, %d)", npl_thread_name, self.capture_request_.id, i), nil, "r");
 		elseif(self.capture_request_.type== 2) then
 			-- FILE download request
 		end	

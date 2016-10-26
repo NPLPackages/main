@@ -25,6 +25,11 @@ System.os.GetUrl({url = "http://localhost:8099/ajax/console?action=getparams", j
 NPL.load("(gl)script/ide/Json.lua");
 local os = commonlib.gettable("System.os");
 
+local npl_thread_name = __rts__:GetName();
+if(npl_thread_name == "main") then
+	npl_thread_name = "";
+end
+
 local function GetUrlSync(url)
 	local c = cURL.easy_init()
 	local result;
@@ -153,5 +158,32 @@ function os.GetUrl(url, callbackFunc, option)
 	local req = Request:new():init(options, callbackFunc);
 
 	-- async call. 
-	NPL.AppendURLRequest(options, format("(%s)CallbackURLRequest__(%d)", nil, req.id), nil, "r");
+	NPL.AppendURLRequest(options, format("(%s)CallbackURLRequest__(%d)", npl_thread_name, req.id), nil, "r");
+end
+
+
+--[[ send an email message via smtp protocol
+@param params: {
+	url="smtp://mail.paraengine.com", 
+	username=string, password=string, ca_info = "/path/to/certificate.pem"
+	from="lixizhi@paraengine.com", to="lixizhi@yeah.net", cc="xizhi.li@gmail.com", 
+	subject = "title here",
+	body = "any body context here. can be very long",
+}
+]]
+function os.send_email(params, callbackFunc)
+	return os.GetUrl({
+		url = params.url,
+		options = {
+			CURLOPT_USERNAME = params.username,
+			CURLOPT_PASSWORD = params.password,
+			CURLOPT_CAINFO = params.ca_info,
+			CURLOPT_CAPATH = params.ca_path,
+			CURLOPT_MAIL_FROM = params.from,
+			CURLOPT_VERBOSE = 1,
+			CURLOPT_UPLOAD = 1,
+			CURLOPT_MAIL_RCPT = {params.to, params.cc},
+			CURLOPT_READDATA = "";
+		},
+	}, callbackFunc);
 end

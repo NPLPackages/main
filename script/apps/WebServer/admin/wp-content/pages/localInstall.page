@@ -1,0 +1,345 @@
+﻿<?npl
+--[[
+Title: download the zip from github
+Author: big
+Date: 2016/10/9
+Desc: /ajax/localInstall?action=downloadQueue&url=&packagesId=%projectName=
+]]
+
+NPL.load("(gl)script/ide/System/Plugins/PluginManager.lua");
+
+addheader('Access-Control-Allow-Origin', '*'); 
+
+local PluginManager = commonlib.gettable("System.Plugins.PluginManager");
+local manager = PluginManager.CreateGetInstance("Paracraft");
+--echo(manager:GetLoader():RebuildModuleList())  --> list of installed plugins
+--manager:GetLoader():LoadAllPlugins() --> load plugins, see PluginLoader for details
+
+local function InstallFromUrl(url,downloadQueue)
+	local status  = false;
+	local dest = '';
+
+	downloadQueue.lock = 1;
+	manager:GetLoader():SetDownloadQueue(downloadQueue);
+	manager:GetLoader():InstallFromUrl(
+		url, 
+		function(bStatus, bDest)
+			status = bStatus;
+			dest = bDest;
+			resume();
+		end
+	);
+	yield();
+
+	downloadQueue.lock = 0;
+	manager:GetLoader():SetDownloadQueue(downloadQueue);
+	return status,dest;
+end
+
+if(is_ajax()) then
+	add_action(
+		'wp_ajax_downloadQueue',
+		function()
+			local url		  = request:get('url');
+			local projectName = request:get('projectName');
+			local packagesId  = tonumber(request:get('packagesId'));
+
+			url				  = url..'/archive/master.zip';
+			local status	  = -5;--package是否可以下载，以前是否下载过
+			local dest		  = '';
+			local isYourTurn  = 0;--是否轮到此包下载
+
+			local downloadQueue = manager:GetLoader():GetDownloadQueue();
+
+			if(downloadQueue.lock == 1) then
+				wp_send_json(
+					{
+						lock = 1;
+					}
+				);
+				return;
+			end
+
+			if(downloadQueue['waitCount'] == 0 and downloadQueue['downloadStatus'] == 0) then
+				status,dest = InstallFromUrl(url,downloadQueue);
+
+				downloadQueue['downloadStatus']     = 1;--设置下载中
+				downloadQueue['currentPackagesId']  = packagesId;
+				downloadQueue['currentProjectName'] = projectName;
+
+				isYourTurn = 1;
+			else
+				if( downloadQueue.currentPackagesId ~= packagesId ) then
+					local waitPackages = downloadQueue.waitPackages;
+					if( #waitPackages == 0 or waitPackages[1]['packagesId'] ~= packagesId or downloadQueue.downloadStatus == 1) then
+					local isAdd = true;
+
+					for i=1,#waitPackages do
+						if(waitPackages[i]['packagesId'] == packagesId) then
+							isAdd = false;
+							break;
+						end
+					end
+
+					if(isAdd) then
+						downloadQueue['waitCount'] = downloadQueue['waitCount'] + 1;
+
+						local newDownloadPackage = {
+							projectName = projectName,
+							packagesId	= packagesId
+						}
+
+						waitPackages[#waitPackages + 1] = newDownloadPackage;
+						log({"newDownloadPackage",newDownloadPackage});
+						log({"downloadQueue",downloadQueue});
+						end
+					else
+						status,dest = InstallFromUrl(url,downloadQueue);
+						downloadQueue['downloadStatus']     = 1;
+						downloadQueue['currentPackagesId']  = packagesId;
+						downloadQueue['currentProjectName'] = projectName;
+						isYourTurn = 1;
+					end
+				end
+			end
+
+			if(isYourTurn == 1 and status == 1) then
+				local waitPackages = downloadQueue.waitPackages;
+				for i=1,#waitPackages do
+					if(waitPackages[i]['packagesId'] == packagesId) then
+						commonlib.removeArrayItem(waitPackages,i);
+						break;
+					end
+				end
+
+				manager:GetLoader():SetDownloadInfo({status=-1,currentFileSize=0,totalFileSize=0});
+
+				manager:GetLoader():StartDownloader(url, dest,
+					function(bStatus, bDest)
+					end
+				);
+
+			elseif(status == -1 or status == 0) then
+
+				local waitPackages = downloadQueue.waitPackages;
+				for i=1,#waitPackages do
+					if(waitPackages[i]['packagesId'] == packagesId) then
+						commonlib.removeArrayItem(waitPackages,i);
+						break;
+					end
+				end
+
+				downloadQueue.downloadStatus	 = 0;
+				downloadQueue.currentPackagesId  = 0;
+				downloadQueue.currentProjectName = 'Not yet!';
+
+			end
+
+			local currentDownloadInfo = manager:GetLoader():GetDownloadInfo();
+			manager:GetLoader():SetDownloadQueue(downloadQueue);
+
+			wp_send_json(
+				{
+					status				= status,--package是否可以下载，以前是否下载过
+					waitCount			= downloadQueue['waitCount'],
+					currentPackagesId	= downloadQueue['currentPackagesId'],
+					currentProjectName	= downloadQueue['currentProjectName'],
+					currentDownloadInfo = currentDownloadInfo,
+					isYourTurn			= isYourTurn,
+					waitPackages		= downloadQueue['waitPackages']
+				}
+			);
+
+			return;
+		end
+	)
+
+	add_action(
+		'wp_ajax_GetCurrentDownload',
+		function()
+			wp_send_json(manager:GetLoader():GetDownloadInfo());
+		end
+	);
+
+	return;
+end
+
+wp_enqueue_script("jqueryui", "/wp-includes/js/jquery/jquery-ui.min.js"); 
+wp_enqueue_script("bootstrap", "/wp-includes/js/bootstrap/js/bootstrap.min.js");
+wp_enqueue_script("angular", "/wp-includes/js/angular/angular.min.js");
+wp_enqueue_script("angular-ui", "/wp-includes/js/angular/ui-bootstrap-tpls-1.3.3.min.js");
+wp_enqueue_style("plugin", "/wp-admin/css/plugin.css");
+PAGE_NO_SIDE_BAR = true;
+?>
+<div class="plugin" ng-app="plugin" ng-controller="localInstallController">
+    <div class="infor-details">
+        <div class="item">
+            <label>Package Name</label>
+            <div>{{projectName}}</div>
+        </div>
+        <div class="item">
+            <label>Author</label>
+            <div>{{author}}</div>
+        </div>
+        <div class="item">
+            <label>Version</label>
+            <div>{{version}}</div>
+        </div>
+    </div>
+    <div class="quene">
+        <h4>Thanks for downloading!</h4>
+		<br>
+		<h4 style="margin-top: -8px;">[Current download]</h4>
+        <div>
+			 <b>{{currentProjectName}}</b>
+		</div>
+		<br>
+		<h4>[Pending packages]</h4>
+		<div ng-repeat="package in waitPackages track by $index">
+			<b>
+			   #{{$index+1}} &nbsp;&nbsp;&nbsp;
+			   Project name:{{package.projectName}} &nbsp;&nbsp;&nbsp;
+			   Package id:{{package.packagesId}}
+			</b>
+		</div>
+
+		<b ng-if="waitPackagesIsEmpty">
+			No pending packages
+		</b>
+    </div>
+    <div class="button">
+        <button class="start" ng-click="install()" disabled="disable">After {{seconds}}s will start</button>
+        <button class="process" disabled="disabled"></button>
+        <span> Press close button at right top corner</span>
+        <!--<button ng-click="cancel()">Cancel</button>-->
+    </div>
+</div>
+<script>
+angular.module('plugin', ['ui.bootstrap'])
+.controller('localInstallController', function ($scope, $http, $location, $interval,$timeout) {
+    var params = $location.search();
+
+    $scope.projectName = params.projectName;
+    $scope.version = params.version;
+    $scope.author = params.displayName;
+    $scope.giturl = params.giturl;
+    $scope.packagesId = params.packagesId;
+
+    $scope.seconds = 5;
+    $scope.currentProjectName = 'Empty';
+    $scope.waitPackagesIsEmpty = true;
+    $scope.waitPackages = [];
+
+    $interval(function () {
+        $scope.seconds--;
+    },1000,5);
+
+    $timeout(function () {
+        $scope.install();
+        $(".start").text("Starting ...");
+    }, 5000);
+
+    $scope.install = function () {
+        $http({
+            method: 'POST',
+            url: '/ajax/localInstall?action=downloadQueue',
+            data: {
+                url: $scope.giturl,
+                projectName: $scope.projectName,
+                packagesId: $scope.packagesId
+            }
+        })
+        .then(function (response) {
+            if (response.data.lock == 1) {
+                $timeout(function () {
+                    $scope.install();
+                }, 1000);
+                return;
+            }
+
+            $scope.currentProjectName = response.data.currentProjectName;
+
+            for (var i in response.data.waitPackages) {
+                $scope.waitPackagesIsEmpty = false;
+                break;
+            }
+            
+            if (!$scope.waitPackagesIsEmpty) {
+                $scope.waitPackages = response.data.waitPackages;
+            }
+
+            if (response.data.isYourTurn == 1) {
+                if (response.data.status == 1) {
+                    $scope.getCurrentDownload();
+                } else if (response.data.status == 0) {
+                    $(".start").text("packages is not updated");
+                    $(".button span").css("display", "block");
+                } else if (response.data.status == -1) {
+                    $(".start").text("service is not available now, please try again later");
+                    $(".button span").css("display", "block");
+                }
+
+            } else if (response.data.currentPackagesId == $scope.packagesId) {
+                $scope.getCurrentDownload();
+                //alert('continue');
+            } else if (response.data.isYourTurn == 0) {
+                console.log(response.data);
+
+                $timeout(function () {
+                    $scope.install();
+                }, 1000);
+            } else {
+                return alert("error!");
+            }
+
+        }, function (response) { });
+    }
+
+    $scope.getCurrentDownload = function () {
+        $http({
+            method: "GET",
+            url: "/ajax/localInstall?action=GetCurrentDownload",
+            data: {
+
+            }
+        })
+        .then(function (response) {
+            if (response.data.status == -1 || response.data.status == 0) {
+
+                var currentFileSize = response.data.currentFileSize;
+                var totalFileSize   = response.data.totalFileSize;
+
+                var percent = (currentFileSize / totalFileSize) * 100;
+
+                //console.log(currentFileSize, totalFileSize, percent)
+
+                if (isNaN(percent) || percent == Infinity) {
+                    percent = 0;
+                } else {
+                    percent = parseInt(percent);
+                }
+
+                //console.log(currentFileSize, totalFileSize, percent);
+
+                $(".start").text(percent + "%      " + parseInt(currentFileSize / 1024) + "/" + parseInt(totalFileSize / 1024) + " KB");
+                $(".process").css({ "display": "block", "width": percent + "%" });
+
+                $timeout(function () {
+                    $scope.getCurrentDownload();
+                }, 1000);
+                
+            } else if (response.data.status == 1) {
+
+                $(".start").text("Download complete!").css("background-color", "#00ffbd");
+                $(".process").css({ "opacity": "0", "width": "100%" });
+                $(".button span").css("display", "block");
+
+            } else {
+                return alert("error status!");
+            }
+
+        }, function (response) { });
+
+    }
+})
+</script>
