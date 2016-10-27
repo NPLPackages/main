@@ -1,17 +1,25 @@
 --[[
-Title: fetch url
+Title: get/post url
 Author(s): LiXizhi
 Date: 2016/1/25
-Desc: helper class to get url content. It offers no progress function. 
+Desc: helper class to get/post url content. It offers no progress function. 
 For large files with progress, please use NPL.AsyncDownload. 
 However, this function can be useful to get URL headers only for large HTTP files. 
 use the lib:
 ------------------------------------------------------------
 NPL.load("(gl)script/ide/System/os/GetUrl.lua");
+-- down file or making standard request
+System.os.GetUrl("https://github.com/LiXizhi/HourOfCode/archive/master.zip", echo);
 -- get headers only with "-I" option. 
 System.os.GetUrl("https://github.com/LiXizhi/HourOfCode/archive/master.zip", function(err, msg, data)  echo(msg) end, "-I");
-System.os.GetUrl("https://github.com/LiXizhi/HourOfCode/archive/master.zip", echo);
-System.os.GetUrl({url = string, json = true, form = {key=value, } }, function(err, msg, data)		echo(data)	end);
+-- send form KV pairs with http post
+System.os.GetUrl({url = "http://localhost:8099/ajax/console?action=getparams", form = {key="value",} }, function(err, msg, data)		echo(data)	end);
+-- send multi-part binary forms with http post
+System.os.GetUrl({url = "http://localhost:8099/ajax/console?action=printrequest", form = {name = {file="dummy.html",	data="<html><bold>bold</bold></html>", type="text/html"}, } }, function(err, msg, data)		echo(data)	end);
+-- To send any binary data, one can use 
+System.os.GetUrl({url = "http://localhost:8099/ajax/console?action=printrequest", headers={["content-type"]="application/json"}, postfields='{"key":"value"}' }, function(err, msg, data)		echo(data)	end);
+-- To simplify json encoding, we can send form as json string using following shortcut
+System.os.GetUrl({url = "http://localhost:8099/ajax/console?action=getparams", json = true, form = {key="value", key2 ={subtable="subvalue"} } }, function(err, msg, data)		echo(data)  end);
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/Json.lua");
@@ -52,6 +60,10 @@ function Request:init(options, callbackFunc)
 	self.options = options;
 	if(options.json) then
 		self:SetHeader('content-type', 'application/json');
+		if(options.form and not options.postfields) then
+			-- encoding data in json and sent via postfields
+			options.postfields = commonlib.Json.Encode(options.form);
+		end
 	end
 	if(options.qs) then
 		options.url = NPL.EncodeURLQuery(options.url, options.qs);
@@ -124,12 +136,15 @@ end
 
 -- return the content of a given url. 
 -- e.g.  echo(NPL.GetURL("www.paraengine.com"))
--- @param url: url string or a options table of {url=string, form={key=value}, headers={key=value, "line strings"}, json=bool, qs={}}
+-- @param url: url string or a options table of {url=string, postfields=string, form={key=value}, headers={key=value, "line strings"}, json=bool, qs={}}
 -- if .json is true, code will be decoded as json.
 -- if .qs is query string table
--- @param callbackFunc: a function(err, msg, data) end, 
---  where msg is the raw HTTP message {header, code=0, rcode=200, data}
---  if nil, the function will not return until result is returned(sync call).
+-- if .postfields is a binary string to be passed in the request body. If this is present, form parameter will be ignored. 
+-- @param callbackFunc: a function(rcode, msg, data) end, if nil, the function will not return until result is returned(sync call).
+--  `rcode` is http return code, such as 200 for success, which is same as `msg.rcode`
+--  `msg` is the raw HTTP message {header, code=0, rcode=200, data}
+--  `data` contains the translated response data if data format is a known format like json
+--    or it contains the binary response body from server, which is same as `msg.data`
 -- @param option: mostly nil. "-I" for headers only
 -- @return: return nil if callbackFunc is a function. or the string content in sync call. 
 function os.GetUrl(url, callbackFunc, option)
@@ -144,4 +159,31 @@ function os.GetUrl(url, callbackFunc, option)
 
 	-- async call. 
 	NPL.AppendURLRequest(options, format("(%s)CallbackURLRequest__(%d)", npl_thread_name, req.id), nil, "r");
+end
+
+
+--[[ send an email message via smtp protocol
+@param params: {
+	url="smtp://mail.paraengine.com", 
+	username=string, password=string, ca_info = "/path/to/certificate.pem"
+	from="lixizhi@paraengine.com", to="lixizhi@yeah.net", cc="xizhi.li@gmail.com", 
+	subject = "title here",
+	body = "any body context here. can be very long",
+}
+]]
+function os.send_email(params, callbackFunc)
+	return os.GetUrl({
+		url = params.url,
+		options = {
+			CURLOPT_USERNAME = params.username,
+			CURLOPT_PASSWORD = params.password,
+			CURLOPT_CAINFO = params.ca_info,
+			CURLOPT_CAPATH = params.ca_path,
+			CURLOPT_MAIL_FROM = params.from,
+			CURLOPT_VERBOSE = 1,
+			CURLOPT_UPLOAD = 1,
+			CURLOPT_MAIL_RCPT = {params.to, params.cc},
+			CURLOPT_READDATA = "";
+		},
+	}, callbackFunc);
 end
