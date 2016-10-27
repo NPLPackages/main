@@ -841,6 +841,55 @@ function SqliteStore:find(query, callbackFunc)
 	return self:InvokeCallback(callbackFunc, err, rows);
 end
 
+-- virtual: 
+-- Replaces a single document within the collection based on the query filter.
+-- it will not auto create index if key does not exist.
+-- @param query: key, value pair table, such as {name="abc"}. 
+-- @param replacement: wholistic fields to be replace any existing doc. 
+function SqliteStore:replaceOne(query, replacement, callbackFunc)
+	self:CommandTick("update");
+	replacement = replacement or query;
+	local err, data;
+	query = self:makeSelectOneQuery(query);
+	local id = self:FindRowId(query, true);
+	if(id) then
+		if(replacement._id and replacement._id~=id) then
+			err = "_id not match";
+		else
+			replacement._id = nil;
+			data = self:getCollectionRow(id);
+			data = self:filterRowByQuery(data, query);
+			if(data) then
+				self:Begin();
+				-- just in case some index value is changed, update index first
+				for name, indexTable in pairs(self.indexes) do
+					if(indexTable:GetName() == name) then
+						if(replacement[name] == nil and data[name]~=nil) then
+							indexTable:removeIndex(data, id);
+						elseif(replacement[name]~=nil) then
+							indexTable:updateIndex(id, replacement, data)
+						end
+					end
+				end
+				-- replace document completely
+				data = replacement;
+
+				self.update_stat = self.update_stat or self._db:prepare([[UPDATE Collection Set value=? Where id=?]]);
+				if(self.update_stat) then
+					local data_str = commonlib.serialize_compact(data);
+					self.update_stat:bind(data_str, id);
+					self.update_stat:exec();
+				else
+					LOG.std(nil, "error", "SqliteStore",  "failed to create update statement");
+				end
+
+				self:End();
+			end	
+		end
+	end
+	return self:InvokeCallback(callbackFunc, err, self:InjectID(data, id));
+end
+
 -- update one will not create index
 function SqliteStore:updateOne(query, update, callbackFunc)
 	self:CommandTick("update");

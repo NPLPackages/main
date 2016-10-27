@@ -144,6 +144,18 @@ function Collection:update(query, update, callbackFunc, timeout)
 	end
 end
 
+-- Replaces a single document within the collection based on the query filter.
+-- it will not auto create index if key does not exist.
+-- @param query: key, value pair table, such as {name="abc"}. 
+-- @param replacement: wholistic fields to be replace any existing doc. 
+function Collection:replaceOne(query, replacement, callbackFunc, timeout)
+	if(self:IsServer()) then
+		return self.storageProvider:replaceOne(query, replacement, callbackFunc);
+	else
+		return IORequest:Send("replaceOne", self, {query = query, replacement = replacement}, callbackFunc, timeout);
+	end
+end
+
 -- if there is already one ore more records with query, this function falls back to updateOne().
 -- otherwise it will insert and return full data with internal row _id.
 -- @param query: nil or query fields. if nil, it will insert a new record regardless of key uniqueness check. 
