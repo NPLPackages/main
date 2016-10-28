@@ -152,12 +152,13 @@ function RenderServerWikiContent()
 				echo("<script>window.skipClientWiki = true;</script>")
 			end
 		end
-	end
-	if(pageName and pageName:match("^_")) then
-		local filename = WIKI_ROOT .. 'pages/special/' .. pageName:gsub("^_", "") .. ".page";
-		if(file_exists(filename)) then
-			include(filename);
-			echo("<script>window.skipClientWiki = true;</script>")
+		if(pageName and pageName:match("^_")) then
+			local filename = WIKI_ROOT .. 'pages/special/' .. pageName:gsub("^_", "") .. ".page";
+			if(file_exists(filename)) then
+				include(filename);
+				echo("<script>window.skipClientWiki = true;</script>")
+			end
 		end
 	end
+	
 end
