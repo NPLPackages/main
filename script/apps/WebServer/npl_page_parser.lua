@@ -218,7 +218,7 @@ function npl_page_parser:run(code_env)
 			if(not code_env.is_exit_call) then
 				-- runtime error:
 				self:send_page_error(result, code_env);
-				LOG.std(nil, "error", "npl_page_parser", "runtime error: %s in %s", tostring(result), last_filename or "");
+				LOG.std(nil, "error", "npl_page_parser", "<Runtime error>: %s in %s", tostring(result), last_filename or "");
 				-- self:set_error_msg(result);
 			else
 				if(call_depth==0) then

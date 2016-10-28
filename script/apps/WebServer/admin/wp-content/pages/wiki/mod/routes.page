@@ -1,30 +1,27 @@
 <?npl
 --[[
-Title: routing ajax/html requests
+Title: routing wiki module page/api request
 Author: LiXizhi
-Date: 2016/6/29
+Date: 2016/10/27
 Desc: redirect AJAX URL to model functions
 Reference: http://guides.rubyonrails.org/routing.html
 
-Mapping of CRUD AJAX operations: 
-- PUT "/api/wiki/models/user/new" --> wiki/models/user:create()
-- GET "/api/wiki/models/user" --> wiki/models/user:get()
-- PUT "/api/wiki/models/user" --> wiki/models/user:update()
-- DELETE "/api/wiki/models/user" --> wiki/models/user:delete()
-- XXX "/api/wiki/models/user/[anyfunc]" --> wiki/models/user:api_[anyfunc]()
-
-Everything else is mapped to `wiki.page` as standard html file.
+/wiki/mod/[name]/[pagename] --> wiki/mod/[name]/pages/[pagename].page (normal web page)
+/api/mod/[name]/models/[modelname] --> wiki/mod/[name]/models/[modelname].page (models api)
+/api/mod/[name]/[modelname] --> wiki/mod/[name]/models/[modelname].page (page ajax)
 ]]
 local path = pagename() or "";
--- this is for hosting wikicraft project in a different folder than webroot such as in NPL code wiki.
-WIKI_WEBROOT = WIKI_WEBROOT or "/wiki/";
-WIKI_ROOT = dirname(__FILE__);
+local modname, isAPI;
+isAPI, modname, path = path:match("^/?(%w+)/mod/([^/]+)(.*)");
+if(not modname) then
+	return
+end
 
-local ajax_type, ajax_path = path:match("^/?api/(%w+)/(.+)");
-if(ajax_type == "mod") then
-	include_once("./mod/routes.page");
-	return;
-elseif(ajax_type == "wiki") then	
+-- this is for hosting wikicraft project in a different folder than webroot such as in NPL code wiki.
+MOD_WEBROOT = WIKI_WEBROOT.."mod/"..modname .. "/";
+MOD_ROOT = dirname(__FILE__)..modname.."/";
+
+if(isAPI == "api") then	
 	-- Allow for cross-domain requests (from the frontend). 
 	send_origin_headers();
 	addheader( 'Content-Type', 'text/html'); 
@@ -32,9 +29,9 @@ elseif(ajax_type == "wiki") then
 	send_nosniff_header();
 	nocache_headers();	
 
-	local modelname, params = ajax_path:match("^models/([%w_]+)/?(.*)")
+	local modelname, params = path:match("^/?models/([%w_]+)/?(.*)")
 	if(modelname) then
-		local modelfilename = "./models/"..modelname..".page";
+		local modelfilename = MOD_ROOT.."models/"..modelname..".page";
 		if(not file_exists(modelfilename)) then
 			return response:status(404):send({message="invalid model"});
 		end
@@ -83,29 +80,32 @@ elseif(ajax_type == "wiki") then
 		end
 	else
 		-- only allow ajax in wiki folder
-		include( "./"..ajax_path..".page" );
+		path = path:match("^/?([^/]*)");
+		if(not path or path == "") then
+			path = "index";
+		end
+		local filename = MOD_ROOT.."pages/"..path..".page";
+		if(file_exists(filename)) then
+			include(filename);
+		else
+			echo("invalid path");
+		end
 	end
 	return;
 else
 	-- dynamic page has no cache headers
 	response:nocache_headers();
 end
+
+path = path:match("^/?([^/]*)");
+if(not path or path == "") then
+	path = "index";
+end
+local filename = MOD_ROOT.."pages/"..path..".page";
+if(file_exists(filename)) then
+	echo("<script>window.skipClientWiki = true;</script>")
+	echo(format("<script>window.MOD_WEBROOT = \"%s\";</script>", MOD_WEBROOT));
+	include(filename);
+end
 ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
-"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-CN">
-<head>
- <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"  />
-<title><?npl wp_title(); ?></title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">      
-<?npl
-wp_enqueue_script("jquery", "/wp-includes/js/jquery/jquery.min.js", nil, "1.11.1"); 
-wp_enqueue_style("bootstrap", "/wp-includes/js/bootstrap/css/bootstrap.min.css");
-wp_enqueue_style("sensitive_style", "/wp-content/themes/sensitive/css/style.css"); 
-wp_enqueue_script("bootstrap", "/wp-includes/js/bootstrap/js/bootstrap.min.js");
-?>
-</head>
-<body>
-<? include(WIKI_ROOT.."wiki.page") ?>
-</body>
-</html>
+

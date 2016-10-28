@@ -143,10 +143,14 @@ end
 -- @note: `[name]/_XXX` is mapped to predefined pages at `wiki/pages/special/_XXX.page`
 function RenderServerWikiContent()
 	if(GetSiteName() == "wiki") then
-		local filename = WIKI_ROOT .. 'pages/' .. GetPageName() .. ".page";
-		if(file_exists(filename)) then
-			include(filename);
-			echo("<script>window.skipClientWiki = true;</script>")
+		if(GetPageName() == "mod") then
+			include_once(WIKI_ROOT .. "mod/routes.page");
+		else
+			local filename = WIKI_ROOT .. 'pages/' .. GetPageName() .. ".page";
+			if(file_exists(filename)) then
+				include(filename);
+				echo("<script>window.skipClientWiki = true;</script>")
+			end
 		end
 	end
 	if(pageName and pageName:match("^_")) then
