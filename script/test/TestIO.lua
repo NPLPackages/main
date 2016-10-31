@@ -214,3 +214,22 @@ end
 --NPL.load("(gl)script/ide/UnitTest/luaunit.lua");
 --SampleTestSuite = wrapFunctions( 'test_io_GeneratePKG')
 --ParaGlobal.Exit(LuaUnit:run('SampleTestSuite'));
+
+function test_MemoryFile()
+	-- "<memory>" is a special name for memory file, both read/write is possible. 
+	local file = ParaIO.open("<memory>", "w");
+	if(file:IsValid()) then	
+		file:WriteString("hello ");
+		local nPos = file:GetFileSize();
+		file:WriteString("world");
+		file:WriteInt(1234);
+		file:seek(nPos);
+		file:WriteString("World");
+		file:SetFilePointer(0, 2); -- 2 is relative to end of file
+		file:WriteInt(0);
+		file:WriteString("End");
+		-- read entire binary text data back to npl string
+		echo(#(file:GetText(0, -1)));
+		file:close();
+	end
+end
