@@ -227,6 +227,7 @@ function test_MemoryFile()
 		file:WriteString("World");
 		file:SetFilePointer(0, 2); -- 2 is relative to end of file
 		file:WriteInt(0);
+		file:WriteBytes(3, {100, 0, 22});
 		file:WriteString("End");
 		-- read entire binary text data back to npl string
 		echo(#(file:GetText(0, -1)));
