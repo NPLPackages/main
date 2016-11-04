@@ -1,0 +1,5 @@
+<?npl
+log("server side redirection\n");
+response:set_header("Location", "http://www.paracraft.cn/")
+response:status(301):send_headers();
+?>

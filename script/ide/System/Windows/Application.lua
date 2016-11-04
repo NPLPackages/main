@@ -319,20 +319,22 @@ function Application:OnToolipWalkUp(timer)
 	timer:Change();
     if (self.toolTipWidget) then
         local w = self.toolTipWidget:GetWindow();
-        -- show tooltip if WA_AlwaysShowToolTips is set, or if
-        -- any ancestor of self.toolTipWidget is the active window
-        local showToolTip = w:testAttribute("WA_AlwaysShowToolTips");
-        while (w and not showToolTip) do
-            showToolTip = w:isActiveWindow();
-            w = w:parentWidget();
-			if(w) then
-				w = w:GetWindow();
+		if(w) then
+			-- show tooltip if WA_AlwaysShowToolTips is set, or if
+			-- any ancestor of self.toolTipWidget is the active window
+			local showToolTip = w:testAttribute("WA_AlwaysShowToolTips");
+			while (w and not showToolTip) do
+				showToolTip = w:isActiveWindow();
+				w = w:parentWidget();
+				if(w) then
+					w = w:GetWindow();
+				end
 			end
-        end
-        if (showToolTip) then
-			local e = Event:new():init("toolTipEvent");
-            self:sendEvent(self.toolTipWidget, e);
-        end
+			if (showToolTip) then
+				local e = Event:new():init("toolTipEvent");
+				self:sendEvent(self.toolTipWidget, e);
+			end
+		end
     end
 end
 
