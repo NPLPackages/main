@@ -1213,24 +1213,37 @@ function PageElement:hide()
 	self:SetAttribute("display", "none")
 end
 
+-- get/set inner text
+-- @param v: if not nil, it will set inner text instead of get
 -- return the inner text or empty string. 
-function PageElement:text()
-	local inner_text = self[1];
-	if(type(inner_text) == "string") then
-		return inner_text;
+function PageElement:text(v)
+	if(v == nil) then
+		local inner_text = self[1];
+		if(type(inner_text) == "string") then
+			return inner_text;
+		else
+			return ""
+		end
 	else
-		return ""
+		self:ClearAllChildren();
+		self[1] = v;
 	end
 end
 
--- get ui or node value of the node. 
-function PageElement:value()
-	local value_ = self:GetUIValue();
-	if(value_==nil) then
-		return self:GetValue();
+-- get/set ui or node value of the node. 
+-- @param v: if not nil, it will set value instead of get
+function PageElement:value(v)
+	if(v == nil) then
+		local value_ = self:GetUIValue();
+		if(value_==nil) then
+			return self:GetValue();
+		else
+			return value_;	
+		end	
 	else
-		return value_;	
-	end	
+		self:SetUIValue(v);
+		self:SetValue(v);
+	end
 end
 
 -- return a table containing all child nodes whose name is name. (it will search recursively)
