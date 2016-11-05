@@ -37,7 +37,7 @@ wp_enqueue_style("jqueryui_css", "/wp-includes/js/jquery/jquery-ui.min.css");
 wp_enqueue_script("easyui", "/wp-includes/js/jeasyui/jquery.easyui.min.js");
 wp_enqueue_script("jqueryui", "/wp-includes/js/jquery/jquery-ui.min.js"); 
 
-echo(format("<script>window.editorInfo = {workspaceDir:'%s', req_src:'%s'};</script>", ParaIO.GetCurDirectory(0), src));
+echo(format("<script>window.editorInfo = {workspaceDir:'%s', req_src:'%s'};</script>", ParaIO.GetCurDirectory(0), src or ""));
 ?>
 <script>
     angular.module('EditCode', ['ngStorage', 'ngSanitize'])

@@ -67,6 +67,7 @@ wp_enqueue_script("easyui", "/wp-includes/js/jeasyui/jquery.easyui.min.js");
 wp_enqueue_script("jqueryui", "/wp-includes/js/jquery/jquery-ui.min.js"); 
 wp_enqueue_style("jqueryui_css", "/wp-includes/js/jquery/jquery-ui.min.css");
 
+echo(format("<script>window.debuggerInfo = {workspaceDir:'%s'};</script>", ParaIO.GetCurDirectory(0)));
 ?>
 <script>
     angular.module('Debugger', ['ngStorage'])
@@ -117,7 +118,7 @@ wp_enqueue_style("jqueryui_css", "/wp-includes/js/jquery/jquery-ui.min.css");
 
         if (!Array.isArray($scope.$storage.breakpoints))
             $scope.$storage.breakpoints = [];
-		var workspaceDir = "<?=ParaIO.GetCurDirectory(0)?>";
+		var workspaceDir = debuggerInfo.workspaceDir;
 		$scope.workspaceDir = workspaceDir;
         var pollTimer;
 
