@@ -71,7 +71,7 @@ wp_scripts = wp_scripts or {};
 			src = src.."?ver="..ver;
 		end
 		wp_scripts[handle] = src;
-		echo(format('<script type="text/javascript" src="%s"></script>\n', src));
+		echo(format('<script type="text/javascript" src="%s" charset="utf-8"></script>\n', src));
 	end
 end
 
