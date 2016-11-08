@@ -59,7 +59,7 @@ bindingContext:UpdateControlsToData()
 ----------------------------------------------------------
 -- BindingContext: Manages a collection of BindingManager(PropertyManager or CurrencyManager) objects
 ----------------------------------------------------------
-local BindingContext = commonlib.createtable(commonlib.gettable("commonlib.BindingContext"), {
+local BindingContext = commonlib.createtable("commonlib.BindingContext", {
 	-- Gets a value indicating whether the collection is read-only. 
 	IsReadOnly = false, 
 	-- private: the collection of PropertyManager or CurrencyManager objects

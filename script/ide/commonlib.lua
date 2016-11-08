@@ -44,17 +44,20 @@ NPL.load("(gl)script/ide/log.lua");
 NPL.load("(gl)script/ide/LibStub.lua");
 NPL.load("(gl)script/ide/package/package.lua");
 NPL.load("(gl)script/ide/debug.lua");
-NPL.load("(gl)script/ide/DataBinding.lua");
 NPL.load("(gl)script/ide/serialization.lua");
 NPL.load("(gl)script/ide/OneTimeAsset.lua");
 NPL.load("(gl)script/ide/timer.lua");
-NPL.load("(gl)script/ide/Files.lua");
 NPL.load("(gl)script/ide/NPLExtension.lua");
 NPL.load("(gl)script/ide/XPath.lua");
 NPL.load("(gl)script/ide/rulemapping.lua");
 NPL.load("(gl)script/ide/Encoding.lua");
 NPL.load("(gl)script/ide/DateTime.lua");
 
+-- called at the end of this function.
+local function FooterLoader()
+	NPL.load("(gl)script/ide/DataBinding.lua");
+	NPL.load("(gl)script/ide/Files.lua");
+end
 
 local _G = _G
 local ParaUI_GetUIObject; if(ParaUI and ParaUI.GetUIObject) then  ParaUI_GetUIObject = ParaUI.GetUIObject; end
@@ -169,7 +172,7 @@ end
 -- @param f: f is a string like "a.b.c.d"
 -- @param rootEnv: it can be a table from which to search for f, if nil, the global table _G is used. 
 -- @return: return the field in LUA, it may be nil, a value, or a table, etc. 
-function commonlib.getfield (f, rootEnv)
+function commonlib.getfield(f, rootEnv)
 	if(not f) then return end
 	local v = rootEnv or _G    -- start with the table of globals
 	local w;
@@ -190,7 +193,7 @@ end
 -- the call setfield("t.x.y", 10) creates a global table t, another table t.x, and assigns 10 to t.x.y
 -- @param f: f is a string like "a.b.c.d"
 -- @param rootEnv: it can be a table from which to search for f, if nil, the global table _G is used. 
-function commonlib.setfield (f, v, rootEnv)
+function commonlib.setfield(f, v, rootEnv)
 	if(not f) then return end
 	local t = rootEnv or _G    -- start with the table of globals
 	local w,d;
@@ -210,7 +213,6 @@ end
 function commonlib.gettable(f, rootEnv)
 	if(not f) then return end
 	local t = rootEnv or _G    -- start with the table of globals
-	local w,d;
 	for w, d in string_gfind(f, "([%w_]+)(.?)") do
 		t[w] = t[w] or {}   -- create table if absent
 		t = t[w]            -- get the table
@@ -784,3 +786,5 @@ function commonlib.split(str,delimiter)
 	end
 	return result;
 end
+
+FooterLoader();

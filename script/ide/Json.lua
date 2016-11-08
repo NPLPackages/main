@@ -376,10 +376,10 @@ function JsonReader:ReadString()
 	local fromunicode = function(m)
 		return string.char(tonumber(m, 16))
 	end
-	-- LXZ: this implementation is very wrong
+	-- LXZ: fixed implementation for \uxxxx in json string.
 	return string.gsub(
 		result, 
-		"u%x%x(%x%x)", 
+		"\\u%x%x(%x%x)", 
 		fromunicode)
 end
 
