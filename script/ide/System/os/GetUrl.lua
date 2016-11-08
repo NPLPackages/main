@@ -20,6 +20,15 @@ System.os.GetUrl({url = "http://localhost:8099/ajax/console?action=printrequest"
 System.os.GetUrl({url = "http://localhost:8099/ajax/console?action=printrequest", headers={["content-type"]="application/json"}, postfields='{"key":"value"}' }, function(err, msg, data)		echo(data)	end);
 -- To simplify json encoding, we can send form as json string using following shortcut
 System.os.GetUrl({url = "http://localhost:8099/ajax/console?action=getparams", json = true, form = {key="value", key2 ={subtable="subvalue"} } }, function(err, msg, data)		echo(data)  end);
+-- sending email via smtp
+System.os.SendEmail({
+	url="smtp://smtp.exmail.qq.com", 
+	username="lixizhi@paraengine.com", password="1234567", 
+	-- ca_info = "/path/to/certificate.pem",
+	from="lixizhi@paraengine.com", to="lixizhi@yeah.net", cc="xizhi.li@gmail.com", 
+	subject = "title here",
+	body = "any body context here. can be very long",
+}, function(err, msg) echo(msg) end);
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/Json.lua");
@@ -165,13 +174,33 @@ end
 --[[ send an email message via smtp protocol
 @param params: {
 	url="smtp://mail.paraengine.com", 
-	username=string, password=string, ca_info = "/path/to/certificate.pem"
+	username="LiXizhi", password="1234567", 
+	-- ca_info = "/path/to/certificate.pem", date = "Mon, 29 Nov 2010 21:54:29 +1100",
 	from="lixizhi@paraengine.com", to="lixizhi@yeah.net", cc="xizhi.li@gmail.com", 
 	subject = "title here",
 	body = "any body context here. can be very long",
 }
 ]]
-function os.send_email(params, callbackFunc)
+function os.SendEmail(params, callbackFunc)
+	local lines = {};
+	if(params.date) then
+		lines[#lines+1] = "Date: "..params.date;
+	end
+	if(params.to) then
+		lines[#lines+1] = "To: "..params.to;
+	end
+	if(params.from) then
+		lines[#lines+1] = "From: "..params.from;
+	end
+	if(params.cc) then
+		lines[#lines+1] = "Cc: "..params.cc;
+	end
+	lines[#lines+1] = "Subject: "..(params.subject or "from NPL");
+	-- empty line to divide headers from body, see RFC5322 
+	lines[#lines+1] = "";
+	lines[#lines+1] = params.body or "hello";
+
+	local contents = table.concat(lines, "\r\n");
 	return os.GetUrl({
 		url = params.url,
 		options = {
@@ -183,7 +212,7 @@ function os.send_email(params, callbackFunc)
 			CURLOPT_VERBOSE = 1,
 			CURLOPT_UPLOAD = 1,
 			CURLOPT_MAIL_RCPT = {params.to, params.cc},
-			CURLOPT_READDATA = "";
+			CURLOPT_READDATA = contents,
 		},
 	}, callbackFunc);
 end

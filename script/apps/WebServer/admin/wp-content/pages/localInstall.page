@@ -17,18 +17,21 @@ local manager = PluginManager.CreateGetInstance("Paracraft");
 
 local function InstallFromUrl(url,downloadQueue)
 	local status  = false;
-	local dest = '';
+	local dest    = '';
 
 	downloadQueue.lock = 1;
 	manager:GetLoader():SetDownloadQueue(downloadQueue);
 	manager:GetLoader():InstallFromUrl(
 		url, 
 		function(bStatus, bDest)
+
 			status = bStatus;
-			dest = bDest;
+			dest   = bDest;
+
 			resume();
 		end
 	);
+
 	yield();
 
 	downloadQueue.lock = 0;
@@ -42,10 +45,10 @@ if(is_ajax()) then
 		function()
 			local url		  = request:get('url');
 			local projectName = request:get('projectName');
+			local projectType = request:get('projectType');
 			local packagesId  = tonumber(request:get('packagesId'));
 
-			url				  = url..'/archive/master.zip';
-			local status	  = -5;--package是否可以下载，以前是否下载过
+			local status	       = -5;--package是否可以下载，以前是否下载过
 			local dest		  = '';
 			local isYourTurn  = 0;--是否轮到此包下载
 
@@ -131,7 +134,13 @@ if(is_ajax()) then
 
 				downloadQueue.downloadStatus	 = 0;
 				downloadQueue.currentPackagesId  = 0;
-				downloadQueue.currentProjectName = 'Not yet!';
+				-- downloadQueue.currentProjectName = 'Not yet!';
+
+				if(projectType == 'npl') then
+					downloadQueue.currentProjectName = 'Not yet!';
+				elseif(projectType == 'paracraft') then
+					downloadQueue.currentProjectName = '还没有!';
+				end
 
 			end
 
@@ -164,6 +173,7 @@ if(is_ajax()) then
 	return;
 end
 
+
 wp_enqueue_script("jqueryui", "/wp-includes/js/jquery/jquery-ui.min.js"); 
 wp_enqueue_script("bootstrap", "/wp-includes/js/bootstrap/js/bootstrap.min.js");
 wp_enqueue_script("angular", "/wp-includes/js/angular/angular.min.js");
@@ -172,45 +182,49 @@ wp_enqueue_style("plugin", "/wp-admin/css/plugin.css");
 PAGE_NO_SIDE_BAR = true;
 ?>
 <div class="plugin" ng-app="plugin" ng-controller="localInstallController">
-    <div class="infor-details">
+	<!--<h1>
+        Do you want to install the following <br/> plugin to your local computer?
+	</h1>-->
+	<img ng-src="{{gitIcon}}">
+     <div class="infor-details">
         <div class="item">
-            <label>Package Name</label>
+            <label>{{language.packageNameDesc}}</label>
             <div>{{projectName}}</div>
         </div>
         <div class="item">
-            <label>Author</label>
+            <label>{{language.authorDesc}}</label>
             <div>{{author}}</div>
         </div>
         <div class="item">
-            <label>Version</label>
+            <label>{{language.versionDesc}}</label>
             <div>{{version}}</div>
         </div>
     </div>
     <div class="quene">
-        <h4>Thanks for downloading!</h4>
+        <h4>{{language.thanks}}</h4>
 		<br>
-		<h4 style="margin-top: -8px;">[Current download]</h4>
-        <div>
+		<h4 style="margin-top: -8px;">[{{language.current}}]</h4>
+		<div>
 			 <b>{{currentProjectName}}</b>
 		</div>
 		<br>
-		<h4>[Pending packages]</h4>
+		<h4>[{{language.waiting}}]</h4>
 		<div ng-repeat="package in waitPackages track by $index">
 			<b>
 			   #{{$index+1}} &nbsp;&nbsp;&nbsp;
-			   Project name:{{package.projectName}} &nbsp;&nbsp;&nbsp;
-			   Package id:{{package.packagesId}}
+			   {{language.projectNameDesc}}:{{package.projectName}} &nbsp;&nbsp;&nbsp;
+			   {{language.packageId}}:{{package.packagesId}}
 			</b>
 		</div>
 
 		<b ng-if="waitPackagesIsEmpty">
-			No pending packages
+			{{language.notYet}}
 		</b>
     </div>
     <div class="button">
-        <button class="start" ng-click="install()" disabled="disable">After {{seconds}}s will start</button>
+        <button class="start" ng-click="install()" disabled="disable">{{language.countDownA+seconds+language.countDownB}}</button>
         <button class="process" disabled="disabled"></button>
-        <span> Press close button at right top corner</span>
+        <span>{{language.tryAgain}}</span>
         <!--<button ng-click="cancel()">Cancel</button>-->
     </div>
 </div>
@@ -222,13 +236,62 @@ angular.module('plugin', ['ui.bootstrap'])
     $scope.projectName = params.projectName;
     $scope.version = params.version;
     $scope.author = params.displayName;
-    $scope.giturl = params.giturl;
+    $scope.projectReleases = params.projectReleases;
+    $scope.gitIcon = params.gitIcon;
     $scope.packagesId = params.packagesId;
+    $scope.projectType = params.projectType;
 
     $scope.seconds = 5;
-    $scope.currentProjectName = 'Empty';
     $scope.waitPackagesIsEmpty = true;
     $scope.waitPackages = [];
+
+    $scope.language = {};
+
+    var language_chinese = {
+        "starting":"开始中",
+        "notUpdate":"软件包未有更新",
+        "serviceNotAvailable":"网络似乎出现了一些问题，请稍后再试",
+        "complete":"完成！",
+        "packageNameDesc":"项目名称",
+        "authorDesc":"作者",
+        "versionDesc":"版本",
+        "thanks":"谢谢你的下载",
+        "current":"当前下载",
+        "waiting":"正在下载",
+        "projectNameDesc":"项目名称",
+        "packageId":"包ID",
+        "notYet":"还没有！",
+        "countDownA":"",
+        "countDownB":"秒后开始",
+        "tryAgain":"请按右上角的按钮关闭对话框",
+        "retry":"重试？"
+    };
+
+    var language_english = {
+        "starting":"Starting",
+        "notUpdate":"package is not up to date",
+        "serviceNotAvailable":"service is not available now, please try again later",
+        "complete":"Download complete!",
+        "packageNameDesc":"Package name",
+        "authorDesc":"Author",
+        "versionDesc":"version",
+        "thanks":"Thanks for downloading",
+        "current":"Current download",
+        "waiting":"Pending packages",
+        "projectNameDesc":"Project name",
+        "packageId":"Package id",
+        "notYet":"Not yet!",
+        "countDownA":"Start after ",
+        "countDownB":" seconds",
+        "tryAgain":"Press close button at right top corner",
+        "retry":"retry?"
+    };
+
+    if($scope.projectType == 'npl'){
+        $scope.language = language_english;
+    }else if($scope.projectType == 'paracraft'){
+        $scope.language = language_chinese;
+    }
 
     $interval(function () {
         $scope.seconds--;
@@ -236,7 +299,7 @@ angular.module('plugin', ['ui.bootstrap'])
 
     $timeout(function () {
         $scope.install();
-        $(".start").text("Starting ...");
+        $(".start").text($scope.language.starting+"......");
     }, 5000);
 
     $scope.install = function () {
@@ -244,9 +307,10 @@ angular.module('plugin', ['ui.bootstrap'])
             method: 'POST',
             url: '/ajax/localInstall?action=downloadQueue',
             data: {
-                url: $scope.giturl,
+                url: $scope.projectReleases,
                 projectName: $scope.projectName,
-                packagesId: $scope.packagesId
+                packagesId: $scope.packagesId,
+                projectType: $scope.projectType
             }
         })
         .then(function (response) {
@@ -272,11 +336,15 @@ angular.module('plugin', ['ui.bootstrap'])
                 if (response.data.status == 1) {
                     $scope.getCurrentDownload();
                 } else if (response.data.status == 0) {
-                    $(".start").text("packages is not updated");
+                    $(".start").text($scope.language.notUpdate);
                     $(".button span").css("display", "block");
                 } else if (response.data.status == -1) {
-                    $(".start").text("service is not available now, please try again later");
+                    $(".start").text($scope.language.serviceNotAvailable);
                     $(".button span").css("display", "block");
+                    
+                    if(confirm($scope.language.retry)){
+                        $scope.install()
+                    }
                 }
 
             } else if (response.data.currentPackagesId == $scope.packagesId) {
@@ -299,9 +367,7 @@ angular.module('plugin', ['ui.bootstrap'])
         $http({
             method: "GET",
             url: "/ajax/localInstall?action=GetCurrentDownload",
-            data: {
-
-            }
+            data: {}
         })
         .then(function (response) {
             if (response.data.status == -1 || response.data.status == 0) {
@@ -330,7 +396,7 @@ angular.module('plugin', ['ui.bootstrap'])
                 
             } else if (response.data.status == 1) {
 
-                $(".start").text("Download complete!").css("background-color", "#00ffbd");
+                $(".start").text($scope.language.complete).css("background-color", "#00ffbd");
                 $(".process").css({ "opacity": "0", "width": "100%" });
                 $(".button span").css("display", "block");
 

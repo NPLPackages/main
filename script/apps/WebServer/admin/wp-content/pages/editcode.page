@@ -36,6 +36,8 @@ wp_enqueue_style("easyui_icon", "/wp-includes/js/jeasyui/themes/icon.css");
 wp_enqueue_style("jqueryui_css", "/wp-includes/js/jquery/jquery-ui.min.css");
 wp_enqueue_script("easyui", "/wp-includes/js/jeasyui/jquery.easyui.min.js");
 wp_enqueue_script("jqueryui", "/wp-includes/js/jquery/jquery-ui.min.js"); 
+
+echo(format("<script>window.editorInfo = {workspaceDir:'%s', req_src:'%s'};</script>", ParaIO.GetCurDirectory(0), src or ""));
 ?>
 <script>
     angular.module('EditCode', ['ngStorage', 'ngSanitize'])
@@ -66,7 +68,7 @@ wp_enqueue_script("jqueryui", "/wp-includes/js/jquery/jquery-ui.min.js");
 		};
 	})
     .controller('EditCodeController', function ($scope, $http, $interval, $localStorage) {
-        $scope.fileExtensions = ["*.*", "*.lua", "*.xml", "*.page", "*.html", "*.txt"];
+        $scope.fileExtensions = ["*.*", "*.lua", "*.npl", "*.xml", "*.page", "*.html", "*.txt"];
         $scope.status = "";
         $scope.rootdir = "";
         $scope.isModified = false;
@@ -76,9 +78,8 @@ wp_enqueue_script("jqueryui", "/wp-includes/js/jquery/jquery-ui.min.js");
             openedfiles: [], // {filename, line}
             extFilter: "*.lua",
         });
-		var workspaceDir = "<?=ParaIO.GetCurDirectory(0)?>";
-
-        var req_src = "<?=src?>";
+		var workspaceDir = editorInfo.workspaceDir;
+        var req_src = editorInfo.req_src;
         if (req_src != "")
             $scope.$storage.currentFilename = req_src;
 

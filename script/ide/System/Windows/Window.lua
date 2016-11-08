@@ -75,7 +75,7 @@ function Window:RefreshUrlComponent()
 	end
 end
 
--- @param params: {url="", alignment, x,y,width, height, allowDrag,zorder }
+-- @param params: {url="", alignment, x,y,width, height, allowDrag,zorder, enable_esc_key, DestroyOnClose}
 function Window:ShowWithParams(params)
 	self.name = params.name;
 	-- load component if url has changed
@@ -119,6 +119,11 @@ function Window:ShowWithParams(params)
 		end
 	end
 	
+	self.esc_state = self.esc_state or {name = "McmlEscKey", OnEscKey = function()  
+		self:CloseWindow(params.DestroyOnClose~=false);
+	end}
+	System.PushState(self.esc_state);
+
 	-- show the window
 	self:show();
 end
@@ -129,6 +134,9 @@ function Window:CloseWindow(bDestroy)
 		self:hide();
 	else
 		self:destroy();
+	end
+	if(self.esc_state) then
+		System.PopState(self.esc_state);
 	end
 end
 

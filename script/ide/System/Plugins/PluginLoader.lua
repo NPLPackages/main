@@ -467,7 +467,7 @@ function PluginLoader:InstallFromUrl(url, callbackFunc, refreshMode)
 
 	-- get http headers only
 	System.os.GetUrl(url, function(err, msg)
-		echo({"GetUrl",url,dest});
+		echo({"PluginLoader:GetUrl", url, dest, msg});
 		if(msg.rcode ~= 200 or not msg.header) then
 			LOG.std(nil, "info", "PluginLoader", "remote plugin can not be fetched from %s, a previous downloaded one at %s is used", url, dest);
 			callbackFunc(-1, dest);

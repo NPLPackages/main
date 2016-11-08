@@ -128,6 +128,16 @@ function Store:updateOne(query, update, callbackFunc)
 	return self:InvokeCallback(callbackFunc, "NotImplemented", nil);
 end
 
+-- virtual: 
+-- Replaces a single document within the collection based on the query filter.
+-- it will not auto create index if key does not exist.
+-- @param query: key, value pair table, such as {name="abc"}. 
+-- @param replacement: wholistic fields to be replace any existing doc. 
+function Store:replaceOne(query, replacement, callbackFunc)
+	return self:InvokeCallback(callbackFunc, "NotImplemented", nil);
+end
+
+
 -- virtual: update multiple records, see also updateOne()
 function Store:update(query, update, callbackFunc)
 	return self:InvokeCallback(callbackFunc, "NotImplemented", nil);

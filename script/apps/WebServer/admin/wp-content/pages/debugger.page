@@ -67,6 +67,8 @@ wp_enqueue_script("easyui", "/wp-includes/js/jeasyui/jquery.easyui.min.js");
 wp_enqueue_script("jqueryui", "/wp-includes/js/jquery/jquery-ui.min.js"); 
 wp_enqueue_style("jqueryui_css", "/wp-includes/js/jquery/jquery-ui.min.css");
 
+NPL.load("(gl)script/ide/Files.lua");
+echo(format("<script>window.debuggerInfo = {workspaceDir:'%s', devDir:'%s'};</script>", ParaIO.GetCurDirectory(0), commonlib.Files.GetDevDirectory() or ""));
 ?>
 <script>
     angular.module('Debugger', ['ngStorage'])
@@ -117,7 +119,9 @@ wp_enqueue_style("jqueryui_css", "/wp-includes/js/jquery/jquery-ui.min.css");
 
         if (!Array.isArray($scope.$storage.breakpoints))
             $scope.$storage.breakpoints = [];
-		var workspaceDir = "<?=ParaIO.GetCurDirectory(0)?>";
+		var workspaceDir = debuggerInfo.workspaceDir;
+		var devDir = debuggerInfo.devDir;
+		$scope.devDir = devDir;
 		$scope.workspaceDir = workspaceDir;
         var pollTimer;
 
@@ -265,6 +269,11 @@ wp_enqueue_style("jqueryui_css", "/wp-includes/js/jquery/jquery-ui.min.css");
 			filename = filename.replace(/\\/g, "/");
 			filename = filename.replace(workspaceDir, "");
 			filename = filename.replace(workspaceDir.toLowerCase(), "");
+			if(devDir!="")
+			{
+				filename = filename.replace(devDir, "");
+				filename = filename.replace(devDir.toLowerCase(), "");
+			}
 			filename = filename.replace(/.*npl_packages\/[^\/]+\//g, "");
 			return filename;
 		}
@@ -595,6 +604,7 @@ wp_enqueue_style("jqueryui_css", "/wp-includes/js/jquery/jquery-ui.min.css");
     <div class="row" style="min-height:500px" >
         <div class="col-md-4">
 			<div>{{workspaceDir}}</div>
+			<div ng-show="devDir!=''">dev:{{devDir}}</div>
             <table id="filedir" style="height:500px;overflow: auto;width:100%" class="easyui-treegrid"
                    url="ajax/world?action=get_world_files&filter=*.lua&rootdir="
                    idField="id" treeField="filename" remoteSort="false" singleSelect="true">

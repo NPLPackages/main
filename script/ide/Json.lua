@@ -362,7 +362,7 @@ end
 function JsonReader:ReadString()
 	local result = ""
 	assert(self:Next() == '"')
-        while self:Peek() ~= '"' do
+    while self:Peek() ~= '"' do
 		local ch = self:Next()
 		if ch == '\\' then
 			ch = self:Next()
@@ -370,15 +370,16 @@ function JsonReader:ReadString()
 				ch = self.escapes[ch]
 			end
 		end
-                result = result .. ch
+		result = result .. ch
 	end
-        assert(self:Next() == '"')
+    assert(self:Next() == '"')
 	local fromunicode = function(m)
 		return string.char(tonumber(m, 16))
 	end
+	-- LXZ: fixed implementation for \uxxxx in json string.
 	return string.gsub(
 		result, 
-		"u%x%x(%x%x)", 
+		"\\u%x%x(%x%x)", 
 		fromunicode)
 end
 
@@ -530,9 +531,14 @@ function commonlib.Json.Encode(o, bUseEmptyArray)
 	return writer:ToString()
 end
 
+-- may return nil if s is not parsed. 
 function commonlib.Json.Decode(s)
-	local reader = JsonReader:New(s)
-	return reader:Read()
+	--local reader = JsonReader:New(s)
+	--return reader:Read()
+	local o = {};
+	if(type(s) == "string" and NPL.FromJson(s, o)) then
+		return o;
+	end
 end
 
 function commonlib.Json.Null()

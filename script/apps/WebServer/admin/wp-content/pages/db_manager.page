@@ -103,6 +103,8 @@ if(is_ajax()) then
 			table:insertOne(query, update, function(err, rows) resume(err, rows) end);
 		elseif (operation == "update") then
 			table:updateOne(query, update, function(err, rows) resume(err, rows) end);
+		elseif (operation == "replace") then
+			table:replaceOne(query, update, function(err, rows) resume(err, rows) end);
 		elseif (operation == "delete") then
 			table:deleteOne(query, resume);
 		else
@@ -293,7 +295,8 @@ PAGE_NO_SIDE_BAR = true;
 				if ($scope.operation == 'insert') {
 					$scope.addRecord(obj);
 				} else {
-					$scope.updateRecord($scope.editRecordId, obj);
+					// $scope.updateRecord($scope.editRecordId, obj);
+					$scope.replaceRecord($scope.editRecordId, obj);
 				}
 				$scope.newRecord();
 				$scope.errMsg = "";
@@ -346,6 +349,12 @@ PAGE_NO_SIDE_BAR = true;
 
         $scope.updateRecord = function (id, obj) {
             var params = {operation: "update", dbPath:$scope.dbPath, tableName: $scope.selectedTable, query: {_id:id}, update: obj}
+            $http.post(urlPrefix+'curd', params);
+			$scope.getTableRecord();
+        }
+
+		$scope.replaceRecord = function (id, obj) {
+            var params = {operation: "replace", dbPath:$scope.dbPath, tableName: $scope.selectedTable, query: {_id:id}, update: obj}
             $http.post(urlPrefix+'curd', params);
 			$scope.getTableRecord();
         }

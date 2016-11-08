@@ -56,6 +56,11 @@ local Page = commonlib.inherit(commonlib.gettable("System.Core.ToolBase"), commo
 Page:Property("Name", "Page");
 Page:Signal("created");
 
+-- make jquery-like invoke
+getmetatable(Page:new()).__call = function(self, ...)
+	return self:jquery(...)
+end
+
 function Page:ctor()
 	-- this will prevent recursive calls to self:Refresh(), which makes self:Refresh(0) pretty safe. 
 	self.refresh_depth = 0;
@@ -438,7 +443,7 @@ function Page:GetRoot()
 end
 
 -- provide jquery-like syntax to find all nodes that match a given name pattern and then use the returned object to invoke a method on all returned nodes. 
---  e.g. node:jquery("a").show();
+--  e.g. node:jquery("a"):show();
 -- @param pattern: The valid format is [tag_name][#name_id][.class_name]. 
 --  e.g. "div#name.class_name", "#some_name", ".some_class", "div"
 function Page:jquery(...)
