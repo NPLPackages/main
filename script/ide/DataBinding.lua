@@ -56,18 +56,15 @@ bindingContext:UpdateDataToControls()
 bindingContext:UpdateControlsToData()
 -------------------------------------------------------
 ]]
-if(not commonlib) then commonlib={}; end
 ----------------------------------------------------------
 -- BindingContext: Manages a collection of BindingManager(PropertyManager or CurrencyManager) objects
 ----------------------------------------------------------
-local BindingContext = {
+local BindingContext = commonlib.createtable(commonlib.gettable("commonlib.BindingContext"), {
 	-- Gets a value indicating whether the collection is read-only. 
 	IsReadOnly = false, 
 	-- private: the collection of PropertyManager or CurrencyManager objects
 	BindingManagers = {},
-};
-
-commonlib.BindingContext = BindingContext;
+});
 
 -- create a new binding context
 function BindingContext:new(o)
@@ -87,7 +84,7 @@ end
 --  (2) The data source.
 --  (3) The navigation path that resolves to a list or property in the data source. A period-delimited navigation path is required when the data source is set to an object that contains multiple DataTable objects 
 function BindingContext:AddBindingObject(dataSource, dataMember, binding)
-	local bindingManager = BindingContext:GetItem(dataSource, dataMember);
+	local bindingManager = self:GetItem(dataSource, dataMember);
 	if(bindingManager == nil) then
 		-- create binding manager if not exist
 		bindingManager = commonlib.BindingManager:new({dataSource = dataSource, dataMember=dataMember});
@@ -129,7 +126,7 @@ end
 @return: the Binding object created is returned. 
 ]]
 function BindingContext:AddBinding(dataSource, dataMember, ControlName, ControlType, ControlPropertyName, DataSourceUpdateMode, NullValue)
-	local bindingManager = BindingContext:GetItem(dataSource, dataMember);
+	local bindingManager = self:GetItem(dataSource, dataMember);
 	local binding;
 	if(bindingManager == nil) then
 		-- create binding manager if not exist
@@ -184,8 +181,7 @@ end
 -- @param dataMember: [optional] if nil, it will only search for existance of dataSource. If it is a string, both the dataSource and dataMember is searched. 
 --  A data member is string name of a sub field or table in the dataSource. 
 -- @return: BindingManager is returned otherwise nil. 
-function BindingContext:GetItem (dataSource, dataMember)
-	local i, bm;
+function BindingContext:GetItem(dataSource, dataMember)
 	for i, bm in ipairs(self.BindingManagers) do
 		if(bm.dataSource == dataSource) then
 			if(dataMember == nil or dataMember==bm.dataMember) then
