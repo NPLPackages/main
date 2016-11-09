@@ -1,7 +1,7 @@
 --[[
-Title: JSON Encoder and Parser for Lua 5.1
-Author: ported by LiXizhi, see original copyright below
-Date: 2008.12.14
+Title: JSON Encoder and Parser
+Author: LiXizhi
+Date: 2008.12.14 (2016.11.8 refactored to use C++ version when available)
 Desc: 
  1) Encodable Lua types: string, number, boolean, table, nil
  2) Use Json.Null() to insert a null value into a Json object
@@ -16,13 +16,13 @@ use the lib:
 NPL.load("(gl)script/ide/Json.lua");
 local t = { 
 ["name1"] = "value1",
-["name2"] = {1, false, true, 23.54, "a \021 string"},
+["name2"] = {1, false, true, 23.54, "a \021 string", {}},
 name3 = commonlib.Json.Null() 
 }
 
 local json = commonlib.Json.Encode(t)
 print (json) 
---> {"name1":"value1","name3":null,"name2":[1,false,true,23.54,"a \u0015 string"]}
+--> {"name1":"value1","name3":null,"name2":[1,false,true,23.54,"a \u0015 string", {}]}
 
 local t = commonlib.Json.Decode(json)
 print(t.name2[4])
@@ -31,7 +31,8 @@ print(t.name2[4])
 -- also consider the NPL version
 local out={};
 if(NPL.FromJson(json, out)) then
-	commonlib.echo(out)
+	echo(out);
+	echo(NPL.ToJson(out, true));
 end
 -------------------------------------------------------
 ]]
@@ -523,12 +524,17 @@ end
 -- @param bUseEmptyArray: by default, empty table is serialized to json as object {}. 
 -- set this to true will be serialized to json as array []
 function commonlib.Json.Encode(o, bUseEmptyArray)
-	local writer = JsonWriter:New()
-	if(bUseEmptyArray) then
-		writer:SetEmptyTableAsArray()
+	if(NPL.ToJson) then
+		-- always use NPL's c++ version when available.
+		return NPL.ToJson(o, bUseEmptyArray==true);
+	else	
+		local writer = JsonWriter:New()
+		if(bUseEmptyArray) then
+			writer:SetEmptyTableAsArray()
+		end
+		writer:Write(o)
+		return writer:ToString()
 	end
-	writer:Write(o)
-	return writer:ToString()
 end
 
 -- may return nil if s is not parsed. 
