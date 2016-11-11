@@ -27,6 +27,7 @@ end
 function PluginConfig:LoadFromXmlNode(modnode)
 	local modname = modnode.attr.name;
 	self.name = modname;
+	self.attr = modnode.attr;
 	for worldnode in commonlib.XPath.eachNode(modnode,"/world") do
 		local worldname = worldnode.attr.name;
 		local checked = worldnode.attr.checked;
@@ -38,8 +39,20 @@ function PluginConfig:LoadFromXmlNode(modnode)
 	return self;
 end
 
+-- set custom property
+function PluginConfig:SetAttribute(name, value)
+	self.attr = self.attr or {};
+	self.attr[name] = value;
+end
+
+-- get custom property
+function PluginConfig:GetAttribute(name)
+	return self.attr and self.attr[name];
+end
+
 function PluginConfig:SaveToXmlNode(modnode)
-	modnode = modnode or {name='mod', attr={name = self.name}};
+	self:SetAttribute("name", self.name);
+	modnode = modnode or {name='mod', attr=self.attr};
 	for worldname, options in pairs(self.worldOptionFilters) do 
 		local worldnode = {name='world', attr = {name = worldname}};
 		worldnode.attr.checked = options.checked;

@@ -39,6 +39,7 @@
         $scope.installNow = 'Install now';
         $scope.download = 'Download';
         $scope.code = 'Github';
+        $scope.verified = 'verified';
     }else if($scope.projectType == 'paracraft'){
         $scope.authorDesc = '创作者';
         $scope.versionDesc = '版本';
@@ -47,6 +48,7 @@
         $scope.installNow = '立即安装';
         $scope.download = '直接下载';
         $scope.code = '源码';
+        $scope.verified = '已认证';
     }else{
         location.href="/wiki/mod/packages";
     }
@@ -179,13 +181,14 @@
                 if (response.data.result == 1) {
                     packagesInstallService.setGiturl(
                         '127.0.0.1:8099/localInstall#?'
-                        + 'projectReleases=' + $scope.projectReleases
-                        + '&gitIcon=' + $scope.gitIcon
-                        + '&projectName=' + $scope.projectName
-                        + '&displayName=' + $scope.displayName
-                        + '&version=' + $scope.version
-                        + '&packagesId=' + request.id
-                        + '&projectType=' + $scope.projectType
+                        + 'projectReleases=' + encodeURIComponent($scope.projectReleases)
+                        + '&gitIcon=' + encodeURIComponent($scope.gitIcon)
+                        + '&projectName=' + encodeURIComponent($scope.projectName)
+                        + '&displayName=' + encodeURIComponent($scope.displayName)
+                        + '&version=' + encodeURIComponent($scope.version)
+                        + '&packagesId=' + encodeURIComponent(request.id)
+                        + '&projectType=' + encodeURIComponent($scope.projectType)
+                        + '&homepage=' + encodeURIComponent(window.location.href)
                     );
 
                     $uibModal.open({
@@ -210,7 +213,7 @@
                 method: "POST",
                 url: "/api/mod/packages/models/packages/verifyPackages",
                 data: {
-                    "packagesId": Request.id,
+                    "packagesId": request.id,
                     "isVerified": newValue.toString()
                 }
             })
