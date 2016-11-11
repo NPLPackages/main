@@ -201,7 +201,7 @@
                 }
             }, function (response) { });
         }, function (response) {
-            alert("local service is not start");
+            alert("`直接安装`需要您启动Paracraft客户端并打开`Mod加载`界面，但是没有检测到正在运行的Paracraft客户端, 请`直接下载`或启动后重试");
         });
     }
 
