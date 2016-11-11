@@ -35,6 +35,9 @@ local PluginLoader = commonlib.inherit(commonlib.gettable("System.Core.ToolBase"
 PluginLoader:Property({"Name", "PluginLoader"});
 PluginLoader:Property({"PluginFolder", "Mod/", auto=true, desc="default plugin folder"});
 
+-- called whenever the plugin list is changed. 
+PluginLoader:Signal("contentChanged", function() end)
+
 local allInstances = {};
 
 function PluginLoader:ctor()
@@ -184,7 +187,6 @@ function PluginLoader:GetPluginConfig(modname, bCreateIfNotExist)
 	return pluginConfig;
 end
 
-
 -- @param params: {displayName=string, url=string, author=string, version=string, }
 function PluginLoader:SetPluginInfo(name, params)
 	local config = self:GetPluginConfig(name, true);
@@ -195,6 +197,7 @@ function PluginLoader:SetPluginInfo(name, params)
 					config:SetAttribute(name, value);
 				end
 			end
+			self:contentChanged();
 		end
 	end
 end
@@ -208,6 +211,11 @@ function PluginLoader:AddModuleToList(modname, modList)
 	end
 	local isZip = modname:match("%.(zip)$") == "zip";
 	local item = {text = modname, name = modname, checked = checked==true, isZip=isZip};
+	item.homepage = pluginConfig and pluginConfig:GetAttribute("homepage") or false;
+	item.author = pluginConfig and pluginConfig:GetAttribute("author") or false;
+	item.version = pluginConfig and pluginConfig:GetAttribute("version") or false;
+	item.displayName = pluginConfig and pluginConfig:GetAttribute("displayName") or false;
+	
 	modList[#modList+1] = item;
 end
 
@@ -236,9 +244,13 @@ function PluginLoader:EnablePlugin(modname, bChecked)
 		pluginConfig:SetEnabled(self:GetWorldFilterName(), bChecked);
 		for i, item in ipairs(self.modList) do
 			if(item.name == modname) then
-				item.bChecked = true;
+				bChecked = (bChecked == true);
+				if(item.checked ~= bChecked) then
+					item.checked = bChecked;
+				end
 			end
 		end
+		self:contentChanged();
 	end
 end
 
@@ -279,7 +291,17 @@ function PluginLoader:UnloadPluginFile(modname)
 	if( modname:match("%.(zip)$") == "zip") then
 		if(ParaIO.DoesAssetFileExist(filename, true))then
 			ParaAsset.CloseArchive(filename);	
+			return true;
 		end
+	end
+end
+
+function PluginLoader:DeletePlugin(modname)
+	if(self:UnloadPluginFile(modname)) then
+		local filename = self:GetPluginFolder()..modname;
+		ParaIO.DeleteFile(filename);
+		self:RebuildModuleList();
+		self:contentChanged();
 	end
 end
 
@@ -373,6 +395,7 @@ function PluginLoader:LoadAllPlugins(bForceReload)
 			self.modTable[modname]:SetEnabled(curWorldname, false);
 		end
 		self:SaveModTableToFile();
+		self:contentChanged();
 	end
 end
 
