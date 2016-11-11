@@ -2,8 +2,8 @@
 --[[
 Title: download the zip from github
 Author: big
-Date: 2016/10/9
-Desc: /ajax/localInstall?action=downloadQueue&url=&packagesId=%projectName=
+Date: 2016/11/10
+Desc: /ajax/localInstall?action=downloadQueue&url=&packagesId=%projectName=&version=&author=&homepage=
 ]]
 
 NPL.load("(gl)script/ide/System/Plugins/PluginManager.lua");
@@ -15,161 +15,52 @@ local manager = PluginManager.CreateGetInstance("Paracraft");
 --echo(manager:GetLoader():RebuildModuleList())  --> list of installed plugins
 --manager:GetLoader():LoadAllPlugins() --> load plugins, see PluginLoader for details
 
-local function InstallFromUrl(url,downloadQueue)
-	local status  = false;
-	local dest    = '';
-
-	downloadQueue.lock = 1;
-	manager:GetLoader():SetDownloadQueue(downloadQueue);
-	manager:GetLoader():InstallFromUrl(
-		url, 
-		function(bStatus, bDest)
-
-			status = bStatus;
-			dest   = bDest;
-
-			resume();
-		end
-	);
-
-	yield();
-
-	downloadQueue.lock = 0;
-	manager:GetLoader():SetDownloadQueue(downloadQueue);
-	return status,dest;
-end
 
 if(is_ajax()) then
 	add_action(
 		'wp_ajax_downloadQueue',
 		function()
 			local url		  = request:get('url');
+			local homepage	  = request:get('homepage');
 			local projectName = request:get('projectName');
 			local projectType = request:get('projectType');
-			local packagesId  = tonumber(request:get('packagesId'));
-
-			local status	       = -5;--package是否可以下载，以前是否下载过
-			local dest		  = '';
-			local isYourTurn  = 0;--是否轮到此包下载
+			local version = request:get('version');
+			local author = request:get('author');
+			local packageId  = tonumber(request:get('packagesId'));
 
 			local downloadQueue = manager:GetLoader():GetDownloadQueue();
 
-			if(downloadQueue.lock == 1) then
-				wp_send_json(
-					{
-						lock = 1;
-					}
-				);
-				return;
-			end
-
-			if(downloadQueue['waitCount'] == 0 and downloadQueue['downloadStatus'] == 0) then
-				status,dest = InstallFromUrl(url,downloadQueue);
-
-				downloadQueue['downloadStatus']     = 1;--设置下载中
-				downloadQueue['currentPackagesId']  = packagesId;
-				downloadQueue['currentProjectName'] = projectName;
-
-				isYourTurn = 1;
-			else
-				if( downloadQueue.currentPackagesId ~= packagesId ) then
-					local waitPackages = downloadQueue.waitPackages;
-					if( #waitPackages == 0 or waitPackages[1]['packagesId'] ~= packagesId or downloadQueue.downloadStatus == 1) then
-					local isAdd = true;
-
-					for i=1,#waitPackages do
-						if(waitPackages[i]['packagesId'] == packagesId) then
-							isAdd = false;
-							break;
-						end
-					end
-
-					if(isAdd) then
-						downloadQueue['waitCount'] = downloadQueue['waitCount'] + 1;
-
-						local newDownloadPackage = {
-							projectName = projectName,
-							packagesId	= packagesId
-						}
-
-						waitPackages[#waitPackages + 1] = newDownloadPackage;
-						log({"newDownloadPackage",newDownloadPackage});
-						log({"downloadQueue",downloadQueue});
-						end
-					else
-						status,dest = InstallFromUrl(url,downloadQueue);
-						downloadQueue['downloadStatus']     = 1;
-						downloadQueue['currentPackagesId']  = packagesId;
-						downloadQueue['currentProjectName'] = projectName;
-						isYourTurn = 1;
-					end
+			local bAdded = manager:GetLoader():InstallFromUrl({
+				url = url,
+				projectName = projectName,
+				version = version,
+				author = author,
+				packageId = packageId, 
+			}, 
+			function(bSucceed, msg, package)
+				if(bSucceed and package) then
+                    manager:GetLoader():RebuildModuleList();
+					manager:GetLoader():SetPluginInfo(package.name, {
+						url = url, 
+						displayName = projectName, 
+						version = version,
+						author = author,
+						homepage = homepage,
+						packageId = packageId,
+					})
+					manager:GetLoader():EnablePlugin(package.name, true)
+                    manager:GetLoader():SaveModTableToFile();
 				end
-			end
-
-			if(isYourTurn == 1 and status == 1) then
-				local waitPackages = downloadQueue.waitPackages;
-				for i=1,#waitPackages do
-					if(waitPackages[i]['packagesId'] == packagesId) then
-						commonlib.removeArrayItem(waitPackages,i);
-						break;
-					end
-				end
-
-				manager:GetLoader():SetDownloadInfo({status=-1,currentFileSize=0,totalFileSize=0});
-
-				manager:GetLoader():StartDownloader(url, dest,
-					function(bStatus, bDest)
-					end
-				);
-
-			elseif(status == -1 or status == 0) then
-
-				local waitPackages = downloadQueue.waitPackages;
-				for i=1,#waitPackages do
-					if(waitPackages[i]['packagesId'] == packagesId) then
-						commonlib.removeArrayItem(waitPackages,i);
-						break;
-					end
-				end
-
-				downloadQueue.downloadStatus	 = 0;
-				downloadQueue.currentPackagesId  = 0;
-				-- downloadQueue.currentProjectName = 'Not yet!';
-
-				if(projectType == 'npl') then
-					downloadQueue.currentProjectName = 'Not yet!';
-				elseif(projectType == 'paracraft') then
-					downloadQueue.currentProjectName = '还没有!';
-				end
-
-			end
-
-			local currentDownloadInfo = manager:GetLoader():GetDownloadInfo();
-			manager:GetLoader():SetDownloadQueue(downloadQueue);
-
-			wp_send_json(
-				{
-					status				= status,--package是否可以下载，以前是否下载过
-					waitCount			= downloadQueue['waitCount'],
-					currentPackagesId	= downloadQueue['currentPackagesId'],
-					currentProjectName	= downloadQueue['currentProjectName'],
-					currentDownloadInfo = currentDownloadInfo,
-					isYourTurn			= isYourTurn,
-					waitPackages		= downloadQueue['waitPackages']
-				}
-			);
-
-			return;
+			end)
+			response:send({packages = manager:GetLoader():GetDownloadQueue().packages, progress=manager:GetLoader():GetDownloadInfo()});
 		end
 	)
-
 	add_action(
 		'wp_ajax_GetCurrentDownload',
 		function()
-			wp_send_json(manager:GetLoader():GetDownloadInfo());
+			response:send({packages = manager:GetLoader():GetDownloadQueue().packages, progress=manager:GetLoader():GetDownloadInfo()});
 		end
 	);
-
 	return;
 end
 
@@ -178,7 +69,7 @@ wp_enqueue_script("jqueryui", "/wp-includes/js/jquery/jquery-ui.min.js");
 wp_enqueue_script("bootstrap", "/wp-includes/js/bootstrap/js/bootstrap.min.js");
 wp_enqueue_script("angular", "/wp-includes/js/angular/angular.min.js");
 wp_enqueue_script("angular-ui", "/wp-includes/js/angular/ui-bootstrap-tpls-1.3.3.min.js");
-wp_enqueue_style("plugin", "/wp-admin/css/plugin.css");
+
 PAGE_NO_SIDE_BAR = true;
 ?>
 <div class="plugin" ng-app="plugin" ng-controller="localInstallController">
@@ -213,10 +104,9 @@ PAGE_NO_SIDE_BAR = true;
 			<b>
 			   #{{$index+1}} &nbsp;&nbsp;&nbsp;
 			   {{language.projectNameDesc}}:{{package.projectName}} &nbsp;&nbsp;&nbsp;
-			   {{language.packageId}}:{{package.packagesId}}
+			   {{language.packageId}}:{{package.packageId}}
 			</b>
 		</div>
-
 		<b ng-if="waitPackagesIsEmpty">
 			{{language.notYet}}
 		</b>
@@ -228,6 +118,168 @@ PAGE_NO_SIDE_BAR = true;
         <!--<button ng-click="cancel()">Cancel</button>-->
     </div>
 </div>
+<style>
+     .plugin {
+      width: 100%;
+      height: 545px;
+      margin: 0 auto;
+      text-align: center;
+    }
+    .plugin > img {
+      width: 70px;
+    }
+    .plugin h1 {
+      font-size: 32px;
+      color: #CC3300;
+      text-align: center;
+      margin-top: 28px;
+    }
+    .plugin .infor-details {
+      width: 52.5%;
+      position: relative;
+      margin: 0 auto;
+      margin-top: 28px;
+      font-size: 20px;
+    }
+    .plugin .infor-details:after {
+      display: block;
+      content: "";
+      clear: both;
+    }
+    .plugin .infor-details .item {
+      margin-bottom: 10px;
+    }
+    .plugin .infor-details .item:after {
+      content: "";
+      display: block;
+      clear: both;
+    }
+    .plugin .infor-details .item label {
+      float: left;
+      margin: 0px;
+      font-size: 18px;
+    }
+    .plugin .infor-details .item > div {
+      /*margin-left: 265px;*/
+      float: right;
+    }
+    .plugin .quene {
+      overflow-y: auto;
+      width: 52.5%;
+      border: solid 1px #000;
+      font-size: 13px;
+      margin: 0 auto;
+      padding: 5px;
+      height: 180px;
+      margin-top: 20px;
+      text-align: left;
+    }
+    .plugin .button {
+      width: 385px;
+      margin: 0 auto;
+      display: block;
+    }
+    .plugin .button button {
+      width: 100%;
+      height: 45px;
+      border: none;
+      padding: 0;
+      margin: 0;
+      font-size: 16px;
+      color: #FFF;
+      outline: none;
+      border-radius: 5px;
+      display: block;
+    }
+    .plugin .button button.start {
+      background-color: #00FFFF;
+      margin-top: 50px;
+      font-weight: 600;
+      color: #000000;
+      transition: background-color 1s;
+    }
+    .plugin .button button.process {
+      background-color: #05bbbb;
+      margin-top: -45px;
+      /*position: relative;
+                    z-index: 1;*/
+      color: #025a48;
+      font-weight: 600;
+      display: none;
+      overflow: hidden;
+      transition: opacity 1s,width 1s;
+      /*@animate: animate 3s linear infinite;
+                    -webkit-animation: @animate;
+                    -moz-animation: @animate;
+                    -ms-animation: @animate;
+                    -o-animation: @animate;
+                    animation: @animate;*/
+    }
+    .plugin .button span {
+      text-align: center;
+      width: 100%;
+      display: none;
+      margin-top: 10px;
+      color: #007d5f;
+      position: relative;
+    }
+    @-webkit-keyframes animate {
+      0% {
+        opacity: 1;
+      }
+      50% {
+        opacity: .3;
+      }
+      100% {
+        opacity: 1;
+      }
+    }
+    @-moz-keyframes animate {
+      0% {
+        opacity: 1;
+      }
+      50% {
+        opacity: .3;
+      }
+      100% {
+        opacity: 1;
+      }
+    }
+    @-ms-keyframes animate {
+      0% {
+        opacity: 1;
+      }
+      50% {
+        opacity: .3;
+      }
+      100% {
+        opacity: 1;
+      }
+    }
+    @-o-keyframes animate {
+      0% {
+        opacity: 1;
+      }
+      50% {
+        opacity: .3;
+      }
+      100% {
+        opacity: 1;
+      }
+    }
+    @keyframes animate {
+      0% {
+        opacity: 1;
+      }
+      50% {
+        opacity: .3;
+      }
+      100% {
+        opacity: 1;
+      }
+    }
+</style>
+
 <script>
 angular.module('plugin', ['ui.bootstrap'])
 .controller('localInstallController', function ($scope, $http, $location, $interval,$timeout) {
@@ -241,7 +293,8 @@ angular.module('plugin', ['ui.bootstrap'])
     $scope.packagesId = params.packagesId;
     $scope.projectType = params.projectType;
 
-    $scope.seconds = 5;
+    var totalSeconds = 2;
+    $scope.seconds = totalSeconds;
     $scope.waitPackagesIsEmpty = true;
     $scope.waitPackages = [];
 
@@ -257,14 +310,14 @@ angular.module('plugin', ['ui.bootstrap'])
         "versionDesc":"版本",
         "thanks":"谢谢你的下载",
         "current":"当前下载",
-        "waiting":"正在下载",
+        "waiting":"下载队列",
         "projectNameDesc":"项目名称",
         "packageId":"包ID",
         "notYet":"还没有！",
         "countDownA":"",
         "countDownB":"秒后开始",
         "tryAgain":"请按右上角的按钮关闭对话框",
-        "retry":"重试？"
+        "retry": "下载异常(您也可以直接下载文件，并手工安装)，是否重新下载?"
     };
 
     var language_english = {
@@ -277,14 +330,14 @@ angular.module('plugin', ['ui.bootstrap'])
         "versionDesc":"version",
         "thanks":"Thanks for downloading",
         "current":"Current download",
-        "waiting":"Pending packages",
+        "waiting":"Download queue",
         "projectNameDesc":"Project name",
         "packageId":"Package id",
         "notYet":"Not yet!",
         "countDownA":"Start after ",
         "countDownB":" seconds",
         "tryAgain":"Press close button at right top corner",
-        "retry":"retry?"
+        "retry":"Download failed (you can download file directly and manually install), do you want to retry downloading?"
     };
 
     if($scope.projectType == 'npl'){
@@ -295,12 +348,75 @@ angular.module('plugin', ['ui.bootstrap'])
 
     $interval(function () {
         $scope.seconds--;
-    },1000,5);
+        if ($scope.seconds == 0) {
+            $(".start").text($scope.language.starting + "......");
+            $scope.install();
+        }
+    }, 1000, totalSeconds);
 
-    $timeout(function () {
-        $scope.install();
-        $(".start").text($scope.language.starting+"......");
-    }, 5000);
+	var updateUI = function(packages, progress)
+	{
+		var package = progress.package;
+		$scope.currentProjectName = package ? package.projectName : "";
+		$scope.waitPackagesIsEmpty = (packages.length == 0);
+        $scope.waitPackages = packages;
+
+		if(package && package.projectName == $scope.projectName)
+		{
+			// our turn now
+			if(package.bSucceed == true) 
+			{
+				if(package.bAlreadyUptodate)
+				{
+					$(".start").text($scope.language.notUpdate);
+					$(".button span").css("display", "block");
+				}
+				else
+				{
+					$(".start").text($scope.language.complete).css("background-color", "#00ffbd");
+					$(".process").css({ "opacity": "0", "width": "100%" });
+					$(".button span").css("display", "block");
+				}
+				return;
+			}
+			else if(package.bSucceed == false)
+			{
+				$(".start").text($scope.language.serviceNotAvailable);
+                $(".button span").css("display", "block");
+                    
+                if(confirm($scope.language.retry)){
+                    $scope.install()
+                }
+				return;
+			}
+		}
+		else
+		{
+			// not our turn yet
+		}
+        
+		// if there is still pending packages, we will continue fetch progress
+		if(packages.length > 0)
+		{
+			var currentFileSize = progress.currentFileSize;
+            var totalFileSize   = progress.totalFileSize;
+
+            var percent = (currentFileSize / totalFileSize) * 100;
+
+            if (isNaN(percent) || percent == Infinity) {
+                percent = 0;
+            } else {
+                percent = parseInt(percent);
+            }
+
+            $(".start").text(percent + "%      " + parseInt(currentFileSize / 1024) + "/" + parseInt(totalFileSize / 1024) + " KB");
+            $(".process").css({ "display": "block", "width": percent + "%" });
+
+			$timeout(function () {
+                $scope.getCurrentDownload();
+            }, 1000);
+		}
+	}
 
     $scope.install = function () {
         $http({
@@ -310,56 +426,14 @@ angular.module('plugin', ['ui.bootstrap'])
                 url: $scope.projectReleases,
                 projectName: $scope.projectName,
                 packagesId: $scope.packagesId,
-                projectType: $scope.projectType
+                projectType: $scope.projectType,
+				author: $scope.author,
+				version: $scope.version,
+				homepage: params.homepage,
             }
         })
         .then(function (response) {
-            if (response.data.lock == 1) {
-                $timeout(function () {
-                    $scope.install();
-                }, 1000);
-                return;
-            }
-
-            $scope.currentProjectName = response.data.currentProjectName;
-
-            for (var i in response.data.waitPackages) {
-                $scope.waitPackagesIsEmpty = false;
-                break;
-            }
-            
-            if (!$scope.waitPackagesIsEmpty) {
-                $scope.waitPackages = response.data.waitPackages;
-            }
-
-            if (response.data.isYourTurn == 1) {
-                if (response.data.status == 1) {
-                    $scope.getCurrentDownload();
-                } else if (response.data.status == 0) {
-                    $(".start").text($scope.language.notUpdate);
-                    $(".button span").css("display", "block");
-                } else if (response.data.status == -1) {
-                    $(".start").text($scope.language.serviceNotAvailable);
-                    $(".button span").css("display", "block");
-                    
-                    if(confirm($scope.language.retry)){
-                        $scope.install()
-                    }
-                }
-
-            } else if (response.data.currentPackagesId == $scope.packagesId) {
-                $scope.getCurrentDownload();
-                //alert('continue');
-            } else if (response.data.isYourTurn == 0) {
-                console.log(response.data);
-
-                $timeout(function () {
-                    $scope.install();
-                }, 1000);
-            } else {
-                return alert("error!");
-            }
-
+			updateUI(response.data.packages, response.data.progress);
         }, function (response) { });
     }
 
@@ -370,42 +444,8 @@ angular.module('plugin', ['ui.bootstrap'])
             data: {}
         })
         .then(function (response) {
-            if (response.data.status == -1 || response.data.status == 0) {
-
-                var currentFileSize = response.data.currentFileSize;
-                var totalFileSize   = response.data.totalFileSize;
-
-                var percent = (currentFileSize / totalFileSize) * 100;
-
-                //console.log(currentFileSize, totalFileSize, percent)
-
-                if (isNaN(percent) || percent == Infinity) {
-                    percent = 0;
-                } else {
-                    percent = parseInt(percent);
-                }
-
-                //console.log(currentFileSize, totalFileSize, percent);
-
-                $(".start").text(percent + "%      " + parseInt(currentFileSize / 1024) + "/" + parseInt(totalFileSize / 1024) + " KB");
-                $(".process").css({ "display": "block", "width": percent + "%" });
-
-                $timeout(function () {
-                    $scope.getCurrentDownload();
-                }, 1000);
-                
-            } else if (response.data.status == 1) {
-
-                $(".start").text($scope.language.complete).css("background-color", "#00ffbd");
-                $(".process").css({ "opacity": "0", "width": "100%" });
-                $(".button span").css("display", "block");
-
-            } else {
-                return alert("error status!");
-            }
-
+			updateUI(response.data.packages, response.data.progress);
         }, function (response) { });
-
     }
 })
 </script>

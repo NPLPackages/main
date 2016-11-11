@@ -13,8 +13,10 @@ Use Lib:
 NPL.load("(gl)script/ide/System/Plugins/PluginLoader.lua");
 local PluginLoader = commonlib.gettable("System.Plugins.PluginLoader");
 local loader = PluginLoader:new();
-loader:InstallFromZipBinary("test", "some data here")
 loader:InstallFromUrl("https://github.com/tatfook/NPLCAD/archive/master.zip", function(bSucceed, msg) echo(msg) end);
+loader:InstallFromUrl("https://github.com/tatfook/NPLCAD/releases/download/0.4.1/NPLCAD.zip", function(bSucceed, msg) echo(msg) end);
+loader:InstallFromZipBinary("test", "some data here")
+
 loader = loader:init(pluginManager, "Mod/");
 local list = loader:RebuildModuleList()
 loader:LoadAllPlugins();
@@ -33,6 +35,9 @@ local PluginLoader = commonlib.inherit(commonlib.gettable("System.Core.ToolBase"
 PluginLoader:Property({"Name", "PluginLoader"});
 PluginLoader:Property({"PluginFolder", "Mod/", auto=true, desc="default plugin folder"});
 
+-- called whenever the plugin list is changed. 
+PluginLoader:Signal("contentChanged", function() end)
+
 local allInstances = {};
 
 function PluginLoader:ctor()
@@ -46,7 +51,9 @@ function PluginLoader:ctor()
 	-- current download info {...}
 	self.currentDownload = {status=-1,currentFileSize=0,totalFileSize=0};
 	-- current download status
-	self.downloadQueue	 = {lock=0,waitCount=0,downloadStatus=0,currentPackagesId=0,currentProjectName='',waitPackages={}};
+	self.downloadQueue = {
+		packages=commonlib.Array:new(),
+	};
 end
 
 -- @param pluginFolder: if nil, default to "Mod/"
@@ -73,8 +80,7 @@ function PluginLoader:GetDownloadInfo()
 end
 
 function PluginLoader:SetDownloadInfo(downloadInfo)
-	--echo(downloadInfo);
-	self.currentDownload = downloadInfo or {};
+	commonlib.partialcopy(self.currentDownload, downloadInfo or {});
 end
 
 function PluginLoader:GetPluginManager()
@@ -171,6 +177,7 @@ function PluginLoader:GetWorldFilterName()
 	return self.curWorld or "global";
 end
 
+-- Create get plugin config for a given module
 function PluginLoader:GetPluginConfig(modname, bCreateIfNotExist)
 	local pluginConfig = self.modTable[modname];
 	if(not pluginConfig and bCreateIfNotExist) then
@@ -178,6 +185,21 @@ function PluginLoader:GetPluginConfig(modname, bCreateIfNotExist)
 		self.modTable[modname] = pluginConfig;
 	end
 	return pluginConfig;
+end
+
+-- @param params: {displayName=string, url=string, author=string, version=string, }
+function PluginLoader:SetPluginInfo(name, params)
+	local config = self:GetPluginConfig(name, true);
+	if(config) then
+		if(params) then
+			for name, value in pairs(params) do
+				if(name~="name") then
+					config:SetAttribute(name, value);
+				end
+			end
+			self:contentChanged();
+		end
+	end
 end
 
 -- private:
@@ -189,6 +211,11 @@ function PluginLoader:AddModuleToList(modname, modList)
 	end
 	local isZip = modname:match("%.(zip)$") == "zip";
 	local item = {text = modname, name = modname, checked = checked==true, isZip=isZip};
+	item.homepage = pluginConfig and pluginConfig:GetAttribute("homepage") or false;
+	item.author = pluginConfig and pluginConfig:GetAttribute("author") or false;
+	item.version = pluginConfig and pluginConfig:GetAttribute("version") or false;
+	item.displayName = pluginConfig and pluginConfig:GetAttribute("displayName") or false;
+	
 	modList[#modList+1] = item;
 end
 
@@ -217,9 +244,13 @@ function PluginLoader:EnablePlugin(modname, bChecked)
 		pluginConfig:SetEnabled(self:GetWorldFilterName(), bChecked);
 		for i, item in ipairs(self.modList) do
 			if(item.name == modname) then
-				item.bChecked = true;
+				bChecked = (bChecked == true);
+				if(item.checked ~= bChecked) then
+					item.checked = bChecked;
+				end
 			end
 		end
+		self:contentChanged();
 	end
 end
 
@@ -251,6 +282,26 @@ function PluginLoader:LoadPlugin(modname)
 	else
 		local main_filename = filename.."/main.lua";
 		return self:LoadPluginImp(modname, main_filename);
+	end
+end
+
+-- just make sure the file is not in use. 
+function PluginLoader:UnloadPluginFile(modname)
+	local filename = self:GetPluginFolder()..modname;
+	if( modname:match("%.(zip)$") == "zip") then
+		if(ParaIO.DoesAssetFileExist(filename, true))then
+			ParaAsset.CloseArchive(filename);	
+			return true;
+		end
+	end
+end
+
+function PluginLoader:DeletePlugin(modname)
+	if(self:UnloadPluginFile(modname)) then
+		local filename = self:GetPluginFolder()..modname;
+		ParaIO.DeleteFile(filename);
+		self:RebuildModuleList();
+		self:contentChanged();
 	end
 end
 
@@ -344,101 +395,7 @@ function PluginLoader:LoadAllPlugins(bForceReload)
 			self.modTable[modname]:SetEnabled(curWorldname, false);
 		end
 		self:SaveModTableToFile();
-	end
-end
-
-function PluginLoader:StartDownloader(src, dest, callbackFunc, cachePolicy)
-	local function OnSucceeded(filename)
-		self.isFetching = false;
-		if(callbackFunc) then
-			callbackFunc(true, filename)
-		end
-	end
-
-	local function OnFail(msg)
-		self.isFetching = false;
-		if(callbackFunc) then
-			callbackFunc(false, msg);
-		end
-	end
-	
-	local ls = System.localserver.CreateStore(nil, 1);
-
-	if(self.isFetching) then
-		OnFail("a previous download is not finished");
-		return;
-	end
-	self.isFetching = true;
-
-	local res = ls:GetFile(System.localserver.CachePolicy:new(cachePolicy or "access plus 5 days"),
-		src,
-		function (entry)
-			--log({"entry",entry});
-
-			if(dest) then
-				if(ParaIO.CopyFile(entry.payload.cached_filepath, dest, true)) then
-					local cached_filepath = entry.payload.cached_filepath;
-					ParaIO.DeleteFile(cached_filepath);
-					--  download complete
-					LOG.std(nil, "info", "PluginLoader", "successfully downloaded file from %s to %s", src, dest);
-					OnSucceeded(dest);
-				else
-					LOG.std(nil, "info", "PluginLoader", "failed copy file from %s to %s", src, dest);
-					OnFail("failed to copy file to dest folder. The file may be in use.");
-				end	
-			else
-				LOG.std(nil, "info", "PluginLoader", "successfully downloaded file to %s", entry.payload.cached_filepath);
-				OnSucceeded(entry.payload.cached_filepath);
-			end
-		end,
-		nil,
-		function (msg, url)
-			local totalFileSize   = msg['totalFileSize'];
-			local currentFileSize = msg['currentFileSize'];
-			local DownloadState   = msg['DownloadState'];
-			local status		  = 0;
-
-			if(DownloadState == 'complete') then
-				local downloadQueue = self:GetDownloadQueue();
-
-				downloadQueue.downloadStatus	 = 0;
-				downloadQueue.currentPackagesId  = 0;
-				downloadQueue.currentProjectName = 'Not yet!';
-
-				self:SetDownloadQueue(downloadQueue);
-
-				status = 1;
-			end
-
-			self:SetDownloadInfo({status=status,currentFileSize=currentFileSize,totalFileSize=totalFileSize});
-
-			-----------
-
-			local text;
-			self.DownloadState = self.DownloadState;
-
-			if(msg.DownloadState == "") then
-				text = "Downloading ..."
-				if(msg.totalFileSize) then
-					self.totalFileSize = msg.totalFileSize;
-					self.currentFileSize = msg.currentFileSize;
-					text = string.format("Downloading: %d/%dKB", math.floor(msg.currentFileSize/1024), math.floor(msg.totalFileSize/1024));
-				end
-			elseif(msg.DownloadState == "complete") then
-				text = "Download completed!";
-			elseif(msg.DownloadState == "terminated") then
-				text = "Download terminated";
-				OnFail(text);
-			end
-
-			if(text) then
-				--log({"text",text}); -- TODO: display in UI?
-			end
-		end
-	);
-
-	if(not res) then
-		OnFail("Duplicated download");
+		self:contentChanged();
 	end
 end
 
@@ -450,51 +407,28 @@ function PluginLoader:ComputeLocalFileName(url)
 	return filename;
 end
 
--- install from url to Mod/ folder 
--- @param url: download and overwrite existing file. 
--- @param callbackFunc: function (bSucceed, dest) end
--- @param refreshMode: nil|"auto"|"never"|"force".  
--- if "never", we will never download again if there is already a local cached file. 
--- if "auto" or nil, we will compare Last-Modified or Content-Length in http headers, before download full file. 
--- if "force", we will always download the file. 
-function PluginLoader:InstallFromUrl(url, callbackFunc, refreshMode)
+-- install from url to Mod/ folder. It will add to pending queue, if there are multiple requests. 
+-- @param params: url string or table {url, [dest, refreshMode, projectName, projectType, version, author, packageId, ...]}
+-- @param callbackFunc: function(bSucceed, dest) end. dest is the local file name or error message. 
+-- @return true if added in queue
+function PluginLoader:InstallFromUrl(params, callbackFunc)
+	if(type(params) == "string") then
+		params = {url = params};
+	end
+	if(not params or not params.url) then
+		return;
+	end
+	local url = params.url;
 
-	refreshMode = refreshMode or "auto";
+	params.callbackFunc = params.callbackFunc or callbackFunc;
 	callbackFunc = callbackFunc or echo;
 	
 	-- destination file path
-	local dest = self:ComputeLocalFileName(url);
+	params.dest = params.dest or self:ComputeLocalFileName(url);
+	local dest = params.dest;
+	params.name = params.name or dest:match("[^\\/]+$");
 
-	-- get http headers only
-	System.os.GetUrl(url, function(err, msg)
-		echo({"PluginLoader:GetUrl", url, dest, msg});
-		if(msg.rcode ~= 200 or not msg.header) then
-			LOG.std(nil, "info", "PluginLoader", "remote plugin can not be fetched from %s, a previous downloaded one at %s is used", url, dest);
-			callbackFunc(-1, dest);
-		else
-			local content_length = msg.header:match("Content%-Length: (%d+)");
-
-			if(content_length) then
-				local local_filesize = ParaIO.GetFileSize(dest);
-
-				if(local_filesize == tonumber(content_length)) then
-					-- we will only compare file size: since github/master does not provide "Last-Modified: " header.
-					LOG.std(nil, "info", "PluginLoader", "remote plugin size not changed, previously downloaded one %s is used", dest);
-
-					callbackFunc(0, dest);
-				else
-
-					callbackFunc(1, dest);
-					
-					--LOG.std(nil, "info", "PluginLoader", "remote(%d) and local(%d) file size differs", content_length, local_filesize);
-					--self:StartDownloader(url, dest, callbackFunc);
-				end
-			else
-				LOG.std(nil, "info", "PluginLoader", "content_length is empty");
-				callbackFunc(-1, dest);
-			end
-		end
-	end, "-I");
+	return self:AddToDownloadQueue(params);
 end
 
 -- install from raw binary content to Mod/ folder
@@ -512,4 +446,154 @@ function PluginLoader:InstallFromZipBinary(name, data)
 		file:write(data, #data);
 		file:close();
 	end
+end
+
+-- private function:
+-- @param params: url string or table {url, [dest, callbackFunc, refreshMode, projectName, projectType, version, author, packageId, ...]}
+-- params.refreshMode: nil|"auto"|"never"|"force".  
+-- if "never", we will never download again if there is already a local cached file. 
+-- if "auto" or nil, we will compare Last-Modified or Content-Length in http headers, before download full file. 
+-- if "force", we will always download the file. 
+-- @param callbackFunc: function(bSucceed, dest, curPackage) end. dest is the local file name or error message. 
+-- @return true if added in queue
+function PluginLoader:AddToDownloadQueue(params)
+	if(type(params) == "string") then
+		params = {url = params};
+	end
+	if(not params or not params.url) then
+		return;
+	end
+	local bAlreadyExist;
+	for i, package in ipairs(self:GetDownloadQueue().packages) do
+		if((package.packageId == params.packageId and params.packageId) or package.url == params.url) then
+			bAlreadyExist = true;
+			break;
+		end
+	end
+
+	if(not bAlreadyExist) then
+		self:GetDownloadQueue().packages:add(params);
+		LOG.std(nil, "info", "PluginLoader:AddToDownloadQueue", params);
+	end
+
+	self:DownloadNext();
+	return true;
+end
+
+-- private function:
+-- try download next package in the packages queue if any. 
+function PluginLoader:DownloadNext()
+	local curPackage = self:GetDownloadQueue().packages:first();
+	if(not curPackage or curPackage.isStarted) then
+		return;
+	end
+	curPackage.isStarted = true;
+
+	local function DoFinished(bSucceed, msg)
+		self.isFetching = false;
+		self:GetDownloadQueue().packages:removeByValue(curPackage);
+		if(curPackage.callbackFunc) then
+			curPackage.bSucceed = bSucceed == true;
+			curPackage.callbackFunc(bSucceed, msg, curPackage)
+		end
+		if(bSucceed) then
+			-- get next one in the queue only if previous one is a success
+			self:DownloadNext(); 
+		end
+	end
+
+	local function OnSucceeded(filename)
+		DoFinished(true, filename)
+	end
+
+	local function OnFail(msg)
+		DoFinished(false, msg);
+	end
+	
+	if(self.isFetching) then
+		OnFail("a previous download is not finished");
+		return;
+	end
+	self.isFetching = true;
+
+	self:GetDownloadInfo().package = curPackage;
+	self:SetDownloadInfo({status=0,currentFileSize=curPackage.currentFileSize or 0,totalFileSize=curPackage.totalFileSize or 0});
+
+	local url = curPackage.url;
+	local dest = curPackage.dest or self:ComputeLocalFileName(curPackage.url);
+	LOG.std(nil, "info", "PluginLoader:DownloadNext", url);
+
+	local function DownloadUrlFile()
+		local ls = System.localserver.CreateStore(nil, 1);
+		local res = ls:GetFile(System.localserver.CachePolicy:new(cachePolicy or "access plus 0 hour"),
+			url,
+			function (entry)
+				if(dest) then
+					self:UnloadPluginFile(curPackage.name);
+					if(ParaIO.CopyFile(entry.payload.cached_filepath, dest, true)) then
+						local cached_filepath = entry.payload.cached_filepath;
+						ParaIO.DeleteFile(cached_filepath);
+						--  download complete
+						LOG.std(nil, "info", "PluginLoader", "successfully downloaded file from %s to %s", url, dest);
+						OnSucceeded(dest);
+					else
+						LOG.std(nil, "info", "PluginLoader", "failed copy file from %s to %s", url, dest);
+						OnFail("failed to copy file to dest folder. The file may be in use.");
+					end	
+				else
+					LOG.std(nil, "info", "PluginLoader", "successfully downloaded file to %s", entry.payload.cached_filepath);
+					OnSucceeded(entry.payload.cached_filepath);
+				end
+			end,
+			nil,
+			function (msg, url)
+				local totalFileSize   = msg.totalFileSize or 0;
+				local currentFileSize = msg.currentFileSize or 0;
+				local DownloadState   = msg.DownloadState;
+				local status		  = 0;
+				if(DownloadState == 'complete') then
+					status = 1;
+				end
+				self:SetDownloadInfo({status=status,currentFileSize=currentFileSize,totalFileSize=totalFileSize});
+				if(DownloadState == "terminated") then
+					OnFail(text);
+				end
+			end
+		);
+		if(not res) then
+			OnFail("Duplicated download");
+		end
+	end
+
+	local function CheckRemoteFileSize()
+		if(curPackage.refreshMode == "force") then
+			DownloadUrlFile();
+		else
+			-- get http headers only (take care of 302 http redirect)
+			System.os.GetUrl(url, function(err, msg)
+				if(msg.rcode ~= 200 and (not msg.header or not msg.header:lower():find("\nlocation:", 1 , true))) then
+					LOG.std(nil, "info", "PluginLoader", "remote plugin can not be fetched from %s, a previous downloaded one at %s is used", url, dest);
+					OnFail("remote plugin can not be downloaded");
+				else
+					local content_length = msg.header:lower():match("content%-length: (%d+)");
+					curPackage.totalFileSize = curPackage.totalFileSize and (content_length and tonumber(content_length));
+					if(curPackage.totalFileSize) then
+						local local_filesize = ParaIO.GetFileSize(dest);
+						if(local_filesize == curPackage.totalFileSize or (curPackage.refreshMode=="never" and local_filesize~=0)) then
+							-- we will only compare file size: since github/master does not provide "Last-Modified: " header.
+							LOG.std(nil, "info", "PluginLoader", "remote plugin size not changed, previously downloaded one %s is used", dest);
+							OnSucceeded(dest);
+						else
+							DownloadUrlFile();
+						end
+					else
+						LOG.std(nil, "info", "PluginLoader", "content_length can not be determined for %s, such as http 302 redirect", url);
+						DownloadUrlFile();
+					end
+				end
+			end, "-I");
+		end
+	end
+
+	CheckRemoteFileSize();
 end

@@ -44,7 +44,7 @@
 					<div class="packages-weight">
 						<a class="package-logo" target="_blank" ng-href="/wiki/mod/packages/packages_install#/npl?id={{package._id}}">
 							<img ng-src="{{package.gitIcon}}" />
-							<div class="verified">verified</div>
+							<div ng-show="package.isVerified == 'true'" class="verified">verified</div>
 						</a>
 						<div class="packages-details">
 							<h3><a class="name" target="_blank" ng-href="/wiki/mod/packages/packages_install#/npl?id={{package._id}}">{{package.projectName}}</a></h3>
@@ -109,7 +109,7 @@
 					<div class="packages-weight">
 						<a class="package-logo" target="_blank" ng-href="/wiki/mod/packages/packages_install#/paracraft?id={{package._id}}">
 							<img ng-src="{{package.gitIcon}}" />
-							<div class="verified">已认证</div>
+							<div ng-show="package.isVerified == 'true'" class="verified">已认证</div>
 						</a>
 						<div class="packages-details">
 							<h3><a class="name" target="_blank" ng-href="/wiki/mod/packages/packages_install#/paracraft?id={{package._id}}">{{package.projectName}}</a></h3>
@@ -133,7 +133,8 @@
 
 	        <h1>如何安装paracraft扩展包?</h1>
 	        <p>
-	            启动Paracraft, 点击`Mod加载...`, 将下载的`zip文件`文件直接Copy到`./Mod目录`, 并启用对应的Mod。开发者可以使用ParacraftSDK和NPL语言开发自己扩展包。
+	            下载并启动Paracraft客户端, 点击`Mod加载...`, 将下载的`zip文件`直接Copy到`./Mod目录`, 并启用对应的Mod。<br/>
+				开发者可以使用ParacraftSDK和NPL语言开发扩展包。
 	        </p>
 	        <a href="http://www.paracraft.cn">下载Paracraft</a> | <a href="https://github.com/LiXizhi/ParaCraftSDK">Paracraft SDK开发包</a>
 	    </div>
