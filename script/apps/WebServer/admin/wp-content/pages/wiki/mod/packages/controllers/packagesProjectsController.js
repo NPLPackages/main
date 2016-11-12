@@ -47,10 +47,12 @@ angular.module('MyApp')
         if($scope.projectType == 'npl'){
             $scope.editProfile = 'Edit profile';
             $scope.create = 'Create';
+            $scope.myProjects = 'My npl packages';
             $scope.deleteDesc = "Are you sure delete this project?";
         }else if($scope.projectType == 'paracraft'){
             $scope.editProfile = '个人设置';
             $scope.create = '新建';
+            $scope.myProjects = '我的paracraft模块';
             $scope.deleteDesc = "是否确定删除你的项目？";
         }
 
@@ -90,6 +92,7 @@ angular.module('MyApp')
             $uibModal.open({
                 templateUrl: MOD_WEBROOT + "partials/packages_project_create.html",
                 controller: "packagesProjectsCreateController",
+                size: 'lg'
             }).result.then(function (params) {
                 alert(params.msg);
                 if ($scope.projectType == params.projectType) {
@@ -111,6 +114,7 @@ angular.module('MyApp')
             $uibModal.open({
                 templateUrl: MOD_WEBROOT + "partials/packages_project_modify.html",
                 controller: "packagesProjectsModifyController",
+                size: 'lg'
             }).result.then(function (params) {
                 alert(params.msg)
                 $scope.projectType = params.projectType;
