@@ -33,10 +33,11 @@ local PluginConfig = commonlib.gettable("System.Plugins.PluginConfig");
 local PluginLoader = commonlib.inherit(commonlib.gettable("System.Core.ToolBase"), commonlib.gettable("System.Plugins.PluginLoader"));
 
 PluginLoader:Property({"Name", "PluginLoader"});
+PluginLoader:Property({"CheckFileSizeBeforeDownload", false});
 PluginLoader:Property({"PluginFolder", "Mod/", auto=true, desc="default plugin folder"});
 
--- called whenever the plugin list is changed. 
-PluginLoader:Signal("contentChanged", function() end)
+-- called whenever the plugin list is changed, type is "pluginEnabled" if only state is changed. 
+PluginLoader:Signal("contentChanged", function(type) end)
 
 local allInstances = {};
 
@@ -219,14 +220,18 @@ function PluginLoader:AddModuleToList(modname, modList)
 	modList[#modList+1] = item;
 end
 
--- Update the modlist from the directory "Mod/" for the current world filter
--- this function is slow and does a file searching, only call this in manager UI
--- @param worldFilterName: if nil, it means "global".
-function PluginLoader:RebuildModuleList(worldFilterName)
+function PluginLoader:TryLoadModTableFromFile()
 	if(not self.configLoaded) then
 		self.configLoaded = true;
 		self:LoadModTableFromFile();
 	end	
+end
+
+-- Update the modlist from the directory "Mod/" for the current world filter
+-- this function is slow and does a file searching, only call this in manager UI
+-- @param worldFilterName: if nil, it means "global".
+function PluginLoader:RebuildModuleList(worldFilterName)
+	self:TryLoadModTableFromFile();
 	self.curWorld = worldFilterName;
 	self.modList = self:SearchAllModules();
 	return self.modList;
@@ -237,8 +242,25 @@ function PluginLoader:GetModuleList()
 	return self.modList;
 end
 
+
+-- @param query: {url, packageId, homepage, displayName}, if any of the given field matches. 
+-- @return array of matching mods config
+function PluginLoader:GetModsByQuery(query)
+	self:TryLoadModTableFromFile();
+	local mods = {};
+	for modname, pluginInfo in pairs(self.modTable) do
+		for name, value in pairs(query) do
+			if(pluginInfo:GetAttribute(name) == value) then
+				mods[#mods+1] = pluginInfo;
+			end
+		end
+	end
+	return mods;
+end
+
 -- enable a plugin for current world
-function PluginLoader:EnablePlugin(modname, bChecked)
+-- @param bAutoDisableOtherVersions: if true we will automatically disable other versions of the same plugin
+function PluginLoader:EnablePlugin(modname, bChecked, bAutoDisableOtherVersions)
 	local pluginConfig = self:GetPluginConfig(modname, bChecked == true);
 	if(pluginConfig) then
 		pluginConfig:SetEnabled(self:GetWorldFilterName(), bChecked);
@@ -250,7 +272,14 @@ function PluginLoader:EnablePlugin(modname, bChecked)
 				end
 			end
 		end
-		self:contentChanged();
+		if(bAutoDisableOtherVersions and pluginConfig.version and pluginConfig.packageId and pluginConfig.displayName) then
+			for modname, pluginInfo in pairs(self.modTable) do
+				if(pluginInfo ~= pluginConfig and pluginConfig.displayName == pluginInfo.displayName) then
+					pluginInfo:SetEnabled(self:GetWorldFilterName(), false);
+				end
+			end
+		end
+		self:contentChanged("pluginEnabled");
 	end
 end
 
@@ -409,6 +438,7 @@ end
 
 -- install from url to Mod/ folder. It will add to pending queue, if there are multiple requests. 
 -- @param params: url string or table {url, [dest, refreshMode, projectName, projectType, version, author, packageId, ...]}
+--	params.refreshMode: nil|"auto"|"never"|"force".  
 -- @param callbackFunc: function(bSucceed, dest) end. dest is the local file name or error message. 
 -- @return true if added in queue
 function PluginLoader:InstallFromUrl(params, callbackFunc)
@@ -454,7 +484,9 @@ end
 -- if "never", we will never download again if there is already a local cached file. 
 -- if "auto" or nil, we will compare Last-Modified or Content-Length in http headers, before download full file. 
 -- if "force", we will always download the file. 
--- @param callbackFunc: function(bSucceed, dest, curPackage) end. dest is the local file name or error message. 
+-- @param callbackFunc: function(bSucceed, dest, curPackage) end. 
+--  dest is the local file name or error message. 
+--  curPackage.bAlreadyUptodate is true if existing version already exist. 
 -- @return true if added in queue
 function PluginLoader:AddToDownloadQueue(params)
 	if(type(params) == "string") then
@@ -595,5 +627,18 @@ function PluginLoader:DownloadNext()
 		end
 	end
 
-	CheckRemoteFileSize();
+	-- check for existing packages
+	for _, modConfig in ipairs(self:GetModsByQuery({displayName = curPackage.projectName})) do
+		if(curPackage.version and modConfig:GetAttribute("version") == curPackage.version and modConfig:GetAttribute("url") == curPackage.url) then
+			curPackage.bAlreadyUptodate = true;
+			OnSucceeded(dest);
+			return;
+		end
+	end
+
+	if(self.CheckFileSizeBeforeDownload) then
+		CheckRemoteFileSize();
+	else
+		DownloadUrlFile();
+	end
 end
