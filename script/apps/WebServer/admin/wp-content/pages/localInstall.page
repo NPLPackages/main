@@ -10,8 +10,11 @@ NPL.load("(gl)script/ide/System/Plugins/PluginManager.lua");
 
 addheader('Access-Control-Allow-Origin', '*'); 
 
+local projectType = request:get('projectType');
+
 local PluginManager = commonlib.gettable("System.Plugins.PluginManager");
-local manager = PluginManager.CreateGetInstance("Paracraft");
+local manager = PluginManager.CreateGetInstance(projectType == "npl" and "npl" or "Paracraft");
+
 --echo(manager:GetLoader():RebuildModuleList())  --> list of installed plugins
 --manager:GetLoader():LoadAllPlugins() --> load plugins, see PluginLoader for details
 
@@ -36,6 +39,7 @@ if(is_ajax()) then
 				version = version,
 				author = author,
 				packageId = packageId, 
+                projectType = projectType,
 			}, 
 			function(bSucceed, msg, package)
 				if(bSucceed and package) then
@@ -47,8 +51,9 @@ if(is_ajax()) then
 						author = author,
 						homepage = homepage,
 						packageId = packageId,
+                        projectType = projectType,
 					})
-					manager:GetLoader():EnablePlugin(package.name, true)
+                    manager:GetLoader():EnablePlugin(package.name, true, true);
                     manager:GetLoader():SaveModTableToFile();
 				end
 			end)
@@ -58,7 +63,7 @@ if(is_ajax()) then
 	add_action(
 		'wp_ajax_GetCurrentDownload',
 		function()
-			response:send({packages = manager:GetLoader():GetDownloadQueue().packages, progress=manager:GetLoader():GetDownloadInfo()});
+            response:send({packages = manager:GetLoader():GetDownloadQueue().packages, progress=manager:GetLoader():GetDownloadInfo()});
 		end
 	);
 	return;
@@ -373,7 +378,7 @@ angular.module('plugin', ['ui.bootstrap'])
         "waiting":"下载队列",
         "projectNameDesc":"项目名称",
         "packageId":"包ID",
-        "notYet":"还没有！",
+        "notYet":"空",
         "countDownA":"",
         "countDownB":"秒后开始",
         "tryAgain":"请按右上角的按钮关闭对话框",
@@ -382,7 +387,7 @@ angular.module('plugin', ['ui.bootstrap'])
 
     var language_english = {
         "starting":"Starting",
-        "notUpdate":"package is not up to date",
+        "notUpdate":"package is already up to date",
         "serviceNotAvailable":"service is not available now, please try again later",
         "complete":"Download complete!",
         "packageNameDesc":"Package name",
@@ -393,8 +398,8 @@ angular.module('plugin', ['ui.bootstrap'])
         "waiting":"Download queue",
         "projectNameDesc":"Project name",
         "packageId":"Package id",
-        "notYet":"Not yet!",
-        "countDownA":"Start after ",
+        "notYet":"Empty",
+        "countDownA":"Start in ",
         "countDownB":" seconds",
         "tryAgain":"Press close button at right top corner",
         "retry":"Download failed (you can download file directly and manually install), do you want to retry downloading?"
@@ -499,9 +504,11 @@ angular.module('plugin', ['ui.bootstrap'])
 
     $scope.getCurrentDownload = function () {
         $http({
-            method: "GET",
+            method: "POST",
             url: "/ajax/localInstall?action=GetCurrentDownload",
-            data: {}
+            data: {
+                projectType: $scope.projectType,
+            }
         })
         .then(function (response) {
 			updateUI(response.data.packages, response.data.progress);
