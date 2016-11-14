@@ -119,10 +119,12 @@ function Window:ShowWithParams(params)
 		end
 	end
 	
-	self.esc_state = self.esc_state or {name = "McmlEscKey", OnEscKey = function()  
-		self:CloseWindow(params.DestroyOnClose~=false);
-	end}
-	System.PushState(self.esc_state);
+	if(params.enable_esc_key) then
+		self.esc_state = self.esc_state or {name = "McmlEscKey", OnEscKey = function()  
+			self:CloseWindow(params.DestroyOnClose~=false);
+		end}
+		System.PushState(self.esc_state);
+	end
 
 	-- show the window
 	self:show();
