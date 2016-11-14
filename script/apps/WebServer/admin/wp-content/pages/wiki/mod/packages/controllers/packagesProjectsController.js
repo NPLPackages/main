@@ -32,8 +32,14 @@ angular.module('MyApp')
         }
     };
 })
-.controller('packagesProjectsController', function ($scope, $uibModal, $http, Account, packagesService, $location ,$rootScope) {
-    Account.setRequireSignin(true);
+.controller('packagesProjectsController', function ($scope, $uibModal, $http, Account, packagesService, $location, $rootScope) {
+    var request = $location.search();
+    
+    if (request.userid == undefined) {
+        Account.setRequireSignin(true);
+    } else {
+        $scope.othersMode = true;
+    }
 
     $rootScope.$on('$locationChangeSuccess', function () {
         if ($location.path() == "/npl") {
@@ -62,9 +68,20 @@ angular.module('MyApp')
 
         packagesService.setProjectsType($scope.projectType);
 
-        $scope.$watch(Account.getUser, function (newValue, oldValue) {
-            $scope.user = angular.copy(newValue);
-        });
+        if (request.userid == undefined) {
+            $scope.$watch(Account.getUser, function (newValue, oldValue) {
+                $scope.user = angular.copy(newValue);
+            });
+        }else{
+            $http({
+                method: 'POST',
+                url: '/api/wiki/models/user/getothersid',
+                data: { "othersId": request.userid }
+            })
+            .then(function (response) {
+                $scope.user = response.data;
+            }).then(function (response) { });
+        }
 
         $scope.$watch(packagesService.getPage, function (newValue, oldValue) {
             $scope.page = newValue;
@@ -74,15 +91,21 @@ angular.module('MyApp')
         $scope.items = [];
         $scope.page  = 1;
 
+        var postData = {
+            projectType: $scope.projectType,
+            page: $scope.page,
+            amount: 4
+        };
+
+        if (request.userid != undefined) {
+            postData.userid = request.userid;
+        }
+
         $scope.getProjects = function () {
             $http({
                 method: 'POST',
                 url: '/api/mod/packages/models/packages',
-                data: {
-                    projectType: $scope.projectType,
-                    page: $scope.page,
-                    amount: 4
-                }
+                data: postData
             })
             .then(function (response) {
                 $scope.items = response.data;
