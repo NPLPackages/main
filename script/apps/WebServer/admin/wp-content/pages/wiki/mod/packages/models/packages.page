@@ -78,8 +78,6 @@ function packages:api_createPackage(params)
 		query.version = "0.0.1"
 	end
 
-	-- log({"----------------------------------------query",query});
-
 	self:db():insertOne(nil,
 		{
 			projectName     = query.projectName,
@@ -130,10 +128,14 @@ end
 function packages:api_modifyPackage(params)
 	data = {};
 
-	--log({"modifyPackageParams",params})
 	self:db():updateOne(
 		{_id = params.packageId},
-		{projectName=params.projectName, projectDesc=params.projectDesc, version=params.version},
+		{projectName     = params.projectName,
+		 projectDesc     = params.projectDesc,
+		 projectGitURL   = params.projectGitURL,
+		 projectUpdate	= ParaGlobal.GetDateFormat("yyyy-MM-dd"),
+		 projectReleases = params.projectReleases,
+		 version         = params.version},
 		function(err, response)
 			data = response;
 			resume();

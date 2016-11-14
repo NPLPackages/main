@@ -25,8 +25,10 @@
 
     if ($location.path() == "/npl") {
         $scope.projectType = 'npl';
+        $scope.myProjects = 'My npl packages';
     } else if ($location.path() == "/paracraft") {
         $scope.projectType = 'paracraft';
+        $scope.myProjects = '我的paracraft模块';
     } else{
         $scope.projectType = '';
     }
