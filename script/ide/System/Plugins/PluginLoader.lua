@@ -61,9 +61,13 @@ end
 function PluginLoader:init(pluginManager, pluginFolder)
 	if(pluginManager) then
 		self.pluginManager = pluginManager;
+		if(pluginManager:GetName() == "npl") then
+			pluginFolder = pluginFolder or "npl_packages/";
+		end
 	end
 	if(pluginFolder) then
 		self:SetPluginFolder(pluginFolder);
+		ParaIO.CreateDirectory(self:GetPluginFolder());
 	end
 	return self;
 end
@@ -272,14 +276,33 @@ function PluginLoader:EnablePlugin(modname, bChecked, bAutoDisableOtherVersions)
 				end
 			end
 		end
-		if(bAutoDisableOtherVersions and pluginConfig.version and pluginConfig.packageId and pluginConfig.displayName) then
+		if(bAutoDisableOtherVersions and pluginConfig:GetAttribute("version") and pluginConfig:GetAttribute("packageId") and pluginConfig:GetAttribute("displayName")) then
 			for modname, pluginInfo in pairs(self.modTable) do
-				if(pluginInfo ~= pluginConfig and pluginConfig.displayName == pluginInfo.displayName) then
+				if(pluginInfo ~= pluginConfig and pluginConfig:GetAttribute("displayName") == pluginInfo:GetAttribute("displayName")) then
 					pluginInfo:SetEnabled(self:GetWorldFilterName(), false);
+					for i, item in ipairs(self.modList) do
+						if(item.name == pluginInfo.name) then
+							item.checked = false;
+						end
+					end
 				end
 			end
 		end
 		self:contentChanged("pluginEnabled");
+	end
+end
+
+function PluginLoader:DoesPluginExist(modname)
+	local filename = self:GetPluginFolder()..modname;
+	if( modname:match("%.(zip)$") == "zip") then
+		if(ParaIO.DoesAssetFileExist(filename, true))then
+			return true;
+		end
+	else
+		local main_filename = filename.."/main.lua";
+		if(ParaIO.DoesAssetFileExist(main_filename, true))then
+			return true;
+		end
 	end
 end
 
@@ -630,9 +653,11 @@ function PluginLoader:DownloadNext()
 	-- check for existing packages
 	for _, modConfig in ipairs(self:GetModsByQuery({displayName = curPackage.projectName})) do
 		if(curPackage.version and modConfig:GetAttribute("version") == curPackage.version and modConfig:GetAttribute("url") == curPackage.url) then
-			curPackage.bAlreadyUptodate = true;
-			OnSucceeded(dest);
-			return;
+			if(self:DoesPluginExist(modConfig.name)) then
+				curPackage.bAlreadyUptodate = true;
+				OnSucceeded(dest);
+				return;
+			end
 		end
 	end
 

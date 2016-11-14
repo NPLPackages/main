@@ -15,6 +15,18 @@ function packages_stats:ctor()
 	self:addfield("","string",false,0);
 end
 
+function packages_stats:get()
+end
+
+function packages_stats:delete()
+end
+
+function packages_stats:create()
+end
+
+function packages_stats:update()
+end
+
 function packages_stats:recordCreate(projectType)
 	newQuantity = 0;
 

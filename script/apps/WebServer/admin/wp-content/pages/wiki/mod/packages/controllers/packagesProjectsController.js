@@ -54,7 +54,7 @@ angular.module('MyApp')
             $scope.editProfile         = 'Edit profile';
             $scope.create              = 'Create';
             $scope.myProjects          = 'My npl packages';
-            $scope.downloadsA          = 'Downloads';
+            $scope.downloadsA          = 'Downloads:';
             $scope.downloadsB          = '';
             $scope.deleteDesc          = "Are you sure delete this project?";
         }else if($scope.projectType == 'paracraft'){

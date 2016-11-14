@@ -36,6 +36,8 @@ function packages:ctor()
 	self:addfield("amount","number",false,10);
 	--page number
 	self:addfield("page","number",false,10);
+	--package Id
+	self:addfield("packageId","number",false,10);
 end
 
 function packages:get(params)
@@ -90,6 +92,15 @@ function packages:get(params)
 	local err,data = yield(true);
 
 	return data;
+end
+
+function packages:delete()
+end
+
+function packages:create()
+end
+
+function packages:update()
 end
 
 function packages:api_createPackage(params)

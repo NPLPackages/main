@@ -29,7 +29,7 @@
 	    
 	    <div class="packages-total hidden-xs hidden-sm">
 	        <div class="stat stat-icon-package">
-	            <strong>{{packagesStats}}</strong>
+	            <strong>{{packagesStats || 0}}</strong>
 	            total packages
 	        </div>
 	        <div class="stat stat-icon-24hours">
@@ -100,12 +100,16 @@
 
 	    <div class="getting-start hidden-xs hidden-sm">
 	        <div class="getting-start-title">
-	            getting start
+
+	            getting started
 	        </div>
 
-	        <h1>installing npl package</h1>
+
+	        <h1>installing npl packages</h1>
 	        <p>
 	            You can redistribute NPLRuntime side-by-side with your scripts and resource files on windows/linux/iOS, etc. However, this section is only about installing NPL runtime to your development computer and setting up a recommended coding environment for NPL.
+				NPL Packages are equivalent to search paths. It provides a way to release your software module to be used by someone else at development time.
+	            Please refer to <a href="https://github.com/LiXizhi/NPLRuntime/wiki/npl_packages">npl package doc</a> for how to install and load npl packages. 
 	        </p>
 	        <a>Download npl</a>
 	    </div>
@@ -147,7 +151,7 @@
 
 	    <div class="packages-total hidden-xs hidden-sm">
 	        <div class="stat stat-icon-package">
-	            <strong>共有{{packagesStats}}个包</strong>
+	            <strong>共有{{packagesStats || 0}}个包</strong>
 	        </div>
 	        <div class="stat stat-icon-24hours">
 	            <strong>今日下载{{dayDownload}}次</strong>
@@ -204,7 +208,7 @@
 								<a class="version">{{package.version}}</a>
 								by <a ng-href="/wiki/mod/packages/packages_projects#/paracraft?userid={{package.userId}}">{{package.displayName}}</a>
 							</div>
-                            <div class="downloads">下载次数：{{package.installTimes}}次</div>
+                            <div class="downloads">下载次数：{{package.installTimes}}</div>
 						</div>
 					</div>
 				</li>
@@ -218,7 +222,7 @@
 
 	        <h1>如何安装paracraft扩展包?</h1>
 	        <p>
-	            下载并启动Paracraft客户端, 点击`Mod加载...`, 将下载的`zip文件`直接Copy到`./Mod目录`, 并启用对应的Mod。<br/>
+	            下载并启动Paracraft客户端, 点击`Mod加载...`, 将下载的`zip文件`直接Copy到`./Mod目录`, 并启用对应的Mod。<a href="https://github.com/LiXizhi/ParaCraftSDK/wiki/ParacraftPlugins">[详情...]</a><br/>
 				开发者可以使用ParacraftSDK和NPL语言开发扩展包。
 	        </p>
 	        <a href="http://www.paracraft.cn">下载Paracraft</a> | <a href="https://github.com/LiXizhi/ParaCraftSDK">Paracraft SDK开发包</a>

@@ -159,6 +159,23 @@
     //     $scope.projectType = "b";
     // }
 
+    $scope.downloadCountAndOpen = function () {
+        $http({
+            method: "POST",
+            url: '/api/mod/packages/models/packages/download',
+            data: {
+                packageId: request.id,
+                projectType: $scope.projectType
+            }
+        })
+        .then(function (response) {
+            if (response.data.result == 1) {
+                window.location.href = $scope.projectReleases;
+            }
+        }, function (response) { });
+        return false;
+    }
+
     $scope.install = function () {
         $http(
             {
