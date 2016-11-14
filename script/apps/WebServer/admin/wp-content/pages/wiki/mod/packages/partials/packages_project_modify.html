@@ -13,6 +13,14 @@
             <label>{{descriptionDesc}}</label>
             <div><textarea ng-class="description" ng-model="projectDesc"></textarea></div>
         </div>
+        <div class="item">
+            <label>{{projectGitURLDesc}}</label>
+            <div><input type="text" value="" ng-model="projectGitURL" /></div>
+        </div>
+        <div class="item">
+            <label>{{projectReleasesDesc}}</label>
+            <div><input type="text" value="" ng-model="projectReleases" /></div>
+        </div>
     </div>
     <button ng-click="confirm()">Confirm</button>
 </div>
@@ -30,6 +38,14 @@
         <div class="item">
             <label>{{descriptionDesc}}</label>
             <div><textarea ng-class="description" ng-model="projectDesc"></textarea></div>
+        </div>
+        <div class="item">
+            <label>{{projectGitURLDesc}}</label>
+            <div><input type="text" value="" ng-model="projectGitURL" /></div>
+        </div>
+        <div class="item">
+            <label>{{projectReleasesDesc}}</label>
+            <div><input type="text" value="" ng-model="projectReleases" /></div>
         </div>
     </div>
     <button ng-click="confirm()">Confirm</button>

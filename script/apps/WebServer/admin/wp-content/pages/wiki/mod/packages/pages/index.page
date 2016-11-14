@@ -57,12 +57,12 @@
 			<ul class="packages-columar hidden-xs hidden-sm">
 				<li ng-repeat="package in packages">
 					<div class="packages-weight">
-						<a class="package-logo" target="_blank" ng-href="/wiki/mod/packages/packages_install#/npl?id={{package._id}}">
+						<a class="package-logo" ng-href="/wiki/mod/packages/packages_install#/npl?id={{package._id}}">
 							<img ng-src="{{package.gitIcon}}" />
 							<div ng-show="package.isVerified == 'true'" class="verified">verified</div>
 						</a>
 						<div class="packages-details">
-							<h3><a class="name" target="_blank" ng-href="/wiki/mod/packages/packages_install#/npl?id={{package._id}}">{{package.projectName}}</a></h3>
+							<h3><a class="name" ng-href="/wiki/mod/packages/packages_install#/npl?id={{package._id}}">{{package.projectName}}</a></h3>
 							<div class="description">
 								{{package.projectDesc}}
 							</div>
@@ -70,6 +70,7 @@
 								<a class="version">{{package.version}}</a>
 								by {{package.displayName}}
 							</div>
+                            <div class="downloads">Downloads:{{package.installTimes}}</div>
 						</div>
 					</div>
 				</li>
@@ -77,12 +78,12 @@
             <ul class="packages-columar packages-columar-sm hidden-md hidden-lg">
 				<li ng-repeat="package in packages">
 					<div class="packages-weight">
-						<a class="package-logo" target="_blank" ng-href="/wiki/mod/packages/packages_install#/paracraft?id={{package._id}}">
+						<a class="package-logo" ng-href="/wiki/mod/packages/packages_install#/paracraft?id={{package._id}}">
 							<img ng-src="{{package.gitIcon}}" />
 							<div ng-show="package.isVerified == 'true'" class="verified">verified</div>
 						</a>
 						<div class="packages-details">
-							<h3><a class="name" target="_blank" ng-href="/wiki/mod/packages/packages_install#/paracraft?id={{package._id}}">{{package.projectName}}</a></h3>
+							<h3><a class="name" ng-href="/wiki/mod/packages/packages_install#/paracraft?id={{package._id}}">{{package.projectName}}</a></h3>
 							<div class="description">
 								{{package.projectDesc}}
 							</div>
@@ -90,6 +91,7 @@
 								<a class="version">{{package.version}}</a>
 								by {{package.displayName}}
 							</div>
+                            <div class="downloads">Downloads:{{package.installTimes}}</div>
 						</div>
 					</div>
 				</li>
@@ -168,12 +170,12 @@
 			<ul class="packages-columar hidden-xs hidden-sm">
 				<li ng-repeat="package in packages">
 					<div class="packages-weight">
-						<a class="package-logo" target="_blank" ng-href="/wiki/mod/packages/packages_install#/paracraft?id={{package._id}}">
+						<a class="package-logo" ng-href="/wiki/mod/packages/packages_install#/paracraft?id={{package._id}}">
 							<img ng-src="{{package.gitIcon}}" />
 							<div ng-show="package.isVerified == 'true'" class="verified">已认证</div>
 						</a>
 						<div class="packages-details">
-							<h3><a class="name" target="_blank" ng-href="/wiki/mod/packages/packages_install#/paracraft?id={{package._id}}">{{package.projectName}}</a></h3>
+							<h3><a class="name" ng-href="/wiki/mod/packages/packages_install#/paracraft?id={{package._id}}">{{package.projectName}}</a></h3>
 							<div class="description">
 								{{package.projectDesc}}
 							</div>
@@ -181,6 +183,7 @@
 								<a class="version">{{package.version}}</a>
 								by {{package.displayName}}
 							</div>
+                            <div class="downloads">下载次数：{{package.installTimes}}次</div>
 						</div>
 					</div>
 				</li>
@@ -188,12 +191,12 @@
             <ul class="packages-columar packages-columar-sm hidden-md hidden-lg">
 				<li ng-repeat="package in packages">
 					<div class="packages-weight">
-						<a class="package-logo" target="_blank" ng-href="/wiki/mod/packages/packages_install#/paracraft?id={{package._id}}">
+						<a class="package-logo" ng-href="/wiki/mod/packages/packages_install#/paracraft?id={{package._id}}">
 							<img ng-src="{{package.gitIcon}}" />
 							<div ng-show="package.isVerified == 'true'" class="verified">已认证</div>
 						</a>
 						<div class="packages-details">
-							<h3><a class="name" target="_blank" ng-href="/wiki/mod/packages/packages_install#/paracraft?id={{package._id}}">{{package.projectName}}</a></h3>
+							<h3><a class="name" ng-href="/wiki/mod/packages/packages_install#/paracraft?id={{package._id}}">{{package.projectName}}</a></h3>
 							<div class="description">
 								{{package.projectDesc}}
 							</div>
@@ -201,6 +204,7 @@
 								<a class="version">{{package.version}}</a>
 								by {{package.displayName}}
 							</div>
+                            <div class="downloads">下载次数：{{package.installTimes}}次</div>
 						</div>
 					</div>
 				</li>

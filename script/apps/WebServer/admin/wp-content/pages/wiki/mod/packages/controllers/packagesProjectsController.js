@@ -45,15 +45,19 @@ angular.module('MyApp')
         }
 
         if($scope.projectType == 'npl'){
-            $scope.editProfile = 'Edit profile';
-            $scope.create = 'Create';
-            $scope.myProjects = 'My npl packages';
-            $scope.deleteDesc = "Are you sure delete this project?";
+            $scope.editProfile         = 'Edit profile';
+            $scope.create              = 'Create';
+            $scope.myProjects          = 'My npl packages';
+            $scope.downloadsA          = 'Downloads';
+            $scope.downloadsB          = '';
+            $scope.deleteDesc          = "Are you sure delete this project?";
         }else if($scope.projectType == 'paracraft'){
-            $scope.editProfile = '个人设置';
-            $scope.create = '新建';
-            $scope.myProjects = '我的paracraft模块';
-            $scope.deleteDesc = "是否确定删除你的项目？";
+            $scope.editProfile         = '个人设置';
+            $scope.create              = '新建';
+            $scope.myProjects          = '我的paracraft模块';
+            $scope.downloadsA          = '下载次数';
+            $scope.downloadsB          = '次';
+            $scope.deleteDesc          = "是否确定删除你的项目？";
         }
 
         packagesService.setProjectsType($scope.projectType);
@@ -81,7 +85,23 @@ angular.module('MyApp')
                 }
             })
             .then(function (response) {
-                $scope.items = response.data
+                $scope.items = response.data;
+
+                for (index in $scope.items) {
+                    var gitRaw = "https://raw.githubusercontent.com";
+
+                    try {
+                        var gitRoot = $scope.items[index].projectGitURL.split("//");
+                        var gitRootStart = gitRoot[1].indexOf("/");
+                        var gitRoot = gitRaw + gitRoot[1].substring(gitRootStart);
+                    } catch (err) {
+                        return alert("url format error");
+                    }
+
+                    var gitIcon = gitRoot + '/master/icon.png'
+
+                    $scope.items[index].gitIcon = gitIcon;
+                }
             },
             function (response) {});
         }
@@ -254,11 +274,15 @@ angular.module('MyApp')
     if ($scope.projectType == "npl") {
         $scope.projectTypeName = "Modify your npl package";
         $scope.versionDesc = "Version";
+        $scope.projectGitURLDesc = 'Git URL';
+        $scope.projectReleasesDesc = 'Download URL';
         $scope.projectNameDesc = "Project name";
         $scope.descriptionDesc = "Description";
     } else if ($scope.projectType == "paracraft") {
         $scope.projectTypeName = "修改 Paracraft 模块信息";
         $scope.versionDesc = "版本";
+        $scope.projectGitURLDesc = 'Git URL';
+        $scope.projectReleasesDesc = '下载 URL';
         $scope.projectNameDesc = "项目";
         $scope.descriptionDesc = "描述"
     }
@@ -277,10 +301,11 @@ angular.module('MyApp')
                 }
             })
             .then(function (response) {
-                $scope.projectName   = response.data.projectName;
-                $scope.projectDesc   = response.data.projectDesc;
-                $scope.projectGitURL = response.data.projectGitURL;
-                $scope.version        = response.data.version;
+                $scope.projectName     = response.data.projectName;
+                $scope.projectDesc     = response.data.projectDesc;
+                $scope.projectGitURL   = response.data.projectGitURL;
+                $scope.projectReleases = response.data.projectReleases;
+                $scope.version         = response.data.version;
             },
             function (response) {
 
@@ -292,10 +317,12 @@ angular.module('MyApp')
 
     $scope.confirm = function () {
         $http.post('/api/mod/packages/models/packages/modifyPackage', {
-            projectName: $scope.projectName,
-            projectDesc: $scope.projectDesc,
-            version: $scope.version,
-            packageId: $scope.packageId
+            projectName     : $scope.projectName,
+            projectDesc     : $scope.projectDesc,
+            projectGitURL   : $scope.projectGitURL,
+            projectReleases : $scope.projectReleases,
+            version         : $scope.version,
+            packageId       : $scope.packageId
         })
         .then(function (response) {
             if (typeof (response.data) == "object") {

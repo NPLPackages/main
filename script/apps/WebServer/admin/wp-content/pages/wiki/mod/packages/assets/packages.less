@@ -94,7 +94,7 @@ body{
         width: 150px;
         height: 30px;
         line-height: 30px;
-        background-color: #CC0000;
+        background-color: #e87f7f;
         color: #FFF;
         text-align: center;
         font-weight: 600;
@@ -111,6 +111,10 @@ body{
         &:active{
             opacity: .8;
         }
+    }
+
+    a.active{
+        background-color: #CC0000;
     }
 }
 
@@ -281,8 +285,6 @@ body{
                         margin-top: -60px;
 
                         h3{
-                            padding-bottom: 10px;
-
                             & > a{
                                 &:hover{
                                     color: #cb3837;
@@ -311,6 +313,10 @@ body{
                                 }
                             }
                         }
+
+                        .downloads{
+                            font-size: 15px;
+                        }
                     }
                 }
             }
@@ -332,9 +338,9 @@ body{
                            }
                        }
 
-                       div.description,div.author{
+                       div.description,div.author,div.downloads{
                             font-size: 12px;
-                        }
+                       }
                     }
                 }
             }
@@ -677,6 +683,12 @@ body{
                 border-bottom: 1px solid #E7E7E7;
                 padding-top: 30px;
 
+                .project-icon{
+                    float: left;
+                    width: 50px;
+                    margin-right: 10px;
+                }
+
                 .project-infor{
                     float: left;
 
@@ -694,6 +706,13 @@ body{
                         font-size: 14px;
                         margin: 0px;
                     }
+                }
+
+                .project-downloads{
+                    float: left;
+                    font-size: 14px;
+                    margin-top: 26px;
+                    margin-left: 10px;
                 }
 
                 .project-operation{
@@ -734,7 +753,7 @@ body{
     /*width: 750px;*/
 
     .packages-from-modify{
-        height: 380px!important;
+        height: 430px!important;
     }
 
     .packages-from{

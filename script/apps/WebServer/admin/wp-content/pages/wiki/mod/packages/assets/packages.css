@@ -77,7 +77,7 @@ body {
   width: 150px;
   height: 30px;
   line-height: 30px;
-  background-color: #CC0000;
+  background-color: #e87f7f;
   color: #FFF;
   text-align: center;
   font-weight: 600;
@@ -92,6 +92,9 @@ body {
 }
 .my-projects a:active {
   opacity: .8;
+}
+.my-projects a.active {
+  background-color: #CC0000;
 }
 .packages .head-line {
   height: 115px;
@@ -236,9 +239,6 @@ body {
 .packages .packages-show .packages-columar li .packages-weight .packages-details {
   margin-top: -60px;
 }
-.packages .packages-show .packages-columar li .packages-weight .packages-details h3 {
-  padding-bottom: 10px;
-}
 .packages .packages-show .packages-columar li .packages-weight .packages-details h3 > a {
   font-size: 20px;
   color: rgba(0, 0, 0, 0.8);
@@ -261,6 +261,9 @@ body {
   color: #cb3837;
   text-decoration: none;
 }
+.packages .packages-show .packages-columar li .packages-weight .packages-details .downloads {
+  font-size: 15px;
+}
 .packages .packages-show .packages-columar-sm {
   -webkit-columns: 1;
   -moz-columns: 1;
@@ -273,7 +276,8 @@ body {
   font-size: 15px;
 }
 .packages .packages-show .packages-columar-sm li .packages-weight .packages-details div.description,
-.packages .packages-show .packages-columar-sm li .packages-weight .packages-details div.author {
+.packages .packages-show .packages-columar-sm li .packages-weight .packages-details div.author,
+.packages .packages-show .packages-columar-sm li .packages-weight .packages-details div.downloads {
   font-size: 12px;
 }
 .packages .getting-start .getting-start-title {
@@ -558,6 +562,11 @@ body {
   content: "";
   clear: both;
 }
+.packages-projects .projects .projects-list .item .project-icon {
+  float: left;
+  width: 50px;
+  margin-right: 10px;
+}
 .packages-projects .projects .projects-list .item .project-infor {
   float: left;
 }
@@ -573,6 +582,12 @@ body {
 .packages-projects .projects .projects-list .item .project-infor p {
   font-size: 14px;
   margin: 0px;
+}
+.packages-projects .projects .projects-list .item .project-downloads {
+  float: left;
+  font-size: 14px;
+  margin-top: 26px;
+  margin-left: 10px;
 }
 .packages-projects .projects .projects-list .item .project-operation {
   float: right;
@@ -604,7 +619,7 @@ body {
   /*width: 750px;*/
 }
 .modal-dialog .packages-from-modify {
-  height: 380px!important;
+  height: 430px!important;
 }
 .modal-dialog .packages-from {
   height: 485px;

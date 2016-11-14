@@ -77,7 +77,7 @@ PAGE_NO_SIDE_BAR = true;
 	<div class="plugin hidden-xs hidden-sm">
         <div class="infor-details">
             <div class="item">
-                <label>1231223{{language.packageNameDesc}}</label>
+                <label>{{language.packageNameDesc}}</label>
                 <div>{{projectName}}</div>
             </div>
             <div class="item">
