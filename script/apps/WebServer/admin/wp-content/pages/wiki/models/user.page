@@ -25,6 +25,7 @@ function user:ctor()
 	self:addfield("location", "string", false, 50);
 	self:addfield("joindate", "string", false, 30);
 	self:addfield("isadmin", "boolean", false);
+	self:addfield("othersId","number",false,10)--others user id
 end
 
 -- return minimum infor about the user
@@ -59,6 +60,18 @@ function user:get(params)
 		end
 	end
 	return data;
+end
+
+function user:api_getothersid(params)
+	local err, query = self:validateQuery(params);
+	if(err) then
+		return;
+	end
+
+	self:db():findOne({_id = query.othersId},resume);
+	local err,data = yield(true);
+
+	return {_id=data._id,displayName=data.displayName,email=data.email};
 end
 
 -- virtual: 
