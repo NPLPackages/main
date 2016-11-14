@@ -17,19 +17,19 @@ function packages:ctor()
 	--package name
 	self:addfield("projectName", "string", true, 30);
 	--package description
-	self:addfield("projectDesc", "string", true, 150);
+	self:addfield("projectDesc", "string", false, 150);
 	--package description
-	self:addfield("version", "string", true, 10);
+	self:addfield("version", "string", false, 10);
 	--npl package or paracraft mod
-	self:addfield("projectType", "string", true, 20);
-	--github reponsity
-	self:addfield("projectGitURL", "string", true, 300);
+	self:addfield("projectType", "string", false, 20);
+	--github repositary
+	self:addfield("projectGitURL", "string", false, 300);
 	--releases url
-	self:addfield("projectReleases", "string", true, 300);
+	self:addfield("projectReleases", "string", false, 300);
 	--user name
 	self:addfield("displayName", "string", true, 50);
 	--is verified
-	self:addfield("isVerified","string",true,10);
+	self:addfield("isVerified","string",false,10);
 end
 
 function packages:get(params)
@@ -63,6 +63,15 @@ function packages:get(params)
 	local err,data = yield(true);
 
 	return data;
+end
+
+function packages:delete()
+end
+
+function packages:create()
+end
+
+function packages:update()
 end
 
 function packages:api_createPackage(params)
