@@ -75,8 +75,8 @@ angular.module('MyApp')
         }else{
             $http({
                 method: 'POST',
-                url: '/api/wiki/models/user/getothersid',
-                data: { "othersId": request.userid }
+                url: '/api/wiki/models/user/getminiprofile',
+                data: { "_id": request.userid }
             })
             .then(function (response) {
                 $scope.user = response.data;
@@ -84,16 +84,15 @@ angular.module('MyApp')
         }
 
         $scope.$watch(packagesService.getPage, function (newValue, oldValue) {
-            $scope.page = newValue;
+            postData.page = newValue;
             $scope.getProjects();
         });
 
         $scope.items = [];
-        $scope.page  = 1;
 
         var postData = {
             projectType: $scope.projectType,
-            page: $scope.page,
+            page: 1,
             amount: 4
         };
 

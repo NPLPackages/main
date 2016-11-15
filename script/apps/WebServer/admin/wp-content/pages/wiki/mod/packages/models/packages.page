@@ -38,12 +38,15 @@ function packages:ctor()
 	self:addfield("page","number",false,10);
 	--package Id
 	self:addfield("packageId","number",false,10);
+	--version
+	self:addfield("version","string",false,10);
+	--install times
+	self:addfield("installTimes","number",false,10);
 end
 
 function packages:get(params)
 	self:ensureAuthenticated();
 	local err, query = self:validateQuery(params);
-	log({"query",query});
 
 	local userid;
 
@@ -53,7 +56,7 @@ function packages:get(params)
 		userid = query.userid;
 	end
 
-	log({userid=userid});
+	--log({userid=userid});
 
 	if(userid ~= -1 and not userid) then
 		return {error=-1,msg="userid is not set"};
@@ -82,9 +85,9 @@ function packages:get(params)
 
 	data = {};
 
-	--log({"self:getUserId()",self:getUserId()})
+	--log({"userid",userid});
 	if(userid) then
-		self:db():find({["+projectType+userId-projectUpdate"] = {query.projectType,userid,limit=limit,skip=skip}}, resume);
+		self:db():find({["+projectType+userid-projectUpdate"] = {query.projectType,userid,limit=limit,skip=skip}}, resume);
 	else
 		self:db():find({["+projectType-projectUpdate"] = {query.projectType,limit=limit,skip=skip}}, resume);
 	end
@@ -94,53 +97,16 @@ function packages:get(params)
 	return data;
 end
 
-function packages:delete()
-end
-
-function packages:create()
-end
-
-function packages:update()
-end
-
 function packages:api_createPackage(params)
-	returnData = {};
-	self:ensureAuthenticated();
-	local err, query = self:validateQuery(params);
+	params.projectReleases = params.projectReleases~="" or params.projectGitURL..'/archive/master.zip';
+	params.version         = params.version~="" or "0.0.1";
+	params.projectUpdate   = ParaGlobal.GetDateFormat("yyyy-MM-dd");
+	params.installTimes    = 0;
+	params.isVerified	   = "false";
 
-	if(not self:getUserId()) then
-		return {result = "-1",msg = "This API must be authentication"};
-	end
-
-	if(query.projectReleases == "") then
-		query.projectReleases = query.projectGitURL..'/archive/master.zip';
-	end
-
-	if(query.version == "") then
-		query.version = "0.0.1"
-	end
-
-	self:db():insertOne(nil,
-		{
-			projectName     = query.projectName,
-			projectDesc     = query.projectDesc,
-			version		    = query.version,
-			projectType     = query.projectType,
-			projectGitURL   = query.projectGitURL,
-			projectReleases = query.projectReleases,
-			projectUpdate	= ParaGlobal.GetDateFormat("yyyy-MM-dd"),
-			userId          = self:getUserId(),
-			displayName     = query.displayName,
-			installTimes	= 0,
-			isVerified		= "false"
-		 },
-		 resume
-	);
-
-	local err,response = yield(true);
-
-	if(not err) then
-		local err = models.packages_stats:new():recordCreate(query.projectType);
+	local data = packages._super.create(self, params);
+	if(data) then
+		local err = models.packages_stats:new():recordCreate(params.projectType);
 		if(not err) then
 			returnData = {result = "1",msg = "Create Successful!"};
 		else
@@ -168,61 +134,35 @@ function packages:api_getOnePackage(params)
 end
 
 function packages:api_modifyPackage(params)
-	self:ensureAuthenticated();
-	local err, query = self:validateQuery(params);
+	params._id = params._id or params.packageId;
+	params.projectUpdate = ParaGlobal.GetDateFormat("yyyy-MM-dd");
+	params.packageId = nil;
 
-	if(not self:getUserId()) then
-		return {result = "-1",msg = "This API must be authentication"};
-	end
-
-	data = {};
-
-	self:db():updateOne(
-		{_id = query.packageId},
-		{projectName     = query.projectName,
-		 projectDesc     = query.projectDesc,
-		 projectGitURL   = query.projectGitURL,
-		 projectUpdate	 = ParaGlobal.GetDateFormat("yyyy-MM-dd"),
-		 projectReleases = query.projectReleases,
-		 version         = query.version},
-		resume
-	);
-
-	local err,data = yield(true);
+	local data = packages._super.update(self, params);
 
 	return data;
 end
 
 function packages:api_deletePackage(params)
-	returnData = {};
-
-	if(not params.packageId) then
-		return {result=-1,msg="packageId is not set"};
-	end
+	params._id = params._id or params.packageId;
+	params.packageId = nil;
 
 	local projectType = "";
 
-	self:db():findOne(
-		{_id=params.packageId},
-		function(err,response)
-			projectType = response.projectType;
-		end
-	);
+	self:db():findOne({_id=params._id},resume);
+	local err,response = yield(true);
 
-	self:db():deleteOne(
-		{_id=params.packageId},
-		function(err, count)
-			if(count == 1) then
-				returnData = {result=1,msg="Delete package success"};
-				resume();
-			else
-				return {result=-1,msg="Delete package fail"};
-			end
-		end
-	);
-	yield();
+	projectType = response.projectType;
 
-	models.packages_stats:new():recordDelete(projectType);
+	local data = packages._super.delete(self, params);
+
+	if(data) then
+		returnData = {result=1,msg="Delete package success"};
+		models.packages_stats:new():recordDelete(projectType);
+	else
+		returnData = {result=-1,msg="Delete package fail"};
+	end
+
 	return returnData;
 end
 
