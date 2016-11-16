@@ -8,6 +8,7 @@ use the lib:
 NPL.load("(gl)script/ide/System/Core/Core.lua");
 ------------------------------------------------------------
 ]]
+NPL.load("(gl)script/ide/ParaEngineExtension.lua");
 NPL.load("(gl)script/ide/System/Core/Variable.lua");
 NPL.load("(gl)script/ide/System/Core/ToolBase.lua");
 NPL.load("(gl)script/ide/System/Core/Event.lua");

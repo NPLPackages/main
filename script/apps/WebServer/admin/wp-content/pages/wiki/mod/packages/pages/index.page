@@ -68,7 +68,7 @@
 							</div>
 							<div class="author">
 								<a class="version">{{package.version}}</a>
-								by <a ng-href="/wiki/mod/packages/packages_projects#/npl?userid={{package.userId}}">{{package.displayName}}</a>
+								by <a ng-href="/wiki/mod/packages/packages_projects#/npl?userid={{package.userid}}">{{package.displayName}}</a>
 							</div>
                             <div class="downloads">Downloads:{{package.installTimes}}</div>
 						</div>
@@ -89,7 +89,7 @@
 							</div>
 							<div class="author">
 								<a class="version">{{package.version}}</a>
-								by <a ng-href="/wiki/mod/packages/packages_projects#/npl?userid={{package.userId}}">{{package.displayName}}</a>
+								by <a ng-href="/wiki/mod/packages/packages_projects#/npl?userid={{package.userid}}">{{package.displayName}}</a>
 							</div>
                             <div class="downloads">Downloads:{{package.installTimes}}</div>
 						</div>
@@ -174,9 +174,9 @@
 							</div>
 							<div class="author">
 								<a class="version">{{package.version}}</a>
-								by <a ng-href="/wiki/mod/packages/packages_projects#/paracraft?userid={{package.userId}}">{{package.displayName}}</a>
+								by <a ng-href="/wiki/mod/packages/packages_projects#/paracraft?userid={{package.userid}}">{{package.displayName}}</a>
 							</div>
-                            <div class="downloads">下载次数：{{package.installTimes}}次</div>
+                            <div class="downloads">下载次数：{{package.installTimes}}</div>
 						</div>
 					</div>
 				</li>
@@ -195,7 +195,7 @@
 							</div>
 							<div class="author">
 								<a class="version">{{package.version}}</a>
-								by <a ng-href="/wiki/mod/packages/packages_projects#/paracraft?userid={{package.userId}}">{{package.displayName}}</a>
+								by <a ng-href="/wiki/mod/packages/packages_projects#/paracraft?userid={{package.userid}}">{{package.displayName}}</a>
 							</div>
                             <div class="downloads">下载次数：{{package.installTimes}}</div>
 						</div>

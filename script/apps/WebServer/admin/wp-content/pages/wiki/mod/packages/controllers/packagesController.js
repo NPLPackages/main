@@ -98,7 +98,8 @@ angular.module('MyApp')
                     var gitRootStart = gitRoot[1].indexOf("/");
                     var gitRoot = gitRaw + gitRoot[1].substring(gitRootStart);
                 } catch (err) {
-                    return alert("url format error");
+                    console.log("url format error");
+                    return;
                 }
 
                 var gitIcon = gitRoot + '/master/icon.png'

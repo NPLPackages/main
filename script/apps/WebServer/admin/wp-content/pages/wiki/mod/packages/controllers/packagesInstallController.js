@@ -126,7 +126,8 @@
             var gitRootStart = gitRoot[1].indexOf("/");
             var gitRoot = gitRaw + gitRoot[1].substring(gitRootStart);
         } catch (err) {
-            return alert("url format error");
+            console.log("url format error");
+            return;
         }
 
         $scope.gitIcon = gitRoot + '/master/icon.png'
