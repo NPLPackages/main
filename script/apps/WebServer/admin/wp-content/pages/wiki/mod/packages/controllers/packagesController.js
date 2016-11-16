@@ -83,6 +83,7 @@ angular.module('MyApp')
             url: '/api/mod/packages/models/packages',
             data: {
                 projectType: $scope.projectType,
+                userid : -1,
                 amount: 20 
             }
         })

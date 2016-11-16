@@ -9,21 +9,23 @@ wp_enqueue_script("packagesProjectsController", MOD_WEBROOT.."controllers/packag
 	    <a href="/wiki/mod/packages/index#/paracraft">Paracraft</a>
 	</div>
 	<div class="my-projects hidden-xs hidden-sm">
-	    <a class="active" href="javascript:;">{{myProjects}}</a>
+	    <a ng-hide="othersMode" class="active" href="javascript:;">{{myProjects}}</a>
+        <a ng-show="othersMode" href="javascript:location.href = '/wiki/mod/packages/packages_projects'">{{myProjects}}</a>
 	</div>
     <div class="packages-tabs packages-tabs-sm hidden-md hidden-lg">
 	    <a href="/wiki/mod/packages/index#/npl">NPL</a>
 	    <a href="/wiki/mod/packages/index#/paracraft">Paracraft</a>
 	</div>
 	<div class="my-projects my-projects-sm hidden-md hidden-lg">
-	    <a class="active" href="javascript:;">{{myProjects}}</a>
+	    <a ng-hide="othersMode" class="active" href="javascript:;">{{myProjects}}</a>
+        <a ng-show="othersMode" href="javascript:location.href = '/wiki/mod/packages/packages_projects'">{{myProjects}}</a>
 	</div>
 
    <div class="user-infor hidden-xs hidden-sm">
        <wiki-identicon userid="user._id" size="234" imageurl="user.picture"></wiki-identicon>
        <h3>{{user.displayName}}</h3>
        <label>{{user.email}}</label>
-       <a href="/wiki/settings" class="edit-profile">{{editProfile}}</a>
+       <a href="/wiki/settings" ng-hide="othersMode" class="edit-profile">{{editProfile}}</a>
    </div>
 
    <div class="projects hidden-xs hidden-sm">
@@ -31,7 +33,7 @@ wp_enqueue_script("packagesProjectsController", MOD_WEBROOT.."controllers/packag
 			<a ng-class="{'active': projectType == 'npl'}" href="#/npl">NPL</a>
 			<a ng-class="{'active': projectType == 'paracraft'}" href="#/paracraft">Paracraft</a>
 
-			<div ng-click="ShowCreateProjectDialog()" class="project-create">
+			<div ng-hide="othersMode" ng-click="ShowCreateProjectDialog()" class="project-create">
 				<button class="createNewPackages">+{{create}}</button>
 			</div>
 		</div>
@@ -42,9 +44,9 @@ wp_enqueue_script("packagesProjectsController", MOD_WEBROOT.."controllers/packag
                 <div class="project-infor">
                     <a ng-href="/wiki/mod/packages/packages_install/#/{{projectType}}?id={{item._id}}">{{item.projectName}}</a>
                     <p>{{item.projectDesc}}</p>
+                    <div class="project-downloads">{{downloadsA}}{{item.installTimes}}{{downloadsB}}</div>
                 </div>
-                <div class="project-downloads">{{downloadsA}}{{item.installTimes}}{{downloadsB}}</div>
-                <div class="project-operation">
+                <div class="project-operation" ng-hide="othersMode">
                     <span>{{item.version}}</span>
                     <a href="javascript:;" ng-click="ShowModifyProjectDialog(item._id)"><img src="<?=MOD_WEBROOT?>assets/images/u68.png"/></a>
                     <a href="javascript:;" ng-click="DeleteProject(item._id)"><img src="<?=MOD_WEBROOT?>assets/images/u76.png"/></a>
@@ -60,7 +62,7 @@ wp_enqueue_script("packagesProjectsController", MOD_WEBROOT.."controllers/packag
 			<a ng-class="{'active': projectType == 'npl'}" href="#/npl">NPL</a>
 			<a ng-class="{'active': projectType == 'paracraft'}" href="#/paracraft">Paracraft</a>
 
-			<div ng-click="ShowCreateProjectDialog()" class="project-create">
+			<div ng-hide="othersMode" ng-click="ShowCreateProjectDialog()" class="project-create">
 				<button class="createNewPackages">+{{create}}</button>
 			</div>
 		</div>
@@ -71,9 +73,9 @@ wp_enqueue_script("packagesProjectsController", MOD_WEBROOT.."controllers/packag
                 <div class="project-infor">
                     <a ng-href="/wiki/mod/packages/packages_install/#/{{projectType}}?id={{item._id}}">{{item.projectName}}</a>
                     <p>{{item.projectDesc}}</p>
+                    <div class="project-downloads">{{downloadsA}}{{item.installTimes}}{{downloadsB}}</div>
                 </div>
-                <div class="project-downloads">{{downloadsA}}{{item.installTimes}}{{downloadsB}}</div>
-                <div class="project-operation">
+                <div class="project-operation" ng-hide="othersMode">
                     <span>{{item.version}}</span>
                     <a href="javascript:;" ng-click="ShowModifyProjectDialog(item._id)"><img src="<?=MOD_WEBROOT?>assets/images/u68.png"/></a>
                     <a href="javascript:;" ng-click="DeleteProject(item._id)"><img src="<?=MOD_WEBROOT?>assets/images/u76.png"/></a>
