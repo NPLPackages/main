@@ -5,13 +5,24 @@
 Welcome. NPL/ParaEngine is a life-long project to me, aiming to explore new logics in 3d design, AI and education. Hope you can join and contribute. We are always open source. 
 <div >
 	<form action="https://github.com/LiXizhi/NPLRuntime/wiki">
-		<button type="submit"/><i class="glyphicon glyphicon-download"></i>Get NPL</button>
+		<button type="submit"/><i class="glyphicon glyphicon-download"></i> Get NPL</button>
 	</form>
 </div>
 </p>
 <p style="text-align: right">&#8212; LiXizhi@yeah.net</p>
+
 <h1>Install Guide</h1>
 <p> Latest google chrome browser is recommended to view the site. 
 Install <a href="https://chrome.google.com/webstore/search/Prevent%20duplicate%20tabs?_category=extensions">prevent duplicate tab</a> plugin.
 </p>
+<br/>
+
+<h3>Install NPL packages</h3>
+<p>
+	NPL Packages are equivalent to search paths. It provides a way to release your software module to be used by someone else at development time.
+	Please refer to <a href="https://github.com/LiXizhi/NPLRuntime/wiki/npl_packages">npl package doc</a> for how to install and load npl packages. 
+</p>
+<form action="http://wikicraft.cn/wiki/mod/packages/index#/npl">
+	<button type="submit"/>Get NPL packages</button>
+</form>
 

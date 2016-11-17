@@ -24,39 +24,39 @@ function packages:ctor()
 	self:addfield("projectType", "string", false, 20);
 	--github reponsity
 	self:addfield("projectGitURL", "string", false, 300);
+	--update time
+	self:addfield("projectUpdate", "string", false, 100);
 	--releases url
 	self:addfield("projectReleases", "string", false, 300);
 	--user name
 	self:addfield("displayName", "string", false, 50);
 	--is verified
 	self:addfield("isVerified","string",false,10);
-	--user ID number
-	self:addfield("userid","number",false,10);
+	--install times
+	self:addfield("installTimes","number",false,10);
+
+
+	---------- following is query only, not saved to columns ----------------
 	--page amount
 	self:addfield("amount","number",false,10);
 	--page number
 	self:addfield("page","number",false,10);
 	--package Id
 	self:addfield("packageId","number",false,10);
-	--version
-	self:addfield("version","string",false,10);
-	--install times
-	self:addfield("installTimes","number",false,10);
+
 end
 
 function packages:get(params)
-	self:ensureAuthenticated();
 	local err, query = self:validateQuery(params);
 
 	local userid;
 
 	if(query.userid ~= -1 and not query.userid) then
+		self:ensureAuthenticated();
 		userid = self:getUserId();
 	else
 		userid = query.userid;
 	end
-
-	--log({userid=userid});
 
 	if(userid ~= -1 and not userid) then
 		return {error=-1,msg="userid is not set"};
@@ -95,6 +95,15 @@ function packages:get(params)
 	local err,data = yield(true);
 
 	return data;
+end
+
+function packages:create()
+end
+
+function packages:delete()
+end
+
+function packages:update()
 end
 
 function packages:api_createPackage(params)
