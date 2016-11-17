@@ -24,6 +24,8 @@ function packages:ctor()
 	self:addfield("projectType", "string", false, 20);
 	--github reponsity
 	self:addfield("projectGitURL", "string", false, 300);
+	--update time
+	self:addfield("projectUpdate", "string", false, 100);
 	--releases url
 	self:addfield("projectReleases", "string", false, 300);
 	--user name
@@ -41,6 +43,7 @@ function packages:ctor()
 	self:addfield("page","number",false,10);
 	--package Id
 	self:addfield("packageId","number",false,10);
+
 end
 
 function packages:get(params)
