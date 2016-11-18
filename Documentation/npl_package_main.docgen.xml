@@ -107,7 +107,7 @@ Returns the value of the first parameter, clamped to be within the lower and upp
 			</function>
 		</table>
 		<table name="algorithm" src="script/ide/commonlib.lua">
-			<function line="94" name="sort_by_predicate">
+			<function line="97" name="sort_by_predicate">
 				<summary>function algorithm.sort_by_predicate(input, predicate_func)
 in place sort of the input list. the item order is unchanged for those who passed and not passed the predicate test.
    @param input: a table array
@@ -120,7 +120,7 @@ in place sort of the input list. the item order is unchanged for those who passe
 			</function>
 		</table>
 		<table name="commonlib" src="script/ide/commonlib.lua">
-			<function line="148" name="GetUIObject">
+			<function line="151" name="GetUIObject">
 				<summary>function commonlib.GetUIObject(name, parent)
 get an UI object by specifying a serie of names separated by #, such as childname#childname#childname, 
 e.g. commonlib.GetUIObject("wndParent#button1");
@@ -135,8 +135,8 @@ e.g. commonlib.GetUIObject("wndParent#button1");
 				<returns>return return the ParaUIObject found. if not found, the returned object IsValid() returns false. 
 				</returns>
 			</function>
-			<function line="172" name="getfield">
-				<summary>function commonlib.getfield (f, rootEnv)
+			<function line="175" name="getfield">
+				<summary>function commonlib.getfield(f, rootEnv)
 We rely on gfind, from the string library, to iterate over all words in f (where "word" is a sequence of one or more alphanumeric characters and underscores).
    @param f: f is a string like "a.b.c.d"
    @param rootEnv: it can be a table from which to search for f, if nil, the global table _G is used.
@@ -149,8 +149,8 @@ We rely on gfind, from the string library, to iterate over all words in f (where
 				<returns>return return the field in LUA, it may be nil, a value, or a table, etc. 
 				</returns>
 			</function>
-			<function line="193" name="setfield">
-				<summary>function commonlib.setfield (f, v, rootEnv)
+			<function line="196" name="setfield">
+				<summary>function commonlib.setfield(f, v, rootEnv)
 set a variable v to f, where f is a string
 the call setfield("t.x.y", 10) creates a global table t, another table t.x, and assigns 10 to t.x.y
    @param f: f is a string like "a.b.c.d"
@@ -162,7 +162,7 @@ the call setfield("t.x.y", 10) creates a global table t, another table t.x, and 
 				<parameter name="rootEnv">it can be a table from which to search for f, if nil, the global table _G is used. 
 				</parameter>
 			</function>
-			<function line="210" name="gettable">
+			<function line="213" name="gettable">
 				<summary>function commonlib.gettable(f, rootEnv)
 get a table f, where f is a string
    @param f: f is a string like "a.b.c.d"
@@ -173,7 +173,7 @@ get a table f, where f is a string
 				<parameter name="rootEnv">it can be a table from which to search for f, if nil, the global table _G is used. 
 				</parameter>
 			</function>
-			<function line="222" name="createtable">
+			<function line="224" name="createtable">
 				<summary>function commonlib.createtable(f, init_params, rootEnv)
 create/get a table and init it with init_params
 				</summary>
@@ -181,7 +181,7 @@ create/get a table and init it with init_params
 				<parameter name="init_params"/>
 				<parameter name="rootEnv"/>
 			</function>
-			<function line="234" name="ResetModelAsset">
+			<function line="236" name="ResetModelAsset">
 				<summary>function commonlib.ResetModelAsset(_obj, assetfilename)
 reset the model asset
    @param obj: model object
@@ -193,14 +193,14 @@ reset the model asset
 				<returns>return new obj
 				</returns>
 			</function>
-			<function line="262" name="MetaClone">
+			<function line="264" name="MetaClone">
 				<summary>function commonlib.MetaClone(obj)
 clone a obj using just meta table. It does not actually copy parameters. 
 Note: one can not serialize a meta cloned object, because it is an empty table with the same meta table as input obj. 
 				</summary>
 				<parameter name="obj"/>
 			</function>
-			<function line="274" name="deepcopy">
+			<function line="276" name="deepcopy">
 				<summary>function commonlib.deepcopy(object)
 code from: http://lua-users.org/wiki/CopyTable
 This function returns a deep copy of a given table. The function below also copies the metatable to the new table if there is one, 
@@ -209,13 +209,13 @@ you can avoid this by changing this 'getmetatable(object)' to '_copy( getmetatab
 				</summary>
 				<parameter name="object"/>
 			</function>
-			<function line="297" name="copy">
+			<function line="299" name="copy">
 				<summary>function commonlib.copy(object)
 same as commonlib.clone except that it does not copy meta table. 
 				</summary>
 				<parameter name="object"/>
 			</function>
-			<function line="318" name="partialcopy">
+			<function line="320" name="partialcopy">
 				<summary>function commonlib.partialcopy(dest, src)
 this function simply does, dest = src, but it copies value from src to dest. 
 It is mostly used with tables.It just copies what is in src to dest, but dest retains its other fields that does not exist in src.
@@ -223,7 +223,7 @@ It is mostly used with tables.It just copies what is in src to dest, but dest re
 				<parameter name="dest"/>
 				<parameter name="src"/>
 			</function>
-			<function line="340" name="mincopy">
+			<function line="342" name="mincopy">
 				<summary>function commonlib.mincopy(dest, src)
 this function simply does, dest = src, but it copies value from src to dest. 
 It is mostly used with tables.It only copies src field to dest field, if src field name does not exist in dest. In other words, dest will preserve all its named fields plus additional fields in dest
@@ -231,7 +231,7 @@ It is mostly used with tables.It only copies src field to dest field, if src fie
 				<parameter name="dest"/>
 				<parameter name="src"/>
 			</function>
-			<function line="362" name="partialcompare">
+			<function line="364" name="partialcompare">
 				<summary>function commonlib.partialcompare(dest, src, tolerance)
 this function simply does, dest = src, but it copies value from src to dest. 
 It is mostly used with tables.It only copies src field to dest field, if src field name does not exist in dest. In other words, dest will preserve all its named fields plus additional fields in dest
@@ -245,7 +245,7 @@ Note: it also compare indexed array items
 				<parameter name="tolerance">if not nil, it will be used to compare number type values. smaller than this will be regarded as equal.
 				</parameter>
 			</function>
-			<function line="385" name="partialfields">
+			<function line="387" name="partialfields">
 				<summary>function commonlib.partialfields(dest, src, fields)
 compare all fields in dest with src and return true if equal.
 				</summary>
@@ -253,7 +253,7 @@ compare all fields in dest with src and return true if equal.
 				<parameter name="src"/>
 				<parameter name="fields"/>
 			</function>
-			<function line="393" name="compare">
+			<function line="395" name="compare">
 				<summary>function commonlib.compare(dest, src, tolerance)
 strict compare all fields reccursively in dest and src, value by value
 Note: it also compare indexed array items
@@ -267,7 +267,7 @@ Note: it also compare indexed array items
 				<returns>return if equal.
 				</returns>
 			</function>
-			<function line="400" name="resize">
+			<function line="402" name="resize">
 				<summary>function commonlib.resize(t, size, v)
 resize a table to a new size. It ensures that all elements are nil. 
 this function uses table_getn() instead of #t, use table.resize for #t
@@ -276,7 +276,7 @@ this function uses table_getn() instead of #t, use table.resize for #t
 				<parameter name="size"/>
 				<parameter name="v"/>
 			</function>
-			<function line="437" name="removeArrayItem">
+			<function line="439" name="removeArrayItem">
 				<summary>function commonlib.removeArrayItem(t, nIndex)
 remove an item from a table. The table size will be minored by 1.
    @param t: table array.
@@ -287,7 +287,7 @@ remove an item from a table. The table size will be minored by 1.
 				<parameter name="nIndex">1 based index, at which to remove the item
 				</parameter>
 			</function>
-			<function line="448" name="insertArrayItem">
+			<function line="450" name="insertArrayItem">
 				<summary>function commonlib.insertArrayItem(t, nIndex, item)
 insert an array item to a table array. The table size will be increased by 1.
    @param t: table array.
@@ -302,7 +302,7 @@ insert an array item to a table array. The table size will be increased by 1.
 				<returns>return 1 based index at which the item is inserted
 				</returns>
 			</function>
-			<function line="473" name="removeArrayItems">
+			<function line="475" name="removeArrayItems">
 				<summary>function commonlib.removeArrayItems(t, callback_func)
 remove all items that matches a certain criteria from an array table
 e.g. 
@@ -315,7 +315,7 @@ commonlib.removeArrayItems({1,2,3,4,5,6}, function(i, item) return (i%2==0); end
 				<parameter name="callback_func">the callback function(index, item) end. if the function returns true, then the table item at the given index will be removed from the table.
 				</parameter>
 			</function>
-			<function line="491" name="swapArrayItem">
+			<function line="493" name="swapArrayItem">
 				<summary>function commonlib.swapArrayItem(t, nIndex1, nIndex2)
 swap two items in a table. 
 				</summary>
@@ -323,7 +323,7 @@ swap two items in a table.
 				<parameter name="nIndex1"/>
 				<parameter name="nIndex2"/>
 			</function>
-			<function line="499" name="moveArrayItem">
+			<function line="501" name="moveArrayItem">
 				<summary>function commonlib.moveArrayItem(t, nIndex1, nIndex2)
 move array item from one nIndex1 to nIndex2
 				</summary>
@@ -331,24 +331,24 @@ move array item from one nIndex1 to nIndex2
 				<parameter name="nIndex1"/>
 				<parameter name="nIndex2"/>
 			</function>
-			<function line="518" name="cleartable">
+			<function line="520" name="cleartable">
 				<summary>function commonlib.cleartable(tab)
 empty a given table
 				</summary>
 				<parameter name="tab"/>
 			</function>
-			<function line="565" name="SearchFiles">
+			<function line="567" name="SearchFiles">
 				<summary>function commonlib.SearchFiles(...)
 OBSOLETED: use commonlib.Files.SearchFiles(), instead. 
 				</summary>
 			</function>
-			<function line="571" name="Absolute">
+			<function line="573" name="Absolute">
 				<summary>function commonlib.Absolute(num)
 get the absolute of the given number, if param not number type return nil
 				</summary>
 				<parameter name="num"/>
 			</function>
-			<function line="587" name="tonumber">
+			<function line="589" name="tonumber">
 				<summary>function commonlib.tonumber(s)
 convert the string to number
 this function will handle the string will additional "0" digits in the front of the string
@@ -356,7 +356,7 @@ e.x. input: "010" return: 10
 				</summary>
 				<parameter name="s"/>
 			</function>
-			<function line="604" name="tolower">
+			<function line="606" name="tolower">
 				<summary>function commonlib.tolower(o)
 make all table fields (including fields of sub tables) lower cased. This is useful for case-insensitive table.
    @param o: it will modify on this table and its sub-tables. If it is string. this function will return the lower cased string.
@@ -367,7 +367,7 @@ make all table fields (including fields of sub tables) lower cased. This is usef
 				<returns>return return the modified input 
 				</returns>
 			</function>
-			<function line="646" name="GetEmptyList">
+			<function line="648" name="GetEmptyList">
 				<summary>function commonlib.GetEmptyList(source_list,goal_num,bSort)
 -random search a number of item from a list
 &lt;verbatim&gt;
@@ -396,7 +396,7 @@ commonlib.echo(result);
 				</parameter>
 				<parameter name="bSort"/>
 			</function>
-			<function line="700" name="GetRandomList">
+			<function line="702" name="GetRandomList">
 				<summary>function commonlib.GetRandomList(source_num,goal_num,bSort)
 在一个范围内随机选取一定的数目
 goal_num = math.min(source_num,goal_num);
@@ -409,7 +409,7 @@ commonlib.echo(result);
 				<parameter name="goal_num"/>
 				<parameter name="bSort"/>
 			</function>
-			<function line="728" name="GetRandomIndex">
+			<function line="730" name="GetRandomIndex">
 				<summary>function commonlib.GetRandomIndex(range,excludeindex)
 在一个范围内随机选取一定的数目
 goal_num = math.min(source_num,goal_num);
@@ -426,7 +426,7 @@ commonlib.echo(result);
 				<parameter name="excludeindex">不包含的整数
 				</parameter>
 			</function>
-			<function line="764" name="module">
+			<function line="766" name="module">
 				<summary>function commonlib.module(modname, ...)
 define a module, replace the global environment _G with that of the table.
 this function is same as commonlib.createtable, except that the global environment _G with that of the table.
@@ -438,7 +438,7 @@ this function is same as commonlib.createtable, except that the global environme
 				<returns>return module created
 				</returns>
 			</function>
-			<function line="775" name="split">
+			<function line="777" name="split">
 				<summary>function commonlib.split(str,delimiter)
 define a module, replace the global environment _G with that of the table.
 this function is same as commonlib.createtable, except that the global environment _G with that of the table.
@@ -511,9 +511,169 @@ when target_class is garbage collected. see also `commonlib.setmetatable__gc`
 				<parameter name="gc_function">if nil, target_class.__gc is used. otherwise this function is used.
 				</parameter>
 			</function>
+			<function line="31" name="echo" src="script/ide/serialization.lua">
+				<summary>function commonlib.echo(p1, handleRecursion)
+output input to log safely in a single echo line (recursion is handled). Only used in debugging or testing
+   @param p1: anything to echo, table, nil, value, function, etc.
+   @param handleRecursion[obsoleted]: 
+Note: recursion is handled by C++ side even if this is nil or false.
+if true, table recursion is handled. it may cause stack overflow if set to nil with recursive table
+Internally it uses commonlib.dump which handles recursive tables.
+				</summary>
+				<parameter name="p1">anything to echo, table, nil, value, function, etc.
+				</parameter>
+				<parameter name="handleRecursion">[obsoleted]: 
+Note: recursion is handled by C++ side even if this is nil or false.
+if true, table recursion is handled. it may cause stack overflow if set to nil with recursive table
+Internally it uses commonlib.dump which handles recursive tables.
+				</parameter>
+			</function>
+			<function line="47" name="serializeToFile" src="script/ide/serialization.lua">
+				<summary>function commonlib.serializeToFile(file, o)
+serialize a table to the current file: function and user data are exported as nil value.
+   @param o: table to serialize
+				</summary>
+				<parameter name="file"/>
+				<parameter name="o">table to serialize
+				</parameter>
+			</function>
+			<function line="92" name="serialize" src="script/ide/serialization.lua">
+				<summary>function commonlib.serialize(o, bBeautify)
+serialize to string.
+e.g. print(commonlib.serialize(o))
+   @param o: the object to serialize
+   @param bBeautify: if true, it will generate with line breakings. if nil, it will use the C++ function to serialize. 
+				</summary>
+				<parameter name="o">the object to serialize
+				</parameter>
+				<parameter name="bBeautify">if true, it will generate with line breakings. if nil, it will use the C++ function to serialize. 
+				</parameter>
+			</function>
+			<function line="128" name="serialize_compact" src="script/ide/serialization.lua">
+				<summary>function commonlib.serialize_compact(o) 
+this is the fatest serialization method using native API. 
+				</summary>
+				<parameter name="o"/>
+			</function>
+			<function line="133" name="serialize_compact3" src="script/ide/serialization.lua">
+				<summary>function commonlib.serialize_compact3(o)
+same as commonlib.serialize, except that it is more compact by removing all \r\n and comments, etc. 
+				</summary>
+				<parameter name="o"/>
+			</function>
+			<function line="200" name="LoadTableFromFile" src="script/ide/serialization.lua">
+				<summary>function commonlib.LoadTableFromFile(filename)
+this function will return a table created from file. 
+function may return nil
+e.g.
+local t = commonlib.LoadTableFromFile("temp/t.txt")
+if(t~=nil) then end
+				</summary>
+				<parameter name="filename"/>
+			</function>
+			<function line="230" name="LoadTableFromString" src="script/ide/serialization.lua">
+				<summary>function commonlib.LoadTableFromString(body)
+
+   @param body: should be a string of "{ any thing here }". if table or other data type, it is returned as it is. 
+return the table. 
+				</summary>
+				<parameter name="body">should be a string of "{ any thing here }". if table or other data type, it is returned as it is. 
+return the table. 
+				</parameter>
+			</function>
+			<function line="248" name="SaveTableToFile" src="script/ide/serialization.lua">
+				<summary>function commonlib.SaveTableToFile(o, filename, bBeautified)
+this function will return a table created from file.
+   @param bBeautified: true to enable indentation which is well organized and easy to read the table structure
+function may return nil.e.g.
+local t = {test=1};
+commonlib.SaveTableToFile(t, "temp/t.txt");
+				</summary>
+				<parameter name="o"/>
+				<parameter name="filename"/>
+				<parameter name="bBeautified">true to enable indentation which is well organized and easy to read the table structure
+function may return nil.e.g.
+local t = {test=1};
+commonlib.SaveTableToFile(t, "temp/t.txt");
+				</parameter>
+			</function>
+			<function line="268" name="serialize2" src="script/ide/serialization.lua">
+				<summary>function commonlib.serialize2(o, lvl)
+serialize to string
+serialization will be well organized and easy to read the table structure
+e.g. print(commonlib.serialize(o, 1))
+				</summary>
+				<parameter name="o"/>
+				<parameter name="lvl"/>
+			</function>
+			<function line="309" name="WriteTextToFile" src="script/ide/serialization.lua">
+				<summary>function commonlib.WriteTextToFile(o, filename)
+dump text or lines. it will automatically create directory for you.
+   @param filename: which file to write to. it will replace whatever in the file.
+   @param o: it can be text string or table array containing text lines, which are concartinated. It does NOT add line endings. 
+commonlib.SaveTableToFile({"hello ", "world!"}, "temp/t.txt");
+				</summary>
+				<parameter name="o">it can be text string or table array containing text lines, which are concartinated. It does NOT add line endings. 
+commonlib.SaveTableToFile({"hello ", "world!"}, "temp/t.txt");
+				</parameter>
+				<parameter name="filename">which file to write to. it will replace whatever in the file.
+				</parameter>
+			</function>
+			<function line="434" name="dump" src="script/ide/serialization.lua">
+				<summary>function commonlib.dump(value, varname, fastmode, ident)
+LiXizhi 2008.5.15: I modified to disable function and userdata dumping. 
+DataDumper consists of a single Lua function, which could easily be put in a separate module or integrated into a bigger one. 
+The function has four parameters, but only the first one is mandatory. It always returns a string value, which is valid Lua code. 
+Simply executing this chunk will import back to a variable the complete structure of the original variable.
+For simple structures, there is only one Lua instruction like a table constructor, but some more complex features will output a script with more instructions. 
+
+All the following language features are supported: 
+
+Simple Lua types: nil, boolean, number, string 
+Tables are dumped recursively 
+Table metatables are also dumped recursively 
+Simple Lua functions (no upvalue) are dumped with loadstring 
+Lua closures with upvalues are also supported, using the debug library! 
+Known C functions are output using their original name 
+Complex tables structures with internal references are supported
+   @param value can be of any supported type
+   @param varname: optional variable name. Depending on its form, the output will look like: 
+	nil: "return value" 
+	identifier: "varname = value" 
+	other: "varname".."value"
+   @param fastmode is a boolean value: 
+	true: optimizes for speed. Metatables, closures, C functions and references are not supported. Returns a code chunk without any space or new line! 
+	false: supports all advanced features and favors readable code with good indentation.
+   @param indent: the number of additional indentation level. Default is 0. 
+				</summary>
+				<parameter name="value">can be of any supported type
+				</parameter>
+				<parameter name="varname">optional variable name. Depending on its form, the output will look like: 
+	nil: "return value" 
+	identifier: "varname = value" 
+	other: "varname".."value"
+				</parameter>
+				<parameter name="fastmode">is a boolean value: 
+	true: optimizes for speed. Metatables, closures, C functions and references are not supported. Returns a code chunk without any space or new line! 
+	false: supports all advanced features and favors readable code with good indentation.
+				</parameter>
+				<parameter name="ident"/>
+			</function>
+			<function line="597" name="fromCSV" src="script/ide/serialization.lua">
+				<summary>function commonlib.fromCSV(s)
+Convert from CSV string to table
+				</summary>
+				<parameter name="s"/>
+			</function>
+			<function line="624" name="toCSV" src="script/ide/serialization.lua">
+				<summary>function commonlib.toCSV(tt)
+Convert from table to CSV string
+				</summary>
+				<parameter name="tt"/>
+			</function>
 		</table>
 		<table name="table" src="script/ide/commonlib.lua">
-			<function line="419" name="resize">
+			<function line="421" name="resize">
 				<summary>function table.resize(t, size, v)
 resize a table to a new size. It ensures that all elements are nil.
    @param t: table to resize
@@ -529,14 +689,14 @@ resize a table to a new size. It ensures that all elements are nil.
 			</function>
 		</table>
 		<table name="utf8" src="script/ide/commonlib.lua">
-			<function line="537" name="len">
+			<function line="539" name="len">
 				<summary>function utf8.len(unicode_string)
 return the number of characters in UTF8 encoding.
 more info at: http://lua-users.org/wiki/LuaUnicode
 				</summary>
 				<parameter name="unicode_string"/>
 			</function>
-			<function line="543" name="sub">
+			<function line="545" name="sub">
 				<summary>function utf8.sub(ustring, nFrom, nTo)
 similar to string.sub(), except that nFrom, nTo refers to characters, instead of byte
 				</summary>
@@ -2820,12 +2980,12 @@ show and bind to a new ParaUI control object to receive events from.
 			<function line="79" name="ShowWithParams">
 				<summary>function Window:ShowWithParams(params)
 
-   @param params: {url="", alignment, x,y,width, height, allowDrag,zorder }
+   @param params: {url="", alignment, x,y,width, height, allowDrag,zorder, enable_esc_key, DestroyOnClose}
 				</summary>
-				<parameter name="params">{url="", alignment, x,y,width, height, allowDrag,zorder }
+				<parameter name="params">{url="", alignment, x,y,width, height, allowDrag,zorder, enable_esc_key, DestroyOnClose}
 				</parameter>
 			</function>
-			<function line="127" name="CloseWindow">
+			<function line="134" name="CloseWindow">
 				<summary>function Window:CloseWindow(bDestroy)
 
    @param bDestroy: if true, it will destroy the window, otherwise it will just hide it.
@@ -2833,22 +2993,22 @@ show and bind to a new ParaUI control object to receive events from.
 				<parameter name="bDestroy">if true, it will destroy the window, otherwise it will just hide it.
 				</parameter>
 			</function>
-			<function line="135" name="GetNativeWindow">
+			<function line="145" name="GetNativeWindow">
 				<summary>function Window:GetNativeWindow()
 
 				</summary>
 			</function>
-			<function line="140" name="SetSizeToUsedSize">
+			<function line="150" name="SetSizeToUsedSize">
 				<summary>function Window:SetSizeToUsedSize()
 set the window's size to be the layout's used size
 				</summary>
 			</function>
-			<function line="151" name="destroy_sys">
+			<function line="161" name="destroy_sys">
 				<summary>function Window:destroy_sys()
 virtual: if this element is a native window, destroy it. 
 				</summary>
 			</function>
-			<function line="159" name="create_sys">
+			<function line="169" name="create_sys">
 				<summary>function Window:create_sys(native_window, initializeWindow, destroyOldWindow)
 bind to native window.
 				</summary>
@@ -2856,36 +3016,36 @@ bind to native window.
 				<parameter name="initializeWindow"/>
 				<parameter name="destroyOldWindow"/>
 			</function>
-			<function line="228" name="handleGeometryChangeEvent">
+			<function line="238" name="handleGeometryChangeEvent">
 				<summary>function Window:handleGeometryChangeEvent()
 
 				</summary>
 			</function>
-			<function line="232" name="isWindow">
+			<function line="242" name="isWindow">
 				<summary>function Window:isWindow()
 
 				</summary>
 			</function>
-			<function line="237" name="handleMouseEvent">
+			<function line="247" name="handleMouseEvent">
 				<summary>function Window:handleMouseEvent(event)
 
    @param event_type: "mousePressEvent", "mouseMoveEvent", "mouseWheelEvent", "mouseReleaseEvent"
 				</summary>
 				<parameter name="event"/>
 			</function>
-			<function line="262" name="handleMouseEnterLeaveEvent">
+			<function line="272" name="handleMouseEnterLeaveEvent">
 				<summary>function Window:handleMouseEnterLeaveEvent(mouse_event)
 
    @param event_type: "mouseEnterEvent", "mouseLeaveEvent"
 				</summary>
 				<parameter name="mouse_event"/>
 			</function>
-			<function line="286" name="UpdateGeometry_Sys">
+			<function line="296" name="UpdateGeometry_Sys">
 				<summary>function Window:UpdateGeometry_Sys()
 update geometry according to native ParaUI object
 				</summary>
 			</function>
-			<function line="295" name="setGeometry_sys">
+			<function line="305" name="setGeometry_sys">
 				<summary>function Window:setGeometry_sys(ax, ay, aw, ah)
 
 				</summary>
@@ -2894,61 +3054,61 @@ update geometry according to native ParaUI object
 				<parameter name="aw"/>
 				<parameter name="ah"/>
 			</function>
-			<function line="332" name="show_sys">
+			<function line="342" name="show_sys">
 				<summary>function Window:show_sys()
 
 				</summary>
 			</function>
-			<function line="336" name="hide_sys">
+			<function line="346" name="hide_sys">
 				<summary>function Window:hide_sys()
 
 				</summary>
 			</function>
-			<function line="340" name="setVisible_sys">
+			<function line="350" name="setVisible_sys">
 				<summary>function Window:setVisible_sys(visible)
 
 				</summary>
 				<parameter name="visible"/>
 			</function>
-			<function line="347" name="EnableSelfPaint">
+			<function line="357" name="EnableSelfPaint">
 				<summary>function Window:EnableSelfPaint(bSelfPaint)
 set whether the window will paint on its own render target. default is false. 
 				</summary>
 				<parameter name="bSelfPaint"/>
 			</function>
-			<function line="355" name="repaint">
+			<function line="365" name="repaint">
 				<summary>function Window:repaint()
 force repaint in the next frame.
 				</summary>
 			</function>
-			<function line="368" name="SetFocus_sys">
+			<function line="378" name="SetFocus_sys">
 				<summary>function Window:SetFocus_sys()
 set key focus to the window. 
 				</summary>
 			</function>
-			<function line="382" name="update">
+			<function line="392" name="update">
 				<summary>function Window:update()
 Updates the widget unless updates are disabled or the widget is hidden.
 This function does not cause an immediate repaint; instead it schedules a paint in the next frame.
 				</summary>
 			</function>
-			<function line="387" name="markDirty">
+			<function line="397" name="markDirty">
 				<summary>function Window:markDirty()
 causing a repaint
 				</summary>
 			</function>
-			<function line="394" name="handleRender">
+			<function line="404" name="handleRender">
 				<summary>function Window:handleRender()
 handle ondraw callback from system ParaUI object. 
 				</summary>
 			</function>
-			<function line="400" name="SetAutoClearBackground">
+			<function line="410" name="SetAutoClearBackground">
 				<summary>function Window:SetAutoClearBackground(bEnabled)
 whether to automatically clear the background to fully transparent when doing self paint on its own render target.
 				</summary>
 				<parameter name="bEnabled"/>
 			</function>
-			<function line="410" name="SetMouseCaptureEnabled">
+			<function line="420" name="SetMouseCaptureEnabled">
 				<summary>function Window:SetMouseCaptureEnabled(bEnabled)
 Sets whether mouse capture should be enabled or not
 If the return value is true, the window receives all mouse events until SetMouseGrabEnabled(false) is
@@ -2956,28 +3116,28 @@ called; other windows get no mouse events at all. Keyboard events are not affect
 				</summary>
 				<parameter name="bEnabled"/>
 			</function>
-			<function line="417" name="IsMouseCaptureEnabled">
+			<function line="427" name="IsMouseCaptureEnabled">
 				<summary>function Window:IsMouseCaptureEnabled()
 
 				</summary>
 			</function>
-			<function line="421" name="handleActivateEvent">
+			<function line="431" name="handleActivateEvent">
 				<summary>function Window:handleActivateEvent(isActivate)
 
 				</summary>
 				<parameter name="isActivate"/>
 			</function>
-			<function line="430" name="handleDestroy_sys">
+			<function line="440" name="handleDestroy_sys">
 				<summary>function Window:handleDestroy_sys()
 native windows have been forcibly closed. 
 				</summary>
 			</function>
-			<function line="445" name="windowDestroyEvent">
+			<function line="455" name="windowDestroyEvent">
 				<summary>function Window:windowDestroyEvent()
 virtual called when native window is destroyed. 
 				</summary>
 			</function>
-			<function line="451" name="mapToGlobal">
+			<function line="461" name="mapToGlobal">
 				<summary>function Window:mapToGlobal(pos)
 convert to global position
    @return the returned Point is temporary, do not hold it for long
@@ -2986,7 +3146,7 @@ convert to global position
 				<returns>return returned Point is temporary, do not hold it for long
 				</returns>
 			</function>
-			<function line="457" name="mapFromGlobal">
+			<function line="467" name="mapFromGlobal">
 				<summary>function Window:mapFromGlobal(pos)
 convert from global to local pos.
    @return the returned Point is temporary, do not hold it for long
@@ -2995,31 +3155,31 @@ convert from global to local pos.
 				<returns>return returned Point is temporary, do not hold it for long
 				</returns>
 			</function>
-			<function line="461" name="setCompositionPoint_sys">
+			<function line="471" name="setCompositionPoint_sys">
 				<summary>function Window:setCompositionPoint_sys(p)
 
 				</summary>
 				<parameter name="p"/>
 			</function>
-			<function line="467" name="paintEvent">
+			<function line="477" name="paintEvent">
 				<summary>function Window:paintEvent(painter)
 
 				</summary>
 				<parameter name="painter"/>
 			</function>
-			<function line="471" name="mousePressEvent">
+			<function line="481" name="mousePressEvent">
 				<summary>function Window:mousePressEvent(event)
 virtual: 
 				</summary>
 				<parameter name="event"/>
 			</function>
-			<function line="482" name="mouseMoveEvent">
+			<function line="492" name="mouseMoveEvent">
 				<summary>function Window:mouseMoveEvent(event)
 
 				</summary>
 				<parameter name="event"/>
 			</function>
-			<function line="503" name="mouseReleaseEvent">
+			<function line="513" name="mouseReleaseEvent">
 				<summary>function Window:mouseReleaseEvent(event)
 
 				</summary>
@@ -3982,76 +4142,105 @@ default to autocamera if no camera is set.
 			</function>
 		</table>
 		<table name="request" src="script/apps/WebServer/npl_request.lua">
-			<function line="44" name="ctor">
+			<function line="45" name="ctor">
 				<summary>function request:ctor()
 
 				</summary>
 			</function>
-			<function line="49" name="GetResponse">
+			<function line="50" name="GetResponse">
 				<summary>function request:GetResponse()
 get the response object. 
 				</summary>
 			</function>
-			<function line="54" name="GetNid">
+			<function line="55" name="GetNid">
 				<summary>function request:GetNid()
 get the nid where the request is from. 
 				</summary>
 			</function>
-			<function line="58" name="errorEvent">
+			<function line="59" name="errorEvent">
 				<summary>function request:errorEvent(msg)
 
 				</summary>
 				<parameter name="msg"/>
 			</function>
-			<function line="70" name="tostring">
+			<function line="71" name="tostring">
 				<summary>function request:tostring()
 
 				</summary>
 			</function>
-			<function line="74" name="redirect">
+			<function line="75" name="redirect">
 				<summary>function request:redirect(d)
 
 				</summary>
 				<parameter name="d"/>
 			</function>
-			<function line="81" name="url">
+			<function line="82" name="url">
 				<summary>function request:url()
 original request url
 				</summary>
 			</function>
-			<function line="85" name="parse_url">
+			<function line="86" name="parse_url">
 				<summary>function request:parse_url()
 
 				</summary>
 			</function>
-			<function line="97" name="GetMsg">
+			<function line="98" name="GetMsg">
 				<summary>function request:GetMsg()
 headers actually is the raw message containing everything.
 just incase one wants to clone the request and forward it to some other threads or network process. 
 				</summary>
 			</function>
-			<function line="103" name="getparams">
+			<function line="204" name="ParseMultipartData">
+				<summary>function request:ParseMultipartData(input, input_type, tab, overwrite)
+
+   @param input: input string
+   @param input_type: the content type containing the boundary text.
+   @param tab: table of key value pairs, if nil a new table is created and returned.
+   @return table of key value pairs
+				</summary>
+				<parameter name="input">input string
+				</parameter>
+				<parameter name="input_type">the content type containing the boundary text.
+				</parameter>
+				<parameter name="tab">table of key value pairs, if nil a new table is created and returned.
+				</parameter>
+				<parameter name="overwrite"/>
+				<returns>return of key value pairs
+				</returns>
+			</function>
+			<function line="215" name="ParsePostData">
+				<summary>function request:ParsePostData()
+
+				</summary>
+			</function>
+			<function line="238" name="GetBody">
+				<summary>function request:GetBody()
+get the request body. if the body is known datetype, such as "application/json", it may already be converted to table
+One can always get the raw http request body string using self.headers.body. 
+				</summary>
+			</function>
+			<function line="244" name="getparams">
 				<summary>function request:getparams()
 get url parameters: both url post/get are supported
 return a table of name, value pairs
 				</summary>
 			</function>
-			<function line="121" name="IsJsonBody">
+			<function line="255" name="IsJsonBody">
 				<summary>function request:IsJsonBody()
 
 				</summary>
 			</function>
-			<function line="130" name="GetHost">
+			<function line="264" name="GetHost">
 				<summary>function request:GetHost()
 get host name from header. usually checking for the http origin for cross-domain request or not. 
 				</summary>
 			</function>
-			<function line="135" name="GetMethod">
+			<function line="269" name="GetMethod">
 				<summary>function request:GetMethod()
 in headers  'GET', 'HEAD', 'POST', 'PUT', 'OPTIONS' etc
 				</summary>
 			</function>
-			<function line="141" name="header">
+			<function line="275" name="header">
 				<summary>function request:header(name)
 get the value of given header
    @param name: "method", "Host", or any of other custom header fields
@@ -4059,7 +4248,7 @@ get the value of given header
 				<parameter name="name">"method", "Host", or any of other custom header fields
 				</parameter>
 			</function>
-			<function line="148" name="get">
+			<function line="282" name="get">
 				<summary>function request:get(name)
 get a given url get/post param by name
    @param name: if name is nil or 'json', we will return table object passed in from headers.body (json http post)
@@ -4069,24 +4258,24 @@ if you post data as json, you can also access json encoded html body directly wi
 if you post data as json, you can also access json encoded html body directly with key name. 
 				</parameter>
 			</function>
-			<function line="160" name="getpeername">
+			<function line="294" name="getpeername">
 				<summary>function request:getpeername()
 get ip address as string
 				</summary>
 			</function>
-			<function line="167" name="discard">
+			<function line="301" name="discard">
 				<summary>function request:discard()
 drop this request, so that nothing is sent to client at the moment. 
 we use this function to delegate a request from one thread to another in npl script handler
 				</summary>
 			</function>
-			<function line="172" name="send">
+			<function line="306" name="send">
 				<summary>function request:send(address)
 send/route the request to another processor: possibly another npl file in another thread or another machine. 
 				</summary>
 				<parameter name="address"/>
 			</function>
-			<function line="181" name="get_cookie">
+			<function line="315" name="get_cookie">
 				<summary>function request:get_cookie(name)
 get cookies or a given cookie entry value by name
    @param name: if nil, entire cookies table is returned. if string, only cookies value of the given name is returned. 
@@ -4094,18 +4283,18 @@ get cookies or a given cookie entry value by name
 				<parameter name="name">if nil, entire cookies table is returned. if string, only cookies value of the given name is returned. 
 				</parameter>
 			</function>
-			<function line="203" name="clear_cookie">
+			<function line="337" name="clear_cookie">
 				<summary>function request:clear_cookie()
 clear all cookies in case of rpc request, etc. 
 				</summary>
 			</function>
-			<function line="226" name="NormalizeHeaders">
+			<function line="360" name="NormalizeHeaders">
 				<summary>function request:NormalizeHeaders(headers)
 from case insensitive to case sensitive. 
 				</summary>
 				<parameter name="headers"/>
 			</function>
-			<function line="246" name="init">
+			<function line="380" name="init">
 				<summary>function request:init(msg)
 request can be reused by calling this function. 
 the request object is returned if succeed.
@@ -4504,7 +4693,7 @@ get file text
 				</summary>
 				<parameter name="filename"/>
 			</function>
-			<function line="452" name="yield">
+			<function line="458" name="yield">
 				<summary>function npl_page_env.yield(bExitOnError)
 yield control until all async jobs are completed
    @param bExitOnError: if true, this function will handle error
@@ -4515,7 +4704,7 @@ yield control until all async jobs are completed
 				<returns>return , msg: err is true if there is error. 
 				</returns>
 			</function>
-			<function line="482" name="gettable">
+			<function line="495" name="gettable">
 				<summary>function npl_page_env.gettable(tabNames)
 similar to commonlib.gettable(tabNames) but in page scope.
    @param tabNames: table names like "models.users"
@@ -4523,7 +4712,7 @@ similar to commonlib.gettable(tabNames) but in page scope.
 				<parameter name="tabNames">table names like "models.users"
 				</parameter>
 			</function>
-			<function line="493" name="createtable">
+			<function line="506" name="createtable">
 				<summary>function npl_page_env.createtable(tabNames, init_params)
 similar to commonlib.createtable(tabNames) but in page scope.
    @param tabNames: table names like "models.users"
@@ -4532,7 +4721,7 @@ similar to commonlib.createtable(tabNames) but in page scope.
 				</parameter>
 				<parameter name="init_params"/>
 			</function>
-			<function line="499" name="inherit">
+			<function line="512" name="inherit">
 				<summary>function npl_page_env.inherit(baseClass, new_class, ctor)
 same as commonlib.inherit()
 				</summary>
@@ -4685,12 +4874,12 @@ private: return true if file is already included in the environment.
 				</summary>
 				<parameter name="bExitOnError"/>
 			</function>
-			<function line="440" name="restore_page_env">
+			<function line="446" name="restore_page_env">
 				<summary>function env_imp:restore_page_env()
 
 				</summary>
 			</function>
-			<function line="462" name="resume">
+			<function line="468" name="resume">
 				<summary>function env_imp:resume(err, msg)
 resume from where jobs are paused last.
    @param err: if there is error, this is true, otherwise it is nil.
@@ -4701,13 +4890,13 @@ resume from where jobs are paused last.
 				<parameter name="msg">error message in case err=true
 				</parameter>
 			</function>
-			<function line="476" name="gettable">
+			<function line="489" name="gettable">
 				<summary>function env_imp:gettable(tabNames)
 
 				</summary>
 				<parameter name="tabNames"/>
 			</function>
-			<function line="487" name="createtable">
+			<function line="500" name="createtable">
 				<summary>function env_imp:createtable(tabNames, init_params)
 
 				</summary>
