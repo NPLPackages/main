@@ -31,7 +31,6 @@ if(is_ajax()) then
 		local err, msg = yield();
 
 		echo(commonlib.serialize({err, msg}))
-		-- response:send({err = "unknown err"});
     end)
 	return;
 end
