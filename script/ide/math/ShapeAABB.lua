@@ -93,8 +93,7 @@ function ShapeAABB:SetMinMaxValues(minX, minY, minZ, maxX, maxY, maxZ)
 end
 
 function ShapeAABB:SetMinMax(min, max)
-	self.mCenter = (max + min)*0.5; 
-	self.mExtents = (max - min)*0.5;	
+	self:SetMinMaxValues(min[1], min[2], min[3], max[1], max[2], max[3]);
 end
 
 function ShapeAABB:dump()
@@ -120,8 +119,8 @@ function ShapeAABB:GetBottomPosition()
 end
 
 function ShapeAABB:SetPointAABB(pt)
-	self.mCenter = pt; 
-	self.mExtents = vector3d:new({0,0,0});
+	self.mCenter:set(pt); 
+	self.mExtents:set(0,0,0);
 end
 
 function ShapeAABB:Offset(dx, dy, dz)
