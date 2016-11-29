@@ -195,6 +195,7 @@ function os.SendEmail(params, callbackFunc)
 	if(params.cc) then
 		lines[#lines+1] = "Cc: "..params.cc;
 	end
+	lines[#lines+1] = "Content-Type: ".."text/html; charset=UTF-8";
 	lines[#lines+1] = "Subject: "..(params.subject or "from NPL");
 	-- empty line to divide headers from body, see RFC5322 
 	lines[#lines+1] = "";
