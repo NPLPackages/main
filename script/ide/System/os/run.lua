@@ -8,6 +8,7 @@ use the lib:
 NPL.load("(gl)script/ide/System/os/run.lua");
 -- any lines of windows batch commands
 echo(System.os("dir *.exe \n svn info"));
+echo(System.os.runAsAdmin('reg add "HKCR\\paracraft" /ve /d "URL:paracraft" /f'))
 -- any lines of linux bash shell commands
 echo(System.os.run("ls -al | grep total\ngit | grep commit"));
 -- async run command in worker thread
@@ -186,7 +187,7 @@ end
 function os.runAsAdmin(cmd, bPrintToLog, bDeleteTempFile)
 	if(os.GetPlatform()=="win32") then
 		local cmd_filename = "temp.bat";
-		local cmd_fullpath, output_fullpath, output_filename = PrepareTempFile(cmd, cmd_filename, "temp.txt");
+		local cmd_fullpath, output_fullpath, output_filename = PrepareTempShellFile(cmd, cmd_filename);
 	
 		cmd_fullpath = cmd_fullpath:gsub("/", "\\")
 		
@@ -223,7 +224,7 @@ if '%errorlevel%' NEQ '0' (
 :--------------------------------------
 "%~dp0]]..cmd_filename..[["]];
 
-		local cmd_admin_fullpath, output_fullpath = PrepareTempFile(cmd_admin, "tempAdmin.bat", "");
+		local cmd_admin_fullpath, output_fullpath = PrepareTempShellFile(cmd_admin, "tempAdmin.bat", "");
 		if(ParaGlobal.ShellExecute("wait", cmd_admin_fullpath, cmd_admin_fullpath, "", 1)) then
 			if(bPrintToLog) then
 				-- get output
@@ -247,7 +248,8 @@ if '%errorlevel%' NEQ '0' (
 		end
 		return stdout_text;
 	else
-		log("run shell script is not supported on this platform\n");
+		-- TODO: elevate access right in linux?
+		return os.run(cmd, bPrintToLog, bDeleteTempFile);
 	end
 end
 
