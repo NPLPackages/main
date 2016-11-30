@@ -161,7 +161,28 @@ function test_IO_OpenAssetFile()
 	
 	local file = ParaIO.OpenAssetFile("model/Skybox/skybox3/Skybox3.x");
 	if(file:IsValid()) then
-		commonlib.echo(file:readline())
+		local line;
+		repeat 
+			line = file:readline()
+			echo(line);
+		until(not line)
+		file:close();
+	end
+end
+
+function test_IO_readline()
+	local file = ParaIO.open("temp/test_readline.txt", "w");
+	if(file:IsValid()) then
+		file:WriteString("win line ending \r\n linux line ending \n last line without line ending")
+		file:close();
+	end
+	local file = ParaIO.open("temp/test_readline.txt", "r");
+	if(file:IsValid()) then
+		local line;
+		repeat 
+			line = file:readline()
+			echo(line);
+		until(not line)
 		file:close();
 	end
 end
@@ -233,4 +254,13 @@ function test_MemoryFile()
 		echo(#(file:GetText(0, -1)));
 		file:close();
 	end
+end
+
+function test_process_open()
+	-- NPL.load("script/ide/commonlib.lua");
+	local file = assert(io.popen('/bin/ls -la', 'r'))
+	local output = file:read('*all')
+	file:close()
+	echo(output)
+	-- exit(1)
 end
