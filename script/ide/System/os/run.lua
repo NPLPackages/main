@@ -6,14 +6,18 @@ Desc: run command lines (windows batch or linux bash commands).
 use the lib:
 ------------------------------------------------------------
 NPL.load("(gl)script/ide/System/os/run.lua");
--- any lines of windows batch commands
-echo(System.os("dir *.exe \n svn info"));
-echo(System.os.runAsAdmin('reg add "HKCR\\paracraft" /ve /d "URL:paracraft" /f'))
--- any lines of linux bash shell commands
-echo(System.os.run("ls -al | grep total\ngit | grep commit"));
+if(System.os.GetPlatform()=="win32") then
+	-- any lines of windows batch commands
+	echo(System.os("dir *.exe \n svn info"));
+	-- this will popup confirmation window, so there is no way to get its result. 
+	System.os.runAsAdmin('reg add "HKCR\\paracraft" /ve /d "URL:paracraft" /f');
+else
+	-- any lines of linux bash shell commands
+	echo(System.os.run("ls -al | grep total\ngit | grep commit"));
+end
 -- async run command in worker thread
 for i=1, 10 do
-	System.os.runAsync("dir", function(err, result)   echo(result)  end);
+	System.os.runAsync("echo hello", function(err, result)   echo(result)  end);
 end
 echo("waiting run async reply ...")
 ------------------------------------------------------------
