@@ -191,7 +191,7 @@ function os.run(cmd, bPrintToLog, bDeleteTempFile)
 		return stdout_text;
 	else
 		-- linux bash shell
-		local cmd_fullpath, output_fullpath, output_filename = PrepareTempShellFile(cmd, GetTempFilePrefix().."temp.sh");
+		local cmd_fullpath, output_fullpath, output_filename = PrepareTempShellFile(cmd, GetTempFilePrefix());
 		local stdout_text = nil;
 		-- we will use popen(process open)
 		local file = io.popen(cmd_fullpath, 'r');
