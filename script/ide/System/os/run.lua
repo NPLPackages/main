@@ -32,6 +32,14 @@ local thisThreadName = __rts__:GetName();
 -- same as os.run(cmd);
 setmetatable(os, { __call = function(self, ...) return os.run(...); end})
 
+local function GetFullPath(filename)
+	if(filename and filename:match("^/") or filename:match("^%w+:")) then
+		return filename
+	elseif(filename) then
+		return ParaIO.GetWritablePath()..filename;
+	end
+end
+
 -- @param cmd: one or more lines of command
 -- @param cmd_filename: default to "temp.bat" or "temp.sh"
 -- @param output_filename: default to cmd_filename..".txt", if "", it will output to default standard output
@@ -42,8 +50,8 @@ local function PrepareTempShellFile(cmd, cmd_filename, output_filename)
 		if(not output_filename) then
 			output_filename = cmd_filename..".txt";
 		end
-		local cmd_fullpath = ParaIO.GetWritablePath()..cmd_filename;
-		local output_fullpath = ParaIO.GetWritablePath()..output_filename;
+		local cmd_fullpath = GetFullPath(cmd_filename);
+		local output_fullpath = GetFullPath(output_filename);
 		ParaIO.DeleteFile(output_filename)
 		ParaIO.CreateDirectory(cmd_filename);
 		local file = ParaIO.open(cmd_filename, "w");
@@ -65,18 +73,20 @@ exit /b
 		if(not output_filename) then
 			output_filename = cmd_filename..".txt";
 		end
-		local cmd_fullpath = ParaIO.GetWritablePath()..cmd_filename;
-		local output_fullpath = ParaIO.GetWritablePath()..output_filename;
-		ParaIO.DeleteFile(output_filename)
-		ParaIO.CreateDirectory(cmd_filename);
+		local cmd_fullpath = GetFullPath(cmd_filename);
+		local output_fullpath = GetFullPath(output_filename);
+		--ParaIO.DeleteFile(output_filename)
+		--ParaIO.CreateDirectory(cmd_filename);
 		local file = ParaIO.open(cmd_filename, "w");
 		if(file:IsValid()) then
 			local content = format([[#!/bin/bash
 subfunc() {
   %s
 }
+pushd %s
 subfunc %s
-]], cmd, output_filename == "" and "" or format([[> "`dirname \"$0\"`/%s"]], output_filename:gsub(".+[/\\]", "")) );
+popd
+]], cmd, ParaIO.GetCurDirectory(0), output_filename == "" and "" or format([[> "`dirname \"$0\"`/%s"]], output_filename:gsub(".+[/\\]", "")) );
 			-- convert to linux line ending
 			content = content:gsub("\r\n", "\n");
 			file:WriteString(content);
@@ -87,6 +97,8 @@ subfunc %s
 			if(file) then
 				file:read("*all");
 				file:close();
+			else
+				LOG.std(nil, "warn", "os.chmod", "%s failed", cmd_fullpath);
 			end
 		else
 			LOG.std(nil, "warn", "os.run", "failed to create file at %s", cmd_filename);
@@ -115,16 +127,41 @@ end
 
 local tempPrefix;
 local function GetTempFilePrefix()
-	if(not tempPrefix) then
-		tempPrefix = "temp/"..thisThreadName.."_";
+	if(os.GetPlatform()=="win32") then
+		if(not tempPrefix) then
+			tempPrefix = "temp/"..thisThreadName.."_";
+		end
+		return tempPrefix;
+	else
+		return os.maketempfile();
 	end
-	return tempPrefix;
+end
+
+-- return the file name of the temp file created. the caller is responsible to delete the file
+function os.maketempfile()
+	if(os.GetPlatform()=="win32") then
+		
+	else
+		-- under linux
+		local file = io.popen("mktemp", 'r');
+		if(file) then
+			local filename = file:read('*all')
+			file:close();
+			if(filename and filename~="") then
+				filename = filename:gsub("[\r\n]", ""):gsub("^%s+", ""):gsub("%s+$", "");
+				return filename;
+			end
+		else
+			LOG.std(nil, "warn", "os.maketempfile", "failed");
+		end
+	end
+	return "temp/"..thisThreadName.."_";
 end
 
 -- run command line using default OS shell script.
 -- @param cmd: any command lines (can be multiple lines), such as "dir \n svn info"
 -- @param bPrintToLog: true to print to log file, default to false
--- @param bDeleteTempFile: true to delete temp file, default to false
+-- @param bDeleteTempFile: true to delete temp file, default to true
 -- @return text string returned by the cmd as if it is standard output.
 function os.run(cmd, bPrintToLog, bDeleteTempFile)
 	if(os.GetPlatform()=="win32") then
@@ -148,8 +185,8 @@ function os.run(cmd, bPrintToLog, bDeleteTempFile)
 				commonlib.log(stdout_text);
 			end
 		end
-		if(bDeleteTempFile) then
-			ParaIO.DeleteFile(cmd_filename);
+		if(bDeleteTempFile~=false) then
+			ParaIO.DeleteFile(cmd_fullpath);
 		end
 		return stdout_text;
 	else
@@ -176,9 +213,11 @@ function os.run(cmd, bPrintToLog, bDeleteTempFile)
 				end
 				commonlib.log(stdout_text);
 			end
+		else
+			LOG.std(nil, "warn", "os.run", "can not run %s. check permission or duplicate access", cmd_fullpath);
 		end
-		if(bDeleteTempFile) then
-			ParaIO.DeleteFile(cmd_filename);
+		if(bDeleteTempFile~=false) then
+			ParaIO.DeleteFile(cmd_fullpath);
 		end
 		return stdout_text;
 	end
