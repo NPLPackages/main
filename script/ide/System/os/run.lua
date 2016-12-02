@@ -167,8 +167,8 @@ function os.run(cmd, bPrintToLog, bDeleteTempFile)
 	if(os.GetPlatform()=="win32") then
 		-- window 32 desktop platform uses batch command line
 		-- write command script to a temp file and redirect all of its output to another temp file
-
-		local cmd_fullpath, output_fullpath, output_filename = PrepareTempShellFile(cmd, GetTempFilePrefix().."temp.bat");
+		local cmd_path = GetTempFilePrefix().."temp.bat";
+		local cmd_fullpath, output_fullpath, output_filename = PrepareTempShellFile(cmd, cmd_path);
 		local stdout_text = nil;
 		-- we will use ShellExecuteEx to wait for the process to terminate and then retrieve output. 
 		if(ParaGlobal.ShellExecute("wait", cmd_fullpath, cmd_fullpath, "", 1)) then
@@ -185,8 +185,8 @@ function os.run(cmd, bPrintToLog, bDeleteTempFile)
 				commonlib.log(stdout_text);
 			end
 		end
-		if(bDeleteTempFile~=false) then
-			ParaIO.DeleteFile(cmd_fullpath);
+		if(bDeleteTempFile) then
+			ParaIO.DeleteFile(cmd_path);
 		end
 		return stdout_text;
 	else

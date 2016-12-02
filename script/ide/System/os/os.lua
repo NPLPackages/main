@@ -8,6 +8,7 @@ use the lib:
 NPL.load("(gl)script/ide/System/os/os.lua");
 echo(System.os.GetPlatform()=="win32");
 echo(System.os.args("bootstrapper", ""));
+echo(System.os.GetCurrentProcessId());
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/System/os/run.lua");
@@ -43,4 +44,12 @@ end
 -- @param default_value: default value
 function os.args(name, default_value)
 	return ParaEngine.GetAppCommandLineByParam(name, default_value);
+end
+
+-- get process id
+function os.GetCurrentProcessId()
+	if(not os.pid) then
+		os.pid = ParaEngine.GetAttributeObject():GetField("ProcessId", 0)
+	end
+	return os.pid;
 end
