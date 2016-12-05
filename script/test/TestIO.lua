@@ -201,6 +201,16 @@ function test_IO_SyncAssetFile_Async()
 	end
 end
 
+-- test IO write binary file
+function test_IO_WriteBinaryFile()
+	local file = ParaIO.open("temp/binaryfile.bin", "w");
+	if(file:IsValid()) then	
+		local data = "binary\0\0\0\0file";
+		file:write(data, #data);
+		file:close();
+	end
+end
+
 -- test file system watcher
 function test_io_FileSystemWatcher()
 	-- we will modify file changes under temp and model directory. 
