@@ -75,6 +75,11 @@ function ShapeBox:SetPointBox(x,y,z)
 	return self;
 end
 
+function ShapeBox:Offset(dx, dy, dz)
+	self.m_Min:add(dx, dy, dz);
+	self.m_Max:add(dx, dy, dz);
+end
+
 -- extend by point
 function ShapeBox:Extend(x,y,z)
 	self.m_Min[1] = math_min(self.m_Min[1], x);

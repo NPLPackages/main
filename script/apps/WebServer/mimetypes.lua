@@ -16,13 +16,21 @@ mimetypes.types_map = {
 	["html"] = "text/html",
 	["htm"] = "text/html",
 	["page"] = "text/html",
+	["npl"] = "text/html",
 	["lua"] = "text/html",
 	["css"] = "text/css",
 	["js"] = "application/javascript",
 	["woff"] = "application/octet-stream",
 	["woff2"] = "application/octet-stream",
 	["ttf"] = "application/octet-stream",
+	["stl"] = "application/octet-stream",
 };
+
+-- set mime type for a given file
+-- @param value: if nil, it will remove the type
+function mimetypes:set_type(name, value)
+	self.types_map[name] = value;
+end
 
 -- gets the mimetype from the filename's extension
 -- @param path: filepath 

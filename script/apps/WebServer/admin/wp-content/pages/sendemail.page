@@ -1,0 +1,53 @@
+<?npl
+--[[
+Title: send email
+Author: LiXizhi
+Date: 2016/11/18
+]]
+if(not is_admin()) then
+  exit("access denied")
+end
+
+if(is_ajax()) then
+	-- upload file
+	add_action('wp_ajax_sendemail', function()
+		local params = request:getparams();
+		
+		echo("your input:<br/>")
+		echo(commonlib.serialize(params));
+		echo("result:<br/>")
+
+
+		NPL.load("(gl)script/ide/System/os/GetUrl.lua");
+		System.os.SendEmail({
+			url=params.url, 
+			username=params.username, password=params.password, 
+			-- ca_info = "/path/to/certificate.pem",
+			from=params.from, to=params.to, cc=params.cc, 
+			subject = params.subject,
+			body = params.body,
+		}, resume);
+
+		local err, msg = yield();
+
+		echo(commonlib.serialize({err, msg}))
+    end)
+	return;
+end
+?>
+<div class="col-md-12">
+	<h3>This is an example of sending email via external smtp server</h3>
+	<form name="sendemail" class="form-horizontal" method="post" action="/ajax/sendemail?action=sendemail">
+		smtp server url:<input name="url" value="smtp://smtp.exmail.qq.com" class="form-control"/>
+		username:<input name="username" value="lixizhi@paraengine.com" class="form-control"/>
+		password:<input name="password" value="" class="form-control"/>
+		<hr/>
+		from address: <input name="from" value="lixizhi@paraengine.com" class="form-control"/>
+		to address: <input name="to" value="lixizhi@yeah.net" class="form-control"/>
+		cc: <input name="cc" value="xizhi.li@gmail.com" class="form-control"/>
+		subject: <input name="subject" value="title here" class="form-control"/>
+		body: <textarea rows="3" name="body" class="form-control" >any body context here. can be very long</textarea>
+		<hr/>
+		<input name="submit" type="submit" class="btn btn-primary" value="sendemail"/>
+	</form>
+</div>

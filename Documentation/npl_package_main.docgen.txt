@@ -12,7 +12,10 @@ script/ide/oo.lua
 script/ide/Encoding.lua
 script/ide/timer.lua
 script/ide/NPLExtension.lua
+script/ide/serialization.lua
+script/ide/System/os/os.lua
 script/ide/ParaEngineExtension.lua
+script/ide/System/os/GetUrl.lua
 script/ide/System/Util/CmdParser.lua
 script/ide/System/Core/Event.lua
 script/ide/System/Core/ToolBase.lua

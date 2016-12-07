@@ -12,11 +12,14 @@ end);
 _guihelper.MessageBox("Hello ParaEngine!", function(res)
 	if(res and res == _guihelper.DialogResult.Yes) then
 		-- pressed YES
-		_guihelper.CloseMessageBox(true); -- fast close without animation
+		-- _guihelper.CloseMessageBox(true); -- fast close without animation
+	else
+		echo("You clicked No")
+		commonlib.TimerManager.SetTimeout(function()  _guihelper.MessageBox("Cancel") end, 500)
 	end
 end, _guihelper.MessageBoxButtons.YesNo);
 
-_guihelper.MessageBox("Did you press OK?", function(res)
+_guihelper.MessageBox_Plain("Did you press OK?", function(res)
 	if(res and res == _guihelper.DialogResult.OK) then
 		-- pressed OK
 	end

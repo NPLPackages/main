@@ -9,7 +9,7 @@ NPL.load("(gl)script/ide/System/test/test_SystemOS.lua");
 local test_SystemOS = commonlib.gettable("System.Core.Test.test_SystemOS");
 ------------------------------------------------------------
 ]]
-NPL.load("(gl)script/ide/System");
+NPL.load("(gl)script/ide/System/System.lua");
 -- define a new class
 local test_SystemOS = commonlib.gettable("System.Core.Test.test_SystemOS");
 
@@ -25,3 +25,13 @@ function test_SystemOS:TestSendEmail()
 	}, function(err, msg) echo(msg) end);
 end
 
+function test_SystemOS:TestLinuxRunCommands()
+	NPL.load("(gl)script/ide/System/System.lua");
+	echo(System.os.run("ls -al | grep total\ngit | grep commit"));
+
+	-- async run command in worker thread
+	for i=1, 10 do
+		System.os.runAsync("dir", function(err, result)   echo(result)  end);
+	end
+	echo("waiting run async reply ...")
+end
