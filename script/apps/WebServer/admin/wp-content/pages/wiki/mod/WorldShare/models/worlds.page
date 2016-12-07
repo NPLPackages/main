@@ -1,0 +1,74 @@
+<?npl
+--[[
+Title: worlds
+Author: Big
+Date: 2016/12/07
+]]
+
+include_once(WIKI_ROOT.."models/abstract/multi_user_base.page");
+include_once(WIKI_ROOT.."models/user.page");
+
+local worlds = inherit(models.abstract.multi_user_base, gettable("models.worlds"));
+
+worlds.db_name = "worlds";
+
+function worlds:ctor()
+	--giturl
+	self:addfield("giturl", "string", false, 300);
+	--worlds name
+	self:addfield("worldsName", "table", false);
+end
+
+function worlds:get(params)
+	local err, query = self:validateQuery(params);
+	local userid;
+
+	self:ensureAuthenticated();
+	userid = self:getUserId();
+
+	if(not userid) then
+		return {error=-1,msg="user is not exist"};
+	end
+
+	if(not query["worldsName"]) then
+		return {error=-1,msg="worlds is nil"};
+	end
+
+	local worldsName = query["worldsName"];
+	local returnWorlds = {};
+
+	for key,value in ipairs(worlds) do
+		self:db():find({_id=userid,worldsName=value},resume);
+		local err,response = yield(true);
+
+		if(not err) then
+			if(response == {}) then
+				insertParams['giturl']     = "https://github.com/".."onedou".."/".."onedou";
+				insertParams['worldsName'] = value;
+
+				worlds._super.create(self, insertParams);
+			end
+		else
+			return {error=-1,msg="database err"};
+		end
+	end
+
+	self:db:find({_id=userid},resume);
+
+	local err,response = yield(true);
+
+	if(not err) then
+		return response;
+	else
+		return {error=-1,msg="database err"};
+	end
+end
+
+function worlds:create()
+end
+
+function worlds:delete()
+end
+
+function worlds:update()
+end
