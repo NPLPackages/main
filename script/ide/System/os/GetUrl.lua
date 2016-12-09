@@ -100,7 +100,9 @@ end
 function Request:SetResponse(msg)
 	self.response = msg;
 	if(msg and msg.data) then
-		if(self.options.json and msg.header) then
+		if(type(msg.header) == "string" and 
+			msg.header:lower():match("content%-type:%s*([^\r\n]+)") == "application/json") then
+
 			if(type(msg.data) == "string") then
 				msg.data = commonlib.Json.Decode(msg.data) or msg.data;
 			end
@@ -146,9 +148,13 @@ end
 -- return the content of a given url. 
 -- e.g.  echo(NPL.GetURL("www.paraengine.com"))
 -- @param url: url string or a options table of {url=string, postfields=string, form={key=value}, headers={key=value, "line strings"}, json=bool, qs={}}
--- if .json is true, code will be decoded as json.
+-- .form is optional key, value pair table.
+-- if .json is true, form will be encoded in json.
 -- if .qs is query string table
 -- if .postfields is a binary string to be passed in the request body. If this is present, form parameter will be ignored. 
+-- if .headers is a table, it contains additional http request headers to be added
+-- if .options is a table, it contains additional curl options, 
+--    such as {CURLOPT_CAINFO = string, CURLOPT_SSLCERT = string, CURLOPT_SSLKEY = string, etc}, see curl doc for more information. 
 -- @param callbackFunc: a function(rcode, msg, data) end, if nil, the function will not return until result is returned(sync call).
 --  `rcode` is http return code, such as 200 for success, which is same as `msg.rcode`
 --  `msg` is the raw HTTP message {header, code=0, rcode=200, data}
