@@ -648,7 +648,7 @@ function M:Index (node, table, key)
    if key.tag == 'String' and is_ident(key[1]) then
       -- ``table.key''. --
       self:acc "."
-      self:acc (field)
+      self:acc (key[1])
    else
       -- ``table [key]''. --
       self:acc   "["
