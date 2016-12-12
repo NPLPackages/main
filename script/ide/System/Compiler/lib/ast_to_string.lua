@@ -429,7 +429,7 @@ function M:Call (node, f)
    --| _ -> parens = true
    --end
 
-	if node[2].tag == 'String' or node[2].tag == 'Table' then
+	if #node == 2 and (node[2].tag == 'String' or node[2].tag == 'Table') then
 		parens = false
 	else parens = true
 	end
@@ -448,7 +448,7 @@ function M:Invoke (node, f, method)
    --| _ -> parens = true
    --end
 
-	if node[3].tag == 'String' or node[3].tag == 'Table' then
+	if #node == 3 and (node[3].tag == 'String' or node[3].tag == 'Table') then
 		parens = false
 	else parens = true
 	end
