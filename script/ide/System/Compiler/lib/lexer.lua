@@ -26,12 +26,18 @@
 --
 ----------------------------------------------------------------------
 
-module ("lexer", package.seeall)
+NPL.load("(gl)script/ide/System/Compiler/lib/metalua/table2.lua");
+NPL.load("(gl)script/ide/System/Compiler/lib/metalua/base.lua");
+NPL.load("(gl)script/ide/System/Compiler/lib/metalua/string2.lua");
 
-require 'metalua.runtime'
+--module ("lexer", package.seeall)
+local lexer = commonlib.inherit(nil, commonlib.gettable("lexer"))
+--require 'metalua.runtime'
 
 
-lexer = { alpha={ }, sym={ } }
+--lexer = { alpha={ }, sym={ } }
+lexer.alpha = { }
+lexer.sym = { }
 lexer.__index=lexer
 
 local debugf = function() end

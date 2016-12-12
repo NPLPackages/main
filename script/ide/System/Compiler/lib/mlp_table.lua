@@ -44,13 +44,14 @@
 --require "gg"
 --require "mll"
 --require "mlp_misc"
-
+local gg = commonlib.gettable("gg")
+local mlp = commonlib.inherit(nil, commonlib.gettable("mlp"))
 module ("mlp", package.seeall)
-
+--
 --------------------------------------------------------------------------------
 -- eta expansion to break circular dependencies:
 --------------------------------------------------------------------------------
-local function _expr (lx) return expr(lx) end
+local function _expr (lx) return mlp.expr(lx) end
 
 --------------------------------------------------------------------------------
 -- [[key] = value] table field definition
@@ -61,7 +62,7 @@ local bracket_field = gg.sequence{ "[", _expr, "]", "=", _expr, builder = "Pair"
 -- [id = value] or [value] table field definition;
 -- [[key]=val] are delegated to [bracket_field()]
 --------------------------------------------------------------------------------
-function table_field (lx)
+function mlp.table_field (lx)
    if lx:is_keyword (lx:peek(), "[") then return bracket_field (lx) end
    local e = _expr (lx)
    if lx:is_keyword (lx:peek(), "=") then 
@@ -79,7 +80,7 @@ local function _table_field(lx) return table_field(lx) end
 --------------------------------------------------------------------------------
 -- table constructor, without enclosing braces; returns a full table object
 --------------------------------------------------------------------------------
-table_content = gg.list { _table_field, 
+mlp.table_content = gg.list { _table_field, 
    separators = { ",", ";" }, terminators = "}", builder = "Table" }
 
 local function _table_content(lx) return table_content(lx) end
@@ -87,6 +88,6 @@ local function _table_content(lx) return table_content(lx) end
 --------------------------------------------------------------------------------
 -- complete table constructor including [{...}]
 --------------------------------------------------------------------------------
-table = gg.sequence{ "{", _table_content, "}", builder = fget(1) }
+mlp.table = gg.sequence{ "{", _table_content, "}", builder = fget(1) }
 
 

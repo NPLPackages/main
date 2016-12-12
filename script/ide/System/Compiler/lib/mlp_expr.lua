@@ -45,7 +45,7 @@
 -- * [mlp.func_val()]
 --
 --------------------------------------------------------------------------------
-
+--NPL.load("(gl)script/ide/System/Compiler/lib/metalua/base.lua");
 --require "gg"
 --require "mlp_misc"
 --require "mlp_table"
@@ -55,18 +55,21 @@
 -- These function wrappers (eta-expansions ctually) are just here to break
 -- some circular dependencies between mlp_xxx.lua files.
 --------------------------------------------------------------------------------
+local gg = commonlib.gettable("gg")
+local mlp = commonlib.inherit(nil, commonlib.gettable("mlp"))
+
 local function _expr (lx) return mlp.expr (lx)  end
 local function _table_content (lx) return mlp.table_content (lx) end
 local function block (lx) return mlp.block (lx) end
 local function stat  (lx) return mlp.stat (lx)  end
 
-module ("mlp", package.seeall)
+--module ("mlp", package.seeall)
 
 --------------------------------------------------------------------------------
 -- Non-empty expression list. Actually, this isn't used here, but that's
 -- handy to give to users.
 --------------------------------------------------------------------------------
-expr_list = gg.list{ _expr, separators = "," }
+mlp.expr_list = gg.list{ _expr, separators = "," }
 
 --------------------------------------------------------------------------------
 -- Helpers for function applications / method applications
@@ -79,8 +82,8 @@ func_args_content = gg.list {
 method_args = gg.multisequence{
    name = "function argument(s)",
    { "{", table_content, "}" },
-   { "(", func_args_content, ")", builder = fget(1) },
-   default = function(lx) local r = opt_string(lx); return r and {r} or { } end }
+   { "(", func_args_content, ")", builder = mlp.fget(1) },
+   default = function(lx) local r = mlp.opt_string(lx); return r and {r} or { } end }
 
 --------------------------------------------------------------------------------
 -- [func_val] parses a function, from opening parameters parenthese to
@@ -91,16 +94,16 @@ method_args = gg.multisequence{
 -- parser uses the latter, they will notice updates of [func_val]
 -- definitions.
 --------------------------------------------------------------------------------
-func_params_content = gg.list{ name="function parameters",
-   gg.multisequence{ { "...", builder = "Dots" }, default = id },
+mlp.func_params_content = gg.list{ name="function parameters",
+   gg.multisequence{ { "...", builder = "Dots" }, default = mlp.id },
    separators  = ",", terminators = {")", "|"} } 
 
 local _func_params_content = function (lx) return func_params_content(lx) end
 
-func_val = gg.sequence { name="function body",
-   "(", func_params_content, ")", block, "end", builder = "Function" }
+mlp.func_val = gg.sequence { name="function body",
+   "(", mlp.func_params_content, ")", block, "end", builder = "Function" }
 
-local _func_val = function (lx) return func_val(lx) end
+local _func_val = function (lx) return mlp.func_val (lx) end
 
 --------------------------------------------------------------------------------
 -- Default parser for primary expressions
@@ -151,18 +154,18 @@ end
 
 -- FIXME: set line number. In [expr] transformers probably
 
-expr = gg.expr { name = "expression",
+mlp.expr = gg.expr { name = "expression",
 
    primary = gg.multisequence{ name="expr primary",
       { "(", _expr, ")",           builder = "Paren" },
-      { "function", _func_val,     builder = fget(1) },
-      { "-{", splice_content, "}", builder = fget(1) },
-      { "+{", quote_content, "}",  builder = fget(1) }, 
+      { "function", _func_val,     builder = mlp.fget(1) },
+      { "-{", splice_content, "}", builder = mlp.fget(1) },
+      { "+{", quote_content, "}",  builder = mlp.fget(1) }, 
       { "nil",                     builder = "Nil" },
       { "true",                    builder = "True" },
       { "false",                   builder = "False" },
       { "...",                     builder = "Dots" },
-      table,
+      mlp.table,
       default = id_or_literal },
 
    infix = { name="expr infix op",
@@ -190,14 +193,14 @@ expr = gg.expr { name = "expression",
    suffix = { name="expr suffix op",
       { "[", _expr, "]", builder = function (tab, idx) 
          return {tag="Index", tab, idx[1]} end},
-      { ".", id, builder = function (tab, field) 
-         return {tag="Index", tab, id2string(field[1])} end },
+      { ".", mlp.id, builder = function (tab, field) 
+         return {tag="Index", tab, mlp.id2string(field[1])} end },
       { "(", func_args_content, ")", builder = function(f, args) 
          return {tag="Call", f, unpack(args[1])} end },
       { "{", _table_content, "}", builder = function (f, arg)
          return {tag="Call", f, arg[1]} end},
-      { ":", id, method_args, builder = function (obj, post)
-         return {tag="Invoke", obj, id2string(post[1]), unpack(post[2])} end},
+      { ":", mlp.id, method_args, builder = function (obj, post)
+         return {tag="Invoke", obj, mlp.id2string(post[1]), unpack(post[2])} end},
       { "+{", quote_content, "}", builder = function (f, arg) 
          return {tag="Call", f,  arg[1] } end },
       default = { name="opt_string_arg", parse = mlp.opt_string, builder = function(f, arg) 

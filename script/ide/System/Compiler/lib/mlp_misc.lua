@@ -49,8 +49,9 @@
 
 --require "gg"
 --require "mll"
-
-module ("mlp", package.seeall)
+local gg = commonlib.gettable("gg")
+local mlp = commonlib.inherit(nil, commonlib.gettable("mlp"))
+--module ("mlp", package.seeall)
 
 --------------------------------------------------------------------------------
 -- returns a function that takes the [n]th element of a table.
@@ -63,7 +64,7 @@ module ("mlp", package.seeall)
 -- a lightweight syntax.
 --------------------------------------------------------------------------------
 
-function fget (n, tag) 
+function mlp.fget (n, tag) 
    assert (type (n) == "number")
    if tag then
       assert (type (tag) == "string")
@@ -80,7 +81,7 @@ end
 -- Try to read an identifier (possibly as a splice), or return [false] if no
 -- id is found.
 --------------------------------------------------------------------------------
-function opt_id (lx)
+function mlp.opt_id (lx)
    local a = lx:peek();
    if lx:is_keyword (a, "-{") then
       local v = gg.sequence{ "-{", splice_content, "}" } (lx) [1]
@@ -95,14 +96,14 @@ end
 --------------------------------------------------------------------------------
 -- Mandatory reading of an id: causes an error if it can't read one.
 --------------------------------------------------------------------------------
-function id (lx)
-   return opt_id (lx) or gg.parse_error(lx,"Identifier expected")
+function mlp.id (lx)
+   return mlp.opt_id (lx) or gg.parse_error(lx,"Identifier expected")
 end
 
 --------------------------------------------------------------------------------
 -- Common helper function
 --------------------------------------------------------------------------------
-id_list = gg.list { primary = mlp.id, separators = "," }
+mlp.id_list = gg.list { primary = mlp.id, separators = "," }
 
 --------------------------------------------------------------------------------
 -- Symbol generator: [gensym()] returns a guaranteed-to-be-unique identifier.
@@ -113,7 +114,7 @@ id_list = gg.list { primary = mlp.id, separators = "," }
 --------------------------------------------------------------------------------
 local gensymidx = 0
 
-function gensym (arg)
+function mlp.gensym (arg)
    gensymidx = gensymidx + 1
    return { tag="Id", _G.string.format(".%i.%s", gensymidx, arg or "")}
 end
@@ -122,7 +123,7 @@ end
 -- Converts an identifier into a string. Hopefully one day it'll handle
 -- splices gracefully, but that proves quite tricky.
 --------------------------------------------------------------------------------
-function id2string (id)
+function mlp.id2string (id)
    --print("id2string:", disp.ast(id))
    if id.tag == "Id" then id.tag = "String"; return id
    elseif id.tag == "Splice" then
@@ -141,7 +142,7 @@ end
 --------------------------------------------------------------------------------
 -- Read a string, possibly spliced, or return an error if it can't
 --------------------------------------------------------------------------------
-function string (lx)
+function mlp.string (lx)
    local a = lx:peek()
    if lx:is_keyword (a, "-{") then
       local v = gg.sequence{ "-{", splice_content, "}" } (lx) [1]
@@ -156,7 +157,7 @@ end
 --------------------------------------------------------------------------------
 -- Try to read a string, or return false if it can't. No splice allowed.
 --------------------------------------------------------------------------------
-function opt_string (lx)
+function mlp.opt_string (lx)
    return lx:peek().tag == "String" and lx:next()
 end
    
@@ -175,11 +176,11 @@ local function _chunk (lx)
    if lx:peek().tag == 'Eof' then return { } -- handle empty files
    else 
       skip_initial_sharp_comment (lx)
-      local chunk = block (lx)
+      local chunk = mlp.block (lx)
       if lx:peek().tag ~= "Eof" then error "End-of-file expected" end
       return chunk
    end
 end
 
 -- chunk is wrapped in a sequence so that it has a "transformer" field.
-chunk = gg.sequence { _chunk, builder = unpack }
+mlp.chunk = gg.sequence { _chunk, builder = unpack }

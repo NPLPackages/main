@@ -33,8 +33,8 @@
 --
 --------------------------------------------------------------------------------
 
-module("gg", package.seeall)
-
+--module("gg", package.seeall)
+local gg = commonlib.inherit(nil, commonlib.gettable("gg"))
 -------------------------------------------------------------------------------
 -- parser metatable, which maps __call to method parse, and adds some
 -- error tracing boilerplate.
@@ -63,7 +63,7 @@ end
 -------------------------------------------------------------------------------
 -- Turn a table into a parser, mainly by setting the metatable.
 -------------------------------------------------------------------------------
-function make_parser(kind, p)
+function gg.make_parser(kind, p)
    p.kind = kind
    if not p.transformers then p.transformers = { } end
    function p.transformers:add (x)
@@ -77,7 +77,7 @@ end
 -- Return true iff [x] is a parser.
 -- If it's a gg-generated parser, return the name of its kind.
 -------------------------------------------------------------------------------
-function is_parser (x)
+function gg.is_parser (x)
    return type(x)=="function" or getmetatable(x)==parser_metatable and x.kind
 end
 
@@ -90,8 +90,8 @@ local function raw_parse_sequence (lx, p)
       e=p[i]
       if type(e) == "string" then 
          if not lx:is_keyword (lx:next(), e) then
-            parse_error (lx, "Keyword '%s' expected", e) end
-      elseif is_parser (e) then
+            gg.parse_error (lx, "Keyword '%s' expected", e) end
+      elseif gg.is_parser (e) then
          table.insert (r, e (lx)) 
       else 
          gg.parse_error (lx,"Sequence `%s': element #%i is not a string "..
@@ -132,7 +132,7 @@ end
 -------------------------------------------------------------------------------
 -- Generate a tracable parsing error (not implemented yet)
 -------------------------------------------------------------------------------
-function parse_error(lx, fmt, ...)
+function gg.parse_error(lx, fmt, ...)
    local li = lx:lineinfo_left() or {-1,-1,-1, "<unknown file>"}
    local msg  = string.format("line %i, char %i: "..fmt, li[1], li[2], ...)   
    local src = lx.src
@@ -174,8 +174,8 @@ end
 -- * [name] is set, if it wasn't in the input.
 --
 -------------------------------------------------------------------------------
-function sequence (p)
-   make_parser ("sequence", p)
+function gg.sequence (p)
+   gg.make_parser ("sequence", p)
 
    -------------------------------------------------------------------
    -- Parsing method
@@ -250,8 +250,8 @@ end --</sequence>
 -- * [kind] == "multisequence"
 --
 -------------------------------------------------------------------------------
-function multisequence (p)   
-   make_parser ("multisequence", p)
+function gg.multisequence (p)   
+   gg.make_parser ("multisequence", p)
 
    -------------------------------------------------------------------
    -- Add a sequence (might be just a config table for [gg.sequence])
@@ -259,8 +259,8 @@ function multisequence (p)
    function p:add (s)
       -- compile if necessary:
       local keyword = s[1]
-      if not is_parser(s) then sequence(s) end
-      if is_parser(s) ~= 'sequence' or type(keyword) ~= "string" then 
+      if not gg.is_parser(s) then gg.sequence(s) end
+      if gg.is_parser(s) ~= 'sequence' or type(keyword) ~= "string" then 
          if self.default then -- two defaults
             error ("In a multisequence parser, all but one sequences "..
                    "must start with a keyword")
@@ -361,8 +361,8 @@ end --</multisequence>
 --   [add] method
 --
 -------------------------------------------------------------------------------
-function expr (p)
-   make_parser ("expr", p)
+function gg.expr (p)
+   gg.make_parser ("expr", p)
 
    -------------------------------------------------------------------
    -- parser method.
@@ -512,7 +512,7 @@ function expr (p)
    if not p.primary then p.primary=p[1]; p[1]=nil end
    for _, t in ipairs{ "primary", "prefix", "infix", "suffix" } do
       if not p[t] then p[t] = { } end
-      if not is_parser(p[t]) then multisequence(p[t]) end
+      if not gg.is_parser(p[t]) then gg.multisequence(p[t]) end
    end
    function p:add(...) return self.primary:add(...) end
    return p
@@ -549,8 +549,8 @@ end --</expr>
 -- * [kind] == "list"
 --
 -------------------------------------------------------------------------------
-function list (p)
-   make_parser ("list", p)
+function gg.list (p)
+   gg.make_parser ("list", p)
 
    -------------------------------------------------------------------
    -- Parsing method
@@ -648,8 +648,8 @@ end --</list>
 -- * [keywords]
 --
 -------------------------------------------------------------------------------
-function onkeyword (p)
-   make_parser ("onkeyword", p)
+function gg.onkeyword (p)
+   gg.make_parser ("onkeyword", p)
 
    -------------------------------------------------------------------
    -- Parsing method
@@ -671,7 +671,7 @@ function onkeyword (p)
    if not p.keywords then p.keywords = { } end
    for _, x in ipairs(p) do
       if type(x)=="string" then table.insert (p.keywords, x)
-      else assert (not p.primary and is_parser (x)); p.primary = x end
+      else assert (not p.primary and gg.is_parser (x)); p.primary = x end
    end
    if not next (p.keywords) then 
       eprintf("Warning, no keyword to trigger gg.onkeyword") end
@@ -693,7 +693,7 @@ end --</onkeyword>
 -- Notice that tokens returned by lexer already carry lineinfo, therefore
 -- there's no need to add them, as done usually through transform() calls.
 -------------------------------------------------------------------------------
-function optkeyword (...)
+function gg.optkeyword (...)
    local args = {...}
    if type (args[1]) == "table" then 
       assert (#args == 1)
@@ -720,7 +720,7 @@ end
 -- The resulting parser returns whatever the argument parser does.
 --
 -------------------------------------------------------------------------------
-function with_lexer(new_lexer, parser)
+function gg.with_lexer(new_lexer, parser)
 
    -------------------------------------------------------------------
    -- Most gg functions take their parameters in a table, so it's 
@@ -728,7 +728,7 @@ function with_lexer(new_lexer, parser)
    -- its arguments in a list:
    -------------------------------------------------------------------
    if not parser and #new_lexer==2 and type(new_lexer[1])=='table' then
-      return with_lexer(unpack(new_lexer))
+      return gg.with_lexer(unpack(new_lexer))
    end
 
    -------------------------------------------------------------------

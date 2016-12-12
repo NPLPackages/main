@@ -13,11 +13,13 @@
 --
 ----------------------------------------------------------------------
 
-module ("mlp", package.seeall)
+--module ("mlp", package.seeall)
+local mlp = commonlib.inherit(nil, commonlib.gettable("mlp"))
+--require "lexer"
+NPL.load("(gl)script/ide/System/Compiler/lib/lexer.lua");
+local lexer = commonlib.gettable("lexer")
 
-require "lexer"
-
-local mlp_lexer = lexer.lexer:clone()
+local mlp_lexer = lexer:clone()
 
 local keywords = {
     "and", "break", "do", "else", "elseif",
@@ -29,4 +31,5 @@ local keywords = {
  
 for w in values(keywords) do mlp_lexer:add(w) end
 
-_M.lexer = mlp_lexer
+--_M.lexer = mlp_lexer
+mlp.lexer = mlp_lexer

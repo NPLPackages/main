@@ -27,11 +27,14 @@
 --------------------------------------------------------------------------------
 -- eta-expansions to break circular dependency
 --------------------------------------------------------------------------------
+local gg = commonlib.gettable("gg")
+local mlp = commonlib.inherit(nil, commonlib.gettable("mlp"))
+
 local expr      = function (lx) return mlp.expr     (lx) end
 local func_val  = function (lx) return mlp.func_val (lx) end
 local expr_list = function (lx) return mlp.expr_list(lx) end
 
-module ("mlp", package.seeall)
+--module ("mlp", package.seeall)
 
 --------------------------------------------------------------------------------
 -- List of all keywords that indicate the end of a statement block. Users are
@@ -50,12 +53,12 @@ end
 --------------------------------------------------------------------------------
 -- list of statements, possibly followed by semicolons
 --------------------------------------------------------------------------------
-block = gg.list {
+mlp.block = gg.list {
    name        = "statements block",
    terminators = block_terminators,
    primary     = function (lx)
       -- FIXME use gg.optkeyword()
-      local x = stat (lx)
+      local x = mlp.stat (lx)
       if lx:is_keyword (lx:peek(), ";") then lx:next() end
       return x
    end }
@@ -78,7 +81,7 @@ local return_expr_list_parser = gg.multisequence{
 -- for header, between [for] and [do] (exclusive).
 -- Return the `Forxxx{...} AST, without the body element (the last one).
 --------------------------------------------------------------------------------
-function for_header (lx)
+function mlp.for_header (lx)
    local var = mlp.id (lx)
    if lx:is_keyword (lx:peek(), "=") then 
       -- Fornum: only 1 variable
@@ -92,7 +95,7 @@ function for_header (lx)
       if a=="in" then var_list = { var, lineinfo = var.lineinfo } else
          -- several vars; first "," skipped, read other vars
          var_list = gg.list{ 
-            primary = id, separators = ",", terminators = "in" } (lx)
+            primary = mlp.id, separators = ",", terminators = "in" } (lx)
          _G.table.insert (var_list, 1, var) -- put back the first variable
          lx:next() -- skip "in"
       end
@@ -106,16 +109,16 @@ end
 --------------------------------------------------------------------------------
 local function fn_builder (list)
    local r = list[1]
-   for i = 2, #list do r = { tag="Index", r, id2string(list[i]) } end
+   for i = 2, #list do r = { tag="Index", r, mlp.id2string (list[i]) } end
    return r
 end
-local func_name = gg.list{ id, separators = ".", builder = fn_builder }
+local func_name = gg.list{ mlp.id, separators = ".", builder = fn_builder }
 
 --------------------------------------------------------------------------------
 -- Function def parser helper: ( : id )?
 --------------------------------------------------------------------------------
-local method_name = gg.onkeyword{ name = "method invocation", ":", id, 
-   transformers = { function(x) return x and id2string(x) end } }
+local method_name = gg.onkeyword{ name = "method invocation", ":", mlp.id, 
+   transformers = { function(x) return x and mlp.id2string (x) end } }
 
 --------------------------------------------------------------------------------
 -- Function def builder
@@ -149,7 +152,7 @@ end
 -- produce a list of (expr,block) pairs
 --------------------------------------------------------------------------------
 local elseifs_parser = gg.list {
-   gg.sequence { expr, "then", block },
+   gg.sequence { expr, "then", mlp.block },
    separators  = "elseif",
    terminators = { "else", "end" } }
 
@@ -159,7 +162,7 @@ local elseifs_parser = gg.list {
 local function assign_or_call_stat_parser (lx)
    local e = expr_list (lx)
    local a = lx:is_keyword(lx:peek())
-   local op = a and stat.assignments[a]
+   local op = a and mlp.stat.assignments[a]
    if op then
       --FIXME: check that [e] is a LHS
       lx:next()
@@ -181,37 +184,37 @@ end
 
 local_stat_parser = gg.multisequence{
    -- local function <name> <func_val>
-   { "function", id, func_val, builder = 
+   { "function", mlp.id, func_val, builder = 
       function(x) 
          local vars = { x[1], lineinfo = x[1].lineinfo }
          local vals = { x[2], lineinfo = x[2].lineinfo }
          return { tag="Localrec", vars, vals } 
       end },
    -- local <id_list> ( = <expr_list> )?
-   default = gg.sequence{ id_list, gg.onkeyword{ "=", expr_list },
+   default = gg.sequence{ mlp.id_list, gg.onkeyword{ "=", expr_list },
       builder = function(x) return {tag="Local", x[1], x[2] or { } } end } }
 
 --------------------------------------------------------------------------------
 -- statement
 --------------------------------------------------------------------------------
-stat = gg.multisequence { 
+mlp.stat = gg.multisequence { 
    name="statement",
-   { "do", block, "end", builder = 
+   { "do", mlp.block, "end", builder = 
       function (x) return { tag="Do", unpack (x[1]) } end },
-   { "for", for_header, "do", block, "end", builder = 
+   { "for", for_header, "do", mlp.block, "end", builder = 
       function (x) x[1][#x[1]+1] = x[2]; return x[1] end },
    { "function", func_name, method_name, func_val, builder=funcdef_builder },
-   { "while", expr, "do", block, "end", builder = "While" },
-   { "repeat", block, "until", expr, builder = "Repeat" },
-   { "local", local_stat_parser, builder = fget (1) },
-   { "return", return_expr_list_parser, builder = fget (1, "Return") },
+   { "while", expr, "do", mlp.block, "end", builder = "While" },
+   { "repeat", mlp.block, "until", expr, builder = "Repeat" },
+   { "local", local_stat_parser, builder = mlp.fget (1) },
+   { "return", return_expr_list_parser, builder = mlp.fget (1, "Return") },
    { "break", builder = function() return { tag="Break" } end },
-   { "-{", splice_content, "}", builder = fget(1) },
-   { "if", elseifs_parser, gg.onkeyword{ "else", block }, "end", 
+   { "-{", splice_content, "}", builder = mlp.fget (1) },
+   { "if", elseifs_parser, gg.onkeyword{ "else", mlp.block }, "end", 
      builder = if_builder },
    default = assign_or_call_stat_parser }
 
-stat.assignments = {
+mlp.stat.assignments = {
    ["="] = "Set" }
 
-function stat.assignments:add(k, v) self[k] = v end
+function mlp.stat.assignments:add(k, v) self[k] = v end

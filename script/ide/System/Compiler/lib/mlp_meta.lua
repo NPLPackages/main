@@ -107,7 +107,7 @@ end
 function quote_content (lx)
    local parser 
    if lx:is_keyword (lx:peek(2), ":") then -- +{parser: content }
-      parser = mlp[id(lx)[1]]
+      parser = mlp[mlp.id (lx)[1]]
       lx:next()
    else -- +{ content }
       parser = mlp.expr

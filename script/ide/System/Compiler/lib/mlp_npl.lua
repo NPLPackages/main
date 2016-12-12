@@ -1,7 +1,9 @@
+local mlp = commonlib.inherit(nil, commonlib.gettable("mlp"))
+
 local function block (lx) return mlp.block (lx) end
 local expr_list = function (lx) return mlp.expr_list(lx) end
 
-module ("mlp", package.seeall)
+--module ("mlp", package.seeall)
 
 --------------------------------------------------------------------------------
 -- NPL def statements
