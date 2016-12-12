@@ -6,6 +6,7 @@
 --------------------------------------------------------------------------------
 NPL.load("(gl)script/ide/System/Compiler/lib/metalua/table2.lua");
 NPL.load("(gl)script/ide/System/Compiler/lib/metalua/base.lua");
+NPL.load("(gl)script/ide/System/Compiler/lib/metalua/string2.lua");
 local M = { }
 M.__index = M
 
@@ -224,8 +225,7 @@ function M:Do (node)
 end
 
 function M:Set (node)
-   --match node with
-   --| `Set{ { `Index{ lhs, `String{ method } } }, 
+   -- `Set{ { `Index{ lhs, `String{ method } } }, 
            --{ `Function{ { `Id "self", ... } == params, body } } } 
          --if is_idx_stack (lhs) and is_ident (method) ->
       -- ``function foo:bar(...) ... end'' --
@@ -233,15 +233,16 @@ function M:Set (node)
 		and node[1][1].tag == 'Index' 
 		and type(node[2][1]) == 'table'
 		and node[2][1].tag == 'Function' 
-		and node[2][1][1][1] == 'self' 
+		and node[2][1][1][1][1] == 'self' 
 		and is_idx_stack(node[1][1][1])
+		and node[1][1][2].tag == 'String'
 		and is_ident(node[1][1][2][1]) then
 	
-	  print("in case 1")
+	  print("in set case 1")
 	  local lhs = node[1][1][1]
 	  local method = node[1][1][2][1]
-	  local params = node[2][1]
-	  local body = node[2][2]
+	  local params = node[2][1][1]
+	  local body = node[2][1][2]
 	  self:acc      "function "
       self:node     (lhs)
       self:acc      ":"
@@ -254,12 +255,12 @@ function M:Set (node)
       self:nldedent ()
       self:acc      "end"
 
- --  | `Set{ { lhs }, { `Function{ params, body } } } if is_idx_stack (lhs) ->
+ -- `Set{ { lhs }, { `Function{ params, body } } } if is_idx_stack (lhs) ->
 	elseif type(node[2][1]) == 'table'
 		and node[2][1].tag == 'Function' 
 		and is_idx_stack(node[1][1]) then
       -- ``function foo(...) ... end'' --
-	  print("in case 2")
+	  print("in set case 2")
 	  local lhs = node[1][1]
 	  local params = node[2][1][1]
 	  local body = node[2][1][2]
@@ -273,14 +274,14 @@ function M:Set (node)
       self:nldedent ()
       self:acc      "end"
 
- --  | `Set{ { `Id{ lhs1name } == lhs1, ... } == lhs, rhs } 
+ --  `Set{ { `Id{ lhs1name } == lhs1, ... } == lhs, rhs } 
  --        if not is_ident (lhs1name) ->
-     elseif node[1][1][1] and not is_ident(node[1][1][1]) then
+     elseif node[1][1].tag == 'Id' and not is_ident(node[1][1][1]) then
 	  -- ``foo, ... = ...'' when foo is *not* a valid identifier.
       -- In that case, the spliced 1st variable must get parentheses,
       -- to be distinguished from a statement splice.
       -- This cannot happen in a plain Lua AST.
-	    print("in case 3")
+	    print("in set case 3")
 		local lhs1 = node[1][1]
 		local lhs = node[1]
 		local rhs = node[2]
@@ -294,10 +295,10 @@ function M:Set (node)
 		self:acc      " = "
 		self:list     (rhs, ", ")
 
-  -- | `Set{ lhs, rhs } ->
+  --  `Set{ lhs, rhs } ->
      elseif #node == 2 then 
 	  -- ``... = ...'', no syntax sugar --
-		print("in final else")
+		print("in set final else")
 		local lhs = node[1]
 		local rhs = node[2]
 		self:list  (lhs, ", ")
@@ -494,8 +495,9 @@ function M:Table (node)
    if not node[1] then self:acc "{ }" else
       self:acc "{"
       if #node > 1 then self:nlindent () else self:acc " " end
+
+	  print("in table ast")
       for i, elem in ipairs (node) do
-         --match elem with
          --| `Pair{ `String{ key }, value } if is_ident (key) ->
             if elem.tag == 'Pair' 
 				and elem[1].tag == 'String' 
@@ -520,6 +522,7 @@ function M:Table (node)
          --| _ -> 
             ---- ``value''. --
 			else
+				print("in table final case")
 				self:node (elem)
 			end
          --end
