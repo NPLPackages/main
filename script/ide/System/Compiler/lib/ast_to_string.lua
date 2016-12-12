@@ -119,7 +119,7 @@ local op_preprec = {
    { "concat" }, 
    { "add", "sub" },
    { "mul", "div", "mod" },
-   { "unary", "not", "len" },
+   { "unm", "not", "len" },
    { "pow" },
    { "index" } }
 
@@ -142,7 +142,7 @@ local op_symbol = {
    div    = " / ",   mod     = " % ",   pow     = " ^ ",
    concat = " .. ",  eq      = " == ",  ne      = " ~= ",
    lt     = " < ",   le      = " <= ",  ["and"] = " and ",
-   ["or"] = " or ",  ["not"] = "not ",  len     = "# " }
+   ["or"] = " or ",  ["not"] = "not ",  len     = "# " , unm	= "-"}
 
 --------------------------------------------------------------------------------
 -- Accumulate the source representation of AST `node' in
@@ -238,7 +238,7 @@ function M:Set (node)
 		and node[1][1][2].tag == 'String'
 		and is_ident(node[1][1][2][1]) then
 	
-	  print("in set case 1")
+	  --print("in set case 1")
 	  local lhs = node[1][1][1]
 	  local method = node[1][1][2][1]
 	  local params = node[2][1][1]
@@ -260,7 +260,7 @@ function M:Set (node)
 		and node[2][1].tag == 'Function' 
 		and is_idx_stack(node[1][1]) then
       -- ``function foo(...) ... end'' --
-	  print("in set case 2")
+	  --print("in set case 2")
 	  local lhs = node[1][1]
 	  local params = node[2][1][1]
 	  local body = node[2][1][2]
@@ -281,7 +281,7 @@ function M:Set (node)
       -- In that case, the spliced 1st variable must get parentheses,
       -- to be distinguished from a statement splice.
       -- This cannot happen in a plain Lua AST.
-	    print("in set case 3")
+	    --print("in set case 3")
 		local lhs1 = node[1][1]
 		local lhs = node[1]
 		local rhs = node[2]
@@ -298,7 +298,7 @@ function M:Set (node)
   --  `Set{ lhs, rhs } ->
      elseif #node == 2 then 
 	  -- ``... = ...'', no syntax sugar --
-		print("in set final else")
+		--print("in set final else")
 		local lhs = node[1]
 		local rhs = node[2]
 		self:list  (lhs, ", ")
@@ -496,7 +496,7 @@ function M:Table (node)
       self:acc "{"
       if #node > 1 then self:nlindent () else self:acc " " end
 
-	  print("in table ast")
+	  --print("in table ast")
       for i, elem in ipairs (node) do
          --| `Pair{ `String{ key }, value } if is_ident (key) ->
             if elem.tag == 'Pair' 
@@ -522,7 +522,7 @@ function M:Table (node)
          --| _ -> 
             ---- ``value''. --
 			else
-				print("in table final case")
+				--print("in table final case")
 				self:node (elem)
 			end
          --end
@@ -575,7 +575,7 @@ function M:Op (node, op, a, b)
       --| _ -> left_paren = false
       --end
 
-	  if a.tag == 'Op' and op_prec[op] >= op_prec[a[1]] then
+	  if a.tag == 'Op' and a[1] and op_prec[op] >= op_prec[a[1]] then
 			left_paren = true
 	  else
 			left_paren = false
@@ -584,8 +584,7 @@ function M:Op (node, op, a, b)
       --| `Op{ op_b, ...} if op_prec[op] >= op_prec[op_b] -> right_paren = true
       --| _ -> right_paren = false
       --end
-
-	  if b.tag == 'Op' and op_prec[op] >= op_prec[b[1]] then
+	  if b.tag == 'Op' and b[1] and op_prec[op] >= op_prec[b[1]] then
 			right_paren = true
 	  else
 			right_paren = false
