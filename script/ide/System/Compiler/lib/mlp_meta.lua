@@ -54,7 +54,7 @@ function mlp.quote (t)
          local sp = t[1]
          return sp
       elseif t.tag then
-         _G.table.insert (mt, { tag = "Pair", quote "tag", quote (t.tag) })
+         _G.table.insert (mt, { tag = "Pair", mlp.quote "tag", mlp.quote (t.tag) })
       end
       for _, v in ipairs (t) do
          _G.table.insert (mt, mlp.quote (v))
@@ -78,6 +78,7 @@ mlp.in_a_quote = false
 -- Parse the inside of a "-{ ... }"
 --------------------------------------------------------------------------------
 function mlp.splice_content (lx)
+	print("I'm in mlp splice_content")
    local parser_name = "expr"
    if lx:is_keyword (lx:peek(2), ":") then
       local a = lx:next()
@@ -90,18 +91,11 @@ function mlp.splice_content (lx)
       --printf("SPLICE_IN_QUOTE:\n%s", _G.table.tostring(ast, "nohash", 60))
       return { tag="Splice", ast }
    else
-      -- try to compare two ast, translate them into string first
-	  -- TODO: need a more robust comparision between two asts
-	  ast_str = _G.table.tostring(ast, "nohash", 60)  
-      if parser_name == "expr" then 
-         if ast_str == "`Call{ `Index{ `Id \"mlp\", `String \"emit\" } }" then
-            ast = {tag="Table", {tag="Pair", {tag="String", "tag"}, {tag="String", "Current"}}}  -- special node in ast
-         end
-         ast = { { tag="Return", ast } }
+      if parser_name == "expr" then ast = { { tag="Return", ast } }
       elseif parser_name == "stat"  then ast = { ast }
       elseif parser_name ~= "block" then
          error ("splice content must be an expr, stat or block") end
-      --printf("EXEC THIS SPLICE:\n%s", _G.table.tostring(ast, "nohash", 60))
+      printf("EXEC THIS SPLICE:\n%s", _G.table.tostring(ast, "nohash", 60))
       return mlp.splice (ast)
    end
 end

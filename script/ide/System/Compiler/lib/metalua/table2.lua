@@ -64,12 +64,12 @@ end
 --    return table.ifold (f, acc, 2, false, ...)
 -- end
 
-function table.izip(...)
+function table.izip (...)
    local function g(...) return {...} end
-   return table.imap(g, ...)
+   return table.imap (g, ...)
 end
 
-function table.ifilter(f, t)
+function table.ifilter (f, t)
    local yes, no = { }, { }
    for i=1,#t do table.insert (f(t[i]) and yes or no, t[i]) end
    return yes, no
@@ -106,16 +106,16 @@ end
 function table.iall (f, ...)
    local result = true
    local function g(...) return not f(...) end
-   return not table.iforeach(g, ...)
+   return not table.iforeach (g, ...)
    --return result
 end
 
 function table.iany (f, ...)
    local function g(...) return not f(...) end
-   return not table.iall(g, ...)
+   return not table.iall (g, ...)
 end
 
-function table.shallow_copy(x)
+function table.shallow_copy (x)
    local y={ }
    for k, v in pairs(x) do y[k]=v end
    return y
@@ -123,7 +123,7 @@ end
 
 -- Warning, this is implementation dependent: it relies on
 -- the fact the [next()] enumerates the array-part before the hash-part.
-function table.cat(...)
+function table.cat (...)
    local y={ }
    for x in values{...} do
       -- cat array-part
@@ -136,7 +136,7 @@ function table.cat(...)
    return y
 end
 
-function table.deep_copy(x) 
+function table.deep_copy (x) 
    local tracker = { }
    local function aux (x)
       if type(x) == "table" then
@@ -151,18 +151,18 @@ function table.deep_copy(x)
    return aux(x)
 end
 
-function table.override(dst, src)
+function table.override (dst, src)
    for k, v in pairs(src) do dst[k] = v end
    for i = #src+1, #dst   do dst[i] = nil end
    return dst
 end
 
 
-function table.range(a,b,c)
+function table.range (a,b,c)
    if not b then assert(not(c)); b=a; a=1
    elseif not c then c = (b>=a) and 1 or -1 end
    local result = { }
-   for i=a, b, c do table.insert(result, i) end
+   for i=a, b, c do table.insert (result, i) end
    return result
 end
 

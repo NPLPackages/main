@@ -11,7 +11,46 @@ NPL.load("(gl)script/ide/System/Compiler/lib/mlp_expr.lua");
 NPL.load("(gl)script/ide/System/Compiler/lib/mlp_stat.lua");
 NPL.load("(gl)script/ide/System/Compiler/lib/mlp_ext.lua");
 
-local nplp = commonlib.inherit(commonlib.gettable("System.Compiler.lib.mlp"), commonlib.gettable("System.Compiler.nplp"))
+nplp = commonlib.inherit(commonlib.gettable("System.Compiler.lib.mlp"), commonlib.gettable("System.Compiler.nplp"))
+----------------------------------------------------------------------
+--Override
+----------------------------------------------------------------------
+function nplp.splice_content (lx)
+	print("I'm in nplp splice_content")
+   local parser_name = "expr"
+   if lx:is_keyword (lx:peek(2), ":") then
+      local a = lx:next()
+      lx:next() -- skip ":"
+      assert (a.tag=="Id", "Invalid splice parser name")
+      parser_name = a[1]
+   end
+   local ast = nplp[parser_name](lx)
+   if nplp.in_a_quote then
+      --printf("SPLICE_IN_QUOTE:\n%s", _G.table.tostring(ast, "nohash", 60))
+      return { tag="Splice", ast }
+   else
+      -- try to compare two ast, translate them into string first
+	  -- TODO: need a more robust comparision between two asts
+	  ast_str = _G.table.tostring(ast, "nohash", 60)
+	  print(ast_str)  
+      if parser_name == "expr" then 
+         if ast_str == "`Call{ `Index{ `Id \"nplp\", `String \"emit\" } }" then
+            ast = {tag="Table", {tag="Pair", {tag="String", "tag"}, {tag="String", "Current"}}}  -- special node in ast
+         end
+         ast = { { tag="Return", ast } }
+      elseif parser_name == "stat"  then ast = { ast }
+      elseif parser_name ~= "block" then
+         error ("splice content must be an expr, stat or block") end
+      --printf("EXEC THIS SPLICE:\n%s", _G.table.tostring(ast, "nohash", 60))
+      return nplp.splice (ast)
+   end
+end
+
+----------------------------------------------------------------------
+--Replace splice structure -{} with new nplp parser
+----------------------------------------------------------------------
+nplp.stat:del("-{")
+nplp.stat:add({ "-{", nplp.splice_content, "}", builder = nplp.fget (1) })
 
 --------------------------------------------------------------------------------
 -- NPL def statements
@@ -38,16 +77,13 @@ local function transformer_maker(s)
    		else
    			res_ast=tast
    		end
-
    		return res_ast
    	end
 
    	local function transformer(ast)
    		el, b = ast[1], ast[2]
    		func_call={tag="Call", {tag="Id", s}, unpack(el)}
-
    		nast={func_call, traverse_and_replace(template_ast, ast[2])}
-
    		return nast
    	end
 
