@@ -15,7 +15,6 @@ local table        = _G.table
 NPL.load("(gl)script/ide/System/Compiler/lib/metalua/base.lua");
 NPL.load("(gl)script/ide/System/Compiler/lib/metalua/string2.lua");
 NPL.load("(gl)script/ide/System/Compiler/lib/metalua/table2.lua");
-NPL.load("(gl)script/ide/System/Compiler/lib/mlc.lua");
 NPL.load("(gl)script/ide/System/Compiler/lib/lexer.lua");
 NPL.load("(gl)script/ide/System/Compiler/lib/gg.lua");
 NPL.load("(gl)script/ide/System/Compiler/lib/mlp_lexer.lua");
@@ -52,9 +51,13 @@ function nplp.compile(src_filename)
 
 	local ast = src_to_ast(src)
 
-	table.print(ast, 80, "nohash")
+	--table.print(ast, 80, "nohash")
 
 	compiled_src=ast_to_string(ast)
+
+	local dst_file = assert(io.open ('result.lua', 'w'))
+	dst_file:write(compiled_src)
+	dst_file:close()
 	print(compiled_src)
 end
 

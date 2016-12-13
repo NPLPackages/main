@@ -201,7 +201,7 @@ mlp.stat = gg.multisequence {
    name="statement",
    { "do", mlp.block, "end", builder = 
       function (x) return { tag="Do", unpack (x[1]) } end },
-   { "for", for_header, "do", mlp.block, "end", builder = 
+   { "for", mlp.for_header, "do", mlp.block, "end", builder = 
       function (x) x[1][#x[1]+1] = x[2]; return x[1] end },
    { "function", func_name, method_name, func_val, builder=funcdef_builder },
    { "while", expr, "do", mlp.block, "end", builder = "While" },
@@ -209,7 +209,7 @@ mlp.stat = gg.multisequence {
    { "local", local_stat_parser, builder = mlp.fget (1) },
    { "return", return_expr_list_parser, builder = mlp.fget (1, "Return") },
    { "break", builder = function() return { tag="Break" } end },
-   { "-{", splice_content, "}", builder = mlp.fget (1) },
+   { "-{", mlp.splice_content, "}", builder = mlp.fget (1) },
    { "if", elseifs_parser, gg.onkeyword{ "else", mlp.block }, "end", 
      builder = if_builder },
    default = assign_or_call_stat_parser }

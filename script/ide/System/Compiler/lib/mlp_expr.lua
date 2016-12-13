@@ -74,15 +74,15 @@ mlp.expr_list = gg.list{ _expr, separators = "," }
 --------------------------------------------------------------------------------
 -- Helpers for function applications / method applications
 --------------------------------------------------------------------------------
-func_args_content = gg.list { 
+mlp.func_args_content = gg.list { 
    name = "function arguments",
    _expr, separators = ",", terminators = ")" } 
 
 -- Used to parse methods
-method_args = gg.multisequence{
+mlp.method_args = gg.multisequence{
    name = "function argument(s)",
-   { "{", table_content, "}" },
-   { "(", func_args_content, ")", builder = mlp.fget(1) },
+   { "{", mlp.table_content, "}" },
+   { "(", mlp.func_args_content, ")", builder = mlp.fget(1) },
    default = function(lx) local r = mlp.opt_string(lx); return r and {r} or { } end }
 
 --------------------------------------------------------------------------------
@@ -195,13 +195,13 @@ mlp.expr = gg.expr { name = "expression",
          return {tag="Index", tab, idx[1]} end},
       { ".", mlp.id, builder = function (tab, field) 
          return {tag="Index", tab, mlp.id2string(field[1])} end },
-      { "(", func_args_content, ")", builder = function(f, args) 
+      { "(", mlp.func_args_content, ")", builder = function(f, args) 
          return {tag="Call", f, unpack(args[1])} end },
       { "{", _table_content, "}", builder = function (f, arg)
          return {tag="Call", f, arg[1]} end},
-      { ":", mlp.id, method_args, builder = function (obj, post)
+      { ":", mlp.id, mlp.method_args, builder = function (obj, post)
          return {tag="Invoke", obj, mlp.id2string(post[1]), unpack(post[2])} end},
-      { "+{", quote_content, "}", builder = function (f, arg) 
+      { "+{", mlp.quote_content, "}", builder = function (f, arg) 
          return {tag="Call", f,  arg[1] } end },
       default = { name="opt_string_arg", parse = mlp.opt_string, builder = function(f, arg) 
          return {tag="Call", f, arg } end } } }
