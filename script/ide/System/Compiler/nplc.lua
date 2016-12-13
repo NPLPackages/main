@@ -1,7 +1,16 @@
+----------------------------------------------------------------------
+-- NPL Compiler
+-- the goal of NPL Compiler is to extend NPL Syntax
+-- compiling procedure: source -> ast -> source
+-- Author:Zhiyuan
+-- Date: 2016-12-13
+----------------------------------------------------------------------
+
 NPL.load("(gl)script/ide/System/Compiler/nplp.lua");
 NPL.load("(gl)script/ide/System/Compiler/nplgen.lua");
 
-local nplp = commonlib.gettable("System.Compiler.nplp")
+--Set nplp as global, for futher use in -{}
+nplp = commonlib.gettable("System.Compiler.nplp")
 local nplgen = commonlib.gettable("System.Compiler.nplgen")
 local nplc = commonlib.inherit(nil, commonlib.gettable("System.Compiler.nplc"))
 
@@ -19,5 +28,4 @@ function nplc.compile(src_filename)
 	local dst_file = assert(io.open ('result.lua', 'w'))
 	dst_file:write(compiled_src)
 	dst_file:close()
-	print(compiled_src)
 end
