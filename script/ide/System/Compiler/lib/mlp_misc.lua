@@ -84,7 +84,7 @@ end
 function mlp.opt_id (lx)
    local a = lx:peek();
    if lx:is_keyword (a, "-{") then
-      local v = gg.sequence{ "-{", splice_content, "}" } (lx) [1]
+      local v = gg.sequence{ "-{", mlp.splice_content, "}" } (lx) [1]
       if v.tag ~= "Id" and v.tag ~= "Splice" then
          gg.parse_error(lx,"Bad id splice")
       end
@@ -145,7 +145,7 @@ end
 function mlp.string (lx)
    local a = lx:peek()
    if lx:is_keyword (a, "-{") then
-      local v = gg.sequence{ "-{", splice_content, "}" } (lx) [1]
+      local v = gg.sequence{ "-{", mlp.splice_content, "}" } (lx) [1]
       if v.tag ~= "" and v.tag ~= "Splice" then
          gg.parse_error(lx,"Bad string splice")
       end

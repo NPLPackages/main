@@ -497,7 +497,7 @@ function gg.expr (p)
       -- extensions as long as we're able to fetch more at
       -- this precedence level.
       ------------------------------------------------------
-      local e = handle_prefix()
+      local e = handle_prefix ()
       repeat
          local x = handle_suffix (e); e = x or e
          local y = handle_infix   (e); e = y or e
