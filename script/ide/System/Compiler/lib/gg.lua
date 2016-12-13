@@ -34,30 +34,31 @@
 --------------------------------------------------------------------------------
 
 --module("gg", package.seeall)
-local gg = commonlib.inherit(nil, commonlib.gettable("gg"))
+local gg = commonlib.inherit(nil, commonlib.gettable("System.Compiler.lib.gg"))
 -------------------------------------------------------------------------------
 -- parser metatable, which maps __call to method parse, and adds some
 -- error tracing boilerplate.
 -------------------------------------------------------------------------------
+-- TODO: trace bugs during meta compiling 
 local parser_metatable = { }
 function parser_metatable.__call (parser, lx, ...)
    --printf ("Call parser %q of type %q", parser.name or "?", parser.kind)
-   if mlc.metabugs then 
+  -- if mlc.metabugs then 
       return parser:parse (lx, ...) 
       --local x = parser:parse (lx, ...) 
       --printf ("Result of parser %q: %s", 
       --        parser.name or "?",
       --        _G.table.tostring(x, "nohash", 80))
       --return x
-   else
-      local li = lx:lineinfo_right() or { "?", "?", "?", "?" }
-      local status, ast = pcall (parser.parse, parser, lx, ...)      
-      if status then return ast else
-         error (string.format ("%s\n - (l.%s, c.%s, k.%s) in parser %s", 
-                               ast:strmatch "gg.lua:%d+: (.*)" or ast,
-                               li[1], li[2], li[3], parser.name or parser.kind))
-      end
-   end
+   --else
+      --local li = lx:lineinfo_right() or { "?", "?", "?", "?" }
+      --local status, ast = pcall (parser.parse, parser, lx, ...)      
+      --if status then return ast else
+         --error (string.format ("%s\n - (l.%s, c.%s, k.%s) in parser %s", 
+                               --ast:strmatch "gg.lua:%d+: (.*)" or ast,
+                               --li[1], li[2], li[3], parser.name or parser.kind))
+      --end
+   --end
 end
 
 -------------------------------------------------------------------------------

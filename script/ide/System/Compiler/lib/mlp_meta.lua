@@ -21,8 +21,8 @@
 --
 --------------------------------------------------------------------------------
 
-local mlp = commonlib.inherit(nil, commonlib.gettable("mlp"))
-local mlc = commonlib.gettable("mlc")
+local mlp = commonlib.inherit(nil, commonlib.gettable("System.Compiler.lib.mlp"))
+local nplgen = commonlib.gettable("System.Compiler.nplgen")
 --------------------------------------------------------------------------------
 -- External splicing: compile an AST into a chunk, load and evaluate
 -- that chunk, and replace the chunk by its result (which must also be
@@ -33,7 +33,7 @@ function mlp.splice (ast)
    --print "say hello from splice -1"
    --local f = mlc.function_of_ast (ast, '=splice')
    --print "say hello from splice -2"
-   local s = ast_to_string (ast)
+   local s = nplgen.ast_to_str (ast)
    local f = loadstring (s)
    local result=f()
    return result

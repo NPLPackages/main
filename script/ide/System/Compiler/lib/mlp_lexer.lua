@@ -12,12 +12,11 @@
 -- for details.
 --
 ----------------------------------------------------------------------
-
---module ("mlp", package.seeall)
-local mlp = commonlib.inherit(nil, commonlib.gettable("mlp"))
---require "lexer"
 NPL.load("(gl)script/ide/System/Compiler/lib/lexer.lua");
-local lexer = commonlib.gettable("lexer")
+--module ("mlp", package.seeall)
+local mlp = commonlib.inherit(nil, commonlib.gettable("System.Compiler.lib.mlp"))
+--require "lexer"
+local lexer = commonlib.gettable("System.Compiler.lib.lexer")
 
 local mlp_lexer = lexer:clone()
 

@@ -44,9 +44,9 @@
 --require "gg"
 --require "mll"
 --require "mlp_misc"
-local gg = commonlib.gettable("gg")
-local mlp = commonlib.inherit(nil, commonlib.gettable("mlp"))
-module ("mlp", package.seeall)
+local gg = commonlib.gettable("System.Compiler.lib.gg")
+local mlp = commonlib.inherit(nil, commonlib.gettable("System.Compiler.lib.mlp"))
+
 --
 --------------------------------------------------------------------------------
 -- eta expansion to break circular dependencies:
@@ -67,15 +67,15 @@ function mlp.table_field (lx)
    local e = _expr (lx)
    if lx:is_keyword (lx:peek(), "=") then 
       lx:next(); -- skip the "="
-      local key = id2string(e)
-      local val = _expr(lx)
+      local key = mlp.id2string (e)
+      local val = _expr (lx)
       local r = { tag="Pair", key, val } 
       r.lineinfo = { first = key.lineinfo.first, last = val.lineinfo.last }
       return r
    else return e end
 end
 
-local function _table_field(lx) return table_field(lx) end
+local function _table_field (lx) return mlp.table_field (lx) end
 
 --------------------------------------------------------------------------------
 -- table constructor, without enclosing braces; returns a full table object
@@ -83,11 +83,11 @@ local function _table_field(lx) return table_field(lx) end
 mlp.table_content = gg.list { _table_field, 
    separators = { ",", ";" }, terminators = "}", builder = "Table" }
 
-local function _table_content(lx) return table_content(lx) end
+local function _table_content (lx) return mlp.table_content (lx) end
 
 --------------------------------------------------------------------------------
 -- complete table constructor including [{...}]
 --------------------------------------------------------------------------------
-mlp.table = gg.sequence{ "{", _table_content, "}", builder = fget(1) }
+mlp.table = gg.sequence{ "{", _table_content, "}", builder = mlp.fget (1) }
 
 

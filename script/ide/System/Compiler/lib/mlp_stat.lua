@@ -27,8 +27,8 @@
 --------------------------------------------------------------------------------
 -- eta-expansions to break circular dependency
 --------------------------------------------------------------------------------
-local gg = commonlib.gettable("gg")
-local mlp = commonlib.inherit(nil, commonlib.gettable("mlp"))
+local gg = commonlib.gettable("System.Compiler.lib.gg")
+local mlp = commonlib.inherit(nil, commonlib.gettable("System.Compiler.lib.mlp"))
 
 local expr      = function (lx) return mlp.expr     (lx) end
 local func_val  = function (lx) return mlp.func_val (lx) end

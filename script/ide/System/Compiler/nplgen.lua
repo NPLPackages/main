@@ -7,10 +7,13 @@
 NPL.load("(gl)script/ide/System/Compiler/lib/metalua/table2.lua");
 NPL.load("(gl)script/ide/System/Compiler/lib/metalua/base.lua");
 NPL.load("(gl)script/ide/System/Compiler/lib/metalua/string2.lua");
+
+local nplgen = commonlib.inherit(nil, commonlib.gettable("System.Compiler.nplgen"))
+
 local M = { }
 M.__index = M
 
-ast_to_string = function(x) return M.run(x) end
+nplgen.ast_to_str = function(x) return M.run(x) end
 
 --------------------------------------------------------------------------------
 -- Instanciate a new AST->source synthetizer

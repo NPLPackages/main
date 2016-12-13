@@ -5,7 +5,8 @@
 --------------------------------------------------------------------------------
 
 --module ("mlp", package.seeall)
-local mlp = commonlib.inherit(nil, commonlib.gettable("mlp"))
+local gg = commonlib.gettable("System.Compiler.lib.gg")
+local mlp = commonlib.inherit(nil, commonlib.gettable("System.Compiler.lib.mlp"))
 
 --------------------------------------------------------------------------------
 -- Alebraic Datatypes

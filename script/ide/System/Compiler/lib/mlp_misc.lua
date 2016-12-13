@@ -49,8 +49,8 @@
 
 --require "gg"
 --require "mll"
-local gg = commonlib.gettable("gg")
-local mlp = commonlib.inherit(nil, commonlib.gettable("mlp"))
+local gg = commonlib.gettable("System.Compiler.lib.gg")
+local mlp = commonlib.inherit(nil, commonlib.gettable("System.Compiler.lib.mlp"))
 --module ("mlp", package.seeall)
 
 --------------------------------------------------------------------------------

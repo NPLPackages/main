@@ -55,8 +55,8 @@
 -- These function wrappers (eta-expansions ctually) are just here to break
 -- some circular dependencies between mlp_xxx.lua files.
 --------------------------------------------------------------------------------
-local gg = commonlib.gettable("gg")
-local mlp = commonlib.inherit(nil, commonlib.gettable("mlp"))
+local gg = commonlib.gettable("System.Compiler.lib.gg")
+local mlp = commonlib.inherit(nil, commonlib.gettable("System.Compiler.lib.mlp"))
 
 local function _expr (lx) return mlp.expr (lx)  end
 local function _table_content (lx) return mlp.table_content (lx) end
