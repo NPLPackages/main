@@ -16,12 +16,12 @@ function worlds:ctor()
 	self:addfield("userid","number",false,10);
 	--giturl
 	self:addfield("giturl", "string", false, 300);
-	--input worlds name table
-	self:addfield("worldsNameForm", "table", false);
 	--worlds name
 	self:addfield("worldsName","string",false,30);
 	--worlds modify date
-	self:addfield("date","string",false,30);
+	self:addfield("revision","string",false,30);
+	--input worlds name table
+	-- self:addfield("worldsNameForm", "table", false);
 end
 
 function worlds:get(params)
@@ -44,6 +44,40 @@ function worlds:get(params)
 		return response;
 	else
 		return {error=-1,msg="database err"};
+	end
+end
+
+function worlds:api_refresh(params)
+	local err, query = self:validateQuery(params);
+	local userid;
+
+	self:ensureAuthenticated();
+	userid = self:getUserId();
+
+	if(not userid) then
+		return {error=-1,msg="user is not exist"};
+	end
+
+	local userinfor = models.user:new():get({});
+
+	self:db():findOne({["+userid+worldsName"] = {userid,query.worldsName}},resume);
+	local err,response = yield(true);
+
+	if(not err) then
+		-- log({"response",response});
+		if(not response or not next(response)) then
+			local insertParams      = {};
+			insertParams.worldsName = query.worldsName;
+			insertParams.giturl     = "https://github.com/"..userinfor["login"].."/"..query.worldsName;
+			insertParams.revision   = query.revision;
+
+			worlds._super.create(self, insertParams);
+		else
+			self:db():updateOne({["+userid+worldsName"] = {userid,query.worldsName}},
+								 {revision = query.revision},resume);
+
+			local err,response = yield(true);
+		end
 	end
 end
 
