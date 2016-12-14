@@ -1,6 +1,7 @@
 --------------------------------------------------------------------------------
+-- NPL code generator
 -- Borrowed from Metalua project
--- Rewrite in pure lua
+-- Rewrite in pure lua/npl
 -- Edited By: Zhiyuan
 -- Date: 2016-12-11
 --------------------------------------------------------------------------------
@@ -22,7 +23,7 @@ function M.new ()
 	local self = {
 		_acc           = { },  -- Accumulates pieces of source as strings
 		current_indent = 0,    -- Current level of line indentation
-		indent_step    = "   " -- Indentation symbol, normally spaces or '\t'
+		indent_step    = "    " -- Indentation symbol, normally spaces or '\t'
 	}
 	return setmetatable (self, M)
 end
@@ -241,7 +242,7 @@ function M:Set (node)
 		and node[1][1][2].tag == 'String'
 		and is_ident(node[1][1][2][1]) then
 	
-	  --print("in set case 1")
+	  print("in set case 1")
 		local lhs = node[1][1][1]
 		local method = node[1][1][2][1]
 		local params = node[2][1][1]
@@ -263,7 +264,7 @@ function M:Set (node)
 		and node[2][1].tag == 'Function' 
 		and is_idx_stack(node[1][1]) then
       -- ``function foo(...) ... end'' --
-	  --print("in set case 2")
+	  print("in set case 2")
 		local lhs = node[1][1]
 		local params = node[2][1][1]
 		local body = node[2][1][2]
@@ -284,7 +285,7 @@ function M:Set (node)
       -- In that case, the spliced 1st variable must get parentheses,
       -- to be distinguished from a statement splice.
       -- This cannot happen in a plain Lua AST.
-	    --print("in set case 3")
+	    print("in set case 3")
 		local lhs1 = node[1][1]
 		local lhs = node[1]
 		local rhs = node[2]
@@ -301,7 +302,7 @@ function M:Set (node)
   --  `Set{ lhs, rhs } ->
 	elseif #node == 2 then 
 	  -- ``... = ...'', no syntax sugar --
-		--print("in set final else")
+		print("in set final else")
 		local lhs = node[1]
 		local rhs = node[2]
 		self:list  (lhs, ", ")
@@ -547,7 +548,7 @@ function M:Op (node, op, a, b)
       --op, a, b = "ne", _a, _b
    --| _ ->
    --end
-
+	--print(op.tag)
 	if node[1] == "not"
 		and node[2].tag == 'Op'
 		and node[2][1] == 'eq' then
@@ -573,7 +574,7 @@ function M:Op (node, op, a, b)
 		--| `Op{ op_a, ...} if op_prec[op] >= op_prec[op_a] -> left_paren = true
 		--| _ -> left_paren = false
 		--end
-
+		print("in binary operator")
 		if a.tag == 'Op' and a[1] and op_prec[op] >= op_prec[a[1]] then
 			left_paren = true
 		else
@@ -583,7 +584,7 @@ function M:Op (node, op, a, b)
 		--| `Op{ op_b, ...} if op_prec[op] >= op_prec[op_b] -> right_paren = true
 		--| _ -> right_paren = false
 		--end
-		if b.tag == 'Op' and b[1] and op_prec[op] >= op_prec[b[1]] then
+		if type(b) == 'table' and b.tag == 'Op' and b[1] and op_prec[op] >= op_prec[b[1]] then
 			right_paren = true
 		else
 			right_paren = false
@@ -605,7 +606,8 @@ function M:Op (node, op, a, b)
 		--| `Op{ op_a, ... } if op_prec[op] >= op_prec[op_a] -> paren = true
 		--| _ -> paren = false
 		--end
-		if a.tag == 'Op' and op_prec[op] >= op_prec[a[1]] then
+		print("in unary operator")
+		if type(a) == 'table' and a.tag == 'Op' and a[1] and op_prec[op] >= op_prec[a[1]] then
 			paren = true
 		else
 			paren = false

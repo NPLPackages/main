@@ -33,7 +33,6 @@ function nplp.splice (ast)
 end
 
 function nplp.splice_content (lx)
-	--print("I'm in nplp splice_content")
 	local parser_name = "expr"
 	if lx:is_keyword (lx:peek(2), ":") then
 		local a = lx:next()

@@ -21,8 +21,7 @@ function nplc.compile(src_filename)
 
 	local ast = nplp.src_to_ast(src)
 
-	--table.print(ast, 80, "nohash")
-
+	table.print(ast, 80, "nohash")
 	compiled_src= nplgen.ast_to_str(ast)
 
 	local dst_file = assert(io.open ('result.lua', 'w'))

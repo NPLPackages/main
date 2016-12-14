@@ -29,11 +29,7 @@ local mlp = commonlib.inherit(nil, commonlib.gettable("System.Compiler.lib.mlp")
 --------------------------------------------------------------------------------
 
 function mlp.splice (ast)
-   --print "say hello from splice -1"
    local f = mlc.function_of_ast (ast, '=splice')
-   --print "say hello from splice -2"
-   --local s = nplgen.ast_to_str (ast)
-   --local f = loadstring (s)
    local result=f()
    return result
 end
