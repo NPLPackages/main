@@ -22,7 +22,6 @@
 --------------------------------------------------------------------------------
 
 local mlp = commonlib.inherit(nil, commonlib.gettable("System.Compiler.lib.mlp"))
-local nplgen = commonlib.gettable("System.Compiler.nplgen")
 --------------------------------------------------------------------------------
 -- External splicing: compile an AST into a chunk, load and evaluate
 -- that chunk, and replace the chunk by its result (which must also be
@@ -31,10 +30,10 @@ local nplgen = commonlib.gettable("System.Compiler.nplgen")
 
 function mlp.splice (ast)
    --print "say hello from splice -1"
-   --local f = mlc.function_of_ast (ast, '=splice')
+   local f = mlc.function_of_ast (ast, '=splice')
    --print "say hello from splice -2"
-   local s = nplgen.ast_to_str (ast)
-   local f = loadstring (s)
+   --local s = nplgen.ast_to_str (ast)
+   --local f = loadstring (s)
    local result=f()
    return result
 end
@@ -78,7 +77,7 @@ mlp.in_a_quote = false
 -- Parse the inside of a "-{ ... }"
 --------------------------------------------------------------------------------
 function mlp.splice_content (lx)
-	print("I'm in mlp splice_content")
+	--print("I'm in mlp splice_content")
    local parser_name = "expr"
    if lx:is_keyword (lx:peek(2), ":") then
       local a = lx:next()
@@ -95,7 +94,7 @@ function mlp.splice_content (lx)
       elseif parser_name == "stat"  then ast = { ast }
       elseif parser_name ~= "block" then
          error ("splice content must be an expr, stat or block") end
-      printf("EXEC THIS SPLICE:\n%s", _G.table.tostring(ast, "nohash", 60))
+      --printf("EXEC THIS SPLICE:\n%s", _G.table.tostring(ast, "nohash", 60))
       return mlp.splice (ast)
    end
 end

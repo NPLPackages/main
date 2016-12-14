@@ -19,12 +19,21 @@ NPL.load("(gl)script/ide/System/Compiler/lib/mlp_expr.lua");
 NPL.load("(gl)script/ide/System/Compiler/lib/mlp_stat.lua");
 NPL.load("(gl)script/ide/System/Compiler/lib/mlp_ext.lua");
 
+local gg = commonlib.gettable("System.Compiler.lib.gg")
 local nplp = commonlib.inherit(commonlib.gettable("System.Compiler.lib.mlp"), commonlib.gettable("System.Compiler.nplp"))
+local nplgen = commonlib.gettable("System.Compiler.nplgen")
 ----------------------------------------------------------------------
---Override
+--Override Splice Parser
 ----------------------------------------------------------------------
+function nplp.splice (ast)
+   local s = nplgen.ast_to_str (ast)
+   local f = loadstring (s)
+   local result=f()
+   return result
+end
+
 function nplp.splice_content (lx)
-	print("I'm in nplp splice_content")
+	--print("I'm in nplp splice_content")
 	local parser_name = "expr"
 	if lx:is_keyword (lx:peek(2), ":") then
 		local a = lx:next()
@@ -40,7 +49,7 @@ function nplp.splice_content (lx)
 		-- try to compare two ast, translate them into string first
 		-- TODO: need a more robust comparision between two asts
 		ast_str = _G.table.tostring(ast, "nohash", 60)
-		print(ast_str)  
+		--print(ast_str)  
 		if parser_name == "expr" then 
 			if ast_str == "`Call{ `Index{ `Id \"nplp\", `String \"emit\" } }" then
 				ast = {tag="Table", {tag="Pair", {tag="String", "tag"}, {tag="String", "Current"}}}  -- special node in ast
@@ -55,8 +64,36 @@ function nplp.splice_content (lx)
 end
 
 ----------------------------------------------------------------------
+--Override some parsers using splice parser
+----------------------------------------------------------------------
+function nplp.opt_id (lx)
+   local a = lx:peek();
+   if lx:is_keyword (a, "-{") then
+      local v = gg.sequence{ "-{", nplp.splice_content, "}" } (lx) [1]
+      if v.tag ~= "Id" and v.tag ~= "Splice" then
+         gg.parse_error(lx,"Bad id splice")
+      end
+      return v
+   elseif a.tag == "Id" then return lx:next()
+   else return false end
+end
+
+function nplp.string (lx)
+   local a = lx:peek()
+   if lx:is_keyword (a, "-{") then
+      local v = gg.sequence{ "-{", nplp.splice_content, "}" } (lx) [1]
+      if v.tag ~= "" and v.tag ~= "Splice" then
+         gg.parse_error(lx,"Bad string splice")
+      end
+      return v
+   elseif a.tag == "String" then return lx:next()
+   else error "String expected" end
+end
+----------------------------------------------------------------------
 --Replace splice structure -{} with new nplp parser
 ----------------------------------------------------------------------
+nplp.expr.primary:del("-{")
+nplp.expr.primary:add({ "-{", nplp.splice_content, "}", builder = nplp.fget(1) })
 nplp.stat:del("-{")
 nplp.stat:add({ "-{", nplp.splice_content, "}", builder = nplp.fget (1) })
 
@@ -71,15 +108,19 @@ local function transformer_maker(s)
     	error("not defined symbol")
    	end
 
-   	local function traverse_and_replace(tast, ast)  -- traverse template ast and replace 
+   	local function traverse_and_replace(tast, func_call, ast)  -- traverse template ast and replace 
    		local res_ast={}
    		if(type(tast)=='table') then
    			if tast.tag and tast.tag=='Current' then 
    				res_ast=ast
-   			else 
+   			elseif tast.tag and tast.tag=="Call"
+					and tast[1] and tast[1][1] 
+					and tast[1][1] == s then
+				res_ast=func_call
+			else 
    				res_ast.tag=tast.tag
    				for i=1, #tast do
-   					res_ast[i] = traverse_and_replace(tast[i], ast)
+   					res_ast[i] = traverse_and_replace(tast[i], func_call, ast)
    				end
    			end
    		else
@@ -91,7 +132,7 @@ local function transformer_maker(s)
    	local function transformer(ast)
    		el, b = ast[1], ast[2]
    		func_call={tag="Call", {tag="Id", s}, unpack(el)}
-   		nast={func_call, traverse_and_replace(template_ast, ast[2])}
+   		nast=traverse_and_replace(template_ast, func_call, ast[2])
    		return nast
    	end
 
