@@ -1,0 +1,130 @@
+<?npl
+--[[
+Title: worlds
+Author: Big
+Date: 2016/12/07
+]]
+
+include_once(WIKI_ROOT.."models/abstract/multi_user_base.page");
+include_once(WIKI_ROOT.."models/user.page");
+
+local worlds = inherit(models.abstract.multi_user_base, gettable("models.worlds"));
+
+worlds.db_name = "worlds";
+
+function worlds:ctor()
+	self:addfield("userid","number",false,10);
+	--giturl
+	self:addfield("giturl", "string", false, 300);
+	--worlds name
+	self:addfield("worldsName","string",false,30);
+	--worlds modify date
+	self:addfield("revision","string",false,30);
+	--input worlds name table
+	-- self:addfield("worldsNameForm", "table", false);
+end
+
+function worlds:get(params)
+	local err, query = self:validateQuery(params);
+	local userid;
+
+	self:ensureAuthenticated();
+	userid = self:getUserId();
+
+	if(not userid) then
+		return {error=-1,msg="user is not exist"};
+	end
+
+	-- 删除同步代码	
+
+	self:db():find({userid=userid},resume);
+	local err,response = yield(true);
+
+	if(not err) then
+		return response;
+	else
+		return {error=-1,msg="database err"};
+	end
+end
+
+function worlds:api_refresh(params)
+	local err, query = self:validateQuery(params);
+	local userid;
+
+	self:ensureAuthenticated();
+	userid = self:getUserId();
+
+	if(not userid) then
+		return {error=-1,msg="user is not exist"};
+	end
+
+	local userinfor = models.user:new():get({});
+
+	self:db():findOne({["+userid+worldsName"] = {userid,query.worldsName}},resume);
+	local err,response = yield(true);
+
+	if(not err) then
+		-- log({"response",response});
+		if(not response or not next(response)) then
+			local insertParams      = {};
+			insertParams.worldsName = query.worldsName;
+			insertParams.giturl     = "https://github.com/"..userinfor["login"].."/"..query.worldsName;
+			insertParams.revision   = query.revision;
+
+			worlds._super.create(self, insertParams);
+		else
+			self:db():updateOne({["+userid+worldsName"] = {userid,query.worldsName}},
+								 {revision = query.revision},resume);
+
+			local err,response = yield(true);
+		end
+	end
+end
+
+function worlds:backup()
+	local userinfor = models.user:new():get({});
+
+	if(not query["worldsNameForm"]) then
+		return {error=-1,msg="worlds name form is nil"};
+	end
+
+	local worldsNameForm = query["worldsNameForm"];
+
+	-- log({"worldsNameForm",worldsNameForm});
+	for key,value in ipairs(worldsNameForm) do
+		-- log(value);
+		self:db():findOne({["+userid+worldsName"] = {userid,value["worldsName"]}},resume);
+		local err,response = yield(true);
+
+		if(not err) then
+			-- log({"response",response});
+			if(not response or not next(response)) then
+				local insertParams      = {};
+				insertParams.worldsName = value["worldsName"];
+				insertParams.giturl     = "https://github.com/"..userinfor["login"].."/"..value["worldsName"];
+				insertParams.date 		= value["date"];
+
+				worlds._super.create(self, insertParams);
+			else
+				local rDate = string.gsub(response["date"],"-","");
+				local vDate = string.gsub(value["date"],"-","");
+
+				if(tonumber(rDate) < tonumber(vDate)) then
+					self:db():updateOne({["+userid+worldsName"] = {userid,value["worldsName"]}},
+										 {date = value["date"]},resume);
+
+					local err,response = yield(true);
+				end
+			end
+		end
+	end
+end
+
+function worlds:create()
+end
+
+function worlds:delete()
+end
+
+function worlds:update()
+end
