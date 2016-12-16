@@ -11,15 +11,24 @@ NPL.load("(gl)script/ide/System/os/GetUrl.lua");
 -- down file or making standard request
 System.os.GetUrl("https://github.com/LiXizhi/HourOfCode/archive/master.zip", echo);
 -- get headers only with "-I" option. 
-System.os.GetUrl("https://github.com/LiXizhi/HourOfCode/archive/master.zip", function(err, msg, data)  echo(msg) end, "-I");
+System.os.GetUrl("https://github.com/LiXizhi/HourOfCode/archive/master.zip", 
+	function(err, msg, data)  echo(msg) end, "-I");
 -- send form KV pairs with http post
-System.os.GetUrl({url = "http://localhost:8099/ajax/console?action=getparams", form = {key="value",} }, function(err, msg, data)		echo(data)	end);
+System.os.GetUrl({url = "http://localhost:8099/ajax/console?action=getparams", 
+	form = {key="value",} }, function(err, msg, data)		echo(data)	end);
 -- send multi-part binary file upload with http post
-System.os.GetUrl({url = "http://localhost:8099/ajax/console?action=printrequest", form = {name = {file="dummy.html",	data="<html><bold>bold</bold></html>", type="text/html"}, } }, function(err, msg, data)		echo(data)	end);
+System.os.GetUrl({url = "http://localhost:8099/ajax/console?action=printrequest", 
+	form = {name = {file="dummy.html",	data="<html><bold>bold</bold></html>", type="text/html"}, } }, 
+	function(err, msg, data)		echo(data)	end);
 -- To send any binary data, one can use 
-System.os.GetUrl({url = "http://localhost:8099/ajax/console?action=printrequest", headers={["content-type"]="application/json"}, postfields='{"key":"value"}' }, function(err, msg, data)		echo(data)	end);
+System.os.GetUrl({url = "http://localhost:8099/ajax/console?action=printrequest", 
+	headers={["content-type"] = "application/json"}, 
+	postfields="{\"key\":\"value\"}" },
+	function(err, msg, data)		echo(data)	end);
 -- To simplify json encoding, we can send form as json string using following shortcut
-System.os.GetUrl({url = "http://localhost:8099/ajax/console?action=getparams", json = true, form = {key="value", key2 ={subtable="subvalue"} } }, function(err, msg, data)		echo(data)  end);
+System.os.GetUrl({url = "http://localhost:8099/ajax/console?action=getparams", 
+	json = true, form = {key="value", key2 ={subtable="subvalue"} } }, 
+	function(err, msg, data)		echo(data)  end);
 -- sending email via smtp
 System.os.SendEmail({
 	url="smtp://smtp.exmail.qq.com", 
