@@ -81,6 +81,28 @@ function worlds:api_refresh(params)
 	end
 end
 
+function worlds:create()
+end
+
+function worlds:delete(params)
+	local err, query = self:validateQuery(params);
+	local userid;
+
+	self:ensureAuthenticated();
+	userid = self:getUserId();
+
+	if(not userid) then
+		return {error=-1,msg="user is not exist"};
+	end
+
+	self:db():deleteOne(query,resume);
+
+	local err,response = yield(true);
+end
+
+function worlds:update()
+end
+
 function worlds:backup()
 	local userinfor = models.user:new():get({});
 
@@ -118,13 +140,4 @@ function worlds:backup()
 			end
 		end
 	end
-end
-
-function worlds:create()
-end
-
-function worlds:delete()
-end
-
-function worlds:update()
 end
