@@ -13,9 +13,7 @@
 --
 ----------------------------------------------------------------------
 NPL.load("(gl)script/ide/System/Compiler/lib/lexer.lua");
---module ("mlp", package.seeall)
 local mlp = commonlib.inherit(nil, commonlib.gettable("System.Compiler.lib.mlp"))
---require "lexer"
 local lexer = commonlib.gettable("System.Compiler.lib.lexer")
 
 local mlp_lexer = lexer:clone()

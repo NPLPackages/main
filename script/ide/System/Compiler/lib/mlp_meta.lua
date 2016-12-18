@@ -45,6 +45,7 @@ function mlp.quote (t)
       local mt = { tag = "Table" }
       --_G.table.insert (mt, { tag = "Pair", quote "quote", { tag = "True" } })
       if t.tag == "Splice" then
+		 printf("IN_QUOTE:\n%s", _G.table.tostring(t, "nohash", 60))
          assert (#t==1, "Invalid splice")
          local sp = t[1]
          return sp
@@ -83,7 +84,7 @@ function mlp.splice_content (lx)
    end
    local ast = mlp[parser_name](lx)
    if mlp.in_a_quote then
-      --printf("SPLICE_IN_QUOTE:\n%s", _G.table.tostring(ast, "nohash", 60))
+      printf("SPLICE_IN_QUOTE:\n%s", _G.table.tostring(ast, "nohash", 60))
       return { tag="Splice", ast }
    else
       if parser_name == "expr" then ast = { { tag="Return", ast } }
@@ -99,6 +100,7 @@ end
 -- Parse the inside of a "+{ ... }"
 --------------------------------------------------------------------------------
 function mlp.quote_content (lx)
+	print("I'm in mlp quote content")
    local parser 
    if lx:is_keyword (lx:peek(2), ":") then -- +{parser: content }
       parser = mlp[mlp.id (lx)[1]]

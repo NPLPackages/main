@@ -108,8 +108,9 @@ local _func_val = function (lx) return mlp.func_val (lx) end
 --------------------------------------------------------------------------------
 -- Default parser for primary expressions
 --------------------------------------------------------------------------------
-function id_or_literal (lx)
+function mlp.id_or_literal (lx)
    local a = lx:next()
+   --printf("id is : %s", a[1])
    if a.tag~="Id" and a.tag~="String" and a.tag~="Number" then
       gg.parse_error (lx, "Unexpected expr token %s",
                       _G.table.tostring (a, 'nohash'))
@@ -151,13 +152,12 @@ end
 -- complete expression
 --
 --------------------------------------------------------------------------------
-
 -- FIXME: set line number. In [expr] transformers probably
 
 mlp.expr = gg.expr { name = "expression",
 
    primary = gg.multisequence{ name="expr primary",
-      { "(", _expr, ")",           builder = "Paren" },
+      { "(", _expr, ")",           builder = 'Paren' },
       { "function", _func_val,     builder = mlp.fget(1) },
       { "-{", mlp.splice_content, "}", builder = mlp.fget(1) },
       { "+{", mlp.quote_content, "}",  builder = mlp.fget(1) }, 
@@ -166,7 +166,7 @@ mlp.expr = gg.expr { name = "expression",
       { "false",                   builder = "False" },
       { "...",                     builder = "Dots" },
       mlp.table,
-      default = id_or_literal },
+      default = mlp.id_or_literal },
 
    infix = { name="expr infix op",
       { "+",  prec = 60, builder = opf2 "add"  },
