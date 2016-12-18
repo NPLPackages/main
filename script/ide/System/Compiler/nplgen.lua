@@ -23,7 +23,8 @@ function M.new ()
 	local self = {
 		_acc           = { },  -- Accumulates pieces of source as strings
 		current_indent = 0,    -- Current level of line indentation
-		indent_step    = "    " -- Indentation symbol, normally spaces or '\t'
+		indent_step    = "    ", -- Indentation symbol, normally spaces or '\t'
+		current_line   = 1   -- Current line number
 	}
 	return setmetatable (self, M)
 end
@@ -73,6 +74,16 @@ end
 function M:nldedent ()
 	self.current_indent = self.current_indent - 1
 	self:acc ("\n" .. self.indent_step:rep (self.current_indent))
+end
+
+--------------------------------------------------------------------------------
+-- Go to the line.
+--------------------------------------------------------------------------------
+function M:goline (dst_line)
+	for i=self.current_line, dst_line-1 do
+		self:acc ("\n ")
+	end
+	self.current_line = dst_line
 end
 
 --------------------------------------------------------------------------------
@@ -158,7 +169,7 @@ local op_symbol = {
 function M:node (node)
 	assert (self~=M and self._acc)
 	if not node.tag then -- tagless block.
-		self:list (node, self.nl)
+		self:list (node, " ")  -- space as line sperator
 	else
 		local f = M[node.tag]
 		if type (f) == "function" then -- Delegate to tag method.
@@ -167,9 +178,9 @@ function M:node (node)
 			self:acc (f)
 		else -- No appropriate method, fall back to splice dumping.
 			 -- This cannot happen in a plain Lua AST.
-			self:acc " -{ "
-			self:acc (table.tostring (node, "nohash"), 80)
-			self:acc " }"
+			--self:acc " -{ "
+			--self:acc (table.tostring (node, "nohash"), 80)
+			--self:acc " }"
 		end
 	end
 end
@@ -432,7 +443,12 @@ function M:Call (node, f)
 	--| `Call{ _, `Table{...}} -> parens = false
 	--| _ -> parens = true
 	--end
-
+	if(node.lineinfo) then
+		table.print(node.lineinfo.first, 60, "nohash")
+	end
+	if node.lineinfo.first[1] > self.current_line then
+		self:goline (node.lineinfo.first[1])
+	end
 	if #node == 2 and (node[2].tag == 'String' or node[2].tag == 'Table') then
 		parens = false
 	else parens = true

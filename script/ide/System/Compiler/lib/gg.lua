@@ -87,12 +87,23 @@ end
 -------------------------------------------------------------------------------
 local function raw_parse_sequence (lx, p)
    local r = { }
+   local fi, li = {}, {}
    for i=1, #p do
       e=p[i]
-      if type(e) == "string" then 
+      if type(e) == "string" then
+	  ---------------------------------------
+		 if i==1 then 
+			fi = lx:lineinfo_right()
+		 end
+      ---------------------------------------
          if not lx:is_keyword (lx:next(), e) then
             gg.parse_error (lx, "Keyword '%s' expected", e) end
       elseif gg.is_parser (e) then
+	  ---------------------------------------
+		 if i==1 then 
+			fi = lx:lineinfo_right()
+		 end
+	  ---------------------------------------
          table.insert (r, e (lx)) 
       else 
          gg.parse_error (lx,"Sequence `%s': element #%i is not a string "..
@@ -100,6 +111,10 @@ local function raw_parse_sequence (lx, p)
                          p.name, i, table.tostring(e))
       end
    end
+   ---------------------------------------
+   li = lx:lineinfo_left()
+   r.lineinfo = {first = fi, last = li}
+   ---------------------------------------
    return r
 end
 
