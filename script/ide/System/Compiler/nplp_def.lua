@@ -1,3 +1,11 @@
+----------------------------------------------------------------------
+-- NPL Def Structure Block Parser
+-- Extended from Metalua Parser
+-- This parser is used only to parse block in def structure
+-- Author:Zhiyuan
+-- Date: 2016-12-16
+----------------------------------------------------------------------
+
 NPL.load("(gl)script/ide/System/Compiler/lib/metalua/base.lua");
 NPL.load("(gl)script/ide/System/Compiler/lib/metalua/string2.lua");
 NPL.load("(gl)script/ide/System/Compiler/lib/metalua/table2.lua");
