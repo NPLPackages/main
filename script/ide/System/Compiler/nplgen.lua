@@ -79,7 +79,22 @@ end
 --------------------------------------------------------------------------------
 -- Go to the line.
 --------------------------------------------------------------------------------
-function M:goline (dst_line)
+function M:goHead (node)
+	local dst_line = 0
+	if node.lineinfo and node.lineinfo.first then
+		dst_line = node.lineinfo.first[1]
+	end
+	for i=self.current_line, dst_line-1 do
+		self:acc ("\n ")
+	end
+	self.current_line = dst_line
+end
+
+function M:goTail (node)
+	local dst_line = 0
+	if node.lineinfo and node.lineinfo.last then
+		dst_line = node.lineinfo.last[1]
+	end
 	for i=self.current_line, dst_line-1 do
 		self:acc ("\n ")
 	end
@@ -109,14 +124,6 @@ end
 -- a series of nested string indexes, with an identifier as
 -- the innermost node.
 --------------------------------------------------------------------------------
---local function is_idx_stack (ast)
-   --match ast with
-   --| `Id{ _ }                     -> return true
-   --| `Index{ left, `String{ _ } } -> return is_idx_stack (left)
-   --| _                            -> return false
-   --end
---end
-
 local function is_idx_stack (ast)
 	if ast.tag == 'Id' then return true
 	elseif ast.tag == 'Index' then return is_idx_stack(ast[1])
@@ -232,17 +239,16 @@ end
 --------------------------------------------------------------------------------
 
 function M:Do (node)
+	self:goHead   (node)
 	self:acc      "do"
-	self:nlindent ()
-	self:list     (node, self.nl)
-	self:nldedent ()
+	self:acc	  " "
+	self:list     (node, " ")
+	self:acc      " "
+	self:goTail   (node)
 	self:acc      "end"
 end
 
 function M:Set (node)
-   -- `Set{ { `Index{ lhs, `String{ method } } }, 
-           --{ `Function{ { `Id "self", ... } == params, body } } } 
-         --if is_idx_stack (lhs) and is_ident (method) ->
       -- ``function foo:bar(...) ... end'' --
 	if  type(node[1][1]) == 'table'
 		and node[1][1].tag == 'Index' 
@@ -258,6 +264,7 @@ function M:Set (node)
 		local method = node[1][1][2][1]
 		local params = node[2][1][1]
 		local body = node[2][1][2]
+		self:goHead   (node)
 		self:acc      "function "
 		self:node     (lhs)
 		self:acc      ":"
@@ -265,12 +272,11 @@ function M:Set (node)
 		self:acc      " ("
 		self:list     (params, ", ", 2)
 		self:acc      ")"
-		self:nlindent ()
+		self:acc      " "
 		self:list     (body, self.nl)
-		self:nldedent ()
+		self:acc      " "
 		self:acc      "end"
 
- -- `Set{ { lhs }, { `Function{ params, body } } } if is_idx_stack (lhs) ->
 	elseif type(node[2][1]) == 'table'
 		and node[2][1].tag == 'Function' 
 		and is_idx_stack(node[1][1]) then
@@ -279,91 +285,79 @@ function M:Set (node)
 		local lhs = node[1][1]
 		local params = node[2][1][1]
 		local body = node[2][1][2]
+		self:goHead   (node)
 		self:acc      "function "
 		self:node     (lhs)
 		self:acc      " ("
 		self:list     (params, ", ")
 		self:acc      ")"
-		self:nlindent ()
-		self:list    (body, self.nl)
-		self:nldedent ()
+		self:acc      " "
+		self:list     (body, " ")
+		self:acc      " "
+		self:goTail   (node)
 		self:acc      "end"
 
- --  `Set{ { `Id{ lhs1name } == lhs1, ... } == lhs, rhs } 
- --        if not is_ident (lhs1name) ->
-	elseif node[1][1].tag == 'Id' and not is_ident(node[1][1][1]) then
-	  -- ``foo, ... = ...'' when foo is *not* a valid identifier.
-      -- In that case, the spliced 1st variable must get parentheses,
-      -- to be distinguished from a statement splice.
-      -- This cannot happen in a plain Lua AST.
-	    print("in set case 3")
-		local lhs1 = node[1][1]
-		local lhs = node[1]
-		local rhs = node[2]
-		self:acc      "("
-		self:node     (lhs1)
-		self:acc      ")"
-		if lhs[2] then -- more than one lhs variable
-			 self:acc   ", "
-			 self:list  (lhs, ", ", 2)
-		end
-		self:acc      " = "
-		self:list     (rhs, ", ")
-
-  --  `Set{ lhs, rhs } ->
 	elseif #node == 2 then 
 	  -- ``... = ...'', no syntax sugar --
 		print("in set final else")
 		local lhs = node[1]
 		local rhs = node[2]
+		self:goHead(node)
 		self:list  (lhs, ", ")
 		self:acc   " = "
+		self:goTail(node)
 		self:list  (rhs, ", ")
 	end
 end
 
 function M:While (node, cond, body)
+	self:goHead   (node)
 	self:acc      "while "
 	self:node     (cond)
-	self:acc      " do"
-	self:nlindent ()
-	self:list     (body, self.nl)
-	self:nldedent ()
+	self:acc      " do"        -- TODO: put 'do' in right position
+	self:acc      " "
+	self:list     (body, " ")
+	self:acc      " "
+	self:goTail   (node)
 	self:acc      "end"
 end
 
 function M:Repeat (node, body, cond)
+	self:goHead   (node)
 	self:acc      "repeat"
-	self:nlindent ()
-	self:list     (body, self.nl)
-	self:nldedent ()
-	self:acc      "until "
+	self:acc      " "
+	self:list     (body, " ")
+	self:acc      " "
+	self:acc      "until "     -- TODO: put 'until' in right position
 	self:node     (cond)
 end
 
 function M:If (node)
+	self:goHead   (node)
 	for i = 1, #node-1, 2 do
 		-- for each ``if/then'' and ``elseif/then'' pair --
 		local cond, body = node[i], node[i+1]
 		self:acc      (i==1 and "if " or "elseif ")
 		self:node     (cond)
-		self:acc      " then"
-		self:nlindent ()
-		self:list     (body, self.nl)
-		self:nldedent ()
+		self:acc      " then"  -- TODO: put 'then' in right position
+		self:acc      " "
+		self:list     (body, " ")
+		self:acc      " "
 	end
 	-- odd number of children --> last one is an `else' clause --
 	if #node%2 == 1 then 
-		self:acc      "else"
-		self:nlindent ()
-		self:list     (node[#node], self.nl)
-		self:nldedent ()
+		self:acc      "else"  -- TODO: put 'else' in right position
+		self:acc      " "
+		self:list     (node[#node], " ")
+		self:nldedent (" ")
 	end
+	self:goTail (node)
 	self:acc "end"
 end
 
 function M:Fornum (node, var, first, last)
 	local body = node[#node]
+	self:goHead   (node)
 	self:acc      "for "
 	self:node     (var)
 	self:acc      " = "
@@ -375,103 +369,95 @@ function M:Fornum (node, var, first, last)
 		self:node  (node[4])
 	end
 	self:acc      " do"
-	self:nlindent ()
-	self:list     (body, self.nl)
-	self:nldedent ()
+	self:acc      " "
+	self:list     (body, " ")
+	self:acc      " "
+	self:goTail   (node)
 	self:acc      "end"
 end
 
 function M:Forin (node, vars, generators, body)
+	self:goHead   (node)
 	self:acc      "for "
 	self:list     (vars, ", ")
 	self:acc      " in "
 	self:list     (generators, ", ")
 	self:acc      " do"
-	self:nlindent ()
-	self:list     (body, self.nl)
-	self:nldedent ()
+	self:acc      " "
+	self:list     (body, " ")
+	self:acc      " "
+	self:goTail   (node)
 	self:acc      "end"
 end
 
 function M:Local (node, lhs, rhs)
-	if next (lhs) then
-		self:acc     "local "
-		self:list    (lhs, ", ")
-		if rhs[1] then
-			self:acc  " = "
-			self:list (rhs, ", ")
-		end
-   else -- Can't create a local statement with 0 variables in plain Lua
-		self:acc (table.tostring (node, 'nohash', 80))
-   end
+	self:goHead (node)
+--	if next (lhs) then
+	self:acc     "local "
+	self:list    (lhs, ", ")
+	if rhs[1] then
+		self:acc  " = "
+		self:list (rhs, ", ")
+	end
+--  end
 end
 
 function M:Localrec (node, lhs, rhs)
-   --match node with
-   --| `Localrec{ { `Id{name} }, { `Function{ params, body } } }
-         --if is_ident (name) ->
 	if node[1][1].tag == 'Id' 
 		and node[2][1].tag == 'Function' then
 		-- ``local function name() ... end'' --
 		local name = node[1][1][1]
 		local params = node[2][1][1]
 		local body = node[2][1][2]
+		self:goHead   (node)
 		self:acc      "local function "
 		self:acc      (name)
 		self:acc      " ("
 		self:list     (params, ", ")
 		self:acc      ")"
-		self:nlindent ()
-		self:list     (body, self.nl)
-		self:nldedent ()
+		self:acc      " "
+		self:list     (body, " ")
+		self:acc      " "
+		self:goTail   (node)
 		self:acc      "end"
 
 	else
       -- Other localrec are unprintable ==> splice them --
           -- This cannot happen in a plain Lua AST. --
-		self:acc "-{ "
-		self:acc (table.tostring (node, 'nohash', 80))
-		self:acc " }"
+		--self:acc "-{ "
+		--self:acc (table.tostring (node, 'nohash', 80))
+		--self:acc " }"
 	end
 end
 
 function M:Call (node, f)
 	-- single string or table literal arg ==> no need for parentheses. --
 	local parens
-	--match node with
-	--| `Call{ _, `String{_} }
-	--| `Call{ _, `Table{...}} -> parens = false
-	--| _ -> parens = true
-	--end
 	if(node.lineinfo) then
 		table.print(node.lineinfo.first, 60, "nohash")
-	end
-	if node.lineinfo.first[1] > self.current_line then
-		self:goline (node.lineinfo.first[1])
+		table.print(node.lineinfo.last, 60, "nohash")
 	end
 	if #node == 2 and (node[2].tag == 'String' or node[2].tag == 'Table') then
 		parens = false
 	else parens = true
 	end
+	self:goHead (node)
 	self:node (f)
 	self:acc  (parens and " (" or  " ")
 	self:list (node, ", ", 2) -- skip `f'.
+	--self:goTail (node)
 	self:acc  (parens and ")")
 end
 
 function M:Invoke (node, f, method)
 	-- single string or table literal arg ==> no need for parentheses. --
 	local parens
-	--match node with
-	--| `Invoke{ _, _, `String{_} }
-	--| `Invoke{ _, _, `Table{...}} -> parens = false
-	--| _ -> parens = true
-	--end
 
 	if #node == 3 and (node[3].tag == 'String' or node[3].tag == 'Table') then
 		parens = false
 	else parens = true
 	end
+	self:goHead (node)
 	self:node   (f)
 	self:acc    ":"
 	self:acc    (method[1])
@@ -481,6 +467,7 @@ function M:Invoke (node, f, method)
 end
 
 function M:Return (node)
+	self:goHead (node)
 	self:acc  "return "
 	self:list (node, ", ")
 end
@@ -502,12 +489,14 @@ function M:String (node, str)
 end
 
 function M:Function (node, params, body)
+	self:goHead   (node)
 	self:acc      "function ("
 	self:list     (params, ", ")
 	self:acc      ")"
-	self:nlindent ()
-	self:list     (body, self.nl)
-	self:nldedent ()
+	self:acc      " "
+	self:list     (body, " ")
+	self:acc      " "
+	self:goTail   (node)
 	self:acc      "end"
 end
 
@@ -516,9 +505,7 @@ function M:Table (node)
 		self:acc "{"
 		if #node > 1 then self:nlindent () else self:acc " " end
 
-		--print("in table ast")
 		for i, elem in ipairs (node) do
-			--| `Pair{ `String{ key }, value } if is_ident (key) ->
 			if elem.tag == 'Pair' 
 				and elem[1].tag == 'String' 
 				and is_ident(elem[1][1]) then
@@ -528,8 +515,7 @@ function M:Table (node)
 				self:acc  (key)
 				self:acc  " = "
 				self:node (value)
---
-         --| `Pair{ key, value } ->
+
             ---- ``[key] = value''. --
 			elseif elem.tag == 'Pair' then
 				local key = elem[1]
@@ -538,33 +524,25 @@ function M:Table (node)
 				self:node (key)
 				self:acc  "] = "
 				self:node (value)
---
-         --| _ -> 
+
             ---- ``value''. --
 			else
-				--print("in table final case")
 				self:node (elem)
 			end
-         --end
+         
 			if node [i+1] then
 				self:acc ","
-				self:nl  ()
+				self:acc " "
 			end
 		end
-		if #node > 1 then self:nldedent () else self:acc " " end
-		self:acc       "}"
+		--if #node > 1 then self:nldedent () else self:acc " " end
+		self:acc  " "
+		self:acc  "}"
 	end
 end
 
 function M:Op (node, op, a, b)
    -- Transform ``not (a == b)'' into ``a ~= b''. --
-   --match node with
-   --| `Op{ "not", `Op{ "eq", _a, _b } }
-   --| `Op{ "not", `Paren{ `Op{ "eq", _a, _b } } } ->  
-      --op, a, b = "ne", _a, _b
-   --| _ ->
-   --end
-	--print(op.tag)
 	if node[1] == "not"
 		and node[2].tag == 'Op'
 		and node[2][1] == 'eq' then
@@ -586,20 +564,12 @@ function M:Op (node, op, a, b)
 
 	if b then -- binary operator.
 		local left_paren, right_paren
-		--match a with
-		--| `Op{ op_a, ...} if op_prec[op] >= op_prec[op_a] -> left_paren = true
-		--| _ -> left_paren = false
-		--end
-		print("in binary operator")
 		if a.tag == 'Op' and a[1] and op_prec[op] >= op_prec[a[1]] then
 			left_paren = true
 		else
 			left_paren = false
 		end
-		--match b with -- FIXME: might not work with right assoc operators ^ and ..
-		--| `Op{ op_b, ...} if op_prec[op] >= op_prec[op_b] -> right_paren = true
-		--| _ -> right_paren = false
-		--end
+
 		if type(b) == 'table' and b.tag == 'Op' and b[1] and op_prec[op] >= op_prec[b[1]] then
 			right_paren = true
 		else
@@ -618,11 +588,7 @@ function M:Op (node, op, a, b)
 
 	else -- unary operator.     
 		local paren
-		--match a with
-		--| `Op{ op_a, ... } if op_prec[op] >= op_prec[op_a] -> paren = true
-		--| _ -> paren = false
-		--end
-		print("in unary operator")
+
 		if type(a) == 'table' and a.tag == 'Op' and a[1] and op_prec[op] >= op_prec[a[1]] then
 			paren = true
 		else
@@ -644,10 +610,6 @@ end
 function M:Index (node, table, key)
 	local paren_table
 	-- Check precedence, see if parens are needed around the table --
-	--match table with
-	--| `Op{ op, ... } if op_prec[op] < op_prec.index -> paren_table = true
-	--| _ -> paren_table = false
-	--end
 
 	if table.tag == 'Op' and op_prec[op] < op_prec.index then
 		paren_table = true
@@ -659,8 +621,6 @@ function M:Index (node, table, key)
 	self:node (table)
 	self:acc  (paren_table and ")")
 
-	--match key with
-	--| `String{ field } if is_ident (field) -> 
 	if key.tag == 'String' and is_ident(key[1]) then
 		-- ``table.key''. --
 		self:acc "."
@@ -676,11 +636,6 @@ end
 function M:Id (node, name)
 	if is_ident (name) then
 		self:acc (name)
-	else -- Unprintable identifier, fall back to splice representation.
-         -- This cannot happen in a plain Lua AST.
-		self:acc    "-{`Id "
-		self:String (node, name)
-		self:acc    "}"
 	end 
 end
 
