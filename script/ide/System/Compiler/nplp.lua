@@ -94,19 +94,25 @@ end
 local function label_params(ast, symTbl)
 	local res_ast = {}
 	if type(ast) == 'table' then
-		if ast.tag == 'Id' and symTbl[ast[1]] then
+		if ast.tag == 'Id' and symTbl[ast[1]] and nplp.in_a_quote then
 			res_ast.tag = 'Param'-- symTle[ast[1]] reflects ith param
 			res_ast[1] = symTbl[ast[1]]
-		elseif ast.tag == 'Dots' and symTbl[1] then
+		elseif ast.tag == 'Dots' and symTbl[1] and nplp.in_a_quote then
 			res_ast.tag = 'Param'
 			res_ast[1] = 'All'
 		elseif ast.tag == 'Quote' then
+			local prev_quote = nplp.in_a_quote
+			if prev_quote then
+				error "not support quote in a quote"
+			end
+			nplp.in_a_quote = true
 			for i=1, #ast do
 				res_ast[i] = label_params(ast[i], symTbl)
 				if ast[i].lineinfo then
 					res_ast[i].lineinfo = ast[i].lineinfo
 				end
 			end
+			nplp.in_a_quote = prev_quote
 		else
 			res_ast.tag = ast.tag
 			res_ast.lineinfo = ast.lineinfo
@@ -159,9 +165,10 @@ local function def_builder(x)
 				error ("def params only allow identifiers")
 			end
 		end
-		table.print(blk, 60, "nohash")
+		--table.print(blk, 60, "nohash")
+		nplp.in_a_quote = false
 		labeld_blk = label_params(blk, symTbl)
-		table.print(labeld_blk, 60, "nohash")
+		--table.print(labeld_blk, 60, "nohash")
       	if type(name)=='string' then
          	nplp.register(name, labeld_blk)
       	elseif type(s)=='table' then
