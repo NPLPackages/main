@@ -36,15 +36,7 @@ nplp_def.method_args = gg.multisequence{
    { "(", nplp_def.func_args_content, ")", builder = nplp_def.fget(1) },
    default = function(lx) local r = nplp_def.opt_string(lx); return r and {r} or { } end }
 
---------------------------------------------------------------------------------
--- [func_val] parses a function, from opening parameters parenthese to
--- "end" keyword included. Used for anonymous functions as well as
--- function declaration statements (both local and global).
---
--- It's wrapped in a [_func_val] eta expansion, so that when expr
--- parser uses the latter, they will notice updates of [func_val]
--- definitions.
---------------------------------------------------------------------------------
+
 nplp_def.func_params_content = gg.list{ name="function parameters",
    gg.multisequence{ { "...", builder = "Dots" }, default = nplp_def.id },
    separators  = ",", terminators = {")", "|"} } 
@@ -55,29 +47,17 @@ nplp_def.func_val = gg.sequence { name="function body",
    "(", nplp_def.func_params_content, ")", _block, "end", builder = "Function" }
 
 --local _func_val = function (lx) return mlp.func_val (lx) end
---------------------------------------------------------------------------------
--- Builder generator for operators. Wouldn't be worth it if "|x|" notation
--- were allowed, but then lua 5.1 wouldn't compile it 
---------------------------------------------------------------------------------
 
--- opf1 = |op| |_,a| `Op{ op, a }
 local function opf1 (op) return 
    function (_,a) return { tag="Op", op, a } end end
 
--- opf2 = |op| |a,_,b| `Op{ op, a, b }
 local function opf2 (op) return 
    function (a,_,b) return { tag="Op", op, a, b } end end
 
--- opf2r = |op| |a,_,b| `Op{ op, b, a } -- (args reversed)
 local function opf2r (op) return 
    function (a,_,b) return { tag="Op", op, b, a } end end
 
 local function op_ne(a, _, b) 
-   -- The first version guarantees to return the same code as Lua,
-   -- but it relies on the non-standard 'ne' operator, which has been
-   -- suppressed from the official AST grammar (although still supported
-   -- in practice by the compiler).
-   -- return { tag="Op", "ne", a, b }
    return { tag="Op", "not", { tag="Op", "eq", a, b, lineinfo= {
             first = a.lineinfo.first, last = b.lineinfo.last } } }
 end
@@ -87,21 +67,16 @@ end
 --quote builder
 ----------------------------------------------------------------------
 local function quote_builder(x)
-	print "I'm in nplp_def quote builder"
-	table.print(x, 60, "nohash")
 	x = unpack(x)
 	if x.tag == 'Call' and x[1].tag		-- emit() function called in +{} 
 		and x[1].tag == 'Id' and x[1][1] == "emit" then
-		print("meet emit()")
 		return {tag="EmitAll"}
 	else
-		print("no emit()")
 		return {tag="Quote", x}
 	end
 end
 
 function nplp_def.id_or_literal (lx)
-   print("in nplp id or literal")
    local a = lx:next()
    if a.tag~="Id" and a.tag~="String" and a.tag~="Number" then
       gg.parse_error (lx, "Unexpected expr token %s",
@@ -195,7 +170,6 @@ nplp_def.block = gg.list {
    terminators = block_terminators,
    primary     = function (lx)
       -- FIXME use gg.optkeyword()
-	  print("I'm in nplp_def.block parser")
       local x = _stat (lx)
       if lx:is_keyword (lx:peek(), ";") then lx:next() end
       return x
@@ -268,9 +242,7 @@ local elseifs_parser = gg.list {
    terminators = { "else", "end" } }
 
 local function assign_or_call_stat_parser (lx)
-   print "I'm in assign or call stat parser(nplp_def)"
    local e = nplp_def.expr_list (lx)
-   table.print(e, 60, "nohash")
    local a = lx:is_keyword(lx:peek())
    local op = a and nplp_def.stat.assignments[a]
    if op then

@@ -28,82 +28,14 @@ local nplgen = commonlib.gettable("System.Compiler.nplgen")
 ----------------------------------------------------------------------
 --Delete original -{}, +{} structure parser in Metalua
 ----------------------------------------------------------------------
-nplp.expr.primary:del("+{") -- TODO: FIXME, why deleting "+{" for nplp.expr leads to error
+nplp.expr.primary:del("+{") 
 nplp.expr.suffix:del("+{")
 nplp.expr.primary:del("-{")
 nplp.stat:del("-{")
 --nplp.lexer:del "-{"	TODO: delete "-{" keyword
 
-----------------------------------------------------------------------
---Override Splice Parser
-----------------------------------------------------------------------
-function nplp.splice (ast)
-   local s = nplgen.ast_to_str (ast)
-   local f = loadstring (s)
-   local result=f()
-   return result
-end
-
-function nplp.splice_content (lx)
-	local parser_name = "expr"
-	if lx:is_keyword (lx:peek(2), ":") then
-		local a = lx:next()
-		lx:next() -- skip ":"
-		assert (a.tag=="Id", "Invalid splice parser name")
-		parser_name = a[1]
-	end
-	local ast = nplp[parser_name](lx)
-	if nplp.in_a_quote then
-		printf("SPLICE_IN_QUOTE:\n%s", _G.table.tostring(ast, "nohash", 60))
-		return { tag="Splice", ast }
-	else
-		-- try to compare two ast, translate them into string first
-		-- TODO: need a more robust comparision between two asts
-		ast_str = _G.table.tostring(ast, "nohash", 60)
-		--print(ast_str)  
-		if parser_name == "expr" then 
-			if ast_str == "`Call{ `Index{ `Id \"nplp\", `String \"emit\" } }" then
-				ast = {tag="Table", {tag="Pair", {tag="String", "tag"}, {tag="String", "Current"}}}  -- special node in ast
-			end
-			ast = { { tag="Return", ast } }
-		elseif parser_name == "stat"  then ast = { ast }
-		elseif parser_name ~= "block" then
-			error ("splice content must be an expr, stat or block") end
-			--printf("EXEC THIS SPLICE:\n%s", _G.table.tostring(ast, "nohash", 60))
-		return nplp.splice (ast)
-	end
-end
-
-----------------------------------------------------------------------
---Override some parsers using splice parser
-----------------------------------------------------------------------
-function nplp.opt_id (lx)
-   local a = lx:peek();
-   if lx:is_keyword (a, "-{") then
-      local v = gg.sequence{ "-{", nplp.splice_content, "}" } (lx) [1]
-      if v.tag ~= "Id" and v.tag ~= "Splice" then
-         gg.parse_error(lx,"Bad id splice")
-      end
-      return v
-   elseif a.tag == "Id" then return lx:next()
-   else return false end
-end
-
-function nplp.string (lx)
-   local a = lx:peek()
-   if lx:is_keyword (a, "-{") then
-      local v = gg.sequence{ "-{", nplp.splice_content, "}" } (lx) [1]
-      if v.tag ~= "" and v.tag ~= "Splice" then
-         gg.parse_error(lx,"Bad string splice")
-      end
-      return v
-   elseif a.tag == "String" then return lx:next()
-   else error "String expected" end
-end
-
-
 --------------------------------------------------------------------------------
--- NPL def statements
+-- build transformer for defined structure
 --------------------------------------------------------------------------------
 local function transformer_maker(name)
 	local template_ast = {}
@@ -156,11 +88,10 @@ local function transformer_maker(name)
    	return transformer
 end
 
+--------------------------------------------------------------------------------
+-- When meet params in +{}, label them with tag `Param #
+--------------------------------------------------------------------------------
 local function label_params(ast, symTbl)
-	--if ast.lineinfo then
-		--table.print(ast.lineinfo.first, 60, "nohash")
-		--table.print(ast.lineinfo.last, 60, "nohash")
-	--end
 	local res_ast = {}
 	if type(ast) == 'table' then
 		if ast.tag == 'Id' and nplp.in_a_quote and symTbl[ast[1]] then
@@ -194,6 +125,9 @@ local function label_params(ast, symTbl)
 	return res_ast
 end
 
+--------------------------------------------------------------------------------
+-- register the defined structure
+--------------------------------------------------------------------------------
 function nplp.register (name, tempAst)
 	if not _G.metaDefined then _G.metaDefined = {} end
 	_G.metaDefined[name] = tempAst
@@ -201,6 +135,9 @@ function nplp.register (name, tempAst)
     nplp.stat:add{name, "(", nplp.func_args_content, ")", "{", nplp.block, "}", builder=nil, transformers={transformer_maker(name)}}
 end
 
+------------------------------------------------------------------------------------------
+-- Define builder for def structure, including structure registeration, params replacement  
+------------------------------------------------------------------------------------------
 local function def_builder(x)
    	local elems, blk = x[1], x[2]
    	if #elems > 0 then
@@ -224,9 +161,15 @@ local function def_builder(x)
    	end
 end
 
+--------------------------------------------------------------------------------
+-- Add def structure to parser
+--------------------------------------------------------------------------------
 nplp.lexer:add "def"
 nplp.stat:add{name="define statement", "def", "(", nplp.expr_list, ")", "{", nplp_def.block, "}", builder=def_builder}
 
+--------------------------------------------------------------------------------
+-- Parse src code and translate to ast
+--------------------------------------------------------------------------------
 function nplp.src_to_ast(src)
   local  lx  = nplp.lexer:newstream (src)
   local  ast = nplp.chunk (lx)
