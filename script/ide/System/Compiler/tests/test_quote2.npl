@@ -1,0 +1,34 @@
+----------------------------------------------------------------------
+-- Test +{} 
+-- +{=...} is a shortcut of +{emit(...)}
+-- +{=...} used inside block
+----------------------------------------------------------------------
+-- push () 
+--	translate (5, 10, 15) 
+--	push () 
+--		scale (5) 
+--		translate (5, 10, 15) 
+--	pop () 
+--	print "emit something" 
+-- pop ()
+
+def("scale", p1){
+	push()
+	scale(+{=p1})
+	+{emit()}
+	pop()
+}
+
+def("scaleAndtranslate", p1, p2, p3){
+	push()
+	translate(+{=p1}, +{=p2}, +{=p3})
+	scale(+{=p1}){
+		translate(+{=p1}, +{=p2}, +{=p3})
+	}
+	+{emit()}
+	pop()
+}
+
+scaleAndtranslate(5, 10, 15){
+	print("emit something")
+}
