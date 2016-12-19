@@ -49,40 +49,54 @@ local function transformer_maker(name)
    		local res_ast={}
    		if(type(tast)=='table') then
    			if tast.tag and tast.tag=='EmitAll' then 
-   				res_ast = blk
+   				--res_ast = blk
+				table.insert(res_ast, blk)
 				cfg.emited = true
    			elseif tast.tag and tast.tag=='Param' then
-				if args[tast[1]] then
-					res_ast=args[tast[1]]
+				if tast[1] == 'All' then
+					res_ast=args
+				elseif args[tast[1]] then
+					--res_ast=args[tast[1]]
+					table.insert(res_ast, args[tast[1]])
 				else
-					res_ast={tag='Nil'}
+					--res_ast={tag='Nil'}
+					table.insert(res_ast, {tag='Nil'})
 				end
-			else 
-   				res_ast.tag=tast.tag
+			else
+				local res = {}
+			   	res.tag=tast.tag
 				if not cfg.emited then
-					res_ast.lineinfo = {first = cfg.before}
+					res.lineinfo = {first = cfg.before, last = cfg.before}
 				else
-					res_ast.lineinfo = {first = cfg.after}
+					res.lineinfo = {first = cfg.after, last = cfg.after}
 				end
-   				for i=1, #tast do
-   					res_ast[i], cfg = traverse_and_replace(tast[i], args, blk, cfg)
-   				end
+				for i=1, #tast do
+					local r = {}
+					r, cfg = traverse_and_replace(tast[i], args, blk, cfg)
+					for j=1, #r do
+						table.insert(res, r[j])
+					end
+				end
+				table.insert(res_ast, res)
    			end
    		else
-   			res_ast=tast
+   			--res_ast=tast
+			table.insert(res_ast, tast)
    		end
    		return res_ast, cfg
    	end
 
    	local function transformer(ast)
-	    local cfg = {
+	    table.print(ast.lineinfo.first, 60, "nohash")
+		table.print(ast.lineinfo.last, 60, "nohash")
+		local cfg = {
 			before = ast.lineinfo.first, 
 			after = ast.lineinfo.last,
 			emited = false
 		}
 		--table.print(ast.lineinfo.last, 60, "nohash")
    		args, blk = ast[1], ast[2]
-		return traverse_and_replace(template_ast, args, blk, cfg)  
+		return traverse_and_replace(template_ast, args, blk, cfg)
    	end
 
    	return transformer
@@ -106,10 +120,12 @@ local function label_params(ast, symTbl)
 				error "not support quote in a quote"
 			end
 			nplp.in_a_quote = true
-			for i=1, #ast do
-				res_ast[i] = label_params(ast[i], symTbl)
-				if ast[i].lineinfo then
-					res_ast[i].lineinfo = ast[i].lineinfo
+			if #ast > 1 then
+				error "quote only support one expression"
+			else
+				res_ast = label_params(ast[1], symTbl)
+				if ast[1].lineinfo then
+					res_ast.lineinfo = ast[1].lineinfo
 				end
 			end
 			nplp.in_a_quote = prev_quote
@@ -165,10 +181,10 @@ local function def_builder(x)
 				error ("def params only allow identifiers")
 			end
 		end
-		--table.print(blk, 60, "nohash")
+		table.print(blk, 60, "nohash")
 		nplp.in_a_quote = false
 		labeld_blk = label_params(blk, symTbl)
-		--table.print(labeld_blk, 60, "nohash")
+		table.print(labeld_blk, 60, "nohash")
       	if type(name)=='string' then
          	nplp.register(name, labeld_blk)
       	elseif type(s)=='table' then
