@@ -96,12 +96,23 @@ end
 ----------------------------------------------------------------------
 --expr parser redefined
 ----------------------------------------------------------------------
+nplp_def.expr_in_quote = nplp_def.expr
+nplp_def.expr_in_quote.primary:del ("+{")
+function nplp_def.opt_expr_in_quote(lx)
+	local a = lx:peek()
+	if lx:is_keyword (a, "}")  then		-- if nothing inside +{}, treat is as nil
+		return {tag="Nil"}
+	else
+		return nplp_def.expr_in_quote (lx)
+	end
+end
+
 nplp_def.expr = gg.expr { name = "expression",
 
    primary = gg.multisequence{ name="expr primary",
       { "(", _expr, ")",           builder = 'Paren' },
       { "function", nplp_def.func_val,     builder = nplp_def.fget(1) },
-      { "+{", _expr, "}",  builder = quote_builder }, 
+      { "+{", nplp_def.opt_expr_in_quote, "}",  builder = quote_builder }, 
       { "nil",                     builder = "Nil" },
       { "true",                    builder = "True" },
       { "false",                   builder = "False" },
@@ -272,7 +283,7 @@ local function assign_or_call_stat_parser (lx)
    end
 end
 
-local_stat_parser = gg.multisequence{
+local local_stat_parser = gg.multisequence{
    -- local function <name> <func_val>
    { "function", nplp_def.id, nplp_def.func_val, builder = 
       function(x) 
