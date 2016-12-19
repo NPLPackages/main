@@ -156,7 +156,7 @@ function nplp.register (name, tempAst)
 	_G.metaDefined[name] = tempAst
 	nplp.lexer:add(name)
     nplp.stat:add{name, "(", nplp.func_args_content, ")", "{", nplp.block, "}", builder=nil, transformers={transformer_maker(name)}}
-	nplp_def.stat:add{name, "(", nplp.func_args_content, ")", "{", nplp_def.block, "}", builder=nil, transformers={transformer_maker(name)}}
+	nplp_def.stat:add{name, "(", nplp_def.func_args_content, ")", "{", nplp_def.block, "}", builder=nil, transformers={transformer_maker(name)}}
 end
 
 ------------------------------------------------------------------------------------------
