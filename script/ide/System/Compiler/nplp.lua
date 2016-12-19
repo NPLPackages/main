@@ -97,19 +97,16 @@ local function label_params(ast, symTbl)
 		if ast.tag == 'Id' and symTbl[ast[1]] then
 			res_ast.tag = 'Param'-- symTle[ast[1]] reflects ith param
 			res_ast[1] = symTbl[ast[1]]
+		elseif ast.tag == 'Dots' and symTbl[1] then
+			res_ast.tag = 'Param'
+			res_ast[1] = 'All'
 		elseif ast.tag == 'Quote' then
-			--local prev_quote = nplp.in_a_quote
-			--if prev_quote then
-			--	error "not support quote in a quote"
-			--end
-			--nplp.in_a_quote = true
 			for i=1, #ast do
 				res_ast[i] = label_params(ast[i], symTbl)
 				if ast[i].lineinfo then
 					res_ast[i].lineinfo = ast[i].lineinfo
 				end
 			end
-			--nplp.in_a_quote = prev_quote
 		else
 			res_ast.tag = ast.tag
 			res_ast.lineinfo = ast.lineinfo
@@ -145,6 +142,7 @@ end
 ------------------------------------------------------------------------------------------
 local function def_builder(x)
    	local elems, blk = x[1], x[2]
+	table.print(elems, 60, "nohash")
    	if #elems > 0 then
 		if(elems[1].tag ~= 'String') then
 			error("name needed for def structure")
@@ -154,12 +152,16 @@ local function def_builder(x)
 		for i=2, #elems do					-- read from second params to store as parameters for func in symbol table
 			if elems[i].tag == "Id" then 
 				symTbl[elems[i][1]] = i-1
-			else 
+			elseif elems[i].tag == "Dots" then
+				table.print(elems[i], 60, "nohash")
+				symTbl[1] = true           -- use a special position to store '...'
+			else
 				error ("def params only allow identifiers")
 			end
 		end
-		--nplp.in_a_quote = false
+		table.print(blk, 60, "nohash")
 		labeld_blk = label_params(blk, symTbl)
+		table.print(labeld_blk, 60, "nohash")
       	if type(name)=='string' then
          	nplp.register(name, labeld_blk)
       	elseif type(s)=='table' then
@@ -170,10 +172,50 @@ local function def_builder(x)
 end
 
 --------------------------------------------------------------------------------
+-- Parse a string
+--------------------------------------------------------------------------------
+function nplp.string (lx)
+   local a = lx:peek()
+   if a.tag == "String" then return lx:next()
+   else gg.parse_error (lx, "String expected") end
+end
+
+nplp.params = gg.list{name="params",
+   nplp.id ,
+   separators  = ",", terminators = ")"}
+--------------------------------------------------------------------------------
+-- def structure params parser
+--------------------------------------------------------------------------------
+function nplp.def_params (lx) 
+	local res = {}
+	local name = nplp.string (lx)
+	table.insert(res, name)
+	local a = lx:peek()
+	if lx:is_keyword(a, ')') then
+	elseif lx:is_keyword(a, ',') then
+		lx:next() -- skip ','
+		local b = lx:peek()
+		if lx:is_keyword(b, '...') then
+		    lx:next()
+			table.insert(res, {tag="Dots"})
+		else
+			local params = nplp.params (lx)
+			for i=1, #params do
+				table.insert(res, params[i])
+			end
+		end
+	else
+		gg.parse_error(lx, "unexpected token in def parameters")
+	end
+	return res
+end
+
+
+--------------------------------------------------------------------------------
 -- Add def structure to parser
 --------------------------------------------------------------------------------
 nplp.lexer:add "def"
-nplp.stat:add{name="define statement", "def", "(", nplp.expr_list, ")", "{", nplp_def.block, "}", builder=def_builder}
+nplp.stat:add{name="define statement", "def", "(", nplp.def_params, ")", "{", nplp_def.block, "}", builder=def_builder}
 
 --------------------------------------------------------------------------------
 -- Parse src code and translate to ast
