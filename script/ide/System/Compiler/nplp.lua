@@ -80,9 +80,9 @@ local function transformer_maker(name)
 			after = ast.lineinfo.last,
 			emited = false
 		}
-		table.print(ast.lineinfo.last, 60, "nohash")
+		--table.print(ast.lineinfo.last, 60, "nohash")
    		args, blk = ast[1], ast[2]
-		return traverse_and_replace(template_ast, args, blk, cfg)
+		return traverse_and_replace(template_ast, args, blk, cfg)  
    	end
 
    	return transformer
@@ -94,28 +94,31 @@ end
 local function label_params(ast, symTbl)
 	local res_ast = {}
 	if type(ast) == 'table' then
-		if ast.tag == 'Id' and nplp.in_a_quote and symTbl[ast[1]] then
+		if ast.tag == 'Id' and symTbl[ast[1]] then
 			res_ast.tag = 'Param'-- symTle[ast[1]] reflects ith param
 			res_ast[1] = symTbl[ast[1]]
 		elseif ast.tag == 'Quote' then
-			local prev_quote = nplp.in_a_quote
-			if prev_quote then
-				error "not support quote in a quote"
-			end
-			nplp.in_a_quote = true
+			--local prev_quote = nplp.in_a_quote
+			--if prev_quote then
+			--	error "not support quote in a quote"
+			--end
+			--nplp.in_a_quote = true
 			for i=1, #ast do
 				res_ast[i] = label_params(ast[i], symTbl)
 				if ast[i].lineinfo then
 					res_ast[i].lineinfo = ast[i].lineinfo
 				end
 			end
-			nplp.in_a_quote = prev_quote
+			--nplp.in_a_quote = prev_quote
 		else
 			res_ast.tag = ast.tag
+			res_ast.lineinfo = ast.lineinfo
 			for i=1, #ast do
-				res_ast[i] = label_params(ast[i], symTbl)
-				if ast[i].lineinfo then
+				if type(ast[i]) == 'table' then
+					res_ast[i] = label_params(ast[i], symTbl)
 					res_ast[i].lineinfo = ast[i].lineinfo
+				else
+					res_ast[i] = ast[i]
 				end
 			end
 		end
@@ -129,10 +132,12 @@ end
 -- register the defined structure
 --------------------------------------------------------------------------------
 function nplp.register (name, tempAst)
+	print("registering")
 	if not _G.metaDefined then _G.metaDefined = {} end
 	_G.metaDefined[name] = tempAst
 	nplp.lexer:add(name)
     nplp.stat:add{name, "(", nplp.func_args_content, ")", "{", nplp.block, "}", builder=nil, transformers={transformer_maker(name)}}
+	nplp_def.stat:add{name, "(", nplp.func_args_content, ")", "{", nplp_def.block, "}", builder=nil, transformers={transformer_maker(name)}}
 end
 
 ------------------------------------------------------------------------------------------
@@ -141,6 +146,9 @@ end
 local function def_builder(x)
    	local elems, blk = x[1], x[2]
    	if #elems > 0 then
+		if(elems[1].tag ~= 'String') then
+			error("name needed for def structure")
+		end
       	name=elems[1][1]
 		symTbl = {}
 		for i=2, #elems do					-- read from second params to store as parameters for func in symbol table
@@ -150,7 +158,7 @@ local function def_builder(x)
 				error ("def params only allow identifiers")
 			end
 		end
-		nplp.in_a_quote = false
+		--nplp.in_a_quote = false
 		labeld_blk = label_params(blk, symTbl)
       	if type(name)=='string' then
          	nplp.register(name, labeld_blk)
