@@ -506,3 +506,12 @@ function lexer:clone()
    clone.__index = clone
    return clone
 end
+
+----------------------------------------------------------------------
+-- Added for NPLP
+----------------------------------------------------------------------
+function lexer:del(w)
+	if self.alpha [w] then
+		self.alpha [w] = false
+	end
+end

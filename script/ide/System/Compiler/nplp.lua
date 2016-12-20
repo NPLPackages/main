@@ -36,13 +36,13 @@ nplp.stat:del("-{")
 nplp.metaDefined = {}
 
 function nplp:new()
-	print("in new")
 	local o = {
 		metaDefined = {}
 	}
-	self:construct()
+	--self:construct()
 	setmetatable (o, self)
 	self.__index = self
+	o:construct()
 	return o
 end
 
@@ -196,7 +196,7 @@ function nplp:defbuilder_maker()
 				error ("def params only allow identifiers")
 			end
 		end
-		table.print(blk, 60, "nohash")
+		--table.print(blk, 60, "nohash")
 		self.in_a_quote_or_emit = false
 		labeld_blk = self:label_params(blk, symTbl)
 		--table.print(labeld_blk, 60, "nohash")
@@ -231,7 +231,7 @@ function nplp:def_builder(x)
 				error ("def params only allow identifiers")
 			end
 		end
-		table.print(blk, 60, "nohash")
+		--table.print(blk, 60, "nohash")
 		self.in_a_quote_or_emit = false
 		labeld_blk = label_params(blk, symTbl)
 		--table.print(labeld_blk, 60, "nohash")
@@ -244,68 +244,47 @@ function nplp:def_builder(x)
    	end
 end
 
-----------------------------------------------------------------------------------
----- Parse a string
-----------------------------------------------------------------------------------
---function nplp.string (lx)
-   --local a = lx:peek()
-   --if a.tag == "String" then return lx:next()
-   --else gg.parse_error (lx, "String expected") end
---end
---
---nplp.params = gg.list{name="params",
-   --nplp.id ,
-   --separators  = ",", terminators = ")"}
-----------------------------------------------------------------------------------
----- def structure params parser
-----------------------------------------------------------------------------------
---function nplp.def_params (lx) 
-	--local res = {}
-	--local name = nplp.string (lx)
-	--table.insert(res, name)
-	--local a = lx:peek()
-	--if lx:is_keyword(a, ')') then
-	--elseif lx:is_keyword(a, ',') then
-		--lx:next() -- skip ','
-		--local b = lx:peek()
-		--if lx:is_keyword(b, '...') then
-		    --lx:next()
-			--table.insert(res, {tag="Dots"})
-		--else
-			--local params = nplp.params (lx)
-			--for i=1, #params do
-				--table.insert(res, params[i])
-			--end
-		--end
-	--else
-		--gg.parse_error(lx, "unexpected token in def parameters")
-	--end
-	--return res
---end
-
-
 --------------------------------------------------------------------------------
 -- Add def structure to parser
 --------------------------------------------------------------------------------
 function nplp:construct()
 	nplp.lexer:add "def"
-	nplp.stat:add{name="define statement", "def", "(", nplp_def.params, ")", "{", nplp_def.block, "}", builder=self:defbuilder_maker()}
+	nplp.stat:add{"def", "(", nplp_def.params, ")", "{", nplp_def.block, "}", builder=self:defbuilder_maker()}
 end
 
-nplp:construct()
+function nplp:deconstruct()
+	--nplp.lexer:add "def"
+	nplp.stat:del("def")
+end
 
+--nplp:construct()
+
+--------------------------------------------------------------------------------
+-- set environment before parsing
+--------------------------------------------------------------------------------
 function nplp:setEnv()
+	self:construct()
+	print("in set env")
 	for name, v in pairs(self.metaDefined) do 
+		printf("in set env: %s", name)
+		nplp.lexer:add(name)
 		nplp.stat:add{name, "(", nplp.func_args_content, ")", "{", nplp.block, "}", builder=nil, transformers={self:transformer_maker(name)}}
 		nplp_def.stat:add{name, "(", nplp_def.func_args_content, ")", "{", nplp_def.block, "}", builder=nil, transformers={self:transformer_maker(name)}}
 	end
 end
 
+--------------------------------------------------------------------------------
+-- clear environment after parsing
+--------------------------------------------------------------------------------
 function nplp:clearEnv()
+	print("in clear env")
 	for name, v in pairs(self.metaDefined) do 
+		printf("in clear env: %s", name)
+		nplp.lexer:del(name)
 		nplp.stat:del(name)
 		nplp_def.stat:del(name)
 	end
+	self:deconstruct()
 end
 --------------------------------------------------------------------------------
 -- Parse src code and translate to ast
