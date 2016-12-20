@@ -76,7 +76,7 @@ end
 ----------------------------------------------------------------------
 local function quote_builder(x)
 	x = unpack(x)
-	table.print(x, 60, "nohash")
+	--table.print(x, 60, "nohash")
 	if x.tag == 'Call' and x[1].tag		-- emit() function called in +{} 
 		and x[1].tag == 'Id' and x[1][1] == "emit" then
 		if #x > 1 then
@@ -84,7 +84,7 @@ local function quote_builder(x)
 			for i=2, #x do
 				table.insert(res, x[i])
 			end
-			table.print(res, 60, "nohash")
+			--table.print(res, 60, "nohash")
 			return res
 		else
 			return {tag="EmitAll"}

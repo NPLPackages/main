@@ -37,6 +37,7 @@ function nplc.compile_Debug(src_filename, src_filename2, dst_filename)	-- debug 
 	local src2 = src_file:read '*a'; src_file:close()
 	--src = src:gsub('^#[^\r\n]*', '') 
 	local nplpInt = nplp:new()
+	local nplpInt2 = nplp:new()
 	local ast = nplpInt:src_to_ast(src1)
 	local ast2 = nplpInt:src_to_ast(src2)
 	--table.print(ast, 80, "nohash")

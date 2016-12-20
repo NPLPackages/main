@@ -273,8 +273,9 @@ function M:Set (node)
 		self:list     (params, ", ", 2)
 		self:acc      ")"
 		self:acc      " "
-		self:list     (body, self.nl)
+		self:list     (body, " ")
 		self:acc      " "
+		self:goTail   (node)
 		self:acc      "end"
 
 	elseif type(node[2][1]) == 'table'
@@ -349,7 +350,7 @@ function M:If (node)
 		self:acc      "else"  -- TODO: put 'else' in right position
 		self:acc      " "
 		self:list     (node[#node], " ")
-		self:nldedent (" ")
+		self:acc      (" ")
 	end
 	self:goTail (node)
 	self:acc "end"
@@ -433,10 +434,6 @@ end
 function M:Call (node, f)
 	-- single string or table literal arg ==> no need for parentheses. --
 	local parens
-	if(node.lineinfo) then
-		table.print(node.lineinfo.first, 60, "nohash")
-		table.print(node.lineinfo.last, 60, "nohash")
-	end
 	if #node == 2 and (node[2].tag == 'String' or node[2].tag == 'Table') then
 		parens = false
 	else parens = true
@@ -503,8 +500,8 @@ end
 function M:Table (node)
 	if not node[1] then self:acc "{ }" else
 		self:acc "{"
-		if #node > 1 then self:nlindent () else self:acc " " end
-
+		self:acc " "
+		--if #node > 1 then self:nlindent () else self:acc " " end
 		for i, elem in ipairs (node) do
 			if elem.tag == 'Pair' 
 				and elem[1].tag == 'String' 
