@@ -18,7 +18,6 @@ function nplc.compile(src_filename, dst_filename)
 	local src_file = assert(io.open (src_filename, 'r'))
 	local src = src_file:read '*a'; src_file:close()
 	--src = src:gsub('^#[^\r\n]*', '') 
-
 	local ast = nplp.src_to_ast(src)
 
 	--table.print(ast, 80, "nohash")
@@ -28,3 +27,11 @@ function nplc.compile(src_filename, dst_filename)
 	dst_file:write(compiled_src)
 	dst_file:close()
 end
+
+function nplc.loadstring(string, filename)
+	local ast = nplp.src_to_ast(string)
+	local compiled_src= nplgen.ast_to_str(string)
+	return loadstring(compiled_src, filename)
+end
+
+NPL.loadstring = nplc.loadstring
