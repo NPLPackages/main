@@ -1,0 +1,37 @@
+----------------------------------------------------------------------
+-- Test multi nplp objects
+----------------------------------------------------------------------
+NPL.load("(gl)script/ide/System/Compiler/nplp.lua");
+local nplp = commonlib.gettable("System.Compiler.nplp")
+local macro_plusOne = [[
+	def("plusOne", p1){
+		local a = 1
+		a = a + +{=p1}
+		print(a)
+	}
+]]
+
+local nplp_plusOne = nplp:new()
+pcall(NPL.loadstring(macro_plusOne, "macro", nplp_plusOne))
+
+local app_plusOne = [[
+    plusOne(10){}
+]]
+
+pcall(NPL.loadstring(app_plusOne, "app", nplp_plusOne))		-- 11
+
+local multiFour = [[
+	def("multiFour", p1){
+		local a = 4
+		a = a * +{=p1}
+		print(a)
+	}
+
+	multiFour(7){}
+]]
+
+local nplp_multiFour = nplp:new()
+pcall(NPL.loadstring(multiFour, "multiFour", nplp_multiFour))    --28
+pcall(NPL.loadstring(app_plusOne, "plusOne", nplp_multiFour))    --nothing happened, 
+																 --multiFour parser doesn't recognize 'plusOne'
+
