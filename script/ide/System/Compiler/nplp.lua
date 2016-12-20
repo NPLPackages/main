@@ -33,14 +33,26 @@ nplp.expr.suffix:del("+{")
 nplp.expr.primary:del("-{")
 nplp.stat:del("-{")
 --nplp.lexer:del "-{"	TODO: delete "-{" keyword
+nplp.metaDefined = {}
+
+function nplp:new()
+	print("in new")
+	local o = {
+		metaDefined = {}
+	}
+	self:construct()
+	setmetatable (o, self)
+	self.__index = self
+	return o
+end
 
 --------------------------------------------------------------------------------
 -- build transformer for defined structure
 --------------------------------------------------------------------------------
-local function transformer_maker(name)
+function nplp:transformer_maker(name)
 	local template_ast = {}
-	if _G.metaDefined[name] then
-		template_ast = _G.metaDefined[name]
+	if self.metaDefined[name] then
+		template_ast = self.metaDefined[name]
    	else
 		print(name)
     	error("not defined symbol")
@@ -107,36 +119,36 @@ end
 --------------------------------------------------------------------------------
 -- When meet params in +{}, label them with tag `Param #
 --------------------------------------------------------------------------------
-local function label_params(ast, symTbl)
+function nplp:label_params(ast, symTbl)
 	local res_ast = {}
 	if type(ast) == 'table' then
-		if ast.tag == 'Id' and symTbl[ast[1]] and nplp.in_a_quote_or_emit then
+		if ast.tag == 'Id' and symTbl[ast[1]] and self.in_a_quote_or_emit then
 			res_ast.tag = 'Param'-- symTle[ast[1]] reflects ith param
 			res_ast[1] = symTbl[ast[1]]
-		elseif ast.tag == 'Dots' and symTbl[1] and nplp.in_a_quote_or_emit then
+		elseif ast.tag == 'Dots' and symTbl[1] and self.in_a_quote_or_emit then
 			res_ast.tag = 'Param'
 			res_ast[1] = 'All'
 		elseif ast.tag == 'Quote' or ast.tag == 'Emit' then
-			local prev_quote = nplp.in_a_quote_or_emit
+			local prev_quote = self.in_a_quote_or_emit
 			if prev_quote then
 				error "not support quote in a quote"
 			end
-			nplp.in_a_quote_or_emit = true
+			self.in_a_quote_or_emit = true
 			if #ast > 1 then
 				error "quote only support one expression"
 			else
-				res_ast = label_params(ast[1], symTbl)
+				res_ast = self:label_params(ast[1], symTbl)
 				if ast[1].lineinfo then
 					res_ast.lineinfo = ast[1].lineinfo
 				end
 			end
-			nplp.in_a_quote_or_emit = prev_quote
+			self.in_a_quote_or_emit = prev_quote
 		else
 			res_ast.tag = ast.tag
 			res_ast.lineinfo = ast.lineinfo
 			for i=1, #ast do
 				if type(ast[i]) == 'table' then
-					res_ast[i] = label_params(ast[i], symTbl)
+					res_ast[i] = self:label_params(ast[i], symTbl)
 					res_ast[i].lineinfo = ast[i].lineinfo
 				else
 					res_ast[i] = ast[i]
@@ -152,19 +164,20 @@ end
 --------------------------------------------------------------------------------
 -- register the defined structure
 --------------------------------------------------------------------------------
-function nplp.register (name, tempAst)
+function nplp:register (name, tempAst)
 	printf("registering : ", name)
-	if not _G.metaDefined then _G.metaDefined = {} end
-	_G.metaDefined[name] = tempAst
+	if not self.metaDefined then self.metaDefined = {} end
+	self.metaDefined[name] = tempAst
 	nplp.lexer:add(name)
-    nplp.stat:add{name, "(", nplp.func_args_content, ")", "{", nplp.block, "}", builder=nil, transformers={transformer_maker(name)}}
-	nplp_def.stat:add{name, "(", nplp_def.func_args_content, ")", "{", nplp_def.block, "}", builder=nil, transformers={transformer_maker(name)}}
+    nplp.stat:add{name, "(", nplp.func_args_content, ")", "{", nplp.block, "}", builder=nil, transformers={self:transformer_maker(name)}}
+	nplp_def.stat:add{name, "(", nplp_def.func_args_content, ")", "{", nplp_def.block, "}", builder=nil, transformers={self:transformer_maker(name)}}
 end
 
 ------------------------------------------------------------------------------------------
 -- Define builder for def structure, including structure registeration, params replacement  
 ------------------------------------------------------------------------------------------
-local function def_builder(x)
+function nplp:defbuilder_maker()
+	local def_builder = function (x)
    	local elems, blk = x[1], x[2]
 	--table.print(elems, 60, "nohash")
    	if #elems > 0 then
@@ -184,11 +197,46 @@ local function def_builder(x)
 			end
 		end
 		table.print(blk, 60, "nohash")
-		nplp.in_a_quote_or_emit = false
+		self.in_a_quote_or_emit = false
+		labeld_blk = self:label_params(blk, symTbl)
+		--table.print(labeld_blk, 60, "nohash")
+      	if type(name)=='string' then
+         	self:register(name, labeld_blk)
+      	elseif type(s)=='table' then
+      	end
+   	else
+      	error("def construction error")
+   	end
+	end
+
+	return def_builder
+end
+
+function nplp:def_builder(x)
+   	local elems, blk = x[1], x[2]
+	--table.print(elems, 60, "nohash")
+   	if #elems > 0 then
+		if(elems[1].tag ~= 'String') then
+			error("name needed for def structure")
+		end
+      	name=elems[1][1]
+		symTbl = {}
+		for i=2, #elems do					-- read from second params to store as parameters for func in symbol table
+			if elems[i].tag == "Id" then 
+				symTbl[elems[i][1]] = i-1
+			elseif elems[i].tag == "Dots" then
+				table.print(elems[i], 60, "nohash")
+				symTbl[1] = true           -- use a special position to store '...'
+			else
+				error ("def params only allow identifiers")
+			end
+		end
+		table.print(blk, 60, "nohash")
+		self.in_a_quote_or_emit = false
 		labeld_blk = label_params(blk, symTbl)
 		--table.print(labeld_blk, 60, "nohash")
       	if type(name)=='string' then
-         	nplp.register(name, labeld_blk)
+         	self:register(name, labeld_blk)
       	elseif type(s)=='table' then
       	end
    	else
@@ -239,16 +287,35 @@ end
 --------------------------------------------------------------------------------
 -- Add def structure to parser
 --------------------------------------------------------------------------------
-nplp.lexer:add "def"
-nplp.stat:add{name="define statement", "def", "(", nplp_def.params, ")", "{", nplp_def.block, "}", builder=def_builder}
+function nplp:construct()
+	nplp.lexer:add "def"
+	nplp.stat:add{name="define statement", "def", "(", nplp_def.params, ")", "{", nplp_def.block, "}", builder=self:defbuilder_maker()}
+end
 
+nplp:construct()
+
+function nplp:setEnv()
+	for name, v in pairs(self.metaDefined) do 
+		nplp.stat:add{name, "(", nplp.func_args_content, ")", "{", nplp.block, "}", builder=nil, transformers={self:transformer_maker(name)}}
+		nplp_def.stat:add{name, "(", nplp_def.func_args_content, ")", "{", nplp_def.block, "}", builder=nil, transformers={self:transformer_maker(name)}}
+	end
+end
+
+function nplp:clearEnv()
+	for name, v in pairs(self.metaDefined) do 
+		nplp.stat:del(name)
+		nplp_def.stat:del(name)
+	end
+end
 --------------------------------------------------------------------------------
 -- Parse src code and translate to ast
 --------------------------------------------------------------------------------
-function nplp.src_to_ast(src)
-  local  lx  = nplp.lexer:newstream (src)
-  local  ast = nplp.chunk (lx)
-  return ast
+function nplp:src_to_ast(src)
+	self:setEnv()
+	local  lx  = nplp.lexer:newstream (src)
+	local  ast = nplp.chunk (lx)
+	self:clearEnv()
+	return ast
 end
 
 ---------------------------------
