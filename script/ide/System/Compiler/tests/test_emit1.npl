@@ -1,0 +1,22 @@
+----------------------------------------------------------------------
+-- Test Default emit function
+-- +{emit(p)}, emit parameters, equal to +{=p}(only one param supported now, to be improved)
+----------------------------------------------------------------------
+-- push () 
+--	scale (5) 
+--  scale (5) 
+--	translate (1, 1, 1) 
+-- pop ()
+
+def("scale", p1){
+	push()
+	scale(+{emit(p1)})
+	scale(+{=p1})
+	+{emit()}
+	pop()
+}
+
+
+scale(5){
+	translate(1,1,1)
+}

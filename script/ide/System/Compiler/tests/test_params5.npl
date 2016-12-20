@@ -1,0 +1,22 @@
+----------------------------------------------------------------------
+-- Test Define Structure Parameters
+-- +{= x}, x doesn't exist or be null
+----------------------------------------------------------------------
+-- push () 
+--	scale (nil) 
+--	print (nil) 
+--	translate (1, 1, 1) 
+-- pop ()
+
+def("scale"){
+	push()
+	scale(+{=p1})
+	print(+{=})
+	+{emit()}
+	pop()
+}
+
+
+scale(){
+	translate(1,1,1)
+}
