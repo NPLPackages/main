@@ -28,7 +28,7 @@ function nplc.compile(src_filename, dst_filename)
 	dst_file:close()
 end
 
-function nplc.loadstring(string, filename)
+function nplc.loadstring(string, filename, optional)
 	local ast = nplp.src_to_ast(string)
 	local compiled_src= nplgen.ast_to_str(ast)
 	return loadstring(compiled_src, filename)
