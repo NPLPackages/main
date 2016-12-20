@@ -42,6 +42,7 @@ local function transformer_maker(name)
 	if _G.metaDefined[name] then
 		template_ast = _G.metaDefined[name]
    	else
+		print(name)
     	error("not defined symbol")
    	end
 
@@ -49,9 +50,10 @@ local function transformer_maker(name)
    		local res_ast={}
    		if(type(tast)=='table') then
    			if tast.tag and tast.tag=='EmitAll' then 
-   				--res_ast = blk
-				table.insert(res_ast, blk)
-				cfg.emited = true
+   					--res_ast = blk
+					table.insert(res_ast, blk)
+					cfg.emited = true
+
    			elseif tast.tag and tast.tag=='Param' then
 				if tast[1] == 'All' then
 					res_ast=args
@@ -87,8 +89,8 @@ local function transformer_maker(name)
    	end
 
    	local function transformer(ast)
-	    table.print(ast.lineinfo.first, 60, "nohash")
-		table.print(ast.lineinfo.last, 60, "nohash")
+	    --table.print(ast.lineinfo.first, 60, "nohash")
+		--table.print(ast.lineinfo.last, 60, "nohash")
 		local cfg = {
 			before = ast.lineinfo.first, 
 			after = ast.lineinfo.last,
@@ -108,18 +110,18 @@ end
 local function label_params(ast, symTbl)
 	local res_ast = {}
 	if type(ast) == 'table' then
-		if ast.tag == 'Id' and symTbl[ast[1]] and nplp.in_a_quote then
+		if ast.tag == 'Id' and symTbl[ast[1]] and nplp.in_a_quote_or_emit then
 			res_ast.tag = 'Param'-- symTle[ast[1]] reflects ith param
 			res_ast[1] = symTbl[ast[1]]
-		elseif ast.tag == 'Dots' and symTbl[1] and nplp.in_a_quote then
+		elseif ast.tag == 'Dots' and symTbl[1] and nplp.in_a_quote_or_emit then
 			res_ast.tag = 'Param'
 			res_ast[1] = 'All'
-		elseif ast.tag == 'Quote' then
-			local prev_quote = nplp.in_a_quote
+		elseif ast.tag == 'Quote' or ast.tag == 'Emit' then
+			local prev_quote = nplp.in_a_quote_or_emit
 			if prev_quote then
 				error "not support quote in a quote"
 			end
-			nplp.in_a_quote = true
+			nplp.in_a_quote_or_emit = true
 			if #ast > 1 then
 				error "quote only support one expression"
 			else
@@ -128,7 +130,7 @@ local function label_params(ast, symTbl)
 					res_ast.lineinfo = ast[1].lineinfo
 				end
 			end
-			nplp.in_a_quote = prev_quote
+			nplp.in_a_quote_or_emit = prev_quote
 		else
 			res_ast.tag = ast.tag
 			res_ast.lineinfo = ast.lineinfo
@@ -151,7 +153,7 @@ end
 -- register the defined structure
 --------------------------------------------------------------------------------
 function nplp.register (name, tempAst)
-	print("registering")
+	printf("registering : ", name)
 	if not _G.metaDefined then _G.metaDefined = {} end
 	_G.metaDefined[name] = tempAst
 	nplp.lexer:add(name)
@@ -164,7 +166,7 @@ end
 ------------------------------------------------------------------------------------------
 local function def_builder(x)
    	local elems, blk = x[1], x[2]
-	table.print(elems, 60, "nohash")
+	--table.print(elems, 60, "nohash")
    	if #elems > 0 then
 		if(elems[1].tag ~= 'String') then
 			error("name needed for def structure")
@@ -182,9 +184,9 @@ local function def_builder(x)
 			end
 		end
 		table.print(blk, 60, "nohash")
-		nplp.in_a_quote = false
+		nplp.in_a_quote_or_emit = false
 		labeld_blk = label_params(blk, symTbl)
-		table.print(labeld_blk, 60, "nohash")
+		--table.print(labeld_blk, 60, "nohash")
       	if type(name)=='string' then
          	nplp.register(name, labeld_blk)
       	elseif type(s)=='table' then
@@ -194,51 +196,51 @@ local function def_builder(x)
    	end
 end
 
---------------------------------------------------------------------------------
--- Parse a string
---------------------------------------------------------------------------------
-function nplp.string (lx)
-   local a = lx:peek()
-   if a.tag == "String" then return lx:next()
-   else gg.parse_error (lx, "String expected") end
-end
-
-nplp.params = gg.list{name="params",
-   nplp.id ,
-   separators  = ",", terminators = ")"}
---------------------------------------------------------------------------------
--- def structure params parser
---------------------------------------------------------------------------------
-function nplp.def_params (lx) 
-	local res = {}
-	local name = nplp.string (lx)
-	table.insert(res, name)
-	local a = lx:peek()
-	if lx:is_keyword(a, ')') then
-	elseif lx:is_keyword(a, ',') then
-		lx:next() -- skip ','
-		local b = lx:peek()
-		if lx:is_keyword(b, '...') then
-		    lx:next()
-			table.insert(res, {tag="Dots"})
-		else
-			local params = nplp.params (lx)
-			for i=1, #params do
-				table.insert(res, params[i])
-			end
-		end
-	else
-		gg.parse_error(lx, "unexpected token in def parameters")
-	end
-	return res
-end
+----------------------------------------------------------------------------------
+---- Parse a string
+----------------------------------------------------------------------------------
+--function nplp.string (lx)
+   --local a = lx:peek()
+   --if a.tag == "String" then return lx:next()
+   --else gg.parse_error (lx, "String expected") end
+--end
+--
+--nplp.params = gg.list{name="params",
+   --nplp.id ,
+   --separators  = ",", terminators = ")"}
+----------------------------------------------------------------------------------
+---- def structure params parser
+----------------------------------------------------------------------------------
+--function nplp.def_params (lx) 
+	--local res = {}
+	--local name = nplp.string (lx)
+	--table.insert(res, name)
+	--local a = lx:peek()
+	--if lx:is_keyword(a, ')') then
+	--elseif lx:is_keyword(a, ',') then
+		--lx:next() -- skip ','
+		--local b = lx:peek()
+		--if lx:is_keyword(b, '...') then
+		    --lx:next()
+			--table.insert(res, {tag="Dots"})
+		--else
+			--local params = nplp.params (lx)
+			--for i=1, #params do
+				--table.insert(res, params[i])
+			--end
+		--end
+	--else
+		--gg.parse_error(lx, "unexpected token in def parameters")
+	--end
+	--return res
+--end
 
 
 --------------------------------------------------------------------------------
 -- Add def structure to parser
 --------------------------------------------------------------------------------
 nplp.lexer:add "def"
-nplp.stat:add{name="define statement", "def", "(", nplp.def_params, ")", "{", nplp_def.block, "}", builder=def_builder}
+nplp.stat:add{name="define statement", "def", "(", nplp_def.params, ")", "{", nplp_def.block, "}", builder=def_builder}
 
 --------------------------------------------------------------------------------
 -- Parse src code and translate to ast

@@ -76,9 +76,19 @@ end
 ----------------------------------------------------------------------
 local function quote_builder(x)
 	x = unpack(x)
+	table.print(x, 60, "nohash")
 	if x.tag == 'Call' and x[1].tag		-- emit() function called in +{} 
 		and x[1].tag == 'Id' and x[1][1] == "emit" then
-		return {tag="EmitAll"}
+		if #x > 1 then
+			local res = {tag="Emit"}
+			for i=2, #x do
+				table.insert(res, x[i])
+			end
+			table.print(res, 60, "nohash")
+			return res
+		else
+			return {tag="EmitAll"}
+		end
 	else
 		return {tag="Quote", x}
 	end
@@ -101,6 +111,47 @@ function nplp_def.id_or_dots (lx)
    end
 end
 
+
+--------------------------------------------------------------------------------
+-- Parse a string
+--------------------------------------------------------------------------------
+function nplp_def.string (lx)
+   local a = lx:peek()
+   if a.tag == "String" then return lx:next()
+   else gg.parse_error (lx, "String expected") end
+end
+
+nplp_def.id_list = gg.list{name="params",
+   nplp_def.id ,
+   separators  = ",", terminators = ")"}
+--------------------------------------------------------------------------------
+-- def structure params parser
+--------------------------------------------------------------------------------
+function nplp_def.params (lx) 
+	local res = {}
+	local name = nplp_def.string (lx)
+	table.insert(res, name)
+	local a = lx:peek()
+	if lx:is_keyword(a, ')') then
+	elseif lx:is_keyword(a, ',') then
+		lx:next() -- skip ','
+		local b = lx:peek()
+		if lx:is_keyword(b, '...') then
+		    lx:next()
+			table.insert(res, {tag="Dots"})
+		else
+			local params = nplp_def.id_list (lx)
+			for i=1, #params do
+				table.insert(res, params[i])
+			end
+		end
+	else
+		gg.parse_error(lx, "unexpected token in def parameters")
+	end
+	return res
+end
+
+
 ----------------------------------------------------------------------
 --expr parser redefined
 ----------------------------------------------------------------------
@@ -118,7 +169,25 @@ function nplp_def.opt_expr_in_quote(lx)
 	else
 		e = nplp_def.expr_in_quote (lx)
 		if e.tag ~= 'Call' then 
-			gg.parse_error(lx, " = or function call expected in +{}")
+			gg.parse_error(lx, " = or function call expected in +{} expression")
+		elseif e[1].tag and e[1].tag == 'Id' 
+				and e[1][1] == "emit" and not e[2] then -- emit() used in expression 
+			gg.parse_error(lx, " emit() not allowed +{} expression")
+		end
+		return e
+	end
+end
+
+function nplp_def.stat_in_quote(lx)
+	local a = lx:peek()
+	if lx:is_keyword (a, "}") then
+		gg.parse_error(lx, " could not be null in +{} statement")
+	else
+		e = nplp_def.expr_in_quote (lx)
+		if e.tag ~= 'Call' then 
+			gg.parse_error(lx, " only function call expected in +{} statement")
+		elseif e[1].tag and e[1].tag == 'Id' and e[1][1] ~= 'emit' then
+			gg.parse_error(lx, " only emit function supported right know")
 		end
 		return e
 	end
@@ -327,7 +396,7 @@ nplp_def.stat = gg.multisequence {
    { "local", local_stat_parser, builder = nplp_def.fget (1) },
    { "return", return_expr_list_parser, builder = nplp_def.fget (1, "Return") },
    { "break", builder = function() return { tag="Break" } end },
-   { "+{", nplp_def.expr, "}", builder = quote_builder}, 
+   { "+{", nplp_def.stat_in_quote, "}", builder = quote_builder}, 
    { "if", elseifs_parser, gg.onkeyword{ "else", nplp_def.block }, "end", 
      builder = if_builder },
    default = assign_or_call_stat_parser }
