@@ -108,15 +108,17 @@ nplp_def.expr_in_quote = nplp_def.expr
 nplp_def.expr_in_quote.primary:del ("+{")
 function nplp_def.opt_expr_in_quote(lx)
 	local a = lx:peek()
-	if lx:is_keyword (a, "}")  then		-- if nothing inside +{}, treat is as nil
-		return {tag="Nil"}
-	elseif lx:is_keyword (a, "=") then
+	if lx:is_keyword (a, "=") then
 		lx:next() -- skip "="
-		return nplp_def.id_or_dots(lx)
+		if lx:is_keyword (lx:peek(), "}") then
+			return {tag="Nil"}
+		else
+			return nplp_def.id_or_dots(lx)
+		end
 	else
 		e = nplp_def.expr_in_quote (lx)
 		if e.tag ~= 'Call' then 
-			gg.parse_error(lx, " = or function call expected")
+			gg.parse_error(lx, " = or function call expected in +{}")
 		end
 		return e
 	end
