@@ -30,7 +30,7 @@ end
 
 function nplc.loadstring(string, filename)
 	local ast = nplp.src_to_ast(string)
-	local compiled_src= nplgen.ast_to_str(string)
+	local compiled_src= nplgen.ast_to_str(ast)
 	return loadstring(compiled_src, filename)
 end
 
