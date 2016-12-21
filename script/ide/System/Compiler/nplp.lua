@@ -32,7 +32,7 @@ nplp.expr.primary:del("+{")
 nplp.expr.suffix:del("+{")
 nplp.expr.primary:del("-{")
 nplp.stat:del("-{")
---nplp.lexer:del "-{"	TODO: delete "-{" keyword
+nplp.lexer:del("-{")	
 nplp.metaDefined = {}
 
 function nplp:new()
@@ -42,7 +42,7 @@ function nplp:new()
 	--self:construct()
 	setmetatable (o, self)
 	self.__index = self
-	o:construct()
+	--o:construct()
 	return o
 end
 
@@ -110,7 +110,11 @@ function nplp:transformer_maker(name)
 		}
 		--table.print(ast.lineinfo.last, 60, "nohash")
    		args, blk = ast[1], ast[2]
-		return traverse_and_replace(template_ast, args, blk, cfg)
+		local local_ast = traverse_and_replace(template_ast, args, blk, cfg)
+		local res_ast = {tag="Do"}		-- wrap the generated ast with do ... end
+		res_ast.lineinfo = local_ast.lineinfo
+		res_ast[1] = local_ast
+		return res_ast
    	end
 
    	return transformer
@@ -210,38 +214,6 @@ function nplp:defbuilder_maker()
 	end
 
 	return def_builder
-end
-
-function nplp:def_builder(x)
-   	local elems, blk = x[1], x[2]
-	--table.print(elems, 60, "nohash")
-   	if #elems > 0 then
-		if(elems[1].tag ~= 'String') then
-			error("name needed for def structure")
-		end
-      	name=elems[1][1]
-		symTbl = {}
-		for i=2, #elems do					-- read from second params to store as parameters for func in symbol table
-			if elems[i].tag == "Id" then 
-				symTbl[elems[i][1]] = i-1
-			elseif elems[i].tag == "Dots" then
-				table.print(elems[i], 60, "nohash")
-				symTbl[1] = true           -- use a special position to store '...'
-			else
-				error ("def params only allow identifiers")
-			end
-		end
-		--table.print(blk, 60, "nohash")
-		self.in_a_quote_or_emit = false
-		labeld_blk = label_params(blk, symTbl)
-		--table.print(labeld_blk, 60, "nohash")
-      	if type(name)=='string' then
-         	self:register(name, labeld_blk)
-      	elseif type(s)=='table' then
-      	end
-   	else
-      	error("def construction error")
-   	end
 end
 
 --------------------------------------------------------------------------------
