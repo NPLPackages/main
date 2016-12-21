@@ -6,15 +6,21 @@
 -- 19 color "blue" 
 -- 20 sphere (3) pop ()
 
-def("playwithSphere", p1){
-	push()
-	+{emit()}
-	sphere(+{=p1})
-	pop()
-}
+function testNPLCAD()
+	local code = [[
+	def("playwithSphere", p1){
+		push()
+		+{emit()}
+		sphere(+{=p1})
+		pop()
+	}
 
 
-playwithSphere(3){
-	translate(2,3,4)
-	color('blue')
-}
+	playwithSphere(3){
+		translate(2,3,4)
+		color('blue')
+	}
+	]]
+
+	pcall(NPL.loadstring(code, "code"))
+end
