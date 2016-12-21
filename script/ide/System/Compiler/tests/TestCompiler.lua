@@ -100,3 +100,59 @@ function Test_MultiEnv()
 	pcall(NPL.loadstring(app_plusOne, "app_plusOne", nplp_multiFour))    --nothing happened
 	pcall(NPL.loadstring(app_multiFour, "app_multiFour", nplp_plusOne))    --nothing happened
 end
+
+function Test_DefParser()
+	local test_defparser = [[
+		def("code"){
+			-- types
+			local a = 10
+			a = "a string"
+			a = true or false
+			a = nil
+			a = "10" + 1
+			a = {}
+			a[1] =2
+			a["key"] = 12
+
+			-- expressions
+			local a, b, c = 4, 5, nil
+			c = a%b
+			c = a*b
+			c = a>=b
+			c = a~=b
+			c = a and b
+			c = a and nil
+			c = "hello" .. "world"
+			c = #c
+			c = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"}
+
+			if true then print(true) end
+			
+			do 
+				local i = 1
+				while c[i] do
+					print(c[i])
+					i = i + 1
+				end
+			end
+
+			do
+				local i = 1
+				repeat
+					print(c[i])
+					i = i + 1
+				until c[i] == nil
+			end
+
+			for i = 10, 1, -1 do print(i) end
+
+			function AddOne(x) return x+1 end
+			c = AddOne(5)
+			print(c)
+		}
+
+		code(){}
+	]]
+
+	pcall(NPL.loadstring(test_defparser, "test_defparser"))
+end
