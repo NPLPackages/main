@@ -30,14 +30,10 @@ local function _stat  (lx) return nplp_def.stat (lx)  end
 
 nplp_def.expr_list = gg.list{ _expr, separators = "," }
 
---------------------------------------------------------------------------------
--- Helpers for function applications / method applications
---------------------------------------------------------------------------------
 nplp_def.func_args_content = gg.list { 
    name = "function arguments",
    _expr, separators = ",", terminators = ")" } 
 
--- Used to parse methods
 nplp_def.method_args = gg.multisequence{
    name = "function argument(s)",
    { "{", _table_content, "}" },
@@ -181,7 +177,7 @@ end
 function nplp_def.stat_in_quote(lx)
 	local a = lx:peek()
 	if lx:is_keyword (a, "}") then
-		gg.parse_error(lx, " could not be null in +{} statement")
+		gg.parse_error(lx, "could not be null in +{} statement")
 	else
 		e = nplp_def.expr_in_quote (lx)
 		if e.tag ~= 'Call' then 
@@ -243,32 +239,10 @@ nplp_def.expr = gg.expr { name = "expression",
       default = { name="opt_string_arg", parse = nplp_def.opt_string, builder = function(f, arg) 
 		return {tag="Call", f, arg } end } } }
 
---nplp_def.expr.primary:add({"+{", nplp_def.expr, "}", builder=quote_builder})
-
---nplp_def.expr_list = gg.list{ nplp_def.expr, separators = "," }
-
---nplp_def.func_args_content = gg.list { 
-   --name = "function arguments",
-   --nplp_def.expr, separators = ",", terminators = ")" } 
---
---nplp_def.method_args = gg.multisequence{
-   --name = "function argument(s)",
-   --{ "{", nplp_def.table_content, "}" },
-   --{ "(", nplp_def.func_args_content, ")", builder = nplp_def.fget(1) },
-   --default = function(lx) local r = nplp_def.opt_string(lx); return r and {r} or { } end }
---
---nplp_def.func_params_content = gg.list{ name="function parameters",
-   --gg.multisequence{ { "...", builder = "Dots" }, default = nplp_def.id },
-   --separators  = ",", terminators = {")", "|"} } 
---
---nplp_def.func_val = gg.sequence { name="function body",
-   --"(", nplp_def.func_params_content, ")", nplp_def.block, "end", builder = "Function" }
-
 ----------------------------------------------------------------------
 --stat and block parser redefined
 ----------------------------------------------------------------------
 local block_terminators = { "else", "elseif", "end", "until", ")", "}", "]" }
-
 
 nplp_def.block = gg.list {
    name        = "statements block",
@@ -279,7 +253,6 @@ nplp_def.block = gg.list {
       if lx:is_keyword (lx:peek(), ";") then lx:next() end
       return x
    end }
-
 
 local return_expr_list_parser = gg.multisequence{
    { ";" , builder = function() return { } end }, 
@@ -320,7 +293,7 @@ local func_name = gg.list{ nplp_def.id, separators = ".", builder = fn_builder }
 local method_name = gg.onkeyword{ name = "method invocation", ":", nplp_def.id, 
    transformers = { function(x) return x and nplp_def.id2string (x) end } }
 
-local function funcdef_builder(x)
+local function funcdef_builder (x)
    local name, method, func = x[1], x[2], x[3]
    if method then 
       name = { tag="Index", name, method, lineinfo = {
@@ -396,7 +369,8 @@ nplp_def.stat = gg.multisequence {
    { "local", local_stat_parser, builder = nplp_def.fget (1) },
    { "return", return_expr_list_parser, builder = nplp_def.fget (1, "Return") },
    { "break", builder = function() return { tag="Break" } end },
-   { "+{", nplp_def.stat_in_quote, "}", builder = quote_builder}, 
+   --{ "+{", nplp_def.stat_in_quote, "}", builder = quote_builder}, 
+   { "+{", nplp_def.block, "}", builder = "Execute"}, 
    { "if", elseifs_parser, gg.onkeyword{ "else", nplp_def.block }, "end", 
      builder = if_builder },
    default = assign_or_call_stat_parser }
