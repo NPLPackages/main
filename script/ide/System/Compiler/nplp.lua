@@ -19,11 +19,13 @@ NPL.load("(gl)script/ide/System/Compiler/lib/mlp_expr.lua");
 NPL.load("(gl)script/ide/System/Compiler/lib/mlp_stat.lua");
 NPL.load("(gl)script/ide/System/Compiler/lib/mlp_ext.lua");
 NPL.load("(gl)script/ide/System/Compiler/nplp_def.lua");
+NPL.load("(gl)script/ide/System/Compiler/ast.lua");
 
 local gg = commonlib.gettable("System.Compiler.lib.gg")
 local nplp = commonlib.inherit(commonlib.gettable("System.Compiler.lib.mlp"), commonlib.gettable("System.Compiler.nplp"))
 local nplp_def = commonlib.gettable("System.Compiler.nplp_def")
 local nplgen = commonlib.gettable("System.Compiler.nplgen")
+local AST = commonlib.gettable("System.Compiler.ast")
 
 ----------------------------------------------------------------------
 --Delete original -{}, +{} structure parser in Metalua
@@ -46,6 +48,10 @@ function nplp:new()
 	return o
 end
 
+function nplp.print()
+	print("in nplp print")
+end
+
 --------------------------------------------------------------------------------
 -- build transformer for defined structure
 --------------------------------------------------------------------------------
@@ -65,7 +71,6 @@ function nplp:transformer_maker(name)
    					--res_ast = blk
 					table.insert(res_ast, blk)
 					cfg.emited = true
-
    			elseif tast.tag and tast.tag=='Param' then
 				if tast[1] == 'All' then
 					res_ast=args
@@ -76,6 +81,23 @@ function nplp:transformer_maker(name)
 					--res_ast={tag='Nil'}
 					table.insert(res_ast, {tag='Nil'})
 				end
+			elseif tast.tag and tast.tag=='Execute' then
+				local execute_src = nplgen.ast_to_str(tast[1])
+				local f = loadstring(execute_src)
+				--local blk_ast = AST:new(blk)
+				emit = {}
+				emit.emited = false
+				emit.dump = function() emit.emited = true end
+
+				local env = { 
+					ast = AST:new(blk),
+					e = emit,
+					print = _G.print
+				}
+				setfenv(f, env)
+				f()
+				print(env.e.emited)
+				if env.e.emited then res_ast = env.ast:getAst() end
 			else
 				local res = {}
 			   	res.tag=tast.tag
@@ -169,12 +191,12 @@ end
 -- register the defined structure
 --------------------------------------------------------------------------------
 function nplp:register (name, tempAst)
-	printf("registering : ", name)
+	printf("registering : %s", name)
 	if not self.metaDefined then self.metaDefined = {} end
 	self.metaDefined[name] = tempAst
 	nplp.lexer:add(name)
-    nplp.stat:add{name, "(", nplp.func_args_content, ")", "{", nplp.block, "}", builder=nil, transformers={self:transformer_maker(name)}}
-	nplp_def.stat:add{name, "(", nplp_def.func_args_content, ")", "{", nplp_def.block, "}", builder=nil, transformers={self:transformer_maker(name)}}
+    nplp.stat:add({name, "(", nplp.func_args_content, ")", "{", nplp.block, "}", builder=nil, transformers={self:transformer_maker(name)}})
+	nplp_def.stat:add({name, "(", nplp_def.func_args_content, ")", "{", nplp_def.block, "}", builder=nil, transformers={self:transformer_maker(name)}})
 end
 
 ------------------------------------------------------------------------------------------
@@ -200,7 +222,7 @@ function nplp:defbuilder_maker()
 				error ("def params only allow identifiers")
 			end
 		end
-		--table.print(blk, 60, "nohash")
+		table.print(blk, 60, "nohash")
 		self.in_a_quote_or_emit = false
 		labeld_blk = self:label_params(blk, symTbl)
 		--table.print(labeld_blk, 60, "nohash")
@@ -220,8 +242,8 @@ end
 -- Add def structure to parser
 --------------------------------------------------------------------------------
 function nplp:construct()
-	nplp.lexer:add "def"
-	nplp.stat:add{"def", "(", nplp_def.params, ")", "{", nplp_def.block, "}", builder=self:defbuilder_maker()}
+	nplp.lexer:add("def")
+	nplp.stat:add({"def", "(", nplp_def.params, ")", "{", nplp_def.block, "}", builder=self:defbuilder_maker()})
 end
 
 function nplp:deconstruct()
@@ -240,8 +262,8 @@ function nplp:setEnv()
 	for name, v in pairs(self.metaDefined) do 
 		printf("in set env: %s", name)
 		nplp.lexer:add(name)
-		nplp.stat:add{name, "(", nplp.func_args_content, ")", "{", nplp.block, "}", builder=nil, transformers={self:transformer_maker(name)}}
-		nplp_def.stat:add{name, "(", nplp_def.func_args_content, ")", "{", nplp_def.block, "}", builder=nil, transformers={self:transformer_maker(name)}}
+		nplp.stat:add({name, "(", nplp.func_args_content, ")", "{", nplp.block, "}", builder=nil, transformers={self:transformer_maker(name)}})
+		nplp_def.stat:add({name, "(", nplp_def.func_args_content, ")", "{", nplp_def.block, "}", builder=nil, transformers={self:transformer_maker(name)}})
 	end
 end
 
