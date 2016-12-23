@@ -72,22 +72,7 @@ end
 ----------------------------------------------------------------------
 local function quote_builder(x)
 	x = unpack(x)
-	--table.print(x, 60, "nohash")
-	if x.tag == 'Call' and x[1].tag		-- emit() function called in +{} 
-		and x[1].tag == 'Id' and x[1][1] == "emit" then
-		if #x > 1 then
-			local res = {tag="Emit"}
-			for i=2, #x do
-				table.insert(res, x[i])
-			end
-			--table.print(res, 60, "nohash")
-			return res
-		else
-			return {tag="EmitAll"}
-		end
-	else
-		return {tag="Quote", x}
-	end
+	return {tag="Quote", x}
 end
 
 function nplp_def.id_or_literal (lx)
@@ -160,17 +145,14 @@ function nplp_def.opt_expr_in_quote(lx)
 		if lx:is_keyword (lx:peek(), "}") then
 			return {tag="Nil"}
 		else
-			return nplp_def.id_or_dots(lx)
+			local b = lx:next()
+			if b.tag == "Id" then return b
+			elseif lx:is_keyword (b, "...") then return {tag="Dots"}
+			else gg.parse_error (lx, "id or dots(...) is expected")
+			end
 		end
 	else
-		e = nplp_def.expr_in_quote (lx)
-		if e.tag ~= 'Call' then 
-			gg.parse_error(lx, " = or function call expected in +{} expression")
-		elseif e[1].tag and e[1].tag == 'Id' 
-				and e[1][1] == "emit" and not e[2] then -- emit() used in expression 
-			gg.parse_error(lx, " emit() not allowed +{} expression")
-		end
-		return e
+		gg.parse_error(lx, "= expected in +{} expression")
 	end
 end
 
@@ -194,7 +176,7 @@ nplp_def.expr = gg.expr { name = "expression",
    primary = gg.multisequence{ name="expr primary",
       { "(", _expr, ")",           builder = 'Paren' },
       { "function", nplp_def.func_val,     builder = nplp_def.fget(1) },
-      { "+{", nplp_def.opt_expr_in_quote, "}",  builder = quote_builder }, 
+      { "+{", nplp_def.opt_expr_in_quote, "}",  builder = "Param" },  -- Params
       { "nil",                     builder = "Nil" },
       { "true",                    builder = "True" },
       { "false",                   builder = "False" },

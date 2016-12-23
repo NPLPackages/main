@@ -48,19 +48,15 @@ function nplp:new()
 	return o
 end
 
-function nplp.print()
-	print("in nplp print")
-end
-
 --------------------------------------------------------------------------------
 -- build transformer for defined structure
 --------------------------------------------------------------------------------
 function nplp:transformer_maker(name)
-	local template_ast = {}
+	local template_ast, symTbl = {}, {}
 	if self.metaDefined[name] then
-		template_ast = self.metaDefined[name]
+		template_ast = self.metaDefined[name].tempAst
+		symTbl = self.metaDefined[name].symTbl
    	else
-		print(name)
     	error("not defined symbol")
    	end
 
@@ -72,32 +68,33 @@ function nplp:transformer_maker(name)
 					table.insert(res_ast, blk)
 					cfg.emited = true
    			elseif tast.tag and tast.tag=='Param' then
-				if tast[1] == 'All' then
+				if tast[1] and tast[1].tag == 'Dots' and symTbl[1] then
 					res_ast=args
-				elseif args[tast[1]] then
-					--res_ast=args[tast[1]]
-					table.insert(res_ast, args[tast[1]])
+				elseif tast[1] and tast[1].tag == 'Id' and 
+						symTbl[tast[1][1]] and args[symTbl[tast[1][1]]] then
+					table.insert(res_ast, args[symTbl[tast[1][1]]])
 				else
-					--res_ast={tag='Nil'}
 					table.insert(res_ast, {tag='Nil'})
 				end
 			elseif tast.tag and tast.tag=='Execute' then
 				local execute_src = nplgen.ast_to_str(tast[1])
+				printf("Execute src: %s", execute_src)
 				local f = loadstring(execute_src)
 				--local blk_ast = AST:new(blk)
-				emit = {}
-				emit.emited = false
-				emit.dump = function() emit.emited = true end
-
+				-----------------------------------------------------
+				local e = {}
+				e.emited = false
+				e.dump = function() e.emited = true end
+				
+				setmetatable(e, {__call = function(e) e.dump() end})
 				local env = { 
 					ast = AST:new(blk),
-					e = emit,
-					print = _G.print
+					emit = e,
 				}
+				------------------------------------------------------
 				setfenv(f, env)
 				f()
-				print(env.e.emited)
-				if env.e.emited then res_ast = env.ast:getAst() end
+				if env.emit.emited then res_ast = env.ast:getAst() end
 			else
 				local res = {}
 			   	res.tag=tast.tag
@@ -116,7 +113,6 @@ function nplp:transformer_maker(name)
 				table.insert(res_ast, res)
    			end
    		else
-   			--res_ast=tast
 			table.insert(res_ast, tast)
    		end
    		return res_ast, cfg
@@ -143,57 +139,12 @@ function nplp:transformer_maker(name)
 end
 
 --------------------------------------------------------------------------------
--- When meet params in +{}, label them with tag `Param #
---------------------------------------------------------------------------------
-function nplp:label_params(ast, symTbl)
-	local res_ast = {}
-	if type(ast) == 'table' then
-		if ast.tag == 'Id' and symTbl[ast[1]] and self.in_a_quote_or_emit then
-			res_ast.tag = 'Param'-- symTle[ast[1]] reflects ith param
-			res_ast[1] = symTbl[ast[1]]
-		elseif ast.tag == 'Dots' and symTbl[1] and self.in_a_quote_or_emit then
-			res_ast.tag = 'Param'
-			res_ast[1] = 'All'
-		elseif ast.tag == 'Quote' or ast.tag == 'Emit' then
-			local prev_quote = self.in_a_quote_or_emit
-			if prev_quote then
-				error "not support quote in a quote"
-			end
-			self.in_a_quote_or_emit = true
-			if #ast > 1 then
-				error "quote only support one expression"
-			else
-				res_ast = self:label_params(ast[1], symTbl)
-				if ast[1].lineinfo then
-					res_ast.lineinfo = ast[1].lineinfo
-				end
-			end
-			self.in_a_quote_or_emit = prev_quote
-		else
-			res_ast.tag = ast.tag
-			res_ast.lineinfo = ast.lineinfo
-			for i=1, #ast do
-				if type(ast[i]) == 'table' then
-					res_ast[i] = self:label_params(ast[i], symTbl)
-					res_ast[i].lineinfo = ast[i].lineinfo
-				else
-					res_ast[i] = ast[i]
-				end
-			end
-		end
-	else
-		res_ast = ast
-	end
-	return res_ast
-end
-
---------------------------------------------------------------------------------
 -- register the defined structure
 --------------------------------------------------------------------------------
-function nplp:register (name, tempAst)
+function nplp:register (name, tempAst, symTbl)
 	printf("registering : %s", name)
 	if not self.metaDefined then self.metaDefined = {} end
-	self.metaDefined[name] = tempAst
+	self.metaDefined[name] = {tempAst = tempAst, symTbl = symTbl}
 	nplp.lexer:add(name)
     nplp.stat:add({name, "(", nplp.func_args_content, ")", "{", nplp.block, "}", builder=nil, transformers={self:transformer_maker(name)}})
 	nplp_def.stat:add({name, "(", nplp_def.func_args_content, ")", "{", nplp_def.block, "}", builder=nil, transformers={self:transformer_maker(name)}})
@@ -205,7 +156,6 @@ end
 function nplp:defbuilder_maker()
 	local def_builder = function (x)
    	local elems, blk = x[1], x[2]
-	--table.print(elems, 60, "nohash")
    	if #elems > 0 then
 		if(elems[1].tag ~= 'String') then
 			error("name needed for def structure")
@@ -223,11 +173,8 @@ function nplp:defbuilder_maker()
 			end
 		end
 		table.print(blk, 60, "nohash")
-		self.in_a_quote_or_emit = false
-		labeld_blk = self:label_params(blk, symTbl)
-		--table.print(labeld_blk, 60, "nohash")
       	if type(name)=='string' then
-         	self:register(name, labeld_blk)
+         	self:register(name, blk, symTbl)
       	elseif type(s)=='table' then
       	end
    	else
@@ -250,8 +197,6 @@ function nplp:deconstruct()
 	--nplp.lexer:add "def"
 	nplp.stat:del("def")
 end
-
---nplp:construct()
 
 --------------------------------------------------------------------------------
 -- set environment before parsing
