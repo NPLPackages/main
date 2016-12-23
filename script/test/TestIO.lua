@@ -203,11 +203,42 @@ end
 
 -- test IO write binary file
 function test_IO_WriteBinaryFile()
+	
 	local file = ParaIO.open("temp/binaryfile.bin", "w");
 	if(file:IsValid()) then	
 		local data = "binary\0\0\0\0file";
 		file:write(data, #data);
+		-- write 32 bits int
+		file:WriteUInt(0xffffffff);
+		file:WriteInt(-1);
+		-- write float
+		file:WriteFloat(-3.14);
+		-- write double (precision is limited by lua double)
+		file:WriteDouble(-3.1415926535897926);
+		-- write 16bits word
+		file:WriteWord(0xff00);
+		file:WriteBytes(3, {255, 0, 255});
 		file:close();
+
+		-- testing by reading file content back
+		local file = ParaIO.open("temp/binaryfile.bin", "r");
+		if(file:IsValid()) then	
+			assert(file:GetText(0, #data) == data);
+			file:seekRelative(#data);
+			assert(file:getpos() == #data);
+			assert(file:ReadUInt() == 0xffffffff);
+			assert(file:ReadInt() == -1);
+			assert(math.abs(file:ReadFloat() - (-3.14)) < 0.000001);
+			assert(file:ReadDouble() == -3.1415926535897926);
+			assert(file:ReadWord() == 0xff00);
+			local o = {};
+			file:ReadBytes(3, o);
+			assert(o[1] == 255 and o[2] == 0 and o[3] == 255);
+
+			file:seek(0);
+			assert(file:GetText(0,6) == "binary");
+			file:close();
+		end
 	end
 end
 
