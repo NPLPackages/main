@@ -41,10 +41,8 @@ function nplp:new()
 	local o = {
 		metaDefined = {}
 	}
-	--self:construct()
 	setmetatable (o, self)
 	self.__index = self
-	--o:construct()
 	return o
 end
 
@@ -119,14 +117,11 @@ function nplp:transformer_maker(name)
    	end
 
    	local function transformer(ast)
-	    --table.print(ast.lineinfo.first, 60, "nohash")
-		--table.print(ast.lineinfo.last, 60, "nohash")
 		local cfg = {
 			before = ast.lineinfo.first, 
 			after = ast.lineinfo.last,
 			emited = false
 		}
-		--table.print(ast.lineinfo.last, 60, "nohash")
    		args, blk = ast[1], ast[2]
 		local local_ast = traverse_and_replace(template_ast, args, blk, cfg)
 		local res_ast = {tag="Do"}		-- wrap the generated ast with do ... end
@@ -138,6 +133,20 @@ function nplp:transformer_maker(name)
    	return transformer
 end
 
+function nplp.raw(lx)
+	local lines = {}
+	local a = lx:nextLine()
+	while a.tag ~= "LastLine" do
+		table.insert(lines, a)
+		table.print(a, 60, "nohash")
+		a = lx:nextLine()
+	end
+	table.print(a, 60, "nohash")
+	table.insert(lines, a)
+	return lines
+end
+
+
 --------------------------------------------------------------------------------
 -- register the defined structure
 --------------------------------------------------------------------------------
@@ -147,6 +156,7 @@ function nplp:register (name, tempAst, symTbl)
 	self.metaDefined[name] = {tempAst = tempAst, symTbl = symTbl}
 	nplp.lexer:add(name)
     nplp.stat:add({name, "(", nplp.func_args_content, ")", "{", nplp.block, "}", builder=nil, transformers={self:transformer_maker(name)}})
+	--nplp.stat:add({name, "(", nplp.func_args_content, ")", "{", nplp.raw, "}", builder=nil, transformers={self:transformer_maker(name)}})
 	nplp_def.stat:add({name, "(", nplp_def.func_args_content, ")", "{", nplp_def.block, "}", builder=nil, transformers={self:transformer_maker(name)}})
 end
 
@@ -155,34 +165,42 @@ end
 ------------------------------------------------------------------------------------------
 function nplp:defbuilder_maker()
 	local def_builder = function (x)
-   	local elems, blk = x[1], x[2]
-   	if #elems > 0 then
-		if(elems[1].tag ~= 'String') then
-			error("name needed for def structure")
-		end
-      	name=elems[1][1]
-		symTbl = {}
-		for i=2, #elems do					-- read from second params to store as parameters for func in symbol table
-			if elems[i].tag == "Id" then 
-				symTbl[elems[i][1]] = i-1
-			elseif elems[i].tag == "Dots" then
-				table.print(elems[i], 60, "nohash")
-				symTbl[1] = true           -- use a special position to store '...'
-			else
-				error ("def params only allow identifiers")
+   		local elems, mode, blk = x[1], x[2], x[3]
+		print(mode)
+   		if #elems > 0 then
+			if(elems[1].tag ~= 'String') then
+				error("name needed for def structure")
 			end
-		end
-		table.print(blk, 60, "nohash")
-      	if type(name)=='string' then
-         	self:register(name, blk, symTbl)
-      	elseif type(s)=='table' then
-      	end
-   	else
-      	error("def construction error")
-   	end
+      		name=elems[1][1]
+			symTbl = {}
+			for i=2, #elems do					-- read from second params to store as parameters for func in symbol table
+				if elems[i].tag == "Id" then 
+					symTbl[elems[i][1]] = i-1
+				elseif elems[i].tag == "Dots" then
+					symTbl[1] = true           -- use a special position to store '...'
+				else
+					error ("def params only allow identifiers")
+				end
+			end
+      		if type(name)=='string' then
+         		self:register(name, blk, symTbl)
+      		elseif type(s)=='table' then
+      		end
+   		else
+      		error("def construction error")
+   		end
 	end
 
 	return def_builder
+end
+
+
+function nplp.modeParser(lx)
+	local pattern = "^%-%-mode:([^\n]*)()\n"
+	local mode, i = lx.src:match(pattern, lx.i)
+	printf("mode is : %s", mode)
+	if i then lx.i, lx.line = i, lx.line+1 end
+	return mode
 end
 
 --------------------------------------------------------------------------------
@@ -190,7 +208,8 @@ end
 --------------------------------------------------------------------------------
 function nplp:construct()
 	nplp.lexer:add("def")
-	nplp.stat:add({"def", "(", nplp_def.params, ")", "{", nplp_def.block, "}", builder=self:defbuilder_maker()})
+	nplp.stat:add({"def", "(", nplp_def.params, ")", "{", nplp.modeParser, nplp_def.block, "}", builder=self:defbuilder_maker()})
+	--nplp.stat:add({"def", "(", nplp_def.params, ")", "{", nplp.raw, "}", builder=self:defbuilder_maker()})
 end
 
 function nplp:deconstruct()
@@ -203,7 +222,6 @@ end
 --------------------------------------------------------------------------------
 function nplp:setEnv()
 	self:construct()
-	print("in set env")
 	for name, v in pairs(self.metaDefined) do 
 		printf("in set env: %s", name)
 		nplp.lexer:add(name)
@@ -216,7 +234,6 @@ end
 -- clear environment after parsing
 --------------------------------------------------------------------------------
 function nplp:clearEnv()
-	print("in clear env")
 	for name, v in pairs(self.metaDefined) do 
 		printf("in clear env: %s", name)
 		nplp.lexer:del(name)

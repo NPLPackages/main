@@ -364,6 +364,28 @@ function lexer:next (n)
    return a or eof_token
 end
 
+function lexer:nextLine ()
+	local j = self.src:find("\n", self.i)
+	local k = self.src:find("}", self.i)
+	if j and k and j < k then
+		local line = self.src:sub(self.i, j-1)
+		self.i = j+1
+		return {tag="Line", line}
+	elseif j and k and j > k then
+		local line = self.src:sub(self.i, k-1)
+		self.i = k
+		return {tag="LastLine", line}
+	elseif not j and k then
+		local line = self.src:sub(self.i, k-1)
+		self.i = k
+		return {tag="LastLine", line}
+	elseif j and not k then
+		error("} expected")
+	else
+		error("next line error")
+	end
+end
+
 ----------------------------------------------------------------------
 -- Returns an object which saves the stream's current state.
 ----------------------------------------------------------------------
