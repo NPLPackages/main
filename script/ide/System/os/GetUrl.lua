@@ -219,7 +219,7 @@ end
 	url="smtp://mail.paraengine.com", 
 	username="LiXizhi", password="1234567", 
 	-- ca_info = "/path/to/certificate.pem", date = "Mon, 29 Nov 2010 21:54:29 +1100",
-	from="lixizhi@paraengine.com", to="lixizhi@yeah.net", cc="xizhi.li@gmail.com", 
+	addresser="xizhi",from="lixizhi@paraengine.com", to="lixizhi@yeah.net", cc="xizhi.li@gmail.com", 
 	subject = "title here",
 	body = "any body context here. can be very long",
 }
@@ -234,6 +234,11 @@ function os.SendEmail(params, callbackFunc)
 	end
 	if(params.from) then
 		lines[#lines+1] = "From: "..params.from;
+		if(params.addresser)then
+			lines[#lines+1] = "From: "..params.addresser.."<"..params.from..">";
+		else
+			lines[#lines+1] = "From: "..params.from;
+		end
 	end
 	if(params.cc) then
 		lines[#lines+1] = "Cc: "..params.cc;
