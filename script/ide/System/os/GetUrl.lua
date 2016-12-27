@@ -233,7 +233,6 @@ function os.SendEmail(params, callbackFunc)
 		lines[#lines+1] = "To: "..params.to;
 	end
 	if(params.from) then
-		lines[#lines+1] = "From: "..params.from;
 		if(params.addresser)then
 			lines[#lines+1] = "From: "..params.addresser.."<"..params.from..">";
 		else
