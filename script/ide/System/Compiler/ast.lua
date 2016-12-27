@@ -8,14 +8,20 @@ NPL.load("(gl)script/ide/System/Compiler/nplgen.lua");
 NPL.load("(gl)script/ide/System/Compiler/nplp.lua");
 
 local nplgen = commonlib.gettable("System.Compiler.nplgen")
-local nplp = commonlib.gettable("System.Compiler.nplp")
 local ast = commonlib.inherit(nil, commonlib.gettable("System.Compiler.ast"))
 
 ast.content = {}
-ast.lines = {}
-function ast:new(con)
+ast.params= {}
+
+function ast:new(params, con)
 	local con = con or {}
-	local o = { content = con, lines = nplgen.ast_to_rawstr(con) }
+	local params = params or {}
+	local symTbl = {}
+	local o = { 
+		content = con, 
+		params = params,
+		symTbl = symTbl
+	}
 	setmetatable(o, self)
 	self.__index = self
 	return o
@@ -23,6 +29,16 @@ end
 
 function ast:print()
 	table.print(self.content, 60, "nohash")
+end
+
+function ast:setSymTbl(symTbl)
+	self.symTbl = symTbl
+end
+
+function ast:getContent()
+	--print("I'm in ast:getContent()")
+	--print(nplgen.ast_to_str(self.content))
+	return nplgen.ast_to_str(self.content)
 end
 
 function ast:getlines()
@@ -33,15 +49,42 @@ function ast:replaceline(i, line)
 	self.lines[i] = line
 end
 
-function ast:updateAst()
-	local lines = self.lines
-	for i=#lines, 2, -1 do
-		table.insert(lines, i, "\n")
-	end
-	local src = table.concat(lines)
-	self.content = nplp:src_to_ast(src)
+function ast:getAst()
+	--self:updateAst()
+	return self.content
 end
 
-function ast:getAst()
-	return self.content
+function ast:appendAst(a)
+	a.lineinfo = self.content[#self.content].lineinfo
+	table.insert(self.content, a)
+end
+
+function ast:getParam(p)
+	if type(p) == "number" then
+		if self.params[p] then
+			return self.params[p][1]
+		else
+			return nil
+		end
+	elseif type(p) == "string" then
+		print("get params in ast")
+		if self.symTbl[p] and self.params[self.symTbl[p]] then
+			return self.params[self.symTbl[p]][1]
+		else
+			return nil
+		end
+	end
+end
+
+function ast:buildSymTbl()
+	local symTbl = {}
+	if #self.params < 2 then return symTbl end
+	if self.params[2].tag == "Dots" then
+		symTbl.dots = true
+	else
+		for i=2, #self.params do
+			symTbl[self.params[i][1]] = i-1
+		end
+	end
+	return symTbl
 end
