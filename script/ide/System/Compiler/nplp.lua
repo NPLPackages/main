@@ -87,24 +87,25 @@ local function defBlock(lx)
 	local i = lx.i
 	local ast = {}
 	local bracket_stack = {false}
-	local in_string = false 
+	local in_string = false
+	local string_left 
 	local current_chunk = {}
 	while i <= lx.src:len() do  -- avoid dead loop
 		local c = lx.src:sub(i, i)
 		--printf("current char: %s", c)
 		local c_next = lx.src:sub(i+1, i+1)
-		if c=="+" and c_next == "{" then
+		if c=="+" and c_next == "{" and not in_string then
 			if #current_chunk > 0 then
 				table.insert(ast, {tag="Raw", table.concat(current_chunk)})  --FIXME:not 100% Raw here
 				current_chunk = {}
 			end
 			table.insert(bracket_stack, true)
 			i=i+2
-		elseif c == "{" then 
+		elseif c == "{" and not in_string then 
 			table.insert(bracket_stack, false)
 			table.insert(current_chunk, c)
 			i=i+1
-		elseif c == "}" then
+		elseif c == "}" and not in_string then
 			if(bracket_stack[#bracket_stack]) then
 				if #current_chunk > 0 then
 					table.insert(ast, {tag="Slice", table.concat(current_chunk)})
@@ -123,7 +124,7 @@ local function defBlock(lx)
 				table.insert(current_chunk, c)
 				i=i+1
 			end
-		elseif c == "p" and lx.src:sub(i, i+6) == "params(" then	-- FIXME:transform id to string, in order to call params() properly
+		elseif c == "p" and lx.src:sub(i, i+6) == "params(" and not in_string then	-- FIXME:transform id to string, in order to call params() properly
 			table.insert(current_chunk, lx.src:sub(i, i+6)..'"')
 			i = i+7
 			local prev_i = i
@@ -132,6 +133,24 @@ local function defBlock(lx)
 			end
 			table.insert(current_chunk, lx.src:sub(prev_i, i-1)..'"'..")")
 			i=i+1
+		elseif c == '"' or c == "'" then
+			if not in_string then
+				in_string = true
+				string_left = c
+			elseif c == string_left and lx.src:sub(i-1, i-1) ~= "\\" then
+				in_string = false	
+			end
+			table.insert(current_chunk, c)
+			i=i+1
+		elseif c == "[" and lx.src:sub(i+1, i+1) == "["  and not in_string then
+			in_string = true
+			string_left = "[["
+			table.insert(current_chunk, "[[")
+			i=i+2
+		elseif c == "]" and lx.src:sub(i+1, i+1) == "]"  and in_string and string_left == "[[" then
+			in_string = false
+			table.insert(current_chunk, "]]")
+			i=i+2
 		else
 			table.insert(current_chunk, c)
 			i=i+1
