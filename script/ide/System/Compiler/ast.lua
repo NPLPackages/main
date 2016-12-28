@@ -13,12 +13,14 @@ local ast = commonlib.inherit(nil, commonlib.gettable("System.Compiler.ast"))
 ast.content = {}
 ast.params= {}
 
-function ast:new(params, con)
+function ast:new(params, mode, con)
 	local con = con or {}
 	local params = params or {}
+	local mode = mode or "stricted"
 	local symTbl = {}
 	local o = { 
 		content = con, 
+		mode = mode, 
 		params = params,
 		symTbl = symTbl
 	}
@@ -31,22 +33,16 @@ function ast:print()
 	table.print(self.content, 60, "nohash")
 end
 
+function ast:getMode()
+	return self.mode
+end
+
 function ast:setSymTbl(symTbl)
 	self.symTbl = symTbl
 end
 
 function ast:getContent()
-	--print("I'm in ast:getContent()")
-	--print(nplgen.ast_to_str(self.content))
 	return nplgen.ast_to_str(self.content)
-end
-
-function ast:getlines()
-	return self.lines
-end
-
-function ast:replaceline(i, line)
-	self.lines[i] = line
 end
 
 function ast:getAst()
@@ -64,14 +60,20 @@ function ast:getParam(p)
 		if self.params[p] then
 			return self.params[p][1]
 		else
-			return nil
+			return "nil"
 		end
 	elseif type(p) == "string" then
 		print("get params in ast")
-		if self.symTbl[p] and self.params[self.symTbl[p]] then
+		if p == ""  and self.symTbl.dots then
+			local pList = {}
+			for i=1, #self.params do
+				table.insert(pList, self.params[i][1])
+			end
+			return table.concat(pList, ",")
+		elseif self.symTbl[p] and self.params[self.symTbl[p]] then
 			return self.params[self.symTbl[p]][1]
 		else
-			return nil
+			return "nil"
 		end
 	end
 end
