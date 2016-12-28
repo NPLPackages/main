@@ -45,33 +45,39 @@ function nplp:new()
 	return o
 end
 
---function nplp.modeParser(lx)
-	--local previous_i = lx.i
-	--lx.i = lx.src:match (lx.patterns.spaces, lx.i)
-	--while true do
-		--previous_i = lx.src :find ("\n", previous_i+1, true)
-        --if not previous_i or previous_i> lx.i then break end 
-		--lx.line = lx.line+1
-	--end
-	--local pattern = "^%-%-mode:([^\n]*)()\n"
-	--local mode, i = lx.src:match(pattern, lx.i)
-	--if mode then 
-		--printf("mode is : %s", mode)
-		--if i then lx.i, lx.line = i, lx.line+1 end
-	--else
-		--mode = "stricted"
-	--end
-	--return mode
---end
-
 --------------------------------------------------------------------------------
-function nplp:builder(funcExpr)
-	return function(x)
-		local ast = AST:new(x[1], x[2])
-		ast:setSymTbl(funcExpr.symTbl)
-		local src = funcExpr:Compile(ast)
-		return self:src_to_ast(src)	-- recursively translate nested custom functions
+local function lineMode(lx)
+	local i = lx.i
+	local j = lx.src:find("\n", i)
+	local k = lx.src:find("}", i)
+	local ast = {}
+	if not k then
+		error("} expected")
+	elseif not j then
+		lx.i = k 
+		return {tag="Line", lx.src:sub(i, k-1)}
 	end
+
+	while j and j < k do
+		table.insert(ast, {tag="Line", lx.src:sub(i, j-1)})
+		i = j+1
+		j = lx.src:find("\n", i)
+	end
+	if i < k then table.insert(ast, {tag="Line", lx.src:sub(i, k-1)}) end
+	lx.i = k
+	table.print(ast, 60, "nohash")
+	return ast
+end
+
+local function tokenMode(lx)
+	local ast = {}
+	print("in tokenmode")
+	while not lx:is_keyword(lx:peek(), "}") and lx:peek().tag ~= "Eof" do
+		table.insert(ast, lx:next())
+		table.print(lx:peek())
+	end
+	table.print(ast)
+	return ast
 end
 
 function nplp:register (funcExpr)
@@ -79,8 +85,46 @@ function nplp:register (funcExpr)
 	printf("registering : %s", name)
 	if not self.metaDefined then self.metaDefined = {} end
 	self.metaDefined[name] = funcExpr
+
+	local blkParser, builder
+	if funcExpr.mode == "stricted" then
+		blkParser = nplp.block
+		builder = function(x)
+			local ast = AST:new(x[1], nil, x[2])
+			ast:setSymTbl(funcExpr.symTbl)
+			local src = funcExpr:Compile(ast)
+			return self:src_to_ast(src)    -- recursively translate nested custom functions
+		end
+	elseif funcExpr.mode == "line" then
+		blkParser = lineMode
+		builder = nil
+	elseif funcExpr.mode == "token" then
+		blkParser = tokenMode
+		builder = nil
+	end
 	nplp.lexer:add(name)
-    nplp.stat:add({name, "(", nplp.func_args_content, ")", "{", nplp.block, "}", builder=self:builder(funcExpr)})
+    nplp.stat:add({name, "(", nplp.func_args_content, ")", "{", blkParser, "}", builder=builder})
+end
+
+
+--------------------------------------------------------------------------------
+local function defMode(lx)
+	local previous_i = lx.i
+	lx.i = lx.src:match (lx.patterns.spaces, lx.i)
+	while true do
+		previous_i = lx.src :find ("\n", previous_i+1, true)
+        if not previous_i or previous_i> lx.i then break end 
+		lx.line = lx.line+1
+	end
+	local pattern = "^%-%-mode:([^\n]*)()\n"
+	local mode, i = lx.src:match(pattern, lx.i)
+	if mode then 
+		printf("mode is : %s", mode)
+		if i then lx.i, lx.line = i, lx.line+1 end
+	else
+		mode = "stricted"
+	end
+	return mode
 end
 
 local function defBlock(lx)
@@ -162,10 +206,8 @@ end
 
 function nplp:defBuilder()
 	return function(x)
-		a, b = x[1], x[2]
-		--table.print(b, 60, "nohash")
 		local funcDef = FuncExpressionDef:new()
-		local f = funcDef:buildFunc(AST:new(x[1], x[2]))
+		local f = funcDef:buildFunc(AST:new(x[1], x[2], x[3]))
 		self:register(f)
 		end
 end
@@ -208,7 +250,7 @@ end
 --------------------------------------------------------------------------------
 function nplp:construct()
 	nplp.lexer:add("def")
-	nplp.stat:add({"def", "(", defParams, ")", "{", defBlock, "}", builder=self:defBuilder()})
+	nplp.stat:add({"def", "(", defParams, ")", "{", defMode, defBlock, "}", builder=self:defBuilder()})
 end
 
 function nplp:deconstruct()
