@@ -173,3 +173,15 @@ function test_Windows:TestEditbox()
 	-- show the window natively
 	window:Show("my_window", nil, "_lt", 0,0, 200, 200);
 end
+
+function test_Windows:test_draggableWindow()
+	NPL.load("(gl)script/ide/System/Windows/Window.lua");
+	local Window = commonlib.gettable("System.Windows.Window");
+
+	local window = Window:new();
+	window:Show({
+		url="script/ide/System/test/test_mcml_page.html", 
+		alignment="_mt", left = 0, top = 0, width = 200, height = 400,
+		allowDrag=true, 
+	});
+end
