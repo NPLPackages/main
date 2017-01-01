@@ -288,27 +288,27 @@ angular.module('MyApp')
     }
 })
 .controller('packagesProjectsModifyController', function (Account, $scope, $http, $uibModalInstance, packagesService) {
-    $scope.projectName = '';
-    $scope.projectDesc = '';
-    $scope.projectGitURL = '';
-    $scope.projectType = packagesService.getProjectsType();
-    $scope.version = '';
+    $scope.projectName     = '';
+    $scope.projectDesc     = '';
+    $scope.projectGitURL   = '';
+    $scope.projectType     = packagesService.getProjectsType();
+    $scope.version         = '';
     $scope.projectTypeName = '';
 
     if ($scope.projectType == "npl") {
-        $scope.projectTypeName = "Modify your npl package";
-        $scope.versionDesc = "Version";
-        $scope.projectGitURLDesc = 'Git URL';
+        $scope.projectTypeName     = "Modify your npl package";
+        $scope.versionDesc         = "Version";
+        $scope.projectGitURLDesc   = 'Git URL';
         $scope.projectReleasesDesc = 'Download URL';
-        $scope.projectNameDesc = "Project name";
-        $scope.descriptionDesc = "Description";
+        $scope.projectNameDesc     = "Project name";
+        $scope.descriptionDesc     = "Description";
     } else if ($scope.projectType == "paracraft") {
-        $scope.projectTypeName = "修改 Paracraft 模块信息";
-        $scope.versionDesc = "版本";
-        $scope.projectGitURLDesc = 'Git URL';
+        $scope.projectTypeName     = "修改 Paracraft 模块信息";
+        $scope.versionDesc         = "版本";
+        $scope.projectGitURLDesc   = 'Git URL';
         $scope.projectReleasesDesc = '下载 URL';
-        $scope.projectNameDesc = "项目";
-        $scope.descriptionDesc = "描述"
+        $scope.projectNameDesc     = "项目";
+        $scope.descriptionDesc     = "描述";
     }
 
     $scope.packageId = 0;
@@ -339,7 +339,7 @@ angular.module('MyApp')
         }
     });
 
-    $scope.confirm = function () {
+    $scope.confirm = function(){
         $http.post('/api/mod/packages/models/packages/modifyPackage', {
             projectName     : $scope.projectName,
             projectDesc     : $scope.projectDesc,
@@ -357,7 +357,7 @@ angular.module('MyApp')
             } else {
                 return alert('Package modify fail');
             }
-        }, function (error) { });
+        }, function (error){});
     }
 })
 .controller('Pagination', function ($scope, $log, $http, packagesService) {
@@ -368,8 +368,8 @@ angular.module('MyApp')
 
     $scope.$watch(packagesService.getForceUpdatePagin, function (newValue, oldValue) {
         $scope.getPackageStats();
-        packagesService.setForceUpdatePagin(0)
-    })
+        packagesService.setForceUpdatePagin(0);
+    });
 
     //packagestats
     $scope.getPackageStats = function () {
