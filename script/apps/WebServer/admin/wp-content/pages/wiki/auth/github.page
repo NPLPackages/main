@@ -52,10 +52,13 @@ util.GetUrl({url = accessTokenUrl, qs = params }, function(err, msg, data)
 					if (not user) then
 						return response:status(400):send({ message= 'User not found' });
 					end
-					user.github = profile.id;
-					user.picture = user.picture or profile.avatar_url;
-					user.displayName = user.displayName or profile.name;
+
+					user.login        = profile.login;
+					user.github       = profile.id;
+					user.picture      = user.picture or profile.avatar_url;
+					user.displayName  = user.displayName or profile.name;
 					user.github_token = accessToken;
+
 					db.User:updateOne(user, function(err, user)
 						local token = createJWT(user);
 						response:send({ token = token });
@@ -73,12 +76,14 @@ util.GetUrl({url = accessTokenUrl, qs = params }, function(err, msg, data)
 					response:send({ token = token });
 					return;
 				end
+
 				db.User:insertOne({github = profile.id}, {
-					github = profile.id,
-					picture = profile.avatar_url,
-					displayName = profile.name,
+					github       = profile.id,
+					login        = profile.login,
+					picture      = profile.avatar_url,
+					displayName  = profile.name,
 					github_token = accessToken,
-					joindate = ParaGlobal.GetDateFormat("yyyy-MM-dd"),
+					joindate     = ParaGlobal.GetDateFormat("yyyy-MM-dd"),
 				}, function(err, user) 
 					local token = createJWT(user);
 					include_once("../models/stats.page");
