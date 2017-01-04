@@ -95,3 +95,16 @@ function ast:buildSymTbl()
 	end
 	return symTbl
 end
+
+function ast:getLines(fl, ll)
+	--printf("in ast:getLines, mode is %s", self.mode)
+	if self.mode ~= "line" then return end
+	local lines = {}
+	local fl = fl or 1
+	local ll = ll or #self.content
+	for i=fl, ll do
+		if not self.content[i] then break end
+		table.insert(lines, self.content[i][1])
+	end
+	return table.concat(lines, "\n")
+end

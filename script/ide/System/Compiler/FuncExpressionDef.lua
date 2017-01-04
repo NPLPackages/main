@@ -66,10 +66,16 @@ function FuncExpressionDef:buildFunc(ast)
 						insertLines(code, curline)
 					end
 				else
-					lines = ast:getContent()
-					lnum = insertLines(lines, 1)	
+					local lines = ast:getContent()
+					local lnum = insertLines(lines, 1)	
 					curline = lnum
 				end	
+			end,
+			print = _G.print,
+			emitline = function(fl, ll)
+				local fl = fl or 1
+				local lnum = insertLines(ast:getLines(fl, ll), fl)
+				curline = fl+lnum-1
 			end,
 			params = function(p)
 				table.insert(compiledCode[#compiledCode], ast:getParam(p))

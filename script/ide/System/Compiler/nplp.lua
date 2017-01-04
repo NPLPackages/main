@@ -50,22 +50,25 @@ local function lineMode(lx)
 	local i = lx.i
 	local j = lx.src:find("\n", i)
 	local k = lx.src:find("}", i)
-	local ast = {}
+	--printf("line number is %s", lx.line)        --TODO:line number needs modification
+	local ast = {lineinfo={first={lx.line}}}
 	if not k then
 		error("} expected")
 	elseif not j then
 		lx.i = k 
-		return {tag="Line", lx.src:sub(i, k-1)}
+		return {tag="Line", lx.src:sub(i, k-1), lineinfo={first={lx.line}}}
 	end
 
 	while j and j < k do
-		table.insert(ast, {tag="Line", lx.src:sub(i, j-1)})
+		table.insert(ast, {tag="Line", lx.src:sub(i, j-1), lineinfo={first={lx.line}}})
 		i = j+1
+		lx.line = lx.line+1
 		j = lx.src:find("\n", i)
 	end
 	if i < k then table.insert(ast, {tag="Line", lx.src:sub(i, k-1)}) end
 	lx.i = k
 	--table.print(ast, 60, "nohash")
+	--print(ast.lineinfo.first[1])
 	return ast
 end
 
@@ -85,14 +88,21 @@ function nplp:getBuilder(funcExpr)
 	if funcExpr.mode == "stricted" then
 		blkParser = nplp.block
 		builder = function(x)
-			local ast = AST:new(x[1], nil, x[2])
+			--print(x[2].lineinfo.first[1])
+			local ast = AST:new(x[1], funcExpr.mode, x[2])
 			ast:setSymTbl(funcExpr.symTbl)
 			local src = funcExpr:Compile(ast)
 			return self:src_to_ast_raw(src)    -- recursively translate nested custom functions
 		end
 	elseif funcExpr.mode == "line" then
 		blkParser = lineMode
-		builder = nil
+		builder = function(x)
+			--print(x[2].lineinfo.first[1])
+			local ast = AST:new(x[1], funcExpr.mode, x[2])
+			ast:setSymTbl(funcExpr.symTbl)
+			local src = funcExpr:Compile(ast)
+			return self:src_to_ast_raw(src)    -- recursively translate nested custom functions
+		end
 	elseif funcExpr.mode == "token" then
 		blkParser = tokenMode
 		builder = nil
@@ -121,7 +131,7 @@ local function defMode(lx)
         if not previous_i or previous_i> lx.i then break end 
 		lx.line = lx.line+1
 	end
-	local pattern = "^%-%-mode:([^\n]*)()\n"
+	local pattern = "^%-%-mode:([^\n]*)\n()"
 	local mode, i = lx.src:match(pattern, lx.i)
 	if mode then 
 		--printf("mode is : %s", mode)
