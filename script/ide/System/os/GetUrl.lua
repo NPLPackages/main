@@ -130,12 +130,15 @@ end
 function Request:SetResponse(msg)
 	self.response = msg;
 	if(msg and msg.data) then
-		if(type(msg.header) == "string" and 
-			msg.header:lower():match("content%-type:%s*([^\r\n]+)") == "application/json") then
-
-			if(type(msg.data) == "string") then
-				msg.data = commonlib.Json.Decode(msg.data) or msg.data;
-			end
+		if(type(msg.header) == "string") then
+			local input_type_lower = msg.header:lower():match("content%-type:%s*([^\r\n]+)");
+			if(input_type_lower:find("application/json", 1, true)) then
+				if(type(msg.data) == "string") then
+					msg.data = commonlib.Json.Decode(msg.data) or msg.data;
+				end
+			elseif(input_type_lower:find("x-www-form-urlencoded", 1, true)) then
+				-- TODO: 
+			end 
 		end
 	end
 end
