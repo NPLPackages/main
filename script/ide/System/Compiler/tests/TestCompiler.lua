@@ -13,12 +13,12 @@ function Test_Params()
 
 		def("IdParam", p1, p2){
 			local a = 1
-			a = a + +{=p1} + +{=p2}
+			a = a + +{params(p1)} + +{params(p2)}
 			print(a)
 		}
 
 		def("DotsParam", ...){
-			local a, b = +{=...}
+			local a, b = +{params()}
 			print(a)
 			print(b)
 		}
@@ -38,13 +38,13 @@ end
 function Test_Quote()
 	local test_quote = [[
 		def("testQuote", p1){
-			print(+{=p1})
+			print(+{params(p1)})
 			+{emit()}
 		}
 		
 		def("testQuoteNested", p1, p2){
-			testQuote(+{=p1}){
-				print(+{=p2})
+			testQuote(+{params(p1)}){
+				print(+{params(p2)})
 			}
 		}
 		
@@ -57,11 +57,17 @@ end
 
 function Test_Emit()
 	local test_emit = [[
-		def("testEmit", p1){
-			print(+{emit(p1)}
+		def("testEmit"){
+			+{emit("local a = 2", 2)}
+			+{for i=1, 10 do}
+			circle()
+			+{end}
+			+{emit()}
 		}
 
-		testEmit(5){}
+		testEmit(){
+			local c=2
+		}
 	]]
 
 	pcall(NPL.loadstring(test_emit, "test_emit"))
@@ -76,7 +82,7 @@ function Test_MultiEnv()
 	local macro_plusOne = [[
 		def("plusOne", p1){
 			local a = 1
-			a = a + +{=p1}
+			a = a + +{params(p1)}
 			print(a)
 		}
 	]]
@@ -84,7 +90,7 @@ function Test_MultiEnv()
 	local macro_multiFour = [[
 		def("multiFour", p1){
 			local a = 4
-			a = a * +{=p1}
+			a = a * +{params(p1)}
 			print(a)
 		}
 	]]
@@ -101,65 +107,28 @@ function Test_MultiEnv()
 	pcall(NPL.loadstring(app_multiFour, "app_multiFour", nplp_plusOne))    --nothing happened
 end
 
-function Test_DefParser()
-	local test_defparser = [[
-		def("code"){
-			-- types
-			local a = 10
-			a = "a string"
-			a = true or false
-			a = nil
-			a = "10" + 1
-			a = {}
-			a[1] =2
-			a["key"] = 12
-
-			-- expressions
-			local a, b, c = 4, 5, nil
-			c = a%b
-			c = a*b
-			c = a>=b
-			c = a~=b
-			c = a and b
-			c = a and nil
-			c = "hello" .. "world"
-			c = #c
-			c = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"}
-
-			if true then print(true) end
-			
-			do 
-				local i = 1
-				while c[i] do
-					print(c[i])
-					i = i + 1
-				end
-			end
-
-			do
-				local i = 1
-				repeat
-					print(c[i])
-					i = i + 1
-				until c[i] == nil
-			end
-
-			for i = 10, 1, -1 do print(i) end
-
-			function AddOne(x) return x+1 end
-			c = AddOne(5)
-			print(c)
+function Test_LineNumber()
+	local code = [[ assert(debug.getinfo(1, "nSl").currentline == 1)
+		def("testQuote", p1){
+			print(+{params(p1)})
+			+{emit()}
 		}
-
-		code(){}
+		assert(debug.getinfo(1, "nSl").currentline == 6)
+		def("testQuoteNested", p1, p2){
+			testQuote(+{params(p1)}){
+				print(+{params(p2)})
+			}
+		}
+		assert(debug.getinfo(1, "nSl").currentline == 12)
+		testQuote(3){
+		
+		assert(debug.getinfo(1, "nSl").currentline == 15)
+		}
+		testQuoteNested(5,7){
+		assert(debug.getinfo(1, "nSl").currentline == 18)
+		}	
+		assert(debug.getinfo(1, "nSl").currentline == 20)
 	]]
 
-	pcall(NPL.loadstring(test_defparser, "test_defparser"))
-end
-
-
-function Test_LineNumber()
-	local code = [[print(debug.getinfo(1, "nSl").currentline)]]
-
-	pcall(loadstring(code))
+	NPL.loadstring(code, "code")()
 end
