@@ -65,7 +65,7 @@ local function lineMode(lx)
 	end
 	if i < k then table.insert(ast, {tag="Line", lx.src:sub(i, k-1)}) end
 	lx.i = k
-	table.print(ast, 60, "nohash")
+	--table.print(ast, 60, "nohash")
 	return ast
 end
 
@@ -76,16 +76,11 @@ local function tokenMode(lx)
 		table.insert(ast, lx:next())
 		table.print(lx:peek())
 	end
-	table.print(ast)
+	--table.print(ast)
 	return ast
 end
 
-function nplp:register (funcExpr)
-	local name = funcExpr:getName()
-	printf("registering : %s", name)
-	if not self.metaDefined then self.metaDefined = {} end
-	self.metaDefined[name] = funcExpr
-
+function nplp:getBuilder(funcExpr)
 	local blkParser, builder
 	if funcExpr.mode == "stricted" then
 		blkParser = nplp.block
@@ -93,7 +88,7 @@ function nplp:register (funcExpr)
 			local ast = AST:new(x[1], nil, x[2])
 			ast:setSymTbl(funcExpr.symTbl)
 			local src = funcExpr:Compile(ast)
-			return self:src_to_ast(src)    -- recursively translate nested custom functions
+			return self:src_to_ast_raw(src)    -- recursively translate nested custom functions
 		end
 	elseif funcExpr.mode == "line" then
 		blkParser = lineMode
@@ -102,6 +97,16 @@ function nplp:register (funcExpr)
 		blkParser = tokenMode
 		builder = nil
 	end
+	return blkParser, builder
+end
+
+function nplp:register (funcExpr)
+	local name = funcExpr:getName()
+	--printf("registering : %s", name)
+	if not self.metaDefined then self.metaDefined = {} end
+	self.metaDefined[name] = funcExpr
+
+	local blkParser, builder = self:getBuilder(funcExpr)
 	nplp.lexer:add(name)
     nplp.stat:add({name, "(", nplp.func_args_content, ")", "{", blkParser, "}", builder=builder})
 end
@@ -119,7 +124,7 @@ local function defMode(lx)
 	local pattern = "^%-%-mode:([^\n]*)()\n"
 	local mode, i = lx.src:match(pattern, lx.i)
 	if mode then 
-		printf("mode is : %s", mode)
+		--printf("mode is : %s", mode)
 		if i then lx.i, lx.line = i, lx.line+1 end
 	else
 		mode = "stricted"
@@ -170,7 +175,7 @@ local function defBlock(lx)
 			end
 		elseif c == "p" and lx.src:sub(i, i+6) == "params(" and not in_string then	-- FIXME:transform id to string, in order to call params() properly
 			table.insert(current_chunk, lx.src:sub(i, i+6)..'"')
-			i = i+7
+			i = i+string.len("params(")
 			local prev_i = i
 			while lx.src:sub(i, i) ~= ")" do
 				i = i+1
@@ -195,6 +200,9 @@ local function defBlock(lx)
 			in_string = false
 			table.insert(current_chunk, "]]")
 			i=i+2
+		elseif c == "\n" then
+			lx.line = lx.line + 1
+			i=i+1
 		else
 			table.insert(current_chunk, c)
 			i=i+1
@@ -263,9 +271,10 @@ end
 function nplp:setEnv()
 	self:construct()
 	for name, funcExpr in pairs(self.metaDefined) do 
-		printf("in set env: %s", name)
+		--printf("in set env: %s", name)
+		local blkParser, builder = self:getBuilder(funcExpr)
 		nplp.lexer:add(name)
-		nplp.stat:add({name, "(", nplp.func_args_content, ")", "{", nplp.block, "}", builder=self:builder(funcExpr)})
+		nplp.stat:add({name, "(", nplp.func_args_content, ")", "{", blkParser, "}", builder=builder})
 	end
 end
 
@@ -274,7 +283,7 @@ end
 --------------------------------------------------------------------------------
 function nplp:clearEnv()
 	for name, v in pairs(self.metaDefined) do 
-		printf("in clear env: %s", name)
+		--printf("in clear env: %s", name)
 		nplp.lexer:del(name)
 		nplp.stat:del(name)
 	end
@@ -288,6 +297,12 @@ function nplp:src_to_ast(src)
 	local  lx  = nplp.lexer:newstream (src)
 	local  ast = nplp.chunk (lx)
 	self:clearEnv()
+	return ast
+end
+
+function nplp:src_to_ast_raw(src)
+	local  lx  = nplp.lexer:newstream (src)
+	local  ast = nplp.chunk (lx)
 	return ast
 end
 

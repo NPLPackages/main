@@ -127,7 +127,8 @@ function lexer:extract ()
       assert (tag and content)
       local i, first_line, first_column_offset, previous_line_length =
          previous_i, self.line, self.column_offset, nil
-
+	  
+	  if i==1 then i = 0 end  -- Fix a bug, count the first "\n" 
       -- update self.line and first_line. i := indexes of '\n' chars
       while true do
          i = self.src :find ("\n", i+1, true)
@@ -167,8 +168,7 @@ function lexer:extract ()
       -- for this to work, the whitespace extractor *must be* at index 1.
       if ext_idx==1 then loc = self.i end
 
-      if tag then 
-         --printf("`%s{ %q }\t%i", tag, content, loc);
+      if tag then
          return build_token (tag, content) 
       end
    end
@@ -355,35 +355,13 @@ function lexer:next (n)
    for i=1,n do 
       a = _G.table.remove (self.peeked, 1) 
       if a then 
-         --debugf ("lexer:next() ==> %s %s",
-         --        table.tostring(a), tostring(a))
+         --printf ("lexer:next() ==> %s %s",
+           --      table.tostring(a), tostring(a))
       end
       self.lastline = a.lineinfo.last[1]
    end
    self.lineinfo_last = a.lineinfo.last
    return a or eof_token
-end
-
-function lexer:nextLine ()
-	local j = self.src:find("\n", self.i)
-	local k = self.src:find("}", self.i)
-	if j and k and j < k then
-		local line = self.src:sub(self.i, j-1)
-		self.i = j+1
-		return {tag="Line", line}
-	elseif j and k and j > k then
-		local line = self.src:sub(self.i, k-1)
-		self.i = k
-		return {tag="LastLine", line}
-	elseif not j and k then
-		local line = self.src:sub(self.i, k-1)
-		self.i = k
-		return {tag="LastLine", line}
-	elseif j and not k then
-		error("} expected")
-	else
-		error("next line error")
-	end
 end
 
 ----------------------------------------------------------------------

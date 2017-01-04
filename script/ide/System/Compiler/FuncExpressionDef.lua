@@ -25,7 +25,7 @@ function FuncExpressionDef:buildFunc(ast)
 		local tast = ast.content
 		for i=1, #tast do
 			if tast[i].tag == "Raw" then
-				compiledCode[#compiledCode+1] = "emit([["..tast[i][1].."]]) "
+				compiledCode[#compiledCode+1] = "emit([["..tast[i][1].."]]) "	--TODO:handle [[ & ]]
 			elseif tast[i].tag == "Slice" then
 				compiledCode[#compiledCode+1] = tast[i][1].." "
 			end
@@ -33,22 +33,47 @@ function FuncExpressionDef:buildFunc(ast)
 	end
 
 	compiledCode[#compiledCode+1] = [[return function(ast)
-		local compiledCode = {}
+		local compiledCode = {{}}
+		local function insertLines(code, offset)
+			local i = 1
+			local line = offset
+			for k=#compiledCode+1, line do
+				compiledCode[k] = {}
+			end
+			while true do
+				local prev_i = i
+				i = string.find(code, "\n", i)
+				if not compiledCode[line] then compiledCode[line] = {} end
+				if not i then
+					table.insert(compiledCode[line], code:sub(prev_i))
+					break
+				else
+					table.insert(compiledCode[line], code:sub(prev_i, i-1))
+				end
+				i = i+1
+				line = line+1
+			end
+		end
+
 		local f_scope = {
-			emit = function(code)
-			if(code) then
-				compiledCode[#compiledCode+1] = code
-			else
-				compiledCode[#compiledCode+1] = ast:getContent()
-			end	
+			emit = function(code, line)
+				if code then
+					if line then
+						insertLines(code, line)
+					else
+						insertLines(code, #compiledCode)
+					end
+				else
+					lines = ast:getContent()
+					insertLines(lines, 1)
+				end	
 			end,
-			params = function(p) 
-				compiledCode[#compiledCode+1] = ast:getParam(p) 
+			params = function(p)
+				table.insert(compiledCode[#compiledCode], ast:getParam(p))
 			end
 		}
 
 		local function compile()
-
 	]]
 
 	compile()
@@ -57,6 +82,16 @@ function FuncExpressionDef:buildFunc(ast)
 	end
 	setfenv(compile, f_scope)
 	compile()
+
+	for i=1, #compiledCode do
+		compiledCode[i] = table.concat(compiledCode[i], " ")
+	end
+	
+	compiledCode = table.concat(compiledCode, "\n")
+	local startline = ast:getOffset()
+	for i=1, startline-1 do
+		compiledCode = "\n"..compiledCode
+	end
 	return compiledCode
 	end
 	]]

@@ -42,7 +42,13 @@ function ast:setSymTbl(symTbl)
 end
 
 function ast:getContent()
-	return nplgen.ast_to_str(self.content)
+	local con = nplgen.ast_to_str(self.content)
+	local startline = self:getOffset()
+	return con:sub(startline)
+end
+
+function ast:getOffset()
+	return self.content.lineinfo.first[1]
 end
 
 function ast:getAst()
@@ -63,7 +69,6 @@ function ast:getParam(p)
 			return "nil"
 		end
 	elseif type(p) == "string" then
-		print("get params in ast")
 		if p == ""  and self.symTbl.dots then
 			local pList = {}
 			for i=1, #self.params do

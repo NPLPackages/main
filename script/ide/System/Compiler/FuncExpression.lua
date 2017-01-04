@@ -19,10 +19,8 @@ function FuncExpression:new(name)
 	return o	
 end
 
-
 function FuncExpression:Compile(ast)
-	local lines = self.CompileCode(ast)
-	return table.concat(lines)
+	return self.CompileCode(ast)
 end
 
 --function FuncExpression:CompileCode(ast)

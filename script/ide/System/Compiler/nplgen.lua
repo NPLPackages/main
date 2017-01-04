@@ -282,7 +282,6 @@ function M:Set (node)
 		and node[1][1][2].tag == 'String'
 		and is_ident(node[1][1][2][1]) then
 	
-	  print("in set case 1")
 		local lhs = node[1][1][1]
 		local method = node[1][1][2][1]
 		local params = node[2][1][1]
@@ -305,7 +304,6 @@ function M:Set (node)
 		and node[2][1].tag == 'Function' 
 		and is_idx_stack(node[1][1]) then
       -- ``function foo(...) ... end'' --
-	  print("in set case 2")
 		local lhs = node[1][1]
 		local params = node[2][1][1]
 		local body = node[2][1][2]
@@ -323,7 +321,6 @@ function M:Set (node)
 
 	elseif #node == 2 then 
 	  -- ``... = ...'', no syntax sugar --
-		print("in set final else")
 		local lhs = node[1]
 		local rhs = node[2]
 		self:goHead(node)
