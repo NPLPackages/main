@@ -132,3 +132,26 @@ function Test_LineNumber()
 
 	NPL.loadstring(code, "code")()
 end
+
+function Test_LineMode()
+	local code = [[
+		def("loop"){
+			--mode:line
+			+{local line = ast:getLines(1,1)
+			  local times, i = line:match("execute the code (%w+) times with (%l)")
+	          if not times then times="1" end
+	          if not i then i="i" end
+	         }
+			for +{emit(i)}=1, +{emit(times)} do
+				+{emitline(2)}
+			end
+        }
+
+		loop(){execute the code 10 times with j
+			print(2+j)
+			print(3)
+			print(4)
+		}
+	]]
+	NPL.loadstring(code, "code")()
+end
