@@ -34,12 +34,12 @@ function FuncExpressionDef:buildFunc(ast)
 
 	compiledCode[#compiledCode+1] = [[return function(ast)
 		local compiledCode = {{}}
-		local function insertLines(code, offset)
+		local maxlnum = 0
+		local curline = 1
+		local function insertLines(code, line)
+			if not line then return end
+			local prev_line = line
 			local i = 1
-			local line = offset
-			for k=#compiledCode+1, line do
-				compiledCode[k] = {}
-			end
 			while true do
 				local prev_i = i
 				i = string.find(code, "\n", i)
@@ -53,6 +53,8 @@ function FuncExpressionDef:buildFunc(ast)
 				i = i+1
 				line = line+1
 			end
+			if line > maxlnum then maxlnum = line end
+			return line	- prev_line + 1	-- return total lines of emitted string
 		end
 
 		local f_scope = {
@@ -61,11 +63,12 @@ function FuncExpressionDef:buildFunc(ast)
 					if line then
 						insertLines(code, line)
 					else
-						insertLines(code, #compiledCode)
+						insertLines(code, curline)
 					end
 				else
 					lines = ast:getContent()
-					insertLines(lines, 1)
+					lnum = insertLines(lines, 1)	
+					curline = lnum
 				end	
 			end,
 			params = function(p)
@@ -83,15 +86,21 @@ function FuncExpressionDef:buildFunc(ast)
 	setfenv(compile, f_scope)
 	compile()
 
+	for i=1, maxlnum do
+		if not compiledCode[i] then compiledCode[i] = {} end
+	end
+
 	for i=1, #compiledCode do
 		compiledCode[i] = table.concat(compiledCode[i], " ")
 	end
 	
 	compiledCode = table.concat(compiledCode, "\n")
+	compiledCode = "do "..compiledCode.." end"
 	local startline = ast:getOffset()
 	for i=1, startline-1 do
 		compiledCode = "\n"..compiledCode
 	end
+	
 	return compiledCode
 	end
 	]]
