@@ -156,3 +156,10 @@ function Test_DefParser()
 
 	pcall(NPL.loadstring(test_defparser, "test_defparser"))
 end
+
+
+function Test_LineNumber()
+	local code = [[print(debug.getinfo(1, "nSl").currentline)]]
+
+	pcall(loadstring(code))
+end
