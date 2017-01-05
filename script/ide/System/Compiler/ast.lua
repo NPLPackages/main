@@ -29,10 +29,6 @@ function ast:new(params, mode, con)
 	return o
 end
 
-function ast:print()
-	table.print(self.content, 60, "nohash")
-end
-
 function ast:getMode()
 	return self.mode
 end
@@ -42,9 +38,22 @@ function ast:setSymTbl(symTbl)
 end
 
 function ast:getContent()
-	local con = nplgen.ast_to_str(self.content)
-	local startline = self:getOffset()
-	return con:sub(startline)
+	if self.mode=="strict" then
+		local con = nplgen.ast_to_str(self.content)
+		local startline = self:getOffset()
+		return con:sub(startline)
+	elseif self.mode=="line" then
+		local con=""
+		for i=1, #self.content-1 do
+			con = con..self.content[i][1].."\n"
+		end
+		con=con..self.content[#self.content][1]
+		return con
+	elseif self.mode=="token" then   -- FIXME:not implemented yet
+		return 
+	else
+		error("unknown mode")
+	end
 end
 
 function ast:getOffset()
@@ -52,13 +61,7 @@ function ast:getOffset()
 end
 
 function ast:getAst()
-	--self:updateAst()
 	return self.content
-end
-
-function ast:appendAst(a)
-	a.lineinfo = self.content[#self.content].lineinfo
-	table.insert(self.content, a)
 end
 
 function ast:getParam(p)

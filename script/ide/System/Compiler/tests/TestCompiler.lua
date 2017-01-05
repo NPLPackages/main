@@ -133,6 +133,25 @@ function Test_LineNumber()
 	NPL.loadstring(code, "code")()
 end
 
+function Test_NPLCAD()
+	local code = [[
+	def("playwithSphere", p1){
+		push()
+		+{emit()}
+		sphere(+{params(p1)})
+		pop()
+	}
+
+
+	playwithSphere(3){
+		translate(2,3,4)
+		color('blue')
+	}
+	]]
+
+	pcall(NPL.loadstring(code, "code"))
+end
+
 function Test_LineMode()
 	local code = [[
 		def("loop"){

@@ -71,7 +71,6 @@ function FuncExpressionDef:buildFunc(ast)
 					curline = lnum
 				end	
 			end,
-			print = _G.print,
 			emitline = function(fl, ll)
 				local fl = fl or 1
 				local lnum = insertLines(ast:getLines(fl, ll), fl)
@@ -110,7 +109,6 @@ function FuncExpressionDef:buildFunc(ast)
 	return compiledCode
 	end
 	]]
-	--print(table.concat(compiledCode))
 	f.CompileCode = loadstring(table.concat(compiledCode))()
 	return f
 end
