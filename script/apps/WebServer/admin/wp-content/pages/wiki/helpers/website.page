@@ -83,7 +83,7 @@ function getSiteRootURL(site)
 	end
 end
 
-local siteName, pageName, isSingleSite;
+local siteName, pageName, isSingleSite, subPage;
 function SetWikiPage(siteName_, pageName_)
 	siteName, pageName = siteName_ or siteName, pageName_ or pageName;
 end
@@ -94,6 +94,10 @@ end
 
 function GetPageName()
 	return pageName;
+end
+
+function GetSubPage()
+	return subPage or "";
 end
 
 -- whether this web site is mapped via CNAME
@@ -115,10 +119,10 @@ function RenderServerWikiScript()
 		if(siteName_ and siteName_~="www") then
 			isSingleSite = true;
 			siteName = siteName_;
-			pageName = request:url():match("^/?([^/]*)");	
+			pageName, subPage = request:url():match("^/?([^/]*)(.*)");	
 		else
 			local url = commonlib.Encoding.url_decode(request:url());
-			siteName, pageName = url:match("^/?([^/]+)/?([^/]*)");	
+			siteName, pageName, subPage = url:match("^/?([^/]+)/?([^/]*)(.*)");	
 			if(not siteName) then
 				siteName, pageName = "wiki", "home"
 			end
@@ -146,7 +150,7 @@ function RenderServerWikiContent()
 		if(GetPageName() == "mod") then
 			include_once(WIKI_ROOT .. "mod/routes.page");
 		else
-			local filename = WIKI_ROOT .. 'pages/' .. GetPageName() .. ".page";
+			local filename = WIKI_ROOT .. 'pages/' .. GetPageName() .. GetSubPage() .. ".page";
 			if(file_exists(filename)) then
 				include(filename);
 				echo("<script>window.skipClientWiki = true;</script>")
