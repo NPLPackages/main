@@ -1,0 +1,10 @@
+----------------------------------------------------------------------
+-- Code Generator Test(ast -> source)
+-- table expr test
+----------------------------------------------------------------------
+-- a={1,2,3}
+table_ast1 = {tag="Set", {{tag="Id", "a"}}, {{tag="Table", {tag="Number", 1}, {tag="Number", 2}, {tag="Number", 3}}}}
+
+-- b = {foo1 = "bar1", foo2 = "bar2"}
+table_ast2 = {tag="Set", {{tag="Id", "b"}}, {{tag="Table", {tag="Pair", {tag="String", "foo1"}, {tag="String", "bar1"}},
+														   {tag="Pair", {tag="String", "foo2"}, {tag="String", "bar2"}}}}}
