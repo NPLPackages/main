@@ -7,19 +7,20 @@ NPL.load("(gl)script/ide/System/Compiler/FuncExpression.lua");
 local FuncExpression = commonlib.gettable("System.Compiler.FuncExpression")
 local FuncExpressionDef = commonlib.inherit(commonlib.gettable("System.Compiler.FuncExpression"), commonlib.gettable("System.Compiler.FuncExpressionDef"))
 
-function FuncExpressionDef:new()
-	local o = {name = "Def", mode = "unstricted"}
-	setmetatable(o, self)
-	self.__index = self
-	return o	
+function FuncExpressionDef:ctor()
+
+end
+
+function FuncExpressionDef:init()
+	FuncExpressionDef._super.init(self, "Def")
+	return self
 end
 
 function FuncExpressionDef:buildFunc(ast)
-	--local mode = self:GetModeFromAst(ast)
-	--print(ast:getParam(1))
-	local f = FuncExpression:new(ast:getParam(1))
+	local f = FuncExpression:new():init(ast:getParam(1))
 	f.symTbl = ast:buildSymTbl()
-	f.mode= ast:getMode() or "stricted"
+	f.mode= ast:getMode()
+
 	local compiledCode={}
 	local function compile()
 		local tast = ast.content

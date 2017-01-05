@@ -15,7 +15,6 @@ local M = { }
 M.__index = M
 
 nplgen.ast_to_str = function(x) return M.run(x) end
-nplgen.ast_to_rawstr = function(x) return M.runRaw(x) end
 --------------------------------------------------------------------------------
 -- Instanciate a new AST->source synthetizer
 --------------------------------------------------------------------------------
@@ -41,29 +40,6 @@ function M:run (ast)
 	self._acc = { }
 	self:node (ast)
 	return table.concat (self._acc)
-end
-
-function M:runRaw (ast)
-	if not ast then
-		self, ast = M.new(), self
-	end
-	self._acc = { }
-	self:node (ast)
-	while self._acc[1] == "\n" do
-		table.remove(self._acc, 1)
-	end
-	local lines = {}
-	local line = {}
-	for i = 1, #self._acc do
-		if self._acc[i] == "\n" then
-			table.insert(lines, table.concat(line))
-			line = {}
-		else
-			table.insert(line, self._acc[i])
-		end
-	end
-	table.insert(lines, table.concat(line))
-	return lines
 end
 
 --------------------------------------------------------------------------------

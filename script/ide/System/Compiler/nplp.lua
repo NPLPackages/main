@@ -34,15 +34,9 @@ nplp.expr.suffix:del("+{")
 nplp.expr.primary:del("-{")
 nplp.stat:del("-{")
 nplp.lexer:del("-{")	
-nplp.metaDefined = {}
-
-function nplp:new()
-	local o = {
-		metaDefined = {}
-	}
-	setmetatable (o, self)
-	self.__index = self
-	return o
+--nplp.metaDefined = {}
+function nplp:ctor()
+	self.metaDefined = {}
 end
 
 --------------------------------------------------------------------------------
@@ -74,7 +68,7 @@ end
 
 local function tokenMode(lx)
 	local ast = {}
-	print("in tokenmode")
+	--print("in tokenmode")
 	while not lx:is_keyword(lx:peek(), "}") and lx:peek().tag ~= "Eof" do
 		table.insert(ast, lx:next())
 		table.print(lx:peek())
@@ -85,11 +79,11 @@ end
 
 function nplp:getBuilder(funcExpr)
 	local blkParser, builder
-	if funcExpr.mode == "stricted" then
+	if funcExpr.mode == "strict" then
 		blkParser = nplp.block
 		builder = function(x)
 			--print(x[2].lineinfo.first[1])
-			local ast = AST:new(x[1], funcExpr.mode, x[2])
+			local ast = AST:new():init(x[1], funcExpr.mode, x[2])
 			ast:setSymTbl(funcExpr.symTbl)
 			local src = funcExpr:Compile(ast)
 			return self:src_to_ast_raw(src)    -- recursively translate nested custom functions
@@ -98,7 +92,7 @@ function nplp:getBuilder(funcExpr)
 		blkParser = lineMode
 		builder = function(x)
 			--print(x[2].lineinfo.first[1])
-			local ast = AST:new(x[1], funcExpr.mode, x[2])
+			local ast = AST:new():init(x[1], funcExpr.mode, x[2])
 			ast:setSymTbl(funcExpr.symTbl)
 			local src = funcExpr:Compile(ast)
 			return self:src_to_ast_raw(src)    -- recursively translate nested custom functions
@@ -137,7 +131,7 @@ local function defMode(lx)
 		--printf("mode is : %s", mode)
 		if i then lx.i, lx.line = i, lx.line+1 end
 	else
-		mode = "stricted"
+		mode = "strict"
 	end
 	return mode
 end
@@ -224,8 +218,8 @@ end
 
 function nplp:defBuilder()
 	return function(x)
-		local funcDef = FuncExpressionDef:new()
-		local f = funcDef:buildFunc(AST:new(x[1], x[2], x[3]))
+		local funcDef = FuncExpressionDef:new():init()
+		local f = funcDef:buildFunc(AST:new():init(x[1], x[2], x[3]))
 		self:register(f)
 		end
 end

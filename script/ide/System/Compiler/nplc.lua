@@ -9,9 +9,11 @@
 NPL.load("(gl)script/ide/System/Compiler/nplp.lua");
 NPL.load("(gl)script/ide/System/Compiler/nplgen.lua");
 
-local nplp = commonlib.gettable("System.Compiler.nplp")
+local nplpClass = commonlib.gettable("System.Compiler.nplp")
 local nplgen = commonlib.gettable("System.Compiler.nplgen")
 local nplc = commonlib.inherit(nil, commonlib.gettable("System.Compiler.nplc"))
+
+local nplp = nplpClass:new()
 
 function nplc.compile(src_filename, dst_filename)
 	local src_file = assert(io.open (src_filename, 'r'))

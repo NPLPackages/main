@@ -5,18 +5,15 @@
 ----------------------------------------------------------------------
 local FuncExpression = commonlib.inherit(nil, commonlib.gettable("System.Compiler.FuncExpression"))
 
---FuncExpression = {}
-FuncExpression.name = ""
-FuncExpression.mode = "stricted"
+function FuncExpression:ctor()
+	
+end
 
-local Modes = { stricted = 1, line = 2, token = 3 }
-
-function FuncExpression:new(name)
+function FuncExpression:init(name)
 	local name = name or ""
-	local o = {name = name, mode = "stricted"}	--default mode is "stricted"
-	setmetatable(o, self)
-	self.__index = self
-	return o	
+	self.name = name
+	self.mode = "strict"
+	return self
 end
 
 function FuncExpression:Compile(ast)

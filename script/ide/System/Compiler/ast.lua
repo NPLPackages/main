@@ -10,23 +10,19 @@ NPL.load("(gl)script/ide/System/Compiler/nplp.lua");
 local nplgen = commonlib.gettable("System.Compiler.nplgen")
 local ast = commonlib.inherit(nil, commonlib.gettable("System.Compiler.ast"))
 
-ast.content = {}
-ast.params= {}
+function ast:ctor()
 
-function ast:new(params, mode, con)
-	local con = con or {}
+end
+
+function ast:init(params, mode, con)
 	local params = params or {}
-	local mode = mode or "stricted"
-	local symTbl = {}
-	local o = { 
-		content = con, 
-		mode = mode, 
-		params = params,
-		symTbl = symTbl
-	}
-	setmetatable(o, self)
-	self.__index = self
-	return o
+	local mode = mode or "strict"
+	local con = con or {}
+	self.params = params
+	self.mode = mode
+	self.content = con
+	self.symTbl = {}
+	return self
 end
 
 function ast:getMode()
