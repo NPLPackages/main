@@ -174,3 +174,18 @@ function Test_LineMode()
 	]]
 	NPL.loadstring(code, "code")()
 end
+
+function Test_LineModeEmit()
+	local code = [[
+		def("lines"){
+			--mode:line
+			+{emit()}
+		}
+
+		lines(){
+			local a = 1
+			a = 2*3
+		}
+	]]
+	NPL.loadstring(code, "code")()
+end
