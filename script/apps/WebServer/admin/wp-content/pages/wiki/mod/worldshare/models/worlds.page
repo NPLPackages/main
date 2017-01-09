@@ -102,7 +102,7 @@ function worlds:get(params)
 				for j=i+1,#compareResponse do
 					-- LOG.std(nil,"debug","response[j].value",{"BBBB",compareResponse[j]});
 
-					if(response[i].formatDate < compareResponse[j].formatDate) then
+					if(response[i].formatDate > compareResponse[j].formatDate) then
 						local new   = response[i];
 						-- LOG.std(nil,"debug","newnewnew",new);
 						response[i] = compareResponse[j];
@@ -346,6 +346,9 @@ function worlds:api_refresh(params)
 			params.statsType = "worldsTotals";
 			params.method = "add";
 
+			models.worlds_stats:new():inside_update(params);
+
+			params.statsType = "worldsTotalsUser" .. userid;
 			models.worlds_stats:new():inside_update(params);
 		else
 			self:db():updateOne({["+userid+worldsName"] = {userid,query.worldsName}},

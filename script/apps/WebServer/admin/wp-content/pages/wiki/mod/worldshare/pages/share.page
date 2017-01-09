@@ -97,15 +97,17 @@
 	angular.module('MyApp')
 	.controller('shareController', function ($scope, $http, $location, $rootScope, $timeout) {
 		var request = $location.search();
+		console.log(request);
 
-		if(request.opusId){
-			$scope.opusId  = request.opusId;
+		if(request.type == "person" && request.userid){
+			$scope.shareUrl = "http://" + $location.host() + ":8099/wiki/mod/worldshare/person/#?userid=" + request.userid;
+		}else if(request.type == "opus" && request.opusId){
+			$scope.shareUrl = "http://" + $location.host() + ":8099/wiki/mod/worldshare/opus/#?opusId=" + request.opusId;
 		}else{
 			history.go(-1);
 			return;
 		}
-
-		$scope.shareUrl = "http://" + $location.host() + ":8099/wiki/mod/worldshare/opus/#?opusId=" + request.opusId;
+		
 		$scope.shareUrlencode = encodeURIComponent($scope.shareUrl);
 
 		$scope.isCopy = false;
@@ -127,8 +129,8 @@
 		});
 
 		jiathis_config.url      = $scope.shareUrl;
-		jiathis_config.summary  = "AAAAAA";
-		jiathis_config.title    = "BBBBBB";
+		jiathis_config.summary  = request.summary?request.summary:"NO SUMMARY";
+		jiathis_config.title    = request.title?request.title:"TITLE";
 		jiathis_config.shortUrl = false;
 		jiathis_config.hideMore = true;
 
