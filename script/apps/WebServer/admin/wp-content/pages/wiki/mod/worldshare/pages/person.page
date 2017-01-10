@@ -262,15 +262,16 @@
 
         $scope.getAllOpus();
 	})
-	.controller('allOpusPagination', function ($scope, $log, $http, personService) {
+	.controller('allOpusPagination', function ($scope, $log, $location, $http, personService) {
 		var request = $location.search();
 
-		var postData = {
-			statsType: "worldsTotals",
-		};
+		var postData = {};
 
 		if(request.userid){
-			postData.userid = request.userid;
+			postData.statsType = "worldsTotals" + request.userid;
+		}else{
+			postData.statsType = "worldsTotals";
+			postData.isMine    = "true";
 		}
 
 		$scope.totalItems   = 0;
