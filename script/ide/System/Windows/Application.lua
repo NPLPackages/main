@@ -705,7 +705,7 @@ end
 -- load components from a given mcml page or page url to uiElement.
 function Application.LoadComponent(uiElement, url)
 	if(uiElement) then
-		local page = Page:new();
+		local page = Page:new({name = uiElement.name});
 		page:Attach(uiElement);
 		page:Init(url);
 	end
