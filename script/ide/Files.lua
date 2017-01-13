@@ -141,7 +141,7 @@ function Files.SearchFiles(output, sInitDir, sFilePattern, nMaxFileLevels, nMaxN
 	if(type(sFilePattern) == "table")then
 		local i, sValue;
 		for i, sValue in ipairs(sFilePattern) do
-			Files.SearchFiles(output, sInitDir, sValue, nMaxFileLevels, nMaxNumFiles, listFile, listDir);
+			Files.SearchFiles(output, sInitDir, sValue, nMaxFileLevels, nMaxNumFiles, listFile, listDir, zipfile);
 		end
 		return output;
 	end
