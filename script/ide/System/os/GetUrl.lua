@@ -18,7 +18,7 @@ System.os.GetUrl({url = "http://localhost:8099/ajax/console?action=getparams",
 	form = {key="value",} }, function(err, msg, data)		echo(data)	end);
 -- send multi-part binary file upload with http post
 System.os.GetUrl({url = "http://localhost:8099/ajax/console?action=printrequest", 
-	form = {name = {file="dummy.html",	data="<html><bold>bold</bold></html>", type="text/html"}, } }, 
+	form = {file_param_name = {file="dummy.html",	data="<html><bold>bold</bold></html>", type="text/html"}, } }, 
 	function(err, msg, data)		echo(data)	end);
 -- To send any binary data, one can use 
 System.os.GetUrl({url = "http://localhost:8099/ajax/console?action=printrequest", 
