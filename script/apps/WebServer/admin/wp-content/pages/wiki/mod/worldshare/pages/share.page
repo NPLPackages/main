@@ -95,9 +95,20 @@
 <script type="text/javascript">
 	var jiathis_config = {};
 	angular.module('MyApp')
-	.controller('shareController', function ($scope, $http, $location, $rootScope, $timeout) {
+	.controller('shareController', function ($scope, $uibModal, $http, $location, $rootScope, $timeout) {
 		var request = $location.search();
-		console.log(request);
+		var host    = $location.host();
+
+		if(host == "localhost"){
+			$uibModal.open({
+                template: "<div style='width: 435px;height: 150px;margin: 0 auto;text-align: center;font-size: 25px;line-height: 150px;font-weight: 400;'>使用本地服务器分享的页面将不可用</div>",
+                size: 'md'
+            }).result.then(function (params) {
+                
+            }, function (text, error) {
+
+            });
+		}
 
 		if(request.type == "person" && request.userid){
 			$scope.shareUrl = "http://" + $location.host() + ":8099/wiki/mod/worldshare/person/#?userid=" + request.userid;
