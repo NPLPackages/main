@@ -282,7 +282,7 @@
 
 <div ng-controller="opusController">
 	<div class="all-worlds">
-		<a class="btn btn-primary" href="/wiki/mod/worldshare/person/#?userid=">TA的所有世界</a>
+		<a class="btn btn-primary" ng-href="/wiki/mod/worldshare/person/#?userid={{userid}}">TA的所有世界</a>
 		<div class="isadmin" ng-show="isadmin">
             是否推荐？<input type="checkbox" ng-model="isRecommend" name="">
 		</div>
@@ -301,7 +301,7 @@
 			</div>
 		</div>
 		<div class="share">
-			<a ng-href="/wiki/mod/worldshare/share/#?opusId={{opusId}}"><img src="/wp-content/pages/wiki/mod/worldshare/assets/share.png"></a>
+			<a ng-href="/wiki/mod/worldshare/share/#?type=opus&opusId={{opusId}}"><img src="/wp-content/pages/wiki/mod/worldshare/assets/share.png"></a>
 			<a href="javascript:;"><img src="/wp-content/pages/wiki/mod/worldshare/assets/star.png"></a>
 			<a href="javascript:;" uib-tooltip-template="'qrcode.html'"><img src="/wp-content/pages/wiki/mod/worldshare/assets/phone.png"></a>
 		</div>
@@ -424,6 +424,7 @@
         .then(function (response) {
             var data = response.data.data;
 
+            $scope.userid      = data.userid;
             $scope.opusName    = data.worldsName;
             $scope.displayName = data.displayName;
 
