@@ -24,15 +24,15 @@ function Test_Params()
 		}
 	]]
 
-	pcall(NPL.loadstring(test_params, "test_params"))
+	pcall(NPL.loadstring(test_params))
 
 	local test_noparams = [[ NoParam(){} ]]
 	local test_idparams = [[ IdParam(3,5){} ]]
 	local test_dotsparams = [[ DotsParam(3, 5, 7){} ]]
 
-	pcall(NPL.loadstring(test_noparams, "test_noparams"))
-	pcall(NPL.loadstring(test_idparams, "test_idparams"))
-	pcall(NPL.loadstring(test_dotsparams, "test_dotsparams"))
+	pcall(NPL.loadstring(test_noparams))
+	pcall(NPL.loadstring(test_idparams))
+	pcall(NPL.loadstring(test_dotsparams))
 end
 
 function Test_Quote()
@@ -52,7 +52,7 @@ function Test_Quote()
 		testQuoteNested(5,7){}	
 	]]
 
-	pcall(NPL.loadstring(test_quote, "test_quote"))
+	pcall(NPL.loadstring(test_quote))
 end
 
 function Test_Emit()
@@ -70,7 +70,7 @@ function Test_Emit()
 		}
 	]]
 
-	pcall(NPL.loadstring(test_emit, "test_emit"))
+	pcall(NPL.loadstring(test_emit))
 end
 
 function Test_MultiEnv()
@@ -98,13 +98,13 @@ function Test_MultiEnv()
 	local app_plusOne = [[ plusOne(10){} ]]
 	local app_multiFour = [[ multiFour(7){} ]]
 
-	pcall(NPL.loadstring(macro_plusOne, "macro_plusOne", nplp_plusOne))
-	pcall(NPL.loadstring(macro_multiFour, "macro_multiFour", nplp_multiFour))    
+	pcall(NPL.loadstring(macro_plusOne, nplp_plusOne))
+	pcall(NPL.loadstring(macro_multiFour, nplp_multiFour))    
 	
-	pcall(NPL.loadstring(app_plusOne, "app_plusOne", nplp_plusOne))		-- 11
-	pcall(NPL.loadstring(app_multiFour, "app_multiFour", nplp_multiFour))    --28
-	pcall(NPL.loadstring(app_plusOne, "app_plusOne", nplp_multiFour))    --nothing happened
-	pcall(NPL.loadstring(app_multiFour, "app_multiFour", nplp_plusOne))    --nothing happened
+	pcall(NPL.loadstring(app_plusOne, nplp_plusOne))		-- 11
+	pcall(NPL.loadstring(app_multiFour, nplp_multiFour))    --28
+	pcall(NPL.loadstring(app_plusOne, nplp_multiFour))    --nothing happened
+	pcall(NPL.loadstring(app_multiFour, nplp_plusOne))    --nothing happened
 end
 
 function Test_LineNumber()
@@ -130,7 +130,7 @@ function Test_LineNumber()
 		assert(debug.getinfo(1, "nSl").currentline == 20)
 	]]
 
-	NPL.loadstring(code, "code")()
+	NPL.loadstring(code)()
 end
 
 function Test_NPLCAD()
@@ -149,7 +149,7 @@ function Test_NPLCAD()
 	}
 	]]
 
-	pcall(NPL.loadstring(code, "code"))
+	pcall(NPL.loadstring(code))
 end
 
 function Test_LineMode()
@@ -172,7 +172,7 @@ function Test_LineMode()
 			print(4)
 		}
 	]]
-	NPL.loadstring(code, "code")()
+	NPL.loadstring(code)()
 end
 
 function Test_LineModeEmit()
@@ -187,5 +187,5 @@ function Test_LineModeEmit()
 			a = 2*3
 		}
 	]]
-	NPL.loadstring(code, "code")()
+	NPL.loadstring(code)()
 end
