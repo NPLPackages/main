@@ -71,7 +71,7 @@ local function tokenMode(lx)
 	--print("in tokenmode")
 	while not lx:is_keyword(lx:peek(), "}") and lx:peek().tag ~= "Eof" do
 		table.insert(ast, lx:next())
-		table.print(lx:peek())
+		--table.print(lx:peek())
 	end
 	--table.print(ast)
 	return ast
