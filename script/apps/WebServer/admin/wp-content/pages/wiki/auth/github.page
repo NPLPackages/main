@@ -31,8 +31,11 @@ util.GetUrl({url = accessTokenUrl, qs = params }, function(err, msg, data)
 	-- Step 2. Retrieve profile information about the current user.
 	util.GetUrl({ url = userApiUrl, qs = accessToken, headers = headers, json = true }, function(err, msg, profile)
 		
+		LOG.std(nil, "debug", "github_profile_msg", msg);
+		LOG.std(nil, "debug", "github_profile_profile", profile);
+
 		if(not profile) then
-			LOG.std(nil, "debug", "github", msg);
+			LOG.std(nil, "debug", "no_profile", msg);
 			return response:status(400):send({ message= 'Failed to fetch github profile' });
 		end
 
@@ -52,10 +55,13 @@ util.GetUrl({url = accessTokenUrl, qs = params }, function(err, msg, data)
 					if (not user) then
 						return response:status(400):send({ message= 'User not found' });
 					end
-					user.github = profile.id;
-					user.picture = user.picture or profile.avatar_url;
-					user.displayName = user.displayName or profile.name;
+
+					user.login        = profile.login;
+					user.github       = profile.id;
+					user.picture      = user.picture or profile.avatar_url;
+					user.displayName  = user.displayName or profile.name;
 					user.github_token = accessToken;
+
 					db.User:updateOne(user, function(err, user)
 						local token = createJWT(user);
 						response:send({ token = token });
@@ -73,12 +79,14 @@ util.GetUrl({url = accessTokenUrl, qs = params }, function(err, msg, data)
 					response:send({ token = token });
 					return;
 				end
+
 				db.User:insertOne({github = profile.id}, {
-					github = profile.id,
-					picture = profile.avatar_url,
-					displayName = profile.name,
+					github       = profile.id,
+					login        = profile.login,
+					picture      = profile.avatar_url,
+					displayName  = profile.name,
 					github_token = accessToken,
-					joindate = ParaGlobal.GetDateFormat("yyyy-MM-dd"),
+					joindate     = ParaGlobal.GetDateFormat("yyyy-MM-dd"),
 				}, function(err, user) 
 					local token = createJWT(user);
 					include_once("../models/stats.page");

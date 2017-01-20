@@ -134,7 +134,6 @@ function nplp:getBuilder(funcExpr)
         lx:next() -- skip "}"
         return {tag="Defined", ast}
     end
-
 	return blkParser, builder
 end
 

@@ -3,7 +3,7 @@
 Title: show interactive log
 Author: LiXizhi
 Date: 2015/6/23
-Desc: ajax/console?action=runcode&text=poststring&src=filename
+Desc: ajax/log?action=log
 ]]
 if(not is_admin()) then
   exit("access denied")
@@ -24,6 +24,16 @@ if(is_ajax()) then
 			text = ParaGlobal.GetLog(from, to);
 		end
 		response:send({from = from, to = to, text = text});
+    end)
+
+	-- print request to log file
+	add_action('wp_ajax_log', function()
+		log("http request "..request:url().."---------------\n")
+		log("headers---------------\n")
+		log(request.headers)
+		log(request:getparams())
+		log("End of request---------------\n")
+		response:send({success = true});
     end)
 
 	-- return the current log position at the time of calling

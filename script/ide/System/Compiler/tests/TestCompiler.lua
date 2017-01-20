@@ -172,6 +172,7 @@ function Test_LineMode()
 			print(4)
 		}
 	]]
+
 	NPL.loadstring(code)()
 end
 

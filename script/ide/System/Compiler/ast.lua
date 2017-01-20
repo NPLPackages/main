@@ -76,7 +76,6 @@ function ast:getParam(p)
 			return table.concat(pList, ",")
 		elseif self.symTbl[p] and self.params[self.symTbl[p]] then
 			return nplgen.ast_to_str(self.params[self.symTbl[p]])
-            --return self.params[self.symTbl[p]][1]
 		else
 			return "nil"
 		end

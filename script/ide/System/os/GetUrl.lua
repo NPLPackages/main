@@ -1,5 +1,5 @@
 --[[
-Title: get/post url
+Title: get/post/delete/put url request
 Author(s): LiXizhi
 Date: 2016/1/25
 Desc: helper class to get/post url content. It offers no progress function. 
@@ -11,15 +11,24 @@ NPL.load("(gl)script/ide/System/os/GetUrl.lua");
 -- down file or making standard request
 System.os.GetUrl("https://github.com/LiXizhi/HourOfCode/archive/master.zip", echo);
 -- get headers only with "-I" option. 
-System.os.GetUrl("https://github.com/LiXizhi/HourOfCode/archive/master.zip", function(err, msg, data)  echo(msg) end, "-I");
+System.os.GetUrl("https://github.com/LiXizhi/HourOfCode/archive/master.zip", 
+	function(err, msg, data)  echo(msg) end, "-I");
 -- send form KV pairs with http post
-System.os.GetUrl({url = "http://localhost:8099/ajax/console?action=getparams", form = {key="value",} }, function(err, msg, data)		echo(data)	end);
--- send multi-part binary forms with http post
-System.os.GetUrl({url = "http://localhost:8099/ajax/console?action=printrequest", form = {name = {file="dummy.html",	data="<html><bold>bold</bold></html>", type="text/html"}, } }, function(err, msg, data)		echo(data)	end);
+System.os.GetUrl({url = "http://localhost:8099/ajax/console?action=getparams", 
+	form = {key="value",} }, function(err, msg, data)		echo(data)	end);
+-- send multi-part binary file upload with http post
+System.os.GetUrl({url = "http://localhost:8099/ajax/console?action=printrequest", 
+	form = {file_param_name = {file="dummy.html",	data="<html><bold>bold</bold></html>", type="text/html"}, } }, 
+	function(err, msg, data)		echo(data)	end);
 -- To send any binary data, one can use 
-System.os.GetUrl({url = "http://localhost:8099/ajax/console?action=printrequest", headers={["content-type"]="application/json"}, postfields='{"key":"value"}' }, function(err, msg, data)		echo(data)	end);
+System.os.GetUrl({url = "http://localhost:8099/ajax/console?action=printrequest", 
+	headers={["content-type"] = "application/json"}, 
+	postfields="{\"key\":\"value\"}" },
+	function(err, msg, data)		echo(data)	end);
 -- To simplify json encoding, we can send form as json string using following shortcut
-System.os.GetUrl({url = "http://localhost:8099/ajax/console?action=getparams", json = true, form = {key="value", key2 ={subtable="subvalue"} } }, function(err, msg, data)		echo(data)  end);
+System.os.GetUrl({url = "http://localhost:8099/ajax/console?action=getparams", 
+	json = true, form = {key="value", key2 ={subtable="subvalue"} } }, 
+	function(err, msg, data)		echo(data)  end);
 -- sending email via smtp
 System.os.SendEmail({
 	url="smtp://smtp.exmail.qq.com", 
@@ -29,6 +38,27 @@ System.os.SendEmail({
 	subject = "title here",
 	body = "any body context here. can be very long",
 }, function(err, msg) echo(msg) end);
+-- two-side SSL 
+System.os.GetUrl({url = "http://localhost:8099/ajax/console?action=getparams", 
+   options = {
+		CURLOPT_SSLCERT = ParaIO.GetCurDirectory(0).."SSL/wechat/apiclient_cert.pem",
+		CURLOPT_SSLKEY = ParaIO.GetCurDirectory(0).."SSL/wechat/apiclient_key.pem",
+		CURLOPT_CAINFO = "rootca.pem", 
+   } 
+}, function(err, msg, data)		echo(data)  end);
+-- HTTP PUT request
+System.os.GetUrl({
+	method = "PUT",
+	url = "http://localhost:8099/ajax/log?action=log", 
+	form = {filecontent = "binary string here", }
+}, function(err, msg, data)		echo(data)  end);
+
+-- HTTP DELETE request
+System.os.GetUrl({
+	method = "DELETE",
+	url = "http://localhost:8099/ajax/log?action=log", 
+	form = {filecontent = "binary string here", }
+}, function(err, msg, data)		echo(data)  end);
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/Json.lua");
@@ -100,11 +130,16 @@ end
 function Request:SetResponse(msg)
 	self.response = msg;
 	if(msg and msg.data) then
-		if(type(msg.header) == "string" and 
-			msg.header:lower():match("content%-type:%s*([^\r\n]+)") == "application/json") then
-
-			if(type(msg.data) == "string") then
-				msg.data = commonlib.Json.Decode(msg.data) or msg.data;
+		if(type(msg.header) == "string") then
+			local input_type_lower = msg.header:lower():match("content%-type:%s*([^\r\n]+)");
+			if(input_type_lower) then
+				if(input_type_lower:find("application/json", 1, true)) then
+					if(type(msg.data) == "string") then
+						msg.data = commonlib.Json.Decode(msg.data) or msg.data;
+					end
+				elseif(input_type_lower:find("x-www-form-urlencoded", 1, true)) then
+					-- TODO: 
+				end 
 			end
 		end
 	end
@@ -142,6 +177,12 @@ local function GetUrlOptions(url, option)
 		url = option.." "..url;
 	end
 	options.url = url;
+	if(options.method and options.method~="GET" and options.method~="POST") then
+		local method = options.method;
+		options.method = nil;
+		options.options = options.options or {};
+		options.options["CURLOPT_CUSTOMREQUEST"] = method;
+	end
 	return options;
 end
 
@@ -150,6 +191,7 @@ end
 -- @param url: url string or a options table of {url=string, postfields=string, form={key=value}, headers={key=value, "line strings"}, json=bool, qs={}}
 -- .form is optional key, value pair table.
 -- if .json is true, form will be encoded in json.
+-- if .method is optinal or "PUT|DELETE", by default it is get/post request
 -- if .qs is query string table
 -- if .postfields is a binary string to be passed in the request body. If this is present, form parameter will be ignored. 
 -- if .headers is a table, it contains additional http request headers to be added
@@ -182,7 +224,7 @@ end
 	url="smtp://mail.paraengine.com", 
 	username="LiXizhi", password="1234567", 
 	-- ca_info = "/path/to/certificate.pem", date = "Mon, 29 Nov 2010 21:54:29 +1100",
-	from="lixizhi@paraengine.com", to="lixizhi@yeah.net", cc="xizhi.li@gmail.com", 
+	addresser="xizhi",from="lixizhi@paraengine.com", to="lixizhi@yeah.net", cc="xizhi.li@gmail.com", 
 	subject = "title here",
 	body = "any body context here. can be very long",
 }
@@ -196,7 +238,11 @@ function os.SendEmail(params, callbackFunc)
 		lines[#lines+1] = "To: "..params.to;
 	end
 	if(params.from) then
-		lines[#lines+1] = "From: "..params.from;
+		if(params.addresser)then
+			lines[#lines+1] = "From: "..params.addresser.."<"..params.from..">";
+		else
+			lines[#lines+1] = "From: "..params.from;
+		end
 	end
 	if(params.cc) then
 		lines[#lines+1] = "Cc: "..params.cc;
