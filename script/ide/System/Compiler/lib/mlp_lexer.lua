@@ -15,7 +15,7 @@
 NPL.load("(gl)script/ide/System/Compiler/lib/lexer.lua");
 local mlp = commonlib.inherit(nil, commonlib.gettable("System.Compiler.lib.mlp"))
 local lexer = commonlib.gettable("System.Compiler.lib.lexer")
-
+local util = commonlib.gettable("System.Compiler.lib.util")
 local mlp_lexer = lexer:clone()
 
 local keywords = {
@@ -26,7 +26,7 @@ local keywords = {
     "...", "..", "==", ">=", "<=", "~=", 
     "+{", "-{" }
  
-for w in values(keywords) do mlp_lexer:add(w) end
+for w in util.values(keywords) do mlp_lexer:add(w) end
 
 --_M.lexer = mlp_lexer
 mlp.lexer = mlp_lexer

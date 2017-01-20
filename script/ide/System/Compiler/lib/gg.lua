@@ -34,6 +34,7 @@
 --------------------------------------------------------------------------------
 
 --module("gg", package.seeall)
+local util = commonlib.gettable("System.Compiler.lib.util")
 local gg = commonlib.inherit(nil, commonlib.gettable("System.Compiler.lib.gg"))
 -------------------------------------------------------------------------------
 -- parser metatable, which maps __call to method parse, and adds some
@@ -282,7 +283,7 @@ function gg.multisequence (p)
                    "must start with a keyword")
          else self.default = s end -- first default
       elseif self.sequences[keyword] then -- duplicate keyword
-         eprintf (" *** Warning: keyword %q overloaded in multisequence ***", keyword)
+         util.eprintf (" *** Warning: keyword %q overloaded in multisequence ***", keyword)
          self.sequences[keyword] = s
       else -- newly caught keyword
          self.sequences[keyword] = s
@@ -299,7 +300,7 @@ function gg.multisequence (p)
    -------------------------------------------------------------------
    function p:del (kw) 
       if not self.sequences[kw] then 
-         eprintf("*** Warning: trying to delete sequence starting "..
+         util.eprintf("*** Warning: trying to delete sequence starting "..
                  "with %q from a multisequence having no such "..
                  "entry ***", kw) end
       local removed = self.sequences[kw]
@@ -690,7 +691,7 @@ function gg.onkeyword (p)
       else assert (not p.primary and gg.is_parser (x)); p.primary = x end
    end
    if not next (p.keywords) then 
-      eprintf("Warning, no keyword to trigger gg.onkeyword") end
+      util.eprintf("Warning, no keyword to trigger gg.onkeyword") end
    assert (p.primary, 'no primary parser in gg.onkeyword')
    return p
 end --</onkeyword>
