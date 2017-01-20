@@ -15,7 +15,7 @@
 --   + a token tag
 --   + or a string->string transformer function.
 --
--- * There are some _G.table to prevent a namespace clash which has
+-- * There are some table to prevent a namespace clash which has
 --   now disappered. remove them.
 ----------------------------------------------------------------------
 --

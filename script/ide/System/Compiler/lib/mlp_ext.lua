@@ -88,6 +88,7 @@ local function op_assign(kw, op)
 end
 
 util.table_iforeach (op_assign, 
+
                 {"+=", "-=", "*=", "/="},
                 {"add", "sub", "mul", "div"})
 

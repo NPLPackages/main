@@ -190,3 +190,29 @@ function Test_LineModeEmit()
 	]]
 	NPL.loadstring(code)()
 end
+
+function Test_activateFunc()
+	local code = [[
+-- allows one to easily define NPL.this function using following syntax. 
+-- activate(m){
+--     echo(m);
+-- }
+def("activate", p1){
+	NPL.this(function()
+		local +{params(p1)} = msg;
+		+{emit()}
+	end);
+}
+
+LOG.std(nil, "info", "DomainSpecificLanguage", "NPL loaded");
+
+
+-- here is a demo of activate function
+-- NPL.activate("script/ide/System/Compiler/dsl/DSL_npl.npl", {hello=1})
+activate(m){
+	echo(m);
+	echo({line_number = debug.getinfo(1, "nSl").currentline});
+}
+	]]
+	NPL.loadstring(code)()
+end
