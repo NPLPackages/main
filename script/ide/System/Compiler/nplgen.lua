@@ -428,12 +428,13 @@ function M:Localrec (node, lhs, rhs)
 end
 
 function M:Call (node, f)
-	-- single string or table literal arg ==> no need for parentheses. --
-	local parens
-	if #node == 2 and (node[2].tag == 'String' or node[2].tag == 'Table') then
-		parens = false
-	else parens = true
-	end
+	-- Set parentheses all the time
+    local parens = true
+    -- single string or table literal arg ==> no need for parentheses. --
+	--if #node == 2 and (node[2].tag == 'String' or node[2].tag == 'Table') then
+		--parens = false
+	--else parens = true
+	--end
 	self:goHead (node)
 	self:node (f)
 	self:acc  (parens and " (" or  " ")

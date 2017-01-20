@@ -26,7 +26,7 @@ function nplc.compile(src_filename, dst_filename)
 	dst_file:close()
 end
 
-function nplc.loadstring(string, filename, nplp_obj)
+function nplc.loadstring(string, nplp_obj, filename)
 	local ast = {}
 	if nplp_obj then
 		ast = nplp_obj:src_to_ast(string)
