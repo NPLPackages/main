@@ -19,7 +19,7 @@ local function adt (lx)
       return { tag="Table", tagkey, lx:next() }
    elseif lx:is_keyword (lx:peek(), "{") then
       local x = table (lx)
-      _G.table.insert (x, 1, tagkey)
+      table.insert (x, 1, tagkey)
       return x
    else return { tag="Table", tagkey } end
 end
