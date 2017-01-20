@@ -61,58 +61,93 @@ local function lineMode(lx)
 	end
 	if i < k then table.insert(ast, {tag="Line", lx.src:sub(i, k-1)}) end
 	lx.i = k
-	--table.print(ast, 60, "nohash")
-	--print(ast.lineinfo.first[1])
 	return ast
 end
 
 local function tokenMode(lx)
 	local ast = {}
-	--print("in tokenmode")
 	while not lx:is_keyword(lx:peek(), "}") and lx:peek().tag ~= "Eof" do
 		table.insert(ast, lx:next())
-		--table.print(lx:peek())
 	end
-	--table.print(ast)
 	return ast
 end
 
+
+
 function nplp:getBuilder(funcExpr)
-	local blkParser, builder
+	local parser, builder
+    local name = funcExpr:getName()
+
+    local function defaultBuilder(x)
+        local ast = {tag = "Call"}
+        table.insert(ast, {tag = "Id", name})
+        table.print(x, 60, "nohash")
+        for _, param in ipairs(x) do
+            table.insert(ast, param)
+        end
+        table.print(ast, 60, "nohash")
+        return ast    
+    end
+
 	if funcExpr.mode == "strict" then
-		blkParser = nplp.block
+		parser = nplp.block
 		builder = function(x)
-			--print(x[2].lineinfo.first[1])
-			local ast = AST:new():init(x[1], funcExpr.mode, x[2])
-			ast:setSymTbl(funcExpr.symTbl)
-			local src = funcExpr:Compile(ast)
-			return self:src_to_ast_raw(src)    -- recursively translate nested custom functions
+            if(x[2].tag == "Defined") then
+			    local ast = AST:new():init(x[1], funcExpr.mode, x[2][1])
+			    ast:setSymTbl(funcExpr.symTbl)
+			    local src = funcExpr:Compile(ast)
+			    return self:src_to_ast_raw(src)    -- recursively translate nested custom functions
+            elseif(x[2].tag == "Default") then
+                return defaultBuilder(x[1])
+            end
 		end
 	elseif funcExpr.mode == "line" then
-		blkParser = lineMode
+		parser = lineMode
 		builder = function(x)
-			--print(x[2].lineinfo.first[1])
-			local ast = AST:new():init(x[1], funcExpr.mode, x[2])
-			ast:setSymTbl(funcExpr.symTbl)
-			local src = funcExpr:Compile(ast)
-			return self:src_to_ast_raw(src)    -- recursively translate nested custom functions
+            if(x[2].tag == "Defined") then
+			    local ast = AST:new():init(x[1], funcExpr.mode, x[2][1])
+			    ast:setSymTbl(funcExpr.symTbl)
+			    local src = funcExpr:Compile(ast)
+			    return self:src_to_ast_raw(src)    -- recursively translate nested custom functions
+            elseif(x[2].tag == "Default") then
+                return defaultBuilder(x[1])
+            end
 		end
 	elseif funcExpr.mode == "token" then
-		blkParser = tokenMode
-		builder = nil
+		parser = tokenMode
+		builder = function(x)
+            if(x[2].tag == "Defined") then
+                return nil
+            elseif(x[2].tag == "Default") then
+                return defaultBuilder(x[1])
+            end
+        end
 	end
+
+    local blkParser = function(lx)
+        if not lx:is_keyword(lx:peek(), "{") then
+            return {tag="Default"}
+        end
+        lx:next() -- skip "{"
+        local ast = parser(lx)
+        if not lx:is_keyword(lx:peek(), "}") then
+            gg.parse_error (lx, "} expected")
+        end
+        lx:next() -- skip "}"
+        return {tag="Defined", ast}
+    end
+
 	return blkParser, builder
 end
 
 function nplp:register (funcExpr)
 	local name = funcExpr:getName()
-	--printf("registering : %s", name)
 	if not self.metaDefined then self.metaDefined = {} end
 	self.metaDefined[name] = funcExpr
 
 	local blkParser, builder = self:getBuilder(funcExpr)
 	nplp.lexer:add(name)
-    nplp.stat:add({name, "(", nplp.func_args_content, ")", "{", blkParser, "}", builder=builder})
+    nplp.stat:add({name, "(", nplp.func_args_content, ")", blkParser, builder=builder})
 end
 
 
@@ -128,7 +163,6 @@ local function defMode(lx)
 	local pattern = "^%-%-mode:([^\n]*)\n()"
 	local mode, i = lx.src:match(pattern, lx.i)
 	if mode then 
-		--printf("mode is : %s", mode)
 		if i then lx.i, lx.line = i, lx.line+1 end
 	else
 		mode = "strict"
@@ -145,7 +179,6 @@ local function defBlock(lx)
 	local current_chunk = {}
 	while i <= lx.src:len() do  -- avoid dead loop
 		local c = lx.src:sub(i, i)
-		--printf("current char: %s", c)
 		local c_next = lx.src:sub(i+1, i+1)
 		if c=="+" and c_next == "{" and not in_string then
 			if #current_chunk > 0 then
@@ -275,7 +308,6 @@ end
 function nplp:setEnv()
 	self:construct()
 	for name, funcExpr in pairs(self.metaDefined) do 
-		--printf("in set env: %s", name)
 		local blkParser, builder = self:getBuilder(funcExpr)
 		nplp.lexer:add(name)
 		nplp.stat:add({name, "(", nplp.func_args_content, ")", "{", blkParser, "}", builder=builder})
@@ -287,7 +319,6 @@ end
 --------------------------------------------------------------------------------
 function nplp:clearEnv()
 	for name, v in pairs(self.metaDefined) do 
-		--printf("in clear env: %s", name)
 		nplp.lexer:del(name)
 		nplp.stat:del(name)
 	end
