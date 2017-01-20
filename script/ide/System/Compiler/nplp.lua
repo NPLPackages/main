@@ -81,11 +81,9 @@ function nplp:getBuilder(funcExpr)
     local function defaultBuilder(x)
         local ast = {tag = "Call"}
         table.insert(ast, {tag = "Id", name})
-        table.print(x, 60, "nohash")
         for _, param in ipairs(x) do
             table.insert(ast, param)
         end
-        table.print(ast, 60, "nohash")
         return ast    
     end
 
@@ -310,7 +308,7 @@ function nplp:setEnv()
 	for name, funcExpr in pairs(self.metaDefined) do 
 		local blkParser, builder = self:getBuilder(funcExpr)
 		nplp.lexer:add(name)
-		nplp.stat:add({name, "(", nplp.func_args_content, ")", "{", blkParser, "}", builder=builder})
+		nplp.stat:add({name, "(", nplp.func_args_content, ")", blkParser, builder=builder})
 	end
 end
 
