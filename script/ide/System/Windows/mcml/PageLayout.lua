@@ -132,7 +132,7 @@ end
 
 -- create a new PageLayout, that is the same size of the preferred size but left, top is 0,0;
 function PageLayout:new_child()
-	local o = PageLayout:new(o)
+	local o = PageLayout:new()
 	local width, height = self:GetPreferredSize();
 	o:reset(0, 0, width, height);
 	return o;

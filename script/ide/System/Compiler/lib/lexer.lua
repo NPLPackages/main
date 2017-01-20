@@ -15,7 +15,7 @@
 --   + a token tag
 --   + or a string->string transformer function.
 --
--- * There are some _G.table to prevent a namespace clash which has
+-- * There are some table to prevent a namespace clash which has
 --   now disappered. remove them.
 ----------------------------------------------------------------------
 --
@@ -71,7 +71,7 @@ local function unescape_string (s)
          backslashes = backslashes :sub (1,-2)
       end
       local k, j, i = digits:reverse():byte(1, 3)
-      local z = _G.string.byte "0"
+      local z = string.byte "0"
       local code = (k or z) + 10*(j or z) + 100*(i or z) - 111*z
       if code > 255 then 
           error ("Illegal escape sequence '\\"..digits.."' in string: ASCII codes must be in [0..255]") 
@@ -183,7 +183,7 @@ end
 -- - short comments at last line without a final \n
 ----------------------------------------------------------------------
 function lexer:skip_whitespaces_and_comments()
-   local table_insert = _G.table.insert
+   local table_insert = table.insert
    repeat -- loop as long as a space or comment chunk is found
       local _, j
       local again = false
@@ -322,7 +322,7 @@ function lexer:add (w, ...)
          local k = w:sub(1,1)
          local list = self.sym [k]
          if not list then list = { }; self.sym [k] = list end
-         _G.table.insert (list, w)
+         table.insert (list, w)
       elseif w:match "^%p$" then return
       else error "Invalid keyword" end
    end
@@ -353,7 +353,7 @@ function lexer:next (n)
    self:peek (n)
    local a
    for i=1,n do 
-      a = _G.table.remove (self.peeked, 1) 
+      a = table.remove (self.peeked, 1) 
       if a then 
          --printf ("lexer:next() ==> %s %s",
            --      table.tostring(a), tostring(a))
@@ -368,7 +368,7 @@ end
 -- Returns an object which saves the stream's current state.
 ----------------------------------------------------------------------
 -- FIXME there are more fields than that to save
-function lexer:save () return { self.i; _G.table.cat(self.peeked) } end
+function lexer:save () return { self.i; table.cat(self.peeked) } end
 
 ----------------------------------------------------------------------
 -- Restore the stream's state, as saved by method [save].
@@ -485,7 +485,7 @@ function lexer:check (...)
    local function err ()
       error ("Got " .. tostring (a) .. 
              ", expected one of these keywords : '" ..
-             _G.table.concat (words,"', '") .. "'") end
+             table.concat (words,"', '") .. "'") end
           
    if not a or a.tag ~= "Keyword" then err () end
    if #words == 0 then return a[1] end

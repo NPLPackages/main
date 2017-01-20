@@ -18,7 +18,7 @@ local function adt (lx)
       return { tag="Table", tagkey, lx:next() }
    elseif lx:is_keyword (lx:peek(), "{") then
       local x = table (lx)
-      _G.table.insert (x, 1, tagkey)
+      table.insert (x, 1, tagkey)
       return x
    else return { tag="Table", tagkey } end
 end
@@ -80,13 +80,13 @@ local function op_assign(kw, op)
       return { tag="Op", op, a, b } 
    end
    local function f(a,b) 
-      return { tag="Set", a, _G.table.imap(rhs, a, b) }
+      return { tag="Set", a, table.imap(rhs, a, b) }
    end
    mlp.lexer:add (kw)
    mlp.stat.assignments[kw] = f
 end
 
-_G.table.iforeach (op_assign, 
+table.iforeach (op_assign, 
                 {"+=", "-=", "*=", "/="},
                 {"add", "sub", "mul", "div"})
 

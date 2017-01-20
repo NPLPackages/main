@@ -113,7 +113,7 @@ function mlp.id_or_literal (lx)
    --printf("id is : %s", a[1])
    if a.tag~="Id" and a.tag~="String" and a.tag~="Number" then
       gg.parse_error (lx, "Unexpected expr token %s",
-                      _G.table.tostring (a, 'nohash'))
+                      table.tostring (a, 'nohash'))
    end
    return a
 end

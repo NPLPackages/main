@@ -4,8 +4,9 @@
 -- compiling procedure: source -> ast -> source
 -- Author:Zhiyuan
 -- Date: 2016-12-13
+-- Desc: NPL.loadstring is implemented here
 ----------------------------------------------------------------------
-
+NPL.load("(gl)script/ide/commonlib.lua");
 NPL.load("(gl)script/ide/System/Compiler/nplp.lua");
 NPL.load("(gl)script/ide/System/Compiler/nplgen.lua");
 
@@ -26,14 +27,26 @@ function nplc.compile(src_filename, dst_filename)
 	dst_file:close()
 end
 
+<<<<<<< .mine
 function nplc.loadstring(string, nplp_obj, filename)
+=======
+-- similar to loadstring() except that it support function-expression in NPL.
+-- @param code: NPL source code 
+-- @param filename: virtual filename 
+-- @param nplp_obj: the parser object. If nil, it is in global environment. 
+-- @return return a function that represent the code. 
+function nplc.loadstring(code, filename, nplp_obj)
+	echo(code)
+>>>>>>> .r22049
 	local ast = {}
 	if nplp_obj then
-		ast = nplp_obj:src_to_ast(string)
+		ast = nplp_obj:src_to_ast(code)
 	else
-		ast = nplp:src_to_ast(string)
+		ast = nplp:src_to_ast(code)
 	end
-	local compiled_src= nplgen.ast_to_str(ast)
+	
+	local compiled_src = nplgen.ast_to_str(ast)
+	echo(compiled_src)
 	return loadstring(compiled_src, filename)
 end
 

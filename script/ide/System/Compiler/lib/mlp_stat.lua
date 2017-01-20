@@ -47,7 +47,7 @@ local block_terminators = { "else", "elseif", "end", "until", ")", "}", "]" }
 -- FIXME: this must be handled from within GG!!!
 function block_terminators:add(x) 
    if type (x) == "table" then for _, y in ipairs(x) do self:add (y) end
-   else _G.table.insert (self, x) end
+   else table.insert (self, x) end
 end
 
 --------------------------------------------------------------------------------
@@ -96,7 +96,7 @@ function mlp.for_header (lx)
          -- several vars; first "," skipped, read other vars
          var_list = gg.list{ 
             primary = mlp.id, separators = ",", terminators = "in" } (lx)
-         _G.table.insert (var_list, 1, var) -- put back the first variable
+         table.insert (var_list, 1, var) -- put back the first variable
          lx:next() -- skip "in"
       end
       local e = expr_list (lx)
@@ -129,7 +129,7 @@ local function funcdef_builder(x)
       name = { tag="Index", name, method, lineinfo = {
          first = name.lineinfo.first,
          last  = method.lineinfo.last } }
-      _G.table.insert (func[1], 1, {tag="Id", "self"}) 
+      table.insert (func[1], 1, {tag="Id", "self"}) 
    end
    local r = { tag="Set", {name}, {func} } 
    r[1].lineinfo = name.lineinfo
