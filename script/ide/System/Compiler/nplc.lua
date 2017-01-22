@@ -45,7 +45,6 @@ function nplc.loadstring(code, filename, nplp_obj)
 			ast = nplp:src_to_ast(code)
 		end
 		local compiled_src = nplgen.ast_to_str(ast)
-		log(compiled_src);
 		return loadstring(compiled_src, filename)
 	end
 end
