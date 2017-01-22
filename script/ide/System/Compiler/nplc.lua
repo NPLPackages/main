@@ -27,9 +27,6 @@ function nplc.compile(src_filename, dst_filename)
 	dst_file:close()
 end
 
-<<<<<<< .mine
-function nplc.loadstring(string, nplp_obj, filename)
-=======
 -- similar to loadstring() except that it support function-expression in NPL.
 -- @param code: NPL source code 
 -- @param filename: virtual filename 
@@ -37,7 +34,6 @@ function nplc.loadstring(string, nplp_obj, filename)
 -- @return return a function that represent the code. 
 function nplc.loadstring(code, filename, nplp_obj)
 	echo(code)
->>>>>>> .r22049
 	local ast = {}
 	if nplp_obj then
 		ast = nplp_obj:src_to_ast(code)

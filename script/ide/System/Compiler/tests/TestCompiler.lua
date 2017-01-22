@@ -98,13 +98,13 @@ function Test_MultiEnv()
 	local app_plusOne = [[ plusOne(10){} ]]
 	local app_multiFour = [[ multiFour(7){} ]]
 
-	pcall(NPL.loadstring(macro_plusOne, nplp_plusOne))
-	pcall(NPL.loadstring(macro_multiFour, nplp_multiFour))    
+	pcall(NPL.loadstring(macro_plusOne, "", nplp_plusOne))
+	pcall(NPL.loadstring(macro_multiFour, "", nplp_multiFour))    
 	
-	pcall(NPL.loadstring(app_plusOne, nplp_plusOne))		-- 11
-	pcall(NPL.loadstring(app_multiFour, nplp_multiFour))    --28
-	pcall(NPL.loadstring(app_plusOne, nplp_multiFour))    --nothing happened
-	pcall(NPL.loadstring(app_multiFour, nplp_plusOne))    --nothing happened
+	pcall(NPL.loadstring(app_plusOne, "", nplp_plusOne))		-- 11
+	pcall(NPL.loadstring(app_multiFour, "", nplp_multiFour))    --28
+	pcall(NPL.loadstring(app_plusOne, "", nplp_multiFour))    --nothing happened
+	pcall(NPL.loadstring(app_multiFour, "", nplp_plusOne))    --nothing happened
 end
 
 function Test_LineNumber()
