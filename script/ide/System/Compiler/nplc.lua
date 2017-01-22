@@ -27,27 +27,26 @@ function nplc.compile(src_filename, dst_filename)
 	dst_file:close()
 end
 
-<<<<<<< .mine
-function nplc.loadstring(string, nplp_obj, filename)
-=======
 -- similar to loadstring() except that it support function-expression in NPL.
 -- @param code: NPL source code 
 -- @param filename: virtual filename 
 -- @param nplp_obj: the parser object. If nil, it is in global environment. 
 -- @return return a function that represent the code. 
 function nplc.loadstring(code, filename, nplp_obj)
-	echo(code)
->>>>>>> .r22049
-	local ast = {}
-	if nplp_obj then
-		ast = nplp_obj:src_to_ast(code)
-	else
-		ast = nplp:src_to_ast(code)
+	if(code) then
+		-- TODO: add crlf windows line ending support so the following is not required. 
+		code = code:gsub("\r\n", "\n");
+
+		local ast = {}
+
+		if nplp_obj then
+			ast = nplp_obj:src_to_ast(code)
+		else
+			ast = nplp:src_to_ast(code)
+		end
+		local compiled_src = nplgen.ast_to_str(ast)
+		return loadstring(compiled_src, filename)
 	end
-	
-	local compiled_src = nplgen.ast_to_str(ast)
-	echo(compiled_src)
-	return loadstring(compiled_src, filename)
 end
 
 NPL.loadstring = nplc.loadstring
