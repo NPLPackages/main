@@ -47,11 +47,10 @@
 --
 --------------------------------------------------------------------------------
 
---require "gg"
---require "mll"
+NPL.load("(gl)script/ide/System/Compiler/lib/util.lua");
+local util = commonlib.gettable("System.Compiler.lib.util")
 local gg = commonlib.gettable("System.Compiler.lib.gg")
 local mlp = commonlib.inherit(nil, commonlib.gettable("System.Compiler.lib.mlp"))
---module ("mlp", package.seeall)
 
 --------------------------------------------------------------------------------
 -- returns a function that takes the [n]th element of a table.
@@ -136,7 +135,7 @@ function mlp.id2string (id)
       -- That is, without sugar:
       return {tag="String",  {tag="Index", {tag="Splice", id[1] }, 
                                            {tag="Number", 1 } } }
-   else error ("Identifier expected: "..table.tostring(id)) end
+   else error ("Identifier expected: "..util.table_tostring(id)) end
 end
 
 --------------------------------------------------------------------------------

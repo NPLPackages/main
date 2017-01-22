@@ -40,10 +40,6 @@
 -- KNOWN BUG: doesn't handle final ";" or "," before final "}"
 --
 --------------------------------------------------------------------------------
-
---require "gg"
---require "mll"
---require "mlp_misc"
 local gg = commonlib.gettable("System.Compiler.lib.gg")
 local mlp = commonlib.inherit(nil, commonlib.gettable("System.Compiler.lib.mlp"))
 

@@ -94,3 +94,7 @@ function util.table_transpose(t)
    for a, b in pairs(t) do tt[b] = a end
    return tt
 end
+
+function util.table_tostring(t)
+	return commonlib.serialize_compact(t)
+end

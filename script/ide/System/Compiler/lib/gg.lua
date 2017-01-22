@@ -49,7 +49,7 @@ function parser_metatable.__call (parser, lx, ...)
       --local x = parser:parse (lx, ...) 
       --printf ("Result of parser %q: %s", 
       --        parser.name or "?",
-      --        table.tostring(x, "nohash", 80))
+      --        util.table_tostring(x, "nohash", 80))
       --return x
    --else
       --local li = lx:lineinfo_right() or { "?", "?", "?", "?" }
@@ -109,7 +109,7 @@ local function raw_parse_sequence (lx, p)
       else 
          gg.parse_error (lx,"Sequence `%s': element #%i is not a string "..
                          "nor a parser: %s", 
-                         p.name, i, table.tostring(e))
+                         p.name, i, util.table_tostring(e))
       end
    end
    ---------------------------------------

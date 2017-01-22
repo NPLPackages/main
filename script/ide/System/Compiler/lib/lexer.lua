@@ -357,7 +357,7 @@ function lexer:next (n)
       a = table.remove (self.peeked, 1) 
       if a then 
          --printf ("lexer:next() ==> %s %s",
-           --      table.tostring(a), tostring(a))
+           --      util.table_tostring(a), tostring(a))
       end
       self.lastline = a.lineinfo.last[1]
    end

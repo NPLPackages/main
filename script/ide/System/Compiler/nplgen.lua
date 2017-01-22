@@ -183,7 +183,7 @@ function M:node (node)
 		else -- No appropriate method, fall back to splice dumping.
 			 -- This cannot happen in a plain Lua AST.
 			--self:acc " -{ "
-			--self:acc (table.tostring (node, "nohash"), 80)
+			--self:acc (util.table_tostring (node, "nohash"), 80)
 			--self:acc " }"
 		end
 	end
@@ -420,7 +420,7 @@ function M:Localrec (node, lhs, rhs)
       -- Other localrec are unprintable ==> splice them --
           -- This cannot happen in a plain Lua AST. --
 		--self:acc "-{ "
-		--self:acc (table.tostring (node, 'nohash', 80))
+		--self:acc (util.table_tostring (node, 'nohash', 80))
 		--self:acc " }"
 	end
 end
