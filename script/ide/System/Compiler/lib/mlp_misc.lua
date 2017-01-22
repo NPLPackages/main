@@ -164,7 +164,7 @@ end
 --------------------------------------------------------------------------------
 -- Chunk reader: block + Eof
 --------------------------------------------------------------------------------
-function skip_initial_sharp_comment (lx)
+local function skip_initial_sharp_comment (lx)
    -- Dirty hack: I'm happily fondling lexer's private parts
    -- FIXME: redundant with lexer:newstream()
    lx :sync()

@@ -26,6 +26,7 @@
 --
 ----------------------------------------------------------------------
 
+local util = commonlib.gettable("System.Compiler.lib.util")
 local lexer = commonlib.inherit(nil, commonlib.gettable("System.Compiler.lib.lexer"))
 
 --lexer = { alpha={ }, sym={ } }
@@ -500,8 +501,8 @@ end
 ----------------------------------------------------------------------
 function lexer:clone()
    local clone = {
-      alpha = table.deep_copy(self.alpha),
-      sym   = table.deep_copy(self.sym) }
+      alpha = util.table_deep_copy(self.alpha),
+      sym   = util.table_deep_copy(self.sym) }
    setmetatable(clone, self)
    clone.__index = clone
    return clone

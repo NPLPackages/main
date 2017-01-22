@@ -5,10 +5,7 @@
 -- Author:Zhiyuan
 -- Date: 2016-12-13
 ----------------------------------------------------------------------
-
-NPL.load("(gl)script/ide/System/Compiler/lib/metalua/base.lua");
-NPL.load("(gl)script/ide/System/Compiler/lib/metalua/string2.lua");
-NPL.load("(gl)script/ide/System/Compiler/lib/metalua/table2.lua");
+NPL.load("(gl)script/ide/System/Compiler/lib/util.lua");
 NPL.load("(gl)script/ide/System/Compiler/lib/lexer.lua");
 NPL.load("(gl)script/ide/System/Compiler/lib/gg.lua");
 NPL.load("(gl)script/ide/System/Compiler/lib/mlp_lexer.lua");

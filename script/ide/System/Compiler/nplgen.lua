@@ -5,10 +5,8 @@
 -- Edited By: Zhiyuan
 -- Date: 2016-12-11
 --------------------------------------------------------------------------------
-NPL.load("(gl)script/ide/System/Compiler/lib/metalua/table2.lua");
-NPL.load("(gl)script/ide/System/Compiler/lib/metalua/base.lua");
-NPL.load("(gl)script/ide/System/Compiler/lib/metalua/string2.lua");
-
+NPL.load("(gl)script/ide/System/Compiler/lib/util.lua");
+local util = commonlib.gettable("System.Compiler.lib.util")
 local nplgen = commonlib.inherit(nil, commonlib.gettable("System.Compiler.nplgen"))
 
 local M = { }
@@ -103,7 +101,7 @@ end
 --------------------------------------------------------------------------------
 -- Keywords, which are illegal as identifiers.
 --------------------------------------------------------------------------------
-local keywords = table.transpose {
+local keywords = util.table_transpose {
 	"and",    "break",   "do",    "else",   "elseif",
 	"end",    "false",   "for",   "function", "if",
 	"in",     "local",   "nil",   "not",    "or",
@@ -114,7 +112,7 @@ local keywords = table.transpose {
 -- Return true iff string `id' is a legal identifier name.
 --------------------------------------------------------------------------------
 local function is_ident (id)
-	return id:strmatch "^[%a_][%w_]*$" and not keywords[id]
+	return id:match "^[%a_][%w_]*$" and not keywords[id]
 end
 
 --------------------------------------------------------------------------------
@@ -150,7 +148,7 @@ local op_preprec = {
 local op_prec = { }
 
 for prec, ops in ipairs (op_preprec) do
-	for op in ivalues (ops) do
+	for op in util.ivalues (ops) do
 		op_prec[op] = prec
 	end
 end

@@ -6,6 +6,7 @@
 
 --module ("mlp", package.seeall)
 local gg = commonlib.gettable("System.Compiler.lib.gg")
+local util = commonlib.gettable("System.Compiler.lib.util")
 local mlp = commonlib.inherit(nil, commonlib.gettable("System.Compiler.lib.mlp"))
 
 --------------------------------------------------------------------------------
@@ -80,13 +81,14 @@ local function op_assign(kw, op)
       return { tag="Op", op, a, b } 
    end
    local function f(a,b) 
-      return { tag="Set", a, table.imap(rhs, a, b) }
+      return { tag="Set", a, util.table_imap(rhs, a, b) }
    end
    mlp.lexer:add (kw)
    mlp.stat.assignments[kw] = f
 end
 
-table.iforeach (op_assign, 
+util.table_iforeach (op_assign, 
+
                 {"+=", "-=", "*=", "/="},
                 {"add", "sub", "mul", "div"})
 
