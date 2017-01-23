@@ -34,9 +34,6 @@ end
 -- @return return a function that represent the code. 
 function nplc.loadstring(code, filename, nplp_obj)
 	if(code) then
-		-- TODO: add crlf windows line ending support so the following is not required. 
-		code = code:gsub("\r\n", "\n");
-
 		local ast = {}
 
 		if nplp_obj then
