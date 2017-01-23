@@ -39,7 +39,7 @@ end
 -- the only key being lifted in this version is ["tag"]
 --------------------------------------------------------------------------------
 function mlp.quote (t)
-   --print("QUOTING:", table.tostring(t, 60))
+   --print("QUOTING:", util.table_tostring(t, 60))
    local cases = { }
    function cases.table (t)
       local mt = { tag = "Table" }
@@ -91,7 +91,7 @@ function mlp.splice_content (lx)
       elseif parser_name == "stat"  then ast = { ast }
       elseif parser_name ~= "block" then
          error ("splice content must be an expr, stat or block") end
-      --printf("EXEC THIS SPLICE:\n%s", table.tostring(ast, "nohash", 60))
+      --printf("EXEC THIS SPLICE:\n%s", util.table_tostring(ast, "nohash", 60))
       return mlp.splice (ast)
    end
 end

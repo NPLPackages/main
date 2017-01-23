@@ -297,7 +297,3 @@ function util.table_tostring(t, ...)
 end
 
 function util.table_print(...) return print(util.table_tostring(...)) end
-
---function util.table_tostring(t)
-	--return commonlib.serialize_compact(t)
---end

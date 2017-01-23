@@ -46,15 +46,13 @@
 --
 --------------------------------------------------------------------------------
 --NPL.load("(gl)script/ide/System/Compiler/lib/metalua/base.lua");
---require "gg"
---require "mlp_misc"
---require "mlp_table"
---require "mlp_meta"
 
 --------------------------------------------------------------------------------
 -- These function wrappers (eta-expansions ctually) are just here to break
 -- some circular dependencies between mlp_xxx.lua files.
 --------------------------------------------------------------------------------
+NPL.load("(gl)script/ide/System/Compiler/lib/util.lua");
+local util = commonlib.gettable("System.Compiler.lib.util")
 local gg = commonlib.gettable("System.Compiler.lib.gg")
 local mlp = commonlib.inherit(nil, commonlib.gettable("System.Compiler.lib.mlp"))
 local util = commonlib.gettable("System.Compiler.lib.util")

@@ -49,7 +49,7 @@ function parser_metatable.__call (parser, lx, ...)
       --local x = parser:parse (lx, ...) 
       --printf ("Result of parser %q: %s", 
       --        parser.name or "?",
-      --        table.tostring(x, "nohash", 80))
+      --        util.table_tostring(x, "nohash", 80))
       --return x
    --else
       --local li = lx:lineinfo_right() or { "?", "?", "?", "?" }
