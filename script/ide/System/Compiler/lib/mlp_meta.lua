@@ -45,7 +45,7 @@ function mlp.quote (t)
       local mt = { tag = "Table" }
       --table.insert (mt, { tag = "Pair", quote "quote", { tag = "True" } })
       if t.tag == "Splice" then
-		 printf("IN_QUOTE:\n%s", table.tostring(t, "nohash", 60))
+		 printf("IN_QUOTE:\n%s", util.table_tostring(t, "nohash", 60))
          assert (#t==1, "Invalid splice")
          local sp = t[1]
          return sp
@@ -84,7 +84,7 @@ function mlp.splice_content (lx)
    end
    local ast = mlp[parser_name](lx)
    if mlp.in_a_quote then
-      printf("SPLICE_IN_QUOTE:\n%s", table.tostring(ast, "nohash", 60))
+      printf("SPLICE_IN_QUOTE:\n%s", util.table_tostring(ast, "nohash", 60))
       return { tag="Splice", ast }
    else
       if parser_name == "expr" then ast = { { tag="Return", ast } }

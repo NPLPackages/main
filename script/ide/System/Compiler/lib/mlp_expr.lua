@@ -57,6 +57,7 @@
 --------------------------------------------------------------------------------
 local gg = commonlib.gettable("System.Compiler.lib.gg")
 local mlp = commonlib.inherit(nil, commonlib.gettable("System.Compiler.lib.mlp"))
+local util = commonlib.gettable("System.Compiler.lib.util")
 
 local function _expr (lx) return mlp.expr (lx)  end
 local function _table_content (lx) return mlp.table_content (lx) end
@@ -113,7 +114,7 @@ function mlp.id_or_literal (lx)
    --printf("id is : %s", a[1])
    if a.tag~="Id" and a.tag~="String" and a.tag~="Number" then
       gg.parse_error (lx, "Unexpected expr token %s",
-                      table.tostring (a, 'nohash'))
+                      util.table_tostring (a, 'nohash'))
    end
    return a
 end

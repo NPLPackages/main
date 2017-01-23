@@ -109,7 +109,7 @@ local function raw_parse_sequence (lx, p)
       else 
          gg.parse_error (lx,"Sequence `%s': element #%i is not a string "..
                          "nor a parser: %s", 
-                         p.name, i, table.tostring(e))
+                         p.name, i, util.table_tostring(e))
       end
    end
    ---------------------------------------
