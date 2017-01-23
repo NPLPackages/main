@@ -1,3 +1,8 @@
+--[[
+Title: 
+Author(s): ported to NPL by Zhiyuan
+Date: 2016/1/25
+]]
 ----------------------------------------------------------------------
 -- Metalua:  $Id: mlp_stat.lua,v 1.7 2006/11/15 09:07:50 fab13n Exp $
 --
@@ -34,7 +39,6 @@ local expr      = function (lx) return mlp.expr     (lx) end
 local func_val  = function (lx) return mlp.func_val (lx) end
 local expr_list = function (lx) return mlp.expr_list(lx) end
 
---module ("mlp", package.seeall)
 
 --------------------------------------------------------------------------------
 -- List of all keywords that indicate the end of a statement block. Users are

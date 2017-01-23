@@ -1,3 +1,8 @@
+--[[
+Title: 
+Author(s): ported to NPL by Zhiyuan
+Date: 2016/1/25
+]]
 ----------------------------------------------------------------------
 -- Metalua:  $Id: mlp_table.lua,v 1.5 2006/11/10 02:11:17 fab13n Exp $
 --

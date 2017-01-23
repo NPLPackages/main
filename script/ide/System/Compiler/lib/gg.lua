@@ -1,3 +1,8 @@
+--[[
+Title: 
+Author(s): ported to NPL by Zhiyuan, LiXizhi
+Date: 2016/1/25
+]]
 ----------------------------------------------------------------------
 -- Metalua.
 --
@@ -33,7 +38,6 @@
 --
 --------------------------------------------------------------------------------
 
---module("gg", package.seeall)
 local util = commonlib.gettable("System.Compiler.lib.util")
 local gg = commonlib.inherit(nil, commonlib.gettable("System.Compiler.lib.gg"))
 -------------------------------------------------------------------------------

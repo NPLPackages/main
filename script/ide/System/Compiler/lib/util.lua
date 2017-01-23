@@ -1,3 +1,9 @@
+--[[
+Title: helper functions
+Author(s): ported to NPL by Zhiyuan
+Date: 2016/1/25
+]]
+
 local util = commonlib.inherit(nil, commonlib.gettable("System.Compiler.lib.util"))
 
 function util.values(x)

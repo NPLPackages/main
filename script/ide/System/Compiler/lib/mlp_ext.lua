@@ -1,10 +1,10 @@
---------------------------------------------------------------------------------
---
--- Non-Lua syntax extensions
---
---------------------------------------------------------------------------------
+--[[
+Title: 
+Author(s): ported to NPL by Zhiyuan
+Date: 2016/1/25
+]]
 
---module ("mlp", package.seeall)
+
 local gg = commonlib.gettable("System.Compiler.lib.gg")
 local util = commonlib.gettable("System.Compiler.lib.util")
 local mlp = commonlib.inherit(nil, commonlib.gettable("System.Compiler.lib.mlp"))
