@@ -23,6 +23,7 @@ local nplp = commonlib.inherit(commonlib.gettable("System.Compiler.lib.mlp"), co
 local nplgen = commonlib.gettable("System.Compiler.nplgen")
 local AST = commonlib.gettable("System.Compiler.ast")
 local FuncExpressionDef = commonlib.gettable("System.Compiler.FuncExpressionDef")
+local util = commonlib.gettable("System.Compiler.lib.util")
 ----------------------------------------------------------------------
 --Delete original -{}, +{} structure parser in Metalua
 ----------------------------------------------------------------------
@@ -234,6 +235,9 @@ local function defBlock(lx)
 		elseif c == "\n" then
 			lx.line = lx.line + 1
 			i=i+1
+        elseif c == "\r" and c_next == "\n" then    -- handle \r\n
+            lx.line = lx.line + 1
+            i=i+2
 		else
 			table.insert(current_chunk, c)
 			i=i+1
