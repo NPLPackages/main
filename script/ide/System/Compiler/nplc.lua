@@ -21,6 +21,7 @@ local nplc = commonlib.inherit(nil, commonlib.gettable("System.Compiler.nplc"))
 
 local nplp = nplpClass:new()
 
+-- only for debugging purposes
 function nplc.compile(src_filename, dst_filename)
     local src_file = assert(io.open(src_filename, 'r'))
     local src = src_file:read '*a'; src_file:close()
@@ -30,6 +31,38 @@ function nplc.compile(src_filename, dst_filename)
     local dst_file = assert(io.open(dst_filename, 'w')) -- debug only
     dst_file:write(compiled_src)
     dst_file:close()
+end
+
+-- force load/reload an NPL file
+-- similar to NPL.load(filename, true);
+-- @param filename 
+function nplc.load(filename)
+	filename = filename:gsub("^%([^%)]*%)", "")
+	local file = ParaIO.open(filename, "r");
+	if(file:IsValid()) then
+		local text = file:GetText(0, -1);
+		if(text) then
+			local pFunc = NPL.loadstring(text, filename);
+			if(pFunc) then
+				return pcall(pFunc);
+			end
+		end
+		file:close();
+	end
+end
+
+local dsl_loaded;
+-- these *.npl files are preloaded before any user defined *.npl file is loaded for the global environment. 
+local function CheckLoadDefaultNplDslExtension()
+	if(dsl_loaded) then
+		return
+	end
+	dsl_loaded = true;
+
+	LOG.std(nil, "info", "DomainSpecificLanguage", "NPL language extension loaded");
+
+	-- TODO: add more core NPL extension dsl here.
+	nplc.load("(gl)script/ide/System/Compiler/dsl/DSL_npl.npl");
 end
 
 -- similar to loadstring() except that it support function-expression in NPL.
@@ -44,6 +77,7 @@ function nplc.loadstring(code, filename, nplp_obj)
         if nplp_obj then
             ast = nplp_obj:src_to_ast(code)
         else
+			CheckLoadDefaultNplDslExtension();
             ast = nplp:src_to_ast(code)
         end
         local compiled_src = nplgen.ast_to_str(ast)

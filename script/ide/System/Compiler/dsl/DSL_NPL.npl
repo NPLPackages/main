@@ -20,8 +20,6 @@ def("activate", p1){
 	end);
 }
 
-LOG.std(nil, "info", "DomainSpecificLanguage", "NPL loaded");
-
 -- here is a demo of activate function
 -- NPL.activate("script/ide/System/Compiler/dsl/DSL_npl.npl", {hello=1})
 activate(m){
