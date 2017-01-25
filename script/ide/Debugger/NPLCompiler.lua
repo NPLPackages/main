@@ -20,9 +20,10 @@ Foreign bytecode (e.g. from Lua 5.1) is incompatible and cannot be loaded.
 -----------------------------------------------
 NPL.load("(gl)script/ide/Debugger/NPLCompiler.lua");
 NPL.CompileFiles("script/config.lua");
+-- *.npl is also supported with meta-compiler
+NPL.CompileFiles("script/ide/System/Compiler/dsl/DSL_npl.npl");
 -----------------------------------------------
 ]]
-
 -- luac.lua - partial reimplementation of luac in Lua.
 -- http://lua-users.org/wiki/LuaCompilerInLua
 -- David Manura et al.
@@ -88,7 +89,12 @@ local function npl_compile(...)
 		local file = ParaIO.open(filename, "r");
 		if(file:IsValid()) then
 			local text = file:GetText();
-			chunks[i] = assert(loadstring(text, filename));
+			if(filename:match("%.npl$")) then
+				NPL.load("(gl)script/ide/System/Compiler/nplc.lua");
+				chunks[i] = assert(NPL.loadstring(text, filename));
+			else
+				chunks[i] = assert(loadstring(text, filename));
+			end
 			file:close();
 		else
 			LOG.std(nil, "warn", "NPL.compiler", "file: %s not found or size is 0",  filename);
@@ -164,7 +170,7 @@ function NPL.CompileFiles(files, additionalParams, searchDepth, targetDir)
 				commonlib.log("NPL.CompileFiles len: %s\n", #output)
 				local _, file
 				for _, file in ipairs(output) do
-					if(string.match(file, "lua$")) then
+					if(string.match(file, "lua$") or string.match(file, "npl$")) then
 						error_count = error_count + NPL.CompileFiles(dir..file, additionalParams)
 					end
 				end
@@ -177,6 +183,7 @@ function NPL.CompileFiles(files, additionalParams, searchDepth, targetDir)
 				args = args..additionalParams.." "
 			end
 			local output = string.gsub(files, "^(.*)lua$", "bin/%1o");
+			local output = string.gsub(files, "^(.*)npl$", "bin/%1o");
 			if(ParaIO.CreateDirectory(output)) then
 				args = string.format("%s -o %s %s", args, output, files)
 				commonlib.log("Compiling: %s\n", files)

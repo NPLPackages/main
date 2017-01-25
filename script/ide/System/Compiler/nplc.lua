@@ -1,11 +1,16 @@
-----------------------------------------------------------------------
--- NPL Compiler
--- the goal of NPL Compiler is to extend NPL Syntax
--- compiling procedure: source -> ast -> source
--- Author:Zhiyuan
--- Date: 2016-12-13
--- Desc: NPL.loadstring is implemented here
-----------------------------------------------------------------------
+--[[
+Title: NPL Compiler
+Author:Zhiyuan
+Date: 2016-12-13
+Desc: the goal of NPL Compiler is to extend NPL Syntax
+compiling procedure: source - > ast - > source
+NPL.loadstring is implemented here
+use the lib:
+------------------------------------------------------------
+NPL.load("(gl)script/ide/System/Compiler/nplc.lua");
+NPL.loadstring('def("activate", p1){NPL.this(function() local +{params(p1)} = msg; +{emit()} end);}')
+-------------------------------------------------------
+]]
 NPL.load("(gl)script/ide/commonlib.lua");
 NPL.load("(gl)script/ide/System/Compiler/nplp.lua");
 NPL.load("(gl)script/ide/System/Compiler/nplgen.lua");
@@ -17,14 +22,14 @@ local nplc = commonlib.inherit(nil, commonlib.gettable("System.Compiler.nplc"))
 local nplp = nplpClass:new()
 
 function nplc.compile(src_filename, dst_filename)
-	local src_file = assert(io.open (src_filename, 'r'))
-	local src = src_file:read '*a'; src_file:close()
-	--src = src:gsub('^#[^\r\n]*', '') 
-	local ast = nplp:src_to_ast(src)
-	local compiled_src= nplgen.ast_to_str(ast)
-	local dst_file = assert(io.open (dst_filename, 'w'))  -- debug only
-	dst_file:write(compiled_src)
-	dst_file:close()
+    local src_file = assert(io.open(src_filename, 'r'))
+    local src = src_file:read '*a'; src_file:close()
+    --src = src:gsub('^#[^\r\n]*', '') 
+    local ast = nplp:src_to_ast(src)
+    local compiled_src = nplgen.ast_to_str(ast)
+    local dst_file = assert(io.open(dst_filename, 'w')) -- debug only
+    dst_file:write(compiled_src)
+    dst_file:close()
 end
 
 -- similar to loadstring() except that it support function-expression in NPL.
@@ -33,17 +38,16 @@ end
 -- @param nplp_obj: the parser object. If nil, it is in global environment. 
 -- @return return a function that represent the code. 
 function nplc.loadstring(code, filename, nplp_obj)
-	if(code) then
-		local ast = {}
-
-		if nplp_obj then
-			ast = nplp_obj:src_to_ast(code)
-		else
-			ast = nplp:src_to_ast(code)
-		end
-		local compiled_src = nplgen.ast_to_str(ast)
-		return loadstring(compiled_src, filename)
-	end
+    if(code) then
+        local ast = {}
+        
+        if nplp_obj then
+            ast = nplp_obj:src_to_ast(code)
+        else
+            ast = nplp:src_to_ast(code)
+        end
+        local compiled_src = nplgen.ast_to_str(ast)
+        return loadstring(compiled_src, filename)
+    end
 end
-
 NPL.loadstring = nplc.loadstring
