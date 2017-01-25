@@ -208,7 +208,7 @@ LOG.std(nil, "info", "DomainSpecificLanguage", "NPL loaded");
 
 
 -- here is a demo of activate function
--- NPL.activate("script/ide/System/Compiler/dsl/DSL_npl.npl", {hello=1})
+-- NPL.activate("script/ide/System/Compiler/dsl/DSL_NPL.npl", {hello=1})
 activate(m){
 	echo(m);
 	echo({line_number = debug.getinfo(1, "nSl").currentline});

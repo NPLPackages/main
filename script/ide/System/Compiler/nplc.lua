@@ -49,6 +49,7 @@ function nplc.load(filename)
 		end
 		file:close();
 	end
+    LOG.std(nil, "warn", "NPL.load", "file not exist: %s", filename);
 end
 
 local dsl_loaded;
@@ -62,7 +63,7 @@ local function CheckLoadDefaultNplDslExtension()
 	LOG.std(nil, "info", "DomainSpecificLanguage", "NPL language extension loaded");
 
 	-- TODO: add more core NPL extension dsl here.
-	nplc.load("(gl)script/ide/System/Compiler/dsl/DSL_npl.npl");
+	nplc.load("(gl)script/ide/System/Compiler/dsl/DSL_NPL.npl");
 end
 
 -- similar to loadstring() except that it support function-expression in NPL.

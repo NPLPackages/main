@@ -21,7 +21,7 @@ Foreign bytecode (e.g. from Lua 5.1) is incompatible and cannot be loaded.
 NPL.load("(gl)script/ide/Debugger/NPLCompiler.lua");
 NPL.CompileFiles("script/config.lua");
 -- *.npl is also supported with meta-compiler
-NPL.CompileFiles("script/ide/System/Compiler/dsl/DSL_npl.npl");
+NPL.CompileFiles("script/ide/System/Compiler/dsl/DSL_NPL.npl");
 -----------------------------------------------
 ]]
 -- luac.lua - partial reimplementation of luac in Lua.
