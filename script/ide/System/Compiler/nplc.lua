@@ -33,6 +33,7 @@ function nplc.compile(src_filename, dst_filename)
     dst_file:close()
 end
 
+-- NOT used: only for debugging
 -- force load/reload an NPL file
 -- similar to NPL.load(filename, true);
 -- @param filename 
@@ -63,7 +64,7 @@ local function CheckLoadDefaultNplDslExtension()
 	LOG.std(nil, "info", "DomainSpecificLanguage", "NPL language extension loaded");
 
 	-- TODO: add more core NPL extension dsl here.
-	nplc.load("(gl)script/ide/System/Compiler/dsl/DSL_NPL.npl");
+	NPL.load("(gl)script/ide/System/Compiler/dsl/DSL_NPL.npl");
 end
 
 -- similar to loadstring() except that it support function-expression in NPL.
