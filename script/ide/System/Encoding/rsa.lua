@@ -21,7 +21,6 @@ local bigint = commonlib.gettable("System.Encoding.bigint");
 local Encoding = commonlib.gettable("System.Encoding");
 
 
-
 ----------------------------
 -- string conversion
 ----------------------------
@@ -31,6 +30,9 @@ local Encoding = commonlib.gettable("System.Encoding");
 -- @param base: what is the base number that each byte in put represent. default to 256. 
 -- @return string number
 local function binary_to_stringnumber(input, base)
+	if(type(input) == "number") then
+		return tostring(input);
+	end
 	base = base or 256;
 	local num = bigint(0)
 	local bytes = {input:byte(1,-1)};
@@ -178,24 +180,21 @@ function RSAKey:SetPEMPublicKey(publickey)
 	publickey = publickey:gsub("[\r\n]*", "");
 	local rawdata = Encoding.unbase64(publickey);
 	if(rawdata) then
-		echo({rawdata:byte(1,-1)})
 		local e,n;
-		if(keytype == "RSA") then
-			-- n, e separated by \0
-			local pos = rawdata:find("\0");
-			if(pos and pos>1) then
-				n = rawdata:sub(1, pos-1);
-				local pos2 = rawdata:find("\0", pos+1);
-				e = rawdata:sub(pos + 1, pos2);
-			end
-		else
-			-- ssh {length, data}
-			e, n = decode_ssh_rsa_key(rawdata);
+		-- n, e separated by \0
+		NPL.load("(gl)script/ide/System/Encoding/asn1.lua");
+		local Encoding = commonlib.gettable("System.Encoding");
+		local decoder = Encoding.asn1.ASN1Decoder:new()
+		local pos, data = decoder:decode(rawdata, 1);
+		if(type(data) == "table" and data[1] and data[2]) then
+			e = binary_to_stringnumber(data[2]);
+			n = binary_to_stringnumber(data[1]);
+			-- echo({e,n})
+			self:SetPublic(e, n);
+		elseif(type(data) == "string") then
+			-- for an RSA public key, the OID is 1.2.840.113549.1.1.1 and there is a RSAPublicKey as the PublicKey key data bitstring.
+			
 		end
-		e = binary_to_stringnumber(e);
-		n = binary_to_stringnumber(n);
-		echo({e,n})
-		self:SetPublic(e, n);
 	end
 	return self;
 end
