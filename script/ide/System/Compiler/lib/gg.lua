@@ -165,6 +165,9 @@ function gg.parse_error(lx, fmt, ...)
       local idx  = string.rep (" ", li[2]).."^"
       msg = string.format("%s\n>>> %s\n>>> %s", msg, srcline, idx)
    end
+   log("\n");echo("=================")
+   commonlib.log.log_long(src);
+   log("\n");echo("=================")
    error(msg)
 end
    

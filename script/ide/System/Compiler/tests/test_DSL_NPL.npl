@@ -1,0 +1,16 @@
+--[[
+Title: 
+Author(s): LiXizhi
+Date: 2017/2/2
+Desc: 
+use the lib:
+------------------------------------------------------------
+NPL.load("script/ide/System/Compiler/tests/test_DSL_NPL.npl")
+------------------------------------------------------------
+]]
+rpc("Test.RPC"){
+  echo(msg);
+  return {"output message"};
+}
+-- now we can invoke it anywhere
+Test.RPC(nil, {"input message"}, function(err, result)  echo(result) end);
