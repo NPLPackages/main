@@ -6,8 +6,14 @@ Use Lib:
 -------------------------------------------------------
 NPL.load("(gl)script/ide/System/Encoding/bigint.lua");
 local bigint = commonlib.gettable("System.Encoding.bigint");
+local binary_to_stringnumber = commonlib.gettable("System.Encoding.binary_to_stringnumber");
+local bigint_to_stringbinary = commonlib.gettable("System.Encoding.bigint_to_stringbinary");
+
 local res = bigint("100")-bigint(1);
 assert(tostring(res) == "99")
+
+assert(binary_to_stringnumber("\255") == "255");
+assert(bigint_to_stringbinary(bigint(255)) == "\255");
 -------------------------------------------------------
 ]]
 --
@@ -72,13 +78,13 @@ local function normalize(bi, notrunc)
 	for i = 1, #c - 1 do
 		v = c[i]
 		if v < 0 then
-			c[i+1] = c[i+1] + fl(v / radix) - 1
+			c[i + 1] = c[i + 1] + fl(v / radix) - 1
 			v = cmod(v, radix)
 			if v ~= 0 then
 				c[i] = v + radix
 			else
 				c[i] = v
-				c[i+1] = c[i+1] + 1
+				c[i + 1] = c[i + 1] + 1
 			end
 		end
 	end
@@ -89,7 +95,7 @@ local function normalize(bi, notrunc)
 		for i = 1, #c - 1 do
 			v = c[i]
 			c[i] = radix - v
-			c[i+1] = c[i+1] + 1
+			c[i + 1] = c[i + 1] + 1
 		end
 		c[#c] = -c[#c]
 	end
@@ -97,7 +103,7 @@ local function normalize(bi, notrunc)
 	for i = 1, #c do
 		v = c[i]
 		if v > radix then
-			c[i+1] = (c[i+1] or 0) + fl(v / radix)
+			c[i + 1] =(c[i + 1] or 0) + fl(v / radix)
 			c[i] = cmod(v, radix)
 		end
 	end
@@ -227,7 +233,7 @@ local function multiply(a, b)
 	end
 	for i = 1, #ac do
 		for j = 1, #bc do
-			c[i+j-1] = c[i+j-1] + ac[i] * bc[j]
+			c[i + j-1] = c[i + j-1] + ac[i] * bc[j]
 		end
 		-- keep the zeroes
 		normalize(bi, true)
@@ -244,13 +250,13 @@ local function kmul(a, b)
 	local an, bn = #a.comps, #b.comps
 	local bi, bj, bk, bl = alloc(), alloc(), alloc(), alloc()
 	local ic, jc, kc, lc = bi.comps, bj.comps, bk.comps, bl.comps
-
+	
 	local n = fl((math.max(an, bn) + 1) / 2)
 	for i = 1, n do
-		ic[i] = (i + n <= an) and ac[i+n] or 0
-		jc[i] = (i <= an) and ac[i] or 0
-		kc[i] = (i + n <= bn) and bc[i+n] or 0
-		lc[i] = (i <= bn) and bc[i] or 0
+		ic[i] =(i + n <= an) and ac[i + n] or 0
+		jc[i] =(i <= an) and ac[i] or 0
+		kc[i] =(i + n <= bn) and bc[i + n] or 0
+		lc[i] =(i <= bn) and bc[i] or 0
 	end
 	normalize(bi)
 	normalize(bj)
@@ -258,15 +264,15 @@ local function kmul(a, b)
 	normalize(bl)
 	local ik = bi * bk
 	local jl = bj * bl
-	local mid = (bi + bj) * (bk + bl) - ik - jl
+	local mid =(bi + bj) *(bk + bl) - ik - jl
 	local mc = mid.comps
 	local ikc = ik.comps
 	local jlc = jl.comps
 	for i = 1, #mc do
-		jlc[i+n] = (jlc[i+n] or 0) + mc[i]
+		jlc[i + n] =(jlc[i + n] or 0) + mc[i]
 	end
 	for i = 1, #ikc do
-		jlc[i+n*2] = (jlc[i+n*2] or 0) + ikc[i]
+		jlc[i + n * 2] =(jlc[i + n * 2] or 0) + ikc[i]
 	end
 	jl.sign = a.sign * b.sign
 	normalize(jl)
@@ -408,8 +414,8 @@ local function rem(bi, m)
 	elseif type(bi) == "number" then
 		bi = bigint(bi)
 	end
-
-	return bi - ((bi / m) * m)
+	
+	return bi -((bi / m) * m)
 end
 
 local function mod(a, m)
@@ -446,16 +452,16 @@ local function biginttonumber(bi)
 end
 
 bigintmt = {
-	__add = add,
-	__sub = sub,
-	__mul = mul,
-	__div = div,
-	__mod = mod,
-	__unm = negate,
-	__eq = eq,
-	__lt = lt,
-	__le = le,
-	__tostring = biginttostring,
+__add = add,
+__sub = sub,
+__mul = mul,
+__div = div,
+__mod = mod,
+__unm = negate,
+__eq = eq,
+__lt = lt,
+__le = le,
+__tostring = biginttostring,
 }
 
 local cache = {}
@@ -493,5 +499,48 @@ function bigint(n)
 	ncache = ncache + 1
 	return bi
 end
+
+
+----------------------------
+-- string conversion
+----------------------------
+
+-- most significant byte first
+-- e.g. binary_to_stringnumber("\255") == "255"
+-- @param input: binary string
+-- @param base: what is the base number that each byte in put represent. default to 256. 
+-- @return string number
+local function binary_to_stringnumber(input, base)
+	if(type(input) == "number") then
+		return tostring(input);
+	end
+	base = base or 256;
+	local num = bigint(0)
+	local bytes = {input:byte(1, -1)};
+	for i = 1, #bytes do
+		num = num * base + bytes[i];
+	end
+	return tostring(num)
+end
+
+-- most significant byte first
+-- @param num: bigint
+-- @param base: default to 256. 
+local function bigint_to_stringbinary(num, base)
+	base = bigint(base or 256);
+	local bytes = {};
+	while(true) do
+		if(num < base) then
+			bytes[#bytes + 1] = string.char(tonumber(tostring(num)));
+			break;
+		else
+			bytes[#bytes + 1] = string.char(tonumber(tostring(num % base)));
+			num = num / base;
+		end
+	end
+	return string.reverse(table.concat(bytes));
+end
+Encoding.binary_to_stringnumber = binary_to_stringnumber;
+Encoding.bigint_to_stringbinary = bigint_to_stringbinary;
 
 Encoding.bigint = bigint;

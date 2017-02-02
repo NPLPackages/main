@@ -1,3 +1,8 @@
+--[[
+Title: 
+Author(s): ported to NPL by Zhiyuan, LiXizhi
+Date: 2016/1/25
+]]
 ----------------------------------------------------------------------
 -- Metalua.
 --
@@ -33,7 +38,6 @@
 --
 --------------------------------------------------------------------------------
 
---module("gg", package.seeall)
 local util = commonlib.gettable("System.Compiler.lib.util")
 local gg = commonlib.inherit(nil, commonlib.gettable("System.Compiler.lib.gg"))
 -------------------------------------------------------------------------------
@@ -161,6 +165,9 @@ function gg.parse_error(lx, fmt, ...)
       local idx  = string.rep (" ", li[2]).."^"
       msg = string.format("%s\n>>> %s\n>>> %s", msg, srcline, idx)
    end
+   log("\n");echo("=================")
+   commonlib.log.log_long(src);
+   log("\n");echo("=================")
    error(msg)
 end
    

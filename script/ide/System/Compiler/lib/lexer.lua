@@ -1,3 +1,8 @@
+--[[
+Title: 
+Author(s): ported to NPL by Zhiyuan, LiXizhi
+Date: 2016/1/25
+]]
 ----------------------------------------------------------------------
 -- Metalua:  $Id: mll.lua,v 1.3 2006/11/15 09:07:50 fab13n Exp $
 --
@@ -29,7 +34,6 @@
 local util = commonlib.gettable("System.Compiler.lib.util")
 local lexer = commonlib.inherit(nil, commonlib.gettable("System.Compiler.lib.lexer"))
 
---lexer = { alpha={ }, sym={ } }
 lexer.alpha = { }
 lexer.sym = { }
 lexer.__index=lexer
