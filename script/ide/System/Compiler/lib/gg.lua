@@ -586,7 +586,7 @@ function gg.list (p)
       -- or a separator immediately ahead
       ------------------------------------------------------
       local function peek_is_in (keywords) 
-         return keywords and lx:is_keyword(lx:peek(), unpack(keywords)) end
+         return keywords and lx:is_keyword(lx:peek(), keywords) end
 
       local x = { }
       local fli = lx:lineinfo_right()
@@ -679,7 +679,7 @@ function gg.onkeyword (p)
    -- Parsing method
    -------------------------------------------------------------------
    function p:parse(lx)
-      if lx:is_keyword (lx:peek(), unpack(self.keywords)) then
+      if lx:is_keyword (lx:peek(), self.keywords) then
          --local fli = lx:lineinfo_right()
          if not self.peek then lx:next() end
          local content = self.primary (lx)
@@ -725,7 +725,7 @@ function gg.optkeyword (...)
    end
    for _, v in ipairs(args) do assert (type(v)=="string") end
    return function (lx)
-      local x = lx:is_keyword (lx:peek(), unpack (args))
+      local x = lx:is_keyword (lx:peek(), args)
       if x then lx:next(); return x
       else return false end
    end
