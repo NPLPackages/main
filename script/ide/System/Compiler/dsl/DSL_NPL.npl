@@ -10,10 +10,10 @@ NPL.load("(gl)script/ide/System/Compiler/dsl/DSL_NPL.npl");
 ]]
 
 -- allows one to easily define NPL.this function using following syntax. 
--- activate(m){
+-- this(m){
 --     echo(m);
 -- }
-def("activate", msg){
+def("this", msg){
 	NPL.this(function()
 		local +{params(msg)} = msg;
 		+{emit()}
@@ -30,6 +30,7 @@ def("rpc", funcName){
 	rpc_.fullname = +{params(funcName)};
 	rpc_.filename = format("rpc/%s.lua", rpc_.fullname);
 	rpc_.thread_name = format("(%s)", __rts__:GetName());
+	-- define the activate function
 	rpc_.activate = function(self, address, msg, callbackFunc)
 		self.next_run_id = self.next_run_id + 1;
 		self.run_callbacks[self.next_run_id] = callbackFunc;
@@ -68,7 +69,7 @@ def("rpc", funcName){
 
 -- here is a demo of activate function
 -- NPL.activate("script/ide/System/Compiler/dsl/DSL_NPL.npl", {hello=1})
-activate(m){
+this(m){
 	echo(m)
 	echo({line_number = debug.getinfo(1, "nSl").currentline});
 
