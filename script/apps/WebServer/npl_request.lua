@@ -225,10 +225,10 @@ function request:ParsePostData()
 			elseif(input_type_lower:find("application/json", 1, true)) then
 				-- please note: this will overwrite parameters in url.
 				self.params = commonlib.Json.Decode(body) or self.params or {};
-				self.data = self.params;
 			else
 				self.params = util.parse_str(body, self.params);	
 			end
+			self.data = self.params;
 		end
 	end
 end
