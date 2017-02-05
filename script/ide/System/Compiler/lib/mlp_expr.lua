@@ -22,6 +22,7 @@ NPL.load("(gl)script/ide/System/Compiler/lib/util.lua");
 local util = commonlib.gettable("System.Compiler.lib.util")
 local gg = commonlib.gettable("System.Compiler.lib.gg")
 local mlp = commonlib.inherit(nil, commonlib.gettable("System.Compiler.lib.mlp"))
+local util = commonlib.gettable("System.Compiler.lib.util")
 
 local function _expr (lx) return mlp.expr (lx)  end
 local function _table_content (lx) return mlp.table_content (lx) end

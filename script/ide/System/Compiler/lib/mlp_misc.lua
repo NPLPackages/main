@@ -93,7 +93,7 @@ function mlp.opt_id (lx)
          gg.parse_error(lx,"Bad id splice")
       end
       return v
-   elseif a.tag == "Id" then return lx:next()
+   elseif a.tag == "Id" or "Keyword" then return lx:next()
    else return false end
 end
 
@@ -129,7 +129,7 @@ end
 --------------------------------------------------------------------------------
 function mlp.id2string (id)
    --print("id2string:", disp.ast(id))
-   if id.tag == "Id" then id.tag = "String"; return id
+   if id.tag == "Id" or "Keyword" then id.tag = "String"; return id
    elseif id.tag == "Splice" then
       assert (in_a_quote, "can't do id2string on an outermost splice")
       error ("id2string on splice not implemented")
