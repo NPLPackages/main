@@ -469,13 +469,21 @@ end
 -- have to be strings. if the token a is a keyword, and it's content
 -- is one of the ... args, then returns it (it's truth value is
 -- true). If no a keyword or not in ..., return nil.
+-- Hacked by Zhiyuan
 ----------------------------------------------------------------------
-function lexer:is_keyword (a, ...)
+function lexer:is_keyword (a, param)
    if not a or a.tag ~= "Keyword" then return false end
-   local words = {...}
-   if #words == 0 then return a[1] end
-   for _, w in ipairs (words) do
-      if w == a[1] then return w end
+   if type(param) == "nil" then
+        return a[1]
+   elseif type(param) == "string" then
+        if param == a[1] then return param end
+   elseif type(param) == "table" then
+        if #param == 0 then 
+            return a[1]
+        end
+        for _, w in ipairs (param) do       --TODO: Optimize the search
+            if w == a[1] then return w end
+        end
    end
    return false
 end

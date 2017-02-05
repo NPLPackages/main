@@ -95,7 +95,7 @@ function mlp.for_header (lx)
       return { tag="Fornum", var, unpack (e) }
    else
       -- Forin: there might be several vars
-      local a = lx:is_keyword (lx:next(), ",", "in")
+      local a = lx:is_keyword (lx:next(), { ",", "in" })
       if a=="in" then var_list = { var, lineinfo = var.lineinfo } else
          -- several vars; first "," skipped, read other vars
          var_list = gg.list{ 
