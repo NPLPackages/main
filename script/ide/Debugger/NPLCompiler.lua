@@ -183,7 +183,7 @@ function NPL.CompileFiles(files, additionalParams, searchDepth, targetDir)
 				args = args..additionalParams.." "
 			end
 			local output = string.gsub(files, "^(.*)lua$", "bin/%1o");
-			local output = string.gsub(files, "^(.*)npl$", "bin/%1o");
+			output = string.gsub(output, "^(.*)npl$", "bin/%1o");
 			if(ParaIO.CreateDirectory(output)) then
 				args = string.format("%s -o %s %s", args, output, files)
 				commonlib.log("Compiling: %s\n", files)
