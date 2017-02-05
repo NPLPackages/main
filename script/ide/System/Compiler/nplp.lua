@@ -238,6 +238,42 @@ local function defBlock(lx)
 		elseif c == "\r" and c_next == "\n" then -- handle \r\n
 			lx.line = lx.line + 1
 			i = i + 2
+        elseif c == "-" and c_next == "-" then  -- handle comment
+            i = i + 2
+            local con = lx.src:sub(i, i)
+            local con_next = lx.src:sub(i+1, i+1)
+            if con == "[" and con_next == "[" then
+                while con ~= "]" or con_next ~= "]" do
+                    if con == "\n" then
+                        lx.line = lx.line + 1
+                        i = i + 1
+                    elseif con == "\r" and con_next == "\n" then
+                        lx.line = lx.line + 1
+                        i = i + 2
+                    else
+                        i = i + 1
+                    end
+                    if i >= lx.src:len() then break end
+                    con = lx.src:sub(i, i)
+                    con_next = lx.src:sub(i+1, i+1)
+                end
+                if con == "]" and con_next == "]" then
+                    i = i + 2
+                else
+                    gg.parse_error(lx, "Unfinished Comment Block")
+                end
+            else
+                while(con ~= "\n" and i < lx.src:len()) do
+                    i = i + 1
+                    con = lx.src:sub(i, i)
+                end
+                if con == "\n" then
+                    lx.line = lx.line + 1
+                    i = i + 1
+                else
+                    gg.parse_error(lx, "Unfinished Def Block")
+                end
+            end
 		else
 			table.insert(current_chunk, c)
 			i = i + 1
