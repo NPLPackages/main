@@ -163,12 +163,14 @@ function gg.parse_error(lx, fmt, ...)
       while src:sub(j,j) ~= '\n' and j<=#src do j=j+1 end      
       local srcline = src:sub (i+1, j-1)
       local idx  = string.rep (" ", li[2]).."^"
-      msg = string.format("%s\n>>> %s\n>>> %s", msg, srcline, idx)
+      local filename = li[4]
+      if filename == "?" then filename = "Unkonwn File" end
+      msg = string.format("[File: %s]:%s\n>>> %s\n>>> %s", filename, msg, srcline, idx)
    end
    log("\n");echo("=================")
    commonlib.log.log_long(src);
    log("\n");echo("=================")
-   error(msg)
+   error(msg, -1)
 end
    
 -------------------------------------------------------------------------------
