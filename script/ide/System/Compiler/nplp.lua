@@ -361,16 +361,17 @@ end
 --------------------------------------------------------------------------------
 -- Parse src code and translate to ast
 --------------------------------------------------------------------------------
-function nplp:src_to_ast(src)
+function nplp:src_to_ast(src, filename)
 	self:setEnv()
-	local lx = nplp.lexer:newstream(src)
+    self.filename = filename
+	local lx = nplp.lexer:newstream(src, filename)
 	local ast = nplp.chunk(lx)
 	self:clearEnv()
 	return ast
 end
 
 function nplp:src_to_ast_raw(src)
-	local lx = nplp.lexer:newstream(src)
+	local lx = nplp.lexer:newstream(src, self.filename)
 	local ast = nplp.chunk(lx)
 	return ast
 end
