@@ -73,11 +73,12 @@ local _func_val = function (lx) return mlp.func_val (lx) end
 
 --------------------------------------------------------------------------------
 -- Default parser for primary expressions
+-- Edited by Zhiyuan
 --------------------------------------------------------------------------------
 function mlp.id_or_literal (lx)
    local a = lx:next()
    --printf("id is : %s", a[1])
-   if a.tag~="Id" and a.tag~="String" and a.tag~="Number" then
+   if a.tag~="Id" and a.tag~="String" and a.tag~="Number" and a.tag~="Keyword" then
       gg.parse_error (lx, "Unexpected expr token %s",
                       util.table_tostring (a, 'nohash'))
    end
