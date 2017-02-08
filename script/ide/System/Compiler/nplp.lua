@@ -92,7 +92,6 @@ function nplp:getBuilder(funcExpr)
 				local ast = AST:new():init(x[1], funcExpr.mode, x[2][1])
 				ast:setSymTbl(funcExpr.symTbl)
 				local src = funcExpr:Compile(ast)
-                print(src)
 				return self:src_to_ast_raw(src) -- recursively translate nested custom functions
 			elseif(x[2].tag == "Default") then
 				return defaultBuilder(x[1])
