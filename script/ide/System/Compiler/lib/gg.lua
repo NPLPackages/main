@@ -164,12 +164,14 @@ function gg.parse_error(lx, fmt, ...)
       local srcline = src:sub (i+1, j-1)
       local idx  = string.rep (" ", li[2]).."^"
       local filename = li[4]
-      if filename == "?" then filename = "Unkonwn File" end
-      msg = string.format("[File: %s]:%s\n>>> %s\n>>> %s", filename, msg, srcline, idx)
+      if filename == "?" then filename = "Unknown File" end
+      msg = string.format("<Syntax error>[File: %s]:%s\n>>> %s\n>>> %s", filename, msg, srcline, idx)
    end
-   log("\n");echo("=================")
-   commonlib.log.log_long(src);
-   log("\n");echo("=================")
+   if(gg.dump_error_src) then
+	   log("\n");echo("=================")
+	   commonlib.log.log_long(src);
+	   log("\n");echo("=================")
+	end
    error(msg, -1)
 end
    
