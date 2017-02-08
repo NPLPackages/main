@@ -8,7 +8,7 @@ use the lib:
 NPL.load("script/ide/System/Compiler/tests/test_DSL_NPL.npl")
 ------------------------------------------------------------
 ]]
-rpc("Test.RPC"){
+def_rpc("Test.RPC"){
   echo(msg);
   return {"output message"};
 }
