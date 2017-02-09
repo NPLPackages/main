@@ -20,50 +20,25 @@ def("this", msg){
 	end);
 }
 
--- allows one to define a remote procedure call using current NPL file as public file. 
--- without the need to write NPL.this or NPL.activate in current file. 
--- @param funcName: global name like "MyApp.XXX.YYY"
-def("rpc", funcName){
-	local rpc_ = commonlib.gettable(+{params(funcName)});
-	rpc_.run_callbacks = {};
-	rpc_.next_run_id = 0;
-	rpc_.fullname = +{params(funcName)};
-	rpc_.filename = format("rpc/%s.lua", rpc_.fullname);
-	rpc_.thread_name = format("(%s)", __rts__:GetName());
-	-- define the activate function
-	rpc_.activate = function(self, address, msg, callbackFunc)
-		self.next_run_id = self.next_run_id + 1;
-		self.run_callbacks[self.next_run_id] = callbackFunc;
-		return NPL.activate(format("%s%s", address or "", rpc_.filename), {
-			type="run", 
-			msg = msg, 
-			callbackId = self.next_run_id, 
-			callbackThread=self.thread_name,
-		});
-	end;
-	rpc_.handle_request = function(self, msg) 
-		+{emit()}
-	end;
-	setmetatable(rpc_, {
-		__call = rpc_.activate,
-		__tostring = function(self)
-			return format("%s: (rpc defined in %s)", rpc_.fullname, rpc_.filename);
-		end
-	});
 
-	NPL.this(function() 
-		local msg = msg;
-		if(msg.type=="run") then
-			local result = rpc_:handle_request(msg.msg);
-			NPL.activate(format("%s%s", msg.callbackThread, rpc_.filename), {type="result", result = result, err=nil, callbackId = msg.callbackId});
-		elseif(msg.type== "result" and msg.callbackId) then
-			local callbackFunc = rpc_.run_callbacks[msg.callbackId];
-			rpc_.run_callbacks[msg.callbackId] = nil;
-			if(type(callbackFunc) == "function") then
-				callbackFunc(msg.err, msg.result);
-			end
-		end
-	end, {filename = rpc_.filename});
+-- allows one to define a remote procedure call using a visual NPL file as public file. 
+-- without the need to write NPL.this or NPL.activate in current file. 
+-- e.g. 
+--    -- here is demo of creating a remote procedure call.
+--    def_rpc("Test.RPC"){
+--    	echo(msg);
+--    	return {"output message"};
+--    }
+--    -- now we can invoke it anywhere
+--    Test.RPC(nil, {"input message"}, function(err, result)  echo(result) end);
+-- 
+-- @param funcName: global name like "MyApp.XXX.YYY"
+def("def_rpc", funcName){
+	NPL.load("(gl)script/ide/System/Concurrent/rpc.lua");
+	local rpc = commonlib.gettable("System.Concurrent.Async.rpc");
+	rpc:new():init(+{params(funcName)}, function(self, msg)
+		+{emit()}
+	end);
 }
 
 
@@ -74,7 +49,7 @@ this(m){
 	echo({line_number = debug.getinfo(1, "nSl").currentline});
 
 	-- here is demo of creating a remote procedure call.
-	rpc("Test.RPC"){
+	def_rpc("Test.RPC"){
 		echo(msg);
 		return {"output message"};
 	}

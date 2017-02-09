@@ -10,6 +10,7 @@ local Async = commonlib.gettable("System.Concurrent.Async");
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/System/Concurrent/waterfall.lua");
+NPL.load("(gl)script/ide/System/Concurrent/rpc.lua");
 
 local Async = commonlib.gettable("System.Concurrent.Async");
 
