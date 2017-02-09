@@ -216,3 +216,30 @@ activate(m){
 	]]
 	NPL.loadstring(code)()
 end
+
+function Test_Keyword()
+    local code = [[
+    def("test"){
+        print("Sucsess as a func expression")
+    }
+
+    local test = "Success as a variable" 
+    print(test)
+
+    function test() print("Success as a function name to be Called") end 
+    test()
+
+    local test = {}
+    function test:new() print("Success as a table name to be Invoked") end
+    test.new(self)
+    test:new()
+
+    local a = {}
+    a.test = "Success as a index of table"
+    print(a.test)
+
+    test(){}
+]]
+
+    NPL.loadstring(code)()
+end
