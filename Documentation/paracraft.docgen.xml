@@ -3439,34 +3439,34 @@ when geometry or position changed, thus a moving entity may frequently load and 
 add new preloaded item class here. 
 				</summary>
 			</function>
-			<function line="74" name="OnInit">
+			<function line="76" name="OnInit">
 				<summary>function ItemClient.OnInit()
 
 				</summary>
 			</function>
-			<function line="89" name="RegisterItemClass">
+			<function line="91" name="RegisterItemClass">
 				<summary>function ItemClient.RegisterItemClass(name, class)
 register a new class
 				</summary>
 				<parameter name="name"/>
 				<parameter name="class"/>
 			</function>
-			<function line="94" name="LoadFromCurrentWorld">
+			<function line="96" name="LoadFromCurrentWorld">
 				<summary>function ItemClient.LoadFromCurrentWorld()
 load both official block list as well as custom user defined block list. 
 				</summary>
 			</function>
-			<function line="100" name="LoadGlobalBlockList">
+			<function line="102" name="LoadGlobalBlockList">
 				<summary>function ItemClient.LoadGlobalBlockList()
 private: only load once the official block list. 
 				</summary>
 			</function>
-			<function line="169" name="SaveToCurrentWorld">
+			<function line="171" name="SaveToCurrentWorld">
 				<summary>function ItemClient.SaveToCurrentWorld()
 
 				</summary>
 			</function>
-			<function line="176" name="AddBlock">
+			<function line="178" name="AddBlock">
 				<summary>function ItemClient.AddBlock(block_id, index, category_name)
 add a block at the given index.
    @param index: if nil, it will be added to last block.
@@ -3478,7 +3478,7 @@ add a block at the given index.
 				<parameter name="category_name">default to "static"
 				</parameter>
 			</function>
-			<function line="190" name="SearchBlocks">
+			<function line="192" name="SearchBlocks">
 				<summary>function ItemClient.SearchBlocks(block_id_or_name, category_name, ds)
 search a given block
    @return a table containing all matching blocks
@@ -3489,19 +3489,19 @@ search a given block
 				<returns>return table containing all matching blocks
 				</returns>
 			</function>
-			<function line="235" name="GetBlockDS">
+			<function line="237" name="GetBlockDS">
 				<summary>function ItemClient.GetBlockDS(category_name)
 get data source by category name
 				</summary>
 				<parameter name="category_name"/>
 			</function>
-			<function line="248" name="GetItemCount">
+			<function line="250" name="GetItemCount">
 				<summary>function ItemClient.GetItemCount(block_id)
 
 				</summary>
 				<parameter name="block_id"/>
 			</function>
-			<function line="252" name="SetItemCount">
+			<function line="254" name="SetItemCount">
 				<summary>function ItemClient.SetItemCount(block_id, count, diff_count)
 
 				</summary>
@@ -3509,72 +3509,72 @@ get data source by category name
 				<parameter name="count"/>
 				<parameter name="diff_count"/>
 			</function>
-			<function line="262" name="AddItem">
+			<function line="264" name="AddItem">
 				<summary>function ItemClient.AddItem(block_id, item)
 add item
 				</summary>
 				<parameter name="block_id"/>
 				<parameter name="item"/>
 			</function>
-			<function line="283" name="GetItem">
+			<function line="285" name="GetItem">
 				<summary>function ItemClient.GetItem(block_id)
 get item by id
 				</summary>
 				<parameter name="block_id"/>
 			</function>
-			<function line="287" name="GetItemByName">
+			<function line="289" name="GetItemByName">
 				<summary>function ItemClient.GetItemByName(name)
 
 				</summary>
 				<parameter name="name"/>
 			</function>
-			<function line="297" name="CreateGetByBlockID">
+			<function line="299" name="CreateGetByBlockID">
 				<summary>function ItemClient.CreateGetByBlockID(block_id, item_class)
 create get an item by block id. 
 				</summary>
 				<parameter name="block_id"/>
 				<parameter name="item_class"/>
 			</function>
-			<function line="306" name="CreateByBlockID">
+			<function line="308" name="CreateByBlockID">
 				<summary>function ItemClient.CreateByBlockID(block_id, item_class)
 create and overwrite 
 				</summary>
 				<parameter name="block_id"/>
 				<parameter name="item_class"/>
 			</function>
-			<function line="325" name="OnLeaveWorld">
+			<function line="327" name="OnLeaveWorld">
 				<summary>function ItemClient.OnLeaveWorld()
 
 				</summary>
 			</function>
-			<function line="351" name="LoadCustomBlocks">
+			<function line="353" name="LoadCustomBlocks">
 				<summary>function ItemClient.LoadCustomBlocks()
 custom block is used defined blocks in the current world directory. 
 				</summary>
 			</function>
-			<function line="378" name="SaveCustomBlocks">
+			<function line="380" name="SaveCustomBlocks">
 				<summary>function ItemClient.SaveCustomBlocks()
 custom block is used defined blocks in the current world directory. 
 				</summary>
 			</function>
-			<function line="397" name="GetNextCustomBlockId">
+			<function line="399" name="GetNextCustomBlockId">
 				<summary>function ItemClient.GetNextCustomBlockId()
 next custom block id
 				</summary>
 			</function>
-			<function line="408" name="GetCustomBlockByTexture">
+			<function line="410" name="GetCustomBlockByTexture">
 				<summary>function ItemClient.GetCustomBlockByTexture(filename)
 return item or nil by texture filename. 
 				</summary>
 				<parameter name="filename"/>
 			</function>
-			<function line="416" name="UnRegisterCustomItem">
+			<function line="418" name="UnRegisterCustomItem">
 				<summary>function ItemClient.UnRegisterCustomItem(block_id)
 
 				</summary>
 				<parameter name="block_id"/>
 			</function>
-			<function line="422" name="RegisterCustomItem">
+			<function line="424" name="RegisterCustomItem">
 				<summary>function ItemClient.RegisterCustomItem(params)
 
    @param params: a table of {base_block_id, texture, [id], [icon], alphaTestTexture=false, blendedTexture=false, transparent=false}
@@ -4466,19 +4466,19 @@ loading all block definition from file
 				</summary>
 				<parameter name="filename"/>
 			</function>
-			<function line="622" name="register_basics">
+			<function line="623" name="register_basics">
 				<summary>function block_types.register_basics()
 basic types
 				</summary>
 			</function>
-			<function line="635" name="GenerateFromDirFile">
+			<function line="636" name="GenerateFromDirFile">
 				<summary>function block_types.GenerateFromDirFile(filename)
 dev only function:
    @filename: type in cmd.exe "dir &gt;filename.txt" and then use this function. 
 				</summary>
 				<parameter name="filename"/>
 			</function>
-			<function line="666" name="update_registered_templates">
+			<function line="669" name="update_registered_templates">
 				<summary>function block_types.update_registered_templates(blockWorld)
 update the re-register all templates with the low level game engine.
    @param blockWorld: the ParaBlockWorld object. if nil, the default client block world is used. 
@@ -4514,13 +4514,13 @@ for breaking into pieces animation.
 			</function>
 		</table>
 		<table name="block" src="script/apps/Aries/Creator/Game/blocks/block.lua">
-			<function line="85" name="ctor">
+			<function line="86" name="ctor">
 				<summary>function block:ctor()
 
    @param id: uint16 type. need to be larger than 1024 if not system type. 
 				</summary>
 			</function>
-			<function line="130" name="LoadSound">
+			<function line="131" name="LoadSound">
 				<summary>function block:LoadSound(name, max_count, volume, pitch)
 not used. allowing to specify "glass4", and "glass[1-4]" is used. 
 				</summary>
@@ -4529,17 +4529,17 @@ not used. allowing to specify "glass4", and "glass[1-4]" is used.
 				<parameter name="volume"/>
 				<parameter name="pitch"/>
 			</function>
-			<function line="158" name="Init">
+			<function line="159" name="Init">
 				<summary>function block:Init()
 
 				</summary>
 			</function>
-			<function line="162" name="get_id">
+			<function line="163" name="get_id">
 				<summary>function block:get_id()
 
 				</summary>
 			</function>
-			<function line="167" name="SetTexture">
+			<function line="168" name="SetTexture">
 				<summary>function block:SetTexture(filename, texture_index)
 
    @param texture_index: nil to default to 1
@@ -4548,7 +4548,7 @@ not used. allowing to specify "glass4", and "glass[1-4]" is used.
 				<parameter name="texture_index">nil to default to 1
 				</parameter>
 			</function>
-			<function line="177" name="GetTexture">
+			<function line="178" name="GetTexture">
 				<summary>function block:GetTexture(texture_index)
 
    @param texture_index: nil to default to 1
@@ -4556,7 +4556,7 @@ not used. allowing to specify "glass4", and "glass[1-4]" is used.
 				<parameter name="texture_index">nil to default to 1
 				</parameter>
 			</function>
-			<function line="187" name="GetTextureObj">
+			<function line="188" name="GetTextureObj">
 				<summary>function block:GetTextureObj(texture_index)
 
    @param texture_index: nil to default to 1
@@ -4567,7 +4567,7 @@ not used. allowing to specify "glass4", and "glass[1-4]" is used.
 				<returns>return , false or the texture asset object. 
 				</returns>
 			</function>
-			<function line="228" name="ReplaceTexture">
+			<function line="229" name="ReplaceTexture">
 				<summary>function block:ReplaceTexture(filename, texture_index)
 
    @param texture_index: nil to default to 1
@@ -4576,31 +4576,31 @@ not used. allowing to specify "glass4", and "glass[1-4]" is used.
 				<parameter name="texture_index">nil to default to 1
 				</parameter>
 			</function>
-			<function line="276" name="RestoreTexture">
+			<function line="277" name="RestoreTexture">
 				<summary>function block:RestoreTexture()
 
 				</summary>
 			</function>
-			<function line="304" name="GetIcon">
+			<function line="305" name="GetIcon">
 				<summary>function block:GetIcon()
 
 				</summary>
 			</function>
-			<function line="320" name="SetAttribute">
+			<function line="323" name="SetAttribute">
 				<summary>function block:SetAttribute(name, value)
 set per template attribute
 				</summary>
 				<parameter name="name"/>
 				<parameter name="value"/>
 			</function>
-			<function line="334" name="UpdateAttribute">
+			<function line="337" name="UpdateAttribute">
 				<summary>function block:UpdateAttribute(name, value)
 update attribute. 
 				</summary>
 				<parameter name="name"/>
 				<parameter name="value"/>
 			</function>
-			<function line="344" name="SetSpeedReduction">
+			<function line="347" name="SetSpeedReduction">
 				<summary>function block:SetSpeedReduction(value)
 set speed reduction percentage of current block type.
    @param value : [0,1]. by default water and web has 0.4, and 0.33 reduction. 
@@ -4608,28 +4608,28 @@ set speed reduction percentage of current block type.
 				<parameter name="value">[0,1]. by default water and web has 0.4, and 0.33 reduction. 
 				</parameter>
 			</function>
-			<function line="348" name="GetSpeedReduction">
+			<function line="351" name="GetSpeedReduction">
 				<summary>function block:GetSpeedReduction()
 
 				</summary>
 			</function>
-			<function line="352" name="RecomputeAttribute">
+			<function line="355" name="RecomputeAttribute">
 				<summary>function block:RecomputeAttribute()
 
 				</summary>
 			</function>
-			<function line="372" name="GetAttribute">
+			<function line="375" name="GetAttribute">
 				<summary>function block:GetAttribute(name)
 
 				</summary>
 				<parameter name="name"/>
 			</function>
-			<function line="378" name="Highlight">
+			<function line="381" name="Highlight">
 				<summary>function block:Highlight()
 
 				</summary>
 			</function>
-			<function line="383" name="Register">
+			<function line="386" name="Register">
 				<summary>function block:Register(blockWorld)
 register this block template
    @param blockWorld: the ParaBlockWorld object. if nil, the default client block world is used. 
@@ -4637,23 +4637,23 @@ register this block template
 				<parameter name="blockWorld">the ParaBlockWorld object. if nil, the default client block world is used. 
 				</parameter>
 			</function>
-			<function line="400" name="getMobilityFlag">
+			<function line="403" name="getMobilityFlag">
 				<summary>function block:getMobilityFlag()
 Returns the mobility information of the block, 0 = free, 1 = can't push but can move over, 2 = total immobility and stop pistons
 				</summary>
 			</function>
-			<function line="405" name="setHardness">
+			<function line="408" name="setHardness">
 				<summary>function block:setHardness(value)
 Sets how many hits it takes to break a block.
 				</summary>
 				<parameter name="value"/>
 			</function>
-			<function line="413" name="setBlockUnbreakable">
+			<function line="416" name="setBlockUnbreakable">
 				<summary>function block:setBlockUnbreakable()
 This method will make the hardness of the block equals to -1, and the block is indestructible.
 				</summary>
 			</function>
-			<function line="418" name="getBlockHardness">
+			<function line="421" name="getBlockHardness">
 				<summary>function block:getBlockHardness(x,y,z)
 Returns the block hardness at a location. Args: world, x, y, z
 				</summary>
@@ -4661,7 +4661,7 @@ Returns the block hardness at a location. Args: world, x, y, z
 				<parameter name="y"/>
 				<parameter name="z"/>
 			</function>
-			<function line="426" name="GetMetaDataFromEnv">
+			<function line="429" name="GetMetaDataFromEnv">
 				<summary>function block:GetMetaDataFromEnv(blockX, blockY, blockZ, side, side_region, camx,camy,camz, lookat_x,lookat_y,lookat_z)
 get sub meta data according to current player or camera position.
    @param side: user clicked which side. this is *opposite* of the internal side.
@@ -4684,7 +4684,7 @@ get sub meta data according to current player or camera position.
 				<returns>return , force_condition:  metadata is nil, if no block meta data can be derived. some will only return force_condition table
 				</returns>
 			</function>
-			<function line="446" name="OnBlockPlacedBy">
+			<function line="449" name="OnBlockPlacedBy">
 				<summary>function block:OnBlockPlacedBy(x,y,z, entity)
 Called when the block is placed in the world.
 				</summary>
@@ -4693,7 +4693,7 @@ Called when the block is placed in the world.
 				<parameter name="z"/>
 				<parameter name="entity"/>
 			</function>
-			<function line="461" name="Create">
+			<function line="464" name="Create">
 				<summary>function block:Create(x, y, z, bCheckCanCreate, data, side, condition, serverdata)
 virtual function: create a new block at the given position. 
 TODO: move to game logic, and spawn other blocks if required
@@ -4724,7 +4724,7 @@ TODO: move to game logic, and spawn other blocks if required
 				</parameter>
 				<parameter name="serverdata"/>
 			</function>
-			<function line="476" name="NearTerrainHole">
+			<function line="479" name="NearTerrainHole">
 				<summary>function block.NearTerrainHole(x, z)
 whether the given real world point is near a terrain hole.
    @param cx,cz: center of the block in real coordinates
@@ -4732,17 +4732,17 @@ whether the given real world point is near a terrain hole.
 				<parameter name="x"/>
 				<parameter name="z"/>
 			</function>
-			<function line="483" name="GetTooltip">
+			<function line="486" name="GetTooltip">
 				<summary>function block:GetTooltip()
 
 				</summary>
 			</function>
-			<function line="493" name="GetDisplayName">
+			<function line="496" name="GetDisplayName">
 				<summary>function block:GetDisplayName()
 
 				</summary>
 			</function>
-			<function line="499" name="AutoFillUndergroundColumn">
+			<function line="502" name="AutoFillUndergroundColumn">
 				<summary>function block.AutoFillUndergroundColumn(blockX, blockY, blockZ, bIgnoreThisBlock)
 automatically generate blocks in column x,z. where the block at x,y,z must be a valid block either empty or solid.
    @return true, number_blocks_modifed. the first params is true if the current block is not destructible
@@ -4754,13 +4754,13 @@ automatically generate blocks in column x,z. where the block at x,y,z must be a 
 				<returns>return , number_blocks_modifed. the first params is true if the current block is not destructible
 				</returns>
 			</function>
-			<function line="598" name="GetModelByBlockData">
+			<function line="601" name="GetModelByBlockData">
 				<summary>function block:GetModelByBlockData(blockData)
 
 				</summary>
 				<parameter name="blockData"/>
 			</function>
-			<function line="606" name="GetBestModel">
+			<function line="609" name="GetBestModel">
 				<summary>function block:GetBestModel(blockX, blockY, blockZ, blockData, side, force_condition)
 get the best model object according to nearby blocks.
    @param side: usually a hint for on which block side this block is created on. 
@@ -4773,12 +4773,12 @@ get the best model object according to nearby blocks.
 				</parameter>
 				<parameter name="force_condition"/>
 			</function>
-			<function line="745" name="PreloadAsset">
+			<function line="748" name="PreloadAsset">
 				<summary>function block:PreloadAsset()
 preload asset model. 
 				</summary>
 			</function>
-			<function line="777" name="OnBlockAdded">
+			<function line="780" name="OnBlockAdded">
 				<summary>function block:OnBlockAdded(blockX, blockY, blockZ, block_data, serverdata)
 virtual function
 				</summary>
@@ -4788,7 +4788,7 @@ virtual function
 				<parameter name="block_data"/>
 				<parameter name="serverdata"/>
 			</function>
-			<function line="782" name="OnBlockEvent">
+			<function line="785" name="OnBlockEvent">
 				<summary>function block:OnBlockEvent(x,y,z, event_id, event_param)
 when ever an event is received. 
 				</summary>
@@ -4798,7 +4798,7 @@ when ever an event is received.
 				<parameter name="event_id"/>
 				<parameter name="event_param"/>
 			</function>
-			<function line="787" name="GetDroppedItemStack">
+			<function line="790" name="GetDroppedItemStack">
 				<summary>function block:GetDroppedItemStack(x,y,z, bForceDrop)
 get the item stack when this block is broken &amp; dropped. 
 				</summary>
@@ -4807,7 +4807,7 @@ get the item stack when this block is broken &amp; dropped.
 				<parameter name="z"/>
 				<parameter name="bForceDrop"/>
 			</function>
-			<function line="794" name="OnUserBreakItem">
+			<function line="797" name="OnUserBreakItem">
 				<summary>function block:OnUserBreakItem(x,y,z, entityPlayer)
 only called when user clicks to break an item 
 				</summary>
@@ -4816,7 +4816,7 @@ only called when user clicks to break an item
 				<parameter name="z"/>
 				<parameter name="entityPlayer"/>
 			</function>
-			<function line="803" name="DropBlockAsItem">
+			<function line="806" name="DropBlockAsItem">
 				<summary>function block:DropBlockAsItem(x,y,z, bForceDrop)
 when ever this block is about to be destroyed and one may call this function to drop as an item first.
    @Note: this function should always be called before item is removed.
@@ -4828,7 +4828,7 @@ when ever this block is about to be destroyed and one may call this function to 
 				<parameter name="bForceDrop">if true, we will drop regardless of game mode
 				</parameter>
 			</function>
-			<function line="817" name="OnNeighborChanged">
+			<function line="820" name="OnNeighborChanged">
 				<summary>function block:OnNeighborChanged(x,y,z,neighbor_block_id)
 virtual function: Lets the block know when one of its neighbor changes. Doesn't know which neighbor changed (coordinates passed are their own) 
 called when neighbour has changed. be careful of recursive calls.
@@ -4842,7 +4842,7 @@ called when neighbour has changed. be careful of recursive calls.
 				<parameter name="neighbor_block_id">
 				</parameter>
 			</function>
-			<function line="827" name="updateTick">
+			<function line="830" name="updateTick">
 				<summary>function block:updateTick(x,y,z)
 called on framemove.
 				</summary>
@@ -4850,13 +4850,13 @@ called on framemove.
 				<parameter name="y"/>
 				<parameter name="z"/>
 			</function>
-			<function line="832" name="IsAssociatedBlockID">
+			<function line="835" name="IsAssociatedBlockID">
 				<summary>function block:IsAssociatedBlockID(block_id)
 return true if the block_id is associated block, such as an open door and closed door. 
 				</summary>
 				<parameter name="block_id"/>
 			</function>
-			<function line="837" name="CanDestroyBlockAt">
+			<function line="840" name="CanDestroyBlockAt">
 				<summary>function block:CanDestroyBlockAt(x,y,z)
 default to return true, unless there is an can destroy rule. 
 				</summary>
@@ -4864,7 +4864,7 @@ default to return true, unless there is an can destroy rule.
 				<parameter name="y"/>
 				<parameter name="z"/>
 			</function>
-			<function line="849" name="SetRule_CanDestroy">
+			<function line="852" name="SetRule_CanDestroy">
 				<summary>function block:SetRule_CanDestroy(rule)
 set whether a given block can be placed onto another block.
    @param rule: rule or nil. nil to remove the rule. 
@@ -4872,7 +4872,7 @@ set whether a given block can be placed onto another block.
 				<parameter name="rule">rule or nil. nil to remove the rule. 
 				</parameter>
 			</function>
-			<function line="855" name="canPlaceBlockAt">
+			<function line="858" name="canPlaceBlockAt">
 				<summary>function block:canPlaceBlockAt(x,y,z)
 virtual: Checks to see if its valid to put this block at the specified coordinates. Args: world, x, y, z
 				</summary>
@@ -4880,7 +4880,7 @@ virtual: Checks to see if its valid to put this block at the specified coordinat
 				<parameter name="y"/>
 				<parameter name="z"/>
 			</function>
-			<function line="869" name="SetRule_CanPlace">
+			<function line="872" name="SetRule_CanPlace">
 				<summary>function block:SetRule_CanPlace(rule)
 set whether a given block can be placed onto another block.
    @param rule: rule or nil. nil to remove the rule. 
@@ -4888,7 +4888,7 @@ set whether a given block can be placed onto another block.
 				<parameter name="rule">rule or nil. nil to remove the rule. 
 				</parameter>
 			</function>
-			<function line="876" name="canPlaceBlockOnSide">
+			<function line="879" name="canPlaceBlockOnSide">
 				<summary>function block:canPlaceBlockOnSide(x,y,z,side)
 checks to see if you can place this block can be placed on that side of a block: BlockLever overrides
    @param x,y,z: this is the position where the block should be placed
@@ -4901,7 +4901,7 @@ checks to see if you can place this block can be placed on that side of a block:
 				<parameter name="side">this is the OPPOSITE of the side of contact.
 				</parameter>
 			</function>
-			<function line="884" name="GetBlockEntity">
+			<function line="887" name="GetBlockEntity">
 				<summary>function block:GetBlockEntity(x,y,z)
 get the block entity at the given block position that matches the block's entity class
 				</summary>
@@ -4909,7 +4909,7 @@ get the block entity at the given block position that matches the block's entity
 				<parameter name="y"/>
 				<parameter name="z"/>
 			</function>
-			<function line="894" name="UpdateModel">
+			<function line="897" name="UpdateModel">
 				<summary>function block:UpdateModel(blockX, blockY, blockZ, blockData)
 update a block's custom model according to user data. this function is called whenever the block data changes or on load. 
 				</summary>
@@ -4918,7 +4918,7 @@ update a block's custom model according to user data. this function is called wh
 				<parameter name="blockZ"/>
 				<parameter name="blockData"/>
 			</function>
-			<function line="940" name="isProvidingWeakPower">
+			<function line="943" name="isProvidingWeakPower">
 				<summary>function block:isProvidingWeakPower(x, y, z, direction)
 Returns true if the block is emitting indirect/weak redstone power on the specified side. If isBlockNormalCube
 returns true, standard redstone propagation rules will apply instead and this will not be called.
@@ -4930,7 +4930,7 @@ returns true, standard redstone propagation rules will apply instead and this wi
 				<parameter name="direction">Note that the side is reversed.  eg 4 (up) when checking the bottom of the block.
 				</parameter>
 			</function>
-			<function line="946" name="isProvidingStrongPower">
+			<function line="949" name="isProvidingStrongPower">
 				<summary>function block:isProvidingStrongPower(x, y, z, direction)
 Returns true if the block is emitting direct/strong redstone power on the specified side.
    @param direction: Note that the side is reversed.  eg 4 (up) when checking the bottom of the block.
@@ -4941,12 +4941,12 @@ Returns true if the block is emitting direct/strong redstone power on the specif
 				<parameter name="direction">Note that the side is reversed.  eg 4 (up) when checking the bottom of the block.
 				</parameter>
 			</function>
-			<function line="951" name="canProvidePower">
+			<function line="954" name="canProvidePower">
 				<summary>function block:canProvidePower()
 Can this block provide power. 
 				</summary>
 			</function>
-			<function line="957" name="OnBlockLoaded">
+			<function line="960" name="OnBlockLoaded">
 				<summary>function block:OnBlockLoaded(x,y,z, block_data)
 called when block is first loaded from disk file to memory
 only customModel has this function called. 
@@ -4956,12 +4956,12 @@ only customModel has this function called.
 				<parameter name="z"/>
 				<parameter name="block_data"/>
 			</function>
-			<function line="964" name="GetEntityClass">
+			<function line="967" name="GetEntityClass">
 				<summary>function block:GetEntityClass()
 get entity class if any. 
 				</summary>
 			</function>
-			<function line="973" name="DeleteModel">
+			<function line="976" name="DeleteModel">
 				<summary>function block:DeleteModel(blockX, blockY, blockZ)
 
 				</summary>
@@ -4969,7 +4969,7 @@ get entity class if any.
 				<parameter name="blockY"/>
 				<parameter name="blockZ"/>
 			</function>
-			<function line="985" name="OnBlockRemoved">
+			<function line="988" name="OnBlockRemoved">
 				<summary>function block:OnBlockRemoved(blockX, blockY, blockZ, last_id, last_data)
 on block removed
 				</summary>
@@ -4979,14 +4979,14 @@ on block removed
 				<parameter name="last_id"/>
 				<parameter name="last_data"/>
 			</function>
-			<function line="992" name="GetSlipperiness">
+			<function line="995" name="GetSlipperiness">
 				<summary>function block:GetSlipperiness()
 this decides the acceleration distance when entity is moving on the block. 
 0 means no acceleration distance and player stops immediately when it stops moving. 
 bigger value means that the player will slide this certain distance before comming to a complete stop. 
 				</summary>
 			</function>
-			<function line="999" name="Remove">
+			<function line="1002" name="Remove">
 				<summary>function block:Remove(blockX, blockY, blockZ)
 virtual function: remove a block at the given position. 
 it will automatically generate terrain blocks if necessary
@@ -4996,7 +4996,7 @@ it will automatically generate terrain blocks if necessary
 				<parameter name="blockY"/>
 				<parameter name="blockZ"/>
 			</function>
-			<function line="1045" name="FillTerrainBlock">
+			<function line="1048" name="FillTerrainBlock">
 				<summary>function block.FillTerrainBlock(blockX, blockY, blockZ, block_id)
 static function: Fill blocks according to current terrain height and its surroundings.
    @param block_id: if nil it defaults to block_types.names.underground_shell
@@ -5007,7 +5007,7 @@ static function: Fill blocks according to current terrain height and its surroun
 				<parameter name="block_id">if nil it defaults to block_types.names.underground_shell
 				</parameter>
 			</function>
-			<function line="1088" name="RemoveTerrainBlock">
+			<function line="1091" name="RemoveTerrainBlock">
 				<summary>function block.RemoveTerrainBlock(blockX, blockY, blockZ)
 static function: remove the terrain block, we will set holes
 				</summary>
@@ -5015,7 +5015,7 @@ static function: remove the terrain block, we will set holes
 				<parameter name="blockY"/>
 				<parameter name="blockZ"/>
 			</function>
-			<function line="1149" name="GenerateUndergroundBlock">
+			<function line="1152" name="GenerateUndergroundBlock">
 				<summary>function block.GenerateUndergroundBlock(blockX, blockY, blockZ, block_id)
 static function:
 auto fill a random underground terrain block at given position.
@@ -5027,7 +5027,7 @@ auto fill a random underground terrain block at given position.
 				<parameter name="block_id">if nil it is a random block. 
 				</parameter>
 			</function>
-			<function line="1155" name="play_break_sound">
+			<function line="1158" name="play_break_sound">
 				<summary>function block:play_break_sound(x,y,z)
 
 				</summary>
@@ -5035,7 +5035,7 @@ auto fill a random underground terrain block at given position.
 				<parameter name="y"/>
 				<parameter name="z"/>
 			</function>
-			<function line="1162" name="play_create_sound">
+			<function line="1165" name="play_create_sound">
 				<summary>function block:play_create_sound(x,y,z)
 
 				</summary>
@@ -5043,13 +5043,13 @@ auto fill a random underground terrain block at given position.
 				<parameter name="y"/>
 				<parameter name="z"/>
 			</function>
-			<function line="1168" name="play_step_sound">
+			<function line="1171" name="play_step_sound">
 				<summary>function block:play_step_sound(volume)
 
 				</summary>
 				<parameter name="volume"/>
 			</function>
-			<function line="1174" name="play_click_sound">
+			<function line="1177" name="play_click_sound">
 				<summary>function block:play_click_sound(x,y,z)
 
 				</summary>
@@ -5057,7 +5057,7 @@ auto fill a random underground terrain block at given position.
 				<parameter name="y"/>
 				<parameter name="z"/>
 			</function>
-			<function line="1180" name="play_toggle_sound">
+			<function line="1183" name="play_toggle_sound">
 				<summary>function block:play_toggle_sound(x,y,z)
 
 				</summary>
@@ -5065,7 +5065,7 @@ auto fill a random underground terrain block at given position.
 				<parameter name="y"/>
 				<parameter name="z"/>
 			</function>
-			<function line="1188" name="CreateBlockPieces">
+			<function line="1191" name="CreateBlockPieces">
 				<summary>function block:CreateBlockPieces(blockX, blockY, blockZ, granularity, texture_filename, cx, cy, cz)
 
    @param granularity: (0-1), 1 will generate 27 pieces, 0 will generate 0 pieces, default to 1.
@@ -5082,7 +5082,7 @@ auto fill a random underground terrain block at given position.
 				<parameter name="cy"/>
 				<parameter name="cz"/>
 			</function>
-			<function line="1242" name="GetCustomModel">
+			<function line="1245" name="GetCustomModel">
 				<summary>function block:GetCustomModel(blockX, blockY, blockZ)
 get the custom model at the given position.
    @return the paraobject or nil. 
@@ -5093,7 +5093,7 @@ get the custom model at the given position.
 				<returns>return paraobject or nil. 
 				</returns>
 			</function>
-			<function line="1256" name="AddToSelection">
+			<function line="1259" name="AddToSelection">
 				<summary>function block:AddToSelection(blockX, blockY, blockZ, index)
 add the custom model to selection.
    @param index: the selection group id, default to 2.
@@ -5107,7 +5107,7 @@ add the custom model to selection.
 				<returns>return if selected
 				</returns>
 			</function>
-			<function line="1267" name="GetInternalStateNumber">
+			<function line="1270" name="GetInternalStateNumber">
 				<summary>function block:GetInternalStateNumber(x,y,z)
 some block like command blocks, may has an internal state number(like its last output result)
 and some block may use its nearby blocks' state number to generate redstone output or other behaviors.
@@ -5119,7 +5119,7 @@ and some block may use its nearby blocks' state number to generate redstone outp
 				<returns>return or a number between [0-15]
 				</returns>
 			</function>
-			<function line="1274" name="OnClick">
+			<function line="1277" name="OnClick">
 				<summary>function block:OnClick(bx, by, bz, mouse_button, entity, side)
 called when the user clicks on the block
    @param side: on which side the block is clicked.
@@ -5135,7 +5135,7 @@ called when the user clicks on the block
 				<returns>return return true if it is an action block and processed . 
 				</returns>
 			</function>
-			<function line="1286" name="OnEntityCollided">
+			<function line="1289" name="OnEntityCollided">
 				<summary>function block:OnEntityCollided(x,y,z, entity, deltaTime)
 Triggered whenever an entity collides with this block (enters into the block). Args: world, x, y, z, entity
 				</summary>
@@ -5145,7 +5145,7 @@ Triggered whenever an entity collides with this block (enters into the block). A
 				<parameter name="entity"/>
 				<parameter name="deltaTime"/>
 			</function>
-			<function line="1291" name="OnMouseDown">
+			<function line="1294" name="OnMouseDown">
 				<summary>function block:OnMouseDown(x,y,z, mouse_button)
 call when use press mouse down button over the block
 				</summary>
@@ -5154,7 +5154,7 @@ call when use press mouse down button over the block
 				<parameter name="z"/>
 				<parameter name="mouse_button"/>
 			</function>
-			<function line="1300" name="OnActivated">
+			<function line="1303" name="OnActivated">
 				<summary>function block:OnActivated(bx, by, bz, entity)
 virtual function: some signal is received, such as user click
 the default behavior is to activate the neuron block.
@@ -5164,7 +5164,7 @@ the default behavior is to activate the neuron block.
 				<parameter name="bz"/>
 				<parameter name="entity"/>
 			</function>
-			<function line="1311" name="OnToggle">
+			<function line="1314" name="OnToggle">
 				<summary>function block:OnToggle(bx, by, bz)
 some blocks can be toggled to another block. and may event have a toggle function. 
 				</summary>
@@ -5172,7 +5172,7 @@ some blocks can be toggled to another block. and may event have a toggle functio
 				<parameter name="by"/>
 				<parameter name="bz"/>
 			</function>
-			<function line="1322" name="OnStep">
+			<function line="1325" name="OnStep">
 				<summary>function block:OnStep(bx, by, bz, entity)
 when the player steps on the top surface of the block
 some block may have an on step function. 
@@ -5182,42 +5182,42 @@ some block may have an on step function.
 				<parameter name="bz"/>
 				<parameter name="entity"/>
 			</function>
-			<function line="1327" name="tickRate">
+			<function line="1330" name="tickRate">
 				<summary>function block:tickRate()
 How many simulation steps 
 				</summary>
 			</function>
-			<function line="1332" name="isNormalCube">
+			<function line="1335" name="isNormalCube">
 				<summary>function block:isNormalCube()
 whether block is normal solid cube model that can not provide power. 
 				</summary>
 			</function>
-			<function line="1356" name="GetItemModel">
+			<function line="1359" name="GetItemModel">
 				<summary>function block:GetItemModel()
 get model file for item display
 				</summary>
 			</function>
-			<function line="1386" name="GetOffsetY">
+			<function line="1391" name="GetOffsetY">
 				<summary>function block:GetOffsetY()
 
 				</summary>
 			</function>
-			<function line="1397" name="GetItemModelScaling">
+			<function line="1402" name="GetItemModelScaling">
 				<summary>function block:GetItemModelScaling()
 model scaling for GetItemModel() as handheld item. 
 				</summary>
 			</function>
-			<function line="1402" name="OnWorldLoaded">
+			<function line="1407" name="OnWorldLoaded">
 				<summary>function block:OnWorldLoaded()
 called when world is loaded
 				</summary>
 			</function>
-			<function line="1407" name="UpdateBlockBounds">
+			<function line="1412" name="UpdateBlockBounds">
 				<summary>function block:UpdateBlockBounds()
 set the block bounds and collision AABB. 
 				</summary>
 			</function>
-			<function line="1412" name="SetBlockBounds">
+			<function line="1417" name="SetBlockBounds">
 				<summary>function block:SetBlockBounds(minX, minY, minZ, maxX, maxY, maxZ)
 input is in local block pos which is scaled by block_size internally. 
 				</summary>
@@ -5228,7 +5228,7 @@ input is in local block pos which is scaled by block_size internally.
 				<parameter name="maxY"/>
 				<parameter name="maxZ"/>
 			</function>
-			<function line="1419" name="GetCollisionBoundingBoxFromPool">
+			<function line="1424" name="GetCollisionBoundingBoxFromPool">
 				<summary>function block:GetCollisionBoundingBoxFromPool(x,y,z)
 Returns a bounding box from the pool of bounding boxes.
 this box can change after the pool has been cleared to be reused
@@ -5237,7 +5237,7 @@ this box can change after the pool has been cleared to be reused
 				<parameter name="y"/>
 				<parameter name="z"/>
 			</function>
-			<function line="1427" name="AddCollisionBoxesToList">
+			<function line="1432" name="AddCollisionBoxesToList">
 				<summary>function block:AddCollisionBoxesToList(x,y,z, aabb, list, entity)
 Adds all intersecting collision boxes representing this block to a list.
    @param list: in|out array list to hold the output
@@ -5254,7 +5254,7 @@ Adds all intersecting collision boxes representing this block to a list.
 				<parameter name="entity">
 				</parameter>
 			</function>
-			<function line="1442" name="RotateBlockData">
+			<function line="1447" name="RotateBlockData">
 				<summary>function block:RotateBlockData(blockData, angle, axis)
 rotate the block data by the given angle and axis. This is mosted reimplemented in blocks with orientations stored in block data, such as stairs, bones, etc.
    @param blockData: current block data
@@ -5271,7 +5271,7 @@ rotate the block data by the given angle and axis. This is mosted reimplemented 
 				<returns>return rotated block data. 
 				</returns>
 			</function>
-			<function line="1450" name="RotateBlockDataUsingModelFacing">
+			<function line="1455" name="RotateBlockDataUsingModelFacing">
 				<summary>function block:RotateBlockDataUsingModelFacing(blockData, angle, axis)
 helper function: can be used by RotateBlockData() to automatically calculate rotated block facing. 
 please note, it will cache last search result to accelerate subsequent calls.
@@ -5280,7 +5280,7 @@ please note, it will cache last search result to accelerate subsequent calls.
 				<parameter name="angle"/>
 				<parameter name="axis"/>
 			</function>
-			<function line="1489" name="MirrorBlockData">
+			<function line="1494" name="MirrorBlockData">
 				<summary>function block:MirrorBlockData(blockData, axis)
 mirror the block data along the given axis. This is mosted reimplemented in blocks with orientations stored in block data, such as stairs, bones, etc.
    @param blockData: current block data
@@ -5294,7 +5294,7 @@ mirror the block data along the given axis. This is mosted reimplemented in bloc
 				<returns>return mirrored block data. 
 				</returns>
 			</function>
-			<function line="1494" name="GetBlockColor">
+			<function line="1499" name="GetBlockColor">
 				<summary>function block:GetBlockColor(x,y,z)
 return color in RGB, without alpha
 				</summary>
