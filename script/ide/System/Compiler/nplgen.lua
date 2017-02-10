@@ -256,7 +256,9 @@ function M:Set(node)
 	if type(node[1][1]) == 'table'
 	and node[1][1].tag == 'Index' 
 	and type(node[2][1]) == 'table'
-	and node[2][1].tag == 'Function' 
+	and node[2][1].tag == 'Function'
+    and node[2][1][1]
+    and node[2][1][1][1] 
 	and node[2][1][1][1][1] == 'self' 
 	and is_idx_stack(node[1][1][1])
 	and node[1][1][2].tag == 'String'
