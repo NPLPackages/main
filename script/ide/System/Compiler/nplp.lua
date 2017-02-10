@@ -70,81 +70,181 @@ local function tokenMode(lx)
 	return ast
 end
 
-
-
-function nplp:getBuilder(funcExpr)
-	local parser, builder
+function nplp:get_Parser_and_Builder(funcExpr)
 	local name = funcExpr:getName()
-	
-	local function defaultBuilder(x)
-		local ast = {tag = "Call"}
-		table.insert(ast, {tag = "Id", name})
-		for _, param in ipairs(x) do
-			table.insert(ast, param)
-		end
-		return ast    
-	end
+	local builder;
+	local head;
+	local blkParser;
 	
 	if funcExpr.mode == "strict" then
-		parser = nplp.block
+		blkParser = nplp.block
 		builder = function(x)
-			if(x[2].tag == "Defined") then
-				local ast = AST:new():init(x[1], funcExpr.mode, x[2][1])
+			x = x[1]
+			if(x.tag == "Defined") then
+				local ast = AST:new():init(x[1], funcExpr.mode, x[2])
 				ast:setSymTbl(funcExpr.symTbl)
 				local src = funcExpr:Compile(ast)
 				return self:src_to_ast_raw(src) -- recursively translate nested custom functions
-			elseif(x[2].tag == "Default") then
-				return defaultBuilder(x[1])
+			elseif(x.tag == "Default") then
+				return x[1]
 			end
 		end
 	elseif funcExpr.mode == "line" then
-		parser = lineMode
+		blkParser = lineMode
 		builder = function(x)
-			if(x[2].tag == "Defined") then
-				local ast = AST:new():init(x[1], funcExpr.mode, x[2][1])
+			x = x[1]
+			if(x.tag == "Defined") then
+				local ast = AST:new():init(x[1], funcExpr.mode, x[2])
 				ast:setSymTbl(funcExpr.symTbl)
 				local src = funcExpr:Compile(ast)
 				return self:src_to_ast_raw(src) -- recursively translate nested custom functions
-			elseif(x[2].tag == "Default") then
-				return defaultBuilder(x[1])
+			elseif(x.tag == "Default") then
+				return x[1]
 			end
 		end
 	elseif funcExpr.mode == "token" then
-		parser = tokenMode
+		blkParser = tokenMode
 		builder = function(x)
-			if(x[2].tag == "Defined") then
+			x = x[1]
+			if(x.tag == "Defined") then
 				return nil
-			elseif(x[2].tag == "Default") then
-				return defaultBuilder(x[1])
+			elseif(x.tag == "Default") then
+				return x[1]
 			end
 		end
 	end
 	
-	local blkParser = function(lx)
-		if not lx:is_keyword(lx:peek(), "{") then
-			return {tag = "Default"}
+	local funcExprParser = function(lx)
+		local ast = {};
+
+		local suffix = { name = "expr suffix op",
+		{ "[", nplp.expr, "]", builder = function (tab, idx) 
+		return {tag = "Index", tab, idx[1]} end},
+		{ ".", nplp.id, builder = function (tab, field) 
+		return {tag = "Index", tab, nplp.id2string(field[1])} end },
+		{ "(", nplp.func_args_content, ")", builder = function(f, args) 
+		return {tag = "Call", f, unpack(args[1])} end },
+		{ "{", nplp.table_content, "}", builder = function (f, arg)
+		return {tag = "Call", f, arg[1]} end},
+		{ ":", nplp.id, nplp.method_args, builder = function (obj, post)
+		return {tag = "Invoke", obj, nplp.id2string(post[1]), unpack(post[2])} end},
+		default = { name = "opt_string_arg", parse = nplp.opt_string, builder = function(f, arg) 
+		return {tag = "Call", f, arg } end } } 
+
+        -- same as raw_parse_sequence(lx, p) in gg.lua
+		local function raw_parse_sequence(lx, p)
+			local r = { }
+			local fi, li = {}, {}
+			for i = 1, #p do
+				e = p[i]
+				if type(e) == "string" then
+					---------------------------------------
+					if i==1 then 
+						fi = lx:lineinfo_right()
+					end
+					---------------------------------------
+					if not lx:is_keyword(lx:next(), e) then
+					gg.parse_error(lx, "Keyword '%s' expected", e) end
+				elseif gg.is_parser(e) then
+					---------------------------------------
+					if i==1 then 
+						fi = lx:lineinfo_right()
+					end
+					---------------------------------------
+					table.insert(r, e(lx)) 
+				else 
+					gg.parse_error(lx, "Sequence `%s': element #%i is not a string "..
+					"nor a parser: %s", 
+					p.name, i, util.table_tostring(e))
+				end
+			end
+			---------------------------------------
+			li = lx:lineinfo_left()
+			r.lineinfo = {first = fi, last = li}
+			---------------------------------------
+			return r
 		end
-		lx:next() -- skip "{"
-		local ast = parser(lx)
-		if not lx:is_keyword(lx:peek(), "}") then
-			gg.parse_error(lx, "} expected")
+
+		local function get_parser_info(tab)
+            local p2;
+            local s = lx:is_keyword(lx:peek())
+            for i = 1, #tab do
+                if tab[i][1] == s then
+                    p2 = tab[i]
+                    break
+                end
+            end
+			if p2 then 
+				local function parser(lx) return raw_parse_sequence(lx, p2) end
+				return parser, p2
+			else 
+				local d = tab.default
+				if d then return d.parse or d.parser, d
+				else return false, false end
+			end
 		end
-		lx:next() -- skip "}"
-		return {tag = "Defined", ast}
+		
+		local function handle_suffix(e)
+			local p2_func, p2 = get_parser_info(suffix)
+			if not p2 then return false end
+			if not p2.prec then
+				local op = p2_func(lx)
+				if not op then return false end
+				e = p2.builder(e, op)
+				return e
+			end
+			return false
+		end 
+
+        -- start parsing
+		if lx:is_keyword(lx:peek(), "(") then
+			lx:next()                   -- skip "("
+			local args_ast = nplp.func_args_content(lx)
+			if not lx:is_keyword(lx:peek(), ")") then
+				gg.parse_error(lx, ") expected")
+			end
+			lx:next()                   -- skip ")"
+			if lx:is_keyword(lx:peek(), "{") then
+				lx:next()               -- skip "{"
+				local blk_ast = blkParser(lx)
+				if not lx:is_keyword(lx:peek(), "}") then
+					gg.parse_error(lx, "} expected")
+				end
+				lx:next()               -- skip "}"
+                ast.tag = "Defined"     -- Func Expression statement
+				ast[1] = args_ast
+				ast[2] = blk_ast
+                return ast                
+			else                        -- handle funcname()<suffix>, here suffix is not {}
+                local e = {tag="Call", lineinfo = {first = {lx.line, lx.column_offset, lx.i, lx.src_name}}, {tag="Id", name}, args_ast}
+				repeat
+					local x = handle_suffix(e)
+					e = x or e
+				until not x
+				ast[1] = e
+			end 
+		else                            -- handle funcname<suffix>, here suffix is not ()
+		    local e = {tag="Id", name}
+            repeat
+                local x = handle_suffix(e)
+                e = x or e
+            until not x
+            ast[1] = e
+		end		
+		ast.tag = "Default"     -- Default Call or Invoke statement
+		return ast
 	end
-	return blkParser, builder
+	return funcExprParser, builder
 end
 
 function nplp:register(funcExpr)
 	local name = funcExpr:getName()
 	if not self.metaDefined then self.metaDefined = {} end
 	self.metaDefined[name] = funcExpr
-	
-	local blkParser, builder = self:getBuilder(funcExpr)
+    local parser, builder = self:get_Parser_and_Builder(funcExpr)
 	nplp.lexer:add(name)
-	nplp.stat:add({name, "(", nplp.func_args_content, ")", blkParser, builder = builder})
+    nplp.stat:add({name, parser, builder = builder})
 end
-
 
 --------------------------------------------------------------------------------
 local function defMode(lx)
@@ -342,9 +442,9 @@ end
 function nplp:setEnv()
 	self:construct()
 	for name, funcExpr in pairs(self.metaDefined) do 
-		local blkParser, builder = self:getBuilder(funcExpr)
+		local parser, builder = self:get_Parser_and_Builder(funcExpr)
 		nplp.lexer:add(name)
-		nplp.stat:add({name, "(", nplp.func_args_content, ")", blkParser, builder = builder})
+		nplp.stat:add({name, parser, builder = builder})
 	end
 end
 

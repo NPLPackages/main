@@ -112,7 +112,7 @@ local keywords = util.table_transpose {
 -- Return true iff string `id' is a legal identifier name.
 --------------------------------------------------------------------------------
 local function is_ident(id)
-	return id:match "^[%a_][%w_]*$" and not keywords[id]
+	return id:match "^[%a_][%w_]*$" 
 end
 
 --------------------------------------------------------------------------------
@@ -123,6 +123,7 @@ end
 --------------------------------------------------------------------------------
 local function is_idx_stack(ast)
 	if ast.tag == 'Id' then return true
+    elseif ast.tag == 'Keyword' then return true
 	elseif ast.tag == 'Index' then return is_idx_stack(ast[1])
 	else return false
 	end
@@ -175,7 +176,12 @@ function M:node(node)
 	if not node.tag then -- tagless block.
 		self:list(node, " ") -- space as line sperator
 	else
-		local f = M[node.tag]
+		local f;
+        if node.tag == 'Keyword' then   -- Handle Keyword as string
+            f = node[1]
+        else
+            f = M[node.tag]
+        end
 		if type(f) == "function" then -- Delegate to tag method.
 			f(self, node, unpack(node))
 		elseif type(f) == "string" then -- tag string.
