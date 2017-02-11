@@ -48,7 +48,14 @@ function Plane:clone()
 end
 
 function Plane:init(a,b,c,d)
-	self[1], self[2], self[3], self[4] = a,b,c,d;
+	local type_ = type(x);
+	if(type_ == "number") then
+		self[1], self[2], self[3], self[4] = a,b,c,d;
+	elseif(type_ == "table" and type(b) == "number") then
+		self[1], self[2], self[3], self[4] = a[1],a[2],a[3],b;
+	elseif(type_ == "table" and b == nil) then
+		self[1], self[2], self[3], self[4] = a[1],a[2],a[3],a[4];
+	end
 end
 
 -- Redefine this plane based on a normal and a point.
@@ -103,4 +110,76 @@ end
 -- @param y, z: if not nil, v, y, z is a vector's x,y,z
 function Plane:PlaneDotNormal(v, y, z)
 	return vector3d.dot(self, v, y, z);
+end
+
+
+
+
+function Plane.fromPoints(a, b, c)
+    return Plane.fromVector3Ds(a, b, c);
+end
+
+function Plane.fromVector3Ds(a, b, c)
+	local n = (b - a):cross(c-a):normalize();
+	return Plane:new():redefine(n,a);
+end
+
+-- like fromVector3Ds, but allow the vectors to be on one point or one line
+-- in such a case a random plane through the given points is constructed
+function Plane.anyPlaneFromVector3Ds(a, b, c)
+    local v1 = b - a;
+    local v2 = c - a;
+    if (v1:length() < tonumber("1e-5")) then
+        v1 = v2:randomPerpendicularVector();
+    end
+    if (v2:length() < tonumber("1e-5")) then
+        v2 = v1:randomPerpendicularVector();
+    end
+    local normal = v1 * v2;
+    if (normal:length() < tonumber("1e-5")) then
+        -- self would mean that v1 == v2.negated()
+        v2 = v1:randomPerpendicularVector();
+        normal = v1 * v2;
+    end
+    normal:normalize();
+	return Plane:new():redefine(normal,a);
+end
+function Plane.fromNormalAndPoint(normal, point)
+    normal = normal:clone():normalize();
+	return Plane:new():redefine(normal,point);
+end
+
+function Plane:signedDistanceToPoint(point)
+    local t = self:GetNormal():dot(point) - self[4];
+    return t;
+end
+
+function Plane:mirrorPoint(point3d)
+    local distance = self:signedDistanceToPoint(point3d);
+    local mirrored = point3d - self:GetNormal() * (distance * 2.0);
+    return mirrored;
+end
+
+function Plane.cross(a,b)
+	return vector3d:new(a[2] * b[3] -a[3] * b[2],a[3] * b[1] - a[1] * b[3],a[1] * b[2] - a[2] * b[1])
+end
+
+-- robust splitting of a line by a plane
+-- will work even if the line is parallel to the plane
+function Plane:splitLineBetweenPoints(p1, p2)
+    local direction = p2 - p1;
+
+	local nx,ny,nz = self.direction:get();
+    local labda = (-self:signedDistanceToPoint(p1)) / self:PlaneDotNormal(nx,ny,nz);
+    if (labda ~= labda) then	-- test for nan
+		labda = 0;
+	end
+    if (labda > 1) then
+		labda = 1;
+	end
+    if (labda < 0) then
+		labda = 0;
+	end
+    local result = p1 + direction:MulByFloat(labda);
+    return result;
 end

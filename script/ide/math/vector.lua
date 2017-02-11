@@ -15,7 +15,11 @@ local dist = v1:dist(v2)
 LOG.info({angle, dist})
 -------------------------------------------------------
 ]]
+
+NPL.load("(gl)script/ide/math/vector2d.lua");
 NPL.load("(gl)script/ide/math/VectorPool.lua");
+
+local vector2d = commonlib.gettable("mathlib.vector2d");
 local VectorPool = commonlib.gettable("mathlib.VectorPool");
 local type = type;
 local vector3d = commonlib.gettable("mathlib.vector3d");
@@ -98,7 +102,7 @@ function vector3d:normalize()
         self[2] = 0
         self[3] = 0
     end
-    return self
+    return self;
 end
 
 function vector3d:set(x,y,z)
@@ -111,6 +115,7 @@ function vector3d:set(x,y,z)
         self[2] = y
         self[3] = z
     end
+	return self;
 end
 
 function vector3d:add(x,y,z)
@@ -123,6 +128,7 @@ function vector3d:add(x,y,z)
         self[2] = self[2] + y
         self[3] = self[3] + z
     end
+	return self;
 end
 
 function vector3d.__add(a,b)
@@ -152,6 +158,7 @@ function vector3d:sub(x,y,z)
         self[2] = self[2] - y
         self[3] = self[3] - z
     end
+	return self;
 end
 
 function vector3d.__sub(a,b)
@@ -241,8 +248,9 @@ function vector3d:compare(v)
 	return (self[1] == v[1] and self[2] == v[2] and self[3] == v[3]);
 end
 
-function vector3d:equals(v)
-	return (self[1] == v[1] and self[2] == v[2] and self[3] == v[3]);
+function vector3d:equals(v,epsilon)
+	epsilon = epsilon or tonumber("1e-5");
+	return (math.abs(self[1] - v[1])<epsilon and math.abs(self[2] - v[2])<epsilon and math.abs(self[3] - v[3])<epsilon);
 end
 
 function vector3d:rotateZYX(az,ay,ax)
@@ -329,6 +337,79 @@ function vector3d:isParallel(otherVector, tolerance)
 	local factor = self:length() * otherVector:length();
 	local dotPrd = self:dot(otherVector) / factor;
 	return (math.abs(math.abs(dotPrd) - 1.0) <= (tolerance or 0.000001));
+end
+
+function vector3d:negated()
+	self[1], self[2], self[3] = -self[1],-self[2],-self[3];
+	return self;
+end
+
+function vector3d:abs()
+	self[1], self[2], self[3] = math.abs(self[1]),math.abs(self[2]),math.abs(self[3]);
+	return self;
+end
+
+function vector3d:transform(m)
+	local x,y,z = self[1], self[2], self[3];
+	self[1] = x*m[1] + y*m[5] + z*m[9] +  m[13];
+	self[2] = x*m[2] + y*m[6] + z*m[10] + m[14];
+	self[3] = x*m[3] + y*m[7] + z*m[11] + m[15];
+	local w = x*m[4] + y*m[8] + z*m[12] + m[16];
+	if (w ~= 1) then
+        local invw = 1.0 / w;
+        self[1] = self[1] * invw;
+        self[2] = self[2] * invw;
+        self[3] = self[3] * invw;
+    end
+	return self;	
+end
+function vector3d:transform_normal(m)
+	local x,y,z = self[1], self[2], self[3];
+	self[1] = x*m[1] + y*m[5] + z*m[9];
+	self[2] = x*m[2] + y*m[6] + z*m[10];
+	self[3] = x*m[3] + y*m[7] + z*m[11];
+	local w = x*m[4] + y*m[8] + z*m[12] + m[16];
+	if (w ~= 1) then
+        local invw = 1.0 / w;
+        self[1] = self[1] * invw;
+        self[2] = self[2] * invw;
+        self[3] = self[3] * invw;
+    end
+	return self;	
+end
+
+-- find a vector that is somewhat perpendicular to this one
+function vector3d:randomPerpendicularVector()
+	abs[1], abs[2], abs[3] = math.abs(self[1]),math.abs(self[2]),math.abs(self[3]);
+	if ((abs[1] <= abs[2]) and (abs[1] <= abs[3])) then
+		return vector3d:new(1, 0, 0);
+	elseif ((abs[2] <= abs[1]) and (abs[2] <= abs[3])) then
+		return vector3d:new(0, 1, 0);
+	else
+		return vector3d:new(0, 0, 1);
+	end
+end
+
+function vector3d:cross(b)
+	self[1], self[2], self[3] = self[2] * b[3] -self[3] * b[2],self[3] * b[1] - self[1] * b[3],self[1] * b[2] - self[2] * b[1];
+	return self;
+end
+
+function vector3d:min(p)
+	self[1], self[2], self[3] = 
+		math.min(self[1], p[1]), math.min(self[2], p[2]), math.min(self[3], p[3]);
+	return self;
+end
+
+function vector3d:max(p)
+	self[1], self[2], self[3] = 
+		math.max(self[1], p[1]), math.max(self[2], p[2]), math.max(self[3], p[3]);
+	return self;
+end
+
+-- project to a 2D vector by set y coordinate zero:
+function vector3d:toVector2D()
+    return vector2d:new(self[1], self[3]);
 end
 
 -- some static members.
