@@ -20,8 +20,11 @@ echo(v);
 ]]
 NPL.load("(gl)script/ide/math/math3d.lua");
 NPL.load("(gl)script/ide/math/vector.lua");
+NPL.load("(gl)script/ide/math/Matrix4.lua");
+
 local math3d = commonlib.gettable("mathlib.math3d");
 local vector3d = commonlib.gettable("mathlib.vector3d");
+local Matrix4 = commonlib.gettable("mathlib.Matrix4");
 local type = type;
 local Plane = commonlib.gettable("mathlib.Plane");
 Plane.__index = Plane;
@@ -56,6 +59,7 @@ function Plane:init(a,b,c,d)
 	elseif(type_ == "table" and b == nil) then
 		self[1], self[2], self[3], self[4] = a[1],a[2],a[3],a[4];
 	end
+	return self;
 end
 
 -- Redefine this plane based on a normal and a point.
@@ -77,9 +81,10 @@ function Plane:set(p)
 	return self;
 end
 
-function Plane:equals(p)
+function Plane:equals(p,epsilon)
+	epsilon = epsilon or tonumber("1e-5");
 	for i=1,4 do
-		if(self[i] ~= p[i]) then
+		if(math.abs(self[i] - p[i])>= epsilon) then
 			return false
 		end
 	end
@@ -121,7 +126,7 @@ end
 
 function Plane.fromVector3Ds(a, b, c)
 	local n = (b - a):cross(c-a):normalize();
-	return Plane:new():redefine(n,a);
+	return Plane.fromNormalAndPoint(n,a);
 end
 
 -- like fromVector3Ds, but allow the vectors to be on one point or one line
@@ -142,11 +147,10 @@ function Plane.anyPlaneFromVector3Ds(a, b, c)
         normal = v1 * v2;
     end
     normal:normalize();
-	return Plane:new():redefine(normal,a);
+	return Plane.fromNormalAndPoint(normal,a);
 end
 function Plane.fromNormalAndPoint(normal, point)
-    normal = normal:clone():normalize();
-	return Plane:new():redefine(normal,point);
+	return Plane:new():init(normal[1],normal[2],normal[3],normal:dot(point));
 end
 
 function Plane:signedDistanceToPoint(point)
@@ -162,6 +166,17 @@ end
 
 function Plane.cross(a,b)
 	return vector3d:new(a[2] * b[3] -a[3] * b[2],a[3] * b[1] - a[1] * b[3],a[1] * b[2] - a[2] * b[1])
+end
+
+function Plane:transform(M)
+	-- need recalc w from transformed points and normal
+	local O = vector3d:new(self[1] * self[4], self[2] * self[4], self[3] * self[4]);
+	O = O:transform(M);
+	local N = vector3d:new(self[1], self[2], self[3]);
+	N = N:transform_normal(M):normalize();
+	self[1], self[2], self[3] = N:get();
+	self[4] = O:dot(N);
+	return self;
 end
 
 -- robust splitting of a line by a plane

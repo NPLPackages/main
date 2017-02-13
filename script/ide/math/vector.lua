@@ -380,10 +380,10 @@ end
 
 -- find a vector that is somewhat perpendicular to this one
 function vector3d:randomPerpendicularVector()
-	abs[1], abs[2], abs[3] = math.abs(self[1]),math.abs(self[2]),math.abs(self[3]);
-	if ((abs[1] <= abs[2]) and (abs[1] <= abs[3])) then
+	local x, y, z = math.abs(self[1]),math.abs(self[2]),math.abs(self[3]);
+	if ((x <= y) and (x <= z)) then
 		return vector3d:new(1, 0, 0);
-	elseif ((abs[2] <= abs[1]) and (abs[2] <= abs[3])) then
+	elseif ((y <= x) and (y <= z)) then
 		return vector3d:new(0, 1, 0);
 	else
 		return vector3d:new(0, 0, 1);

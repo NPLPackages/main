@@ -110,7 +110,7 @@ function vector2d:new_from_pool(x,y)
 end
 
 function vector2d:clone()
-	return vector2d:new():init(self[1],self[2]);
+	return vector2d:new(self[1],self[2]);
 end
 
 function vector2d:clone_from_pool()
@@ -362,7 +362,7 @@ function vector2d:transform_normal(m)
 	local x,y,z = self[1], 0, self[2];
 	self[1] = x*m[1] + y*m[5] + z*m[9];
 	self[2] = x*m[3] + y*m[7] + z*m[11];
-	local w = x*m[4] + y*m[8] + z*m[12];
+	local w = x*m[4] + y*m[8] + z*m[12] + m[16];
 	if (w ~= 1) then
         local invw = 1.0 / w;
         self[1] = self[1] * invw;
@@ -394,6 +394,11 @@ end
 -- extend to a 3D vector by adding a y coordinate:
 function vector2d:toVector3D(y)
     return vector3d:new(self[1], y, self[2]);
+end
+
+-- returns the vector rotated by 90 degrees clockwise
+function vector2d:normal()
+    return vector2d:new(self[2], -self[1]);
 end
 
 -- some static members.
