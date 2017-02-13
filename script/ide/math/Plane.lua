@@ -51,7 +51,7 @@ function Plane:clone()
 end
 
 function Plane:init(a,b,c,d)
-	local type_ = type(x);
+	local type_ = type(a);
 	if(type_ == "number") then
 		self[1], self[2], self[3], self[4] = a,b,c,d;
 	elseif(type_ == "table" and type(b) == "number") then
