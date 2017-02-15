@@ -85,7 +85,7 @@ function vector2d.fromAngleDegrees(degrees)
    return vector2d.fromAngleRadians(radians);
 end
 function vector2d.fromAngleRadians(radians)
-   return vector2d:new():init(math.cos(radians), math.sin(radians));
+   return vector2d:new(math.cos(radians), math.sin(radians));
 end
 
 
@@ -371,12 +371,8 @@ function vector2d:transform_normal(m)
 	return self;	
 end
 
-function vector2d:cross(b)
-	if not y then
-        return self[1] * x[2] - self[2] * x[1];
-    else
-        return self[1] * y + self[2] * x
-    end
+function vector2d:cross(a)
+	return self[1] * a[2] - self[2] * a[1];
 end
 
 function vector2d:min(p)
