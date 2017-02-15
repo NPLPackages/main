@@ -19,21 +19,21 @@ end
 function FuncExpressionDef:buildFunc(ast)
 	local f = FuncExpression:new():init(ast:getParam(1))
 	f.symTbl = ast:buildSymTbl()
-	f.mode= ast:getMode()
-
-	local compiledCode={}
+	f.mode = ast:getMode()
+	
+	local compiledCode = {}
 	local function compile()
 		local tast = ast.content
-		for i=1, #tast do
+		for i = 1, #tast do
 			if tast[i].tag == "Raw" then
-				compiledCode[#compiledCode+1] = "emit([["..tast[i][1].."]]) "	--TODO:handle [[ & ]]
+				compiledCode[#compiledCode + 1] = "emit([["..tast[i][1].."]]) " --TODO:handle [[ & ]]
 			elseif tast[i].tag == "Slice" then
-				compiledCode[#compiledCode+1] = tast[i][1].." "
+				compiledCode[#compiledCode + 1] = tast[i][1].." "
 			end
 		end
 	end
-
-	compiledCode[#compiledCode+1] = [[return function(ast)
+	
+	compiledCode[#compiledCode + 1] = [[return function(ast)
 		local compiledCode = {{}}
 		local maxlnum = 0
 		local curline = 1
@@ -84,10 +84,10 @@ function FuncExpressionDef:buildFunc(ast)
 
 		local function compile()
 	]]
-
+	
 	compile()
-
-	compiledCode[#compiledCode+1] = [[
+	
+	compiledCode[#compiledCode + 1] = [[
 	end
 	setfenv(compile, f_scope)
 	compile()
@@ -101,7 +101,7 @@ function FuncExpressionDef:buildFunc(ast)
 	end
 	
 	compiledCode = table.concat(compiledCode, "\n")
-	compiledCode = "do "..compiledCode.." end"
+	
 	local startline = ast:getOffset()
 	for i=1, startline-1 do
 		compiledCode = "\n"..compiledCode

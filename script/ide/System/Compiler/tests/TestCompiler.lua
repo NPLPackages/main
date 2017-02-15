@@ -24,15 +24,15 @@ function Test_Params()
 		}
 	]]
 
-	pcall(NPL.loadstring(test_params, "test_params"))
+	pcall(NPL.loadstring(test_params))
 
 	local test_noparams = [[ NoParam(){} ]]
 	local test_idparams = [[ IdParam(3,5){} ]]
 	local test_dotsparams = [[ DotsParam(3, 5, 7){} ]]
 
-	pcall(NPL.loadstring(test_noparams, "test_noparams"))
-	pcall(NPL.loadstring(test_idparams, "test_idparams"))
-	pcall(NPL.loadstring(test_dotsparams, "test_dotsparams"))
+	pcall(NPL.loadstring(test_noparams))
+	pcall(NPL.loadstring(test_idparams))
+	pcall(NPL.loadstring(test_dotsparams))
 end
 
 function Test_Quote()
@@ -52,7 +52,7 @@ function Test_Quote()
 		testQuoteNested(5,7){}	
 	]]
 
-	pcall(NPL.loadstring(test_quote, "test_quote"))
+	pcall(NPL.loadstring(test_quote))
 end
 
 function Test_Emit()
@@ -70,7 +70,7 @@ function Test_Emit()
 		}
 	]]
 
-	pcall(NPL.loadstring(test_emit, "test_emit"))
+	pcall(NPL.loadstring(test_emit))
 end
 
 function Test_MultiEnv()
@@ -98,13 +98,13 @@ function Test_MultiEnv()
 	local app_plusOne = [[ plusOne(10){} ]]
 	local app_multiFour = [[ multiFour(7){} ]]
 
-	pcall(NPL.loadstring(macro_plusOne, "macro_plusOne", nplp_plusOne))
-	pcall(NPL.loadstring(macro_multiFour, "macro_multiFour", nplp_multiFour))    
+	pcall(NPL.loadstring(macro_plusOne, "", nplp_plusOne))
+	pcall(NPL.loadstring(macro_multiFour, "", nplp_multiFour))    
 	
-	pcall(NPL.loadstring(app_plusOne, "app_plusOne", nplp_plusOne))		-- 11
-	pcall(NPL.loadstring(app_multiFour, "app_multiFour", nplp_multiFour))    --28
-	pcall(NPL.loadstring(app_plusOne, "app_plusOne", nplp_multiFour))    --nothing happened
-	pcall(NPL.loadstring(app_multiFour, "app_multiFour", nplp_plusOne))    --nothing happened
+	pcall(NPL.loadstring(app_plusOne, "", nplp_plusOne))		-- 11
+	pcall(NPL.loadstring(app_multiFour, "", nplp_multiFour))    --28
+	pcall(NPL.loadstring(app_plusOne, "", nplp_multiFour))    --nothing happened
+	pcall(NPL.loadstring(app_multiFour, "", nplp_plusOne))    --nothing happened
 end
 
 function Test_LineNumber()
@@ -130,7 +130,7 @@ function Test_LineNumber()
 		assert(debug.getinfo(1, "nSl").currentline == 20)
 	]]
 
-	NPL.loadstring(code, "code")()
+	NPL.loadstring(code)()
 end
 
 function Test_NPLCAD()
@@ -149,7 +149,7 @@ function Test_NPLCAD()
 	}
 	]]
 
-	pcall(NPL.loadstring(code, "code"))
+	pcall(NPL.loadstring(code))
 end
 
 function Test_LineMode()
@@ -172,7 +172,8 @@ function Test_LineMode()
 			print(4)
 		}
 	]]
-	NPL.loadstring(code, "code")()
+
+	NPL.loadstring(code)()
 end
 
 function Test_LineModeEmit()
@@ -187,5 +188,58 @@ function Test_LineModeEmit()
 			a = 2*3
 		}
 	]]
-	NPL.loadstring(code, "code")()
+	NPL.loadstring(code)()
+end
+
+function Test_activateFunc()
+	local code = [[
+-- allows one to easily define NPL.this function using following syntax. 
+-- activate(m){
+--     echo(m);
+-- }
+def("activate", p1){
+	NPL.this(function()
+		local +{params(p1)} = msg;
+		+{emit()}
+	end);
+}
+
+LOG.std(nil, "info", "DomainSpecificLanguage", "NPL loaded");
+
+
+-- here is a demo of activate function
+-- NPL.activate("script/ide/System/Compiler/dsl/DSL_NPL.npl", {hello=1})
+activate(m){
+	echo(m);
+	echo({line_number = debug.getinfo(1, "nSl").currentline});
+}
+	]]
+	NPL.loadstring(code)()
+end
+
+function Test_Keyword()
+    local code = [[
+    def("test"){
+        print("Sucsess as a func expression")
+    }
+
+    local test = "Success as a variable" 
+    print(test)
+
+    function test() print("Success as a function name to be Called") end 
+    test()
+
+    local test = {}
+    function test:new() print("Success as a table name to be Invoked") end
+    test.new(self)
+    test:new()
+
+    local a = {}
+    a.test = "Success as a index of table"
+    print(a.test)
+
+    test(){}
+]]
+
+    NPL.loadstring(code)()
 end

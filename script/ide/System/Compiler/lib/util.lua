@@ -1,20 +1,46 @@
----------------------------------------------------------------------
-----------------------------------------------------------------------
---
--- Table module extension
---
-----------------------------------------------------------------------
-----------------------------------------------------------------------
+--[[
+Title: helper functions
+Author(s): ported to NPL by Zhiyuan
+Date: 2016/1/25
+]]
 
--- todo: table.scan (scan1?) fold1? flip?
+local util = commonlib.inherit(nil, commonlib.gettable("System.Compiler.lib.util"))
 
-function table.transpose(t)
-   local tt = { }
-   for a, b in pairs(t) do tt[b] = a end
-   return tt
+function util.values(x)
+   assert(type(x)=='table', 'values() expects a table')
+   local function iterator (state)
+      local it
+      state.content, it = next(state.list, state.content)
+      return it
+   end
+   return iterator, { list = x }
 end
 
-function table.iforeach(f, ...)
+function util.ivalues(x)
+   assert(type(x)=='table', 'ivalues() expects a table')
+   local i = 1
+   local function iterator ()
+      local r = x[i]; i=i+1; return r
+   end
+   return iterator
+end
+
+function util.min(a, ...)
+   for n in util.values{...} do if n<a then a=n end end
+   return a
+end
+
+function util.max(a, ...)
+   for n in util.values{...} do if n>a then a=n end end
+   return a
+end
+
+function util.printf(...) return print(string.format(...)) end
+function util.eprintf(...) 
+   io.stderr:write(string.format(...).."\n") 
+end
+
+function util.table_iforeach(f, ...)
    -- assert (type (f) == "function") [wouldn't allow metamethod __call]
    local nargs = select("#", ...)
    if nargs==1 then -- Quick iforeach (most common case), just one table arg
@@ -35,7 +61,7 @@ function table.iforeach(f, ...)
       -- 2 - determine upper boundary if not given
       if not last then for i = arg1, nargs do 
             assert (type (args[i]) == "table")
-            last = max (#args[i], last) 
+            last = util.max (#args[i], last) 
       end end
       -- 3 - perform the iteration
       for i = first, last do
@@ -47,96 +73,14 @@ function table.iforeach(f, ...)
    end
 end
 
-function table.imap (f, ...)
+function util.table_imap(f, ...)
    local result, idx = { }, 1
    local function g(...) result[idx] = f(...);  idx=idx+1 end
-   table.iforeach(g, ...)
+   util.table_iforeach(g, ...)
    return result
 end
 
-function table.ifold (f, acc, ...)
-   local function g(...) acc = f (acc,...) end
-   table.iforeach (g, ...)
-   return acc
-end
-
--- function table.ifold1 (f, ...)
---    return table.ifold (f, acc, 2, false, ...)
--- end
-
-function table.izip (...)
-   local function g(...) return {...} end
-   return table.imap (g, ...)
-end
-
-function table.ifilter (f, t)
-   local yes, no = { }, { }
-   for i=1,#t do table.insert (f(t[i]) and yes or no, t[i]) end
-   return yes, no
-end
-
-function table.icat(...)
-   local result = { }
-   for t in values {...} do
-      for x in values (t) do
-         table.insert (result, x)
-      end
-   end
-   return result
-end
-
-function table.iflatten (x) return table.icat (unpack (x)) end
-
-function table.irev (t)
-   local result, nt = { }, #t
-   for i=0, nt-1 do result[nt-i] = t[i+1] end
-   return result
-end
-
-function table.isub (t, ...)
-   local ti, u = table.insert, { }
-   local args, nargs = {...}, select("#", ...)
-   for i=1, nargs/2 do
-      local a, b = args[2*i-1], args[2*i]
-      for i=a, b, a<=b and 1 or -1 do ti(u, t[i]) end
-   end
-   return u
-end
-
-function table.iall (f, ...)
-   local result = true
-   local function g(...) return not f(...) end
-   return not table.iforeach (g, ...)
-   --return result
-end
-
-function table.iany (f, ...)
-   local function g(...) return not f(...) end
-   return not table.iall (g, ...)
-end
-
-function table.shallow_copy (x)
-   local y={ }
-   for k, v in pairs(x) do y[k]=v end
-   return y
-end
-
--- Warning, this is implementation dependent: it relies on
--- the fact the [next()] enumerates the array-part before the hash-part.
-function table.cat (...)
-   local y={ }
-   for x in values{...} do
-      -- cat array-part
-      for _, v in ipairs(x) do table.insert(y,v) end
-      -- cat hash-part
-      local lx, k = #x
-      if lx>0 then k=next(x,lx) else k=next(x) end
-      while k do y[k]=x[k]; k=next(x,k) end
-   end
-   return y
-end
-
-function table.deep_copy (x) 
+function util.table_deep_copy(x) 
    local tracker = { }
    local function aux (x)
       if type(x) == "table" then
@@ -151,26 +95,17 @@ function table.deep_copy (x)
    return aux(x)
 end
 
-function table.override (dst, src)
-   for k, v in pairs(src) do dst[k] = v end
-   for i = #src+1, #dst   do dst[i] = nil end
-   return dst
-end
-
-
-function table.range (a,b,c)
-   if not b then assert(not(c)); b=a; a=1
-   elseif not c then c = (b>=a) and 1 or -1 end
-   local result = { }
-   for i=a, b, c do table.insert (result, i) end
-   return result
+function util.table_transpose(t)
+   local tt = { }
+   for a, b in pairs(t) do tt[b] = a end
+   return tt
 end
 
 -- FIXME: new_indent seems to be always nil?!
 -- FIXME: accumulator function should be configurable,
 -- so that print() doesn't need to bufferize the whole string
 -- before starting to print.
-function table.tostring(t, ...)
+function util.table_tostring(t, ...)
    local PRINT_HASH, HANDLE_TAG, FIX_INDENT, LINE_MAX, INITIAL_INDENT = true, true
    for _, x in ipairs {...} do
       if type(x) == "number" then
@@ -367,6 +302,4 @@ function table.tostring(t, ...)
    return table.concat (acc_list)
 end
 
-function table.print(...) return print(table.tostring(...)) end
-
-return table
+function util.table_print(...) return print(util.table_tostring(...)) end

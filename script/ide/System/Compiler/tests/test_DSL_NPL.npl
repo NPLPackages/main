@@ -1,0 +1,41 @@
+--[[
+Title: 
+Author(s): LiXizhi
+Date: 2017/2/2
+Desc: 
+use the lib:
+------------------------------------------------------------
+NPL.load("script/ide/System/Compiler/tests/test_DSL_NPL.npl")
+local TestDSLNPL = commonlib.gettable("Tests.TestDSLNPL");
+TestDSLNPL.TestRPC()
+------------------------------------------------------------
+]]
+
+local TestDSLNPL = commonlib.gettable("Tests.TestDSLNPL");
+
+-- defined in global scope so that it is auto loaded when activated in another thread
+def_rpc("Test.testRPC"){
+	LOG.std(nil, "info", "category", msg);
+	msg.output = true; 
+	ParaEngine.Sleep(1);
+	return msg; 
+}
+Test.testRPC:MakePublic();
+
+function TestDSLNPL.TestRPC()
+	-- now we can invoke it anywhere in any thread or remote address.
+	Test.testRPC("(worker1)", {"input"}, function(err, msg) 
+		assert(msg.output == true and msg[1] == "input")
+		echo(msg);
+	end);
+	
+	Test.testRPC("(worker1)", {"input"}, function(err, msg) 
+		echo("succeed: not timed out");
+	end, 2000);
+	
+	-- time out in 500ms
+	Test.testRPC("(worker1)", {"input"}, function(err, msg) 
+		assert(err == "timeout" and msg==nil)
+		echo("succeed: timed out");
+	end, 500);
+end

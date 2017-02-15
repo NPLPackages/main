@@ -1,0 +1,61 @@
+--[[
+Title: DSL for NPL
+Author: LiXizhi
+Date: 2017-1-20
+Desc: Domain specific language demo
+use the lib:
+------------------------------------------------------------
+NPL.load("(gl)script/ide/System/Compiler/dsl/DSL_NPL.npl");
+-------------------------------------------------------
+]]
+
+-- allows one to easily define NPL.this function using following syntax. 
+-- this(m){
+--     echo(m);
+-- }
+def("this", msg){
+	NPL.this(function()
+		local +{params(msg)} = msg;
+		+{emit()}
+	end);
+}
+
+
+-- allows one to define a remote procedure call using current NPL file as public file. 
+-- without the need to write NPL.this or NPL.activate in current file. 
+-- @param funcName: global function name, such as "API.auth"
+-- @param publicFilename: NPL public filename, if nil, it is the file that the function is defined in. This can be a virtual filename or a real filename. 
+-- e.g. 
+--    -- here is demo of creating a remote procedure call.
+--    def_rpc("Test.RPC"){
+--    	echo(msg);
+--    	return {"output message"};
+--    }
+--    -- now we can invoke it anywhere
+--    Test.RPC(nil, {"input message"}, function(err, result)  echo(result) end);
+-- 
+-- @param funcName: global name like "MyApp.XXX.YYY"
+def("def_rpc", funcName, publicFilename){
+	NPL.load("(gl)script/ide/System/Concurrent/rpc.lua");
+	local rpc = commonlib.gettable("System.Concurrent.Async.rpc");
+	local publicFilename = +{params(publicFilename)} or debug.getinfo(1, "S").source;
+	rpc:new():init(+{params(funcName)}, function(self, msg)
+		+{emit()}
+	end, publicFilename);
+}
+
+
+-- here is a demo of activate function
+-- NPL.activate("script/ide/System/Compiler/dsl/DSL_NPL.npl", {hello=1})
+this(m){
+	echo(m)
+	echo({line_number = debug.getinfo(1, "nSl").currentline});
+
+	-- here is demo of creating a remote procedure call.
+	def_rpc("Test.RPC", "RPC/a_virtual_file.npl"){
+		echo(msg);
+		return {"output message"};
+	}
+	-- now we can invoke it anywhere
+	Test.RPC(nil, {"input message"}, function(err, result)  echo(result) end);
+}

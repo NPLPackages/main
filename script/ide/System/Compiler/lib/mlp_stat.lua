@@ -1,3 +1,8 @@
+--[[
+Title: 
+Author(s): ported to NPL by Zhiyuan
+Date: 2016/1/25
+]]
 ----------------------------------------------------------------------
 -- Metalua:  $Id: mlp_stat.lua,v 1.7 2006/11/15 09:07:50 fab13n Exp $
 --
@@ -34,7 +39,6 @@ local expr      = function (lx) return mlp.expr     (lx) end
 local func_val  = function (lx) return mlp.func_val (lx) end
 local expr_list = function (lx) return mlp.expr_list(lx) end
 
---module ("mlp", package.seeall)
 
 --------------------------------------------------------------------------------
 -- List of all keywords that indicate the end of a statement block. Users are
@@ -47,7 +51,7 @@ local block_terminators = { "else", "elseif", "end", "until", ")", "}", "]" }
 -- FIXME: this must be handled from within GG!!!
 function block_terminators:add(x) 
    if type (x) == "table" then for _, y in ipairs(x) do self:add (y) end
-   else _G.table.insert (self, x) end
+   else table.insert (self, x) end
 end
 
 --------------------------------------------------------------------------------
@@ -91,12 +95,12 @@ function mlp.for_header (lx)
       return { tag="Fornum", var, unpack (e) }
    else
       -- Forin: there might be several vars
-      local a = lx:is_keyword (lx:next(), ",", "in")
+      local a = lx:is_keyword (lx:next(), { ",", "in" })
       if a=="in" then var_list = { var, lineinfo = var.lineinfo } else
          -- several vars; first "," skipped, read other vars
          var_list = gg.list{ 
             primary = mlp.id, separators = ",", terminators = "in" } (lx)
-         _G.table.insert (var_list, 1, var) -- put back the first variable
+         table.insert (var_list, 1, var) -- put back the first variable
          lx:next() -- skip "in"
       end
       local e = expr_list (lx)
@@ -129,7 +133,7 @@ local function funcdef_builder(x)
       name = { tag="Index", name, method, lineinfo = {
          first = name.lineinfo.first,
          last  = method.lineinfo.last } }
-      _G.table.insert (func[1], 1, {tag="Id", "self"}) 
+      table.insert (func[1], 1, {tag="Id", "self"}) 
    end
    local r = { tag="Set", {name}, {func} } 
    r[1].lineinfo = name.lineinfo

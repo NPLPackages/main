@@ -1,3 +1,8 @@
+--[[
+Title: 
+Author(s): ported to NPL by Zhiyuan, LiXizhi
+Date: 2016/1/25
+]]
 ----------------------------------------------------------------------
 -- Metalua:  $Id: mll.lua,v 1.3 2006/11/15 09:07:50 fab13n Exp $
 --
@@ -15,7 +20,7 @@
 --   + a token tag
 --   + or a string->string transformer function.
 --
--- * There are some _G.table to prevent a namespace clash which has
+-- * There are some table to prevent a namespace clash which has
 --   now disappered. remove them.
 ----------------------------------------------------------------------
 --
@@ -26,9 +31,9 @@
 --
 ----------------------------------------------------------------------
 
+local util = commonlib.gettable("System.Compiler.lib.util")
 local lexer = commonlib.inherit(nil, commonlib.gettable("System.Compiler.lib.lexer"))
 
---lexer = { alpha={ }, sym={ } }
 lexer.alpha = { }
 lexer.sym = { }
 lexer.__index=lexer
@@ -71,7 +76,7 @@ local function unescape_string (s)
          backslashes = backslashes :sub (1,-2)
       end
       local k, j, i = digits:reverse():byte(1, 3)
-      local z = _G.string.byte "0"
+      local z = string.byte "0"
       local code = (k or z) + 10*(j or z) + 100*(i or z) - 111*z
       if code > 255 then 
           error ("Illegal escape sequence '\\"..digits.."' in string: ASCII codes must be in [0..255]") 
@@ -183,7 +188,7 @@ end
 -- - short comments at last line without a final \n
 ----------------------------------------------------------------------
 function lexer:skip_whitespaces_and_comments()
-   local table_insert = _G.table.insert
+   local table_insert = table.insert
    repeat -- loop as long as a space or comment chunk is found
       local _, j
       local again = false
@@ -322,7 +327,7 @@ function lexer:add (w, ...)
          local k = w:sub(1,1)
          local list = self.sym [k]
          if not list then list = { }; self.sym [k] = list end
-         _G.table.insert (list, w)
+         table.insert (list, w)
       elseif w:match "^%p$" then return
       else error "Invalid keyword" end
    end
@@ -353,10 +358,10 @@ function lexer:next (n)
    self:peek (n)
    local a
    for i=1,n do 
-      a = _G.table.remove (self.peeked, 1) 
+      a = table.remove (self.peeked, 1) 
       if a then 
          --printf ("lexer:next() ==> %s %s",
-           --      table.tostring(a), tostring(a))
+           --      util.table_tostring(a), tostring(a))
       end
       self.lastline = a.lineinfo.last[1]
    end
@@ -368,7 +373,7 @@ end
 -- Returns an object which saves the stream's current state.
 ----------------------------------------------------------------------
 -- FIXME there are more fields than that to save
-function lexer:save () return { self.i; _G.table.cat(self.peeked) } end
+function lexer:save () return { self.i; table.cat(self.peeked) } end
 
 ----------------------------------------------------------------------
 -- Restore the stream's state, as saved by method [save].
@@ -464,13 +469,21 @@ end
 -- have to be strings. if the token a is a keyword, and it's content
 -- is one of the ... args, then returns it (it's truth value is
 -- true). If no a keyword or not in ..., return nil.
+-- Hacked by Zhiyuan
 ----------------------------------------------------------------------
-function lexer:is_keyword (a, ...)
+function lexer:is_keyword (a, param)
    if not a or a.tag ~= "Keyword" then return false end
-   local words = {...}
-   if #words == 0 then return a[1] end
-   for _, w in ipairs (words) do
-      if w == a[1] then return w end
+   if type(param) == "nil" then
+        return a[1]
+   elseif type(param) == "string" then
+        if param == a[1] then return param end
+   elseif type(param) == "table" then
+        if #param == 0 then 
+            return a[1]
+        end
+        for _, w in ipairs (param) do       --TODO: Optimize the search
+            if w == a[1] then return w end
+        end
    end
    return false
 end
@@ -485,7 +498,7 @@ function lexer:check (...)
    local function err ()
       error ("Got " .. tostring (a) .. 
              ", expected one of these keywords : '" ..
-             _G.table.concat (words,"', '") .. "'") end
+             table.concat (words,"', '") .. "'") end
           
    if not a or a.tag ~= "Keyword" then err () end
    if #words == 0 then return a[1] end
@@ -500,8 +513,8 @@ end
 ----------------------------------------------------------------------
 function lexer:clone()
    local clone = {
-      alpha = table.deep_copy(self.alpha),
-      sym   = table.deep_copy(self.sym) }
+      alpha = util.table_deep_copy(self.alpha),
+      sym   = util.table_deep_copy(self.sym) }
    setmetatable(clone, self)
    clone.__index = clone
    return clone

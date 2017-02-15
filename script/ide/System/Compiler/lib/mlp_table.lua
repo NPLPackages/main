@@ -1,3 +1,8 @@
+--[[
+Title: 
+Author(s): ported to NPL by Zhiyuan
+Date: 2016/1/25
+]]
 ----------------------------------------------------------------------
 -- Metalua:  $Id: mlp_table.lua,v 1.5 2006/11/10 02:11:17 fab13n Exp $
 --
@@ -40,10 +45,6 @@
 -- KNOWN BUG: doesn't handle final ";" or "," before final "}"
 --
 --------------------------------------------------------------------------------
-
---require "gg"
---require "mll"
---require "mlp_misc"
 local gg = commonlib.gettable("System.Compiler.lib.gg")
 local mlp = commonlib.inherit(nil, commonlib.gettable("System.Compiler.lib.mlp"))
 

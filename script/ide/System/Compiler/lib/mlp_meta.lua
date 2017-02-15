@@ -1,3 +1,8 @@
+--[[
+Title: 
+Author(s): ported to NPL by Zhiyuan
+Date: 2016/1/25
+]]
 ----------------------------------------------------------------------
 -- Metalua:  $Id: mlp_meta.lua,v 1.4 2006/11/15 09:07:50 fab13n Exp $
 --
@@ -39,21 +44,21 @@ end
 -- the only key being lifted in this version is ["tag"]
 --------------------------------------------------------------------------------
 function mlp.quote (t)
-   --print("QUOTING:", _G.table.tostring(t, 60))
+   --print("QUOTING:", util.table_tostring(t, 60))
    local cases = { }
    function cases.table (t)
       local mt = { tag = "Table" }
-      --_G.table.insert (mt, { tag = "Pair", quote "quote", { tag = "True" } })
+      --table.insert (mt, { tag = "Pair", quote "quote", { tag = "True" } })
       if t.tag == "Splice" then
-		 printf("IN_QUOTE:\n%s", _G.table.tostring(t, "nohash", 60))
+		 printf("IN_QUOTE:\n%s", util.table_tostring(t, "nohash", 60))
          assert (#t==1, "Invalid splice")
          local sp = t[1]
          return sp
       elseif t.tag then
-         _G.table.insert (mt, { tag = "Pair", mlp.quote "tag", mlp.quote (t.tag) })
+         table.insert (mt, { tag = "Pair", mlp.quote "tag", mlp.quote (t.tag) })
       end
       for _, v in ipairs (t) do
-         _G.table.insert (mt, mlp.quote (v))
+         table.insert (mt, mlp.quote (v))
       end
       return mt
    end
@@ -84,14 +89,14 @@ function mlp.splice_content (lx)
    end
    local ast = mlp[parser_name](lx)
    if mlp.in_a_quote then
-      printf("SPLICE_IN_QUOTE:\n%s", _G.table.tostring(ast, "nohash", 60))
+      printf("SPLICE_IN_QUOTE:\n%s", util.table_tostring(ast, "nohash", 60))
       return { tag="Splice", ast }
    else
       if parser_name == "expr" then ast = { { tag="Return", ast } }
       elseif parser_name == "stat"  then ast = { ast }
       elseif parser_name ~= "block" then
          error ("splice content must be an expr, stat or block") end
-      --printf("EXEC THIS SPLICE:\n%s", _G.table.tostring(ast, "nohash", 60))
+      --printf("EXEC THIS SPLICE:\n%s", util.table_tostring(ast, "nohash", 60))
       return mlp.splice (ast)
    end
 end

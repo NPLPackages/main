@@ -1,3 +1,8 @@
+--[[
+Title: 
+Author(s): ported to NPL by Zhiyuan, LiXizhi
+Date: 2016/1/25
+]]
 ----------------------------------------------------------------------
 -- Metalua:  $Id: mlp_expr.lua,v 1.7 2006/11/15 09:07:50 fab13n Exp $
 --
@@ -12,51 +17,12 @@
 -- for details.
 --
 ----------------------------------------------------------------------
--- History:
--- $Log: mlp_expr.lua,v $
--- Revision 1.7  2006/11/15 09:07:50  fab13n
--- debugged meta operators.
--- Added command line options handling.
---
--- Revision 1.6  2006/11/10 02:11:17  fab13n
--- compiler faithfulness to 5.1 improved
--- gg.expr extended
--- mlp.expr refactored
---
--- Revision 1.5  2006/11/09 09:39:57  fab13n
--- some cleanup
---
--- Revision 1.4  2006/11/07 21:29:02  fab13n
--- improved quasi-quoting
---
--- Revision 1.3  2006/11/07 04:38:00  fab13n
--- first bootstrapping version.
---
--- Revision 1.2  2006/11/05 15:08:34  fab13n
--- updated code generation, to be compliant with 5.1
---
-----------------------------------------------------------------------
 
---------------------------------------------------------------------------------
---
--- Exported API:
--- * [mlp.expr()]
--- * [mlp.expr_list()]
--- * [mlp.func_val()]
---
---------------------------------------------------------------------------------
---NPL.load("(gl)script/ide/System/Compiler/lib/metalua/base.lua");
---require "gg"
---require "mlp_misc"
---require "mlp_table"
---require "mlp_meta"
-
---------------------------------------------------------------------------------
--- These function wrappers (eta-expansions ctually) are just here to break
--- some circular dependencies between mlp_xxx.lua files.
---------------------------------------------------------------------------------
+NPL.load("(gl)script/ide/System/Compiler/lib/util.lua");
+local util = commonlib.gettable("System.Compiler.lib.util")
 local gg = commonlib.gettable("System.Compiler.lib.gg")
 local mlp = commonlib.inherit(nil, commonlib.gettable("System.Compiler.lib.mlp"))
+local util = commonlib.gettable("System.Compiler.lib.util")
 
 local function _expr (lx) return mlp.expr (lx)  end
 local function _table_content (lx) return mlp.table_content (lx) end
@@ -107,13 +73,14 @@ local _func_val = function (lx) return mlp.func_val (lx) end
 
 --------------------------------------------------------------------------------
 -- Default parser for primary expressions
+-- Edited by Zhiyuan
 --------------------------------------------------------------------------------
 function mlp.id_or_literal (lx)
    local a = lx:next()
    --printf("id is : %s", a[1])
-   if a.tag~="Id" and a.tag~="String" and a.tag~="Number" then
+   if a.tag~="Id" and a.tag~="String" and a.tag~="Number" and a.tag~="Keyword" then
       gg.parse_error (lx, "Unexpected expr token %s",
-                      _G.table.tostring (a, 'nohash'))
+                      util.table_tostring (a, 'nohash'))
    end
    return a
 end

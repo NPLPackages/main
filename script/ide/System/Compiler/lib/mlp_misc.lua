@@ -1,3 +1,8 @@
+--[[
+Title: 
+Author(s): ported to NPL by Zhiyuan
+Date: 2016/1/25
+]]
 ----------------------------------------------------------------------
 -- Metalua:  $Id: mlp_misc.lua,v 1.6 2006/11/15 09:07:50 fab13n Exp $
 --
@@ -47,11 +52,10 @@
 --
 --------------------------------------------------------------------------------
 
---require "gg"
---require "mll"
+NPL.load("(gl)script/ide/System/Compiler/lib/util.lua");
+local util = commonlib.gettable("System.Compiler.lib.util")
 local gg = commonlib.gettable("System.Compiler.lib.gg")
 local mlp = commonlib.inherit(nil, commonlib.gettable("System.Compiler.lib.mlp"))
---module ("mlp", package.seeall)
 
 --------------------------------------------------------------------------------
 -- returns a function that takes the [n]th element of a table.
@@ -89,7 +93,7 @@ function mlp.opt_id (lx)
          gg.parse_error(lx,"Bad id splice")
       end
       return v
-   elseif a.tag == "Id" then return lx:next()
+   elseif a.tag == "Id" or "Keyword" then return lx:next()
    else return false end
 end
 
@@ -116,7 +120,7 @@ local gensymidx = 0
 
 function mlp.gensym (arg)
    gensymidx = gensymidx + 1
-   return { tag="Id", _G.string.format(".%i.%s", gensymidx, arg or "")}
+   return { tag="Id", string.format(".%i.%s", gensymidx, arg or "")}
 end
 
 --------------------------------------------------------------------------------
@@ -125,7 +129,7 @@ end
 --------------------------------------------------------------------------------
 function mlp.id2string (id)
    --print("id2string:", disp.ast(id))
-   if id.tag == "Id" then id.tag = "String"; return id
+   if id.tag == "Id" or "Keyword" then id.tag = "String"; return id
    elseif id.tag == "Splice" then
       assert (in_a_quote, "can't do id2string on an outermost splice")
       error ("id2string on splice not implemented")
@@ -136,7 +140,7 @@ function mlp.id2string (id)
       -- That is, without sugar:
       return {tag="String",  {tag="Index", {tag="Splice", id[1] }, 
                                            {tag="Number", 1 } } }
-   else error ("Identifier expected: "..table.tostring(id)) end
+   else error ("Identifier expected: "..util.table_tostring(id)) end
 end
 
 --------------------------------------------------------------------------------
@@ -164,7 +168,7 @@ end
 --------------------------------------------------------------------------------
 -- Chunk reader: block + Eof
 --------------------------------------------------------------------------------
-function skip_initial_sharp_comment (lx)
+local function skip_initial_sharp_comment (lx)
    -- Dirty hack: I'm happily fondling lexer's private parts
    -- FIXME: redundant with lexer:newstream()
    lx :sync()

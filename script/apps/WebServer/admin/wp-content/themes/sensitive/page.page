@@ -1,7 +1,22 @@
 <?npl
 if(not ABSPATH) then die() end
 
-get_header(); ?>
+-- if it is nplide.page, use fullsize in window.
+local function is_fullsize()
+	local source_path = commonlib.Encoding.DefaultToUtf8(page_path() or __FILE__);
+	if(source_path)then
+		source_path = string.lower(source_path);
+		if(string.find(source_path,"nplide.page"))then
+			return true;
+		end
+	end
+
+end
+local PAGE_CONTENT_FULLSIZE = is_fullsize();
+?>
+<? if(PAGE_CONTENT_FULLSIZE)then
+    the_content(); 
+else get_header();?>
 <div class="container">
   <div class="row">
     <div id="content" class="col-md-8">
@@ -23,3 +38,5 @@ get_header(); ?>
 </div>
 
 <?npl get_footer(); ?>
+<? end ?>
+
