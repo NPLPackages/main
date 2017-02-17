@@ -125,7 +125,8 @@ function Plane.fromPoints(a, b, c)
 end
 
 function Plane.fromVector3Ds(a, b, c)
-	local n = (b - a):cross(c-a):normalize();
+	local n = (b - a):cross(c-a);
+	n:MulByFloat(1/n:length());
 	return Plane.fromNormalAndPoint(n,a);
 end
 
