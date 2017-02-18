@@ -249,8 +249,11 @@ function vector3d:compare(v)
 end
 
 function vector3d:equals(v,epsilon)
-	epsilon = epsilon or tonumber("1e-5");
-	return (math.abs(self[1] - v[1])<epsilon and math.abs(self[2] - v[2])<epsilon and math.abs(self[3] - v[3])<epsilon);
+	epsilon = epsilon or 0;
+	if(epsilon==0) then
+		return (self[1] == v[1]) and (self[2] == v[2]) and (self[3] == v[3]);
+	end
+	return (math.abs(self[1] - v[1])<=epsilon and math.abs(self[2] - v[2])<=epsilon and math.abs(self[3] - v[3])<=epsilon);
 end
 
 function vector3d:rotateZYX(az,ay,ax)

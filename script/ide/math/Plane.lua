@@ -82,9 +82,9 @@ function Plane:set(p)
 end
 
 function Plane:equals(p,epsilon)
-	epsilon = epsilon or tonumber("1e-5");
+	epsilon = epsilon or 0;
 	for i=1,4 do
-		if(math.abs(self[i] - p[i])>= epsilon) then
+		if(math.abs(self[i] - p[i])> epsilon) then
 			return false
 		end
 	end
@@ -132,17 +132,19 @@ end
 
 -- like fromVector3Ds, but allow the vectors to be on one point or one line
 -- in such a case a random plane through the given points is constructed
-function Plane.anyPlaneFromVector3Ds(a, b, c)
-    local v1 = b - a;
+function Plane.anyPlaneFromVector3Ds(a, b, c, epsilon)
+    epsilon = epsilon or 0;
+
+	local v1 = b - a;
     local v2 = c - a;
-    if (v1:length() < tonumber("1e-5")) then
+    if (v1:length() <= epsilon) then
         v1 = v2:randomPerpendicularVector();
     end
-    if (v2:length() < tonumber("1e-5")) then
+    if (v2:length() <= epsilon) then
         v2 = v1:randomPerpendicularVector();
     end
     local normal = v1 * v2;
-    if (normal:length() < tonumber("1e-5")) then
+    if (normal:length() <= epsilon) then
         -- self would mean that v1 == v2.negated()
         v2 = v1:randomPerpendicularVector();
         normal = v1 * v2;

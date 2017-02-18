@@ -291,8 +291,11 @@ function vector2d:compare(v)
 end
 
 function vector2d:equals(v,epsilon)
-	epsilon = epsilon or tonumber("1e-5");
-	return (math.abs(self[1] - v[1])<epsilon and math.abs(self[2] - v[2])<epsilon);
+	epsilon = epsilon or 0;
+	if(epsilon==0) then
+		return (self[1] == v[1]) and (self[2] == v[2]);
+	end
+	return (math.abs(self[1] - v[1])<=epsilon and math.abs(self[2] - v[2])<=epsilon);
 end
 
 -- the angle between self and dest
