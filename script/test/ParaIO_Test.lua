@@ -132,27 +132,6 @@ local function ParaIO_SearchPathTest()
 	assert(not ParaIO.DoesFileExist("test_searchpath.lua"));
 end
 
--- test passed on 2008.1.17, LiXizhi
-local function ParaIO_openimageTest()
-	local file = ParaIO.openimage("Texture/alphadot.png", "a8r8g8b8");
-	if(file:IsValid()) then
-		local nSize = file:GetFileSize();
-		local nImageWidth = math.sqrt(nSize/4);
-		
-		-- output each pixel of the image to log
-		local pixel = {}
-		local x,y;
-		for x=1, nImageWidth do
-			for y=1, nImageWidth do
-				-- read four bytes to pixel.
-				file:ReadBytes(4, pixel);
-				log(string.format("%d,%d:\tB=%d, G=%d, R=%d, A=%d\n", x,y,pixel[1],pixel[2],pixel[3],pixel[4]));
-			end
-		end
-	end	
-	file:close();
-end
-
 -- TODO: test passed on 2008.4.20, LiXizhi
 function ParaIO_PathReplaceable()
 	ParaIO.AddPathVariable("WORLD", "worlds/MyWorld")

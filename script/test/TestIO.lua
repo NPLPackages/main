@@ -311,3 +311,50 @@ function test_process_open()
 	echo(output)
 	-- exit(1)
 end
+
+
+-- OBSOLETED, use ParaIO.open(filename, "image") instead
+--  test passed on 2008.1.17, LiXizhi
+local function ParaIO_openimageTest()
+	-- OBSOLETED, use ParaIO.open(filename, "image") instead
+	local file = ParaIO.openimage("Texture/alphadot.png", "a8r8g8b8");
+	if(file:IsValid()) then
+		local nSize = file:GetFileSize();
+		local nImageWidth = math.sqrt(nSize/4);
+		
+		-- output each pixel of the image to log
+		local pixel = {}
+		local x,y;
+		for x=1, nImageWidth do
+			for y=1, nImageWidth do
+				-- read four bytes to pixel.
+				file:ReadBytes(4, pixel);
+				log(string.format("%d,%d:\tB=%d, G=%d, R=%d, A=%d\n", x,y,pixel[1],pixel[2],pixel[3],pixel[4]));
+			end
+		end
+	end	
+	file:close();
+end
+
+function test_reading_image_file()
+	-- reading binary image file
+	-- png, jpg format are supported. 
+	local filename = "Texture/alphadot.png";
+	local file = ParaIO.open(filename, "image");
+	if(file:IsValid()) then
+		local ver = file:ReadInt();
+		local width = file:ReadInt();
+		local height = file:ReadInt();
+		-- how many bytes per pixel, usually 1, 3 or 4
+		local bytesPerPixel = file:ReadInt();
+		echo({ver, width=width, height = height, bytesPerPixel = bytesPerPixel})
+		local pixel = {};
+		for y=1, height do
+			for x=1, width do
+				pixel = file:ReadBytes(bytesPerPixel, pixel);
+				echo({x, y, rgb=pixel})
+			end
+		end
+		file:close();
+	end
+end
