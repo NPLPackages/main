@@ -398,6 +398,10 @@ local function activate()
 end
 NPL.this(activate)
 
+echo("current NPL file is " .. __rts__:GetField("filename", ""));
+
+NPL.load("./TestPicking.lua");
+
 -- select test suite to run
 -- LuaUnit:run("TestNPLEvents")
 -- TestBase64BinaryWithWebservice()
