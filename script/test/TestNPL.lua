@@ -398,9 +398,25 @@ local function activate()
 end
 NPL.this(activate)
 
+
+---------------------------------
+-- test current filename
+---------------------------------
 echo("current NPL file is " .. __rts__:GetField("filename", ""));
 
-NPL.load("./TestPicking.lua");
+--------------------------------------------------------
+-- file module test with cyclic dependency. 
+--------------------------------------------------------
+local TestNPLLoad = NPL.load("./TestNPLLoad.lua");
+
+local TestNPL = NPL.export();
+function TestNPL:print()
+	echo( self:GetName() .. TestNPLLoad:GetName() );
+end
+
+function TestNPL:GetName()
+	return "TestNPL";
+end
 
 -- select test suite to run
 -- LuaUnit:run("TestNPLEvents")

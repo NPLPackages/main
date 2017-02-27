@@ -280,3 +280,7 @@ function NPL.LoadPublicFilesFromXML(filename)
 		end	
 	end
 end
+
+function NPL.require(filename, bReload)
+	local relative_path = filename:match("^([%w_%./]+)(.*)");
+end
