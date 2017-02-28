@@ -281,6 +281,26 @@ function NPL.LoadPublicFilesFromXML(filename)
 	end
 end
 
-function NPL.require(filename, bReload)
-	local relative_path = filename:match("^([%w_%./]+)(.*)");
+-- this will improve the lua's require with NPL.load
+local function NPL_require_()
+	if(#package.loaders == 4) then
+		local file_exts = {dll=true, so=true, lua=true, npl=true, exe=true};
+		-- inject NPL.load as the second loader. 
+		local function NPL_load(modname)
+			local errmsg = ""
+			local fileExt = modname:match("%.(%w%w?%w?)$");
+			-- if modname contains file extension such as *.npl, *.lua or begins with (gl) or "./", we will always use NPL.load to load. 
+			if((fileExt and file_exts[fileExt]) or modname:match("^[%(%.]")) then
+				-- Compile and return the module using NPL.load
+				return function()
+					return NPL.load(modname);
+				end
+			else
+				errmsg = "skiped by NPL.load";
+			end
+			return errmsg;
+		end
+		table.insert(package.loaders, 2, NPL_load);
+	end	
 end
+NPL_require_();
