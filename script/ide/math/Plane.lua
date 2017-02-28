@@ -20,8 +20,11 @@ echo(v);
 ]]
 NPL.load("(gl)script/ide/math/math3d.lua");
 NPL.load("(gl)script/ide/math/vector.lua");
+NPL.load("(gl)script/ide/math/Matrix4.lua");
+
 local math3d = commonlib.gettable("mathlib.math3d");
 local vector3d = commonlib.gettable("mathlib.vector3d");
+local Matrix4 = commonlib.gettable("mathlib.Matrix4");
 local type = type;
 local Plane = commonlib.gettable("mathlib.Plane");
 Plane.__index = Plane;
@@ -48,7 +51,15 @@ function Plane:clone()
 end
 
 function Plane:init(a,b,c,d)
-	self[1], self[2], self[3], self[4] = a,b,c,d;
+	local type_ = type(a);
+	if(type_ == "number") then
+		self[1], self[2], self[3], self[4] = a,b,c,d;
+	elseif(type_ == "table" and type(b) == "number") then
+		self[1], self[2], self[3], self[4] = a[1],a[2],a[3],b;
+	elseif(type_ == "table" and b == nil) then
+		self[1], self[2], self[3], self[4] = a[1],a[2],a[3],a[4];
+	end
+	return self;
 end
 
 -- Redefine this plane based on a normal and a point.
@@ -70,9 +81,10 @@ function Plane:set(p)
 	return self;
 end
 
-function Plane:equals(p)
+function Plane:equals(p,epsilon)
+	epsilon = epsilon or 0;
 	for i=1,4 do
-		if(self[i] ~= p[i]) then
+		if(math.abs(self[i] - p[i])> epsilon) then
 			return false
 		end
 	end
@@ -103,4 +115,89 @@ end
 -- @param y, z: if not nil, v, y, z is a vector's x,y,z
 function Plane:PlaneDotNormal(v, y, z)
 	return vector3d.dot(self, v, y, z);
+end
+
+
+
+
+function Plane.fromPoints(a, b, c)
+    return Plane.fromVector3Ds(a, b, c);
+end
+
+function Plane.fromVector3Ds(a, b, c)
+	local n = (b - a):cross(c-a);
+	n:MulByFloat(1/n:length());
+	return Plane.fromNormalAndPoint(n,a);
+end
+
+-- like fromVector3Ds, but allow the vectors to be on one point or one line
+-- in such a case a random plane through the given points is constructed
+function Plane.anyPlaneFromVector3Ds(a, b, c, epsilon)
+    epsilon = epsilon or 0;
+
+	local v1 = b - a;
+    local v2 = c - a;
+    if (v1:length() <= epsilon) then
+        v1 = v2:randomPerpendicularVector();
+    end
+    if (v2:length() <= epsilon) then
+        v2 = v1:randomPerpendicularVector();
+    end
+    local normal = v1 * v2;
+    if (normal:length() <= epsilon) then
+        -- self would mean that v1 == v2.negated()
+        v2 = v1:randomPerpendicularVector();
+        normal = v1 * v2;
+    end
+    normal:normalize();
+	return Plane.fromNormalAndPoint(normal,a);
+end
+function Plane.fromNormalAndPoint(normal, point)
+	return Plane:new():init(normal[1],normal[2],normal[3],normal:dot(point));
+end
+
+function Plane:signedDistanceToPoint(point)
+    local t = self:GetNormal():dot(point) - self[4];
+    return t;
+end
+
+function Plane:mirrorPoint(point3d)
+    local distance = self:signedDistanceToPoint(point3d);
+    local mirrored = point3d - self:GetNormal() * (distance * 2.0);
+    return mirrored;
+end
+
+function Plane.cross(a,b)
+	return vector3d:new(a[2] * b[3] -a[3] * b[2],a[3] * b[1] - a[1] * b[3],a[1] * b[2] - a[2] * b[1])
+end
+
+function Plane:transform(M)
+	-- need recalc w from transformed points and normal
+	local O = vector3d:new(self[1] * self[4], self[2] * self[4], self[3] * self[4]);
+	O = O:transform(M);
+	local N = vector3d:new(self[1], self[2], self[3]);
+	N = N:transform_normal(M):normalize();
+	self[1], self[2], self[3] = N:get();
+	self[4] = O:dot(N);
+	return self;
+end
+
+-- robust splitting of a line by a plane
+-- will work even if the line is parallel to the plane
+function Plane:splitLineBetweenPoints(p1, p2)
+    local direction = p2 - p1;
+
+	local nx,ny,nz = self.direction:get();
+    local labda = (-self:signedDistanceToPoint(p1)) / self:PlaneDotNormal(nx,ny,nz);
+    if (labda ~= labda) then	-- test for nan
+		labda = 0;
+	end
+    if (labda > 1) then
+		labda = 1;
+	end
+    if (labda < 0) then
+		labda = 0;
+	end
+    local result = p1 + direction:MulByFloat(labda);
+    return result;
 end

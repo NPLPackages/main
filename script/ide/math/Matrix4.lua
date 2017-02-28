@@ -30,6 +30,7 @@ echo(v);
 NPL.load("(gl)script/ide/math/math3d.lua");
 NPL.load("(gl)script/ide/math/vector.lua");
 local math3d = commonlib.gettable("mathlib.math3d");
+local vector3d = commonlib.gettable("mathlib.vector3d");
 local type = type;
 local Matrix4 = commonlib.gettable("mathlib.Matrix4");
 Matrix4.__index = Matrix4;
@@ -194,6 +195,109 @@ function Matrix4:inverse()
         d10, d11, d12, d13,
         d20, d21, d22, d23,
         d30, d31, d32, d33});
+end
+
+-- determine whether self matrix is a mirroring transformation
+function Matrix4:isMirroring()
+    local u = vector3d:new(self[1], self[5], self[9]);
+    local v = vector3d:new(self[2], self[6], self[10]);
+    local w = vector3d:new(self[3], self[7], self[11]);
+
+    -- for a true orthogonal, non-mirrored base, u:cross(v) == w
+    -- If they have an opposite direction then we are mirroring
+    local mirrorvalue = u:cross(v):dot(w);
+    local ismirror = (mirrorvalue < 0);
+    return ismirror;
+end
+
+-- Create an affine matrix for mirroring into an arbitrary plane:
+function Matrix4.mirroring(plane)
+    local nx,ny,nz,w = plane[1],plane[2],plane[3],plane[4];
+    return Matrix4:new({
+        (1.0 - 2.0 * nx * nx), (-2.0 * ny * nx), (-2.0 * nz * nx), 0,
+        (-2.0 * nx * ny), (1.0 - 2.0 * ny * ny), (-2.0 * nz * ny), 0,
+        (-2.0 * nx * nz), (-2.0 * ny * nz), (1.0 - 2.0 * nz * nz), 0,
+        (2.0 * nx * w), (2.0 * ny * w), (2.0 * nz * w), 1
+    });
+end
+
+-- Create a rotation matrix for rotating around the x axis
+function Matrix4.rotationX(degrees)
+    local radians = degrees * math.pi * (1.0 / 180.0);
+    local cos = math.cos(radians);
+    local sin = math.sin(radians);
+    return Matrix4:new( {
+        1, 0, 0, 0, 0, cos, sin, 0, 0, -sin, cos, 0, 0, 0, 0, 1
+    });
+end
+
+-- Create a rotation matrix for rotating around the y axis
+function Matrix4.rotationY(degrees)
+    local radians = degrees * math.pi * (1.0 / 180.0);
+    local cos = math.cos(radians);
+    local sin = math.sin(radians);
+    return Matrix4:new({
+        cos, 0, -sin, 0, 0, 1, 0, 0, sin, 0, cos, 0, 0, 0, 0, 1
+    });
+end
+
+-- Create a rotation matrix for rotating around the z axis
+function Matrix4.rotationZ(degrees)
+    local radians = degrees * math.pi * (1.0 / 180.0);
+    local cos = math.cos(radians);
+    local sin = math.sin(radians);
+    return Matrix4:new({
+        cos, sin, 0, 0, -sin, cos, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1
+    });
+end
+-- Create an affine matrix for translation:
+function Matrix4.translation(v)
+    return Matrix4:new({1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, v[1], v[2], v[3], 1});
+end
+-- Create an affine matrix for scaling:
+function Matrix4.scaling(v)
+    return Matrix4:new({v[1], 0, 0, 0, 0, v[2], 0, 0, 0, 0, v[3], 0, 0, 0, 0, 1});
+end
+-- right multiply by another 4x4 matrix:
+function Matrix4:multiply(m)
+	local m1 = self;
+	local m2 = m;
+	local r11,r12,r13,r14 =
+		m1[ 1] * m2[ 1] + m1[ 2] * m2[ 5] + m1[ 3] * m2[ 9] + m1[ 4] * m2[13],
+		m1[ 1] * m2[ 2] + m1[ 2] * m2[ 6] + m1[ 3] * m2[10] + m1[ 4] * m2[14],
+		m1[ 1] * m2[ 3] + m1[ 2] * m2[ 7] + m1[ 3] * m2[11] + m1[ 4] * m2[15],
+		m1[ 1] * m2[ 4] + m1[ 2] * m2[ 8] + m1[ 3] * m2[12] + m1[ 4] * m2[16];
+	local r21,r22,r23,r24 =								  
+		m1[ 5] * m2[ 1] + m1[ 6] * m2[ 5] + m1[ 7] * m2[ 9] + m1[ 8] * m2[13],
+		m1[ 5] * m2[ 2] + m1[ 6] * m2[ 6] + m1[ 7] * m2[10] + m1[ 8] * m2[14],
+		m1[ 5] * m2[ 3] + m1[ 6] * m2[ 7] + m1[ 7] * m2[11] + m1[ 8] * m2[15],
+		m1[ 5] * m2[ 4] + m1[ 6] * m2[ 8] + m1[ 7] * m2[12] + m1[ 8] * m2[16];
+	local r31,r32,r33,r34 =											  
+		m1[ 9] * m2[ 1] + m1[10] * m2[ 5] + m1[11] * m2[ 9] + m1[12] * m2[13],
+		m1[ 9] * m2[ 2] + m1[10] * m2[ 6] + m1[11] * m2[10] + m1[12] * m2[14],
+		m1[ 9] * m2[ 3] + m1[10] * m2[ 7] + m1[11] * m2[11] + m1[12] * m2[15],
+		m1[ 9] * m2[ 4] + m1[10] * m2[ 8] + m1[11] * m2[12] + m1[12] * m2[16];
+	local r41,r42,r43,r44 =											  
+		m1[13] * m2[ 1] + m1[14] * m2[ 5] + m1[15] * m2[ 9] + m1[16] * m2[13],
+		m1[13] * m2[ 2] + m1[14] * m2[ 6] + m1[15] * m2[10] + m1[16] * m2[14],
+		m1[13] * m2[ 3] + m1[14] * m2[ 7] + m1[15] * m2[11] + m1[16] * m2[15],
+		m1[13] * m2[ 4] + m1[14] * m2[ 8] + m1[15] * m2[12] + m1[16] * m2[16];
+	self[ 1], self[ 2], self[ 3], self[ 4] = r11,r12,r13,r14;
+	self[ 5], self[ 6], self[ 7], self[ 8] = r21,r22,r23,r24;
+	self[ 9], self[10], self[11], self[12] = r31,r32,r33,r34;
+	self[13], self[14], self[15], self[16] = r41,r42,r43,r44;
+	return self;
+end
+function Matrix4:transpose( )
+	local m00, m01, m02, m03 = self[1], self[2], self[3], self[4];
+    local m10, m11, m12, m13 = self[5], self[6], self[7], self[8];
+    local m20, m21, m22, m23 = self[9], self[10],self[11],self[12];
+    local m30, m31, m32, m33 = self[13],self[14],self[15],self[16];
+	self[ 1], self[ 2], self[ 3], self[ 4] = m00,m10,m20,m30;
+	self[ 5], self[ 6], self[ 7], self[ 8] = m01,m11,m21,m31;
+	self[ 9], self[10], self[11], self[12] = m02,m12,m22,m32;
+	self[13], self[14], self[15], self[16] = m03,m13,m23,m33;
+	return self;
 end
 
 -- const static identity matrix. 
