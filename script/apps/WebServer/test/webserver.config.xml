@@ -16,6 +16,7 @@
   <rules id="simple_rule">
     <!--URI remapping example-->
     <rule match='{"^[^%.]+$", "robots.txt"}' with="WebServer.redirecthandler" params='{"/index.page"}'></rule>
+    <!--<rule match='{"^[^%.]+$", "robots.txt"}' with="WebServer.redirecthandler" params='{"/helloworld.lua"}'></rule>-->
     <!--npl script example-->
     <!--<rule match="%.lua$" with="WebServer.makeGenericHandler" params='{docroot="script/apps/WebServer/test", params={}, extra_vars=nil}'></rule>-->
     <rule match='{"%.lua$", "%.npl$"}' with="WebServer.npl_script_handler" params='%CD%'></rule>
