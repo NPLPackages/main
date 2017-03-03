@@ -288,15 +288,14 @@ local function NPL_require_()
 		-- inject NPL.load as the second loader. 
 		local function NPL_load(modname)
 			local errmsg = ""
-			local fileExt = modname:match("%.(%w%w?%w?)$");
-			-- if modname contains file extension such as *.npl, *.lua or begins with (gl) or "./", we will always use NPL.load to load. 
-			if((fileExt and file_exts[fileExt]) or modname:match("^[%(%.]")) then
-				-- Compile and return the module using NPL.load
+			-- Compile and return the module using NPL.load
+			if(NPL.load(modname) == false) then
+				-- fall back to other loaders
+				errmsg = "not found by NPL.load";
+			else
 				return function()
 					return NPL.load(modname);
-				end
-			else
-				errmsg = "skiped by NPL.load";
+				end	
 			end
 			return errmsg;
 		end
