@@ -14,6 +14,8 @@ response:set_header(h, v);
 response:SetReturnCode("forbidden");  -- one of the status_strings keys
 response:Begin();
 response:End();
+response:set_cookie(key, value)
+response:delete_cookie(name, path)
 -----------------------------------------------
 ]]
 NPL.load("(gl)script/apps/WebServer/npl_util.lua");
@@ -171,7 +173,7 @@ function response:status(code)
 end
 
 -- cache string and send it until finish() is called.
--- it is optimized to call send() many times during a single request. 
+-- it is optimized to call sendsome() many times during a single request. 
 -- @param text: string or a table of text lines. 
 function response:sendsome(text)
 	if(type(text) == "string") then
@@ -380,6 +382,13 @@ local function make_cookie(name, value)
 	return cookie
 end
 
+-- @param name: string key
+-- @param value: number or string. or a table of like { 
+--    value = "actual value", 
+--    expires = os.time() + 1200, 
+--    path = "/;HttpOnly"
+-- }
+-- if one wants to specify expires and path. 
 function response:set_cookie(name, value)
 	local cookie = self.headers["Set-Cookie"]
 	if type(cookie) == "table" then
