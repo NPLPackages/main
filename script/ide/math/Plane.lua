@@ -157,7 +157,7 @@ function Plane.fromNormalAndPoint(normal, point)
 end
 
 function Plane:signedDistanceToPoint(point)
-    local t = self:GetNormal():dot(point) - self[4];
+    local t = self[1] * point[1] + self[2] * point[2] + self[3] * point[3] - self[4];
     return t;
 end
 
