@@ -8,15 +8,14 @@ by setting the wpdb global variable in wp-content/db.page
 file to your class. The wpdb class will still be included,
 so you can extend it or simply use your own.
 ]]
-
+local Database = commonlib.gettable("System.Database.Xml.Database");
+	
 wpdb_class = commonlib.inherit(nil, {});
 
 function wpdb_class:ctor()
 end
 
 function wpdb_class:init(db_user, db_password, db_name, db_host)
-	NPL.load("(gl)script/ide/System/Database/XmlDatabase.lua");
-	local Database = commonlib.gettable("System.Database.Xml.Database");
 	self.db = Database:new_from_pool(db_name);
 	self.db:init(db_user, db_password, db_name, db_host);
 	return self;

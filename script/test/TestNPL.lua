@@ -398,6 +398,14 @@ local function activate()
 end
 NPL.this(activate)
 
+
+---------------------------------
+-- test current filename
+---------------------------------
+echo("current NPL file is " .. NPL.filename());
+
 -- select test suite to run
 -- LuaUnit:run("TestNPLEvents")
 -- TestBase64BinaryWithWebservice()
+
+return NPL.export();

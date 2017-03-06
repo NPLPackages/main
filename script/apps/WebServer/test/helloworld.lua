@@ -14,8 +14,15 @@ local function run(req, res)
 	local num = tonumber(req:get_cookie("counter") or 0);
 	res:set_cookie("counter", num + 1);
 	
-	res:send(format("<html><body>hello world! %d</body></html>", num));
-
+	local num2 = tonumber(req:get_cookie("testcookie") or 0);
+	res:set_cookie("testcookie", { 
+		value = num2 + 1, 
+		expires = os.time() + 1200, 
+		path = "/;HttpOnly"
+	});
+	
+	res:sendsome(format("<html><body>hello world! %d, %d</body></html>", num, num2));
+	
 	res:finish();
 end
 

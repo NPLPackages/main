@@ -280,3 +280,26 @@ function NPL.LoadPublicFilesFromXML(filename)
 		end	
 	end
 end
+
+-- this will improve the lua's require with NPL.load
+local function NPL_require_()
+	if(#package.loaders == 4) then
+		local file_exts = {dll=true, so=true, lua=true, npl=true, exe=true};
+		-- inject NPL.load as the second loader. 
+		local function NPL_load(modname)
+			local errmsg = ""
+			-- Compile and return the module using NPL.load
+			if(NPL.load(modname) == false) then
+				-- fall back to other loaders
+				errmsg = "not found by NPL.load";
+			else
+				return function()
+					return NPL.load(modname);
+				end	
+			end
+			return errmsg;
+		end
+		table.insert(package.loaders, 2, NPL_load);
+	end	
+end
+NPL_require_();

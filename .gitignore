@@ -14,6 +14,7 @@ script/ide/ObjectOriented/
 !/script/apps
 /script/apps/*
 !/script/apps/WebServer
+!/npl_mod/
 !Documentation/
 Documentation/*
 !Documentation/Global.xml
