@@ -24,16 +24,27 @@ local EntityManager = commonlib.gettable("MyCompany.Aries.Game.EntityManager");
 local VectorPool = commonlib.gettable("mathlib.VectorPool");
 VectorPool.__index = VectorPool;
 
+ -- Maximum number of times the pool can be "cleaned" before the pool is shrunk
+ -- in most cases, we clear pool every frame move. so 900 is like 30 seconds. 
+VectorPool.maxNumCleansToShrink = 30*30;
+-- max number of entry to remove every Shrink function. 
+VectorPool.numEntriesToRemove = 500;
 -- we will automatically reuse from beginning when reaching this value. 
 -- such that CleanPool() is not a must-call function. Depending on usage pattern.
-VectorPool.startOfChunk = 500;
+VectorPool.maxPoolSize = 1000;
 
 function VectorPool:new()
 	local o = {};
+	-- Number of times this Pool has been cleaned
+	o.numCleans = 0;
 	-- List of vector stored in this Pool
 	o.listVector3D = commonlib.vector:new();
 	-- Next index to use when adding a Pool Entry.
 	o.nextPoolIndex = 1;
+	-- Largest index reached by this Pool since last CleanPool operation. 
+	o.maxPoolIndex = 0;
+	-- Largest index reached by this Pool since last Shrink operation. 
+	o.maxPoolIndexFromLastShrink = 0;
 
 	setmetatable(o, self);
 	return o;
@@ -45,19 +56,15 @@ function VectorPool.GetSingleton()
 		return default_pool;
 	else
 		default_pool = VectorPool:new();
-		default_pool:enlarge(VectorPool.startOfChunk);
 		return default_pool;
 	end
 end
 
-function VectorPool:enlarge(n)
-	local i;
-	local vec3d;
-
-	for i=#self.listVector3D,n-1,1 do
-		vec3d = vector3d:new();
-        self.listVector3D:add(vec3d);
-	end
+function VectorPool:init(maxNumCleansToShrink, numEntriesToRemove, maxPoolSize)
+	self.maxNumCleansToShrink = maxNumCleansToShrink;
+	self.numEntriesToRemove = numEntriesToRemove;
+	self.maxPoolSize = maxPoolSize;
+	return self;
 end
 
 -- Creates a new Vector, or reuses one that's no longer in use. 
@@ -67,27 +74,60 @@ function VectorPool:GetVector(x,y,z)
     local vec3d;
 
     if (self.nextPoolIndex > self.listVector3D:size()) then
-		self:enlarge(#self.listVector3D * 2);
+		vec3d = vector3d:new(x,y,z);
+        self.listVector3D:add(vec3d);
+    else
+        vec3d = self.listVector3D:get(self.nextPoolIndex);
+		vec3d:set(x,y,z);
     end
 
-    local vec3d = self.listVector3D:get(self.nextPoolIndex);
-	vec3d:set(x,y,z);
-	self.nextPoolIndex = self.nextPoolIndex + 1;
+    self.nextPoolIndex = self.nextPoolIndex + 1;
+	if(self.nextPoolIndex > self.maxPoolSize) then
+		LOG.std(nil, "debug", "VectorPool", "maxPoolSize reached %d", self.maxPoolSize);
+		self.maxPoolIndex = self.maxPoolSize;
+		self.nextPoolIndex = 1;
+	end
     return vec3d;
 end
 
+-- Marks the pool as "empty", starting over when adding new entries. If this is called maxNumCleansToShrink times, the list
+-- size is reduced
+function VectorPool:CleanPool()
+    if (self.nextPoolIndex > self.maxPoolIndex) then
+        self.maxPoolIndex = self.nextPoolIndex;
+    end
+
+	if(self.maxPoolIndexFromLastShrink < self.maxPoolIndex) then
+		self.maxPoolIndexFromLastShrink = self.maxPoolIndex;
+	end
+
+	self.numCleans = self.numCleans + 1;
+    if (self.numCleans >= self.maxNumCleansToShrink) then
+		self:Shrink();
+    end
+    self.nextPoolIndex = 1;
+end
+
+-- this function is called automatically inside CleanPool(). 
+function VectorPool:Shrink()
+	local maxHistorySize = math.max(self.maxPoolIndexFromLastShrink, self.maxPoolIndex)
+	local newSize = math.max(maxHistorySize, self.listVector3D:size() - self.numEntriesToRemove);
+	self.listVector3D:resize(newSize);
+    self.maxPoolIndex = 0;
+    self.numCleans = 0;
+	self.nextPoolIndex = 1;
+end
 
 -- Clears the VectorPool
 function VectorPool:clearPool()
     self.nextPoolIndex = 1;
-end
-
--- Clean the VectorPool
-function VectorPool:cleanPool()
-    self.nextPoolIndex = 1;
     self.listVector3D:clear();
 end
 
-function VectorPool:getSize()
-	return self.listVector3D:size();
+function VectorPool:GetListVector3Dsize()
+    return self.listVector3D:size();
+end
+
+function VectorPool:GetNextPoolIndex()
+    return self.nextPoolIndex;
 end
