@@ -415,6 +415,7 @@ function vector3d:toVector2D()
     return vector2d:new(self[1], self[3]);
 end
 
+--[[
 function vector3d.clearPool()
 	VectorPool.GetSingleton():clearPool();
 end
@@ -426,6 +427,7 @@ end
 function vector3d.getPoolSize()
 	return 	VectorPool.GetSingleton():getSize();
 end
+--]]
 
 -- some static members.
 vector3d.unit_x = vector3d:new(1,0,0);
