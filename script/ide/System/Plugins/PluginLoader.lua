@@ -67,8 +67,8 @@ function PluginLoader:init(pluginManager, pluginFolder)
 	end
 	if(pluginFolder) then
 		self:SetPluginFolder(pluginFolder);
-		ParaIO.CreateDirectory(self:GetPluginFolder());
 	end
+	ParaIO.CreateDirectory(self:GetPluginFolder());
 	return self;
 end
 
