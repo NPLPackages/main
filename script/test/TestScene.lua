@@ -72,7 +72,7 @@ function TestParaScene:test_CtorProgress()
 	local asset = ParaAsset.LoadStaticMesh("","model/common/editor/z.x")
 	local obj = ParaScene.CreateMeshPhysicsObject("blueprint_center", asset, 1,1,1, false, "1,0,0,0,1,0,0,0,1,0,0,0");
 	obj:SetPosition(ParaScene.GetPlayer():GetPosition());
-	obj:GetAttributeObject():SetField("progress",1);
+	obj:SetField("progress",1);
 	ParaScene.Attach(obj);
 end
 
@@ -152,14 +152,14 @@ function TestParaScene:test_GameUseGlobalTime()
 	player:SetPosition(x,y,z);
 	ParaScene.Attach(player);
 	Map3DSystem.Animation.PlayAnimationFile("character/Animation/v5/LoopedDance.x", player)
-	player:GetAttributeObject():SetField("UseGlobalTime", true);
+	player:SetField("UseGlobalTime", true);
 	
 	
 	local player = ParaScene.CreateCharacter ("MyPlayer2", ParaAsset.LoadParaX("","character/v3/Elf/Female/ElfFemale.x"), "", true, 0.35, 0, 1.0);
 	player:SetPosition(x+10,y,z);
 	ParaScene.Attach(player);
 	Map3DSystem.Animation.PlayAnimationFile("character/Animation/v5/LoopedDance.x", player)
-	player:GetAttributeObject():SetField("UseGlobalTime", true);
+	player:SetField("UseGlobalTime", true);
 end
 
 
@@ -186,7 +186,7 @@ function TestParaScene:test_SetAnimationDetail(obj, AnimID, AnimFrame)
 	local asset = ParaAsset.LoadStaticMesh("","model/01building/v5/01house/BigDipper/BigDipper.x")
 	local obj = ParaScene.CreateMeshPhysicsObject("g_globalTestModel", asset, 1,1,1, false, "1,0,0,0,1,0,0,0,1,0,0,0");
 	obj:SetPosition(ParaScene.GetPlayer():GetPosition());
-	obj:GetAttributeObject():SetField("progress",1);
+	obj:SetField("progress",1);
 	ParaScene.Attach(obj);
 	
 	local att = ParaScene.GetObject("g_globalTestModel"):GetAttributeObject();
@@ -220,7 +220,7 @@ function TestParaScene:test_BigStaticMesh()
 	local obj = ParaScene.CreateMeshPhysicsObject("g_globalTestModel", asset, 20,20,20, false, "1,0,0,0,1,0,0,0,1,0,0,0");
 	obj:SetPosition(ParaScene.GetPlayer():GetPosition());
 	obj:SetAttribute(8192, true); -- 8192 stands for big static mesh
-	obj:GetAttributeObject():SetField("progress",1);
+	obj:SetField("progress",1);
 	ParaScene.Attach(obj);
 end
 
@@ -229,12 +229,12 @@ function TestParaScene:test_CameraUseCharacterLookup()
 	local obj = ParaScene.CreateMeshPhysicsObject("g_globalTestModel", asset, 20,20,20, false, "1,0,0,0,1,0,0,0,1,0,0,0");
 	obj:SetPosition(ParaScene.GetPlayer():GetPosition());
 	obj:SetAttribute(8192, true); -- 8192 stands for big static mesh
-	obj:GetAttributeObject():SetField("progress",1);
+	obj:SetField("progress",1);
 	ParaScene.Attach(obj);
 		
 	ParaScene.GetPlayer():ToCharacter():MountOn(ParaScene.GetObject("g_globalTestModel"), 20)
-	ParaCamera.GetAttributeObject():SetField("UseCharacterLookup" ,false);
-	ParaCamera.GetAttributeObject():SetField("UseCharacterLookupWhenMounted" ,true);
+	ParaCamera.SetField("UseCharacterLookup" ,false);
+	ParaCamera.SetField("UseCharacterLookupWhenMounted" ,true);
 end
 
 -- for camera testing
@@ -243,7 +243,7 @@ TestParaCamera = {}
 -- 2010.6.13 by LXZ: camera pitch/yaw/roll
 function TestParaCamera:test_TestCameraRoll()
 	NPL.load("(gl)script/ide/timer.lua");
-	ParaCamera.GetAttributeObject():SetField("CameraRotZ", 0.4);
+	ParaCamera.SetField("CameraRotZ", 0.4);
 
 	self.timer_roll = self.timer_roll or commonlib.Timer:new({callbackFunc = function(timer)
 		local att = ParaCamera.GetAttributeObject();
@@ -285,7 +285,7 @@ function TestParaScene:testIges()
 	--local asset = ParaAsset.LoadStaticMesh("","model/Test/hammer.iges");
 	local obj = ParaScene.CreateMeshPhysicsObject("igesTest", asset, 1,1,1, false, "1,0,0,0,1,0,0,0,1,0,0,0");
 	obj:SetPosition(ParaScene.GetPlayer():GetPosition());
-	obj:GetAttributeObject():SetField("progress",1);
+	obj:SetField("progress",1);
 	ParaScene.Attach(obj);
 end
 
@@ -296,3 +296,20 @@ function TestParaScene:test_FBX_player()
 	player:SetPosition(ParaScene.GetPlayer():GetPosition());
 	ParaScene.Attach(player);
 end	
+
+function TestParaScene:test_PostRenderQueueOrder()
+	local asset = ParaAsset.LoadStaticMesh("","model/common/editor/z.x")
+	local obj = ParaScene.CreateMeshPhysicsObject("blueprint_center", asset, 1,1,1, false, "1,0,0,0,1,0,0,0,1,0,0,0");
+	obj:SetPosition(ParaScene.GetPlayer():GetPosition());
+	obj:SetField("progress",1);
+	obj:GetEffectParamBlock():SetBoolean("ztest", false);
+	obj:SetField("RenderOrder", 101)
+	ParaScene.Attach(obj);
+
+	local player = ParaScene.CreateCharacter ("MyPlayer1", ParaAsset.LoadParaX("","character/v3/Elf/Female/ElfFemale.x"), "", true, 0.35, 0, 1.0);
+	local x,y,z = ParaScene.GetPlayer():GetPosition()
+	player:SetPosition(x+1,y,z);
+	player:SetField("RenderOrder", 100)
+	player:GetEffectParamBlock():SetBoolean("ztest", false);
+	ParaScene.Attach(player);
+end
