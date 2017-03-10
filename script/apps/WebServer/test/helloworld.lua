@@ -27,6 +27,7 @@ local function run(req, res)
 end
 
 local function activate()
+	echo(msg);
 	local req = WebServer.request:new():init(msg);
 	run(req, req.response);
 end
