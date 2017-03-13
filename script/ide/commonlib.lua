@@ -80,6 +80,9 @@ local table_getn = table.getn
 local table_insert = table.insert
 
 local string_find = string.find;
+if(not string.gfind) then
+	string.gfind = string.gmatch; -- lua 5.1/5.2 has replaced gfind with gmatch. 
+end
 local string_gfind = string.gfind;
 local string_lower = string.lower;
 
