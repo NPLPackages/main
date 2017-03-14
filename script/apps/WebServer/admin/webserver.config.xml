@@ -16,7 +16,7 @@
   <!--"npl_code_wiki" is an internal rule, but we can also overwrite it here.--> 
   <rules id="npl_code_wiki">
     <rule match='{"^[^%.]+$", "robots.txt"}' with="WebServer.redirecthandler" params='{"/index.page"}'></rule>
-    <rule match="%.page$" with="WebServer.npl_page_handler" params='script/apps/WebServer/admin/'></rule>
+    <rule match="%.page$" with="WebServer.npl_page_handler" params="{docroot='%CD%', enable_file_monitor=true}"></rule>
     <rule match="." with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/"}'></rule>
   </rules>
   <!--rules used when starting a web server. Multiple rules with different id can be defined. -->
@@ -27,7 +27,7 @@
     <!--<rule match="%.lua$" with="WebServer.makeGenericHandler" params='{docroot="script/apps/WebServer/test", params={}, extra_vars=nil}'></rule>-->
     <rule match="%.lua$" with="WebServer.npl_script_handler" params='%CD%'></rule>
     <!--npl server page example-->
-    <rule match="%.page$" with="WebServer.npl_page_handler" params='%CD%'></rule>
+    <rule match="%.page$" with="WebServer.npl_page_handler" params="{docroot='%CD%', enable_file_monitor=true}"></rule>
     <!--Serve files statically in Textures, model, character directory, so that we can use any available png textures. -->
     <rule match='{"^/?Texture/", "^/?model/", "^/?character/"}' with="WebServer.filehandler" params='{baseDir = "", nocache=true}'></rule>
     <!--serving static files in current world directory %world%. -->

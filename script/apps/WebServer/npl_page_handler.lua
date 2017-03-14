@@ -72,18 +72,25 @@ local function npl_page_handler(req, res, root_dir, page_manager)
 end
 
 -- public: file handler maker. it returns a handler that serves files in the baseDir dir
--- @param params: string or {docroot, }the directory from which to serve files. 
+-- @param params: string or {docroot, enable_file_monitor=false}the directory from which to serve files. 
+-- enable_file_monitor default to true
 function WebServer.npl_page_handler(params)
 	local docroot="";
+	local enable_file_monitor = true;
 	if type(params) == "string" then 
 		docroot = params;
 	elseif type(params) == "table" then 
 		docroot = params.docroot;
+		if(params.enable_file_monitor == false or params.enable_file_monitor == "false") then
+			enable_file_monitor = false;
+		end
 	end
 	NPL.load("(gl)script/apps/WebServer/npl_page_manager.lua");
 	local npl_page_manager = commonlib.gettable("WebServer.npl_page_manager");
 	local page_manager = npl_page_manager:new();
-	page_manager:monitor_directory(docroot);
+	if(enable_file_monitor) then
+		page_manager:monitor_directory(docroot);
+	end
 	
 	return function(req, res)
 		return npl_page_handler(req, res, docroot, page_manager)

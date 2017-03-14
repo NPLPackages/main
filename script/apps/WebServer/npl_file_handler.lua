@@ -272,6 +272,7 @@ end
 
 -- public: file handler maker. it returns a handler that serves files in the baseDir dir
 -- @param baseDir: the directory from which to serve files. "%world%" is current world directory
+-- it can also be a table {baseDir=string, nocache=boolean, BrowserCacheExpire=number}
 -- @return the actual handler function(request, response) end
 function WebServer.filehandler(baseDir)
 	local nocache;
