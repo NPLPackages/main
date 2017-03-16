@@ -17,7 +17,7 @@ end)
 Test.testRPC:MakePublic();
 
 -- now we can invoke it anywhere in any thread or remote address.
-Test.testRPC("(worker1)", {"input"}, function(err, msg) 
+Test.testRPC("", {"input"}, function(err, msg) 
 	assert(msg.output == true and msg[1] == "input")
 	echo(msg);
 end);
@@ -64,7 +64,7 @@ function rpc:SetFuncName(funcName)
 	rpc.AddInstance(funcName, self);
 end
 
--- @param filename: the activation file, if nil, it defaults to current file
+-- @param filename: the activation file, if nil, it defaults to this file
 function rpc:SetPublicFile(filename)
 	filename = filename or format("rpc/%s.lua", self.fullname);
 	self.filename = filename;
@@ -76,7 +76,7 @@ function rpc:SetPublicFile(filename)
 	LOG.std(nil, "debug", "rpc", "%s installed to file %s", self.fullname, self.filename);
 end
 
-function rpc:__tostring(self)
+function rpc:__tostring()
 	return format("%s: (rpc defined in %s)", self.fullname or "", self.filename or "");
 end
 
