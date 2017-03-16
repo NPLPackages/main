@@ -131,7 +131,7 @@ function CustomEase:getValue( time, begin, change, duration )
 	if(percent <=0) then return begin; end
 	if(percent >=1) then return begin + change ; end
 	
-	local pts = self._super:TableConcat({self.firstNode},self.points);
+	local pts = CustomEase._super:TableConcat({self.firstNode},self.points);
 	table.insert(pts,self.lastNode);
 	
 	local easedPercent = self:getYForPercent(percent,pts);

@@ -31,7 +31,7 @@ end
 
 -- event_type is "focusInEvent" or "focusOutEvent" or "focusAboutToChangeEvent" 
 function FocusEvent:init(event_type, reason)
-	self._super.init(self, event_type);
+	FocusEvent._super.init(self, event_type);
 	self.reason = reason;
 	return self;
 end

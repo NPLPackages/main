@@ -22,7 +22,7 @@ end
 -- return current mouse event object. 
 -- @param event_type: "keyDownEvent", "keyPressedEvent"
 function KeyEvent:init(event_type, vKey)
-	self._super.init(self, event_type);
+	KeyEvent._super.init(self, event_type);
 	-- global position. 
 	self.virtual_key = vKey or virtual_key;
 	-- key string.

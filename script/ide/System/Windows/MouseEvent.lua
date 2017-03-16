@@ -53,7 +53,7 @@ end
 -- @param event_type: "mousePressEvent", "mouseReleaseEvent", "mouseMoveEvent", "mouseWheelEvent"
 -- @param window: the window that is receiving this event. 
 function MouseEvent:init(event_type, window, localPos, windowPos, screenPos)
-	self._super.init(self, event_type);
+	MouseEvent._super.init(self, event_type);
 	-- global pos
 	if(event_type == "mouseMoveEvent") then
 		self.x, self.y = ParaUI.GetMousePosition();
