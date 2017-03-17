@@ -15,7 +15,7 @@ NPL.load("(gl)script/ide/math/bit.lua");
 NPL.load("(gl)script/ide/System/Encoding/base64.lua");
 local Encoding = commonlib.gettable("System.Encoding");
 local hmac = commonlib.gettable("System.Encoding.hmac");
-local floor,modf = math.floor,math.modf;
+local floor = math.floor;
 local char,format,rep = string.char,string.format,string.rep;
 
 local BLOCK_SIZE = 64; -- 512 bits

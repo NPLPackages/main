@@ -83,6 +83,9 @@ local string_find = string.find;
 if(not string.gfind) then
 	string.gfind = string.gmatch; -- lua 5.1/5.2 has replaced gfind with gmatch. 
 end
+if(not math.mod) then
+	math.mod = math.fmod; -- lua 5.1/5.2 has replaced mod with fmod. 
+end
 local string_gfind = string.gfind;
 local string_lower = string.lower;
 

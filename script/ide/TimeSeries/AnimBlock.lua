@@ -192,7 +192,7 @@ function  AnimBlock:GetNextKeyIndex(anim, time)
 				end
 				
 				local nMid;
-				if( math.mod(nStart + nEnd, 2) == 1 ) then
+				if( ((nStart + nEnd)%2) == 1 ) then
 					nMid = (nStart + nEnd - 1)/2;
 				else
 					nMid = (nStart + nEnd)/2;
@@ -299,7 +299,7 @@ function AnimBlock:getTimeRange(anim, time)
 				end
 				
 				local nMid;
-				if( math.mod(nStart + nEnd, 2) == 1 ) then
+				if( ((nStart + nEnd)%2) == 1 ) then
 					nMid = (nStart + nEnd - 1)/2;
 				else
 					nMid = (nStart + nEnd)/2;
@@ -385,7 +385,7 @@ function AnimBlock:getValue2(anim, time)
 				end
 				
 				local nMid;
-				if( math.mod(nStart + nEnd, 2) == 1 ) then
+				if( ((nStart + nEnd)%2) == 1 ) then
 					nMid = (nStart + nEnd - 1)/2;
 				else
 					nMid = (nStart + nEnd)/2;
