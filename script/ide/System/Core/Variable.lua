@@ -60,5 +60,6 @@ local ATTRIBUTE_FIELDTYPE = commonlib.createtable("System.Core.ATTRIBUTE_FIELDTY
 	FieldType_AnimatedDVector3 = AutoEnum(),
 	FieldType_AnimatedVector4 = AutoEnum(),
 	FieldType_AnimatedQuaternion = AutoEnum(),
+	FieldType_void_pointer = AutoEnum(),
 	FieldType_Deprecated = 0xffffffff
 });

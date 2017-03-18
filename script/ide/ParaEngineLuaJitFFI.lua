@@ -92,6 +92,19 @@ if(use_ffi) then
 	int ParaBlockWorld_GetFirstBlock(void* pWorld, uint16_t x, uint16_t y, uint16_t z, int nBlockId, uint16_t nSide /*= 4*/, uint32_t max_dist /*= 32*/);
 
 	bool ParaScene_CheckExist(int nID);
+
+	bool ParaGlobal_SetFieldCData(const char* sFieldname, void* pValue);
+	bool ParaGlobal_GetFieldCData(const char* sFieldname, void* pValueOut);
+
+	struct Vector3{
+		float x;
+		float y;
+		float z;
+	};
+	struct Vector2{
+		float x;
+		float y;
+	};
 	]]);
 
 
@@ -274,6 +287,26 @@ if(use_ffi) then
 		ParaScene.CheckExist = function(nID)
 			return ParaEngineClient.ParaScene_CheckExist(nID);
 		end
+	end
+
+	--------------------------------------
+	-- ParaAttributeObject
+	--------------------------------------
+
+	local curSelection;
+	-- ffi based cdata
+	ParaAttributeObject.SetFieldCData = function(self, name, cdata)
+		if(curSelection~=self) then
+			ParaGlobal.SelectAttributeObject(self);
+		end
+		return ParaEngineClient.ParaGlobal_SetFieldCData(name, cdata);
+	end
+	-- ffi based cdata
+	ParaAttributeObject.GetFieldCData = function(self, name, cdata)
+		if(curSelection~=self) then
+			ParaGlobal.SelectAttributeObject(self);
+		end
+		return ParaEngineClient.ParaGlobal_GetFieldCData(name, cdata);
 	end
 else
 	-- using standard lua without jit and ffi

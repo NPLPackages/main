@@ -73,3 +73,15 @@ function TestAttributeModel.SerializeAttributeObjectToXMLNode(attr, xmlNode)
 	end
 	return xmlNode;
 end
+
+function TestAttributeModel.TestGetFieldCData()
+	local ffi = require 'ffi'
+	local player = ParaScene.GetPlayer();
+	local asset = player:GetAttributeObject():GetChildAt(0,1):GetChildAt(0);
+	
+	-- see ParaXModelObjNum for details
+	local objnum = ffi.new 'struct ParaXModelObjNum *[1]'
+	if(asset:GetFieldCData("ObjectNum", objnum)) then
+		echo({objnum[0].nAnimations, objnum[0].nBones, objnum[0].nVertices}); 
+	end
+end
