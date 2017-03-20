@@ -287,18 +287,20 @@ end
 -- if aabb and the argument bounding boxes overlap in the Y and Z dimensions, calculate the offset between them in the X dimension.  
 -- This function is used for discrete entity movement physics based on aabb to avoid collision. 
 -- @param dx: delta value to try to add to self
+-- @param epsilon: if self and aabb already overlap by this value, we will return dx unmodified. default to 0.0000001.
 -- @return dx if the bounding boxes do not overlap or if dy is closer to 0 then the offset between this and aabb.
-function ShapeAABB:CalculateXOffset(aabb, dx)
+function ShapeAABB:CalculateXOffset(aabb, dx, epsilon)
 	local self_minX, self_minY, self_minZ = self:GetMinValues();
 	local self_maxX, self_maxY, self_maxZ = self:GetMaxValues();
 	local aabb_minX, aabb_minY, aabb_minZ = aabb:GetMinValues();
 	local aabb_maxX, aabb_maxY, aabb_maxZ = aabb:GetMaxValues();
 
-    if (aabb_maxY > self_minY+0.0000001 and aabb_minY < self_maxY-0.0000001) then
-        if (aabb_maxZ > self_minZ+0.0000001 and aabb_minZ < self_maxZ-0.0000001) then
+	epsilon = epsilon or 0.0000001;	
+    if (aabb_maxY > self_minY+epsilon and aabb_minY < self_maxY-epsilon) then
+        if (aabb_maxZ > self_minZ+epsilon and aabb_minZ < self_maxZ-epsilon) then
             local deltaX;
 
-            if (dx > 0 and aabb_maxX <= (self_minX+0.0000001)) then
+            if (dx > 0 and aabb_maxX <= (self_minX+epsilon)) then
                 deltaX = self_minX - aabb_maxX;
 
                 if (deltaX < dx) then
@@ -306,7 +308,7 @@ function ShapeAABB:CalculateXOffset(aabb, dx)
                 end
             end
 
-            if (dx < 0 and aabb_minX >= (self_maxX-0.0000001)) then
+            if (dx < 0 and aabb_minX >= (self_maxX-epsilon)) then
                 deltaX = self_maxX - aabb_minX;
 				if (deltaX > dx) then
                     dx = deltaX;
@@ -325,18 +327,20 @@ end
 -- if aabb and the argument bounding boxes overlap in the X and Z dimensions, calculate the offset between them in the Y dimension.  
 -- This function is used for discrete entity movement physics based on aabb to avoid collision. 
 -- @param dy: delta value to try to add to self
+-- @param epsilon: if self and aabb already overlap by this value, we will return dy unmodified. default to 0.0000001.
 -- @return dy if the bounding boxes do not overlap or if dy is closer to 0 then the offset between this and aabb.
-function ShapeAABB:CalculateYOffset(aabb, dy)
+function ShapeAABB:CalculateYOffset(aabb, dy, epsilon)
 	local self_minX, self_minY, self_minZ = self:GetMinValues();
 	local self_maxX, self_maxY, self_maxZ = self:GetMaxValues();
 	local aabb_minX, aabb_minY, aabb_minZ = aabb:GetMinValues();
 	local aabb_maxX, aabb_maxY, aabb_maxZ = aabb:GetMaxValues();
 
-    if (aabb_maxX > self_minX+0.0000001 and aabb_minX < self_maxX-0.0000001) then
-        if (aabb_maxZ > self_minZ+0.0000001 and aabb_minZ < self_maxZ-0.0000001) then
+	epsilon = epsilon or 0.0000001;
+    if (aabb_maxX > self_minX+epsilon and aabb_minX < self_maxX-epsilon) then
+        if (aabb_maxZ > self_minZ+epsilon and aabb_minZ < self_maxZ-epsilon) then
             local deltaY;
 
-            if (dy > 0 and aabb_maxY <= (self_minY+0.0000001)) then
+            if (dy > 0 and aabb_maxY <= (self_minY+epsilon)) then
                 deltaY = self_minY - aabb_maxY;
 
                 if (deltaY < dy) then
@@ -344,7 +348,7 @@ function ShapeAABB:CalculateYOffset(aabb, dy)
                 end
             end
 
-            if (dy < 0 and aabb_minY >= (self_maxY-0.0000001)) then
+            if (dy < 0 and aabb_minY >= (self_maxY-epsilon)) then
                 deltaY = self_maxY - aabb_minY;
 
                 if (deltaY > dy) then
@@ -364,18 +368,20 @@ end
 -- if aabb and the argument bounding boxes overlap in the Y and X dimensions, calculate the offset between them in the Z dimension.  
 -- This function is used for discrete entity movement physics based on aabb to avoid collision. 
 -- @param dz: delta value to try to add to self
+-- @param epsilon: if self and aabb already overlap by this value, we will return dz unmodified. default to 0.0000001.
 -- @return dz if the bounding boxes do not overlap or if dz is closer to 0 then the offset between this and aabb.
-function ShapeAABB:CalculateZOffset(aabb, dz)
+function ShapeAABB:CalculateZOffset(aabb, dz, epsilon)
 	local self_minX, self_minY, self_minZ = self:GetMinValues();
 	local self_maxX, self_maxY, self_maxZ = self:GetMaxValues();
 	local aabb_minX, aabb_minY, aabb_minZ = aabb:GetMinValues();
 	local aabb_maxX, aabb_maxY, aabb_maxZ = aabb:GetMaxValues();
 
-    if (aabb_maxX > self_minX+0.0000001 and aabb_minX < self_maxX-0.0000001) then
-        if (aabb_maxY > self_minY+0.0000001 and aabb_minY < self_maxY-0.0000001) then
+	epsilon = epsilon or 0.0000001;
+    if (aabb_maxX > self_minX+epsilon and aabb_minX < self_maxX-epsilon) then
+        if (aabb_maxY > self_minY+epsilon and aabb_minY < self_maxY-epsilon) then
             local deltaZ;
 
-            if (dz > 0 and aabb_maxZ <= (self_minZ+0.0000001) ) then
+            if (dz > 0 and aabb_maxZ <= (self_minZ+epsilon) ) then
                 deltaZ = self_minZ - aabb_maxZ;
 
                 if (deltaZ < dz) then
@@ -383,7 +389,7 @@ function ShapeAABB:CalculateZOffset(aabb, dz)
                 end
             end
 
-            if (dz < 0 and aabb_minZ >= (self_maxZ-0.0000001) ) then
+            if (dz < 0 and aabb_minZ >= (self_maxZ-epsilon) ) then
                 deltaZ = self_maxZ - aabb_minZ;
 
                 if (deltaZ > dz) then
