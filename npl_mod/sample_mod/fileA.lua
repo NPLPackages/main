@@ -3,6 +3,8 @@ Author: Li,Xizhi
 Date: 2017-3-1
 Desc: this is sample mod. 
 -----------------------------------------------
+local fileA = NPL.load("sample_mod.fileA");
+assert(fileA:print() == "fileA");
 -----------------------------------------------
 ]]
 local fileB = NPL.load("./subfolder/fileB.lua")
