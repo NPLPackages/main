@@ -37,7 +37,7 @@
     <!--wp framework related js, css, files-->
     <rule match="^/?wp%-" with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/"}'></rule>
     <!--filehandler example, base dir is where the root file directory is. 
-    @param %CD%:  means current file's directory, 
+    @param %CD%:  means current web root directory, 
     @param nocache: boolean, whether to disable static file caching on server. by default, cache is always enabled for static files. 
     @param BrowserCacheExpire: duration in seconds to cache a static document
     -->
