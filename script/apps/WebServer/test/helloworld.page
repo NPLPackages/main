@@ -72,6 +72,10 @@ local result = include(dirname(__FILE__).."test_include.page");
 echo(result);
 %>
 
+<%
+local sample_util = NPL.load("./sample_util.lua");
+echo("<p>this is from ./sampe_util.lua file based module "..sample_util:hello().."</p>");
+%>
 </body>
 </html>
 

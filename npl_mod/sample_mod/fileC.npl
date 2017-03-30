@@ -1,0 +1,16 @@
+--[[
+Author: Li,Xizhi
+Date: 2017-3-22
+Desc: this is sample sub module with npl extension
+-----------------------------------------------
+local fileC = NPL.load("sample_mod.fileC");
+assert(fileC:print() == "fileC");
+-----------------------------------------------
+]]
+local fileC = NPL.export();
+
+function fileC:print()
+	echo("fileC")
+	return "fileC";
+end
+
