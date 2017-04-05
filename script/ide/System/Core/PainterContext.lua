@@ -292,6 +292,13 @@ function painter:DrawRectTexture(x, y, width, height, texture)
 	end
 end
 
+-- draw a scene object 
+-- @param obj: can be a character or model object. 
+-- @param nOption: default to 0, which renders using the transform of the scene object. 
+function painter:DrawSceneObject(obj, nOption)
+	ParaPainter.DrawSceneObject(obj, nOption or 0);
+end
+
 -----------------------------------
 -- 3d transform related. only useful in 3d mode such as rendering overlays.
 -----------------------------------

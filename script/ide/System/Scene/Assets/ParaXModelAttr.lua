@@ -491,7 +491,7 @@ function ParaXModelAttr:DrawStaticAsText()
 			local nVB = 3 * i;
 			log("triangle"..i..": ")
 			for k = 0, 2 do
-				local a = indices[nIndexOffset + nVB];
+				local a = indices[nIndexOffset + nVB + k];
 				local vert = origVertices[a+1];
 				log({"vert"..k, vert.pos, vert.normal, vert.color0})
 			end
