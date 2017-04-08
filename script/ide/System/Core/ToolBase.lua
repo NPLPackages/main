@@ -119,9 +119,7 @@ function ToolBase:InitSingleton()
 		self.singletonInited = true;
 		ctor_recursive(self);
 		-- disable new function. 
-		self.new = function()
-			LOG.std(nil, "error", "ToolBase", "class %s is InitSingleton, can not be instantiated.", self:GetName());
-		end;
+		self.new = nil;
 	end
 end
 

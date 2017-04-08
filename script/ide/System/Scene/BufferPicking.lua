@@ -2,7 +2,14 @@
 Title: BufferPicking
 Author(s): LiXizhi@yeah.net
 Date: 2015/8/13
-Desc: picking from frame buffer (back buffer)
+Desc: picking from frame buffer. 
+## Usage 1: 
+Singleton of this class represent the back buffer.
+## Usage 2: 
+Inherit from this class and change Name property to represent arbitrary picking buffer. 
+See also `OverlayPicking.lua`
+
+## Introduction
 When there is picking query, it will render scene again (if out dated) with a special shader and read pixels from the back buffer. 
 We can query a single point or we can query a rectangle region in the current viewport and see if have hit anything. 
 Please note: in order for buffer picking to work, each pickable object/component should assign a different picking id in its draw method. 
@@ -11,10 +18,23 @@ In other words, picking and drawing are done using the same draw function.
 use the lib:
 ------------------------------------------------------------
 NPL.load("(gl)script/ide/System/Scene/BufferPicking.lua");
+-- Usage 1: picking from backbuffer
 local BufferPicking = commonlib.gettable("System.Scene.BufferPicking");
 local result = BufferPicking:Pick(nil, nil, 2, 2);
 echo(result);
 echo({System.Core.Color.DWORD_TO_RGBA(result[1] or 0)});
+
+-- Usage 2: custom pick buffer
+local MyBufferClass = commonlib.inherit(commonlib.gettable("System.Scene.BufferPicking"));
+MyBufferClass:Property("Name", "MyCustomBuffer"); 
+function MyBufferClass:paintEvent(painter)
+	self:SetColorAndName(painter, "#ff0000");
+	painter:DrawSceneObject(ParaScene.GetPlayer(), nOption)
+end
+
+local pick_buffer = MyBufferClass:new();
+-- for debugging purposes, we will show the picking buffer into the gui. 
+pick_buffer:DebugShow("_lt", 10, 10, 128, 128)
 ------------------------------------------------------------
 ]]
 
@@ -27,7 +47,54 @@ function BufferPicking:ctor()
 end
 
 function BufferPicking:CreatePickingBuffer_sys()
-	self.engine = ParaEngine.GetAttributeObject():GetChild("BufferPicking");
+	local name = self:GetName();
+	if(name == "BufferPicking" or name == "backbuffer") then
+		self.engine = ParaEngine.GetAttributeObject():GetChild("BufferPicking");
+	elseif(name == "OverlayPicking" or name == "overlay") then
+		self.engine = ParaEngine.GetAttributeObject():GetChild("OverlayPicking");
+	else
+		self.engine = ParaAsset.LoadPickingBuffer(name);
+
+		-- painting context
+		self.painterContext = System.Core.PainterContext:new():init(self);
+		self.rendertarget = self.engine:GetAttributeObject():GetChild("rendertarget"):QueryObject();
+		self.rendertarget:SetScript("On_Paint", function()
+			self:handleRender();
+		end)
+	end
+end
+
+
+-- private: handle system On_Paint message.
+function BufferPicking:handleRender()
+	local renderState = ParaScene.GetSceneState():GetField("RenderState", 0);
+	self.m_render_pass = renderState;
+	if(self.paintEvent) then
+		self:paintEvent(self.painterContext);
+	end
+	self.m_render_pass = nil;
+end
+
+-- virtual function: draw something here to be painted into the picking buffer. 
+function BufferPicking:paintEvent(painter)
+	
+end
+
+-- if we are currently rendering picking
+function BufferPicking:IsPickingPass()
+	return self.m_render_pass == ParaEngine.SceneStateRenderState.RenderState_Overlay_Picking;
+end
+
+
+-- set name of the picking buffer
+function BufferPicking:SetName(name)
+	if(self:GetName() ~= name) then
+		if(self.engine) then
+			self.engine = nil;
+			self.rendertarget = nil;
+			self:CreatePickingBuffer_sys();
+		end
+	end
 end
 
 -- pick by a point in the viewport. 
@@ -130,5 +197,36 @@ function BufferPicking:SetViewport(nViewportIndex)
 		self.engine:SetField("Viewport", nViewportIndex);
 	end
 end
+
+-- get the rendertarget ParaObject
+function BufferPicking:GetRenderTarget()
+	return self.rendertarget;
+end
+
+-- show the buffer on GUI for debugging purposes
+-- e.g. self:DebugShow("_lt", 10, 10, 128, 128)
+-- @param alignment: default to "_lt" left top.
+-- @param left, top, width, height:
+function BufferPicking:DebugShow(alignment, left, top, width, height)
+	if(self.rendertarget) then
+		alignment, left, top, width, height = alignment or "_lt", left or 10, top or 60, width or 128, height or 128;
+		if(not self.debug_ui) then
+			-- create a GUI object that displays the render target. 
+			local _parent = ParaUI.CreateUIObject("button", "paintDevice", alignment, left, top, width, height);
+			_parent.zorder=10;
+			_parent.tooltip = "click to make dirty and redraw";
+			_parent:SetScript("onclick", function()
+				-- click to redraw
+				renderTarget:SetField("Dirty", true);
+			end)
+			_parent:AttachToRoot();
+			self.debug_ui = _parent;
+		else
+			self.debug_ui:Reposition(alignment, left, top, width, height);
+		end
+		self.debug_ui:SetBGImage(self.rendertarget:GetPrimaryAsset());
+	end
+end
+	
 
 BufferPicking:InitSingleton();

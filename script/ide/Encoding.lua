@@ -8,8 +8,9 @@ Use Lib:
 -------------------------------------------------------
 NPL.load("(gl)script/ide/Encoding.lua");
 local Encoding = commonlib.gettable("commonlib.Encoding");
-commonlib.Encoding.Utf8ToDefault(text)
-commonlib.Encoding.DefaultToUtf8(text)
+assert(Encoding.Utf8ToDefault("a") == "a");
+assert(Encoding.DefaultToUtf8("a") == "a")
+assert(Encoding.Utf16ToUtf8(Encoding.Utf8ToUtf16("中文")) == "中文")
 
 print(commonlib.Encoding.SortCSVString("Cword,Aword,Bword"))
 -------------------------------------------------------
@@ -37,6 +38,14 @@ end
 
 function Encoding.DefaultToUtf8(text)
 	return ParaMisc.EncodingConvert("", "utf-8", text)
+end
+
+function Encoding.Utf8ToUtf16(text)
+	return ParaMisc.UTF8ToUTF16(text);
+end
+
+function Encoding.Utf16ToUtf8(text)
+	return ParaMisc.UTF16ToUTF8(text)
 end
 
 
