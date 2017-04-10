@@ -303,6 +303,16 @@ end
 -- 3d transform related. only useful in 3d mode such as rendering overlays.
 -----------------------------------
 
+-- whether we are using the 3d world transform, this is always true for overlay and 3d text.
+function painter:SetUseWorldMatrix(bEnable)
+	ParaPainter.SetField("UseWorldMatrix", bEnable == true);
+end
+
+-- whether we are using the 3d world transform, this is always true for overlay and 3d text.
+function painter:IsUseWorldMatrix()
+	return ParaPainter.GetField("UseWorldMatrix", false);
+end
+
 -- similar to glMatrixMode() in opengl. 
 -- @param nMode:  0 is world, 1 is view, 2 is projection. default to 0. 
 function painter:SetMatrixMode(nMode)

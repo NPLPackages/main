@@ -121,6 +121,7 @@ function ToolBase:InitSingleton()
 		-- disable new function. 
 		self.new = nil;
 	end
+	return self;
 end
 
 -- get event system. 

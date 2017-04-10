@@ -7,7 +7,7 @@ Desc: picking from frame buffer.
 Singleton of this class represent the back buffer.
 ## Usage 2: 
 Inherit from this class and change Name property to represent arbitrary picking buffer. 
-See also `OverlayPicking.lua`
+Inherited class must also call InitSingleton(). See also `OverlayPicking.lua`
 
 ## Introduction
 When there is picking query, it will render scene again (if out dated) with a special shader and read pixels from the back buffer. 
@@ -25,19 +25,23 @@ echo(result);
 echo({System.Core.Color.DWORD_TO_RGBA(result[1] or 0)});
 
 -- Usage 2: custom pick buffer
-local MyBufferClass = commonlib.inherit(commonlib.gettable("System.Scene.BufferPicking"));
-MyBufferClass:Property("Name", "MyCustomBuffer"); 
-function MyBufferClass:paintEvent(painter)
+local MyPickBuffer = commonlib.inherit(commonlib.gettable("System.Scene.BufferPicking"));
+MyPickBuffer:Property("Name", "MyCustomBuffer"); 
+function MyPickBuffer:paintEvent(painter)
 	self:SetColorAndName(painter, "#ff0000");
 	painter:DrawSceneObject(ParaScene.GetPlayer(), nOption)
 end
+MyPickBuffer:InitSingleton();
 
-local pick_buffer = MyBufferClass:new();
 -- for debugging purposes, we will show the picking buffer into the gui. 
-pick_buffer:DebugShow("_lt", 10, 10, 128, 128)
+MyPickBuffer:DebugShow("_lt", 10, 10, 128, 128)
+
+local result = MyPickBuffer:Pick(nil, nil, 2, 2);
 ------------------------------------------------------------
 ]]
-
+NPL.load("(gl)script/ide/math/vector.lua");
+local vector3d = commonlib.gettable("mathlib.vector3d");
+		
 local BufferPicking = commonlib.inherit(commonlib.gettable("System.Core.ToolBase"), commonlib.gettable("System.Scene.BufferPicking"));
 
 BufferPicking:Property("Name", "BufferPicking");
@@ -53,9 +57,10 @@ function BufferPicking:CreatePickingBuffer_sys()
 	elseif(name == "OverlayPicking" or name == "overlay") then
 		self.engine = ParaEngine.GetAttributeObject():GetChild("OverlayPicking");
 	else
-		self.engine = ParaAsset.LoadPickingBuffer(name);
+		self.engine = ParaAsset.LoadPickingBuffer(name):GetAttributeObject();
 
 		-- painting context
+		self.vRenderOrigin = vector3d:new(0,0,0);
 		self.painterContext = System.Core.PainterContext:new():init(self);
 		self.rendertarget = self.engine:GetAttributeObject():GetChild("rendertarget"):QueryObject();
 		self.rendertarget:SetScript("On_Paint", function()
@@ -65,9 +70,15 @@ function BufferPicking:CreatePickingBuffer_sys()
 end
 
 
+-- @return vector3 of render origin
+function BufferPicking:GetRenderOrigin()
+	return self.vRenderOrigin;
+end
+
 -- private: handle system On_Paint message.
 function BufferPicking:handleRender()
 	local renderState = ParaScene.GetSceneState():GetField("RenderState", 0);
+	self.vRenderOrigin = ParaCamera.GetAttributeObject():GetField("RenderOrigin", self.vRenderOrigin)
 	self.m_render_pass = renderState;
 	if(self.paintEvent) then
 		self:paintEvent(self.painterContext);
@@ -203,6 +214,27 @@ function BufferPicking:GetRenderTarget()
 	return self.rendertarget;
 end
 
+-- helper function that set color and picking color(name)
+-- @param color: color used for normal rendering 
+-- @param pickingColor: color used drawing picking pass. if nil, it is the same as the color. if false, it means object is not pickable (we will render it as black). 
+function BufferPicking:SetColorAndName(painter, color, pickingColor)
+	if(self:IsPickingPass()) then
+		if(pickingColor == false) then
+			pickingColor = 0;
+		else
+			if(type(pickingColor) == "number") then
+				-- add alpha channel.
+				if(pickingColor < 0xff000000) then
+					pickingColor = pickingColor + 0xff000000;
+				end
+			end
+		end
+		painter:SetBrush(pickingColor or color);
+	else
+		painter:SetBrush(color);
+	end
+end
+
 -- show the buffer on GUI for debugging purposes
 -- e.g. self:DebugShow("_lt", 10, 10, 128, 128)
 -- @param alignment: default to "_lt" left top.
@@ -217,7 +249,7 @@ function BufferPicking:DebugShow(alignment, left, top, width, height)
 			_parent.tooltip = "click to make dirty and redraw";
 			_parent:SetScript("onclick", function()
 				-- click to redraw
-				renderTarget:SetField("Dirty", true);
+				-- renderTarget:SetField("Dirty", true);
 			end)
 			_parent:AttachToRoot();
 			self.debug_ui = _parent;
