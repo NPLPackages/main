@@ -25,18 +25,32 @@ echo(result);
 echo({System.Core.Color.DWORD_TO_RGBA(result[1] or 0)});
 
 -- Usage 2: custom pick buffer
-local MyPickBuffer = commonlib.inherit(commonlib.gettable("System.Scene.BufferPicking"));
+local MyPickBuffer = commonlib.inherit(commonlib.gettable("System.Scene.BufferPicking"), commonlib.gettable("Tests.MyPickBuffer"));
 MyPickBuffer:Property("Name", "MyCustomBuffer"); 
+-- only called when Pick function is called 
 function MyPickBuffer:paintEvent(painter)
 	self:SetColorAndName(painter, "#ff0000");
-	painter:DrawSceneObject(ParaScene.GetPlayer(), nOption)
+	painter:PushMatrix();
+	local obj = ParaScene.GetPlayer();
+	local x, y, z = obj:GetPosition();
+	local vOrigin = self:GetRenderOrigin();
+	x, y, z = x - vOrigin[1], y - vOrigin[2], z - vOrigin[3];
+	painter:TranslateMatrix(x,y,z);
+	painter:DrawSceneObject(obj, 0)
+	painter:PopMatrix();
 end
 MyPickBuffer:InitSingleton();
 
 -- for debugging purposes, we will show the picking buffer into the gui. 
 MyPickBuffer:DebugShow("_lt", 10, 10, 128, 128)
-
-local result = MyPickBuffer:Pick(nil, nil, 2, 2);
+	
+-- test picking here
+commonlib.Timer:new({callbackFunc = function(timer)
+	-- always redraw (force paintEvent to be invoked)
+	MyPickBuffer:SetDirty(true);
+	-- pick at the current mouse position
+	echo(MyPickBuffer:Pick(nil, nil, 2, 2));
+end}):Change(0, 1000)
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/math/vector.lua");
@@ -51,13 +65,12 @@ function BufferPicking:ctor()
 end
 
 function BufferPicking:CreatePickingBuffer_sys()
-	local name = self:GetName();
-	if(name == "BufferPicking" or name == "backbuffer") then
+	if(self:IsBackBuffer()) then
 		self.engine = ParaEngine.GetAttributeObject():GetChild("BufferPicking");
-	elseif(name == "OverlayPicking" or name == "overlay") then
+	elseif(self:IsOverlay()) then
 		self.engine = ParaEngine.GetAttributeObject():GetChild("OverlayPicking");
 	else
-		self.engine = ParaAsset.LoadPickingBuffer(name):GetAttributeObject();
+		self.engine = ParaAsset.LoadPickingBuffer(self:GetName()):GetAttributeObject();
 
 		-- painting context
 		self.vRenderOrigin = vector3d:new(0,0,0);
@@ -69,7 +82,21 @@ function BufferPicking:CreatePickingBuffer_sys()
 	end
 end
 
+-- backbuffer is a special buffer, which is what actually on screen. 
+function BufferPicking:IsBackBuffer()
+	local name = self:GetName();
+	return (name == "BufferPicking" or name == "backbuffer");
+end
 
+-- overlay is a special buffer, which is an additional render pass for objects on top of 3d scene. 
+function BufferPicking:IsOverlay()
+	local name = self:GetName();
+	return (name == "OverlayPicking" or name == "overlay");
+end
+
+-- World position has double precision which is usually far away from the camera origin. 
+-- When rendering 3d objects, object's world position must substract this vector, 
+-- so that all objects are close to camera before we do any matrix4 transforms.
 -- @return vector3 of render origin
 function BufferPicking:GetRenderOrigin()
 	return self.vRenderOrigin;
@@ -87,6 +114,8 @@ function BufferPicking:handleRender()
 end
 
 -- virtual function: draw something here to be painted into the picking buffer. 
+-- only called when buffer is manually set to dirty with SetDirty() and Pick() function is called. 
+-- When rendering world objects in paintEvent, ensure that they are substracted by GetRenderOrigin() vector. 
 function BufferPicking:paintEvent(painter)
 	
 end
@@ -195,6 +224,21 @@ end
 
 function BufferPicking:SetResultDirty(bDirty)
 	self.engine:SetField("ResultDirty", bDirty == true);
+end
+
+-- if content is dirty
+function BufferPicking:IsDirty()
+	if(self.rendertarget) then
+		return self.rendertarget:GetField("Dirty", false);
+	end
+end
+
+-- if content is dirty, next pick event will repaint and buffer using paintEvent
+-- this is only valid when buffer name is not backbuffer or overlay
+function BufferPicking:SetDirty(bDirty)
+	if(self.rendertarget) then
+		return self.rendertarget:SetField("Dirty", bDirty == true);
+	end
 end
 
 -- in which viewport to pick. default to -1, which is the default one. 
