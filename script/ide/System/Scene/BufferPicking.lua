@@ -95,7 +95,7 @@ function BufferPicking:IsOverlay()
 end
 
 -- World position has double precision which is usually far away from the camera origin. 
--- When rendering 3d objects, object's world position must substract this vector, 
+-- When rendering 3d objects, object's world position must subtract this vector, 
 -- so that all objects are close to camera before we do any matrix4 transforms.
 -- @return vector3 of render origin
 function BufferPicking:GetRenderOrigin()
