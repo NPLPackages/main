@@ -36,11 +36,6 @@ function test_Windows:TestCreateWindow()
 	-- create the native window
 	local window = Window:new();
 
-	-- test UI element
-	local elem = UIElement:new():init(window);
-	elem:SetBackgroundColor("#0000ff");
-	elem:setGeometry(10,0,64,32);
-
 	-- test create rectangle
 	local rcRect = Rectangle:new():init(window);
 	rcRect:SetBackgroundColor("#ff0000");

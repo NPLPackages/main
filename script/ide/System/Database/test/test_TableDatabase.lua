@@ -626,3 +626,19 @@ function TestDelete()
 		assert(count == 2);
 	end)
 end
+
+function TestMultipleDB()
+	NPL.load("(gl)script/ide/System/Database/TableDatabase.lua");
+	local TableDatabase = commonlib.gettable("System.Database.TableDatabase");
+	-- this will start both db client and db server if not.
+	local db_cluster1 = TableDatabase:new():connect("temp/mydatabase/db_cluster1/", function() end);
+	local db_cluster2 = TableDatabase:new():connect("temp/mydatabase/db_cluster2/", function() end);
+	db_cluster1.User:makeEmpty({}, function(err, count) echo("deleted"..(count or 0)) end);
+	db_cluster2.User:makeEmpty({}, function(err, count) echo("deleted"..(count or 0)) end);
+	
+	db_cluster1.User:insertOne(nil, {name="db", email="db_cluster1@1",}, function(err, data)   	end)
+	db_cluster2.User:insertOne(nil, {name="db", email="db_cluster2@1",}, function(err, data)   	end)
+	
+	db_cluster1.User:find({name="db",}, function(err, rows) assert(rows[1].email == "db_cluster1@1") end);
+	db_cluster2.User:find({name="db",}, function(err, rows) assert(rows[1].email == "db_cluster2@1") end);
+end
