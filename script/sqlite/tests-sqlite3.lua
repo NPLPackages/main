@@ -447,3 +447,133 @@ end
 
 
 
+-------------------------------------
+--   Tests for Online Backup API   --
+-------------------------------------
+
+local db_bu = lunit.TestCase("Online Backup API")
+
+function db_bu.setup()
+  db_bu.db_src = assert( sqlite3.open_memory() )
+  assert_table( db_bu.db_src:exec("CREATE TABLE test (id, name text)") )
+  assert_table( db_bu.db_src:exec("INSERT INTO test VALUES (1, 'Hello World')") )
+  assert_table( db_bu.db_src:exec("INSERT INTO test VALUES (2, 'Hello Lua')") )
+  assert_table( db_bu.db_src:exec("INSERT INTO test VALUES (3, 'Hello SQLite')") )
+  db_bu.filename = "/tmp/__lua-sqlite3-20161102233049." .. os.time()
+  db_bu.db_tgt = assert_table( sqlite3.open(db_bu.filename) )
+end
+
+function db_bu.teardown()
+  assert( db_bu.db_src:close() )
+  assert( db_bu.db_tgt:close() )
+  os.remove(db_bu.filename)
+end
+
+function db_bu.test()
+
+  assert_function( sqlite3.backup_init )
+
+  local bu = assert_userdata( sqlite3.backup_init(db_bu.db_tgt.handle, 'main', db_bu.db_src.handle, 'main') )
+
+  assert_function ( bu.step )
+  assert_function ( bu.remaining )
+  assert_function ( bu.pagecount )
+  assert_function ( bu.finish )
+
+  if true then
+    bu = nil
+    collectgarbage()
+    collectgarbage()
+  else
+    bu:finish()
+  end
+
+  bu = assert_userdata( sqlite3.backup_init(db_bu.db_tgt.handle, 'main', db_bu.db_src.handle, 'main') )
+
+  assert( bu:step(-1) )
+  assert( bu:finish() )
+  bu = nil
+
+  local db = db_bu.db_tgt
+  for row in db:irows("SELECT id as val FROM test WHERE name='Hello World'") do
+    assert_equal (row[1], 1)
+  end
+  for row in db:irows("SELECT substr(name,7,3) as val FROM test WHERE id = 2") do
+    assert_equal (row[1],'Lua')
+    assert_equal (#row[1], 3)
+  end
+  for row in db:irows("SELECT name as val FROM test WHERE id = 3") do
+    assert_equal (row[1], 'Hello SQLite')
+    assert_equal (#row[1], 12)
+  end
+
+end
+
+--[[
+local db_bu_gc = lunit.TestCase("Online Backup API GC")
+
+function db_bu_gc.setup()
+  db_bu_gc.db_src = assert( sqlite3.open_memory() )
+  assert_table(db_bu_gc.db_src:exec("CREATE TABLE test (id, name text)") )
+  assert_table(db_bu_gc.db_src:exec("INSERT INTO test VALUES (1, 'Hello World')") )
+  assert_table(db_bu_gc.db_src:exec("INSERT INTO test VALUES (2, 'Hello Lua')") )
+  assert_table(db_bu_gc.db_src:exec("INSERT INTO test VALUES (3, 'Hello SQLite')") )
+  db_bu_gc.filename = "/tmp/__lua-sqlite3-20161103120909." .. os.time()
+  db_bu_gc.db_tgt = assert_table( sqlite3.open(db_bu_gc.filename) )
+end
+
+function db_bu_gc.teardown()
+  os.remove(db_bu_gc.filename)
+end
+
+function db_bu_gc.test()
+
+  local bu = assert_userdata( sqlite3.backup_init(db_bu_gc.db_tgt.handle, 'main', db_bu_gc.db_src.handle, 'main') )
+
+  db_bu_gc.db_src = nil
+  db_bu_gc.db_tgt = nil
+
+  collectgarbage()
+  collectgarbage() -- should not close dbs even though db_bu_gc refs nil'd since they are referenced by bu
+
+  assert(bu:step(-1) )
+  assert(bu:finish() )
+  bu = nil
+
+  collectgarbage()
+  collectgarbage() -- should now close dbs
+
+  local db = assert_table( sqlite3.open(db_bu_gc.filename) )
+
+  for row in db:irows("SELECT id as val FROM test WHERE name='Hello World'") do
+    assert_equal (row[1], 1)
+  end
+  for row in db:irows("SELECT substr(name,7,3) as val FROM test WHERE id = 2") do
+    assert_equal (row[1],'Lua')
+    assert_equal (#row[1], 3)
+  end
+  for row in db:irows("SELECT name as val FROM test WHERE id = 3") do
+    assert_equal (row[1], 'Hello SQLite')
+    assert_equal (#row[1], 12)
+  end
+  assert( db:close() )
+
+end
+]]--
+
+
+local db_bu_null = lunit.TestCase("Online Backup API NULL")
+
+function db_bu_null.setup()
+  db_bu_null.db = assert( sqlite3.open_memory() )
+end
+
+function db_bu_null.teardown()
+  assert( db_bu_null.db:close() )
+end
+
+function db_bu_null.test()
+
+  local bu = assert_nil( sqlite3.backup_init(db_bu_null.db.handle, 'main', db_bu_null.db.handle, 'main') )
+
+end
