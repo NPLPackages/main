@@ -193,7 +193,7 @@ end
 
 
 function sqlite3.backup_init(destdb, destdbname, srcdb, srcdbname)
-  return api.backup_init(destdb, destdbname, srcdb, srcdbname)
+  return api.backup_init(destdb.handle, destdbname, srcdb.handle, srcdbname)
 end
 
 --------------------
