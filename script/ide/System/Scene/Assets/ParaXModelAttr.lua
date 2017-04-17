@@ -20,6 +20,7 @@ local attr = ParaXModelAttr:new():initFromPlayer(ParaScene.GetPlayer())
 echo(attr:GetObjectNum());
 echo(attr:GetRenderPasses());
 echo(attr:GetGeosets());
+echo(attr:GetAnimations());
 
 for i=1, attr:GetObjectNum().nTextures do
 	echo({texture = attr:GetTextureName(i-1)});
@@ -148,6 +149,25 @@ function ParaXModelAttr.StaticInit()
 		uint16_t d5;		// 
 		uint16_t d6;		// root bone
 		struct Vector3 v;
+	};
+
+	struct ModelAnimation {
+		uint32_t animID;
+		uint32_t timeStart;
+		uint32_t timeEnd;
+
+		float moveSpeed;
+
+		uint32_t loopType; /// 1 for non-looping
+		uint32_t flags;
+		uint32_t d1;
+		uint32_t d2;
+		uint32_t playSpeed;  // note: this can't be play speed because it's 0 for some models
+
+		struct Vector3 boxA, boxB;
+		float rad;
+
+		int16_t s[2];
 	};
 	]]);
 end
@@ -278,7 +298,50 @@ function ParaXModelAttr:GetObjectNum()
 	end
 end
 
+-- it will cache the last result, this is as fast as C API.
+-- e.g. 
+-- local result = attr:Animations();
+-- echo(result[0].pos.y)
+-- @return vertices* cdata object
+function ParaXModelAttr:GetAnimationsCData()
+	if(self.m_animsCData) then
+		return self.m_animsCData;
+	end
+	if(self.attr) then
+		local animations = ffi.new('struct ModelAnimation *[1]');
+		if(self.attr:GetFieldCData("Animations", animations)) then
+			self.m_animsCData = animations[0];
+			return self.m_animsCData;
+		end
+	end
+end
 
+-- it will cache result
+function ParaXModelAttr:GetAnimations()
+	if(self.m_anims) then
+		return self.m_anims;
+	end
+	if(self.attr) then
+		local animations = self:GetAnimationsCData();
+		if(animations) then
+			local animations_ = {};
+			self.m_anims = animations_;
+			local nCount = self:GetObjectNum().nAnimations;
+			for i=1, nCount do
+				local ii = i-1;
+				animations_[i] = {
+					animID = animations[ii].animID,
+					timeStart = animations[ii].timeStart,
+					timeEnd = animations[ii].timeEnd,
+					moveSpeed = animations[ii].moveSpeed,
+					loopType = animations[ii].loopType,
+					flags = animations[ii].flags,
+				};
+			end
+			return self.m_anims;
+		end
+	end
+end
 
 -- it will cache the last result, this is as fast as C API.
 -- e.g. 
