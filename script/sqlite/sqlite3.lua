@@ -192,6 +192,9 @@ function sqlite3.open_memory()
 end
 
 
+function sqlite3.backup_init(destdb, destdbname, srcdb, srcdbname)
+  return api.backup_init(destdb, destdbname, srcdb, srcdbname)
+end
 
 --------------------
 -- Database Class --
@@ -249,7 +252,6 @@ function db_class.total_changes(db)
   check_db(db)
   return api.total_changes(db.handle)
 end
-
 
 -- @param bNotWaitOnBusy: if true, it is the same as original. if false and sql is busy, it will retry for 5 seconds before reporting failure.
 function db_class.exec(db, sql, bNotWaitOnBusy)
