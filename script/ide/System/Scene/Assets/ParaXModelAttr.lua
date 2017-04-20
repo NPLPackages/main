@@ -189,7 +189,7 @@ end
 -- @param filename: *.x or *.fbx file
 -- @param callbackFunc: because all asset file are async loaded. callbackFunc(self) is called when model is fully loaded.
 function ParaXModelAttr:initFromAssetFile(filename, callbackFunc)
-	local asset = ParaAsset.LoadParaX("", filename);
+	local asset = ParaAsset.LoadParaX(filename, filename);
 	asset:LoadAsset();
 	if(asset:IsLoaded()) then
 		self:init(asset:GetAttributeObject():GetChildAt(0));

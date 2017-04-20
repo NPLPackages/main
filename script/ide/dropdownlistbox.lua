@@ -177,7 +177,7 @@ function dropdownlistbox:SetText(text)
 	local _this=ParaUI.GetUIObject(self.editbox_id);
 	if(_this:IsValid())then 
 		if(not self.FuncTextFormat) then
-			_this.text = text;
+			_this.text = tostring(text or "");
 		else
 			_this.text = self.FuncTextFormat(text);
 		end	
