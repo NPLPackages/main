@@ -20,6 +20,8 @@ loader:InstallFromZipBinary("test", "some data here")
 loader = loader:init(pluginManager, "Mod/");
 local list = loader:RebuildModuleList()
 loader:LoadAllPlugins();
+-- loading system module, the mod source must already be added to search path. 
+loader:AddSystemModule("BMaxExporter")
 -------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/System/Core/ToolBase.lua");
@@ -41,10 +43,38 @@ PluginLoader:Signal("contentChanged", function(type) end)
 
 local allInstances = {};
 
+------------------------
+-- plugin item
+------------------------
+local ItemClass = commonlib.inherit();
+
+function ItemClass:ctor()
+	self.text = self.text or false;
+	self.name = self.name or false;
+	self.displayName = self.displayName or false;
+	self.checked = self.checked or false;
+	self.isZip = self.isZip or false;
+	self.isSystem = self.isSystem or false;
+	self.homepage = self.homepage or false;
+	self.version = self.version or false;
+	self.auhtor = self.auhtor or false;
+end
+
+function ItemClass:init(name)
+	self.name = self.name or name;
+	self.text = self.text or name;
+	return self;
+end
+
+------------------------
+-- plugin item
+------------------------
 function PluginLoader:ctor()
-	-- array list of existing plugin (there may be fewer items than in modTable)
-	-- in format {text = modname, name = modname, checked = checked, isZip=isZip}
+	-- array list of existing ItemClass plugin (there may be fewer items than in modTable)
+	-- in format {text = modname, name = modname, checked = checked, isZip=isZip, isSystem = boolean, homepage=false,}
 	self.modList = {};
+	-- list of system modules of type ItemClass. 
+	self.sysModList = {};
 	-- mapping from modname to PluginConfig. Please note that a plugin may be removed but its config is never deleted. 
 	self.modTable = {};
 	-- the world where plugins are used in. if "nil"  or "global", the plugins are used in global range;
@@ -207,6 +237,22 @@ function PluginLoader:SetPluginInfo(name, params)
 	end
 end
 
+-- public: system modules are always added programmatically, and can not be removed.
+-- we will assume that the mod is already available on the file system. 
+-- @param modname: 
+-- @param params: nil or parameter table {version, author, ...}
+function PluginLoader:AddSystemModule(modname, params)
+	for _, mod in ipairs(self.sysModList) do
+		if(mod.name == modname) then
+			return;
+		end
+	end
+	local item = ItemClass:new(params):init(modname);
+	item.isSystem = true;
+	item.checked = true;
+	self.sysModList[#self.sysModList+1] = item;
+end
+
 -- private:
 function PluginLoader:AddModuleToList(modname, modList)
 	local checked = false;
@@ -215,7 +261,10 @@ function PluginLoader:AddModuleToList(modname, modList)
 		checked = pluginConfig:IsEnabled(self:GetWorldFilterName());
 	end
 	local isZip = modname:match("%.(zip)$") == "zip";
-	local item = {text = modname, name = modname, checked = checked==true, isZip=isZip};
+	
+	local item = ItemClass:new():init(modname);
+	item.checked = checked==true;
+	item.isZip =  isZip;
 	item.homepage = pluginConfig and pluginConfig:GetAttribute("homepage") or false;
 	item.author = pluginConfig and pluginConfig:GetAttribute("author") or false;
 	item.version = pluginConfig and pluginConfig:GetAttribute("version") or false;
@@ -238,6 +287,11 @@ function PluginLoader:RebuildModuleList(worldFilterName)
 	self:TryLoadModTableFromFile();
 	self.curWorld = worldFilterName;
 	self.modList = self:SearchAllModules();
+
+	for _, mod in ipairs(self.sysModList) do
+		self.modList[#self.modList + 1] = mod;
+	end
+
 	return self.modList;
 end
 
