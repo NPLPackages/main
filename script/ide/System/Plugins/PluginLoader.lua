@@ -16,6 +16,7 @@ local loader = PluginLoader:new();
 loader:InstallFromUrl("https://github.com/tatfook/NPLCAD/archive/master.zip", function(bSucceed, msg) echo(msg) end);
 loader:InstallFromUrl("https://github.com/tatfook/NPLCAD/releases/download/0.4.1/NPLCAD.zip", function(bSucceed, msg) echo(msg) end);
 loader:InstallFromZipBinary("test", "some data here")
+loader:InstallFromZipFile("temp/abc.zip");
 
 loader = loader:init(pluginManager, "Mod/");
 local list = loader:RebuildModuleList()
@@ -66,6 +67,10 @@ function ItemClass:init(name)
 	return self;
 end
 
+function ItemClass:IsSystemMod()
+	return self.isSystem;
+end
+
 ------------------------
 -- plugin item
 ------------------------
@@ -85,6 +90,18 @@ function PluginLoader:ctor()
 	self.downloadQueue = {
 		packages=commonlib.Array:new(),
 	};
+end
+
+-- @param worldname: if nil, it is global 
+function PluginLoader:GetActiveModCount(worldname)
+	self:TryLoadModTableFromFile();
+	local nCount = 0;
+	for modname, pluginInfo in pairs(self.modTable) do
+		if(pluginInfo:IsEnabled(worldname)) then
+			nCount = nCount + 1;
+		end
+	end
+	return nCount + #(self.sysModList);
 end
 
 -- @param pluginFolder: if nil, default to "Mod/"
@@ -288,6 +305,7 @@ function PluginLoader:RebuildModuleList(worldFilterName)
 	self.curWorld = worldFilterName;
 	self.modList = self:SearchAllModules();
 
+	-- append system module to the end
 	for _, mod in ipairs(self.sysModList) do
 		self.modList[#self.modList + 1] = mod;
 	end
@@ -406,9 +424,14 @@ function PluginLoader:DeletePlugin(modname)
 	if(self:UnloadPluginFile(modname)) then
 		local filename = self:GetPluginFolder()..modname;
 		ParaIO.DeleteFile(filename);
-		self:RebuildModuleList();
-		self:contentChanged();
+		self:Refresh();
 	end
+end
+
+-- in case disk file changed, call this function. 
+function PluginLoader:Refresh()
+	self:RebuildModuleList();
+	self:contentChanged();
 end
 
 -- return true if loaded
@@ -495,6 +518,14 @@ function PluginLoader:LoadAllPlugins(bForceReload)
 			end
 		end
 	end
+	-- load system mod
+	for _, mod in ipairs(self.sysModList) do
+		if(skip_modname ~= mod.name) then
+			if(not self:LoadPlugin(mod.name)) then
+				LOG.std(nil, "warn", "PluginLoader", "system plugin %s not loaded", mod.name);
+			end
+		end
+	end
 
 	if(failedMods) then
 		for _, modname in ipairs(failedMods) do
@@ -553,6 +584,13 @@ function PluginLoader:InstallFromZipBinary(name, data)
 		file:write(data, #data);
 		file:close();
 	end
+end
+
+-- @param fromDiskPath: file path of the zip archive
+function PluginLoader:InstallFromZipFile(fromDiskPath)
+	local dest = self:GetPluginFolder()..fromDiskPath:match("[^/\\]+$");
+	ParaIO.CopyFile(fromDiskPath, dest, true);
+	self:Refresh();
 end
 
 -- private function:
