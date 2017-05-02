@@ -1,0 +1,17 @@
+--[[
+Author: Li,Xizhi
+Date: 2017-3-22
+Desc: example of NPL.load folder with package folder configuration file
+-----------------------------------------------
+-- test using `npl loadpackage="npl_mod/sample_mod/" `
+local fileA = NPL.load("npl_mod/sample_mod/");
+echo(fileA:print())
+-----------------------------------------------
+]]
+{
+	-- do not add search path when loading the containing folder via NPL.load. default to true.
+	searchpath = false,
+	-- bootstrapper = "",
+	-- main script
+	main = "fileA.lua",
+}
