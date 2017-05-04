@@ -7,10 +7,13 @@ Desc:
 - ajax/console?action=runcode&text=poststring&src=filename
 
 Print all url params
-- ajax/?action=getparams 
+- ajax/console?action=getparams 
 
 -- print request
 - ajax/console?action=printrequest
+
+-- get process id
+- ajax/console?action=getpid  
 ]]
 NPL.load("(gl)script/ide/System/Compiler/nplc.lua");
 if(not is_admin()) then
@@ -83,6 +86,7 @@ local function RunWithResult(output)
 end
 
 if(is_ajax()) then
+	-- run code
 	add_action('wp_ajax_runcode', function()
 		if(request:get("btnRunPage")) then
 			include_pagecode(code);
@@ -92,8 +96,16 @@ if(is_ajax()) then
 			wp_send_json(output);
 		end
     end)
+
+	-- get request params
 	add_action('wp_ajax_getparams', function()
 		wp_send_json(request:getparams());
+    end)
+
+	-- get process id
+	add_action('wp_ajax_getpid', function()
+		NPL.load("(gl)script/ide/System/os/os.lua");
+		wp_send_json({pid = System.os.GetCurrentProcessId()});
     end)
 
 	-- print raw http request to log. url: "ajax/console?action=printrequest"
