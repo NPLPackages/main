@@ -68,10 +68,13 @@ end
 -- only return the sub folders of the current folder
 -- @param output: table of output. if nil, an empty one is created and returned. each item is {filename,filesize,writedate, createdate, fileattr, accessdate}
 -- @param rootfolder: the folder which will be searched. like "model", "worlds/MyWorlds/"
--- @param nMaxFileLevels: max file levels. 0 shows files in the current directory. it defaults to 0. This must be 0 when zipfile is not nil. However, one can use regular expressions to search deep in to sub folders in one query. 
+-- @param nMaxFileLevels: max file levels. 0 shows files in the current directory. it defaults to 0. 
+-- This must be 0 when zipfile is not nil. However, one can use regular expressions (like ":.") to search deep in to sub folders in one query. 
 -- @param nMaxFilesNum: one can limit the total number of files in the search result. Default value is 50. the search will stop at this value even there are more matching files.
--- @param filter: a function({filename, filesize, writedate}) return true or false end.  it can also be a string, like "*.", or a regular expression that begins with ":" if zipfile is "*.zip"
--- @param zipfile: nil or "*.zip" or "*.*". if nil only disk files are searched. if "*.zip", all zip files are searched. 
+-- @param filter: a function({filename, filesize, writedate}) return true or false end.  
+--  it can also be a wildcard string, like "*.", "*", "world/*.abc", "*.*", 
+--  or a regular expression that begins with ":", like ":." if zipfile is "*.zip"
+-- @param zipfile: nil or "*.zip" or "*.*" or "[filepath].zip". if nil only disk files are searched. if "*.zip", all zip files are searched. It can also be a given zip file name. 
 -- @return a table array containing relative to rootfolder file name.
 function Files.Find(output, rootfolder,nMaxFileLevels, nMaxFilesNum, filter, zipfile)
 	if(rootfolder == nil) then return; end
@@ -135,7 +138,7 @@ Users can override the default behaviors of the UI controls. the Default behavio
 @param nMaxNumFiles: max number of files in file listbox. e.g. 150
 @param listFile: True to include file. This can be nil. 
 @param listDir: True to include directory. This can be nil. 
-@param zipfile: nil or "*.zip" or "*.*". if nil only disk files are searched. if "*.zip", all zip files are searched. "*.*" search in disk and then zip
+@param zipfile: nil or "*.zip" or "*.*" or "[filepath].zip". if nil only disk files are searched. if "*.zip", all zip files are searched. "*.*" search in disk and then zip
 ]]
 function Files.SearchFiles(output, sInitDir, sFilePattern, nMaxFileLevels, nMaxNumFiles, listFile, listDir, zipfile)
 	if(type(sFilePattern) == "table")then

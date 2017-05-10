@@ -358,3 +358,35 @@ function test_reading_image_file()
 		file:close();
 	end
 end
+
+function test_search_zipfile()
+	local zipPath = "temp/test.zip";
+	local zipParentDir = zipPath:gsub("[^/\\]+$", "");
+
+	-- open with relative file path
+	if(ParaAsset.OpenArchive(zipPath, true)) then
+		-- search just in a given zip archive file
+		local filesOut = {};
+		-- ":.", any regular expression after : is supported. `.` match to all strings. 
+		commonlib.Files.Find(filesOut, "", 0, 10000, ":.", zipPath);
+
+		-- print all files in zip file
+		for i = 1,#filesOut do
+			local item = filesOut[i];
+			echo(item.filename .. " size: "..item.filesize);
+			if(item.filesize > 0) then
+				local file = ParaIO.open(zipParentDir..item.filename, "r")
+				if(file:IsValid()) then
+					-- get binary data
+					local binData = file:GetText(0, -1);
+					-- dump the first few characters in the file
+					echo(binData:sub(1, 10));
+					file:close();
+				end
+			else
+				-- this is a folder
+			end
+		end
+		ParaAsset.CloseArchive(zipPath);
+	end
+end
