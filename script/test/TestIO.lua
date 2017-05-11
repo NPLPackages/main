@@ -361,10 +361,14 @@ end
 
 function test_search_zipfile()
 	local zipPath = "temp/test.zip";
-	local zipParentDir = zipPath:gsub("[^/\\]+$", "");
 
 	-- open with relative file path
 	if(ParaAsset.OpenArchive(zipPath, true)) then
+		local zip_archive = ParaEngine.GetAttributeObject():GetChild("AssetManager"):GetChild("CFileManager"):GetChild(zipPath);
+		-- 	zipParentDir is usually the parent directory "temp/" of zip file. 
+		local zipParentDir = zip_archive:GetField("RootDirectory", "");
+		echo(zipParentDir);
+
 		-- search just in a given zip archive file
 		local filesOut = {};
 		-- ":.", any regular expression after : is supported. `.` match to all strings. 
