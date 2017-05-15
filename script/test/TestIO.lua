@@ -248,6 +248,54 @@ function test_IO_BinaryFile()
 	end
 end
 
+-- test IO write/read binary file in "rw" mode
+function test_IO_BinaryFileReadWrite()
+	
+	-- "rw" mode will not destroy the content of existing file. 
+	local file = ParaIO.open("temp/binaryfile.bin", "rw");
+	if(file:IsValid()) then	
+		local data = "binary\0\0\0\0file";
+		file:WriteString(data, #data);
+		-- write 32 bits int
+		file:WriteUInt(0xffffffff);
+		file:WriteInt(-1);
+		-- write float
+		file:WriteFloat(-3.14);
+		-- write double (precision is limited by lua double)
+		file:WriteDouble(-3.1415926535897926);
+		-- write 16bits word
+		file:WriteWord(0xff00);
+		-- write 16bits short integer
+		file:WriteShort(-1);
+		file:WriteBytes(3, {255, 0, 255});
+		file:SetEndOfFile();
+
+		-----------------------------------------
+		-- testing by reading file content back
+		-----------------------------------------
+		file:seek(0);
+		-- test reading binary string without increasing the file cursor
+		assert(file:GetText(0, #data) == data);
+		file:seekRelative(#data);
+		assert(file:getpos() == #data);
+		file:seek(0);
+		-- test reading binary string
+		assert(file:ReadString(#data) == data);
+		assert(file:ReadUInt() == 0xffffffff);
+		assert(file:ReadInt() == -1);
+		assert(math.abs(file:ReadFloat() - (-3.14)) < 0.000001);
+		assert(file:ReadDouble() == -3.1415926535897926);
+		assert(file:ReadWord() == 0xff00);
+		assert(file:ReadShort() == -1);
+		local o = {};
+		file:ReadBytes(3, o);
+		assert(o[1] == 255 and o[2] == 0 and o[3] == 255);
+		file:seek(0);
+		assert(file:ReadString(8) == "binary\0\0");
+		file:close();
+	end
+end
+
 -- test file system watcher
 function test_io_FileSystemWatcher()
 	-- we will modify file changes under temp and model directory. 
