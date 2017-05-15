@@ -52,6 +52,9 @@ local Page = commonlib.inherit(commonlib.gettable("System.Core.ToolBase"), commo
 	OnClose = nil,
 	-- whether the page will paint on to its own render target. 
 	SelfPaint = nil,
+	-- this is a user-defined call back function (filelist) end. it is called whenever user drop files on this page.
+	-- note return true to tell dispatcher we're interested in this message, otherwise return false.
+	OnDropFiles = nil,
 }));
 Page:Property("Name", "Page");
 Page:Signal("created");
