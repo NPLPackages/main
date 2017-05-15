@@ -1372,7 +1372,6 @@ end
 -- WindowFrame.ZOrderFrame is a table that sorted on every show, hide and activate calls.
 --		the table is a zorder index(from 1) and window frame ui object id pair
 function WindowFrame.OnActivateWindowFrame()
-	
 	local nCount = table.getn(WindowFrame.ZOrderFrame);
 	local i, top_index = 1;
 	for i = 1, nCount do
@@ -1381,6 +1380,7 @@ function WindowFrame.OnActivateWindowFrame()
 			break;
 		end
 	end
+	
 	if(top_index == nil) then
 		log("window frame object not found in WindowFrame.ZOrderFrame\n")
 		return;
@@ -1411,6 +1411,32 @@ function WindowFrame.OnActivateWindowFrame()
 		WindowFrame.ZOrderFrame[i] = WindowFrame.ZOrderFrame[i+1];
 	end
 	WindowFrame.ZOrderFrame[nCount] = id;
+end
+
+-- pick top window frame 
+-- @return the window struct and window name is returned
+function WindowFrame.GetTopFrame()
+	local nCount = #WindowFrame.ZOrderFrame;
+	local _top_win = ParaUI.GetUIObject(WindowFrame.ZOrderFrame[nCount]);
+	if _top_win and _top_win:IsValid() then
+		--return _top_win;
+			
+		local _wnd;
+		local _wndName
+		for appName, map in pairs(WindowFrame.WndSet) do
+			for wndName, wnd in pairs(map) do
+				if wnd:GetWindowUIObject().name == _top_win.name then
+					_wnd = wnd;
+					_wndName = wndName;
+					break;
+				end
+			end
+		end
+		
+		return _wnd, _wndName;
+	else
+		return nil;
+	end
 end
 
 -- pick the top object in window frame zorder list, and check if this window frame is top

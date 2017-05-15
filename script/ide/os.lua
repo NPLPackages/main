@@ -93,6 +93,7 @@ CommonCtrl.os = {
 		--		function invokes
 		--		automatic BringToFront show call
 		WM_ACTIVATE = AutoEnum(), 
+		WM_DROPFILES = AutoEnum(),
 		
 		---------------------
 		-- add more system messages here
@@ -390,6 +391,21 @@ function CommonCtrl.os.app:FindWindow(wndName)
 	return self.windows[wndName or self:GetMainAppWndName()];
 end
 
+-- find the active window
+-- @return: the active window or nil is returned.
+function CommonCtrl.os.app:GetActiveWindow()
+	if(not CommonCtrl.WindowFrame) then
+		NPL.load("(gl)script/ide/WindowFrame.lua");
+	end
+	
+	local wnd, wndName = CommonCtrl.WindowFrame.GetTopFrame();
+	if wnd and wndName then
+		return self.windows[wndName];
+	end
+	
+	return nil;
+end
+
 -- register a window. 
 -- @param wndName: the window name to register. 
 -- @param parentWndName: the parent window name of wndName. it can be nil, which means no parent
@@ -456,7 +472,7 @@ function CommonCtrl.os.app:ProcessMessage(msg)
 		local window = self:FindWindow(msg.wndName);
 		if(window~=nil)	 then
 			if(window.msg_handler~=nil) then
-				window:msg_handler(msg);
+				return window:msg_handler(msg);
 			end
 		end
 	end
