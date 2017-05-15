@@ -71,9 +71,9 @@ npl_page_env.__index = npl_page_env;
 -- SECURITY: expose global _G to server env, this can be useful and dangourous.
 setmetatable(npl_page_env, {__index = function(tab, name)
 		if(name == "__LINE__") then
-			local info = debug.getinfo(2, "S")
+			local info = debug.getinfo(2, "l")
 			if(info) then
-				return info.lastlinedefined or info.linedefined;
+				return info.currentline;
 			end
 		end
 		return _G[name];
