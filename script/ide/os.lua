@@ -455,8 +455,9 @@ end
 -- process a single message
 function CommonCtrl.os.app:ProcessMessage(msg)
 	-- call the hook 
+	local bInterested = false;
 	if(hook_class.Invoke(HookType.WH_CALLWNDPROC, 0, self.name, msg) == nil) then
-		return;
+		return bInterested;
 	end
 	
 	if(msg.wndName == "*") then
@@ -464,7 +465,7 @@ function CommonCtrl.os.app:ProcessMessage(msg)
 		for _, window in pairs(self.windows) do
 			if(window~=nil)	 then
 				if(window.msg_handler~=nil) then
-					window:msg_handler(msg);
+					bInterested = bInterested or window:msg_handler(msg);
 				end
 			end
 		end
@@ -472,13 +473,15 @@ function CommonCtrl.os.app:ProcessMessage(msg)
 		local window = self:FindWindow(msg.wndName);
 		if(window~=nil)	 then
 			if(window.msg_handler~=nil) then
-				return window:msg_handler(msg);
+				bInterested = window:msg_handler(msg);
 			end
 		end
 	end
 	
 	-- call the hook 
 	hook_class.Invoke(HookType.WH_CALLWNDPROCRET, 0, self.name, msg);
+	
+	return bInterested;
 end
 
 -------------------------------------------------------------
