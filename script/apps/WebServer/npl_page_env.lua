@@ -8,6 +8,7 @@ Following objects and functions can be used inside page script:
 	response:   current response object: send headers or set cookies, etc.
 	echo(text):   output html
 	__FILE__: current filename
+	__LINE__: get line number
 	page: the current page (parser) object
 	_GLOBAL: the _G itself
 
@@ -68,9 +69,15 @@ local tostring = tostring;
 npl_page_env.__index = npl_page_env;
 
 -- SECURITY: expose global _G to server env, this can be useful and dangourous.
-setmetatable(npl_page_env, {__index = _G});
-
-
+setmetatable(npl_page_env, {__index = function(tab, name)
+		if(name == "__LINE__") then
+			local info = debug.getinfo(2, "l")
+			if(info) then
+				return info.currentline;
+			end
+		end
+		return _G[name];
+	end});
 
 -- expose: request, response, echo and print to npl script. 
 function npl_page_env:new(request, response)
@@ -132,6 +139,7 @@ function env_imp:nplinfo()
 	env_imp.echo(self, commonlib.serialize(self.request.headers, true):gsub("\n", "<br/>"));
 	env_imp.echo(self, "</p>");
 end
+
 
 -- similar to phpinfo()
 -- output everything about the environment and the request including all request headers.

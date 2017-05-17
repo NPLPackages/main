@@ -354,6 +354,7 @@ end
 
 -- start npl web server in the given folder. 
 -- @param root_dir: root directory or the path to the server configuration file. 
+-- please note if `webserver.config.xml.secret` exists, it will be used instead of `webserver.config.xml`
 -- @param ip: nil to use config file setting in the directory. nil or "0.0.0.0" to listen to all ip. "" or "localhost" or "127.0.0.1" to listen to loopback.
 -- @param port: nil to use config file setting. 
 -- @param root_dir: document root directory. default to "script/apps/WebServer/test"
@@ -375,7 +376,11 @@ function WebServer:Start(root_dir, ip, port)
 		config_file = root_dir.."/webserver.config.xml";
 	end
 
-	if(not ParaIO.DoesFileExist(config_file, true)) then
+	local secret_config_file = config_file..".secret";
+	if(ParaIO.DoesFileExist(secret_config_file, true)) then
+		-- if `webserver.config.xml.secret` exists, it will be used instead of `webserver.config.xml`
+		config_file = secret_config_file;
+	elseif(not ParaIO.DoesFileExist(config_file, true)) then
 		LOG.std(nil, "info", "WebServer", "no config file found. You can create one at %s", config_file);
 		config_file = "script/apps/WebServer/default.webserver.config.xml";
 	end
