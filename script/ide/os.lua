@@ -472,7 +472,7 @@ function CommonCtrl.os.app:ProcessMessage(msg)
 		local window = self:FindWindow(msg.wndName);
 		if(window~=nil)	 then
 			if(window.msg_handler~=nil) then
-				return window:msg_handler(msg);
+				window:msg_handler(msg);
 			end
 		end
 	end
