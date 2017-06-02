@@ -567,3 +567,12 @@ function ParaXModelAttr:DrawStaticAsText()
 		DrawPass_(p);
 	end
 end
+
+-- save ParaXModel to x file. 
+function ParaXModelAttr:SaveToDisk(filename)
+	if(self.attr) then
+		if(self.attr.SetField) then
+			self.attr:SetField("SaveToDisk",filename);
+		end
+	end
+end 
