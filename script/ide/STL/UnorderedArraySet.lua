@@ -138,6 +138,12 @@ function UnorderedArraySet:remove(index)
 	return self:removeByValue(self[index]);
 end
 
+-- get first element of nil
 function UnorderedArraySet:first()
 	return self[1];
+end
+
+-- get last element of nil
+function UnorderedArraySet:last()
+	return self[#self];
 end
