@@ -208,11 +208,11 @@ function TableDatabase:EnableSyncMode(bEnabled)
 end
 
 -- create or get a collection on the client
-function TableDatabase:collection(name)
+function TableDatabase:collection(name, provider)
 	if(name) then
 		local collection = rawget(self, name);
 		if(not collection) then
-			collection = Collection:new_collection():init(name, self);
+			collection = Collection:new_collection():init(name, self, provider);
 			rawset(self, name, collection);
 			self.collections[#(self.collections)+1] = collection;
 		end
@@ -244,10 +244,63 @@ function TableDatabase:ToData()
 	-- should always return nil;
 end
 
+local config_filename = "/tabledb.config.xml";
 -- automatically called from IO thread
 function TableDatabase:open(rootFolder)
 	self.rootFolder = rootFolder;
+
 	ParaIO.CreateDirectory(rootFolder);
+
+	local config = ParaIO.open(rootFolder..config_filename, "r");
+	if config:IsValid() then
+		local str = config:GetText(0, -1);
+		local xml = ParaXML.LuaXML_ParseString(str);
+
+		NPL.load("(gl)script/ide/System/Compiler/lib/util.lua");
+		local util = commonlib.gettable("System.Compiler.lib.util")
+		print(util.table_tostring(xml));
+
+		NPL.load("(gl)script/ide/System/Database/StorageProvider.lua");
+		local StorageProvider = commonlib.gettable("System.Database.StorageProvider");
+		if xml[1] and xml[1].name == "tabledb" then
+			for i,item in ipairs(xml[1]) do
+				-- providers should always comes first
+				if item.name == "providers" then
+					for i,provider in ipairs(item) do
+						if provider.name == "provider" then
+
+							local t = commonlib.split(provider[1], ",")
+							local init_args = {}
+							if provider.attr.name == "raft" then
+								init_args = {
+									baseDir = t[0],
+									localAddress = {
+										host = t[1],
+										port = t[2],
+										id = t[3],
+									},
+								}
+							end
+
+							NPL.load(provider.attr.file);
+							local storage = commonlib.gettable(provider.attr.type);
+							StorageProvider:RegisterStorageClass(provider.attr.name, storage, init_args)
+
+							print(util.table_tostring(t))
+							print(provider.attr.name, provider.attr.type, provider.attr.file)
+						end
+					end
+				end
+				if item.name == "tables" then
+					for i,table in ipairs(item) do
+						if table.name == "table" then
+							self:collection(table.attr.name, table.attr.provider);
+						end
+					end
+				end
+			end
+		end
+	end
 	LOG.std(nil, "info", "TableDatabase", "table database: %s is opened.", rootFolder);	
 	return self;
 end
