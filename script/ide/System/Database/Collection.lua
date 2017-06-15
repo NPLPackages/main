@@ -35,9 +35,10 @@ function Collection:new(data)
 end
 
 -- @param parent: the parent table database
-function Collection:init(name, parent)
+function Collection:init(name, parent, provider)
 	self.name = name or "default";
 	self.parent = parent;
+	self.provider = provider;
 	self.isServer = parent:IsServer();
 	self.writerThread = parent.writerThread;
 	if(self:IsServer()) then
@@ -60,6 +61,11 @@ end
 function Collection:GetParent()
 	return self.parent;
 end
+
+function Collection:GetProvider()
+	return self.provider;
+end
+
 
 -- whether this is a server thread
 function Collection:IsServer()
