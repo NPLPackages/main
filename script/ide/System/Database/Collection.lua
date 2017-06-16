@@ -57,6 +57,10 @@ function Collection:GetParent()
 	return self.parent;
 end
 
+function Collection:GetName()
+	return self.name;
+end
+
 function Collection:GetProviderName()
 	return self.parent:FindProvider(self.name) or "sqlite";
 end
