@@ -659,7 +659,7 @@ function TestOpenDatabase()
 			name = "tables",
 			{ name = "table", attr = { provider = "raft", name = "RaftUsers" } }, 
 			{ name = "table", attr = { provider = "raft", name = "RaftTemp" } },
-			{ name = "table", attr = { name = "DefaultToLocalProvider" } }, 
+			{ name = "table", attr = { provider = "raft", name = "default" } }, 
 		}
 	}
 
@@ -678,5 +678,7 @@ function TestOpenDatabase()
 
 end
 
+	NPL.load("(gl)script/ide/commonlib.lua");
 -- TestOpenDatabase()
--- ParaGlobal.Exit(0)
+TestDelete()
+ParaGlobal.Exit(0)

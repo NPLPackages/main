@@ -170,6 +170,7 @@ TableDatabase.writerThread = "tdb";
 -- TableDatabase.writerThread = "main"; -- this is for debugging in main thread
 TableDatabase.isServer = 0;
 TableDatabase.rootFolder = "temp/TableDatabase/";
+TableDatabase.DefaultProviderName = "sqlite";
 
 function TableDatabase:new()
 	local o = {
@@ -209,7 +210,7 @@ function TableDatabase:EnableSyncMode(bEnabled)
 end
 
 function TableDatabase:FindProvider(name)
-	return self.collectionProvider[name];
+	return self.collectionProvider[name] or self.DefaultProviderName;
 end
 
 -- create or get a collection on the client
@@ -258,13 +259,10 @@ function TableDatabase:open(rootFolder)
 
 	ParaIO.CreateDirectory(rootFolder);
 
-	local config = ParaIO.open(rootFolder..config_filename, "r");
+	local config = ParaIO.open(rootFolder .. config_filename, "r");
 	if config:IsValid() then
 		local str = config:GetText(0, -1);
 		local xml = ParaXML.LuaXML_ParseString(str);
-
-		NPL.load("(gl)script/ide/System/Compiler/lib/util.lua");
-		local util = commonlib.gettable("System.Compiler.lib.util")
 
 		if xml[1] and xml[1].name == "tabledb" then
 			for i,item in ipairs(xml[1]) do
@@ -296,7 +294,12 @@ function TableDatabase:open(rootFolder)
 				if item.name == "tables" then
 					for i,table in ipairs(item) do
 						if table.name == "table" then
-							self.collectionProvider[table.attr.name] = table.attr.provider;
+							if table.attr.name == "default" then
+								self.DefaultProviderName = table.attr.provider;
+								StorageProvider:SetStorageClass(StorageProvider:GetStorageClass(table.attr.provider));
+							else
+								self.collectionProvider[table.attr.name] = table.attr.provider;
+							end
 						end
 					end
 				end

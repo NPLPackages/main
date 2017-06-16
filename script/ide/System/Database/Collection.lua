@@ -62,7 +62,7 @@ function Collection:GetName()
 end
 
 function Collection:GetProviderName()
-	return self.parent:FindProvider(self.name) or "sqlite";
+	return self.parent:FindProvider(self.name);
 end
 
 
