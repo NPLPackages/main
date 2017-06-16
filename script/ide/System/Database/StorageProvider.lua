@@ -36,10 +36,14 @@ function StorageProvider:GetStorageClass(name)
 	return storages[name] or StorageProvider.DefaultStorage;
 end
 
+function StorageProvider:GetInitArgs(name)
+	return init_args[name];
+end
+
 function StorageProvider:CreateStorage(collection)
-	local store_class = self:GetStorageClass(collection:GetProvider() or collection:GetName());
+	local store_class = self:GetStorageClass(collection:GetProviderName());
 	if(store_class) then
-		return store_class:new():init(collection, init_args[collection:GetProvider()]);
+		return store_class:new():init(collection, self:GetInitArgs(collection:GetProviderName()));
 	end
 end
 

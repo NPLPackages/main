@@ -174,6 +174,7 @@ TableDatabase.rootFolder = "temp/TableDatabase/";
 function TableDatabase:new()
 	local o = {
 		collections = {},
+		collectionProvider = {},
 	};
 	setmetatable(o, self);
 	return o;
@@ -207,12 +208,16 @@ function TableDatabase:EnableSyncMode(bEnabled)
 	LOG.std(nil, "system", "TableDatabase", "sync mode api is %s in thread %s", bEnabled and "enabled" or "disabled", __rts__:GetName());
 end
 
+function TableDatabase:FindProvider(name)
+	return self.collectionProvider[name];
+end
+
 -- create or get a collection on the client
-function TableDatabase:collection(name, provider)
+function TableDatabase:collection(name)
 	if(name) then
 		local collection = rawget(self, name);
 		if(not collection) then
-			collection = Collection:new_collection():init(name, self, provider);
+			collection = Collection:new_collection():init(name, self);
 			rawset(self, name, collection);
 			self.collections[#(self.collections)+1] = collection;
 		end
@@ -291,7 +296,7 @@ function TableDatabase:open(rootFolder)
 				if item.name == "tables" then
 					for i,table in ipairs(item) do
 						if table.name == "table" then
-							self:collection(table.attr.name, table.attr.provider);
+							self.collectionProvider[table.attr.name] = table.attr.provider;
 						end
 					end
 				end

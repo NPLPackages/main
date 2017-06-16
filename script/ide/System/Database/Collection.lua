@@ -35,10 +35,9 @@ function Collection:new(data)
 end
 
 -- @param parent: the parent table database
-function Collection:init(name, parent, provider)
+function Collection:init(name, parent)
 	self.name = name or "default";
 	self.parent = parent;
-	self.provider = provider;
 	self.isServer = parent:IsServer();
 	self.writerThread = parent.writerThread;
 	if(self:IsServer()) then
@@ -54,16 +53,12 @@ function Collection:ToData()
 	return self.data;
 end
 
-function Collection:GetName()
-	return self.name;
-end
-
 function Collection:GetParent()
 	return self.parent;
 end
 
-function Collection:GetProvider()
-	return self.provider;
+function Collection:GetProviderName()
+	return self.parent:FindProvider(self.name) or "sqlite";
 end
 
 
