@@ -23,9 +23,9 @@ StorageProvider.DefaultStorage = SqliteStore;
 
 local storages = {}
 local init_args = {}
-function StorageProvider:RegisterStorageClass(name, storage, init_args)
+function StorageProvider:RegisterStorageClass(name, storage, args)
 	storages[name] = storage;
-	init_args[name] = init_args;
+	init_args[name] = args;
 end
 
 function StorageProvider:SetStorageClass(storageProvider)

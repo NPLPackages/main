@@ -167,7 +167,7 @@ local TableDatabase = commonlib.gettable("System.Database.TableDatabase");
 
 -- writing NPL thread name
 TableDatabase.writerThread = "tdb";
---TableDatabase.writerThread = "main"; -- this is for debugging in main thread
+-- TableDatabase.writerThread = "main"; -- this is for debugging in main thread
 TableDatabase.isServer = 0;
 TableDatabase.rootFolder = "temp/TableDatabase/";
 
@@ -244,6 +244,8 @@ function TableDatabase:ToData()
 	-- should always return nil;
 end
 
+NPL.load("(gl)script/ide/System/Database/StorageProvider.lua");
+local StorageProvider = commonlib.gettable("System.Database.StorageProvider");
 local config_filename = "/tabledb.config.xml";
 -- automatically called from IO thread
 function TableDatabase:open(rootFolder)
@@ -258,10 +260,7 @@ function TableDatabase:open(rootFolder)
 
 		NPL.load("(gl)script/ide/System/Compiler/lib/util.lua");
 		local util = commonlib.gettable("System.Compiler.lib.util")
-		print(util.table_tostring(xml));
 
-		NPL.load("(gl)script/ide/System/Database/StorageProvider.lua");
-		local StorageProvider = commonlib.gettable("System.Database.StorageProvider");
 		if xml[1] and xml[1].name == "tabledb" then
 			for i,item in ipairs(xml[1]) do
 				-- providers should always comes first
@@ -273,11 +272,11 @@ function TableDatabase:open(rootFolder)
 							local init_args = {}
 							if provider.attr.name == "raft" then
 								init_args = {
-									baseDir = t[0],
+									baseDir = t[1],
 									localAddress = {
-										host = t[1],
-										port = t[2],
-										id = t[3],
+										host = t[2],
+										port = t[3],
+										id = t[4],
 									},
 								}
 							end
@@ -286,8 +285,6 @@ function TableDatabase:open(rootFolder)
 							local storage = commonlib.gettable(provider.attr.type);
 							StorageProvider:RegisterStorageClass(provider.attr.name, storage, init_args)
 
-							print(util.table_tostring(t))
-							print(provider.attr.name, provider.attr.type, provider.attr.file)
 						end
 					end
 				end

@@ -678,5 +678,5 @@ function TestOpenDatabase()
 
 end
 
-TestOpenDatabase()
-ParaGlobal.Exit(0)
+-- TestOpenDatabase()
+-- ParaGlobal.Exit(0)
