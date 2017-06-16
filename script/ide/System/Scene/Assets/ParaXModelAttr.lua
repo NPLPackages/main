@@ -51,6 +51,7 @@ local attr = ParaXModelAttr:new():initFromAssetFile("character/bmax/test_multian
 		echo({vertices[i].pos.x, vertices[i].pos.y, vertices[i].pos.z})
 	end
 end)
+attr:SaveToDisk("temp/test_multianim.x");
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/timer.lua");
@@ -569,10 +570,10 @@ function ParaXModelAttr:DrawStaticAsText()
 end
 
 -- save ParaXModel to x file. 
+-- @param filename: such as "temp/temp.x"
 function ParaXModelAttr:SaveToDisk(filename)
-	if(self.attr) then
-		if(self.attr.SetField) then
-			self.attr:SetField("SaveToDisk",filename);
-		end
+	if(self.attr and filename) then
+		self.attr:SetField("SaveToDisk",filename);
+		LOG.std(nil, "info", "ParaXModel", "file saved to %s", filename);
 	end
 end 

@@ -4,6 +4,10 @@ Author(s): Skeleton
 Date: 2016/11/26
 Desc: 
 Represents a Vector in 2D space.
+
+History: 
+2017/6/5 changed by leio: transformation is set in plane x and y, z = 0.
+
 -------------------------------------------------------
 NPL.load("(gl)script/ide/math/vector2d.lua");
 local vector2d = commonlib.gettable("mathlib.vector2d");
@@ -234,11 +238,11 @@ end
 function vector2d.__mul(a,b)
 	if(type(b) == "table") then
 		if(#b == 16) then
-			local x,y,z = a[1], 0, a[2];
+			local x,y,z = a[1], a[2], 0;
 			return vector2d:new(
 				x*b[1] + y*b[5] + z*b[9] + b[13],
-				--x*b[2] + y*b[6] + z*b[10] + b[14],
-				x*b[3] + y*b[7] + z*b[11] + b[15]
+				x*b[2] + y*b[6] + z*b[10] + b[14]
+				--x*b[3] + y*b[7] + z*b[11] + b[15]
 				);
 		end
 		-- no cross product with a vector2d
@@ -348,23 +352,28 @@ function vector2d:abs()
 	self[1], self[2] = math.abs(self[1]),math.abs(self[2]);
 	return self;
 end
-
+-- z = 0, in plane of x and y.
 function vector2d:transform(m)
-	local x,y,z = self[1], 0, self[2];
-	self[1] = x*m[1] + y*m[5] + z*m[9] +  m[13];
-	self[2] = x*m[3] + y*m[7] + z*m[11] + m[15];
-	local w = x*m[4] + y*m[8] + z*m[12] + m[16];
+	local v0,v1,v2 = self[1], self[2], 0;
+    local v3 = 1;
+	local x = v0*m[1] + v1*m[5] + v2*m[9] +  v3*m[13];
+	local y = v0*m[2] + v1*m[6] + v2*m[10] + v3*m[14];
+	local z = v0*m[3] + v1*m[7] + v2*m[11] + v3*m[15];
+	local w = v0*m[4] + v1*m[8] + v2*m[12] + v3*m[16];
 	if (w ~= 1) then
         local invw = 1.0 / w;
-        self[1] = self[1] * invw;
-        self[2] = self[2] * invw;
+        x = x * invw;
+        y = y * invw;
+        z = z * invw;
     end
+    self[1] = x;
+    self[2] = y;
 	return self;	
 end
 function vector2d:transform_normal(m)
-	local x,y,z = self[1], 0, self[2];
+	local x,y,z = self[1], self[2], 0;
 	self[1] = x*m[1] + y*m[5] + z*m[9];
-	self[2] = x*m[3] + y*m[7] + z*m[11];
+	self[2] = x*m[2] + y*m[6] + z*m[10];
 	local w = x*m[4] + y*m[8] + z*m[12] + m[16];
 	if (w ~= 1) then
         local invw = 1.0 / w;
@@ -390,9 +399,9 @@ function vector2d:max(p)
 	return self;
 end
 
--- extend to a 3D vector by adding a y coordinate:
-function vector2d:toVector3D(y)
-    return vector3d:new(self[1], y, self[2]);
+-- extend to a 3D vector by adding a z coordinate:
+function vector2d:toVector3D(z)
+    return vector3d:new(self[1], self[2], z);
 end
 
 -- returns the vector rotated by 90 degrees clockwise

@@ -25,6 +25,10 @@ function StorageProvider:GetStorageClass(name)
 	return StorageProvider.DefaultStorage;
 end
 
+function StorageProvider:SetStorageClass(storageProvider)
+	StorageProvider.DefaultStorage = storageProvider;
+end
+
 
 function StorageProvider:CreateStorage(collection)
 	local store_class = self:GetStorageClass(collection:GetName());
