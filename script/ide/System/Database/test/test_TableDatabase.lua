@@ -644,7 +644,6 @@ function TestMultipleDB()
 end
 
 function TestOpenDatabase()
-	NPL.load("(gl)script/ide/commonlib.lua");
 	NPL.load("(gl)script/ide/LuaXML.lua");
 	NPL.load("(gl)script/ide/System/Database/TableDatabase.lua");
 	local TableDatabase = commonlib.gettable("System.Database.TableDatabase");
@@ -653,7 +652,7 @@ function TestOpenDatabase()
 		name = "tabledb", 
 		{
 			name = "providers", 
-			{ name = "provider", attr = { name = "raft", type = "TableDB.RaftSqliteStore", file = "(g1)npl_mod/TableDB/RaftSqliteStore.lua" }, "./, localhost, 9004, server4:" }
+			{ name = "provider", attr = { name = "raft", type = "TableDB.RaftSqliteStore", file = "(g1)npl_mod/TableDB/RaftSqliteStore.lua" }, "./,localhost,9004,4" }
 		},
 		{
 			name = "tables",
@@ -678,7 +677,7 @@ function TestOpenDatabase()
 
 end
 
-	NPL.load("(gl)script/ide/commonlib.lua");
--- TestOpenDatabase()
-TestDelete()
+NPL.load("(gl)script/ide/commonlib.lua");
+TestOpenDatabase()
+-- TestDelete()
 ParaGlobal.Exit(0)
