@@ -53,13 +53,18 @@ function Collection:ToData()
 	return self.data;
 end
 
+function Collection:GetParent()
+	return self.parent;
+end
+
 function Collection:GetName()
 	return self.name;
 end
 
-function Collection:GetParent()
-	return self.parent;
+function Collection:GetProviderName()
+	return self.parent:FindProvider(self.name);
 end
+
 
 -- whether this is a server thread
 function Collection:IsServer()

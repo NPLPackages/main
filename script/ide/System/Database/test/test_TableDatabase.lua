@@ -642,3 +642,42 @@ function TestMultipleDB()
 	db_cluster1.User:find({name="db",}, function(err, rows) assert(rows[1].email == "db_cluster1@1") end);
 	db_cluster2.User:find({name="db",}, function(err, rows) assert(rows[1].email == "db_cluster2@1") end);
 end
+
+function TestOpenDatabase()
+	NPL.load("(gl)script/ide/LuaXML.lua");
+	NPL.load("(gl)script/ide/System/Database/TableDatabase.lua");
+	local TableDatabase = commonlib.gettable("System.Database.TableDatabase");
+
+	local config = { 
+		name = "tabledb", 
+		{
+			name = "providers", 
+			{ name = "provider", attr = { name = "raft", type = "TableDB.RaftSqliteStore", file = "(g1)npl_mod/TableDB/RaftSqliteStore.lua" }, "./,localhost,9004,4" }
+		},
+		{
+			name = "tables",
+			{ name = "table", attr = { provider = "raft", name = "RaftUsers" } }, 
+			{ name = "table", attr = { provider = "raft", name = "RaftTemp" } },
+			{ name = "table", attr = { provider = "raft", name = "default" } }, 
+		}
+	}
+
+	local config_path = "temp/mydatabase/tabledb.config.xml";
+	local str = commonlib.Lua2XmlString(config, true);
+	ParaIO.CreateDirectory(config_path);
+	local file = ParaIO.open(config_path, "w");
+	if (file:IsValid()) then
+
+		file:WriteString(str);
+		file:close();
+
+	end
+
+	local db = TableDatabase:new():connect("temp/mydatabase/");	
+
+end
+
+NPL.load("(gl)script/ide/commonlib.lua");
+TestOpenDatabase()
+-- TestDelete()
+ParaGlobal.Exit(0)

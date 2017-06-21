@@ -21,19 +21,29 @@ local StorageProvider = commonlib.gettable("System.Database.StorageProvider");
 -- by default use sqlite store
 StorageProvider.DefaultStorage = SqliteStore;
 
-function StorageProvider:GetStorageClass(name)
-	return StorageProvider.DefaultStorage;
+local storages = {}
+local init_args = {}
+function StorageProvider:RegisterStorageClass(name, storage, args)
+	storages[name] = storage;
+	init_args[name] = args;
 end
 
 function StorageProvider:SetStorageClass(storageProvider)
 	StorageProvider.DefaultStorage = storageProvider;
 end
 
+function StorageProvider:GetStorageClass(name)
+	return storages[name] or StorageProvider.DefaultStorage;
+end
+
+function StorageProvider:GetInitArgs(name)
+	return init_args[name];
+end
 
 function StorageProvider:CreateStorage(collection)
-	local store_class = self:GetStorageClass(collection:GetName());
+	local store_class = self:GetStorageClass(collection:GetProviderName());
 	if(store_class) then
-		return store_class:new():init(collection);
+		return store_class:new():init(collection, self:GetInitArgs(collection:GetProviderName()));
 	end
 end
 
