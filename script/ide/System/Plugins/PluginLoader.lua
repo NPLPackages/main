@@ -140,7 +140,11 @@ function PluginLoader:GetPluginManager()
 end
 
 function PluginLoader:IsDevMode()
-	return System.options.isDevEnv;
+	if(System and System.options)then
+		return System.options.isDevEnv;
+	else
+		return false;
+	end
 end
 
 -- @param filename: if nil, it will use the file GetPluginFolder()+"ModsConfig.xml"
