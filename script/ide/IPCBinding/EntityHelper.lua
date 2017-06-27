@@ -150,7 +150,7 @@ function EntityHelper.GenerateEntityTemplateFromAttrObject(attrObject, name, nam
 	local att = attrObject;
 	local nCount = att:GetFieldNum();
 	local nIndex;
-	for nIndex = 1, nCount do
+	for nIndex = 0, nCount - 1 do
 		local sName = att:GetFieldName(nIndex);
 		local sType = att:GetFieldType(nIndex);
 		local sSchematics = att:GetSchematicsType(nIndex);
