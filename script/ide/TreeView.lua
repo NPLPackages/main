@@ -1058,7 +1058,7 @@ function TreeNode:BindParaAttributeObject(bindingContext, att, bReadOnly, fieldN
 			-- add all fields in attribute object. 
 			local nCount = _att:GetFieldNum();
 			local nIndex;
-			for nIndex = 1, nCount do 
+			for nIndex = 0, nCount - 1 do 
 				AddPropertyNode(nIndex);
 			end	
 		end
