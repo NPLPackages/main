@@ -177,7 +177,7 @@ function ModifierUICtrl:Databind (o)
 			local valueWidth = width - labalWidth - cellspacing*3 - 20;
 			local valueLeft = ctrl_x+labalWidth+cellspacing;
 			
-			for nIndex = 1, nCount do 
+			for nIndex = 0, nCount - 1 do 
 				local sName = att:GetFieldName(nIndex);
 				local type = att:GetFieldType(nIndex);
 				local sSchematics = att:GetSchematicsType(nIndex);

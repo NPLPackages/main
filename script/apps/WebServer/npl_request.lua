@@ -72,12 +72,6 @@ function request:tostring()
 	return commonlib.serialize_compact(self.headers);
 end
 
-function request:redirect(d)
-	self.headers ["Location"] = d
-	self.statusline = "HTTP/1.1 302 Found"
-	self.content = "redirect"
-end
-
 -- original request url
 function request:url()
 	return self.headers.url or self.relpath;
