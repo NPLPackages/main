@@ -16,6 +16,7 @@ response:Begin();
 response:End();
 response:set_cookie(key, value)
 response:delete_cookie(name, path)
+response:redirect(url)
 -----------------------------------------------
 ]]
 NPL.load("(gl)script/apps/WebServer/npl_util.lua");
@@ -400,8 +401,11 @@ function response:set_cookie(name, value)
 	end
 end
 
-function response:redirect(path)
-	-- TODO:
+-- @param status: nil, "moved_temporarily" or "moved_permanently".  
+function response:redirect(path, status)
+	self.headers["Location"] = path
+	self:SetReturnCode(status or "moved_temporarily");
+	self:finish();
 end
 
 function response:delete_cookie(name, path)
