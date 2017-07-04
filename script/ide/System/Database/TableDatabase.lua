@@ -271,18 +271,7 @@ function TableDatabase:open(rootFolder)
 					for i,provider in ipairs(item) do
 						if provider.name == "provider" then
 
-							local t = commonlib.split(provider[1], ",")
-							local init_args = {}
-							if provider.attr.name == "raft" then
-								init_args = {
-									baseDir = t[1],
-									localAddress = {
-										host = t[2],
-										port = t[3],
-										id = t[4],
-									},
-								}
-							end
+							local init_args = commonlib.split(provider[1], ",")
 
 							NPL.load(provider.attr.file);
 							local storage = commonlib.gettable(provider.attr.type);
