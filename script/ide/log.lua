@@ -203,9 +203,9 @@ local app_log_long = commonlib.applog.log_long;
 
 if(not commonlib.stdlog) then commonlib.stdlog = {} end
 function commonlib.stdlog.log_long(thread_or_word,level,module_name,str)
-	local date_str, time_str = GetLogTimeString();
+	local date_str, time_str, nCurTime = GetLogTimeString();
 	
-	WriteToLogFile(format("%s %s|%s|%s|%s|", date_str, time_str, thread_or_word or npl_thread_name,level or "",module_name or ""));
+	WriteToLogFile(format("%s %s %s|%s|%s|%s|", date_str, time_str, nCurTime, thread_or_word or npl_thread_name,level or "",module_name or ""));
 	log_long(str, 10240);
 	if(level == "error" or level == "warning") then
 		WriteToLogFile("|"..commonlib.debug.locationinfo(3).."\n");
