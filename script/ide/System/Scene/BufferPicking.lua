@@ -59,6 +59,8 @@ local vector3d = commonlib.gettable("mathlib.vector3d");
 local BufferPicking = commonlib.inherit(commonlib.gettable("System.Core.ToolBase"), commonlib.gettable("System.Scene.BufferPicking"));
 
 BufferPicking:Property("Name", "BufferPicking");
+BufferPicking:Property({"m_nPickingRenderFrame", 0, "GetPickingRenderFrame", "SetPickingRenderFrame"});
+
 
 function BufferPicking:ctor()
 	self:CreatePickingBuffer_sys();
@@ -77,6 +79,7 @@ function BufferPicking:CreatePickingBuffer_sys()
 		self.painterContext = System.Core.PainterContext:new():init(self);
 		self.rendertarget = self.engine:GetAttributeObject():GetChild("rendertarget"):QueryObject();
 		self.rendertarget:SetScript("On_Paint", function()
+			self:SetPickingRenderFrame(self:GetPickingRenderFrame()+1);
 			self:handleRender();
 		end)
 	end
