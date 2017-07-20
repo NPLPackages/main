@@ -252,16 +252,18 @@ if(use_ffi) then
 		return ParaEngineClient.ParaTerrain_GetFirstBlock( x,y,z, nBlockID, nSide or 5, max_dist or 32);
 	end
 	
-	
-	local pTmpId = ffi.new'uint16_t[1]';
-	local pTmpUserData = ffi.new'uint32_t[1]';
-	ParaTerrain.GetBlockFullData = function(x, y, z)
-		--local pId = ffi.stack'uint16_t[1]';
-		--local pUserData = ffi.stack'uint32_t[1]';
+	if(ParaTerrain.GetBlockFullData) then
+		local pTmpId = ffi.new'uint16_t[1]';
+		local pTmpUserData = ffi.new'uint32_t[1]';
+
+		ParaTerrain.GetBlockFullData = function(x, y, z)
+			--local pId = ffi.stack'uint16_t[1]';
+			--local pUserData = ffi.stack'uint32_t[1]';
 		
-		ParaEngineClient.ParaTerrain_GetBlockFullData(x, y, z, pTmpId, pTmpUserData);
+			ParaEngineClient.ParaTerrain_GetBlockFullData(x, y, z, pTmpId, pTmpUserData);
 		
-		return pTmpId[0], pTmpUserData[0];
+			return pTmpId[0], pTmpUserData[0];
+		end
 	end
 
 	--------------------------------------
