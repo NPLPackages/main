@@ -136,6 +136,10 @@ function Encoding.base64(s)
 	return table.concat(parts)
 end
 
+function Encoding.fastBase64(s)
+	return ParaMisc.base64(s)
+end
+
 -- @param format: nil or "hex" or "base64". if nil it is in binary format
 function Encoding.sha1(message, format)
 	local hash = sha1(message);
@@ -145,5 +149,15 @@ function Encoding.sha1(message, format)
 		return dump(hash);
 	elseif(format == "base64") then
 		return Encoding.base64(hash);
+	end
+end
+
+function Encoding.fastSha1(message, format)
+	if not format then
+		return ParaMisc.sha1(message, true);
+	elseif (format == "hex") then
+		return ParaMisc.sha1(message, false);
+	elseif (format == "base64") then
+		return ParaMisc.base64(ParaMisc.sha1(message));
 	end
 end
