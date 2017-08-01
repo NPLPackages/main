@@ -115,7 +115,7 @@ function commonlib.Lua2XmlString(input, bBeautify)
 					return 
 				else
 					if(bBeautify) then
-						indentStr = "\r\n"..string.rep("\t", indent);
+						indentStr = "\n"..string.rep("\t", indent);
 					end
 					nodeXML = (indentStr or "").."<"..inTable.name;
 					table.insert(output, nodeXML)
@@ -143,7 +143,7 @@ function commonlib.Lua2XmlString(input, bBeautify)
 				if(nodeXML) then
 					local indentStr;
 					if(bBeautify) then
-						indentStr = "\r\n"..string.rep("\t", indent);
+						indentStr = "\n"..string.rep("\t", indent);
 					end
 					table.insert(output, (indentStr or "").."</"..inTable.name..">");
 				end	
