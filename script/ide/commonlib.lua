@@ -798,4 +798,51 @@ function commonlib.split(str,delimiter)
 	return result;
 end
 
+--[[
+	local t = 
+	{
+		["a"] = 1;
+		["b"] = 2;
+	};
+	
+	for k, v in commonlib.keysorted_pairs(t) do
+		print(k, v);
+	end
+	
+	local function sortFunc(a, b)
+		if a.key == b.key then
+			return a.value < b.value;
+		else
+			return a.key < b.key;
+		end
+	end
+	for k, v in commonlib.keysorted_pairs(t, sortFunc) do	
+		print(k, v);
+	end
+]]
+function commonlib.keysorted_pairs(t, sortFunc)
+	local sortTable = {};
+	for k, v in pairs(t) do
+		table.insert(sortTable, {key = k, value = v});
+	end
+	
+	sortFunc = sortFunc or function(a, b)
+		return a.key < b.key;
+	end
+	
+	table.sort(sortTable, sortFunc);
+	
+	local index = 0;
+	
+	return function()
+		index = index + 1;
+		if index > #sortTable then
+			return nil, nil;
+		else
+			local item = sortTable[index];
+			return item.key, item.value;
+		end
+	end
+end
+
 FooterLoader();

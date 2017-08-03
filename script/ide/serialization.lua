@@ -181,8 +181,8 @@ function commonlib.serialize_in_length(o, nMaxLength)
 end
 
 -- this is the fatest serialization method using native API. 
-function commonlib.serialize_compact(o) 
-	return NPL.SerializeToSCode("", o);
+function commonlib.serialize_compact(o, sortByKey) 
+	return NPL.SerializeToSCode("", o, not (not sortByKey));
 end
 
 -- same as commonlib.serialize, except that it is more compact by removing all \r\n and comments, etc. 
