@@ -182,7 +182,11 @@ end
 
 -- this is the fatest serialization method using native API. 
 function commonlib.serialize_compact(o, sortByKey) 
-	return NPL.SerializeToSCode("", o, not (not sortByKey));
+	if(sortByKey) then
+		return NPL.SerializeToSCode("", o, true);
+	else
+		return NPL.SerializeToSCode("", o);
+	end
 end
 
 -- same as commonlib.serialize, except that it is more compact by removing all \r\n and comments, etc. 
