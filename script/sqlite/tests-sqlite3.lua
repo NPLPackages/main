@@ -524,3 +524,48 @@ function db_bu_null.test()
   local bu = assert_nil( sqlite3.backup_init(db_bu_null.db, 'main', db_bu_null.db, 'main') )
 
 end
+
+
+-------------------------------------
+--   Tests for WAL Page hook API   --
+-------------------------------------
+
+wph = lunit.TestCase("WAL Page hook")
+
+function wph.setup()
+  wph.db = assert( sqlite3.open("walPageHook.db") )
+  wph.db2 = assert( sqlite3.open("walPageHook2.db") )
+  assert_table( wph.db2:exec("PRAGMA journal_mode=WAL;") )
+  assert_table( wph.db2:exec("PRAGMA synchronous=NORMAL;") )
+
+
+  assert_table( wph.db:exec("PRAGMA journal_mode=WAL;") )
+  assert_table( wph.db:exec("PRAGMA synchronous=NORMAL;") )
+
+  assert_table( wph.db:set_wal_page_hook(function (page_data, pgno, nTruncate, isCommit)
+    wph.db2:wal_inject_page(page_data, pgno, nTruncate, isCommit)
+    return 1
+  end))
+  
+
+  assert_table( wph.db:exec("CREATE TABLE T1 ( id INTEGER PRIMARY KEY, content VARCHAR );") )
+  assert_table( wph.db:exec("CREATE TABLE T2 ( id INTEGER PRIMARY KEY REFERENCES T1, content VARCHAR );") )
+
+
+
+
+end
+
+function wph.teardown()
+  assert( wph.db:close() )
+  assert( wph.db2:close() )
+end
+
+function wph.test_simple_transaction_commit()
+  assert_table( wph.db:exec("BEGIN;") )
+  assert_table( wph.db:exec("INSERT INTO T1 VALUES (NULL, 'Hello World');") )
+  assert_table( wph.db:exec("UPDATE T1 SET content = 'Hello Again World' WHERE id = 1;") )
+  assert_table( wph.db:exec("DELETE FROM T1 WHERE id = 2;") )
+  assert_table( wph.db:exec("COMMIT;") )
+end
+
