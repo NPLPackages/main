@@ -1,5 +1,15 @@
 <?npl
 log("server side redirection\n");
-response:set_header("Location", "http://www.paracraft.cn/")
-response:status(301):send_headers();
+
+if(request:get("method") == "302") then
+	log("this will not be cached by the browser")
+	response:redirect("http://www.paracraft.cn/?302")
+elseif(request:get("method") == "301") then
+	log("this will be cached by the browser")
+	response:redirect("http://www.paracraft.cn/?301", "moved_permanently")
+else
+	log("manually redirect")
+	response:set_header("Location", "http://www.paracraft.cn/")
+	response:status(301):send_headers();
+end
 ?>

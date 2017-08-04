@@ -88,8 +88,9 @@ end
 
 -- implemented by LiXizhi, 2008.10.20
 -- converting lua table to xml file. Please note the lua table must be in the format returned by commonlib.XML2Lua();
--- @param bBeautify: if true, it will use indentations. 
-function commonlib.Lua2XmlString(input, bBeautify)
+-- @param bBeautify: if true, it will use indentations.
+-- @param sortByKey: if ture, it will sort by key.
+function commonlib.Lua2XmlString(input, bBeautify, sortByKey)
 	if(not input) then return end
 	local output = {};
 	local indent = 0;
@@ -115,16 +116,33 @@ function commonlib.Lua2XmlString(input, bBeautify)
 					return 
 				else
 					if(bBeautify) then
-						indentStr = "\r\n"..string.rep("\t", indent);
+						indentStr = "\n"..string.rep("\t", indent);
 					end
 					nodeXML = (indentStr or "").."<"..inTable.name;
 					table.insert(output, nodeXML)
 				
 					if(inTable.attr) then
 						local name, value
-						for name, value in pairs(inTable.attr) do
-							table.insert(output, string.format(" %s=\"%s\"", name, Encoding.EncodeStr(value)))
+						
+						if sortByKey then
+							local sortTable = {};
+							for name, value in pairs(inTable.attr) do
+								table.insert(sortTable, {key = name, value = value});
+							end
+							
+							table.sort(sortTable, function(a, b) return a.key < b.key; end);	
+
+							for _, att in ipairs(sortTable) do
+								table.insert(output, string.format(" %s=\"%s\"", att.key, Encoding.EncodeStr(att.value)))
+							end
+							
+						else
+							
+							for name, value in pairs(inTable.attr) do
+								table.insert(output, string.format(" %s=\"%s\"", name, Encoding.EncodeStr(value)))
+							end
 						end
+						
 					end
 					
 				end
@@ -143,7 +161,7 @@ function commonlib.Lua2XmlString(input, bBeautify)
 				if(nodeXML) then
 					local indentStr;
 					if(bBeautify) then
-						indentStr = "\r\n"..string.rep("\t", indent);
+						indentStr = "\n"..string.rep("\t", indent);
 					end
 					table.insert(output, (indentStr or "").."</"..inTable.name..">");
 				end	

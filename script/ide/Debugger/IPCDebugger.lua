@@ -1188,7 +1188,13 @@ local function debugger_loop(ev, vars, file, line, idx_watch, stack_info)
 				if res[2] then
 					table.remove(res,1)
 					for _,v in ipairs(res) do
-						IPCDebugger.Dump(tostring(v))
+						-- max view variable length
+						local max_view_variale_length = 512;
+						local sStr = commonlib.serialize_in_length(v, max_view_variale_length)
+						if(sStr and #sStr >= max_view_variale_length) then
+							sStr = sStr .. " ..."
+						end
+						IPCDebugger.Dump(sStr)
 						IPCDebugger.Dump('\t')
 					end
 					IPCDebugger.Dump('\n')

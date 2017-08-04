@@ -76,6 +76,16 @@ echo(result);
 local sample_util = NPL.load("./sample_util.lua");
 echo("<p>this is from ./sampe_util.lua file based module "..sample_util:hello().."</p>");
 %>
+
+This is how to turn any async function call into sync one:
+<%
+NPL.load("(gl)script/ide/System/os/GetUrl.lua");
+System.os.GetUrl("http://www.baidu.com/", resume);
+local err, data = yield();
+echo("<p>System.os.GetUrl('http://www.baidu.com/') returns </p>")
+echo(tostring(err).." html length: "..(type(data) == "table" and #(data.data) or ""));
+%>
+
 </body>
 </html>
 

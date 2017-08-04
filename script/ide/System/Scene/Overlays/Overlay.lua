@@ -66,6 +66,8 @@ Overlay:Property({"enabled", true, "isEnabled", auto=true});
 Overlay:Property({"EnableZPass", true});
 Overlay:Property({"ZPassOpacity", 0.2, "GetZPassOpacity", "SetZPassOpacity", auto=true});
 Overlay:Property({"EnablePicking", true});
+-- this is usually the last system time tick that render function is called.
+Overlay:Property({"PickingRenderFrame", 0, auto=true});
 Overlay:Property({"m_hasMouseTracking", nil, "hasMouseTracking", "setMouseTracking", auto=true});
 Overlay:Property({"m_render_pass", false, });
 Overlay:Property({"m_position", nil, "getPosition", "setPosition"});
@@ -100,6 +102,7 @@ function Overlay:create_sys(native_scene_obj, x, y, z)
 	
 	local guiObject = self.native_scene_obj:GetAttributeObject():GetChild("gui"):QueryUIObject();
 	guiObject:SetScript("ondraw", function()
+		self:SetPickingRenderFrame(commonlib.TimerManager.GetCurrentTime())
 		self:handleRender();
 	end);
 end

@@ -83,6 +83,7 @@ if(use_ffi) then
 	void ParaTerrain_SetHole( float x, float y, bool bIsHold );
 	int ParaTerrain_FindFirstBlock( uint16_t x,uint16_t y,uint16_t z, uint16_t nSide /*= 4*/, uint32_t max_dist /*= 32*/, uint32_t attrFilter /*= 0xffffffff*/, int nCategoryID /*= -1*/ );
 	int ParaTerrain_GetFirstBlock( uint16_t x,uint16_t y,uint16_t z, int nBlockId, uint16_t nSide /*= 5*/, uint32_t max_dist /*= 32*/);
+	
 
 	void ParaBlockWorld_SetBlockId(void* pWorld, uint16_t x, uint16_t y, uint16_t z, uint32_t templateId);
 	uint32_t ParaBlockWorld_GetBlockId(void* pWorld, uint16_t x, uint16_t y, uint16_t z);
@@ -91,6 +92,8 @@ if(use_ffi) then
 	int ParaBlockWorld_FindFirstBlock(void* pWorld, uint16_t x, uint16_t y, uint16_t z, uint16_t nSide /*= 4*/, uint32_t max_dist /*= 32*/, uint32_t attrFilter /*= 0xffffffff*/, int nCategoryID /*= -1*/);
 	int ParaBlockWorld_GetFirstBlock(void* pWorld, uint16_t x, uint16_t y, uint16_t z, int nBlockId, uint16_t nSide /*= 4*/, uint32_t max_dist /*= 32*/);
 
+	void ParaTerrain_GetBlockFullData(uint16_t x, uint16_t y, uint16_t z, uint16_t* pId, uint32_t* pUserData);
+	
 	bool ParaScene_CheckExist(int nID);
 
 	bool ParaGlobal_SetFieldCData(const char* sFieldname, void* pValue);
@@ -228,7 +231,7 @@ if(use_ffi) then
 	ParaTerrain.GetBlockUserDataByIdx = function(x,y,z)
 		return ParaEngineClient.ParaTerrain_GetBlockUserDataByIdx(x,y,z);
 	end
-
+	
 	ParaTerrain.UpdateHoles = function(x,y)
 		ParaEngineClient.ParaTerrain_UpdateHoles(x,y);
 	end
@@ -247,6 +250,20 @@ if(use_ffi) then
 
 	ParaTerrain.GetFirstBlock = function(x,y,z, nBlockID, nSide, max_dist)
 		return ParaEngineClient.ParaTerrain_GetFirstBlock( x,y,z, nBlockID, nSide or 5, max_dist or 32);
+	end
+	
+	if(ParaTerrain.GetBlockFullData) then
+		local pTmpId = ffi.new'uint16_t[1]';
+		local pTmpUserData = ffi.new'uint32_t[1]';
+
+		ParaTerrain.GetBlockFullData = function(x, y, z)
+			--local pId = ffi.stack'uint16_t[1]';
+			--local pUserData = ffi.stack'uint32_t[1]';
+		
+			ParaEngineClient.ParaTerrain_GetBlockFullData(x, y, z, pTmpId, pTmpUserData);
+		
+			return pTmpId[0], pTmpUserData[0];
+		end
 	end
 
 	--------------------------------------
