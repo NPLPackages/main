@@ -191,7 +191,7 @@ function PluginLoader:SaveModTableToFile(filename)
 			end
 		end
 		if(root) then
-			file:WriteString(commonlib.Lua2XmlString(root,true) or "");
+			file:WriteString(commonlib.Lua2XmlString(root,true,true) or "");
 		end
 		file:close();
 	end
