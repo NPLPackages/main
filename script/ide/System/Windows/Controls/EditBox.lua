@@ -250,7 +250,7 @@ function EditBox:removeSelectedText()
 		self.m_text:remove(self.m_selstart+1, self.m_selend - self.m_selstart);
         
         if (self.m_cursor > self.m_selstart) then
-            self.m_cursor = self.m_cursor - math.min(self.m_cursor, self.m_selend) - self.m_selstart;
+            self.m_cursor = self.m_cursor - (math.min(self.m_cursor, self.m_selend) - self.m_selstart);
 		end
         self:internalDeselect();
         self.m_textDirty = true;
@@ -259,7 +259,8 @@ end
 
 function EditBox:selectedText()
 	if(self:hasSelectedText()) then
-		return self.m_text:substr(self.m_selstart+1, self.m_selend);
+		local text = self.m_text:substr(self.m_selstart+1, self.m_selend);
+		return commonlib.Encoding.Utf8ToDefault(text);
 	end
 end
 
@@ -485,7 +486,7 @@ function EditBox:paintEvent(painter)
 		-- draw text
 		painter:SetPen(self:GetColor());
 		painter:SetFont(self:GetFont());
-		painter:SetPen(self:GetColor());
+		--painter:SetPen(self:GetColor());
 		local scale = self:GetScale();
 		painter:DrawTextScaled(self:x() + textLeft, self:y() + textTop, text, scale);
 	end

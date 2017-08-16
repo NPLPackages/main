@@ -13,6 +13,40 @@ NPL.load("(gl)script/ide/System/Windows/mcml/Style.lua");
 local StyleDefault = commonlib.inherit(commonlib.gettable("System.Windows.mcml.Style"), commonlib.gettable("System.Windows.mcml.StyleDefault"));
 
 local items = {
+	["h1"] = {
+		["margin-top"] = 3,
+		["margin-left"] = 0,
+		["margin-bottom"] = 5,
+		["font-weight"] = "bold",
+		["font-size"] = "19",
+		headimage = "Texture/unradiobox.png",
+		headimagewidth = 16,
+	},
+	["h2"] = {
+		["margin-top"] = 3,
+		["margin-left"] = 0,
+		["margin-bottom"] = 3,
+		["font-weight"] = "bold",
+		["font-size"] = "12",
+		headimage = "Texture/unradiobox.png",
+		headimagewidth = 14,
+	},
+	["h3"] = {
+		["margin-top"] = 3,
+		["margin-left"] = 0,
+		["margin-bottom"] = 2,
+		["font-weight"] = "bold",
+		headimage = "Texture/unradiobox.png",
+		headimagewidth = 12,
+	},
+	["h4"] = {
+		["margin-top"] = 3,
+		["margin-left"] = 0,
+		["margin-bottom"] = 1,
+		["font-weight"] = "bold",
+		headimage = "Texture/unradiobox.png",
+		headimagewidth = 10,
+	},
 	["pe:button"] = {
 		padding=5,
 		color = "#ffffff",
@@ -23,6 +57,16 @@ local items = {
 	["pe:editbox"] = {
 		height=24, 
 		["min-width"]=10,
+	},
+	["pe:radio"]={
+		background="Texture/unradiobox.png",
+		background_checked="Texture/radiobox.png",
+		iconSize = 16,
+	},
+	["pe:checkbox"]={
+		background="Texture/uncheckbox2.png",
+		background_checked="Texture/checkbox2.png",
+		iconSize = 16,
 	},
 }
 
