@@ -1134,6 +1134,11 @@
   <ItemGroup>
     <None Include="README.md" />
     <None Include="script\ide\math\vector2d.lua" />
+    <None Include="script\ide\System\Scene\Assets\ParaXModelAttr.lua" />
+    <None Include="script\ide\System\Windows\Controls\MultiLineEditbox.lua" />
+    <None Include="script\ide\System\Windows\Controls\ScrollArea.lua" />
+    <None Include="script\ide\System\Windows\Controls\TextControl.lua" />
+    <None Include="script\ide\System\Windows\Controls\TextCursor.lua" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

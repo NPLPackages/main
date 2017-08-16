@@ -13,6 +13,7 @@ test_Windows:TestMouseEnterLeaveEvents();
 test_Windows:TestCreateWindow();
 test_Windows:TestPostEvents();
 test_Windows:test_pe_custom();
+test_Windows:TestMultiLineEditbox();
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/System/Windows/Window.lua");
@@ -20,6 +21,8 @@ NPL.load("(gl)script/ide/System/Windows/Shapes/Rectangle.lua");
 NPL.load("(gl)script/ide/System/Windows/Controls/Button.lua");
 NPL.load("(gl)script/ide/System/Windows/Application.lua");
 NPL.load("(gl)script/ide/System/Windows/Controls/EditBox.lua");
+NPL.load("(gl)script/ide/System/Windows/Controls/MultiLineEditbox.lua");
+local MultiLineEditbox = commonlib.gettable("System.Windows.Controls.MultiLineEditbox");
 local EditBox = commonlib.gettable("System.Windows.Controls.EditBox");
 local Application = commonlib.gettable("System.Windows.Application");
 local Button = commonlib.gettable("System.Windows.Controls.Button");
@@ -167,6 +170,26 @@ function test_Windows:TestEditbox()
 	-- elem:setMaxLength(6);
 	-- show the window natively
 	window:Show("my_window", nil, "_lt", 0,0, 200, 200);
+end
+
+function test_Windows:TestMultiLineEditbox()
+	local window = Window:new();
+	local mulLine = MultiLineEditbox:new():init(window);
+	mulLine:setGeometry(100, 100, 200, 20 * 5+10);
+--	mulLine:AddItem("我是第一行");
+--	mulLine:AddItem("我是第二行");
+--	mulLine:AddItem("我是第三行");
+--	mulLine:AddItem("我是第四行");
+--	mulLine:AddItem("我是第五行");
+--	mulLine:AddItem("我是第六行");
+	--mulLine:AddItem("我是第七行");
+	--mulLine:AddItem("我是第八行");
+	--mulLine:AddItem("我是第九行");
+	--mulLine:AddItem("我是第十行");
+	--mulLine:SetBackgroundColor("#cccccc");
+
+	window:Show("my_window", nil, "_mt", 0,0, 600, 600);
+	test_Windows.window = window;
 end
 
 function test_Windows:test_draggableWindow()
