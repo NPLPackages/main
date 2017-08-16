@@ -158,7 +158,11 @@ end
 function UniString:remove(pos, count)
 	if(pos <= self:length()) then
 		if(pos >= 1) then
-			self.text = ParaMisc.UniSubString(self.text, 1, pos-1)..ParaMisc.UniSubString(self.text, pos+count, -1);
+			local s = self.text;
+			self.text = ParaMisc.UniSubString(s, 1, pos-1);
+			if(count) then
+				self.text = self.text..ParaMisc.UniSubString(s, pos+count, -1);
+			end
 		else
 			self.text = ParaMisc.UniSubString(self.text, 1, self:length()-1);
 		end

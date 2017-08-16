@@ -22,7 +22,7 @@ local MouseEvent = commonlib.gettable("System.Windows.MouseEvent");
 local UIElement = commonlib.gettable("System.Windows.UIElement");
 
 function UIElement:showChildren(spontaneous)
-	if(self.children and not self.children:empty()) then
+	if(not self:isHidden() and self.children and not self.children:empty()) then
 		local children = self.children;
 		local widget = children:first();
 		while (widget) do

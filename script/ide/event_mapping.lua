@@ -676,7 +676,7 @@ Jabber_Event =
 VirtualKeyToScaneCodeStr = {};
 local key,v;
 for key,v in pairs(Event_Mapping) do
-	local __,__,__,__,k = string.find(key,"(.+)_(.+)_(.+)");
+	local __,__,__,__,k = string.find(key,"([^_]+)_([^_]+)_(.+)");
 	if(k)then
 		k = "DIK_"..k;
 		VirtualKeyToScaneCodeStr[v] = k;
