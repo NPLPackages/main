@@ -1067,6 +1067,7 @@
     <Content Include="script\test\gridviewtest.html" />
     <Content Include="script\test\gridviewtest.lua" />
     <Content Include="script\test\IDE_Test.lua" />
+    <Content Include="script\test\MCMLV2\mcml_window.html" />
     <Content Include="script\test\MCML_Sample.xml" />
     <Content Include="script\test\media\bumpMap.dds" />
     <Content Include="script\test\media\cloud.dds" />
@@ -1134,6 +1135,23 @@
   <ItemGroup>
     <None Include="README.md" />
     <None Include="script\ide\math\vector2d.lua" />
+    <None Include="script\ide\System\Scene\Assets\ParaXModelAttr.lua" />
+    <None Include="script\ide\System\Windows\Controls\Custom.lua" />
+    <None Include="script\ide\System\Windows\Controls\DropdownListbox.lua" />
+    <None Include="script\ide\System\Windows\Controls\ListBox.lua" />
+    <None Include="script\ide\System\Windows\Controls\MultiLineEditbox.lua" />
+    <None Include="script\ide\System\Windows\Controls\Primitives\SliderBase.lua" />
+    <None Include="script\ide\System\Windows\Controls\ScrollArea.lua" />
+    <None Include="script\ide\System\Windows\Controls\ScrollBar.lua" />
+    <None Include="script\ide\System\Windows\Controls\SliderBar.lua" />
+    <None Include="script\ide\System\Windows\Controls\TextControl.lua" />
+    <None Include="script\ide\System\Windows\Controls\TextCursor.lua" />
+    <None Include="script\ide\System\Windows\mcml\BrowserWnd.lua" />
+    <None Include="script\ide\System\Windows\mcml\Elements\pe_checkbox.lua" />
+    <None Include="script\ide\System\Windows\mcml\Elements\pe_header.lua" />
+    <None Include="script\ide\System\Windows\mcml\Elements\pe_radio.lua" />
+    <None Include="script\test\MCMLV2\main.lua" />
+    <None Include="script\test\MCMLV2\mcml_window.lua" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

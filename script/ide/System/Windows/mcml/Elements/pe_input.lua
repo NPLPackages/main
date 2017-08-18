@@ -21,9 +21,9 @@ function pe_input:createFromXmlNode(o)
 	elseif(type == "password") then
 		return Elements.pe_editbox:createFromXmlNode(o);	
 	elseif(type == "radio") then
-		--return Elements.pe_radio:createFromXmlNode(o);	
+		return Elements.pe_radio:createFromXmlNode(o);	
 	elseif(type == "checkbox") then
-		--return Elements.pe_checkbox:createFromXmlNode(o);	
+		return Elements.pe_checkbox:createFromXmlNode(o);	
 	elseif(type == "hidden") then
 		--return Elements.pe_input_hidden:createFromXmlNode(o);	
 	elseif(type == "submit" or type == "button" or type == "reset" ) then

@@ -30,6 +30,16 @@ function pe_editbox:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	end
 end
 
+function pe_editbox:OnLoadComponentAfterChild(parentElem, parentLayout, css)
+	local beFocus = self:GetBool("autofocus");
+	if(beFocus) then
+		local ctrl = self:GetControl();
+		if(ctrl) then
+			ctrl:setFocus("autofocus");
+		end
+	end
+end
+
 function pe_editbox:OnTextChanged(actualText)
 	local onchange = self:GetString("onchange");
 	if(onchange) then

@@ -19,14 +19,21 @@ repeat_data = { {a=1}, {a=2} };
 function GetDS()
     return repeat_data;
 end
+isSearching = false;
+function SearchBlock()
+    isSearching = true;
+end
+function OnSearchBlock()
+    isSearching = false;
+end
 ]]>
 </script>
-<style type="text/mcss" src="script/ide/System/test/test_file_style.mcss">
+<!--<style type="text/mcss" src="script/ide/System/test/test_file_style.mcss">
 {
     color_red = { color = "#ff0000" },
     color_blue = { color = "#0000ff", ["margin-left"] = 10 },
     bold = { ["font-weight"]="bold"    }
-}
+}-->
 </style>
     <div align="right" style="background-color:#ff0000;margin:10px;padding:10px;min-width:400px;min-height:150px">
         <div align="right" style="padding:5px;background:url(Texture/Aries/Common/ThemeKid/btn_thick_hl_32bits.png:7 7 7 7)">
@@ -43,7 +50,7 @@ end
             </div>
         </div>
     </div>
-    <div>
+    <!--<div>
         hello world中文<font color="#ff0000">fontColor</font>
         <span class="color_blue bold">css class</span>
     </div>
@@ -56,7 +63,7 @@ end
         editbox:<input type="text" name="myEditbox" value="" style="margin-left:2px;width:64px;height:25px"/><br/>
         password1:<input type="text" name="myPassword" value="123" style="margin-left:2px;width:64px;height:25px" /><br />
         pe_if: <pe:if condition='<%=globalVar=="test global var"%>'>true</pe:if>
-    </pe:container>
+    </pe:container>-->
     <pe:repeat value="item in repeat_data" style="float:left">
         <div style="float:left;"><%=item.a%></div>
     </pe:repeat>
@@ -66,6 +73,12 @@ end
     <pe:repeat DataSource='<%=GetDS()%>' style="float:left">
         <div style="float:left;"><%=a%></div>
     </pe:repeat>
+    <pe:if condition='<%= isSearching%>'>
+        <input type="text" autofocus="true" name="block_search_text_ctl" uiname="block_search_text_obj" caretcolor="#FFFFFFFF" style="margin-top:2px;margin-left:5px;textcolor:#cccccc;height:25px;background:;" onmodify="SearchBlock" />
+    </pe:if>
+    <pe:if condition='<%= not isSearching%>'>
+        <input type="button" value="搜索: 输入ID或名字" style="margin-left:5px;color:#cccccc;height:22px;background:;" onclick="OnSearchBlock" />
+    </pe:if>
 </pe:mcml>
 </html>
 

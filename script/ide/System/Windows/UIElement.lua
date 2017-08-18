@@ -71,7 +71,7 @@ local MouseEvent = commonlib.gettable("System.Windows.MouseEvent");
 local UIElement = commonlib.inherit(commonlib.gettable("System.Core.ToolBase"), commonlib.gettable("System.Windows.UIElement"));
 UIElement:Property("Name", "UIElement");
 UIElement:Signal("SizeChanged");
-UIElement:Property({"enabled", true, "isEnabled", auto=true});
+UIElement:Property({"enabled", true, "isEnabled", "SetEnabled", auto=true});
 UIElement:Property({"BackgroundColor", "#cccccc", auto=true});
 UIElement:Property({"Background", nil, auto=true});
 UIElement:Property({"tooltip", nil, "GetTooltip", "SetTooltip", auto=true});
@@ -222,13 +222,16 @@ function UIElement:show_helper()
 end
 
 function UIElement:createRecursively()
+	if(not self.children) then
+		return;
+	end
     self:create(nil, true, true);
-    local child = children:first();
+    local child = self.children:first();
 	while (child) do
         if (not child:isHidden() and not child:isWindow() and not child:testAttribute("WA_WState_Created")) then
             child:createRecursively();
 		end
-		child = children:next(child);
+		child = self.children:next(child);
     end
 end
 
@@ -536,7 +539,7 @@ end
 -- draw with offset and its child recursively
 -- @param offset: Point of offset. 
 function UIElement:drawWidget(painterContext, offset)
-	if (not self:updatesEnabled()) then
+	if (not self:updatesEnabled() or self:isHidden()) then
 		return;
 	end
 	-- update the "in paint event" flag
@@ -553,7 +556,7 @@ function UIElement:drawWidget(painterContext, offset)
 	-- now draw all children if any
 	if(self.children and not self.children:empty()) then
 		local widget_offset = Point:new_from_pool(self:x(), self:y());
-		widget_offset:add(offset);
+		--widget_offset:add(offset);
 
 		painterContext:Translate(widget_offset:x(), widget_offset:y());
 		local children = self.children;
@@ -631,7 +634,7 @@ function UIElement:childAt(point)
 end
 
 function UIElement:childAt_helper(point)
-	if(self.children and not self.children:empty()) then
+	if(not self:isHidden() and self.children and not self.children:empty()) then
 		if (self:pointInsideRectAndMask(point)) then
 			return self:childAtRecursiveHelper(point);
 		end

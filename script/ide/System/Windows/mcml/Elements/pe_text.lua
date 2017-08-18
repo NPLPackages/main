@@ -49,7 +49,7 @@ function pe_text:LoadComponent(parentElem, parentLayout, style)
 	self:EnableSelfPaint(parentElem);
 
 	css.float = true;
-	local font, font_size, font_scaling = css:GetFontSettings();
+	local font, font_size, scale = css:GetFontSettings();
 	local line_padding = 2;
 	
 	if(css["line-height"]) then

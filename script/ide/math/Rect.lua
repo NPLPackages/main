@@ -136,6 +136,14 @@ function Rect:bottomLeft()
 	return self.xp, self.yp + self.h;
 end
 
+function Rect:setWidth(w)
+	self.w = w;
+end
+
+function Rect:setHeight(h)
+	self.h = h;
+end
+
 function Rect:setSize(w, h)
 	self.w, self.h = w, h;
 end

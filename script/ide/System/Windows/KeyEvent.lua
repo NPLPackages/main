@@ -43,30 +43,36 @@ local ctrl_seq_map = {
 	["DIK_V"] = "Paste",
 	["DIK_HOME"] = "MoveToStartOfWord",
 	["DIK_END"] = "MoveToEndOfWord",
-	["DIK_RIGHT"] = "MoveToNextWord",
+	["DIK_UP"] = "ScrollToPreviousLine",
+	["DIK_DOWN"] = "ScrollToNextLine",
 	["DIK_LEFT"] = "MoveToPreviousWord",
+	["DIK_RIGHT"] = "MoveToNextWord",
 }
 
 local shift_seq_map = {
 	["DIK_HOME"] = "SelectStartOfLine",
 	["DIK_END"] = "SelectEndOfLine",
-	["DIK_RIGHT"] = "SelectNextChar",
+	["DIK_UP"] = "SelectToPreviousLine",
+	["DIK_DOWN"] = "SelectToNextLine",
 	["DIK_LEFT"] = "SelectPreviousChar",
+	["DIK_RIGHT"] = "SelectNextChar",
 	["DIK_DELETE"] = "Cut",
 }
 
 local ctrl_shift_seq_map = {
 	["DIK_HOME"] = "SelectStartOfBlock",
 	["DIK_END"] = "SelectEndOfBlock",
-	["DIK_RIGHT"] = "SelectNextWord",
 	["DIK_LEFT"] = "SelectPreviousWord",
+	["DIK_RIGHT"] = "SelectNextWord",
 }
 
 local std_seq_map = {
 	["DIK_HOME"] = "MoveToStartOfLine",
 	["DIK_END"] = "MoveToEndOfLine",
-	["DIK_RIGHT"] = "MoveToNextChar",
+	["DIK_UP"] = "MoveToPreviousLine",
+	["DIK_DOWN"] = "MoveToNextLine",
 	["DIK_LEFT"] = "MoveToPreviousChar",
+	["DIK_RIGHT"] = "MoveToNextChar",
 	["DIK_DELETE"] = "Delete",
 }
 

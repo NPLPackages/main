@@ -349,7 +349,8 @@ function Application:notify(receiver, event)
 		self.toolTipWakeUpTimer:Change();
 	end
 	
-	if(type == "keyDownEvent" or type == "keyPressedEvent") then
+	--if(type == "keyDownEvent" or type == "keyPressedEvent") then
+	if(type == "keyReleaseEvent" or type == "keyPressEvent") then
 		local w = receiver;
 		while(w) do
 			res = self:notify_helper(w, event);
@@ -381,7 +382,8 @@ function Application:notify(receiver, event)
 			else
 				res = self:notify_helper(w, event);
 			end
-			if (res and event:isAccepted()) then
+			--if (res and event:isAccepted()) then
+			if (event:isAccepted()) then
 				break;
 			end
 			event:pos():add(w:x(), w:y());
