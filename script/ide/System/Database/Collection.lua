@@ -279,3 +279,15 @@ function Collection:delete(query, callbackFunc, timeout)
 		return IORequest:Send("delete", self, query, callbackFunc, timeout);
 	end
 end
+
+-- 2PC for close
+function Collection:close(callbackFunc, timeout)
+	if(self:IsServer()) then
+		return self.storageProvider:Close();
+	else
+		local close_commit = function (...)
+			IORequest:Send("close_commit", self, nil, callbackFunc, timeout);
+		end
+		return IORequest:Send("close_prepare", self, nil, close_commit, timeout);
+	end
+end

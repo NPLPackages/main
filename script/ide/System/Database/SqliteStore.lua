@@ -60,8 +60,10 @@ function SqliteStore:ctor()
 		end
 	end})
 	self.checkpoint_timer = self.checkpoint_timer or commonlib.Timer:new({callbackFunc = function(timer)
-		self:exec({checkpoint=true});
-		timer:Change();
+		if self._db then
+			self:exec({checkpoint=true});
+			timer:Change();
+		end
 	end})
 end
 

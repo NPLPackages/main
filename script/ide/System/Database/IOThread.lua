@@ -172,6 +172,12 @@ function IOThread:HandleRequest(msg)
 				collection:count(msg.query, function(err, data)
 					self:SendResponse(err, data, msg);
 				end);
+			elseif(query_type == "close_prepare") then
+				self:SendResponse(err, data, msg);
+			elseif(query_type == "close_commit") then
+				collection:close(function(err, data)
+					self:SendResponse(err, data, msg);
+				end);
 			end
 		end
 	elseif(query_type == "connect") then
