@@ -42,6 +42,21 @@ TextControl:Property({"text", nil, "GetText", "SetText"})
 TextControl:Property({"lineWrap", nil, "GetLineWrap", "SetLineWrap", auto=true})
 TextControl:Property({"lineHeight", 20, "GetLineHeight", "SetLineHeight", auto=true})
 
+TextControl:Signal("sizeChanged",function(width,height) end);
+TextControl:Signal("positionChanged");
+
+-- undo/redo handling
+local Command = commonlib.inherit(nil, {});
+--@param t: Separator, Insert, Remove, Delete, RemoveSelection, DeleteSelection, InsertItem, RemoveItem ,SetSelection
+function Command:init(cmd_type, pos, str, select_start, select_end, moveCursor)
+    self.type = cmd_type;
+    self.uc = str;
+    self.pos = pos;
+	self.selStart = select_start;
+	self.selEnd = select_end;
+	self.move = moveCursor;
+	return self;
+end
 
 function TextControl:ctor()
 	self.items = commonlib.Array:new();
@@ -59,6 +74,9 @@ function TextControl:ctor()
 	self.m_selLineEnd = 0;
 	self.m_selPosEnd = 0;
 
+	self.m_undoState = 0;
+	self.m_history = commonlib.Array:new();
+
 	self:setFocusPolicy(FocusPolicy.StrongFocus);
 	self:setAttribute("WA_InputMethodEnabled");
 	self:setMouseTracking(true);
@@ -72,10 +90,37 @@ function TextControl:init(parent)
 
 	return self;
 end
---
---function TextControl:Cursor()
---	return self.cursor:geometry();
---end
+
+-- private: Adds the given command to the undo history
+-- of the line control.  Does not apply the command.
+function TextControl:addCommand(cmd)
+    if (self.m_separator and self.m_undoState>0 and self.m_history[self.m_undoState].type ~= "Separator") then
+		self.m_history:resize(self.m_undoState + 2);
+		self.m_undoState = self.m_undoState + 1;
+        self.m_history[self.m_undoState] = Command:new():init("Separator", self:CursorPos(), "", self:SelStart(), self:SelEnd());
+	else
+		self.m_history:resize(self.m_undoState + 1);
+    end
+    self.m_separator = false;
+	self.m_undoState = self.m_undoState + 1;
+    self.m_history[self.m_undoState] = cmd;
+end
+
+function TextControl:separate()
+	self.m_separator = true;
+end
+
+function TextControl:CursorPos()
+	return {line = self.cursorLine, pos = self.cursorPos};
+end
+
+function TextControl:SelStart()
+	return {line = self.m_selLineStart, pos = self.m_selPosStart};
+end
+
+function TextControl:SelEnd()
+	return {line = self.m_selLineEnd, pos = self.m_selPosEnd};
+end
 
 function TextControl:initCursor()
 	local cursor = TextCursor:new():init(self);
@@ -85,7 +130,12 @@ end
 
 function TextControl:getClip()
 	local r = self.parent:Clip();
-	return Rect:new_from_pool(r:x() - self:x(), r:y() - self:y(), r:width(), r:height());
+	if(not self.mask) then
+		self.mask = Rect:new():init(0,0,0,0);
+	end
+	self.mask:setRect(r:x() - self:x(), r:y() - self:y(), r:width(), r:height());
+	return self.mask;
+	--return Rect:new_from_pool(r:x() - self:x(), r:y() - self:y(), r:width(), r:height());
 end
 
 function TextControl:initDoc()
@@ -97,6 +147,9 @@ end
 
 function TextControl:SetText(text)
 	self.items:clear();
+	self.m_history:clear();
+	self.m_undoState = 0;
+
 	local line_text, breaker_text;
 	for line_text, breaker_text in string.gfind(text or "", "([^\r\n]*)(\r?\n?)") do
 		-- DONE: the current one will not ignore empty lines. such as \r\n\r\n. Empty lines are recognised.  
@@ -120,6 +173,14 @@ end
 
 function TextControl:AddItem(text)
 	self:InsertItem(#self.items, text);
+end
+
+function TextControl:clear()
+--    self.m_selstart = 0;
+--    self.m_selend = self.m_text:length();
+--    self:removeSelectedText();
+--    self:separate();
+    --self:finishChange(priorState, false, false);
 end
 
 function TextControl:GetLine(index)
@@ -159,7 +220,7 @@ function TextControl:InsertItem(pos, text)
 		self.items:insert(pos, item);
 	end
 	if(width > self:width()) then
-		self.crect:setWidth(width);
+		self:setWidth(width);
 	end
 
 	self:RecountHeight();
@@ -176,13 +237,8 @@ function TextControl:RemoveItem(index)
 	self.needUpdate = true;
 end
 
-function TextControl:RecountHeight()
-	self.crect:setHeight(self.lineHeight * #self.items);
-	--self:GetTextRect():setHeight(self.lineHeight * #self.items);
-end
-
-function TextControl:RecountWidth()
-	local width = self:width();
+function TextControl:GetRealWidth()
+	local width = 0;
 	for i = 1, self.items:size() do
 		local itemText = self.items:get(i).text;
 		local itemWidth = math.floor(self:naturalTextWidth(itemText)+0.5) + 1;
@@ -190,24 +246,66 @@ function TextControl:RecountWidth()
 			width = itemWidth;
 		end
 	end
-	if(width > self:width()) then
-		--self:GetTextRect():setWidth(width);
-		self.crect:setWidth(width);
-	end
+	return width;
 end
 
-function TextControl:setX(x, adjustCursor)
+function TextControl:GetRealHeight()
+	return self.lineHeight * #self.items;
+end
+
+function TextControl:RecountHeight()
+	self:setHeight(self:GetRealHeight());
+	--self:GetTextRect():setHeight(self.lineHeight * #self.items);
+end
+
+function TextControl:RecountWidth()
+	local width = self:GetRealWidth();
+	self:setWidth(width);
+--	if(width > self:width()) then
+--		--self:GetTextRect():setWidth(width);
+--		self:setWidth(width);
+--	end
+end
+
+function TextControl:setX(x, emitSingal)
+	if(x == self:x()) then
+		return;
+	end
 	TextControl._super.setX(self, x);
-	if(adjustCursor) then
-		self:adjustCursor();
+	if(emitSingal) then
+		self:emitPositionChanged();
+	end
+	
+end
+
+function TextControl:setY(y, emitSingal)
+	if(y == self:y()) then
+		return;
+	end
+	TextControl._super.setY(self, y);
+	if(emitSingal) then
+		self:emitPositionChanged();
 	end
 end
 
-function TextControl:setY(y, adjustCursor)
-	TextControl._super.setY(self, y);
-	if(adjustCursor) then
-		self:adjustCursor();
+function TextControl:setWidth(w)
+	if(w == self:width()) then
+		return;
 	end
+	if(w > self:width() or w > self:getClip():width()) then
+		self.crect:setWidth(w);
+	end
+	self:emitSizeChanged();
+end
+
+function TextControl:setHeight(h)
+	if(h == self:height()) then
+		return;
+	end
+	if(h > self:height() or h > self:getClip():height()) then
+		self.crect:setHeight(h);
+	end
+	self:emitSizeChanged();
 end
 
 function TextControl:GetLineWidth(line)
@@ -226,8 +324,19 @@ function TextControl:naturalTextWidth(text)
 	return text:GetWidth(self:GetFont());
 end
 
+function TextControl:hValue()
+	local clip = self:getClip();
+	return clip:x();
+end
+
+function TextControl:vValue()
+	local clip = self:getClip();
+	return clip:y()/self.lineHeight;
+end
+
 function TextControl:mousePressEvent(e)
-	if(e:button() == "left") then
+	local clip = self:getClip();
+	if(e:button() == "left" and clip:contains(e:pos())) then
 		local line = self:yToLine(e:pos():y());
 		local text = self:GetLineText(line);
 		local pos = self:xToPos(text, e:pos():x());
@@ -265,34 +374,10 @@ function TextControl:inputMethodEvent(event)
 		event:ignore();
 		return;
 	end
+
+	--self:InsertTextAddToCommand(commitString, nil, nil, true);
+	self:InsertTextInCursorPos(commitString);
 	
-	local priorState = -1;
-    local isGettingInput = commitString ~= "";
-    local cursorPositionChanged = false;
-    
-    if (isGettingInput) then
-        -- If any text is being input, remove selected text.
-        --priorState = self.m_undoState;
-        self:removeSelectedText();
-    end
-    if (commitString~="") then
-		local line = self:GetCurrentLine();
-		local pos = self.cursorPos;
-		local s = self:lineInternalInsert(line, pos, commitString);
-		if(s) then
-			self:moveCursor(self.cursorLine,self.cursorPos + s:length(), false, true);
-		end
-        cursorPositionChanged = true;
-    end
-
-	self:updateDisplayText(true);
-    if (cursorPositionChanged) then
-        self:emitCursorPositionChanged();
-	end
-
---    if (isGettingInput) then
---        self:finishChange(priorState);
---	end
 end
 
 function TextControl:keyPressEvent(event)
@@ -313,14 +398,6 @@ function TextControl:keyPressEvent(event)
 				self:backspace();
 			end
 		end
---	elseif(event:IsKeySequence("Undo")) then
---		if (not self:isReadOnly()) then
---			self:undo();
---		end
---	elseif(event:IsKeySequence("Redo")) then
---		if (not self:isReadOnly()) then
---			self:redo();
---		end
 	elseif(event:IsKeySequence("SelectAll")) then
 		self:selectAll();
 	elseif(event:IsKeySequence("Copy")) then
@@ -408,6 +485,14 @@ function TextControl:keyPressEvent(event)
         if (not self.parent:isReadOnly()) then
             self:del();
 		end
+	elseif(event:IsKeySequence("Undo")) then
+		if (not self.parent:isReadOnly()) then
+			self:undo();
+		end
+	elseif(event:IsKeySequence("Redo")) then
+		if (not self.parent:isReadOnly()) then
+			self:redo();
+		end
 	else
 		unknown = true;
 	end
@@ -419,19 +504,162 @@ function TextControl:keyPressEvent(event)
 	end
 end
 
+function TextControl:resetInputMethod()
+	if (self:hasFocus()) then
+        Application:inputMethod():reset();
+    end
+end
+
+function TextControl:undo()
+	self:resetInputMethod();
+	self:internalUndo(); 
+	--self:finishChange(-1, true);
+end
+
+function TextControl:redo()
+	self:resetInputMethod();
+	self:internalRedo(); 
+	--self:finishChange();
+end
+
+-- For security reasons undo is not available in any password mode (NoEcho included)
+-- with the exception that the user can clear the password with undo.
+function TextControl:isUndoAvailable()
+    return not self.parent:isReadOnly() and self.m_undoState>0
+           and (self.parent:echoMode() == "Normal" or self.m_history[self.m_undoState].type == "Insert");
+end
+
+-- Same as with undo. Disabled for password modes.
+function TextControl:isRedoAvailable()
+    return not self.parent:isReadOnly() and self.parent:echoMode() == "Normal" and self.m_undoState < self.m_history:size();
+end
+
+-- @param untilPos: default to -1
+function TextControl:internalUndo(untilPos)
+	untilPos = untilPos or -1;
+	if (not self:isUndoAvailable()) then
+        return;
+	end
+    self:internalDeselect();
+
+--    -- Undo works only for clearing the line when in any of password the modes
+--    if (self.parent:echoMode() ~= "Normal") then
+--        self:clear();
+--        return;
+--    end
+    while (self.m_undoState>0 and self.m_undoState > untilPos) do
+        local cmd = self.m_history[self.m_undoState];
+		self.m_undoState = self.m_undoState - 1;
+
+		if(cmd.type == "Insert") then
+			self:RemoveTextNotAddToCommand(cmd.selStart.line, cmd.selStart.pos, cmd.selEnd.line, cmd.selEnd.pos, cmd.move);
+		elseif(cmd.type == "Remove") then
+			self:InsertTextNotAddToCommand(cmd.uc, cmd.pos.line, cmd.pos.pos, cmd.move);
+		elseif(cmd.type == "Select") then
+			self:setSelect(cmd.selStart, cmd.selEnd, cmd.pos, true);
+		end
+		if(cmd.type ~= "Separator") then
+			if (untilPos < 0 and self.m_undoState>0) then
+				local next = self.m_history[self.m_undoState];
+				if (next.type ~= cmd.type and next.type == "Separator") then
+					break;
+				end
+			end
+		end
+    end
+    --self.m_textDirty = true;
+    self:emitCursorPositionChanged();
+end
+
+function TextControl:internalRedo()
+	if (not self:isRedoAvailable()) then
+        return;
+	end
+    self:internalDeselect();
+    while (self.m_undoState < self.m_history:size()) do
+        local cmd = self.m_history[self.m_undoState+1];
+		self.m_undoState = self.m_undoState + 1;
+--        if(cmd.type == "Insert") then
+--            self.m_text:insert(cmd.pos+1, cmd.uc);
+--            self.m_cursor = cmd.pos + 1;
+--		elseif(cmd.type == "SetSelection") then
+--            self.m_selstart = cmd.selStart;
+--            self.m_selend = cmd.selEnd;
+--            self.m_cursor = cmd.pos;
+--		elseif(cmd.type == "Remove" or cmd.type == "Delete" or cmd.type == "RemoveSelection" or cmd.type == "DeleteSelection") then
+--            self.m_text:remove(cmd.pos+1, 1);
+--            self.m_selstart = cmd.selStart;
+--            self.m_selend = cmd.selEnd;
+--            self.m_cursor = cmd.pos;
+--		elseif(cmd.type == "Separator") then
+--            self.m_selstart = cmd.selStart;
+--            self.m_selend = cmd.selEnd;
+--            self.m_cursor = cmd.pos;
+--        end
+--        if (self.m_undoState < self.m_history:size()) then
+--            local next = self.m_history[self.m_undoState+1];
+--            if (next.type ~= cmd.type 
+--				and ((cmd.type == "Separator" or cmd.type == "Insert" or cmd.type == "Remove" or cmd.type == "Delete") and next.type ~= "Separator")
+--                and ((next.type == "Separator" or next.type == "Insert" or next.type == "Remove" or next.type == "Delete") or cmd.type == "Separator")) then
+--                break;
+--			end
+--        end
+
+		if(cmd.type == "Insert") then
+			self:InsertTextNotAddToCommand(cmd.uc, cmd.pos.line, cmd.pos.pos, cmd.move);
+
+			--self:RemoveTextNotAddToCommand(cmd.selStart.line, cmd.selStart.pos, cmd.selEnd.line, cmd.selEnd.pos);
+		elseif(cmd.type == "Remove") then
+			self:RemoveTextNotAddToCommand(cmd.selStart.line, cmd.selStart.pos, cmd.selEnd.line, cmd.selEnd.pos, cmd.move);
+			--self:InsertTextNotAddToCommand(cmd.uc, cmd.pos.line, cmd.pos.pos, cmd.move);
+		elseif(cmd.type == "Select") then
+			self:setSelect(cmd.selStart, cmd.selEnd, cmd.pos, true);
+		end
+--		if(cmd.type ~= "Separator") then
+--			if (untilPos < 0 and self.m_undoState>0) then
+--				local next = self.m_history[self.m_undoState];
+--				if (next.type ~= cmd.type and next.type == "Separator") then
+--					break;
+--				end
+--			end
+--		end
+
+		if (self.m_undoState < self.m_history:size()) then
+            local next = self.m_history[self.m_undoState+1];
+            if (next.type ~= cmd.type and next.type == "Separator") then
+				break;
+			end
+        end
+    end
+    --self.m_textDirty = true;
+    self:emitCursorPositionChanged();
+end
+
 function TextControl:scrollX(offst_x)
 	local x = math.min(0,self:x() + offst_x);
-	self:setX(x);
+	self:setX(x, true);
 end
 
 function TextControl:scrollY(offst_y)
+	if(offst_y % self.lineHeight ~= 0) then
+		local tmp_offset = math.ceil(math.abs(offst_y) / self.lineHeight) * self.lineHeight;
+		offst_y = if_else(offst_y >0 ,tmp_offset ,-tmp_offset);
+	end
 	local y = math.min(0,self:y() + offst_y);
+	self:setY(y, true);
+end
+
+function TextControl:updatePos(hscroll, vscroll)
+	local x = -hscroll;
+	local y = -vscroll * self.lineHeight;
+	self:setX(x);
 	self:setY(y);
 end
 
 function TextControl:ScrollLineForward()
 	if((self:y() + self.lineHeight) <= self.parent:Clip():y()) then
-		self:setY(self:y() + self.lineHeight);
+		self:scrollY(self.lineHeight);
+		--self:setY(self:y() + self.lineHeight);
 
 		local cursor_bottom = (self.cursorLine - 1) * self.lineHeight + self.cursor:height();
 		if(cursor_bottom > self:getClip():y() + self:getClip():height()) then
@@ -442,7 +670,8 @@ end
 
 function TextControl:ScrollLineBackward()
 	if((self:y() + self:height() - self.lineHeight) > (self.parent:Clip():y() + self.parent:Clip():height())) then
-		self:setY(self:y() - self.lineHeight);
+		self:scrollY(-self.lineHeight);
+		--self:setY(self:y() - self.lineHeight);
 		local cursor_y = (self.cursorLine - 1) * self.lineHeight;
 		if(cursor_y < self:getClip():y()) then
 			self.cursorLine = self.cursorLine + 1;
@@ -496,11 +725,11 @@ function TextControl:DocEnd(mark)
 end
 
 function TextControl:GetRow()
-	return math.floor(self:getClip():height()/self.lineHeight);
+	return #self.items;
 end
 
 function TextControl:PreviousPage(mark)
-	local row = self:GetRow();
+	local row = self.parent:GetRow();
 	local line = self.cursorLine - row;
 	local pos = self.cursorPos;
 	if(line < 1) then
@@ -513,7 +742,7 @@ function TextControl:PreviousPage(mark)
 end
 
 function TextControl:NextPage(mark)
-	local row = self:GetRow();
+	local row = self.parent:GetRow();
 	local line = self.cursorLine + row;
 	local pos = self.cursorPos;
 	if(line > #self.items) then
@@ -593,6 +822,7 @@ end
 function TextControl:del()
 	--local priorState = self.m_undoState;
     if (self:hasSelectedText()) then
+		self:separate();
         self:removeSelectedText();
     else
         self:internalDelete();
@@ -605,7 +835,8 @@ function TextControl:paste(mode)
 	if(clip or self:hasSelectedText()) then
 		clip = commonlib.Encoding.DefaultToUtf8(clip);
 		--self:separate(); -- make it a separate undo/redo command
-        self:InsertText(clip);
+        --self:InsertTextAddToCommand(clip);
+		self:InsertTextInCursorPos(clip);
         --self:separate();
 	end
 end
@@ -626,27 +857,55 @@ function TextControl:docPos(line, pos)
 	return docPos;
 end
 
-function TextControl:InsertText(text, line, pos)
+function TextControl:InsertTextInCursorPos(text)
+	self:separate();
 	self:removeSelectedText();
+	--self:RemoveTextAddToCommand(self.m_selLineStart, self.m_selPosStart, self.m_selLineEnd, self.m_selPosEnd);
+	self:InsertTextAddToCommand(text, self.cursorLine, self.cursorPos, true);
+end
 
-	line = line or self.cursorLine;
-	pos = pos or self.cursorPos;
+function TextControl:InsertTextAddToCommand(text, line, pos, moveCursor)
+	self:InsertText(text, line, pos, true, moveCursor);
+end
+
+function TextControl:InsertTextNotAddToCommand(text, line, pos, moveCursor)
+	--self:RemoveTextNotAddToCommand(self.m_selLineStart, self.m_selPosStart, self.m_selLineEnd, self.m_selPosEnd);
+	self:InsertText(text, line, pos, false, moveCursor);
+end
+
+function TextControl:InsertText(text, line, pos , addToCommand, moveCursor)
+	if(text == "") then
+		return;
+	end
+
+	local cursorLine = line;
+	local cursorPos = pos;
+
+	local before_pos = {line = line, pos = pos};
 	if(string.find(text,"\r\n")) then
 		local newLines = {};
 		local line_text, breaker_text;
 		for line_text, breaker_text in string.gfind(text or "", "([^\r\n]*)(\r?\n?)") do
 			if(line_text ~= "" or breaker_text ~= "") then
-				newLines[#newLines + 1] = line_text;
+				if(#newLines > 0) then
+					newLines[#newLines] = line_text;
+				else
+					newLines[#newLines + 1] = line_text;
+				end
+				
+				if(breaker_text == "\r" or breaker_text == "\n" or breaker_text == "\r\n") then
+					newLines[#newLines + 1] = "";
+				end
 			end
 			-- DONE: the current one will not ignore empty lines. such as \r\n\r\n. Empty lines are recognised.  
 		end
-		local cursorLineText = self:GetLineText(self.cursorLine);
-		--local LineText = cursorLineText:substr();
-		local newLineText = cursorLineText:substr(self.cursorPos + 1,cursorLineText:length());
-		local lineIndex = self.cursorLine;
+		local cursorLineText = self:GetLineText(line);
+		local newLineText = cursorLineText:substr(pos + 1,cursorLineText:length());
+		self:lineInternalRemove(self:GetLine(line), pos + 1);
+		local lineIndex = line;
 		for i = 1,#newLines do
 			if(i == 1) then
-				local insertLine = self:GetLine(i);
+				local insertLine = self:GetLine(lineIndex);
 				local lineText = insertLine.text;
 				self:lineInternalInsert(insertLine,lineText:length(),newLines[i]);
 			elseif(i == #newLines) then
@@ -656,41 +915,59 @@ function TextControl:InsertText(text, line, pos)
 			end
 			lineIndex = lineIndex + 1;
 		end
-		self:moveCursor(line + #newLines - 1,ParaMisc.GetUnicodeCharNum(newLines[#newLines]), false, true);
-		--self:adjustCursor();
+		if(moveCursor) then
+			cursorLine = line + #newLines - 1;
+			cursorPos = ParaMisc.GetUnicodeCharNum(newLines[#newLines]);
+		end
 	else
-		local s = self:lineInternalInsert(self:GetCurrentLine(), pos, text);
-		if(s) then
-			self:moveCursor(line, pos + s:length(), false, true);
-			--self:adjustCursor();
+		local s = self:lineInternalInsert(self:GetLine(line), pos, text);
+		if(s and moveCursor) then
+			cursorPos = pos + s:length();
 		end
 	end
+
+	if(moveCursor) then
+		self:moveCursor(cursorLine,cursorPos, false, true);
+	end
+
+	local after_pos = {line = cursorLine, pos = cursorPos};
+
+
+	if(addToCommand) then
+		self:addCommand(Command:new():init("Insert", before_pos, text, before_pos, after_pos, moveCursor));
+	end
+end
+
+function TextControl:scopeText(startLine, startPos, endLine, endPos, beUtf8)
+	local text;
+
+	if(startLine == endLine) then
+		text = self:GetLineText(startLine):substr(startPos+1, endPos);
+	else
+		local startLineText = self:GetLineText(startLine);
+		local endLineText = self:GetLineText(endLine);
+		local insertText = "";
+		for i = startLine, endLine do
+			if(i == startLine) then
+				text = startLineText:substr(startPos+1, startLineText:length());
+				text = text.."\r\n";
+			elseif(i == endLine) then
+				text = text..endLineText:substr(1, endPos);
+			else
+				local lineText = self:GetLineText(i).text;
+				text = text..lineText.."\r\n";
+			end
+		end
+	end
+	if(beUtf8) then
+		text = commonlib.Encoding.Utf8ToDefault(tostring(text));
+	end
+	return text;
 end
 
 function TextControl:selectedText()
 	if(self:hasSelectedText()) then
-		local text;
-
-		if(self.m_selLineStart == self.m_selLineEnd) then
-			text = self:GetLineText(self.m_selLineStart):substr(self.m_selPosStart+1, self.m_selPosEnd);
-		else
-			local startLineText = self:GetLineText(self.m_selLineStart);
-			local endLineText = self:GetLineText(self.m_selLineEnd);
-			local insertText = "";
-			for i = self.m_selLineStart, self.m_selLineEnd do
-				if(i == self.m_selLineStart) then
-					text = startLineText:substr(self.m_selPosStart+1, startLineText:length());
-					text = text.."\r\n";
-				elseif(i == self.m_selLineEnd) then
-					text = text..endLineText:substr(1, self.m_selPosEnd);
-				else
-					local lineText = self:GetLineText(i);
-					text = text..lineText.."\r\n";
-				end
-			end
-		end
-
-		return commonlib.Encoding.Utf8ToDefault(tostring(text));
+		return self:scopeText(self.m_selLineStart, self.m_selPosStart, self.m_selLineEnd, self.m_selPosEnd, true);
 	end
 end
 
@@ -709,46 +986,67 @@ function TextControl:selectAll()
 	self:moveCursor(#self.items, text:length(), true, true);
 end
 
-function TextControl:removeSelectedText()
---	if(true) then
---		return;
---	end
-	if(self:hasSelectedText()) then
-		if(self.m_selLineStart == self.m_selLineEnd) then
-			local text = self:GetLineText(self.m_selLineStart);
-			text:remove(self.m_selPosStart+1, self.m_selPosEnd - self.m_selPosStart);
-			if(self.cursorPos > self.m_selPosStart) then
-				local pos = self.cursorPos - (math.min(self.cursorPos, self.m_selPosEnd) - self.m_selPosStart);
-				self:moveCursor(self.m_selLineStart, pos, false, true)
-			end
-		else
-			--local startLineText = 
-			local startLineText = self:GetLineText(self.m_selLineStart);
-			local endLineText = self:GetLineText(self.m_selLineEnd);
-			local insertText = "";
-			for i = self.m_selLineEnd, self.m_selLineStart, -1 do
-				if(i == self.m_selLineStart) then
-					startLineText:remove(self.m_selPosStart+1, startLineText:length() - self.m_selPosStart);
-					startLineText:insert(startLineText:length(),insertText);
-				elseif(i == self.m_selLineEnd) then
-					insertText = endLineText:substr(self.m_selPosEnd+1, endLineText:length());
-					self:RemoveItem(i);
-				else
-					self:RemoveItem(i);
-				end
-			end
-			if(self.cursorLine > self.m_selLineStart) then
-				self:moveCursor(self.m_selLineStart, self.m_selPosStart, false, true)	
+function TextControl:RemoveTextAddToCommand(startLine, startPos, endLine, endPos, moveCursor)
+	self:RemoveText(startLine, startPos, endLine, endPos, true, moveCursor);
+end
+
+function TextControl:RemoveTextNotAddToCommand(startLine, startPos, endLine, endPos, moveCursor)
+	self:RemoveText(startLine, startPos, endLine, endPos, false, moveCursor);
+end
+
+function TextControl:RemoveText(startLine, startPos, endLine, endPos , addToCommand, moveCursor)
+	if(startLine == endLine and startPos == endPos ) then
+		return;
+	end
+
+	local selStart = {line = startLine, pos = startPos};
+	local selEnd = {line = endLine, pos = endPos};
+
+	--local move = not (self.cursorLine == startLine and self.cursorPos == startPos);
+
+	local text = self:scopeText(startLine, startPos, endLine, endPos, false);
+
+	if(startLine == endLine) then
+		self:lineInternalRemove(self:GetLine(startLine), startPos+1, endPos - startPos);
+	else
+		local firstLine = self:GetLine(startLine);
+		local lastLine = self:GetLine(endLine);
+		local firstLineText = firstLine.text;
+		local lastLineText = lastLine.text;
+		local insertText = "";
+		for i = endLine, startLine, -1 do
+			if(i == startLine) then
+				self:lineInternalRemove(firstLine, startPos+1, firstLineText:length() - startPos)
+				self:lineInternalInsert(firstLine, firstLineText:length(), insertText)
+			elseif(i == endLine) then
+				insertText = lastLineText:substr(endPos+1, lastLineText:length());
+				self:RemoveItem(i);
+			else
+				self:RemoveItem(i);
 			end
 		end
+	end
+	if(moveCursor) then
+		self:moveCursor(startLine, startPos, false, true);
+	end
+
+	if(addToCommand) then
+		self:addCommand(Command:new():init("Remove", self:CursorPos(), text, selStart, selEnd, moveCursor));
+	end	
+end
+
+function TextControl:removeSelectedText()
+	if(self:hasSelectedText()) then
+		self:addCommand(Command:new():init("Select", self:CursorPos(), nil, self:SelStart(), self:SelEnd()));
+		self:RemoveTextAddToCommand(self.m_selLineStart, self.m_selPosStart, self.m_selLineEnd, self.m_selPosEnd, true);
 		self:internalDeselect();
-		--self:adjustCursor();
 	end
 end
 
 function TextControl:backspace()
     --local priorState = m_undoState;
     if (self:hasSelectedText()) then
+		self:separate();
         self:removeSelectedText();
     else
 		self:internalDelete(true);
@@ -757,25 +1055,50 @@ function TextControl:backspace()
 end
 
 function TextControl:internalDelete(wasBackspace)
-	if(self.cursorPos > 0) then
-		self:lineInternalRemove(self:GetCurrentLine(), self.cursorPos, 1);
-		self:moveCursor(self.cursorLine, self.cursorPos - 1, false, true);
+	if(self.cursorLine == 1 and self.cursorPos == 0) then
+		return;
+	end
+	self:separate();
+	local startLine, startPos, endLine, endPos;
+	local anchorLine, anchorPos;
+
+	if(wasBackspace) then
+		if(self.cursorPos > 0) then
+			anchorLine = self.cursorLine;
+			anchorPos = self.cursorPos - 1;
+		else
+			anchorLine = self.cursorLine - 1;
+			anchorPos = self:GetLineText(anchorLine):length();
+		end
 	else
-		if(self.cursorLine > 1) then
-			local prevLine = self:GetLine(self.cursorLine - 1);
-			local curLine = self:GetCurrentLine();
-
-			local prevLineText = prevLine.text;
-			local curLineText = curLine.text;
-
-			local curLineIndex = self.cursorLine;
-
-			self:moveCursor(self.cursorLine - 1, prevLineText:length(), false, true);
-			self:lineInternalInsert(prevLine, prevLineText:length(), curLineText:GetText());
-
-			self:RemoveItem(curLineIndex);
+		local len = self:GetLineText(self.cursorLine):length();
+		if(self.cursorPos < len) then
+			anchorLine = self.cursorLine;
+			anchorPos = self.cursorPos + 1;
+		else
+			anchorLine = self.cursorLine + 1;
+			anchorPos = 0;
 		end
 	end
+
+	if(anchorLine == self.cursorLine) then
+		startLine = anchorLine;
+		startPos = math.min(anchorPos, self.cursorPos);
+		endLine = anchorLine;
+		endPos = math.max(anchorPos, self.cursorPos);
+	else
+		startLine = math.min(anchorLine, self.cursorLine);
+		endLine = math.max(anchorLine, self.cursorLine);
+		if(startLine == anchorLine) then
+			startPos = anchorPos;
+			endPos = self.cursorPos;
+		else
+			startPos = self.cursorPos;
+			endPos = anchorPos;
+		end
+	end
+
+	self:RemoveTextAddToCommand(startLine, startPos, endLine, endPos, wasBackspace);
 end
 
 function TextControl:lineInternalRemove(line, pos, count)
@@ -785,20 +1108,23 @@ function TextControl:lineInternalRemove(line, pos, count)
 end
 
 function TextControl:newLine(mark)
-	local pos = self.cursorPos;
-	if(pos == 0) then
-		self:InsertItem(self.cursorLine,"");	
-	elseif(pos == self:GetCurrentLine().text:length()) then
-		self:InsertItem(self.cursorLine + 1,"");	
-	else
-		local curText = self:GetCurrentLine().text;
-		local newTextStr = curText:substr(pos + 1);
-		
-		self:lineInternalRemove(self:GetCurrentLine(), pos + 1);
+	--self:InsertTextAddToCommand("\r\n", nil, nil, true);
+	self:InsertTextInCursorPos("\r\n");
 
-		self:InsertItem(self.cursorLine + 1,newTextStr);	
-	end
-	self:moveCursor(self.cursorLine + 1, 0, false, true);
+--	local pos = self.cursorPos;
+--	if(pos == 0) then
+--		self:InsertItem(self.cursorLine,"");	
+--	elseif(pos == self:GetCurrentLine().text:length()) then
+--		self:InsertItem(self.cursorLine + 1,"");	
+--	else
+--		local curText = self:GetCurrentLine().text;
+--		local newTextStr = curText:substr(pos + 1);
+--		
+--		self:lineInternalRemove(self:GetCurrentLine(), pos + 1);
+--
+--		self:InsertItem(self.cursorLine + 1,newTextStr);	
+--	end
+--	self:moveCursor(self.cursorLine + 1, 0, false, true);
 end
 
 function TextControl:hasAcceptableInput(str)
@@ -834,9 +1160,17 @@ function TextControl:lineInternalInsert(line, pos, s)
     if (remaining > 0) then
 		s = s:left(remaining);
         lineText:insert(pos, s);
+
+		--self:addCommand(Command:new():init("Insert", self.m_cursor, s[i], -1, -1));
+
+--		for i = 1, s:length() do
+--            self:addCommand(Command:new():init("Insert", self.m_cursor, s[i], -1, -1));
+--			self.m_cursor = self.m_cursor + 1;
+--		end
+
 		local width = self:GetLineWidth(line);
 		if(width > self:width()) then
-			self.crect:setWidth(width);
+			self:setWidth(width);
 		end
 		return s;
     end
@@ -848,6 +1182,19 @@ function TextControl:hasSelectedText()
 		return false;
 	end
 	return true;
+end
+
+function TextControl:setSelect(selStart, selEnd, cursorPos, adjustCursor)
+	local startCursorPos, endCursorPos;
+	if(cursorPos.line == selStart.line and cursorPos.pos == selStart.pos) then
+		startCursorPos = selEnd;
+		endCursorPos = selStart;
+	else
+		startCursorPos = selStart;
+		endCursorPos = selEnd;
+	end
+	self:moveCursor(startCursorPos.line, startCursorPos.pos, false, adjustCursor);
+	self:moveCursor(endCursorPos.line, endCursorPos.pos, true, adjustCursor);
 end
 
 function TextControl:moveCursor(line, pos, mark, adjustCursor)
@@ -1000,34 +1347,28 @@ function TextControl:adjustCursor()
 
 		local clip_x_to_self = cursor_x_to_self - cursor_x_to_clip;
 		local self_x = self.parent:Clip():x() - clip_x_to_self;
-		self:setX(self_x);
+		self:setX(self_x, true);
 	end
 
 	local cursor_y = (self.cursorLine - 1) * self.lineHeight;
 	local max_cursor_y = self:cursorMaxPosY();
 	local min_cursor_y = self:cursorMinPosY();
 
+	--local offset_y = 0;
+	local new_y = self:y();
 	if(cursor_y > max_cursor_y) then
-		local y = self:y() + max_cursor_y - (self.cursorLine - 1) * self.lineHeight;
-		self:setY(y);
+		new_y = self:y() + max_cursor_y - (self.cursorLine - 1) * self.lineHeight;
+		--offset_y = y - self:y();
+		--self:scrollY(offset_y);
+		--self:setY(y);
 	elseif(cursor_y < min_cursor_y) then
-		local y = self:y() + min_cursor_y - (self.cursorLine - 1) * self.lineHeight;
-		self:setY(y);
+		new_y = self:y() + min_cursor_y - (self.cursorLine - 1) * self.lineHeight;
+		--offset_y = y - self:y();
+		--self:scrollY(offset_y);
+		--self:setY(y);
 	end
-end
-
-function TextControl:checkSize()
---	local clip = self:getClip();
---	local min_width, min_height = clip:width(), clip:height();
-
-	--local offset_x = self:x() + self:width();
-	if(self:width() < self.parent:width()) then
-		self.crect:setWidth(self.parent:width() - self:x());
-	end
-
-	--local offset_y = self:y() + self:height();
-	if(self:height() < self.parent:height()) then
-		self.crect:setHeight(self.parent:height() - self:y());
+	if(new_y ~= self:y()) then
+		self:scrollY(new_y - self:y());
 	end
 end
 
@@ -1039,8 +1380,44 @@ function TextControl:CharWidth()
 	return _guihelper.GetTextWidth("a", self:GetFont());
 end
 
+function TextControl:emitPositionChanged()
+	self:positionChanged();
+end
+
+function TextControl:emitSizeChanged()
+	local w = self:GetRealWidth();
+	local h = self:GetRealHeight();
+	self:sizeChanged(w, h);
+end
+
+function TextControl:updateGeometry()
+	local clip = self.parent:Clip();
+	if(self:GetRealWidth() < clip:width()) then
+		self:setX(clip:x(), true);
+		self:setWidth(clip:width() - self:x());
+		--self
+	else
+		local offset_r = (clip:x() + clip:width()) - (self:x() + self:width());
+		if(offset_r > 0) then
+			self:scrollX(offset_r);
+		end
+	end
+
+	--local offset_y = self:y() + self:height();
+	if(self:GetRealHeight() < clip:height()) then
+		self:scrollY(clip:y() - self:y());
+		--self:setY(clip:y());
+		self:setHeight(clip:height() - self:y());
+	else
+		local offset_b = (clip:y() + clip:height()) - (self:y() + self:height());
+		if(offset_b >= self.lineHeight) then
+			self:scrollY(self.lineHeight * math.floor(offset_b / self.lineHeight));
+		end
+	end
+end
+
 function TextControl:paintEvent(painter)
-	self:checkSize();
+	self:updateGeometry();
 	self:UpdateCursor();
 
 	local clip =  self:getClip();

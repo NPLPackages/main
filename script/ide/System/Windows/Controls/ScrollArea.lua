@@ -26,10 +26,8 @@ ScrollArea:Property("Name", "ScrollArea");
 --ScrollArea:Property({"Background", nil, auto=true});
 
 function ScrollArea:ctor()
-		self.hbar = nil;
+	self.hbar = nil;
 	self.vbar = nil;
---	self.hscroll = 500;
---	self.vscroll = 500;
 	self.hscroll = 0;
 	self.vscroll = 0;
 
@@ -39,22 +37,32 @@ end
 
 function ScrollArea:init(parent)
 	ScrollArea._super.init(self, parent);
-
---	self.hbar = ScrollBar:hbarBar(self);
---	self.hbar:Connect("scroll", function(event)
---		self.horValue = self.hbar:GetValue();
---	end);
---	self.hbar:hide();
---
---	self.vbar = ScrollBar:vbarBar(self);
---	self.vbar:Connect("scroll", function(event)
---		self.verValue = self.vbar:GetValue();
---	end);
---	self.vbar:hide();
---
---	self.viewport = nil;
+	self:initScrollBar();
 
 	return self;
+end
+
+function ScrollArea:initScrollBar()
+	--self.hbar = ScrollBar:hbarBar(self);
+	self.hbar = ScrollBar:new():init(self);
+	--self.hbar:
+	self.hbar:Connect("valueChanged", function(value)
+		self.hscroll = value;
+		self:updateViewportPos();
+	end);
+	self.hbar:hide();
+
+	self.vbar = ScrollBar:new():init(self);
+	self.vbar:SetDirection("vertical");
+	self.vbar:Connect("valueChanged", function(value)
+		self.vscroll = value;
+		self:updateViewportPos();
+	end);
+	self.vbar:hide();
+end
+
+function ScrollArea:updateViewportPos()
+	
 end
 
 --function ScrollArea:viewport()
