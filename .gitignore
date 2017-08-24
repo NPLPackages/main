@@ -24,3 +24,14 @@ Documentation/*
 !NPLPackageMain.csproj.user
 !NPLPackageMain.sln
 
+!/script/kids/
+/script/kids/*
+!/script/kids/ParaWorldCore.lua
+!/script/kids/3DMapSystemApp/
+/script/kids/3DMapSystemApp/*
+!/script/kids/3DMapSystemApp/*.lua
+!/script/kids/3DMapSystemApp/mcml/
+!/script/kids/3DMapSystemApp/WebBrowser/
+!/script/kids/3DMapSystemApp/DebugApp/
+
+
