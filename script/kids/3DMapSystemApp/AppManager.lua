@@ -25,9 +25,8 @@ NPL.load("(gl)script/kids/3DMapSystemApp/AppManager.lua");
 ------------------------------------------------------------
 ]]
 
-if(not Map3DSystem.App.AppManager) then Map3DSystem.App.AppManager={}; end
+local AppManager = commonlib.gettable("System.App.AppManager");
 
--- requires
 NPL.load("(gl)script/ide/os.lua");
 NPL.load("(gl)script/kids/3DMapSystemApp/AppHelper.lua");
 NPL.load("(gl)script/kids/3DMapSystemApp/AppRegistration.lua");

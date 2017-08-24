@@ -24,6 +24,8 @@ Documentation/*
 !NPLPackageMain.csproj.user
 !NPLPackageMain.sln
 
+
+## old files
 !/script/kids/
 /script/kids/*
 !/script/kids/ParaWorldCore.lua
@@ -33,5 +35,6 @@ Documentation/*
 !/script/kids/3DMapSystemApp/mcml/
 !/script/kids/3DMapSystemApp/WebBrowser/
 !/script/kids/3DMapSystemApp/DebugApp/
+!/script/kids/3DMapSystemApp/localserver/
 
 

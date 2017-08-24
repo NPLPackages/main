@@ -96,7 +96,7 @@ Map3DSystem.App.Command = {
 };
 
 -- create a new command
-function Map3DSystem.App.Command:new (o)
+function Map3DSystem.App.Command:new(o)
 	o = o or {}   -- create object if user does not provide one
 	setmetatable(o, self)
 	self.__index = self
@@ -175,7 +175,7 @@ end
 -- It will first call QueryStatus and then call Exec of the given commands. 
 -- @param params: optional parameters
 -- @return the msg is returned. 
-function Map3DSystem.App.Command:Call (params)
+function Map3DSystem.App.Command:Call(params)
 	if(self.app_key~=nil) then
 		local app = Map3DSystem.App.AppManager.GetApp (self.app_key);
 		if(app~=nil) then
@@ -245,7 +245,7 @@ end
 
 -- get a iterator of depth first tranversal for all elements (including folders) in commands. 
 -- @param rootEnv: from which command group to search. if nil the root command is used. Otherwise it can be a command folder name, e.g. "Files", "Profile.MyApps"
-function Map3DSystem.App.Commands.GetEnumerator (rootEnv)
+function Map3DSystem.App.Commands.GetEnumerator(rootEnv)
 	local cur;
 	if(rootEnv == nil) then
 		cur = Map3DSystem.App.Commands._commands;
@@ -328,7 +328,7 @@ end
 -- @param commandName: 
 -- @param params: nil or additional parameters
 -- @return the msg is returned. 
-function Map3DSystem.App.Commands.Call (commandName, params)
+function Map3DSystem.App.Commands.Call(commandName, params)
 	local cmd = Map3DSystem.App.Commands.GetCommand(commandName);
 	if(cmd~=nil and cmd.Call~=nil) then
 		return cmd:Call(params);
