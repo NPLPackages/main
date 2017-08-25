@@ -57,7 +57,7 @@ URLResourceStore.Cache_policy_REST = System.localserver.CachePolicy:new("access 
 --	Default to nil, which only returns unexpired version, unless HTTP error occurs and expired local server version may be returned. 
 -- @return return true if it is fetching data or data is already available. false if url is already being downloaded by the previous call.
 function URLResourceStore:GetURL(Cache_policy, url, callbackFunc, callbackContext, funcMsgTranslator, bUseExpire)
-	if(paraworld.OfflineMode) then
+	if(paraworld and paraworld.OfflineMode) then
 		Cache_policy = System.localserver.CachePolicies["always"];
 	end
 	-- get request url from input
