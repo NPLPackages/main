@@ -12,6 +12,7 @@ System.SystemInfo.SetField("name", "Aries")
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/IDE.lua");
+NPL.load("(gl)script/ide/System/System.lua");
 NPL.load("(gl)script/ide/Debugger/IPCDebugger.lua");
 
 -- when ParaEngine starts, call following function only once to load all packages/startup/*.zip
@@ -26,17 +27,22 @@ NPL.load("(gl)script/kids/3DMapSystemUI/loadworld.lua");
 NPL.load("(gl)script/ide/WindowFrame.lua");
 NPL.load("(gl)script/kids/3DMapSystemAnimation/AnimationManager.lua");
 
+local User = commonlib.gettable("Map3DSystem.User");
+local options = commonlib.gettable("Map3DSystem.options");
+
 --
 -- ParaWorld platform commandline setting processing
 --
 -- let command line params to override some loaded or default settings. 
-Map3DSystem.User.Name = ParaEngine.GetAppCommandLineByParam("username", Map3DSystem.User.Name);
-Map3DSystem.User.Password = ParaEngine.GetAppCommandLineByParam("password", Map3DSystem.User.Password);
+User.Name = ParaEngine.GetAppCommandLineByParam("username", User.Name);
+User.Password = ParaEngine.GetAppCommandLineByParam("password", User.Password);
 
-Map3DSystem.User.ChatDomain = ParaEngine.GetAppCommandLineByParam("chatdomain", nil);
-Map3DSystem.User.Domain = ParaEngine.GetAppCommandLineByParam("domain", nil);
-paraworld.ChangeDomain({domain=Map3DSystem.User.Domain, chatdomain=Map3DSystem.User.ChatDomain})
-Map3DSystem.options.ForceGateway = ParaEngine.GetAppCommandLineByParam("gateway", nil);
+User.ChatDomain = ParaEngine.GetAppCommandLineByParam("chatdomain", nil);
+User.Domain = ParaEngine.GetAppCommandLineByParam("domain", nil);
+if(paraworld) then
+	paraworld.ChangeDomain({domain=User.Domain, chatdomain=User.ChatDomain})
+end
+options.ForceGateway = ParaEngine.GetAppCommandLineByParam("gateway", nil);
 
 local IsServerMode = ParaEngine.GetAppCommandLineByParam("servermode", "false") == "true";
 local IsQuestServerMode = ParaEngine.GetAppCommandLineByParam("questservermode", "false") == "true";
@@ -48,18 +54,18 @@ elseif(IsQuestServerMode) then
 	--ParaGlobal.SetGameLoop("(gl)script/kids/3DMapSystemQuest/Quest_Server_Loop.lua");
 end
 
-Map3DSystem.User.IP = ParaEngine.GetAppCommandLineByParam("IP", "0");
-Map3DSystem.User.Port = tonumber(ParaEngine.GetAppCommandLineByParam("port", "60001"));
+User.IP = ParaEngine.GetAppCommandLineByParam("IP", "0");
+User.Port = tonumber(ParaEngine.GetAppCommandLineByParam("port", "60001"));
 
 -- update application title
 ParaEngine.SetWindowText(string.format("www.paraengine.com -- powered by ParaEngine"));
 
 -- whether we are in a web browser plugin. 
-Map3DSystem.options.IsWebBrowser = ((ParaEngine.GetAttributeObject():GetField("CoreUsage", 1) % 2) == 0);
+options.IsWebBrowser = ((ParaEngine.GetAttributeObject():GetField("CoreUsage", 1) % 2) == 0);
 -- whether we are in the mobile platform
-Map3DSystem.options.IsMobilePlatform = ParaEngine.GetAttributeObject():GetField("IsMobilePlatform", false);
+options.IsMobilePlatform = ParaEngine.GetAttributeObject():GetField("IsMobilePlatform", false);
 -- do not allow resizing windows when running standalone mode. Allow resizing in web browser
-ParaEngine.GetAttributeObject():SetField("IgnoreWindowSizeChange", not Map3DSystem.options.IsWebBrowser);
+ParaEngine.GetAttributeObject():SetField("IgnoreWindowSizeChange", not options.IsWebBrowser);
 
 --
 -- ParaWorld platform common functions: init, reset, LoadWorld, CreateWorld
@@ -76,15 +82,18 @@ function Map3DSystem.init(params)
 	end
 			
 	-- set IP address of game server
-	--ParaNetwork.SetNerveCenterAddress(string.format("%s:%d", Map3DSystem.User.IP, Map3DSystem.User.Port));
-	--ParaNetwork.SetNerveReceptorAddress(string.format("%s:%d", Map3DSystem.User.IP, Map3DSystem.User.Port-1));
+	--ParaNetwork.SetNerveCenterAddress(string.format("%s:%d", User.IP, User.Port));
+	--ParaNetwork.SetNerveReceptorAddress(string.format("%s:%d", User.IP, User.Port-1));
 	
 	-- startup all applications
 	NPL.load("(gl)script/kids/3DMapSystemApp/AppManager.lua");
 	Map3DSystem.App.AppManager.Startup();
 	
 	-- rebind event handlers
-	Map3DSystem.ReBindEventHandlers();
+	NPL.load("(gl)script/kids/3DMapSystemUI/event_handlers.lua");
+	if(Map3DSystem.ReBindEventHandlers) then
+		Map3DSystem.ReBindEventHandlers();
+	end
 		
 	-- disable network unpon restart
 	ParaNetwork.EnableNetwork(false, "","");
