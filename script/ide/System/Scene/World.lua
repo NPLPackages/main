@@ -76,7 +76,7 @@ function World:LoadWorldImmediate(worldpath, bPerserveUI, bHideProgressUI, OnPro
 		else
 			LOG.std(nil, "warn", "loadworld", "opening zip file while disk file already exist, use zip priority now");
 		end
-		self.readonly = true;
+		self:SetReadOnly(true);
 		
 		NPL.load("(gl)script/ide/sandbox.lua");
 		ParaSandBox.ApplyToWorld(nil);
@@ -86,7 +86,7 @@ function World:LoadWorldImmediate(worldpath, bPerserveUI, bHideProgressUI, OnPro
 			ParaAsset.CloseArchive(self.worldzipfile); 
 		end	
 		self.worldzipfile = nil;
-		self.readonly = nil;	
+		self:SetReadOnly(false);
 		ParaIO.SetDiskFilePriority(0);
 		
 		-- do not use a sandbox for writable world.
@@ -154,22 +154,24 @@ function World:LoadWorld(input, isPerserveUI, bHideProgressUI)
 	end);
 
 	if(res == true) then
-		System.Animation.InitAnimationManager();
+		if(not System.options.servermode) then
+			System.Animation.InitAnimationManager();
+			
+			NPL.load("(gl)script/kids/3DMapSystemUI/Desktop/AppDesktop.lua");
+			System.UI.AppDesktop.OnInit()
 
-		NPL.load("(gl)script/kids/3DMapSystemUI/Desktop/AppDesktop.lua");
-		System.UI.AppDesktop.OnInit()
+			-- Locale IDE to fetch the head arrow asset
+			System.HeadArrowAsset = ParaAsset.LoadParaX("", CommonCtrl.Locale("IDE")("asset_headarrow"));
 		
-		-- Locale IDE to fetch the head arrow asset
-		System.HeadArrowAsset = ParaAsset.LoadParaX("", CommonCtrl.Locale("IDE")("asset_headarrow"));
-
-		-- rebind event handlers
-		System.ReBindEventHandlers();
+			-- rebind event handlers
+			System.ReBindEventHandlers();
 		
-		-- send APP_WORLD_LOAD msg for each installed application, whenever a new world is loaded
-		System.App.AppManager.OnWorldLoad();
+			-- send APP_WORLD_LOAD msg for each installed application, whenever a new world is loaded
+			System.App.AppManager.OnWorldLoad();
 		
-		-- load menu and app task bar.
-		System.UI.AppDesktop.LoadDesktop(bExclusiveMode);
+			-- load menu and app task bar.
+			System.UI.AppDesktop.LoadDesktop(bExclusiveMode);
+		end
 		
 		-- TODO: security alert, this is not in sandbox.  call the onload script for the given world
 		if(bRunOnloadScript) then
@@ -224,7 +226,6 @@ function World:LoadWorldImp(bPerserveUI, bHideProgressUI, OnProgressCallBack)
 		
 		-- we have built the scene, now we can enable the game
 		ParaScene.EnableScene(true);
-		System.PushState("game");
 		return true;
 	else
 		return false, "world config file not exist";
@@ -386,7 +387,7 @@ function World:CloseWorld()
 		ParaAsset.CloseArchive(self.worldzipfile); 
 	end	
 	self.worldzipfile = nil;
-	self.readonly = nil;	
+	self:SetReadOnly(false);
 	ParaIO.SetDiskFilePriority(0);
 		
 	-- do not use a sandbox for writable world.
@@ -395,6 +396,16 @@ function World:CloseWorld()
 	ParaSandBox.Reset();
 end
 
+-- @param bIsReadOnly: boolean
+function World:SetReadOnly(bIsReadOnly)
+	self.readonly = bIsReadOnly;
+	-- for backward compatible
+	commonlib.setfield("System.World.readonly", self.readonly);
+end
+
+function World:IsReadOnly()
+	return self.readonly;
+end
 
 function World:LoadWorldFromDB(name)
 	local att;

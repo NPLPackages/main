@@ -127,7 +127,9 @@ function Map3DSystem.reset(bPerserveUI)
 	if(_AI~=nil and _AI.temp_memory~=nil) then
 		_AI.temp_memory = {}
 	end
-	Map3DSystem.ResetState();
+	if(Map3DSystem.ResetState) then
+		Map3DSystem.ResetState();
+	end
 	
 	-- TODO: reset recorder and movie box. 
 	
