@@ -68,6 +68,9 @@ local items = {
 		background_checked="Texture/checkbox2.png",
 		iconSize = 16,
 	},
+	["pe:sliderbar"]={
+		height = 20;
+	},
 }
 
 function StyleDefault:ctor()

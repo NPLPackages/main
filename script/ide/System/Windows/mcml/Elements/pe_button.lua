@@ -18,8 +18,11 @@ pe_button:Property({"class_name", "pe:button"});
 function pe_button:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	css.float = css.float or true;
 
-	local _this = Button:new():init(parentElem);
-	self:SetControl(_this);
+	local _this = self.control;
+	if(not _this) then
+		_this = Button:new():init(parentElem);
+		self:SetControl(_this);
+	end
 	_this:ApplyCss(css);
 	_this:SetText(self:GetAttributeWithCode("value", nil, true));
 	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
@@ -62,12 +65,15 @@ end
 
 function pe_button:OnAfterChildLayout(layout, left, top, right, bottom)
 	if(self.control) then
-		self.control:setGeometry(left, top, right-left, bottom-top);
+		self:setGeometry(left, top, right-left, bottom-top);
 	end
 end
 
 function pe_button:SetValue(value)
 	self:SetAttribute("value", value);
+	if(self.control) then
+		self.control:setText(value);
+	end
 end
 
 function pe_button:GetValue()

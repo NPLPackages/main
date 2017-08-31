@@ -75,6 +75,7 @@ end
 
 -- this function is called automatically after page component is loaded and whenever the window resize. 
 function pe_text:UpdateLayout(parentLayout)
+	self.value = self:GetTextTrimmed();
 	self:CalculateTextLayout(self:GetValue(), parentLayout);
 end
 

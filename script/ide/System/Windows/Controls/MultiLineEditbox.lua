@@ -182,42 +182,6 @@ function MultiLineEditbox:RemoveItem(index)
 	self.viewport:RemoveItem(index);
 end
 
-function MultiLineEditbox:UpdateScrollBar()
-	if(not self.needUpdate) then
-		return;
-	end
-	if(#self.items > self.rows) then
-		self.vscroll:show();
-
-		self.vscroll:setGeometry(self:width() - self.ScrollBarWidth, 0, self.ScrollBarWidth, self:height());
-		if(#self.items > 0) then
-			local slider_height = (self:height() - 2 * self.ScrollBarWidth) * self.rows / #self.items;
-			self.vscroll:SetSliderHeight(slider_height);	
-		end
-		self.vscroll:SetMin(self.beginIndex);
-		self.vscroll:SetMax(#self.items - self.rows + self.beginIndex);
-		self.vscroll:SetValue(self.beginIndex);
-	else
-		self.vscroll:hide();
-	end
-
-	self.needUpdate = false;
-end
-
-function MultiLineEditbox:adjustedScrollBar()
-	
-end
-
-function MultiLineEditbox:sliderValueFromPosition(min, max, pos, space)
-	local value = (max - min) * pos / space + min;
-	return math.floor(value + 0.5);
-end
-
-function MultiLineEditbox:sliderPositionFromValue(min, max, val, space)
-	local pos = (val - min)/(max - min) * space;
-	return math.floor(pos + 0.5);
-end
-
 function MultiLineEditbox:contains(x,y)
 	return self:rect():contains(x,y);
 end

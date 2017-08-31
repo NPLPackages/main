@@ -72,6 +72,9 @@ end
 function Window:RefreshUrlComponent()
 	if(self.url) then
 		self:LoadComponent(self.url);
+		-- generate size event
+		local event = SizeEvent:new():init(self.crect)
+		Application:sendEvent(self, event);
 	end
 end
 

@@ -22,6 +22,7 @@ local Application = commonlib.gettable("System.Windows.Application");
 local Layout = commonlib.inherit(commonlib.gettable("System.Windows.LayoutItem"), commonlib.gettable("System.Windows.Layout"));
 
 function Layout:ctor()
+	self.activated = nil;
 end
 
 function Layout:layout()

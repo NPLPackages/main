@@ -40,12 +40,11 @@ function SliderBase:ctor()
 --	self.slider = Rect:new():init(0,0,0,0);
 end
 
---function SliderBase:init(parent)
---	SliderBase._super.init(self, parent);
-----	self:initEditor();
-----	self:initButton();
---	return self;
---end
+function SliderBase:SetDirection(direction)
+	if(direction and (direction == "horizontal" or direction == "vertical")) then
+		self.direction = direction;
+	end
+end
 
 function SliderBase:SetMin(min)
 	self:setRange(min, self.max);

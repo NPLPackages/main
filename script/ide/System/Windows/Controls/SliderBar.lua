@@ -18,10 +18,10 @@ local test_Windows = commonlib.gettable("System.Core.Test.test_Windows");
 local SliderBar = commonlib.gettable("System.Windows.Controls.SliderBar");
 local window = Window:new();
 local sliderbar = SliderBar:new():init(window);
---sliderbar:setGeometry(100,100,100,32);
-sliderbar:SetDirection("vertical");
-sliderbar:setGeometry(50,50,32,200);
-window:Show("my_window", nil, "_mt", 0,0, 800, 800);
+sliderbar:setGeometry(100,100,200,32);
+--sliderbar:SetDirection("vertical");
+--sliderbar:setGeometry(50,50,32,200);
+window:Show("my_window", nil, "_mt", 0,0, 500, 500);
 test_Windows.window = window;
 test_Windows.sliderbar = sliderbar;
 
@@ -67,6 +67,12 @@ function SliderBar:pixelPosToRangeValue(pos)
 		value = self:valueFromPosition(y - slider:height()/2, span);
 	end
 	return value;
+end
+
+function SliderBar:SetSliderBackground(bg)
+	if(bg and bg ~= "") then
+		self.sliderBackground = bg;
+	end
 end
 
 function SliderBar:hitSlider(pos)
@@ -154,7 +160,7 @@ end
 
 function SliderBar:setSliderPosition(pos)
 	local value = self:pixelPosToRangeValue(pos);
-	self:SetValue(value);
+	self:SetValue(value, true);
 end
 
 function SliderBar:setDown(down)

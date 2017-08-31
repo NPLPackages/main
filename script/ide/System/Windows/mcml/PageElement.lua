@@ -157,6 +157,8 @@ function PageElement:LoadComponent(parentElem, parentLayout, styleItem)
 
 	-- process any variables that is taking place. 
 	self:ProcessVariables();
+
+	self:checkAttributes();
 	
 	if(self:GetAttribute("trans")) then
 		-- here we will translate all child nodes recursively, using the given lang 
@@ -165,6 +167,8 @@ function PageElement:LoadComponent(parentElem, parentLayout, styleItem)
 	end
 
 	local css = self:CreateStyle(nil, styleItem);
+
+	css.background = css.background or self:GetAttribute("background", nil);
 
 	self:OnLoadComponentBeforeChild(parentElem, parentLayout, css);
 
@@ -201,7 +205,7 @@ end
 function PageElement:EnableSelfPaint(parentElem)
 	if(not self.control) then
 		local _this = System.Windows.UIElement:new():init(parentElem);
-		_this._page_element = self;
+		--_this._page_element = self;
 		_this.paintEvent = paintEventRedirectFunc;
 		self:SetControl(_this);
 	else
@@ -316,7 +320,6 @@ function PageElement:UpdateLayout(parentLayout)
 	left,top = myLayout:GetAvailablePos();
 	myLayout:SetPos(left,top);
 	width,height = myLayout:GetSize();
-	
 	if(css.width) then
 		myLayout:IncWidth(left+margin_left+margin_right+css.width-width)
 	end
@@ -334,6 +337,7 @@ function PageElement:UpdateLayout(parentLayout)
 	-----------------------------
 	-- self and child layout recursively.
 	-----------------------------
+
 	if(not self:OnBeforeChildLayout(myLayout)) then
 		for childnode in self:next() do
 			childnode:UpdateLayout(myLayout);
@@ -369,7 +373,6 @@ function PageElement:UpdateLayout(parentLayout)
 	end
 	myLayout:SetUsedSize(width, height);
 	-- self.m_right, self.m_bottom = width-margin_right, height-margin_bottom;
-
 	-- call virtual function for final size calculation. 
 	self:OnAfterChildLayout(myLayout, left+margin_left, top+margin_top, width-margin_right, height-margin_bottom);
 	width, height = myLayout:GetUsedSize();
@@ -436,15 +439,31 @@ function PageElement:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 end
 
 function PageElement:OnLoadComponentAfterChild(parentElem, parentLayout, css)
+	if(css) then
+		local default_css = mcml:GetStyleItem(self.class_name);
+		css:Merge(default_css);
+	end
 end
+
+local reset_layout_attrs = {
+	["display"] = true,
+	["style"] = true,
+};
 
 -- set the value of an attribute of this node. This function is rarely used. 
 function PageElement:SetAttribute(attrName, value)
 	self.attr = self.attr or {};
-	self.attr[attrName] = value;
-	if(attrName == "style") then
-		-- tricky code: since we will cache style table on the node, we need to delete the cached style when it is changed. 
-		self.style = nil;
+	if(self.attr[attrName] ~= value) then
+		self.attr[attrName] = value;
+
+		if(attrName == "style") then
+			-- tricky code: since we will cache style table on the node, we need to delete the cached style when it is changed. 
+			self.style = nil;
+		end
+
+		if(reset_layout_attrs[attrName]) then
+			self:resetLayout();
+		end
 	end
 end
 
@@ -454,12 +473,12 @@ function PageElement:SetAttributeIfNotCode(attrName, value)
 	local old_value = self.attr[attrName];
 	if(type(old_value) == "string") then
 		local code = string_match(old_value, "^[<%%]%%(=.*)%%[%%>]$")
-		if(not code) then
-			self.attr[attrName] = value;
+		if(code) then
+			return;
 		end
-	else
-		self.attr[attrName] = value;
 	end
+
+	self:SetAttribute(attrName,value);
 end
 
 -- get the value of an attribute of this node as its original format (usually string)
@@ -493,6 +512,20 @@ function PageElement:GetAttributeWithCode(attrName,defaultValue, bNoOverwrite)
 		end
 	end
 	return defaultValue;
+end
+
+function PageElement:checkAttributes()
+	if(self.attr) then
+		for name, value in pairs(self.attr) do
+			if(type(value) == "string") then
+				local code = string_match(value, "^[<%%]%%(=.*)%%[%%>]$")
+				if(code) then
+					value = Elements.pe_script.DoPageCode(code, self:GetPageCtrl());
+					self.attr[attrName] = value;
+				end
+			end
+		end
+	end
 end
 
 
@@ -643,6 +676,7 @@ end
 
 function PageElement:SetControl(control)
 	self.control = control;
+	control:setPageElement(self);
 end
 
 -- get the control associated with this node. 
@@ -714,6 +748,19 @@ function PageElement:printParents()
 	end
 end
 
+function PageElement:printLayout(layout)
+	if(layout) then
+		local temp = {};
+		local name, value
+		for name, value in pairs(layout) do
+			if(type(value) ~= "table") then
+				temp[name] = value;
+			end
+		end
+		echo(temp);
+	end	
+end
+
 -- print this node to log file for debugging purposes. 
 function PageElement:print()
 	log("<"..tostring(self.name));
@@ -748,12 +795,18 @@ end
 -- alternatively, we can use self:SetAttribute("style", value) to change the entire attribute. 
 -- @return true if succeed. 
 function PageElement:SetCssStyle(attrName, value)
-	if(type(self.style) == "table") then
+	if(not self.style) then
+		self:CreateStyle();
+	end
+
+	if(self.style[attrName] ~= value) then
 		self.style[attrName] = value;
-		return true
-	else
-		local style = self:CreateStyle();
-		style[attrName] = value;
+		if(self.control) then
+			self.control:ApplyCss(self.style);
+		end
+		if(StyleItem.isResetField(attrName)) then
+			self:resetLayout();
+		end
 	end
 end
 
@@ -829,6 +882,7 @@ function PageElement:AddChild(child, index)
 		local nCount = #(self) or 0;
 		commonlib.insertArrayItem(self, index, child)
 	end	
+	self:resetLayout();
 end
 
 -- detach this node from its parent node. 
@@ -1175,7 +1229,8 @@ local jquery_metatable = {
 --  e.g. "<div />" will create a new node. 
 -- @param param1: additional xml node when pattern is "<tag_name />"
 function PageElement:jquery(pattern, param1)
-	local tagName = pattern and pattern:match("^<([^%s/>]*)");
+	local tagName = pattern and pattern:match("^<([^%s]*).*/>$") or pattern:match("^<([^%s]*)>.*</(%1)>$");
+	--local tagName = pattern and pattern:match("^<([^%s/>]*)");
 	if(tagName) then
 		param1 = param1 or {name=tagName, attr={}};
 		param1.name = param1.name or tagName;
@@ -1205,7 +1260,7 @@ end
 
 -- show this node. one may needs to refresh the page if page is already rendered
 function PageElement:show()
-	self:SetAttribute("display", nil)
+	self:SetAttribute("display", nil);
 end
 
 -- hide this node. one may needs to refresh the page if page is already rendered
@@ -1603,3 +1658,35 @@ function PageElement:DoPageEvent(handlerScript, ...)
 	return result;
 end
 
+function PageElement:setGeometry(x, y, w, h)
+	self:SetAttribute("gX",x);
+	self:SetAttribute("gY",y);
+	self:SetAttribute("gW",w);
+	self:SetAttribute("gH",h);
+end
+
+function PageElement:getGeometry()
+	local x = self:GetAttribute("gX",0);
+	local y = self:GetAttribute("gY",0);
+	local w = self:GetAttribute("gW",0);
+	local h = self:GetAttribute("gH",0);
+	return x, y, w, h;
+end
+
+function PageElement:isHidden() 
+	local parent = self;
+	while (parent ~= nil) do
+		if(parent:GetAttribute("display") == "none") then
+			return true;
+		end
+		parent = parent.parent;
+	end
+	return false;
+end
+
+function PageElement:resetLayout() 
+	local page = self:GetPageCtrl();
+	if(page and page.layout) then
+		page.layout:invalidate();
+	end
+end
