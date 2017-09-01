@@ -21,17 +21,17 @@ local test_Windows = commonlib.gettable("System.Core.Test.test_Windows");
 local window = Window:new();
 local mulLine = MultiLineEditbox:new():init(window);
 --mulLine:SetRows(2);
-mulLine:setGeometry(100, 100, 200, 20 * 5+10);
+mulLine:setGeometry(100, 100, 200, 20 * 10+10);
 mulLine:AddItem("我是第一行");
-mulLine:AddItem("");
+mulLine:AddItem("我是第二行");
 mulLine:AddItem("我是第三行");
 mulLine:AddItem("我是第四行");
 mulLine:AddItem("我是第五行");
 mulLine:AddItem("我是第六行");
---mulLine:AddItem("我是第七行");
---mulLine:AddItem("我是第八行");
---mulLine:AddItem("我是第九行");
---mulLine:AddItem("我是第十行");
+mulLine:AddItem("我是第七行");
+mulLine:AddItem("我是第八行");
+mulLine:AddItem("我是第九行");
+mulLine:AddItem("我是第十行");
 --mulLine:SetBackgroundColor("#cccccc");
 
 window:Show("my_window", nil, "_mt", 0,0, 600, 600);
@@ -79,7 +79,7 @@ MultiLineEditbox:Property({"m_readOnly", false, "  ", "setReadOnly"})
 MultiLineEditbox:Property({"lineWrap", nil, "GetLineWrap", "SetLineWrap", auto=true})
 MultiLineEditbox:Property({"ItemHeight",20, auto=true})
 
-MultiLineEditbox:Property({"SliderSize", 20, auto=true});
+MultiLineEditbox:Property({"SliderSize", 16, auto=true});
 --MultiLineEditbox:Property({"vSliderWidth", 20, auto=true});
 --MultiLineEditbox:Property({"hSliderHeight", 20, auto=true});
 --MultiLineEditbox:Property({"vSliderWidth", nil, auto=true});
@@ -95,48 +95,19 @@ MultiLineEditbox:Signal("textChanged");
 
 
 function MultiLineEditbox:ctor()
-	self.hbar = nil;
-	self.vbar = nil;
---	self.hscroll = 500;
---	self.vscroll = 500;
-	self.hscroll = 0;
-	self.vscroll = 0;
-
 	self:setFocusPolicy(FocusPolicy.StrongFocus);
 	self:setAttribute("WA_InputMethodEnabled");
 	self:setMouseTracking(true);
 end
 
-
-
 function MultiLineEditbox:init(parent)
 	MultiLineEditbox._super.init(self, parent);
 
 	self.viewport = TextControl:new():init(self);
-
-	self:initScrollBar();
+	self.viewport:Connect("sizeChanged", self, "updateScrollStatus");
+	self.viewport:Connect("positionChanged", self, "updateScrollValue");
 
 	return self;
-end
-
-function MultiLineEditbox:initScrollBar()
---	local vscrollbar = ScrollBar:vScrollBar(self); 
-----	vscrollbar:Connect("scroll", function(event)
-----		self.beginIndex = vscrollbar:GetRoundValue();
-----		vscrollbar:SetValue(self.beginIndex);
-----		self:update();
-----	end);
---
---	self.vbar = vscrollbar;
---
---	local hscrollbar = ScrollBar:hScrollBar(self); 
-----	vscrollbar:Connect("scroll", function(event)
-----		self.beginIndex = vscrollbar:GetRoundValue();
-----		vscrollbar:SetValue(self.beginIndex);
-----		self:update();
-----	end);
---
---	self.hbar = hscrollbar;
 end
 
 function MultiLineEditbox:echoMode()
@@ -211,42 +182,6 @@ function MultiLineEditbox:RemoveItem(index)
 	self.viewport:RemoveItem(index);
 end
 
-function MultiLineEditbox:UpdateScrollBar()
-	if(not self.needUpdate) then
-		return;
-	end
-	if(#self.items > self.rows) then
-		self.vscroll:show();
-
-		self.vscroll:setGeometry(self:width() - self.ScrollBarWidth, 0, self.ScrollBarWidth, self:height());
-		if(#self.items > 0) then
-			local slider_height = (self:height() - 2 * self.ScrollBarWidth) * self.rows / #self.items;
-			self.vscroll:SetSliderHeight(slider_height);	
-		end
-		self.vscroll:SetMin(self.beginIndex);
-		self.vscroll:SetMax(#self.items - self.rows + self.beginIndex);
-		self.vscroll:SetValue(self.beginIndex);
-	else
-		self.vscroll:hide();
-	end
-
-	self.needUpdate = false;
-end
-
-function MultiLineEditbox:adjustedScrollBar()
-	
-end
-
-function MultiLineEditbox:sliderValueFromPosition(min, max, pos, space)
-	local value = (max - min) * pos / space + min;
-	return math.floor(value + 0.5);
-end
-
-function MultiLineEditbox:sliderPositionFromValue(min, max, val, space)
-	local pos = (val - min)/(max - min) * space;
-	return math.floor(pos + 0.5);
-end
-
 function MultiLineEditbox:contains(x,y)
 	return self:rect():contains(x,y);
 end
@@ -272,25 +207,97 @@ function MultiLineEditbox:offsetY()
 	return self:sliderPositionFromValue(0, 1000, self.vscroll, self.items:size() * self.ItemHeight);
 end
 
-function MultiLineEditbox:backspace()
-    local priorState = m_undoState;
-    if (self:hasSelectedText()) then
-        --self:removeSelectedText();
-    else
-		self:internalDelete(true);
---		if(self.cursor:GetPosition() > 0) then
---			self.m_cursor = self.m_cursor - 1;
---			self:internalDelete(true);
---		end
-    end
-    self:finishChange(priorState);
+function MultiLineEditbox:Clip()
+	local w = self:width();
+	local h = self:height();
+	if(not self.hbar:isHidden()) then
+		h = h - self.SliderSize;
+	end
+
+	if(not self.vbar:isHidden()) then
+		w = w - self.SliderSize;
+	end
+	return Rect:new_from_pool(0, 0, w, h);
 end
 
-function MultiLineEditbox:Clip()
-	return Rect:new_from_pool(0, 0, self:width(), self:height());
+function MultiLineEditbox:updateViewportPos()
+	self.viewport:updatePos(self.hscroll, self.vscroll);
+end
+
+function MultiLineEditbox:GetRow()
+	return math.floor(self:Clip():height()/self.viewport:GetLineHeight());
+end
+
+function MultiLineEditbox:updateScrollInfo()
+	local clip = self:Clip();
+	if(not self.hbar:isHidden()) then
+		self.hbar:setRange(0, self.viewport:GetRealWidth() - clip:width() - 1);
+		self.hbar:setStep(self.viewport:WordWidth(), clip:width());
+		self.hbar:SetValue(self.viewport:hValue());
+	end
+
+	if(not self.vbar:isHidden()) then
+		self.vbar:setRange(0, self.viewport:GetRow() - self:GetRow());
+		self.vbar:setStep(1, self:GetRow());
+		self.vbar:SetValue(self.viewport:vValue());
+	end
+end
+
+function MultiLineEditbox:updateScrollValue()
+	if(not self.hbar:isHidden()) then
+		self.hbar:SetValue(self.viewport:hValue());
+	end
+
+	if(not self.vbar:isHidden()) then
+		self.vbar:SetValue(self.viewport:vValue());
+	end
+end
+
+function MultiLineEditbox:updateScrollStatus(textbox_w, textbox_h)
+	local clip = self:Clip();
+	if(textbox_w > clip:width()) then
+		self.hbar:show();
+	else
+		self.hbar:hide();
+	end
+
+	clip = self:Clip();
+	if(textbox_h > clip:height()) then
+		self.vbar:show();
+
+		clip = self:Clip();
+		if(textbox_w > clip:width()) then
+			self.hbar:show();
+		else
+			self.hbar:hide();
+		end
+	else
+		self.vbar:hide();
+	end
+
+	self:updateScrollInfo();
+end
+
+function MultiLineEditbox:updateScrollGeometry()
+	if(not self.hbar:isHidden()) then
+		if(self.vbar:isHidden()) then
+			self.hbar:setGeometry(0, self:height() - self.SliderSize, self:width(), self.SliderSize);
+		else
+			self.hbar:setGeometry(0, self:height() - self.SliderSize, self:width() - self.SliderSize, self.SliderSize);
+		end
+	end
+
+	if(not self.vbar:isHidden()) then
+		if(self.hbar:isHidden()) then
+			self.vbar:setGeometry(self:width() - self.SliderSize, 0, self.SliderSize, self:height());
+		else
+			self.vbar:setGeometry(self:width() - self.SliderSize, 0, self.SliderSize, self:height() - self.SliderSize);
+		end
+	end
 end
 
 function MultiLineEditbox:paintEvent(painter)
+	self:updateScrollGeometry();
 	painter:SetPen(self:GetBackgroundColor());
 	painter:DrawRectTexture(self:x(), self:y(), self:width(), self:height(), self:GetBackground());
 end

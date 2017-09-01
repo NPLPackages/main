@@ -18,16 +18,18 @@ pe_editbox:Property({"class_name", "pe:editbox"});
 function pe_editbox:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	css.float = css.float or true;
 
-	local _this = EditBox:new():init(parentElem);
-	self:SetControl(_this);
-	_this:ApplyCss(css);
+	local _this = self.control;
+	if(not _this) then
+		_this = EditBox:new():init(parentElem);
+		self:SetControl(_this);
+	end
+
 	_this:SetText(self:GetAttributeWithCode("value", nil, true));
+	_this:ApplyCss(css);
+	
 	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
 
-	local onchange = self:GetString("onchange");
-	if(onchange) then
-		_this:Connect("textChanged", self, self.OnTextChanged)
-	end
+	_this:Connect("textChanged", self, self.OnTextChanged)
 end
 
 function pe_editbox:OnLoadComponentAfterChild(parentElem, parentLayout, css)
@@ -50,20 +52,20 @@ end
 
 function pe_editbox:OnAfterChildLayout(layout, left, top, right, bottom)
 	if(self.control) then
-		self.control:setGeometry(left, top, right-left, bottom-top);
+		self:setGeometry(left, top, right-left, bottom-top);
 	end
 end
 
 -- get UI value: get the value on the UI object with current node
 -- @param instName: the page instance name. 
-function pe_editbox:GetUIValue(pageInstName)
+function pe_editbox:GetUIValue()
 	if(self.control) then
 		return self.control:GetText();
 	end
 end
 
 -- set UI value: set the value on the UI object with current node
-function pe_editbox:SetUIValue(pageInstName, value)
+function pe_editbox:SetUIValue(value)
 	if(self.control) then
 		return self.control:SetText(value);
 	end

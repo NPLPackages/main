@@ -28,11 +28,13 @@ function pe_radio:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	css["background"] = self:GetAttributeWithCode("UncheckedBG", nil, true) or default_css["background"];
 	css["background_checked"] = self:GetAttributeWithCode("CheckedBG", nil, true) or default_css["background_checked"];
 
+	local _this = self.control;
+	if(not _this) then
+		_this = Button:new():init(parentElem);
+		self:SetControl(_this);
+	end
 	
-	
-	local _this = Button:new():init(parentElem);
 	_this:setCheckable(true);
-	self:SetControl(_this);
 	_this:ApplyCss(css);
 	_this:SetText(self:GetAttributeWithCode("Label", nil, true));
 	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
@@ -102,6 +104,6 @@ end
 -- after child node layout is updated
 function pe_radio:OnAfterChildLayout(layout, left, top, right, bottom)
 	if(self.control) then
-		self.control:setGeometry(left, top, right-left, bottom-top);
+		self:setGeometry(left, top, right-left, bottom-top);
 	end
 end

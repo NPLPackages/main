@@ -211,7 +211,7 @@ function ButtonBase:setText(text)
     self.text = text;
 
     self:update();
-    self:updateGeometry();
+    --self:updateGeometry();
 end
 
 function ButtonBase:getText() 

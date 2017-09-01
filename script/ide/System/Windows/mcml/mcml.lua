@@ -112,6 +112,12 @@ function mcml:LoadAllElements()
 	Elements.pe_radio:RegisterAs("pe:radio","radio");
 	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_checkbox.lua");
 	Elements.pe_checkbox:RegisterAs("pe:checkbox","checkbox");
+	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_sliderbar.lua");
+	Elements.pe_sliderbar:RegisterAs("pe:sliderbar", "sliderbar");
+	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_br.lua");
+	Elements.pe_br:RegisterAs("br");
+	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_textarea.lua");
+	Elements.pe_textarea:RegisterAs("textarea");
 	-- TODO: add all system defined page element here
 end
 

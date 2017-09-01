@@ -1,28 +1,57 @@
 ﻿<!-- "script/test/mcmlv2/mcml_window.html" -->
 <html>
 <pe:mcml>
-<script refresh="false" type="text/npl" src="mcml_window.lua"><![CDATA[
-    function OnClickOK()
-        local content = Page:GetValue("content") or "";
-        _guihelper.MessageBox("你输入的是:"..content);
-    end
+<script type="text/npl" refresh="false">
+<![CDATA[
 
-    function Textchange()
-        _guihelper.MessageBox("text change");
-    end
-    repeat_data = { {a=1}, {a=2} };
+    repeat_data = { {a="red"}, {a="green"}, {a="blue"} };
     function GetDS()
         return repeat_data;
     end
-    isSearching = true;
-    function SearchBlock()
-        isSearching = false;
+
+    function OnChangeSize()
+        Page:jquery("div#test"):SetCssStyle("width",200);
     end
-    function OnSearchBlock()
-        isSearching = true;
-        Page:Refresh(0.1);
+
+    function OnHide()
+        --Page:jquery("h1"):hide();
+        Page:jquery("div#test"):hide();
     end
-]]></script>
+
+    function OnShow()
+        --Page:jquery("h1"):show();
+        Page:jquery("div#test"):show();
+    end
+
+    function Textchange(text,node)
+        local w = node.control:naturalTextWidth();
+        local css = node:GetStyle();
+        --if(w > css.min-width) then
+        if(w > css["min-width"]) then
+            node:SetCssStyle("width",w);
+        end
+    end
+
+    function sliderValueChanged(value, node)
+        echo("value:"..tostring(value));
+        --echo(#Page:jquery("input#sliderbarValue"))
+        Page:jquery("input#sliderbarValue"):SetUIValue(tostring(value));
+    end
+
+    function OnAddNode()
+        local param = {
+			name="input",
+			attr={
+				type="button",
+				style="margin-left:50px;width:30px;height:25px;",
+				value="new",
+			},
+		};
+        local new_btn = Page:jquery("<input/>", param);
+        Page:jquery("div#test"):AddChild(new_btn);
+    end
+]]>
+</script>
 <!--<div style="color:#33ff33;background-color:#808080">
     <div style="margin:100px;">
         Hello World from MCML page!
@@ -33,17 +62,46 @@
     </div>
 </div>-->
 <div align="right" style="background-color:#ff0000;margin:10px;padding:10px;min-width:200px;min-height:150px;">
-    <input type="checkbox" name="1" value="1" checked="true" /><div style="float:left;">1</div>
-    <input type="checkbox" /><div style="float:left;">2</div>
-    <input type="checkbox" /><div style="float:left;">3</div>
-    <input type="radio" name="gender" value="0" checked="true" UncheckedBG="Texture/uncheckbox2.png" CheckedBG="Texture/checkbox2.png" /><div style="float:left;">男</div>
-    <input type="radio" name="gender" value="1" /><div style="float:left;">女</div>
-    <!--<input type="button" style="width:30px;height:25px;" value="222222222222222"/>-->
+    <div>
+        <input type="button" style="margin-left:50px;width:30px;height:25px;" value="hide" onclick="OnHide"/>
+        <input type="button" style="margin-left:50px;width:30px;height:25px;" value="show" onclick="OnShow"/>
+        <input type="button" style="margin-left:50px;width:30px;height:25px;" value="change" onclick="OnChangeSize"/>
+        <input type="button" style="margin-left:50px;width:30px;height:25px;" value="add" onclick="OnAddNode"/>
+        <div name="test" style="background-color:#00ff00;width:500px;">
+            <h1>head 1</h1>
+            <h4>head 4</h4>
+            <input type="checkbox" name="1" value="1" checked="true" /><div style="float:left;">1</div>
+            <input type="checkbox" /><div style="float:left;">2</div>
+            <input type="checkbox" /><div style="float:left;">3</div>
+            <input type="radio" name="gender" value="0" /><div style="float:left;">男</div>
+            <input type="radio" name="gender" value="1" /><div style="float:left;">女</div>
+            <br/>
+            <editbox onchange="Textchange" style="margin-left:10px;width:40px;height:25px;min-width:40px"/>
+            <span>hello world</span>
+            <br/>
+            <sliderbar style="width:150px" value="50" onchange="sliderValueChanged" />
+            <input type="text" name="sliderbarValue" onchange="Textchange" style="margin-left:10px;width:40px;height:25px;" />
+            <br/>
+            <textarea rows="5" style="margin:10px;width:200px;" />
+            <pe:repeat value="item in GetDS()" style="float:left">
+                <!--<div style="float:left;"><%=item.a%></div>-->
+                <input type="checkbox" /><div style="float:left;"><%=item.a%></div>
+            </pe:repeat>
+        </div>
+    </div>
+    
+    <!--<input type="radio" name="gender" value="0" checked="true" UncheckedBG="Texture/uncheckbox2.png" CheckedBG="Texture/checkbox2.png" /><div style="float:left;">男</div>-->
+    <!--<br/>
+    <input type="text" name="sliderbarValue" style="width:200px;height:25px;background:url(Texture/Aries/Common/ThemeKid/btn_thick_hl_32bits.png:7 7 7 7)" />
+    <br/>
+    <textarea rows="13" style="width:200px;" />-->
+    
+    <!--<input type="button" style="margin-left:50px;width:30px;height:25px;" value="1" onclick="OnRefresh"/>-->
     <!--<input type="text" name="content" style="width:200px;height:25px;font-size:20;background:url(Texture/radiobox.png)" onchange="Textchange"/>-->
-    <!--<input type="text" name="content" style="width:200px;height:25px;background:url(Texture/Aries/Common/ThemeKid/btn_thick_hl_32bits.png:7 7 7 7)" />-->
-    <!--<editbox onchange="Textchange" style="width:40px;height:25px;background:url(Texture/Aquarius/Common/Frame3_32bits.png:32 46 20 17)"></editbox>-->
-    <h1>111111</h1>
-    <h4>11111</h4>
+    
+    
+    <!--<h1>111111</h1>-->
+    <!--<h4>11111</h4>-->
     <!--<pe:repeat value="item in repeat_data" style="float:left">
         <div style="float:left;"><%=item.a%></div>
     </pe:repeat>

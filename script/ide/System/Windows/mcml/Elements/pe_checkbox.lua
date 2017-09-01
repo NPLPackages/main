@@ -27,9 +27,12 @@ function pe_checkbox:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	css["background"] = self:GetAttributeWithCode("UncheckedBG", nil, true) or default_css["background"];
 	css["background_checked"] = self:GetAttributeWithCode("CheckedBG", nil, true) or default_css["background_checked"];
 	
-	local _this = Button:new():init(parentElem);
+	local _this = self.control;
+	if(not _this) then
+		_this = Button:new():init(parentElem);
+		self:SetControl(_this);
+	end
 	
-	self:SetControl(_this);
 	_this:ApplyCss(css);
 	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
 	_this:setCheckable(self:GetBool("enabled",true));
@@ -38,8 +41,6 @@ function pe_checkbox:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	if(checked) then
 		_this:setChecked(true);
 	end
-
-	--self.groupName = self:GetAttribute("name") or "_defaultCheckbox";
 
 	_this:Connect("clicked", self, self.OnClick)
 end
@@ -51,7 +52,7 @@ function pe_checkbox:OnClick()
 		ctl:setChecked(checked);
 		self:SetAttribute("checked", checked);
 	end
-
+	local result;
 	local onclick = self.onclickscript or self:GetString("onclick");
 	if(onclick == "")then
 		onclick = nil;
@@ -60,12 +61,13 @@ function pe_checkbox:OnClick()
 		-- the callback function format is function(buttonName, self) end
 		result = self:DoPageEvent(onclick, buttonName, self);
 	end
+	return result;
 end
 
 -- virtual function: 
 -- after child node layout is updated
 function pe_checkbox:OnAfterChildLayout(layout, left, top, right, bottom)
 	if(self.control) then
-		self.control:setGeometry(left, top, right-left, bottom-top);
+		self:setGeometry(left, top, right-left, bottom-top);
 	end
 end

@@ -40,39 +40,40 @@ function pe_div:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 			ontouch = nil;
 		end
 	end
-	local tooltip
-	if(not ignore_tooltip) then
-		tooltip = self:GetAttributeWithCode("tooltip",nil,true);
-		if(tooltip == "") then
-			tooltip = nil;
-		end
-	end
-	local background;
-	if(not ignore_background) then
-		background = self:GetAttribute("background") or css.background;
-	end
-	if(css["background-color"] and not ignore_background) then
-		if(not background and not css.background2) then
-			background = "Texture/whitedot.png";
-		end
+--	local tooltip
+--	if(not ignore_tooltip) then
+--		tooltip = self:GetAttributeWithCode("tooltip",nil,true);
+--		if(tooltip == "") then
+--			tooltip = nil;
+--		end
+--	end
+
+--	if(css["background-color"] and not ignore_background) then
+--		if(not background and not css.background2) then
+--			background = "Texture/whitedot.png";
+--		end
+--	end
+
+	if(css["background-color"] and not css.background and not css.background2) then
+		css.background = "Texture/whitedot.png";
 	end
 
 	if(onclick_for or onclick or tooltip or ontouch) then
 		-- if there is onclick event, the inner nodes will not be interactive.
-		local _this = Button:new():init(parentElem);
-		self:SetControl(_this);
-		if(background) then
-			_this:SetBackground(background);
-			if(background~="") then
-				if(css["background-color"]) then
-					_this:SetBackgroundColor(css["background-color"]);
-				end	
-				if(css["background-rotation"]) then
-					_this:SetRotation(tonumber(css["background-rotation"]));
-				end
-				if(css["background-repeat"] == "repeat") then
-					_this:SetRotation("UVWrappingEnabled", true);
-				end
+		local _this = self.control;
+		if(not _this) then
+			_this = Button:new():init(parentElem);
+			self:SetControl(_this);
+			--self.control._page_element = self;
+		end
+		_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
+		_this:ApplyCss(css);
+		if(css.background and css.background~="") then
+			if(css["background-rotation"]) then
+				_this:SetRotation(tonumber(css["background-rotation"]));
+			end
+			if(css["background-repeat"] == "repeat") then
+				_this:SetRotation("UVWrappingEnabled", true);
 			end
 		end
 		local zorder = self:GetNumber("zorder");
@@ -80,21 +81,21 @@ function pe_div:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 			_this.zorder = zorder;
 		end
 	else
-		if(background) then
-			local _this = Rectangle:new():init(parentElem);
-			self:SetControl(_this)
-			if(background) then
-				_this:SetBackground(background);
-				if(background~="") then
-					if(css["background-color"]) then
-						_this:SetBackgroundColor(css["background-color"]);
-					end	
-					if(css["background-rotation"]) then
-						_this:SetRotation(tonumber(css["background-rotation"]));
-					end
-					if(css["background-repeat"] == "repeat") then
-						_this:SetRotation("UVWrappingEnabled", true);
-					end
+		if(css.background) then
+			local _this = self.control;
+			if(not _this) then
+				_this = Rectangle:new():init(parentElem);
+				self:SetControl(_this);
+				--self.control._page_element = self;
+			end
+			_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
+			_this:ApplyCss(css);
+			if(css.background and css.background~="") then
+				if(css["background-rotation"]) then
+					_this:SetRotation(tonumber(css["background-rotation"]));
+				end
+				if(css["background-repeat"] == "repeat") then
+					_this:SetRotation("UVWrappingEnabled", true);
 				end
 			end
 			local zorder = self:GetNumber("zorder");
@@ -109,6 +110,6 @@ end
 -- after child node layout is updated
 function pe_div:OnAfterChildLayout(layout, left, top, right, bottom)
 	if(self.control) then
-		self.control:setGeometry(left, top, right-left, bottom-top);
+		self:setGeometry(left, top, right-left, bottom-top);
 	end
 end

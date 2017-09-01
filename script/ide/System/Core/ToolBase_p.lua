@@ -65,7 +65,11 @@ function ConnectionSynapse:Activate(...)
 		if(self.receiver) then
 			self.receiver.currentSender = self.sender;
 		end
-		self.slot(self.receiver, ...);
+		if(self.receiver) then
+			self.slot(self.receiver, ...);
+		else
+			self.slot(...);
+		end
 		if(self.receiver) then
 			self.receiver.currentSender = nil;
 		end

@@ -51,6 +51,29 @@ function StyleItem:MergeInheritable(style)
 	end
 end
 
+local reset_fields = 
+{
+	["height"] = true,
+	["min-height"] = true,
+	["max-height"] = true,
+	["width"] = true,
+	["min-width"] = true,
+	["max-width"] = true,
+	["left"] = true,
+	["top"] = true,
+
+	["margin"] = true,
+	["margin-left"] = true,
+	["margin-top"] = true,
+	["margin-right"] = true,
+	["margin-bottom"] = true,
+
+	["padding"] = true,
+	["padding-left"] = true,
+	["padding-top"] = true,
+	["padding-right"] = true,
+	["padding-bottom"] = true,
+}
 
 local number_fields = {
 	["height"] = true,
@@ -65,6 +88,10 @@ local number_fields = {
 	["spacing"] = true,
 	["base-font-size"] = true,
 };
+
+function StyleItem.isResetField(name)
+	return reset_fields[name];
+end
 
 -- @param style_code: mcml style attribute string like "background:url();margin:10px;"
 function StyleItem:AddString(style_code)

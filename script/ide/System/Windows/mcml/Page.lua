@@ -724,12 +724,6 @@ function Page:OnRefresh()
 	end
 	self.refresh_depth = self.refresh_depth + 1;
 
-	-- render control. 
-	uiElem:deleteChildren();
-	if(uiElem:isCreated()) then
-		uiElem:hide();
-	end
-	
 	if(self.status== 1 and self.mcmlNode) then
 		-- call OnLoad
 		self:OnLoad();
@@ -740,14 +734,8 @@ function Page:OnRefresh()
 		self.mcmlNode:SetAttribute("request_url", self.url);
 		-- secretely put this page control object into page_ctrl field, so that we can refresh this page with a different url, such as in pe_a or form submit button.
 		self.mcmlNode:SetAttribute("page_ctrl", self);
-		layout:invalidate();
+
 		self:LoadComponent();
-
-		if(uiElem:isHidden()) then
-			-- tricky to show all newly created sub controls, by hide it and than show them again. 
-			uiElem:show();
-		end
-
 		self.used_width, self.used_height = layout:GetUsedSize();	
 
 		self:OnCreate();

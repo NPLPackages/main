@@ -1147,9 +1147,12 @@
     <None Include="script\ide\System\Windows\Controls\TextControl.lua" />
     <None Include="script\ide\System\Windows\Controls\TextCursor.lua" />
     <None Include="script\ide\System\Windows\mcml\BrowserWnd.lua" />
+    <None Include="script\ide\System\Windows\mcml\Elements\pe_br.lua" />
     <None Include="script\ide\System\Windows\mcml\Elements\pe_checkbox.lua" />
     <None Include="script\ide\System\Windows\mcml\Elements\pe_header.lua" />
     <None Include="script\ide\System\Windows\mcml\Elements\pe_radio.lua" />
+    <None Include="script\ide\System\Windows\mcml\Elements\pe_sliderbar.lua" />
+    <None Include="script\ide\System\Windows\mcml\Elements\pe_textarea.lua" />
     <None Include="script\test\MCMLV2\main.lua" />
     <None Include="script\test\MCMLV2\mcml_window.lua" />
   </ItemGroup>
