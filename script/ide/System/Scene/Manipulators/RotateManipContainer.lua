@@ -37,6 +37,8 @@ RotateManipContainer:Property({"RollPlugName", "roll", auto=true});
 RotateManipContainer:Property({"RollInverted", false, "IsRollInverted", "SetRollInverted", auto=true});
 -- whether to show last yaw/pitch/roll angles 
 RotateManipContainer:Property({"ShowLastAngles", false, "SetShowLastAngles", "SetShowLastAngles"});
+-- whether to update values during dragging
+RotateManipContainer:Property({"RealTimeUpdate", true, "IsRealTimeUpdate", "SetRealTimeUpdate", auto=true});
 
 function RotateManipContainer:ctor()
 end
@@ -58,6 +60,14 @@ end
 -- only call this after init();
 function RotateManipContainer:SetRollEnabled(bEnabled)
 	self.RotateManip:SetRollEnabled(bEnabled);
+end
+
+function RotateManipContainer:IsRealTimeUpdate()
+	return self.RotateManip:IsRealTimeUpdate();
+end
+
+function RotateManipContainer:SetRealTimeUpdate(value)
+	self.RotateManip:SetRealTimeUpdate(value);
 end
 
 -- only call this after init();
@@ -84,7 +94,7 @@ function RotateManipContainer:connectToDependNode(node)
 		-- for one way position conversion:
 		self:addPlugToManipConversionCallback(manipPosPlug, function(self, manipPlug)
 			local pos = plugPos:GetValue();
-			return (pos and pos[1] and pos) or {0.01, 0.01, 0.01};
+			return (pos and pos[1] and {pos[1], pos[2], pos[3]}) or {0.01, 0.01, 0.01};
 		end);
 
 		-- for yaw conversion:
