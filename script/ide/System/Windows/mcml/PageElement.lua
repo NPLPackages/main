@@ -521,7 +521,7 @@ function PageElement:checkAttributes()
 				local code = string_match(value, "^[<%%]%%(=.*)%%[%%>]$")
 				if(code) then
 					value = Elements.pe_script.DoPageCode(code, self:GetPageCtrl());
-					self.attr[attrName] = value;
+					self.attr[name] = value;
 				end
 			end
 		end
@@ -676,7 +676,9 @@ end
 
 function PageElement:SetControl(control)
 	self.control = control;
-	control:setPageElement(self);
+	if(control) then
+		control:setPageElement(self);
+	end
 end
 
 -- get the control associated with this node. 

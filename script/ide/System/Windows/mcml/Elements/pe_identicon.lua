@@ -17,15 +17,19 @@ pe_identicon:Property({"class_name", "pe:identicon"});
 
 function pe_identicon:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	css.float = css.float or true;
-	local _this = Identicon:new():init(parentElem);
-	self:SetControl(_this);
+	local _this = self.control;
+	if(not _this) then
+		_this = Identicon:new():init(parentElem);
+		self:SetControl(_this);
+	end
 	_this:ApplyCss(css);
 	_this:SetText(self:GetAttributeWithCode("value", nil, true));
 end
 
 function pe_identicon:OnAfterChildLayout(layout, left, top, right, bottom)
 	if(self.control) then
-		self.control:setGeometry(left, top, right-left, bottom-top);
+		self:setGeometry(left, top, right-left, bottom-top);
+		--self.control:setGeometry(left, top, right-left, bottom-top);
 	end
 end
 

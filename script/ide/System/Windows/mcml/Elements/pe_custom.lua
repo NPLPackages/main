@@ -35,8 +35,11 @@ function pe_custom:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	if(classns) then
 		local class_def = commonlib.getfield(classns);
 		if(class_def and class_def.new) then
-			local _this = class_def:new():init(parentElem);
-			self:SetControl(_this);
+			local _this = self.control;
+			if(not _this) then
+				_this = class_def:new():init(parentElem);
+				self:SetControl(_this);
+			end
 			_this:ApplyCss(self:GetStyle());
 		end
 	end
@@ -47,6 +50,7 @@ end
 
 function pe_custom:OnAfterChildLayout(layout, left, top, right, bottom)
 	if(self.control) then
-		self.control:setGeometry(left, top, right-left, bottom-top);
+		self:setGeometry(left, top, right-left, bottom-top);
+		--self.control:setGeometry(left, top, right-left, bottom-top);
 	end
 end
