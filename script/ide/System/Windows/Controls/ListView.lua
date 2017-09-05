@@ -78,12 +78,6 @@ function ListView:SelEnd()
 	return {line = self.m_selLineEnd, pos = self.m_selPosEnd};
 end
 
---function ListView:initCursor()
---	local cursor = TextCursor:new():init(self);
---	cursor:setGeometry(0, 0, self.m_cursorWidth, self.lineHeight);
---	self.cursor = cursor;
---end
-
 function ListView:getClip()
 	local r = self.parent:Clip();
 	if(not self.mask) then

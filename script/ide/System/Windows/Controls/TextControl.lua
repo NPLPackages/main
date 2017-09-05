@@ -15,12 +15,10 @@ test
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/System/Windows/UIElement.lua");
-NPL.load("(gl)script/ide/System/Windows/Controls/TextCursor.lua");
 local Rect = commonlib.gettable("mathlib.Rect");
 local UniString = commonlib.gettable("System.Core.UniString");
 local Application = commonlib.gettable("System.Windows.Application");
 local FocusPolicy = commonlib.gettable("System.Core.Namespace.FocusPolicy");
-local TextCursor = commonlib.gettable("System.Windows.Controls.TextCursor");
 local Point = commonlib.gettable("mathlib.Point");
 
 local TextControl = commonlib.inherit(commonlib.gettable("System.Windows.UIElement"), commonlib.gettable("System.Windows.Controls.TextControl"));
@@ -34,6 +32,7 @@ TextControl:Property({"SelectedBackgroundColor", "#006680", auto=true})
 TextControl:Property({"CurLineBackgroundColor", "#87ceff", auto=true})
 TextControl:Property({"m_cursor", 0, "cursorPosition", "setCursorPosition"})
 TextControl:Property({"cursorVisible", false, "isCursorVisible", "setCursorVisible"})
+TextControl:Property({"m_readOnly", false, "isReadOnly", "setReadOnly", auto=true})
 TextControl:Property({"m_cursorWidth", 2,})
 TextControl:Property({"m_blinkPeriod", 0, "getCursorBlinkPeriod", "setCursorBlinkPeriod"})
 TextControl:Property({"Font", "System;14;norm", auto=true})
@@ -63,7 +62,7 @@ function TextControl:ctor()
 	self.items = commonlib.Array:new();
 
 	-- cursor info
-	self.cursor = nil;
+	--self.cursor = nil;
 	self.cursorLine = 1;
 	self.cursorLastLine = 1;
 	self.cursorPos = 0;
@@ -87,7 +86,6 @@ function TextControl:init(parent)
 	TextControl._super.init(self, parent);
 
 	self:initDoc();
-	self:initCursor();
 
 	return self;
 end
@@ -123,12 +121,6 @@ function TextControl:SelEnd()
 	return {line = self.m_selLineEnd, pos = self.m_selPosEnd};
 end
 
-function TextControl:initCursor()
-	local cursor = TextCursor:new():init(self);
-	cursor:setGeometry(0, 0, self.m_cursorWidth, self.lineHeight);
-	self.cursor = cursor;
-end
-
 function TextControl:getClip()
 	local r = self.parent:Clip();
 	if(not self.mask) then
@@ -144,6 +136,68 @@ function TextControl:initDoc()
 		text = UniString:new();
 	}
 	self.items:push_back(item);
+end
+
+function TextControl:setReadOnly(bReadOnly)
+	self.m_readOnly = bReadOnly;
+	if (bReadOnly) then
+        self:setCursorBlinkPeriod(0);
+    else
+        self:setCursorBlinkPeriod(Application:cursorFlashTime());
+	end
+end
+
+-- virtual: 
+function TextControl:focusInEvent(event)
+	-- Application:inputMethod():show();
+	self:setCursorVisible(true);
+	self:setCursorBlinkPeriod(Application:cursorFlashTime());
+end
+
+-- virtual: 
+function TextControl:focusOutEvent(event)
+	-- Application:inputMethod():hide();
+	self:setCursorVisible(false);
+	self:setCursorBlinkPeriod(0);
+end
+
+function TextControl:setCursorVisible(visible)
+    if (self.cursorVisible == visible) then
+        return;
+	end
+    self.cursorVisible = visible;
+    self:update();
+end
+
+function TextControl:isCursorVisible()
+	return self.cursorVisible;
+end
+
+function TextControl:getCursorBlinkPeriod()
+	return self.m_blinkPeriod;
+end
+
+function TextControl:setCursorBlinkPeriod(msec)
+    if (msec == self.m_blinkPeriod) then
+        return;
+	end
+    if (self.m_blinkTimer) then
+        self.m_blinkTimer:Change();
+    end
+    if (msec > 0 and not self.m_readOnly) then
+        self.m_blinkTimer = self.m_blinkTimer or commonlib.Timer:new({callbackFunc = function(timer)
+			self.m_blinkStatus = not self.m_blinkStatus;
+			--self:updateNeeded(); -- signal
+		end})
+		self.m_blinkTimer:Change(msec / 2, msec / 2);
+        self.m_blinkStatus = 1;
+    else
+        -- self.m_blinkTimer = nil;
+        if (self.m_blinkStatus == 1) then
+            --self:updateNeeded(); -- signal
+		end
+    end
+    self.m_blinkPeriod = msec;
 end
 
 function TextControl:SetText(text)
@@ -262,10 +316,6 @@ end
 function TextControl:RecountWidth()
 	local width = self:GetRealWidth();
 	self:setWidth(width);
---	if(width > self:width()) then
---		--self:GetTextRect():setWidth(width);
---		self:setWidth(width);
---	end
 end
 
 function TextControl:setX(x, emitSingal)
@@ -362,7 +412,7 @@ function TextControl:mouseMoveEvent(e)
 end
 
 function TextControl:inputMethodEvent(event)
-	if(self.parent:isReadOnly()) then
+	if(self:isReadOnly()) then
 		event:ignore();
 		return;
 	end
@@ -391,7 +441,7 @@ function TextControl:keyPressEvent(event)
 			self:newLine(mark);
 		end
 	elseif(keyname == "DIK_BACKSPACE") then
-		if (not self.parent:isReadOnly()) then
+		if (not self:isReadOnly()) then
 			if(event.ctrl_pressed) then
 				self:cursorWordBackward(true);
 				self:del();
@@ -404,11 +454,11 @@ function TextControl:keyPressEvent(event)
 	elseif(event:IsKeySequence("Copy")) then
 		self:copy();
 	elseif(event:IsKeySequence("Paste")) then
-		if (not self.parent:isReadOnly()) then
+		if (not self:isReadOnly()) then
 			self:paste("Clipboard");
 		end
 	elseif(event:IsKeySequence("Cut")) then
-		if (not self.parent:isReadOnly()) then
+		if (not self:isReadOnly()) then
 			self:copy();
 			self:del();
 		end
@@ -449,13 +499,13 @@ function TextControl:keyPressEvent(event)
 	elseif (event:IsKeySequence("MoveToNextWord")) then
         if (self.parent:echoMode() == "Normal") then
             self:cursorWordForward(false);
-        elseif (not self.parent:isReadOnly()) then
+        elseif (not self:isReadOnly()) then
             self:End(false);
 		end
     elseif (event:IsKeySequence("MoveToPreviousWord")) then
         if (self.parent:echoMode() == "Normal") then
             self:cursorWordBackward(false);
-        elseif (not self.parent:isReadOnly()) then
+        elseif (not self:isReadOnly()) then
             self:Home(false);
         end
     elseif (event:IsKeySequence("SelectNextWord")) then
@@ -483,15 +533,15 @@ function TextControl:keyPressEvent(event)
 	elseif (event:IsKeySequence("ScrollToNextLine")) then
 		self:ScrollLineBackward();
     elseif (event:IsKeySequence("Delete")) then
-        if (not self.parent:isReadOnly()) then
+        if (not self:isReadOnly()) then
             self:del();
 		end
 	elseif(event:IsKeySequence("Undo")) then
-		if (not self.parent:isReadOnly()) then
+		if (not self:isReadOnly()) then
 			self:undo();
 		end
 	elseif(event:IsKeySequence("Redo")) then
-		if (not self.parent:isReadOnly()) then
+		if (not self:isReadOnly()) then
 			self:redo();
 		end
 	else
@@ -526,13 +576,13 @@ end
 -- For security reasons undo is not available in any password mode (NoEcho included)
 -- with the exception that the user can clear the password with undo.
 function TextControl:isUndoAvailable()
-    return not self.parent:isReadOnly() and self.m_undoState>0
+    return not self:isReadOnly() and self.m_undoState>0
            and (self.parent:echoMode() == "Normal" or self.m_history[self.m_undoState].type == "Insert");
 end
 
 -- Same as with undo. Disabled for password modes.
 function TextControl:isRedoAvailable()
-    return not self.parent:isReadOnly() and self.parent:echoMode() == "Normal" and self.m_undoState < self.m_history:size();
+    return not self:isReadOnly() and self.parent:echoMode() == "Normal" and self.m_undoState < self.m_history:size();
 end
 
 -- @param untilPos: default to -1
@@ -580,50 +630,14 @@ function TextControl:internalRedo()
     while (self.m_undoState < self.m_history:size()) do
         local cmd = self.m_history[self.m_undoState+1];
 		self.m_undoState = self.m_undoState + 1;
---        if(cmd.type == "Insert") then
---            self.m_text:insert(cmd.pos+1, cmd.uc);
---            self.m_cursor = cmd.pos + 1;
---		elseif(cmd.type == "SetSelection") then
---            self.m_selstart = cmd.selStart;
---            self.m_selend = cmd.selEnd;
---            self.m_cursor = cmd.pos;
---		elseif(cmd.type == "Remove" or cmd.type == "Delete" or cmd.type == "RemoveSelection" or cmd.type == "DeleteSelection") then
---            self.m_text:remove(cmd.pos+1, 1);
---            self.m_selstart = cmd.selStart;
---            self.m_selend = cmd.selEnd;
---            self.m_cursor = cmd.pos;
---		elseif(cmd.type == "Separator") then
---            self.m_selstart = cmd.selStart;
---            self.m_selend = cmd.selEnd;
---            self.m_cursor = cmd.pos;
---        end
---        if (self.m_undoState < self.m_history:size()) then
---            local next = self.m_history[self.m_undoState+1];
---            if (next.type ~= cmd.type 
---				and ((cmd.type == "Separator" or cmd.type == "Insert" or cmd.type == "Remove" or cmd.type == "Delete") and next.type ~= "Separator")
---                and ((next.type == "Separator" or next.type == "Insert" or next.type == "Remove" or next.type == "Delete") or cmd.type == "Separator")) then
---                break;
---			end
---        end
 
 		if(cmd.type == "Insert") then
 			self:InsertTextNotAddToCommand(cmd.uc, cmd.pos.line, cmd.pos.pos, cmd.move);
-
-			--self:RemoveTextNotAddToCommand(cmd.selStart.line, cmd.selStart.pos, cmd.selEnd.line, cmd.selEnd.pos);
 		elseif(cmd.type == "Remove") then
 			self:RemoveTextNotAddToCommand(cmd.selStart.line, cmd.selStart.pos, cmd.selEnd.line, cmd.selEnd.pos, cmd.move);
-			--self:InsertTextNotAddToCommand(cmd.uc, cmd.pos.line, cmd.pos.pos, cmd.move);
 		elseif(cmd.type == "Select") then
 			self:setSelect(cmd.selStart, cmd.selEnd, cmd.pos, true);
 		end
---		if(cmd.type ~= "Separator") then
---			if (untilPos < 0 and self.m_undoState>0) then
---				local next = self.m_history[self.m_undoState];
---				if (next.type ~= cmd.type and next.type == "Separator") then
---					break;
---				end
---			end
---		end
 
 		if (self.m_undoState < self.m_history:size()) then
             local next = self.m_history[self.m_undoState+1];
@@ -662,7 +676,7 @@ function TextControl:ScrollLineForward()
 		self:scrollY(self.lineHeight);
 		--self:setY(self:y() + self.lineHeight);
 
-		local cursor_bottom = (self.cursorLine - 1) * self.lineHeight + self.cursor:height();
+		local cursor_bottom = (self.cursorLine - 1) * self.lineHeight + self.lineHeight;
 		if(cursor_bottom > self:getClip():y() + self:getClip():height()) then
 			self.cursorLine = self.cursorLine - 1;
 		end
@@ -1109,23 +1123,7 @@ function TextControl:lineInternalRemove(line, pos, count)
 end
 
 function TextControl:newLine(mark)
-	--self:InsertTextAddToCommand("\r\n", nil, nil, true);
 	self:InsertTextInCursorPos("\r\n");
-
---	local pos = self.cursorPos;
---	if(pos == 0) then
---		self:InsertItem(self.cursorLine,"");	
---	elseif(pos == self:GetCurrentLine().text:length()) then
---		self:InsertItem(self.cursorLine + 1,"");	
---	else
---		local curText = self:GetCurrentLine().text;
---		local newTextStr = curText:substr(pos + 1);
---		
---		self:lineInternalRemove(self:GetCurrentLine(), pos + 1);
---
---		self:InsertItem(self.cursorLine + 1,newTextStr);	
---	end
---	self:moveCursor(self.cursorLine + 1, 0, false, true);
 end
 
 function TextControl:hasAcceptableInput(str)
@@ -1161,13 +1159,6 @@ function TextControl:lineInternalInsert(line, pos, s)
     if (remaining > 0) then
 		s = s:left(remaining);
         lineText:insert(pos, s);
-
-		--self:addCommand(Command:new():init("Insert", self.m_cursor, s[i], -1, -1));
-
---		for i = 1, s:length() do
---            self:addCommand(Command:new():init("Insert", self.m_cursor, s[i], -1, -1));
---			self.m_cursor = self.m_cursor + 1;
---		end
 
 		local width = self:GetLineWidth(line);
 		if(width > self:width()) then
@@ -1235,7 +1226,8 @@ function TextControl:moveCursor(line, pos, mark, adjustCursor)
 	if(self.cursorLine ~= line or self.cursorPos ~= pos) then
 		self.cursorLine = line;
 		self.cursorPos = pos;
-		self.cursor:setStatus(true);
+		self.m_blinkStatus = 1;
+		--self.cursor:setStatus(true);
 	end
 	if(adjustCursor) then
 		self:adjustCursor();
@@ -1270,38 +1262,6 @@ function TextControl:cursorToX(text)
 	local text = text or self:GetCurrentLine().text;
 	local x = text:cursorToX(self.cursorPos, self:GetFont());
 	return math.floor(x + 0.5);
-end
-
-function TextControl:showCursor()
-	if(self.parent:isReadOnly()) then
-		self.cursor:show();
-	end
-end
-
-function TextControl:hideCursor()
-	self.cursor:hide();
-end
-
--- virtual: 
-function TextControl:focusInEvent(event)
-	self:showCursor();
-end
-
--- virtual: 
-function TextControl:focusOutEvent(event)
-	self:hideCursor();
-end
-
-function TextControl:UpdateCursor()
-	local x = self:cursorToX();
-	local y = (self.cursorLine - 1) * self.lineHeight;
-	if(self.parent:contains(self:x() + x, self:y() + y)) then
-		self.cursor:show();
-	else
-		self.cursor:hide();
-	end
-	self.cursor:setX(x);
-	self.cursor:setY(y);
 end
 
 function TextControl:cursorMinPosX()
@@ -1359,14 +1319,8 @@ function TextControl:adjustCursor()
 	local new_y = self:y();
 	if(cursor_y > max_cursor_y) then
 		new_y = self:y() + max_cursor_y - (self.cursorLine - 1) * self.lineHeight;
-		--offset_y = y - self:y();
-		--self:scrollY(offset_y);
-		--self:setY(y);
 	elseif(cursor_y < min_cursor_y) then
 		new_y = self:y() + min_cursor_y - (self.cursorLine - 1) * self.lineHeight;
-		--offset_y = y - self:y();
-		--self:scrollY(offset_y);
-		--self:setY(y);
 	end
 	if(new_y ~= self:y()) then
 		self:scrollY(new_y - self:y());
@@ -1419,13 +1373,7 @@ end
 
 function TextControl:paintEvent(painter)
 	self:updateGeometry();
-	self:UpdateCursor();
-
-	if(not self.cursor:isHidden()) then
-		local curline_x, curline_y = 0, (self.cursorLine - 1) * self.lineHeight;
-		painter:SetPen(self:GetCurLineBackgroundColor());
-		painter:DrawRect(self:x() + curline_x, self:y() + curline_y, self:width(), self.lineHeight);
-	end
+	--self:UpdateCursor();
 
 	local clip =  self:getClip();
 	local hasTextClipping = self:width() > clip:width() or self:height() > clip:height();
@@ -1433,6 +1381,13 @@ function TextControl:paintEvent(painter)
 	if(hasTextClipping) then
 		painter:Save();
 		painter:SetClipRegion(self:x() +clip:x(), self:y() +clip:y(),clip:width(),clip:height());
+	end
+
+	if(self.cursorVisible and self:hasFocus() and not self:isReadOnly()) then
+		-- the curor line backgroud
+		local curline_x, curline_y = 0, (self.cursorLine - 1) * self.lineHeight;
+		painter:SetPen(self:GetCurLineBackgroundColor());
+		painter:DrawRect(self:x() + curline_x, self:y() + curline_y, self:width(), self.lineHeight);
 	end
 
 	if (self:hasSelectedText()) then
@@ -1517,7 +1472,16 @@ function TextControl:paintEvent(painter)
 			painter:DrawTextScaled(self:x(), self:y() + self.lineHeight * (i - 1), item.text:GetText(), scale);
 		end
 	end
-	
+
+	if(self.cursorVisible and self:hasFocus() and not self:isReadOnly()) then
+		-- draw cursor
+		if(self.m_blinkPeriod==0 or self.m_blinkStatus) then
+			local cursor_x = self:cursorToX();
+			local cursor_y = (self.cursorLine - 1) * self.lineHeight;
+			painter:SetPen(self:GetCursorColor());
+			painter:DrawRect(self:x() + cursor_x, self:y() + cursor_y, self.m_cursorWidth, self.lineHeight);
+		end
+	end
 
 	if(hasTextClipping) then
 		painter:Restore();
