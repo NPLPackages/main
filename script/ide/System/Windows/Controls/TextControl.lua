@@ -30,7 +30,8 @@ TextControl:Property({"Background", "", auto=true});
 TextControl:Property({"BackgroundColor", "#cccccc", auto=true});
 TextControl:Property({"Color", "#000000", auto=true})
 TextControl:Property({"CursorColor", "#33333388", auto=true})
-TextControl:Property({"SelectedBackgroundColor", "#00006680", auto=true})
+TextControl:Property({"SelectedBackgroundColor", "#006680", auto=true})
+TextControl:Property({"CurLineBackgroundColor", "#87ceff", auto=true})
 TextControl:Property({"m_cursor", 0, "cursorPosition", "setCursorPosition"})
 TextControl:Property({"cursorVisible", false, "isCursorVisible", "setCursorVisible"})
 TextControl:Property({"m_cursorWidth", 2,})
@@ -1419,6 +1420,12 @@ end
 function TextControl:paintEvent(painter)
 	self:updateGeometry();
 	self:UpdateCursor();
+
+	if(not self.cursor:isHidden()) then
+		local curline_x, curline_y = 0, (self.cursorLine - 1) * self.lineHeight;
+		painter:SetPen(self:GetCurLineBackgroundColor());
+		painter:DrawRect(self:x() + curline_x, self:y() + curline_y, self:width(), self.lineHeight);
+	end
 
 	local clip =  self:getClip();
 	local hasTextClipping = self:width() > clip:width() or self:height() > clip:height();

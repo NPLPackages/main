@@ -28,8 +28,7 @@ end
 
 function pe_identicon:OnAfterChildLayout(layout, left, top, right, bottom)
 	if(self.control) then
-		self:setGeometry(left, top, right-left, bottom-top);
-		--self.control:setGeometry(left, top, right-left, bottom-top);
+		self.control:setGeometry(left, top, right-left, bottom-top);
 	end
 end
 
