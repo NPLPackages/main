@@ -369,9 +369,6 @@ function UIElement:event(event)
 		local event_type = event:GetType();
 		local func = self[event:GetHandlerFuncName()];
 		if(type(func) == "function") then
-			if(event_type == "paintEvent" and self._page_element) then
-				self:syncPageElementGeometry();
-			end
 			func(self, event);
 		end
 		if(event_type == "focusInEvent" or event_type == "moveEvent" or event_type == "sizeEvent") then
@@ -994,11 +991,4 @@ end
 
 function UIElement:setPageElement(page_elem)
 	self._page_element = page_elem;
-end
-
-function UIElement:syncPageElementGeometry()
-	if(self._page_element) then
-		local x, y, w, h = self._page_element:getGeometry();
-		self:setGeometry(x, y, w, h);
-	end
 end

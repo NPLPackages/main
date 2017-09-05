@@ -104,6 +104,6 @@ end
 -- after child node layout is updated
 function pe_radio:OnAfterChildLayout(layout, left, top, right, bottom)
 	if(self.control) then
-		self:setGeometry(left, top, right-left, bottom-top);
+		self.control:setGeometry(left, top, right-left, bottom-top);
 	end
 end

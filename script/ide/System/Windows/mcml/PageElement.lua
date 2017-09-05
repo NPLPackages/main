@@ -143,6 +143,10 @@ function PageElement:LoadScriptFile(src)
 	end
 end
 
+local no_parse_nodes = {
+	["option"] = true,
+}
+
 -- virtual function: load component recursively. 
 -- generally one do not need to override this function, override 
 --  OnLoadComponentBeforeChild and OnLoadComponentAfterChild instead. 
@@ -151,6 +155,9 @@ end
 function PageElement:LoadComponent(parentElem, parentLayout, styleItem)
 	if(self:GetAttribute("display") == "none") then 
 		return 
+	end
+	if(no_parse_nodes[self.name]) then
+		return;
 	end
 	-- apply models
 	self:ApplyPreValues();
@@ -225,6 +232,9 @@ end
 function PageElement:UpdateLayout(parentLayout)
 	if(self:GetAttribute("display") == "none") then 
 		return 
+	end
+	if(no_parse_nodes[self.name]) then
+		return;
 	end
 	local css = self:GetStyle();
 	if(not css) then
@@ -1658,21 +1668,6 @@ function PageElement:DoPageEvent(handlerScript, ...)
 		Elements.pe_script.EndCode();
 	end
 	return result;
-end
-
-function PageElement:setGeometry(x, y, w, h)
-	self:SetAttribute("gX",x);
-	self:SetAttribute("gY",y);
-	self:SetAttribute("gW",w);
-	self:SetAttribute("gH",h);
-end
-
-function PageElement:getGeometry()
-	local x = self:GetAttribute("gX",0);
-	local y = self:GetAttribute("gY",0);
-	local w = self:GetAttribute("gW",0);
-	local h = self:GetAttribute("gH",0);
-	return x, y, w, h;
 end
 
 function PageElement:isHidden() 

@@ -19,8 +19,12 @@ function pe_container:ctor()
 end
 
 function pe_container:LoadComponent(parentElem, parentLayout, style)
-	local _this = Canvas:new():init(parentElem);
-	self:SetControl(_this);
+	local _this = self.control;
+	if(not _this) then
+		_this = Canvas:new():init(parentElem);
+		self:SetControl(_this);
+	end
+
 	pe_container._super.LoadComponent(self, _this, parentLayout, style);
 	_this:ApplyCss(self:GetStyle());
 end

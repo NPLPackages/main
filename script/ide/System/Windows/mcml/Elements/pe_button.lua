@@ -29,22 +29,7 @@ function pe_button:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 
 	local buttonName = self:GetAttributeWithCode("name"); -- touch name
 
-	local onclick = self.onclickscript or self:GetString("onclick");
-	if(onclick == "")then
-		onclick = nil;
-	end
-	local onclick_for = self:GetString("for");
-	if(onclick_for == "") then
-		onclick_for = nil;
-	end
-	local ontouch = self:GetString("ontouch");
-	if(ontouch == "")then
-		ontouch = nil;
-	end
-
-	if(onclick or onclick_for or ontouch) then
-		_this:Connect("clicked", self, self.OnClick)
-	end
+	_this:Connect("clicked", self, self.OnClick)
 end
 
 function pe_button:OnBeforeChildLayout(layout)
@@ -65,7 +50,7 @@ end
 
 function pe_button:OnAfterChildLayout(layout, left, top, right, bottom)
 	if(self.control) then
-		self:setGeometry(left, top, right-left, bottom-top);
+		self.control:setGeometry(left, top, right-left, bottom-top);
 	end
 end
 
