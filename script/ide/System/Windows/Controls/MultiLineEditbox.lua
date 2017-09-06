@@ -35,13 +35,12 @@ mulLine:AddItem("我是第十行");
 --mulLine:SetBackgroundColor("#cccccc");
 
 window:Show("my_window", nil, "_mt", 0,0, 600, 600);
-test_Windows.window = window;
+test_Windows.windows = {window};
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/System/Windows/Controls/ScrollArea.lua");
 NPL.load("(gl)script/ide/System/Windows/Controls/ScrollBar.lua");
 NPL.load("(gl)script/ide/math/Point.lua");
-NPL.load("(gl)script/ide/System/Windows/Controls/TextCursor.lua");
 NPL.load("(gl)script/ide/System/Windows/Controls/TextControl.lua");
 local TextControl = commonlib.gettable("System.Windows.Controls.TextControl");
 local Point = commonlib.gettable("mathlib.Point");
@@ -50,7 +49,6 @@ local UniString = commonlib.gettable("System.Core.UniString");
 local Application = commonlib.gettable("System.Windows.Application");
 local FocusPolicy = commonlib.gettable("System.Core.Namespace.FocusPolicy");
 local ScrollBar = commonlib.gettable("System.Windows.Controls.ScrollBar");
-local TextCursor = commonlib.gettable("System.Windows.Controls.TextCursor");
 
 local MultiLineEditbox = commonlib.inherit(commonlib.gettable("System.Windows.Controls.ScrollArea"), commonlib.gettable("System.Windows.Controls.MultiLineEditbox"));
 MultiLineEditbox:Property("Name", "MultiLineEditbox");
@@ -64,7 +62,7 @@ MultiLineEditbox:Property({"m_cursor", nil, "cursorPosition", "setCursorPosition
 MultiLineEditbox:Property({"cursorVisible", false, "isCursorVisible", "setCursorVisible"})
 MultiLineEditbox:Property({"m_cursorWidth", 2,})
 MultiLineEditbox:Property({"m_blinkPeriod", 0, "getCursorBlinkPeriod", "setCursorBlinkPeriod"})
-MultiLineEditbox:Property({"m_readOnly", false, "isReadOnly", "setReadOnly", auto=true})
+--MultiLineEditbox:Property({"m_readOnly", false, "isReadOnly", "setReadOnly", auto=true})
 MultiLineEditbox:Property({"m_echoMode", "Normal", "echoMode", "setEchoMode"})
 MultiLineEditbox:Property({"Font", "System;14;norm", auto=true})
 MultiLineEditbox:Property({"Scale", nil, "GetScale", "SetScale", auto=true})
@@ -73,7 +71,7 @@ MultiLineEditbox:Property({"leftTextMargin", 2});
 MultiLineEditbox:Property({"topTextMargin", 2});
 MultiLineEditbox:Property({"rightTextMargin", 2});
 MultiLineEditbox:Property({"bottomTextMargin", 2});
-MultiLineEditbox:Property({"m_readOnly", false, "  ", "setReadOnly"})
+--MultiLineEditbox:Property({"m_readOnly", false, "  ", "setReadOnly"})
 --MultiLineEditbox:Property({"m_maxLength", 65535, "getMaxLength", "setMaxLength", auto=true})
 --MultiLineEditbox:Property({"rows", nil, "GetRows", "SetRows"})
 MultiLineEditbox:Property({"lineWrap", nil, "GetLineWrap", "SetLineWrap", auto=true})
@@ -95,9 +93,9 @@ MultiLineEditbox:Signal("textChanged");
 
 
 function MultiLineEditbox:ctor()
-	self:setFocusPolicy(FocusPolicy.StrongFocus);
-	self:setAttribute("WA_InputMethodEnabled");
-	self:setMouseTracking(true);
+--	self:setFocusPolicy(FocusPolicy.StrongFocus);
+--	self:setAttribute("WA_InputMethodEnabled");
+--	self:setMouseTracking(true);
 end
 
 function MultiLineEditbox:init(parent)
@@ -158,11 +156,15 @@ function MultiLineEditbox:ViewPort()
 end
 
 function MultiLineEditbox:setReadOnly(bReadOnly)
-	self.m_readOnly = bReadOnly;
-	if (bReadOnly) then
-        self:setCursorBlinkPeriod(0);
-    else
-        self:setCursorBlinkPeriod(Application:cursorFlashTime());
+	--self.m_readOnly = bReadOnly;
+	if(self.viewport) then
+		self.viewport:setReadOnly(bReadOnly);
+	end
+end
+
+function MultiLineEditbox:isReadOnly()
+	if(self.viewport) then
+		self.viewport:isReadOnly();
 	end
 end
 
@@ -184,19 +186,6 @@ end
 
 function MultiLineEditbox:contains(x,y)
 	return self:rect():contains(x,y);
-end
-
-function MultiLineEditbox:isReadOnly()
-	return self.m_readOnly;
-end
-
-function MultiLineEditbox:setReadOnly(bReadOnly)
-	self.m_readOnly = bReadOnly;
-	if (bReadOnly) then
-        self.viewport:hideCursor();
-    else
-        self.viewport:showCursor();
-	end
 end
 
 function MultiLineEditbox:offsetX()
