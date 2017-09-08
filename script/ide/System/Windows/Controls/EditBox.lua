@@ -534,6 +534,10 @@ function EditBox:inSelection(x)
 end
 
 function EditBox:mousePressEvent(e)
+	if(self:isReadOnly()) then
+		e:ignore();
+		return;
+	end
 	if(e:button() == "left") then
 		local mark = e.shift_pressed;
 		local cursor = self:xToPos(e:pos():x());
@@ -543,6 +547,10 @@ function EditBox:mousePressEvent(e)
 end
 
 function EditBox:mouseMoveEvent(e)
+	if(self:isReadOnly()) then
+		e:ignore();
+		return;
+	end
 	if(e:button() == "left") then
 		local select = true;
 		self:moveCursor(self:xToPos(e:pos():x()), select);
@@ -815,6 +823,10 @@ end
 
 
 function EditBox:keyPressEvent(event)
+	if(self:isReadOnly()) then
+		e:ignore();
+		return;
+	end
 	local keyname = event.keyname;
 	-- echo({keyname, event.key_sequence});
 	local unknown = false;

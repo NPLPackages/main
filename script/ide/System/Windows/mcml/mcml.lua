@@ -118,6 +118,8 @@ function mcml:LoadAllElements()
 	Elements.pe_br:RegisterAs("br");
 	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_textarea.lua");
 	Elements.pe_textarea:RegisterAs("textarea");
+	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_select.lua");
+	Elements.pe_select:RegisterAs("select");
 	-- TODO: add all system defined page element here
 end
 

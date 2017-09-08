@@ -493,7 +493,7 @@ end
 
 -- get the value of an attribute of this node as its original format (usually string)
 function PageElement:GetAttribute(attrName,defaultValue)
-	if(self.attr) then
+	if(self.attr and self.attr[attrName]) then
 		return self.attr[attrName];
 	end
 	return defaultValue;
@@ -541,7 +541,7 @@ end
 
 -- get an attribute as string
 function PageElement:GetString(attrName,defaultValue)
-	if(self.attr) then
+	if(self.attr and self.attr[attrName]) then
 		return self.attr[attrName];
 	end
 	return defaultValue;
@@ -549,7 +549,7 @@ end
 
 -- get an attribute as number
 function PageElement:GetNumber(attrName,defaultValue)
-	if(self.attr) then
+	if(self.attr and self.attr[attrName]) then
 		return tonumber(self.attr[attrName]);
 	end
 	return defaultValue;
@@ -557,7 +557,7 @@ end
 
 -- get an attribute as integer
 function PageElement:GetInt(attrName, defaultValue)
-	if(self.attr) then
+	if(self.attr and self.attr[attrName]) then
 		return math.floor(tonumber(self.attr[attrName]));
 	end
 	return defaultValue;
@@ -566,7 +566,7 @@ end
 
 -- get an attribute as boolean
 function PageElement:GetBool(attrName, defaultValue)
-	if(self.attr) then
+	if(self.attr and self.attr[attrName]) then
 		local v = string_lower(tostring(self.attr[attrName]));
 		if(v == "false") then
 			return false

@@ -50,6 +50,17 @@
         local new_btn = Page:jquery("<input/>", param);
         Page:jquery("div#test"):AddChild(new_btn);
     end
+
+    function GetSelectInfo()
+        local select = Page:jquery("select#select");
+        echo(select:GetValue());
+        echo(select:GetText());
+    end
+
+    function SetSelectValue()
+        local select = Page:jquery("select#select");
+        select:SetValue("1");
+    end
 ]]>
 </script>
 <!--<div style="color:#33ff33;background-color:#808080">
@@ -83,10 +94,21 @@
             <input type="text" name="sliderbarValue" onchange="Textchange" style="margin-left:10px;width:40px;height:25px;" />
             <br/>
             <textarea rows="5" style="margin:10px;width:200px;" />
-            <pe:repeat value="item in GetDS()" style="float:left">
-                <!--<div style="float:left;"><%=item.a%></div>-->
-                <input type="checkbox" /><div style="float:left;"><%=item.a%></div>
+            <pe:repeat DataSource = '<%=GetDS()%>' style="float:left">
+                <input type="checkbox" /><div style="float:left;"><%=a%></div>
             </pe:repeat>
+            <!--<br/>-->
+            <select name="select" AllowUserEdit="false" DataSource='<%={{value="0", text="zero", selected="true"},{value="1", text="1"},{value="2"},}%>'></select>
+            <!--<input type="button" style="margin-left:4px;width:30px;height:25px;" value="getInfo" onclick="GetSelectInfo"/>
+            <input type="button" style="margin-left:4px;width:30px;height:25px;" value="setValue" onclick="SetSelectValue"/>-->
+            <select name="list" AllowUserEdit="false" size="2" style="margin-left:50px;height:100px;width:60px;">
+                <option value="0" selected="selected">O</option>
+                <option value="2">A</option>
+                <option value="3">B</option> 
+                <option value="4">AB</option>
+            </select>
+            <!--<br/>
+            <input type="button" name="sliderbarValue" style="width:40px;height:25px;" />-->
         </div>
     </div>
     

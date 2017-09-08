@@ -1139,6 +1139,7 @@
     <None Include="script\ide\System\Windows\Controls\Custom.lua" />
     <None Include="script\ide\System\Windows\Controls\DropdownListbox.lua" />
     <None Include="script\ide\System\Windows\Controls\ListBox.lua" />
+    <None Include="script\ide\System\Windows\Controls\ListView.lua" />
     <None Include="script\ide\System\Windows\Controls\MultiLineEditbox.lua" />
     <None Include="script\ide\System\Windows\Controls\Primitives\SliderBase.lua" />
     <None Include="script\ide\System\Windows\Controls\ScrollArea.lua" />
@@ -1151,6 +1152,7 @@
     <None Include="script\ide\System\Windows\mcml\Elements\pe_checkbox.lua" />
     <None Include="script\ide\System\Windows\mcml\Elements\pe_header.lua" />
     <None Include="script\ide\System\Windows\mcml\Elements\pe_radio.lua" />
+    <None Include="script\ide\System\Windows\mcml\Elements\pe_select.lua" />
     <None Include="script\ide\System\Windows\mcml\Elements\pe_sliderbar.lua" />
     <None Include="script\ide\System\Windows\mcml\Elements\pe_textarea.lua" />
     <None Include="script\test\MCMLV2\main.lua" />
