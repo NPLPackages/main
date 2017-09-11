@@ -10,6 +10,7 @@ Buildin DOM path:
 	/asset				DOM of the C++ asset object. 
 	/viewport			DOM of the C++ viewport object. 
 	/player				DOM of the C++ current focused player object. 
+	/AsyncLoader		DOM of the C++ current AsyncLoader object. 
 
 See also: ObjectPath.lua
 
@@ -56,6 +57,8 @@ function DOM.GetDOM(name)
 		dom = ParaEngine.GetAttributeObject():GetChild("AssetManager");
 	elseif(name == "viewport") then
 		dom = ParaEngine.GetAttributeObject():GetChild("ViewportManager");
+	elseif(name == "AsyncLoader") then
+		dom = ParaEngine.GetAttributeObject():GetChild("AsyncLoader");
 	elseif(name == "player") then
 		dom = ParaScene.GetPlayer():GetAttributeObject();
 	elseif(name == "npl") then
@@ -96,7 +99,7 @@ end
 -- get all builtin and registed doms names in a newly created table array. 
 -- @return table array, such as {"scene", "gui", ...}
 function DOM.GetAllDOMNames()
-	local doms = {"all", "scene", "gui", "asset", "viewport", "player", "npl", "camera", "GLOBALS"};
+	local doms = {"all", "scene", "gui", "asset", "viewport", "player", "npl", "camera", "GLOBALS", "AsyncLoader"};
 	for name, _ in pairs(registered_doms) do
 		doms[#doms+1] = name;
 	end

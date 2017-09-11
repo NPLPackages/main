@@ -13,7 +13,7 @@ echo(System.os.GetCurrentProcessId());
 ]]
 NPL.load("(gl)script/ide/System/os/run.lua");
 NPL.load("(gl)script/ide/System/os/GetUrl.lua");
-
+NPL.load("(gl)script/ide/System/os/options.lua");
 local os = commonlib.gettable("System.os");
 
 -- @return "win32", "linux", "android", "ios", "mac"

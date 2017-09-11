@@ -192,6 +192,13 @@ function WebServer:LoadConfig(filename)
 		end
 	end
 
+	if(self.config.ServerCurlThreadCount) then
+		System.os.options.SetWorkerThreadsCount(2, self.config.ServerCurlThreadCount)
+	end
+	if(self.config.ServerCurlThreadQueueSize) then
+		System.os.options.SetProcessorQueueSize(2, self.config.ServerCurlThreadQueueSize)
+	end
+
 	-- read all rules
 	local rules_map = commonlib.copy(internal_rules);
 	for node in commonlib.XPath.eachNode(xmlRoot, "//WebServer/rules") do
