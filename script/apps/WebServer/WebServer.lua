@@ -38,7 +38,7 @@ NPL.activate("(gl)script/apps/WebServer/WebServer.lua", {type="StartServerAsync"
 ]]
 if(not WebServer) then  WebServer = {} end
 
-NPL.load("(gl)script/ide/commonlib.lua");
+NPL.load("(gl)script/ide/System/System.lua");
 
 WebServer.config = {
 	public_files = "config/NPLPublicFiles.xml",
