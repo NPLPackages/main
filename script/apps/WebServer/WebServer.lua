@@ -38,7 +38,7 @@ NPL.activate("(gl)script/apps/WebServer/WebServer.lua", {type="StartServerAsync"
 ]]
 if(not WebServer) then  WebServer = {} end
 
-NPL.load("(gl)script/ide/commonlib.lua");
+NPL.load("(gl)script/ide/System/System.lua");
 
 WebServer.config = {
 	public_files = "config/NPLPublicFiles.xml",
@@ -190,6 +190,13 @@ function WebServer:LoadConfig(filename)
 		for _, tablenode in ipairs(node) do
 			LoadCustomConfig(tablenode, self.config);
 		end
+	end
+
+	if(self.config.ServerCurlThreadCount) then
+		System.os.options.SetWorkerThreadsCount(2, self.config.ServerCurlThreadCount)
+	end
+	if(self.config.ServerCurlThreadQueueSize) then
+		System.os.options.SetProcessorQueueSize(2, self.config.ServerCurlThreadQueueSize)
 	end
 
 	-- read all rules
