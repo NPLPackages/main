@@ -71,6 +71,10 @@ Overlay:Property({"PickingRenderFrame", 0, auto=true});
 Overlay:Property({"m_hasMouseTracking", nil, "hasMouseTracking", "setMouseTracking", auto=true});
 Overlay:Property({"m_render_pass", false, });
 Overlay:Property({"m_position", nil, "getPosition", "setPosition"});
+-- always use camera position
+Overlay:Property({"UseCameraPos", false, "IsUseCameraPos", "SetUseCameraPos"});
+-- default to nil, which self:Tick() is not called. 
+Overlay:Property({"TickInterval", nil, "GetTickInterval", "SetTickInterval"});
 Overlay:Property({"localTransform", nil, "GetLocalTransform", "SetLocalTransform"});
 
 
@@ -85,7 +89,52 @@ function Overlay:init(parent)
 	else
 		self:create_sys(nil);
 	end
+	-- automatically start ticking
+	if(self:IsUseCameraPos()) then
+		self:SetUseCameraPos(true);
+	end
+	if(self:GetTickInterval()) then
+		self:SetTickInterval(self:GetTickInterval());
+	end
 	return self;
+end
+
+function Overlay:SetUseCameraPos(bEnabled)
+	self.UseCameraPos = bEnabled;
+	if(not self:GetTickInterval()) then
+		self:SetTickInterval(33);
+	end
+end
+
+function Overlay:IsUseCameraPos()
+	return self.UseCameraPos;
+end
+
+function Overlay:SetTickInterval(interval)
+	self.TickInterval = interval;
+	if(interval) then
+		if(not self.tick_timer) then
+			self.tick_timer = commonlib.Timer:new({callbackFunc = function(timer)
+				self:Tick();
+			end})
+		end
+		self.tick_timer:Change(interval, interval)
+	elseif(self.tick_timer) then
+		self.tick_timer:Change(nil, nil);
+	end
+end
+
+function Overlay:GetTickInterval()
+	return self.TickInterval;
+end
+
+
+-- virtual function: 
+-- only called when TickInterval is specified or UseCameraPos is true. 
+function Overlay:Tick()
+	if(self:IsUseCameraPos()) then
+		self:UpdateToCameraPosition();
+	end
 end
 
 -- private: bind to native scene object.
@@ -349,6 +398,13 @@ end
 -- picking name from the last picking result.
 function Overlay:GetActivePickingName()
 	return OverlayPicking:GetActivePickingName();
+end
+
+-- set position using the current camera position in the scene. 
+-- this is useful when you want the overlay to be always visible. 
+function Overlay:UpdateToCameraPosition()
+	local x, y, z = ParaCamera.GetLookAtPos();
+	self:SetPosition(x, y, z);
 end
 
 -- helper function that set color and picking color(name)

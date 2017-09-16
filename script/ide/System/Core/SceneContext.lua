@@ -322,6 +322,7 @@ function SceneContext:AddManipulator(manip)
 		self.manipulators = commonlib.Array:new();
 	end
 	self.manipulators:add(manip);
+	manip:SetSceneContext(self);
 end
 
 -- automatically called when SceneContext is Unselected or destroyed. However, one may needs to call this manually

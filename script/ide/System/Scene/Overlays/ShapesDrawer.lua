@@ -44,14 +44,27 @@ function ShapesDrawer.DrawCube(painter, x,y,z, radius, bFakeCube)
 		local from = cube_template[i] 
 		to[1], to[2], to[3] = x+from[1]*radius, y+from[2]*radius, z+from[3]*radius;
 	end	
-	if(bFakeCube~=true) then
+	if(bFakeCube~=false) then
 		painter:DrawTriangleList(fake_cube_triangles);
 	else
 		painter:DrawTriangleList(cube_triangles);
 	end
 end
 
-local lineList = {{0,0,0}, {1,0,0}};
+local lineList = {
+	{0,0,0}, {1,0,0},
+	{0,0,0}, {1,0,0},
+	{0,0,0}, {1,0,0},
+	{0,0,0}, {1,0,0},
+	{0,0,0}, {1,0,0},
+	{0,0,0}, {1,0,0},
+	{0,0,0}, {1,0,0},
+	{0,0,0}, {1,0,0},
+	{0,0,0}, {1,0,0},
+	{0,0,0}, {1,0,0},
+	{0,0,0}, {1,0,0},
+	{0,0,0}, {1,0,0},
+};
 
 -- draw a line
 function ShapesDrawer.DrawLine(painter, from_x,from_y,from_z, to_x, to_y, to_z)
@@ -59,8 +72,79 @@ function ShapesDrawer.DrawLine(painter, from_x,from_y,from_z, to_x, to_y, to_z)
 	from[1], from[2], from[3] = from_x,from_y,from_z or 0;
 	local to = lineList[2];
 	to[1], to[2], to[3] = to_x, to_y, to_z or 0;
-	painter:DrawLineList(lineList);
+	painter:DrawLineList(lineList, 1);
 end
+
+
+-- draw AABB
+-- @param bFill: if true, we will render box instead of boader lines. 
+function ShapesDrawer.DrawAABB(painter, min_x, min_y, min_z, max_x, max_y, max_z, bFill)
+	if(bFill) then
+		local cx, cy, cz = (min_x + max_x) * 0.5, (min_y + max_y) * 0.5, (min_z + max_z) * 0.5;
+		local ex, ey,ez = math.abs(min_x - max_x)*0.5, math.abs(min_y - max_y) * 0.5, math.abs(min_z - max_z) * 0.5;
+		for i=1,8 do
+			local to = cube_vertices[i] 
+			local from = cube_template[i] 
+			to[1], to[2], to[3] = cx+from[1]*ex, cy+from[2]*ey, cz+from[3]*ez;
+		end	
+		painter:DrawTriangleList(cube_triangles);
+	else
+		local pt;
+		pt = lineList[1];
+		pt[1], pt[2], pt[3] = min_x, min_y, min_z;
+		pt = lineList[2];
+		pt[1], pt[2], pt[3] = max_x, min_y, min_z;
+		pt = lineList[3];
+		pt[1], pt[2], pt[3] = min_x, min_y, min_z;
+		pt = lineList[4];
+		pt[1], pt[2], pt[3] = min_x, min_y, max_z;
+		pt = lineList[5];
+		pt[1], pt[2], pt[3] = max_x, min_y, min_z;
+		pt = lineList[6];
+		pt[1], pt[2], pt[3] = max_x, min_y, max_z;
+		pt = lineList[7];
+		pt[1], pt[2], pt[3] = min_x, min_y, max_z;
+		pt = lineList[8];
+		pt[1], pt[2], pt[3] = max_x, min_y, max_z;
+
+		pt = lineList[9];
+		pt[1], pt[2], pt[3] = min_x, max_y, min_z;
+		pt = lineList[10];
+		pt[1], pt[2], pt[3] = max_x, max_y, min_z;
+		pt = lineList[11];
+		pt[1], pt[2], pt[3] = min_x, max_y, min_z;
+		pt = lineList[12];
+		pt[1], pt[2], pt[3] = min_x, max_y, max_z;
+		pt = lineList[13];			  
+		pt[1], pt[2], pt[3] = max_x, max_y, min_z;
+		pt = lineList[14];
+		pt[1], pt[2], pt[3] = max_x, max_y, max_z;
+		pt = lineList[15];
+		pt[1], pt[2], pt[3] = min_x, max_y, max_z;
+		pt = lineList[16];
+		pt[1], pt[2], pt[3] = max_x, max_y, max_z;
+
+		pt = lineList[17];
+		pt[1], pt[2], pt[3] = min_x, min_y, min_z;
+		pt = lineList[18];
+		pt[1], pt[2], pt[3] = min_x, max_y, min_z;
+		pt = lineList[19];
+		pt[1], pt[2], pt[3] = min_x, min_y, max_z;
+		pt = lineList[20];
+		pt[1], pt[2], pt[3] = min_x, max_y, max_z;
+		pt = lineList[21];			  
+		pt[1], pt[2], pt[3] = max_x, min_y, min_z;
+		pt = lineList[22];
+		pt[1], pt[2], pt[3] = max_x, max_y, min_z;
+		pt = lineList[23];
+		pt[1], pt[2], pt[3] = max_x, min_y, max_z;
+		pt = lineList[24];
+		pt[1], pt[2], pt[3] = max_x, max_y, max_z;
+		
+		painter:DrawLineList(lineList, 12);
+	end
+end
+
 
 local ring_triangles = {};
 local circle_triangles = {};
