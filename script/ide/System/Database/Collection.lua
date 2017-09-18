@@ -280,6 +280,14 @@ function Collection:delete(query, callbackFunc, timeout)
 	end
 end
 
+function Collection:injectWALPage(query, callbackFunc, timeout)
+	if(self:IsServer()) then
+		return self.storageProvider:injectWALPage(query, callbackFunc);
+	else
+		return IORequest:Send("injectWALPage", self, query, callbackFunc, timeout);
+	end
+end
+
 -- 2PC for close
 function Collection:close(callbackFunc, timeout)
 	if(self:IsServer()) then

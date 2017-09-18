@@ -629,10 +629,11 @@ end
 function db_class.wal_inject_page(db, page_data, pgno, nTruncate, isCommit)
   check_db(db)
   local status = api.wal_inject_page(db.handle, page_data, pgno, nTruncate, isCommit)
-  if is_error(status) then
-    return nil, errmsg(db.handle)
-  end
-  return db
+  return status
+  -- if is_error(status) then
+  --   return nil, errmsg(db.handle)
+  -- end
+  -- return db
 end
 
 function db_class.set_wal_checkpoint_hook(db, func)

@@ -178,6 +178,10 @@ function IOThread:HandleRequest(msg)
 				collection:close(function(err, data)
 					self:SendResponse(err, data, msg);
 				end);
+			elseif(query_type == "injectWALPage") then
+				collection:injectWALPage(msg.query, function(err, data)
+					self:SendResponse(err, data, msg);
+				end);
 			end
 		end
 	elseif(query_type == "connect") then
