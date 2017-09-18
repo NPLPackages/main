@@ -42,9 +42,7 @@ function pe_container:OnBeforeChildLayout(layout)
 		local width, height = layout:GetPreferredSize();
 		local padding_left, padding_top = css:padding_left(),css:padding_top();
 		myLayout:reset(padding_left,padding_top,width+padding_left, height+padding_top);
-		for childnode in self:next() do
-			childnode:UpdateLayout(myLayout);
-		end
+		self:UpdateChildLayout(myLayout);
 		width, height = myLayout:GetUsedSize();
 		width = width - padding_left;
 		height = height - padding_top;

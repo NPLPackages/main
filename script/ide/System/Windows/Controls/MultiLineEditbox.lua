@@ -38,7 +38,7 @@ window:Show("my_window", nil, "_mt", 0,0, 600, 600);
 test_Windows.windows = {window};
 ------------------------------------------------------------
 ]]
-NPL.load("(gl)script/ide/System/Windows/Controls/ScrollArea.lua");
+NPL.load("(gl)script/ide/System/Windows/Controls/Primitives/ScrollAreaBase.lua");
 NPL.load("(gl)script/ide/System/Windows/Controls/ScrollBar.lua");
 NPL.load("(gl)script/ide/math/Point.lua");
 NPL.load("(gl)script/ide/System/Windows/Controls/TextControl.lua");
@@ -50,7 +50,7 @@ local Application = commonlib.gettable("System.Windows.Application");
 local FocusPolicy = commonlib.gettable("System.Core.Namespace.FocusPolicy");
 local ScrollBar = commonlib.gettable("System.Windows.Controls.ScrollBar");
 
-local MultiLineEditbox = commonlib.inherit(commonlib.gettable("System.Windows.Controls.ScrollArea"), commonlib.gettable("System.Windows.Controls.MultiLineEditbox"));
+local MultiLineEditbox = commonlib.inherit(commonlib.gettable("System.Windows.Controls.Primitives.ScrollAreaBase"), commonlib.gettable("System.Windows.Controls.MultiLineEditbox"));
 MultiLineEditbox:Property("Name", "MultiLineEditbox");
 
 MultiLineEditbox:Property({"Background", "", auto=true});
@@ -77,7 +77,6 @@ MultiLineEditbox:Property({"bottomTextMargin", 2});
 MultiLineEditbox:Property({"lineWrap", nil, "GetLineWrap", "SetLineWrap", auto=true})
 MultiLineEditbox:Property({"ItemHeight",20, auto=true})
 
-MultiLineEditbox:Property({"SliderSize", 16, auto=true});
 --MultiLineEditbox:Property({"vSliderWidth", 20, auto=true});
 --MultiLineEditbox:Property({"hSliderHeight", 20, auto=true});
 --MultiLineEditbox:Property({"vSliderWidth", nil, auto=true});
@@ -98,14 +97,17 @@ function MultiLineEditbox:ctor()
 --	self:setMouseTracking(true);
 end
 
-function MultiLineEditbox:init(parent)
-	MultiLineEditbox._super.init(self, parent);
+--function MultiLineEditbox:init(parent)
+--	MultiLineEditbox._super.init(self, parent);
+--
+--	return self;
+--end
 
+function MultiLineEditbox:initViewport()
 	self.viewport = TextControl:new():init(self);
-	self.viewport:Connect("sizeChanged", self, "updateScrollStatus");
-	self.viewport:Connect("positionChanged", self, "updateScrollValue");
-
-	return self;
+	self.viewport:SetClip(true);
+	self.viewport:Connect("SizeChanged", self, "updateScrollStatus");
+	self.viewport:Connect("PositionChanged", self, "updateScrollValue");
 end
 
 function MultiLineEditbox:echoMode()
@@ -134,10 +136,6 @@ end
 
 function MultiLineEditbox:GetRows()
 	return math.floor(self:ViewPort():height()/self.ItemHeight);
-end
-
-function MultiLineEditbox:SetPosition(x, y)
-	self:setGeometry(x, y, 200, 20 * 5);
 end
 
 function MultiLineEditbox:ViewPort()
@@ -188,37 +186,16 @@ function MultiLineEditbox:contains(x,y)
 	return self:rect():contains(x,y);
 end
 
-function MultiLineEditbox:offsetX()
-	return self:sliderPositionFromValue(0, 1000, self.hscroll, self.length);
-end
-
-function MultiLineEditbox:offsetY()
-	return self:sliderPositionFromValue(0, 1000, self.vscroll, self.items:size() * self.ItemHeight);
-end
-
-function MultiLineEditbox:Clip()
-	local w = self:width();
-	local h = self:height();
-	if(not self.hbar:isHidden()) then
-		h = h - self.SliderSize;
-	end
-
-	if(not self.vbar:isHidden()) then
-		w = w - self.SliderSize;
-	end
-	return Rect:new_from_pool(0, 0, w, h);
-end
-
 function MultiLineEditbox:updateViewportPos()
 	self.viewport:updatePos(self.hscroll, self.vscroll);
 end
 
 function MultiLineEditbox:GetRow()
-	return math.floor(self:Clip():height()/self.viewport:GetLineHeight());
+	return math.floor(self:ClipRegion():height()/self.viewport:GetLineHeight());
 end
 
 function MultiLineEditbox:updateScrollInfo()
-	local clip = self:Clip();
+	local clip = self:ClipRegion();
 	if(not self.hbar:isHidden()) then
 		self.hbar:setRange(0, self.viewport:GetRealWidth() - clip:width() - 1);
 		self.hbar:setStep(self.viewport:WordWidth(), clip:width());
@@ -243,18 +220,18 @@ function MultiLineEditbox:updateScrollValue()
 end
 
 function MultiLineEditbox:updateScrollStatus(textbox_w, textbox_h)
-	local clip = self:Clip();
+	local clip = self:ClipRegion();
 	if(textbox_w > clip:width()) then
 		self.hbar:show();
 	else
 		self.hbar:hide();
 	end
 
-	clip = self:Clip();
+	clip = self:ClipRegion();
 	if(textbox_h > clip:height()) then
 		self.vbar:show();
 
-		clip = self:Clip();
+		clip = self:ClipRegion();
 		if(textbox_w > clip:width()) then
 			self.hbar:show();
 		else

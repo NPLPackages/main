@@ -328,6 +328,7 @@ function Window:setGeometry_sys(ax, ay, aw, ah)
 				self:setAttribute("WA_PendingSizeEvent");
 			end
 		end
+		self:emitSizeChanged();
 	end
 	if(self:isVisible()) then
 		if(isMove) then

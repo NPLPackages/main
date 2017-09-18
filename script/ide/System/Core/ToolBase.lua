@@ -111,6 +111,19 @@ function ToolBase:isAncestorOf(child)
     return false;
 end
 
+function ToolBase:GetParent(name)
+	if(name==nil) then
+		return self.parent
+	end
+	local parent = self.parent;
+	while (parent~=nil) do
+		if(parent:GetField("Name",nil) == name) then
+			return parent;
+		end
+		parent = parent.parent;
+	end
+end
+
 -- static function: to use the class itself as a singleton object. 
 -- this function can be called many times, only the first time succeed. 
 -- Once called, it will disable new() method for object instantiation.  

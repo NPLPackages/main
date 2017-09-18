@@ -3,63 +3,12 @@
 <pe:mcml>
 <script type="text/npl" refresh="false">
 <![CDATA[
-
-    repeat_data = { {a="red"}, {a="green"}, {a="blue"} };
-    function GetDS()
-        return repeat_data;
+    function tvwOnClickNode(treenode)
+        echo("tvwOnClickNode");
     end
-
-    function OnChangeSize()
-        Page:jquery("div#test"):SetCssStyle("width",200);
-    end
-
-    function OnHide()
-        --Page:jquery("h1"):hide();
-        Page:jquery("div#test"):hide();
-    end
-
-    function OnShow()
-        --Page:jquery("h1"):show();
-        Page:jquery("div#test"):show();
-    end
-
-    function Textchange(text,node)
-        local w = node.control:naturalTextWidth();
-        local css = node:GetStyle();
-        --if(w > css.min-width) then
-        if(w > css["min-width"]) then
-            node:SetCssStyle("width",w);
-        end
-    end
-
-    function sliderValueChanged(value, node)
-        echo("value:"..tostring(value));
-        --echo(#Page:jquery("input#sliderbarValue"))
-        Page:jquery("input#sliderbarValue"):SetUIValue(tostring(value));
-    end
-
-    function OnAddNode()
-        local param = {
-			name="input",
-			attr={
-				type="button",
-				style="margin-left:50px;width:30px;height:25px;",
-				value="new",
-			},
-		};
-        local new_btn = Page:jquery("<input/>", param);
-        Page:jquery("div#test"):AddChild(new_btn);
-    end
-
-    function GetSelectInfo()
-        local select = Page:jquery("select#select");
-        echo(select:GetValue());
-        echo(select:GetText());
-    end
-
-    function SetSelectValue()
-        local select = Page:jquery("select#select");
-        select:SetValue("1");
+    function tvwOnClickNode2(treenode)
+        echo("tvwOnClickNode2");
+        --_guihelper.MessageBox("This is per treenode click!");
     end
 ]]>
 </script>
@@ -72,46 +21,60 @@
         <input type="button" name="ok" value="确定" onclick="OnClickOK"/>
     </div>
 </div>-->
-<div align="right" style="background-color:#ff0000;margin:10px;padding:10px;min-width:200px;min-height:150px;">
-    <div>
-        <input type="button" style="margin-left:50px;width:30px;height:25px;" value="hide" onclick="OnHide"/>
-        <input type="button" style="margin-left:50px;width:30px;height:25px;" value="show" onclick="OnShow"/>
-        <input type="button" style="margin-left:50px;width:30px;height:25px;" value="change" onclick="OnChangeSize"/>
-        <input type="button" style="margin-left:50px;width:30px;height:25px;" value="add" onclick="OnAddNode"/>
-        <div name="test" style="background-color:#00ff00;width:500px;">
-            <h1>head 1</h1>
-            <h4>head 4</h4>
-            <input type="checkbox" name="1" value="1" checked="true" /><div style="float:left;">1</div>
-            <input type="checkbox" /><div style="float:left;">2</div>
-            <input type="checkbox" /><div style="float:left;">3</div>
-            <input type="radio" name="gender" value="0" /><div style="float:left;">男</div>
-            <input type="radio" name="gender" value="1" /><div style="float:left;">女</div>
-            <br/>
-            <editbox onchange="Textchange" style="margin-left:10px;width:40px;height:25px;min-width:40px"/>
-            <span>hello world</span>
-            <br/>
-            <sliderbar style="width:150px" value="50" onchange="sliderValueChanged" />
-            <input type="text" name="sliderbarValue" onchange="Textchange" style="margin-left:10px;width:40px;height:25px;" />
-            <br/>
-            <textarea rows="5" style="margin:10px;width:200px;" />
-            <pe:repeat DataSource = '<%=GetDS()%>' style="float:left">
-                <input type="checkbox" /><div style="float:left;"><%=a%></div>
-            </pe:repeat>
-            <!--<br/>-->
-            <select name="select" AllowUserEdit="false" DataSource='<%={{value="0", text="zero", selected="true"},{value="1", text="1"},{value="2"},}%>'></select>
-            <!--<input type="button" style="margin-left:4px;width:30px;height:25px;" value="getInfo" onclick="GetSelectInfo"/>
-            <input type="button" style="margin-left:4px;width:30px;height:25px;" value="setValue" onclick="SetSelectValue"/>-->
-            <select name="list" AllowUserEdit="false" size="2" style="margin-left:50px;height:100px;width:60px;">
-                <option value="0" selected="selected">O</option>
-                <option value="2">A</option>
-                <option value="3">B</option> 
-                <option value="4">AB</option>
-            </select>
-            <!--<br/>
-            <input type="button" name="sliderbarValue" style="width:40px;height:25px;" />-->
-        </div>
-    </div>
-    
+<Resource style="display:none" name="MySampleDataSource" >
+    <folder text="folder1" expanded="true">
+        <folder text="folder1_1" expanded="true">
+            <file text="some file1" finished="true"></file>
+            <file text="some file1_2" finished="true"></file>
+        </folder>
+        <file text="some file2"></file>
+        <file text="some file3"></file>
+    </folder>
+    <mcml_folder text="folder2">
+        <file text="some file4" finished="true"></file>
+    </mcml_folder>
+    <file_canclick text="some file5 (Click me!!!)"></file_canclick>
+    <file_canclick2 text="some file6 (Click me unique!!!)"></file_canclick2>
+</Resource>
+
+<div style="background-color:#ff0000;margin:10px;padding:10px;min-width:200px;min-height:150px;">
+    <pe:treeview name="tvwXMLTest2" DataSourceID='MySampleDataSource' DefaultNodeHeight="20" OnClick="tvwOnClickNode()" style="width:300px;height:150px;">
+	    <NodeTemplates>
+		    <NodeTemplate DataType="folder">
+                <pe:treenode text='<%=XPath("this|text")%>' expanded='<%=XPath("this|expanded")%>'></pe:treenode>
+            </NodeTemplate>
+            <NodeTemplate DataType="mcml_folder" >
+                <pe:treenode RenderTemplate="mcml_folder_template" expanded='<%=XPath("this|expanded")%>' MouseOverBG=""/>
+            </NodeTemplate>
+            <NodeTemplate DataType="mcml_folder_template">
+                <div color="#008000" style="font-weight:bold"><%=XPath("this|text")%> [with mcml]</div>
+            </NodeTemplate>
+            <NodeTemplate DataType="file">
+                <div style="height:20px;">
+                    <%=XPath("this|text")%>
+                    <pe:if condition='<%=XPath("this|finished")%>'>
+				        <span color="#008000">(已完成)</span>
+                    </pe:if>
+                </div>
+            </NodeTemplate>
+            <NodeTemplate DataType="file_canclick">
+                <pe:treenode RenderTemplate="file" MouseOverBG=""/>
+            </NodeTemplate>
+            <NodeTemplate DataType="file_canclick2">
+                <pe:treenode RenderTemplate="file" MouseOverBG="" OnClick="tvwOnClickNode2()"/>
+            </NodeTemplate>
+            <NodeTemplate DataType="mcml_finished_template">
+                <div color="#008000" style="font-weight:bold">[finished nodes] [with mcml]</div>
+            </NodeTemplate>
+	    </NodeTemplates>
+        <!--<DataNodePlaceholder xpath="*"/>-->
+        <pe:treenode text="[all nodes without filter]" expanded="true">
+            <DataNodePlaceholder xpath="*"/>
+        </pe:treenode>
+        <!--<pe:treenode RenderTemplate="mcml_finished_template" MouseOverBG="" expanded="true">
+            <DataNodePlaceholder xpath="//file[@finished = 'true']"/>
+	    </pe:treenode>-->
+    </pe:treeview>
     <!--<input type="radio" name="gender" value="0" checked="true" UncheckedBG="Texture/uncheckbox2.png" CheckedBG="Texture/checkbox2.png" /><div style="float:left;">男</div>-->
     <!--<br/>
     <input type="text" name="sliderbarValue" style="width:200px;height:25px;background:url(Texture/Aries/Common/ThemeKid/btn_thick_hl_32bits.png:7 7 7 7)" />

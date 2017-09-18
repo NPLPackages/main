@@ -79,7 +79,7 @@ function mcml:LoadAllElements()
 	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_text.lua");
 	Elements.pe_text:RegisterAs("text", "pe:text");
 	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_div.lua");
-	Elements.pe_div:RegisterAs("pe:mcml", "div", "pe:div");
+	Elements.pe_div:RegisterAs("pe:mcml", "div", "pe:div", "NodeTemplate");
 		NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_font.lua");
 		Elements.pe_font:RegisterAs("font");
 		NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_span.lua");
@@ -91,7 +91,7 @@ function mcml:LoadAllElements()
 	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_script.lua");
 	Elements.pe_script:RegisterAs("script", "pe:script", "unknown"); -- "unknown" will handle <% %>, etc. 
 		NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_unknown.lua");
-		Elements.pe_unknown:RegisterAs("pe:flushnode", "pe:fallthrough");
+		Elements.pe_unknown:RegisterAs("pe:flushnode", "pe:fallthrough", "DataNodePlaceholder");
 	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_input.lua");
 	Elements.pe_input:RegisterAs("input");
 		NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_editbox.lua");
@@ -120,6 +120,12 @@ function mcml:LoadAllElements()
 	Elements.pe_textarea:RegisterAs("textarea");
 	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_select.lua");
 	Elements.pe_select:RegisterAs("select");
+	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_scrollarea.lua");
+	Elements.pe_scrollarea:RegisterAs("pe:scrollarea","scrollarea");
+	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_treenode.lua");
+	Elements.pe_treenode:RegisterAs("pe:treenode");
+	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_treeview.lua");
+	Elements.pe_treeview:RegisterAs("pe:treeview");
 	-- TODO: add all system defined page element here
 end
 

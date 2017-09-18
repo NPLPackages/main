@@ -48,6 +48,9 @@ local PageLayout = commonlib.inherit(commonlib.gettable("System.Windows.Layout")
 	-- the min region in the container control which is occupied by its child controls
 	usedWidth = 0,
 	usedHeight = 0,
+	-- the real region in the container control which is occupied by its child controls
+	realWidth = 0,
+	realHeight = 0,
 }));
 
 function PageLayout:ctor()
@@ -65,6 +68,8 @@ function PageLayout:clone()
 		height = self.height,
 		usedWidth = self.usedWidth,
 		usedHeight = self.usedHeight,
+		realWidth = self.realWidth,
+		realHeight = self.realHeight,
 	});
 end
 
@@ -197,6 +202,16 @@ end
 -- set used size
 function PageLayout:SetUsedSize(width, height)
 	self.usedWidth, self.usedHeight = width, height;
+end
+
+-- get real size
+function PageLayout:GetRealSize()
+	return self.realWidth, self.realHeight;
+end
+
+-- set real size
+function PageLayout:SetRealSize(width, height)
+	self.realWidth, self.realHeight = width, height;
 end
 
 -- clear the used size to currently available pos. 

@@ -96,6 +96,10 @@ function Rect:setY(y)
 	self.yp = y or self.yp;
 end
 
+function Rect:setPosition(x, y)
+	self.xp, self.yp = x, y;
+end
+
 function Rect:setRight(pos)
 	self.w = pos - self.xp;
 end

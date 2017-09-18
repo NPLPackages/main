@@ -81,13 +81,13 @@ function pe_div:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 			_this.zorder = zorder;
 		end
 	else
+		local _this = self.control;
+		if(not _this) then
+			_this = Rectangle:new():init(parentElem);
+			_this:SetBackground("Texture/Aries/Creator/Theme/GameCommonIcon_32bits.png;3 3 3 3:1 1 1 1");
+			self:SetControl(_this);
+		end
 		if(css.background) then
-			local _this = self.control;
-			if(not _this) then
-				_this = Rectangle:new():init(parentElem);
-				self:SetControl(_this);
-				--self.control._page_element = self;
-			end
 			_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
 			_this:ApplyCss(css);
 			if(css.background and css.background~="") then
@@ -102,6 +102,8 @@ function pe_div:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 			if(zorder) then
 				_this.zorder = zorder;
 			end
+		else
+			_this:SetBackgroundColor();
 		end
 	end
 end

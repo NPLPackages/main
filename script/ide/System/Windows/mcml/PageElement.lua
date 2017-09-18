@@ -143,8 +143,17 @@ function PageElement:LoadScriptFile(src)
 	end
 end
 
+--local skip_treenode_names = {
+--	["NodeTemplates"] = true,
+--	["EmptyDataTemplate"] = true,
+--	["FetchingDataTemplate"] = true,
+--}
+
 local no_parse_nodes = {
 	["option"] = true,
+	["NodeTemplates"] = true,
+	["EmptyDataTemplate"] = true,
+	["FetchingDataTemplate"] = true,
 }
 
 -- virtual function: load component recursively. 
@@ -159,6 +168,8 @@ function PageElement:LoadComponent(parentElem, parentLayout, styleItem)
 	if(no_parse_nodes[self.name]) then
 		return;
 	end
+
+
 	-- apply models
 	self:ApplyPreValues();
 
@@ -179,9 +190,7 @@ function PageElement:LoadComponent(parentElem, parentLayout, styleItem)
 
 	self:OnLoadComponentBeforeChild(parentElem, parentLayout, css);
 
-	for childnode in self:next() do
-		childnode:LoadComponent(parentElem, parentLayout, css);
-	end
+	self:OnLoadChildrenComponent(parentElem, parentLayout, css);
 	
 	self:OnLoadComponentAfterChild(parentElem, parentLayout, css);
 	
@@ -349,12 +358,13 @@ function PageElement:UpdateLayout(parentLayout)
 	-----------------------------
 
 	if(not self:OnBeforeChildLayout(myLayout)) then
-		for childnode in self:next() do
-			childnode:UpdateLayout(myLayout);
-		end
+		self:UpdateChildLayout(myLayout);
 	end
 	
 	local width, height = myLayout:GetUsedSize()
+	local real_w = width + padding_right - left - margin_left;
+	local real_h = height + padding_bottom - top - margin_top;
+	myLayout:SetRealSize(real_w, real_h);
 	width = width + padding_right + margin_right
 	height = height + padding_bottom + margin_bottom
 	if(css.width) then
@@ -413,9 +423,10 @@ function PageElement:UpdateLayout(parentLayout)
 		myLayout:IncHeight(-margin_bottom-padding_bottom);
 		myLayout:ResetUsedSize();
 		self:OnBeforeChildLayout(myLayout);
-		for childnode in self:next() do
-			childnode:UpdateLayout(myLayout);
-		end
+--		for childnode in self:next() do
+--			childnode:UpdateLayout(myLayout);
+--		end
+		self:UpdateChildLayout(myLayout);
 		local right, bottom = left+size_width, top+size_height
 		myLayout:SetUsedSize(right, bottom);
 		self:OnAfterChildLayout(myLayout, left+margin_left, top+margin_top, right-margin_right, bottom-margin_bottom);
@@ -443,6 +454,12 @@ function PageElement:OnAfterChildLayout(layout, left, top, right, bottom)
 	
 end
 
+function PageElement:UpdateChildLayout(layout)
+	for childnode in self:next() do
+		childnode:UpdateLayout(layout);
+	end
+end
+
 -- virtual function: 
 -- @param css: style
 function PageElement:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
@@ -452,6 +469,12 @@ function PageElement:OnLoadComponentAfterChild(parentElem, parentLayout, css)
 	if(css) then
 		local default_css = mcml:GetStyleItem(self.class_name);
 		css:Merge(default_css);
+	end
+end
+
+function PageElement:OnLoadChildrenComponent(parentElem, parentLayout, css)
+	for childnode in self:next() do
+		childnode:LoadComponent(parentElem, parentLayout, css);
 	end
 end
 
@@ -1662,7 +1685,8 @@ function PageElement:DoPageEvent(handlerScript, ...)
 			end
 		end	
 	elseif(type(handlerScript) == "function") then
-		result = pFunc(...);
+		--result = pFunc(...);
+		result = handlerScript(...);
 	end
 	if(self) then
 		Elements.pe_script.EndCode();
@@ -1681,9 +1705,40 @@ function PageElement:isHidden()
 	return false;
 end
 
-function PageElement:resetLayout() 
+function PageElement:resetLayout()
 	local page = self:GetPageCtrl();
 	if(page and page.layout) then
-		page.layout:invalidate();
+		local window = page:GetWindow();
+		if(window and window:testAttribute("WA_WState_Created")) then
+			page.layout:invalidate();
+		end
+	end
+end
+
+function PageElement:IsClip()
+	local parent = self;
+	while(parent) do
+		local control = self.control;
+		if(control and control:IsClip()) then
+			return true;
+		end
+		parent = parent.parent;
+	end
+end
+
+-- clip region. 
+function PageElement:ClipRegion()
+	local parent = self;
+	while(parent) do
+		local control = parent.control;
+		if(control and control:IsClip()) then
+			local clip_rect = control:ClipRegion();
+			if(clip_rect) then
+				clip_rect:setX(control:x() + clip_rect:x() - self:x());
+				clip_rect:setY(control:y() + clip_rect:y() - self:y());
+				return clip_rect;
+			end
+		end
+		parent = parent.parent;
 	end
 end

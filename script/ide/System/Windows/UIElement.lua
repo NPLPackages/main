@@ -70,7 +70,8 @@ local KeyEvent = commonlib.gettable("System.Windows.KeyEvent");
 local MouseEvent = commonlib.gettable("System.Windows.MouseEvent");
 local UIElement = commonlib.inherit(commonlib.gettable("System.Core.ToolBase"), commonlib.gettable("System.Windows.UIElement"));
 UIElement:Property("Name", "UIElement");
-UIElement:Signal("SizeChanged");
+UIElement:Signal("SizeChanged", function(width, height) end);
+UIElement:Signal("PositionChanged", function(x, y) end);
 UIElement:Property({"enabled", true, "isEnabled", "SetEnabled", auto=true});
 UIElement:Property({"BackgroundColor", "#cccccc", auto=true});
 UIElement:Property({"Background", nil, auto=true});
@@ -79,6 +80,9 @@ UIElement:Property({"toolTipDuration", 5000, auto=true});
 
 UIElement:Property({"focus_policy", FocusPolicy.NoFocus, "focusPolicy", "setFocusPolicy"});
 UIElement:Property({"mouseTracking", nil, "hasMouseTracking", "setMouseTracking"});
+UIElement:Property({"render_priority", 0, auto=true});
+
+UIElement:Property({"clip", false, "IsClip", "SetClip", auto=true});
 
 -- number of posted events
 UIElement.postedEvents = 0;
@@ -111,6 +115,12 @@ function UIElement:SetParent(parent)
 		end
 		self:setParent_helper(parent);
 	end
+end
+
+function UIElement:lessPriority(elem)
+	local self_priority = self:GetField("render_priority",nil);
+	local elem_priority = elem:GetField("render_priority",nil);
+	return self_priority < elem_priority;
 end
 
 -- virtual: apply css style
@@ -369,7 +379,13 @@ function UIElement:event(event)
 		local event_type = event:GetType();
 		local func = self[event:GetHandlerFuncName()];
 		if(type(func) == "function") then
+			if(event_type == "paintEvent") then
+				self:setClipRegion(event);
+			end
 			func(self, event);
+			if(event_type == "paintEvent") then
+				self:resetClipRegion(event);
+			end
 		end
 		if(event_type == "focusInEvent" or event_type == "moveEvent" or event_type == "sizeEvent") then
 			self:updateWidgetTransform(event);
@@ -591,8 +607,6 @@ end
 
 -- virtual: 
 function UIElement:mousePressEvent(mouse_event)
-	-- echo(mouse_event);
-	-- self:setFocus();
 end
 
 -- virtual: 
@@ -693,9 +707,16 @@ function UIElement:setGeometry(ax, ay, aw, ah)
 	if (self:testAttribute("WA_WState_Created")) then
         self:setGeometry_sys(ax, ay, aw, ah);
     else
-		self.crect:setRect(ax, ay, aw, ah);
-		self:setAttribute("WA_PendingSizeEvent");
+		self:setRect(ax, ay, aw, ah);
+--		self.crect:setRect(ax, ay, aw, ah);
+--		self:setAttribute("WA_PendingSizeEvent");
 	end
+end
+
+function UIElement:setRect(ax, ay, aw, ah)
+	local resPos = self:reposition(ax, ay);
+	local resSize = self:resize(aw, ah);
+	return resPos or resSize;
 end
 
 -- move to a given position
@@ -706,21 +727,41 @@ function UIElement:move(x, y)
 		self:setGeometry_sys(x + self:geometry():x(), y + self:geometry():y(), self:width(), self:height(), true);
     else
         -- no frame yet: 
-		if(not self:isWindow()) then
-			self.crect:setX(x); 
-			self.crect:setY(y); 
-		end
-        self:setAttribute("WA_PendingSizeEvent");
+--		if(not self:isWindow()) then
+--			self.crect:setX(x); 
+--			self.crect:setY(y); 
+--		end
+		self:reposition(x, y);
+        --self:setAttribute("WA_PendingSizeEvent");
     end
 end
 
 -- set size
 function UIElement:resize(aw, ah)
+	if(self:width() == aw and self:height() == ah) then
+		return false;
+	end
 	self.crect:setSize(aw, ah);
-	self:setAttribute("WA_PendingSizeEvent");
+	self:emitSizeChanged();
+	if (not self:testAttribute("WA_WState_Created") or not self:isVisible()) then
+		self:setAttribute("WA_PendingSizeEvent");
+	end
+	return true;
 end
 
-
+function UIElement:reposition(ax, ay)
+	if(self:x() == ax and self:y() == ay) then
+		return false;
+	end
+	if(not self:isWindow()) then
+		self.crect:setPosition(ax, ay);
+		self:emitPositionChanged();
+	end
+	if (not self:testAttribute("WA_WState_Created") or not self:isVisible()) then
+		self:setAttribute("WA_PendingSizeEvent");
+	end
+	return true;
+end
 
 -- client rect. left, top is always 0,0.
 -- @note: the returned rect is temporary, do not keep for long. 
@@ -756,13 +797,22 @@ function UIElement:y()
 	return self.crect:y();
 end
 
+function UIElement:setWidth(w)
+	self:resize(w, self:height());
+end
+
+function UIElement:setHeight(h)
+	self:resize(self:width(), h);
+end
 
 function UIElement:setX(x)
-	self.crect:setX(x);
+	--self.crect:setX(x);
+	self:reposition(x, self:y());
 end
 
 function UIElement:setY(y)
-	self.crect:setY(y);
+	--self.crect:setY(y);
+	self:reposition(self:x(), y);
 end
 
 -- if the mouse is captured to this element or not.
@@ -991,4 +1041,65 @@ end
 
 function UIElement:setPageElement(page_elem)
 	self._page_element = page_elem;
+end
+
+function UIElement:emitPositionChanged()
+	self:PositionChanged(self:x(), self:y());
+end
+
+function UIElement:emitSizeChanged()
+	self:SizeChanged(self:width(), self:height());
+end
+
+function UIElement:needClipping()
+	local parent = self;
+	while(parent) do
+		if(parent:IsClip()) then
+			return true;
+		end
+		parent = parent.parent;
+	end
+--	if(self._page_element and self._page_element:IsClip()) then
+--		return true;
+--	end
+end
+
+function UIElement:setClipRegion(painter)
+	if(self:needClipping()) then
+		local clip = self:ClipRegion();
+		painter:Save();
+		painter:SetClipRegion(self:x() + clip:x(), self:y() +clip:y(),clip:width(),clip:height());
+	end
+end
+
+function UIElement:resetClipRegion(painter)
+	if(self:needClipping()) then
+		painter:Restore();
+	end
+end
+
+function UIElement:ParentClipRegion()
+	if(self.parent and self.parent.ClipRegion) then
+		local clip_rect = self.parent:ClipRegion();
+		if(clip_rect) then
+			clip_rect:setX(clip_rect:x() - self:x());
+			clip_rect:setY(clip_rect:y() - self:y());
+			return clip_rect;
+		end
+	end
+end
+
+-- clip region. 
+function UIElement:ClipRegion()
+	if(self:IsClip()) then
+		return self:rect();
+	else
+		return self:ParentClipRegion();
+	end
+end
+
+function UIElement:PageElementClipRegion()
+	if(self._page_element and self._page_element:IsClip()) then
+		return self._page_element:ClipRegion();
+	end
 end

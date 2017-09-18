@@ -100,25 +100,29 @@ function UIElement:hideChildren(spontaneous)
 end
 
 function UIElement:setGeometry_sys(ax, ay, aw, ah)
-	local old_x, old_y, old_w, old_h = self.crect:getRect();
-	local isResize = old_w~=aw or old_h~=ah;
-	local isMove = old_x~=ax or old_y~=ay;
-	if(not isResize and not isMove) then
-		-- We only care about stuff that changes the geometry
-		return;
-	end
-	self.crect:setRect(ax, ay, aw, ah);
-
-	if (self:isVisible()) then
-		-- generate size event
+	if(self:setRect(ax, ay, aw, ah) and self:isVisible()) then
 		local event = SizeEvent:new():init(self.crect)
         Application:sendEvent(self, event);
-	else
-		-- not visible
-		if(isResize or isMove) then
-			self:setAttribute("WA_PendingSizeEvent");
-		end
 	end
+--	local old_x, old_y, old_w, old_h = self.crect:getRect();
+--	local isResize = old_w~=aw or old_h~=ah;
+--	local isMove = old_x~=ax or old_y~=ay;
+--	if(not isResize and not isMove) then
+--		-- We only care about stuff that changes the geometry
+--		return;
+--	end
+--	self.crect:setRect(ax, ay, aw, ah);
+--
+--	if (self:isVisible()) then
+--		-- generate size event
+--		local event = SizeEvent:new():init(self.crect)
+--        Application:sendEvent(self, event);
+--	else
+--		-- not visible
+--		if(isResize or isMove) then
+--			self:setAttribute("WA_PendingSizeEvent");
+--		end
+--	end
 end
 
 function UIElement:updateWidgetTransform(event)

@@ -152,6 +152,52 @@ function List:insert_after(item, after_item)
 	return item;
 end
 
+local function changePrev(item, prev)
+	item.prev = prev;
+	if(prev) then
+		prev.next = item;
+	end
+end
+
+local function changeNext(item, next)
+	item.next = next;
+	if(next) then
+		next.prev = item;
+	end
+end
+
+function List:swapAdjoin(prev_item, next_item)
+	changePrev(next_item, prev_item.prev);
+	changeNext(prev_item, next_item.next);
+
+	prev_item.prev = next_item;
+	next_item.next = prev_item;
+end
+
+
+function List:swap(item1, item2)
+	if(item1 and item2) then
+		if(item1.next == item2) then
+			self:swapAdjoin(item1, item2);
+		elseif(item2.next == item1) then
+			self:swapAdjoin(item2, item1);
+		else
+			local temp = item1.prev;
+			changePrev(item1, item2.prev);
+			changePrev(item2, temp);
+
+			temp = item1.next;
+			changeNext(item1, item2.next);
+			changeNext(item2, temp);
+		end
+		self.head = if_else(not item1.prev, item1, self.head);
+		self.head = if_else(not item2.prev, item2, self.head);
+
+		self.tail = if_else(not item1.next, item1, self.tail);
+		self.tail = if_else(not item2.next, item2, self.tail);
+	end
+end
+
 -- remove an item from the list. It takes o(1) time to remove.
 -- if item is not from list. the item will be removed. however if item is head or tail, it may make the container list invalid. 
 -- @param item: item must be table. The table fields item.prev and item.next are reserved for list data keeping. 
@@ -242,6 +288,31 @@ function List:Clone()
 	return new_list;
 end
 
+local function less(item1, item2)
+	return item1[1] <= item2[1];
+end
+
+function List:sort(compFun)
+	compFun = compFun or less;
+	local begin_item = self:first();
+	while(begin_item) do
+		local before_begin_item = begin_item.prev;
+		local next_item = self:next(begin_item);
+		while(next_item) do
+			local next_next_item = next_item.next;		
+			if(not compFun(begin_item, next_item)) then
+				self:swap(begin_item, next_item);
+				if(before_begin_item) then
+					begin_item = self:next(before_begin_item);
+				else
+					begin_item = self:first();
+				end
+			end
+			next_item = next_next_item;
+		end
+		begin_item = self:next(begin_item);
+	end
+end
 
 --[[ test and example
 function List:TestMe()

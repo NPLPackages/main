@@ -42,8 +42,8 @@ ListView:Property({"lineWrap", nil, "GetLineWrap", "SetLineWrap", auto=true})
 ListView:Property({"lineHeight", 20, "GetLineHeight", "SetLineHeight", auto=true})
 ListView:Property({"SelectMultiple",false, auto=true})
 
-ListView:Signal("sizeChanged",function(width,height) end);
-ListView:Signal("positionChanged");
+--ListView:Signal("SizeChanged",function(width,height) end);
+--ListView:Signal("PositionChanged");
 ListView:Signal("clicked");
 
 function ListView:ctor()
@@ -79,7 +79,7 @@ function ListView:SelEnd()
 end
 
 function ListView:getClip()
-	local r = self.parent:Clip();
+	local r = self.parent:ClipRegion();
 	if(not self.mask) then
 		self.mask = Rect:new():init(0,0,0,0);
 	end
@@ -246,9 +246,10 @@ function ListView:setWidth(w)
 		return;
 	end
 	if(w > self:width() or w > self:getClip():width()) then
-		self.crect:setWidth(w);
+		--self:setWidth(w);
+		ListView._super.setWidth(self, w);
 	end
-	self:emitSizeChanged();
+	--self:emitSizeChanged();
 end
 
 function ListView:setHeight(h)
@@ -256,9 +257,10 @@ function ListView:setHeight(h)
 		return;
 	end
 	if(h > self:height() or h > self:getClip():height()) then
-		self.crect:setHeight(h);
+		--self.crect:setHeight(h);
+		ListView._super.setHeight(self, h);
 	end
-	self:emitSizeChanged();
+	--self:emitSizeChanged();
 end
 
 function ListView:GetLineWidth(line)
@@ -468,7 +470,7 @@ function ListView:updatePos(hscroll, vscroll)
 end
 
 function ListView:ScrollLineForward()
-	if((self:y() + self.lineHeight) <= self.parent:Clip():y()) then
+	if((self:y() + self.lineHeight) <= self.parent:ClipRegion():y()) then
 		self:scrollY(self.lineHeight);
 		--self:setY(self:y() + self.lineHeight);
 
@@ -480,7 +482,7 @@ function ListView:ScrollLineForward()
 end
 
 function ListView:ScrollLineBackward()
-	if((self:y() + self:height() - self.lineHeight) > (self.parent:Clip():y() + self.parent:Clip():height())) then
+	if((self:y() + self:height() - self.lineHeight) > (self.parent:ClipRegion():y() + self.parent:ClipRegion():height())) then
 		self:scrollY(-self.lineHeight);
 		--self:setY(self:y() - self.lineHeight);
 		local cursor_y = (self.cursorLine - 1) * self.lineHeight;
@@ -619,17 +621,17 @@ function ListView:CharWidth()
 end
 
 function ListView:emitPositionChanged()
-	self:positionChanged();
+	self:PositionChanged();
 end
 
 function ListView:emitSizeChanged()
 	local w = self:GetRealWidth();
 	local h = self:GetRealHeight();
-	self:sizeChanged(w, h);
+	self:SizeChanged(w, h);
 end
 
 function ListView:updateGeometry()
-	local clip = self.parent:Clip();
+	local clip = self.parent:ClipRegion();
 	if(self:GetRealWidth() < clip:width()) then
 		self:setX(clip:x(), true);
 		self:setWidth(clip:width() - self:x());
