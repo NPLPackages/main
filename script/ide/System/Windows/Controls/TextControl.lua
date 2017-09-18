@@ -42,8 +42,8 @@ TextControl:Property({"text", nil, "GetText", "SetText"})
 TextControl:Property({"lineWrap", nil, "GetLineWrap", "SetLineWrap", auto=true})
 TextControl:Property({"lineHeight", 20, "GetLineHeight", "SetLineHeight", auto=true})
 
-TextControl:Signal("sizeChanged",function(width,height) end);
-TextControl:Signal("positionChanged");
+--TextControl:Signal("SizeChanged",function(width,height) end);
+--TextControl:Signal("PositionChanged");
 
 -- undo/redo handling
 local Command = commonlib.inherit(nil, {});
@@ -121,14 +121,12 @@ function TextControl:SelEnd()
 	return {line = self.m_selLineEnd, pos = self.m_selPosEnd};
 end
 
-function TextControl:getClip()
-	local r = self.parent:Clip();
-	if(not self.mask) then
-		self.mask = Rect:new():init(0,0,0,0);
-	end
-	self.mask:setRect(r:x() - self:x(), r:y() - self:y(), r:width(), r:height());
-	return self.mask;
-	--return Rect:new_from_pool(r:x() - self:x(), r:y() - self:y(), r:width(), r:height());
+-- clip region. 
+function TextControl:ClipRegion()
+	local r = self.parent:ClipRegion();
+	r:setX(r:x() - self:x());
+	r:setY(r:y() - self:y());
+	return r;
 end
 
 function TextControl:initDoc()
@@ -343,8 +341,9 @@ function TextControl:setWidth(w)
 	if(w == self:width()) then
 		return;
 	end
-	if(w > self:width() or w > self:getClip():width()) then
-		self.crect:setWidth(w);
+	if(w > self:width() or w > self:ClipRegion():width()) then
+		--self.crect:setWidth(w);
+		TextControl._super.setWidth(self, w);
 	end
 	self:emitSizeChanged();
 end
@@ -353,8 +352,9 @@ function TextControl:setHeight(h)
 	if(h == self:height()) then
 		return;
 	end
-	if(h > self:height() or h > self:getClip():height()) then
-		self.crect:setHeight(h);
+	if(h > self:height() or h > self:ClipRegion():height()) then
+		--self.crect:setHeight(h);
+		TextControl._super.setHeight(self, h);
 	end
 	self:emitSizeChanged();
 end
@@ -376,17 +376,17 @@ function TextControl:naturalTextWidth(text)
 end
 
 function TextControl:hValue()
-	local clip = self:getClip();
+	local clip = self:ClipRegion();
 	return clip:x();
 end
 
 function TextControl:vValue()
-	local clip = self:getClip();
+	local clip = self:ClipRegion();
 	return clip:y()/self.lineHeight;
 end
 
 function TextControl:mousePressEvent(e)
-	local clip = self:getClip();
+	local clip = self:ClipRegion();
 	if(e:button() == "left" and clip:contains(e:pos())) then
 		local line = self:yToLine(e:pos():y());
 		local text = self:GetLineText(line);
@@ -672,23 +672,23 @@ function TextControl:updatePos(hscroll, vscroll)
 end
 
 function TextControl:ScrollLineForward()
-	if((self:y() + self.lineHeight) <= self.parent:Clip():y()) then
+	if((self:y() + self.lineHeight) <= self.parent:ClipRegion():y()) then
 		self:scrollY(self.lineHeight);
 		--self:setY(self:y() + self.lineHeight);
 
 		local cursor_bottom = (self.cursorLine - 1) * self.lineHeight + self.lineHeight;
-		if(cursor_bottom > self:getClip():y() + self:getClip():height()) then
+		if(cursor_bottom > self:ClipRegion():y() + self:ClipRegion():height()) then
 			self.cursorLine = self.cursorLine - 1;
 		end
 	end
 end
 
 function TextControl:ScrollLineBackward()
-	if((self:y() + self:height() - self.lineHeight) > (self.parent:Clip():y() + self.parent:Clip():height())) then
+	if((self:y() + self:height() - self.lineHeight) > (self.parent:ClipRegion():y() + self.parent:ClipRegion():height())) then
 		self:scrollY(-self.lineHeight);
 		--self:setY(self:y() - self.lineHeight);
 		local cursor_y = (self.cursorLine - 1) * self.lineHeight;
-		if(cursor_y < self:getClip():y()) then
+		if(cursor_y < self:ClipRegion():y()) then
 			self.cursorLine = self.cursorLine + 1;
 		end
 	end
@@ -1265,23 +1265,23 @@ function TextControl:cursorToX(text)
 end
 
 function TextControl:cursorMinPosX()
-	return self:getClip():x();
+	return self:ClipRegion():x();
 end
 
 function TextControl:cursorMaxPosX()
-	return self:getClip():x() + self:getClip():width();
+	return self:ClipRegion():x() + self:ClipRegion():width();
 end
 
 function TextControl:cursorMinPosY()
-	return self:getClip():y();
+	return self:ClipRegion():y();
 end
 
 function TextControl:cursorMaxPosY()
-	return self:getClip():y() + self:getClip():height() - self.lineHeight;
+	return self:ClipRegion():y() + self:ClipRegion():height() - self.lineHeight;
 end
 
 function TextControl:adjustCursor()
-	local clip = self:getClip();
+	local clip = self:ClipRegion();
 	local cursor_x_to_clip;
 
 	local cursor_x_to_self = self:cursorToX();
@@ -1307,7 +1307,7 @@ function TextControl:adjustCursor()
 		end
 
 		local clip_x_to_self = cursor_x_to_self - cursor_x_to_clip;
-		local self_x = self.parent:Clip():x() - clip_x_to_self;
+		local self_x = self.parent:ClipRegion():x() - clip_x_to_self;
 		self:setX(self_x, true);
 	end
 
@@ -1336,17 +1336,17 @@ function TextControl:CharWidth()
 end
 
 function TextControl:emitPositionChanged()
-	self:positionChanged();
+	self:PositionChanged();
 end
 
 function TextControl:emitSizeChanged()
 	local w = self:GetRealWidth();
 	local h = self:GetRealHeight();
-	self:sizeChanged(w, h);
+	self:SizeChanged(w, h);
 end
 
 function TextControl:updateGeometry()
-	local clip = self.parent:Clip();
+	local clip = self.parent:ClipRegion();
 	if(self:GetRealWidth() < clip:width()) then
 		self:setX(clip:x(), true);
 		self:setWidth(clip:width() - self:x());
@@ -1375,13 +1375,13 @@ function TextControl:paintEvent(painter)
 	self:updateGeometry();
 	--self:UpdateCursor();
 
-	local clip =  self:getClip();
-	local hasTextClipping = self:width() > clip:width() or self:height() > clip:height();
+--	local clip =  self:ClipRegion();
+--	local hasTextClipping = self:width() > clip:width() or self:height() > clip:height();
 
-	if(hasTextClipping) then
-		painter:Save();
-		painter:SetClipRegion(self:x() +clip:x(), self:y() +clip:y(),clip:width(),clip:height());
-	end
+--	if(hasTextClipping) then
+--		painter:Save();
+--		painter:SetClipRegion(self:x() +clip:x(), self:y() +clip:y(),clip:width(),clip:height());
+--	end
 
 	if(self.cursorVisible and self:hasFocus() and not self:isReadOnly()) then
 		-- the curor line backgroud
@@ -1483,8 +1483,8 @@ function TextControl:paintEvent(painter)
 		end
 	end
 
-	if(hasTextClipping) then
-		painter:Restore();
-	end
+--	if(hasTextClipping) then
+--		painter:Restore();
+--	end
 end
 

@@ -40,7 +40,7 @@ window:Show("my_window", nil, "_mt", 0,0, 600, 600);
 test_Windows.windows = {window};
 ------------------------------------------------------------
 ]]
-NPL.load("(gl)script/ide/System/Windows/Controls/ScrollArea.lua");
+NPL.load("(gl)script/ide/System/Windows/Controls/Primitives/ScrollAreaBase.lua");
 NPL.load("(gl)script/ide/System/Windows/Controls/ScrollBar.lua");
 NPL.load("(gl)script/ide/math/Point.lua");
 NPL.load("(gl)script/ide/System/Windows/Controls/ListView.lua");
@@ -52,7 +52,7 @@ local Application = commonlib.gettable("System.Windows.Application");
 local FocusPolicy = commonlib.gettable("System.Core.Namespace.FocusPolicy");
 local ScrollBar = commonlib.gettable("System.Windows.Controls.ScrollBar");
 
-local ListBox = commonlib.inherit(commonlib.gettable("System.Windows.Controls.ScrollArea"), commonlib.gettable("System.Windows.Controls.ListBox"));
+local ListBox = commonlib.inherit(commonlib.gettable("System.Windows.Controls.Primitives.ScrollAreaBase"), commonlib.gettable("System.Windows.Controls.ListBox"));
 ListBox:Property("Name", "ListBox");
 
 ListBox:Property({"Background", "", auto=true});
@@ -71,10 +71,6 @@ ListBox:Property({"lineWrap", nil, "GetLineWrap", "SetLineWrap", auto=true})
 ListBox:Property({"ItemHeight", 20, "GetItemHeight", "SetItemHeight"})
 
 ListBox:Property({"SliderSize", 16, auto=true});
---ListBox:Property({"vSliderWidth", 20, auto=true});
---ListBox:Property({"hSliderHeight", 20, auto=true});
---ListBox:Property({"vSliderWidth", nil, auto=true});
---ListBox:Property({"hSliderHeight", nil, auto=true});
 
 --ListBox:Signal("resetInputContext");
 ListBox:Signal("selectionChanged");
@@ -90,14 +86,16 @@ function ListBox:ctor()
 --	self:setMouseTracking(true);
 end
 
-function ListBox:init(parent)
-	ListBox._super.init(self, parent);
+--function ListBox:init(parent)
+--	ListBox._super.init(self, parent);
+--
+--	return self;
+--end
 
+function ListBox:initViewport()
 	self.viewport = ListView:new():init(self);
-	self.viewport:Connect("sizeChanged", self, "updateScrollStatus");
-	self.viewport:Connect("positionChanged", self, "updateScrollValue");
-
-	return self;
+	self.viewport:Connect("SizeChanged", self, "updateScrollStatus");
+	self.viewport:Connect("PositionChanged", self, "updateScrollValue");
 end
 
 function ListBox:selectItem(index)
@@ -146,7 +144,7 @@ end
 
 function ListBox:SetRow(num)
 	local height = num * self.ItemHeight;
-	self.crect:setHeight(height);
+	self:setHeight(height);
 end
 
 function ListBox:SetSize(num)
@@ -178,23 +176,6 @@ function ListBox:ViewPort()
 	return self.viewport;
 end
 
---function ListBox:setReadOnly(bReadOnly)
---	self.m_readOnly = bReadOnly;
---	if (bReadOnly) then
---        self:setCursorBlinkPeriod(0);
---    else
---        self:setCursorBlinkPeriod(Application:cursorFlashTime());
---	end
---end
-
---function ListBox:SetText(text)
---	self.viewport:SetText(text);
---end
---
---function ListBox:GetText()
---	return self.viewport:GetText();
---end
-
 function ListBox:AddItems(items)
 	for i = 1,#items do
 		self:AddItem(items[i]);
@@ -213,46 +194,12 @@ function ListBox:contains(x,y)
 	return self:rect():contains(x,y);
 end
 
---function ListBox:isReadOnly()
---	return self.m_readOnly;
---end
---
---function ListBox:setReadOnly(bReadOnly)
---	self.m_readOnly = bReadOnly;
---	if (bReadOnly) then
---        self.viewport:hideCursor();
---    else
---        self.viewport:showCursor();
---	end
---end
-
-function ListBox:offsetX()
-	return self:sliderPositionFromValue(0, 1000, self.hscroll, self.length);
-end
-
-function ListBox:offsetY()
-	return self:sliderPositionFromValue(0, 1000, self.vscroll, self.items:size() * self.ItemHeight);
-end
-
-function ListBox:Clip()
-	local w = self:width();
-	local h = self:height();
-	if(not self.hbar:isHidden()) then
-		h = h - self.SliderSize;
-	end
-
-	if(not self.vbar:isHidden()) then
-		w = w - self.SliderSize;
-	end
-	return Rect:new_from_pool(0, 0, w, h);
-end
-
 function ListBox:updateViewportPos()
 	self.viewport:updatePos(self.hscroll, self.vscroll);
 end
 
 function ListBox:GetRow()
-	return math.floor(self:Clip():height()/self.viewport:GetLineHeight());
+	return math.floor(self:ClipRegion():height()/self.viewport:GetLineHeight());
 end
 
 function ListBox:emitclicked()
@@ -269,7 +216,7 @@ function ListBox:selectIndex()
 end
 
 function ListBox:updateScrollInfo()
-	local clip = self:Clip();
+	local clip = self:ClipRegion();
 	if(not self.hbar:isHidden()) then
 		self.hbar:setRange(0, self.viewport:GetRealWidth() - clip:width() - 1);
 		self.hbar:setStep(self.viewport:WordWidth(), clip:width());
@@ -294,18 +241,18 @@ function ListBox:updateScrollValue()
 end
 
 function ListBox:updateScrollStatus(textbox_w, textbox_h)
-	local clip = self:Clip();
+	local clip = self:ClipRegion();
 	if(textbox_w > clip:width()) then
 		self.hbar:show();
 	else
 		self.hbar:hide();
 	end
 
-	clip = self:Clip();
+	clip = self:ClipRegion();
 	if(textbox_h > clip:height()) then
 		self.vbar:show();
 
-		clip = self:Clip();
+		clip = self:ClipRegion();
 		if(textbox_w > clip:width()) then
 			self.hbar:show();
 		else
