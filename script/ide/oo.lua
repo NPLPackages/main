@@ -109,17 +109,18 @@ end
 -- create a new class inheriting from a baseClass.
 -- the new class has new(), _super, isa() function.
 -- @param baseClass: the base class from which to inherit the new one. it can be nil if there is no base class.
+-- if it is string, baseClass = commonlib.gettable(baseClass) is used to obtain the class
 -- @param new_class: nil or a raw table. 
+-- if it is string, new_class = commonlib.gettable(new_class) is used to obtain the class
 -- @param ctor: nil or the constructor function(o) end, one may init dynamic table fields in it. One can also define new_class:ctor() at a later time. 
 --  note: inside ctor function, parent class virtual functions are not available,since meta table of parent is not set yet. 
 -- @return the new class is created. One can later create and instance of the new class by calling its new function(). 
 function commonlib.inherit(baseClass, new_class, ctor)
 	if(type(baseClass) == "string") then
-		log("Fatal error: "..baseClass.." must be a table instead of string\n");
+		baseClass = commonlib.gettable(baseClass);
 	end
 	if(type(new_class) == "string") then
 		new_class = commonlib.gettable(new_class);
-		log("Fatal error: "..new_class.." must be a table instead of string\n");
 	end
 	if(not ctor and type(baseClass) == "function") then
 		ctor = baseClass;
