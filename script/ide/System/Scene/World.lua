@@ -23,7 +23,7 @@ World.shortname = "_noname";
 World.sConfigFile = "";
 World.sNpcDbFile = "";
 World.sAttributeDbFile = "";
-World.sBaseWorldCfgFile = "_emptyworld/_emptyWorld.worldconfig.txt";
+World.sBaseWorldCfgFile = "_emptyworld/worldconfig.txt";
 World.sBaseWorldAttFile = "_emptyworld/_emptyWorld.attribute.db"
 World.sBaseWorldNPCFile = "_emptyworld/_emptyWorld.NPC.db"
 World.createtime = "2006-1-26";
@@ -34,7 +34,7 @@ World.env_set = 0;
 World.sky = 0;
 World.readonly = nil;
 -- the default player position if the player has never been here before.
-World.defaultPos = {x=255,y=255};--{x=130,y=95};
+World.defaultPos = {x=20000,y=20000};
 
 function World:ctor()
 end
@@ -674,15 +674,23 @@ end
 
 
 --[[set the world name from which a new world is derived
-@param name: a world name or "". if "" the "_emptyworld" is used and will be created if not exists.
+@param name: a world name or nil or "". if "_emptyworld", a new world will be created if not exists.
 @return : true if succeeded, nil if not.]]
-function World:SetBaseWorldName(name)
+function world:SetBaseWorldName(name)
 	if(name == nil or name == "") then
-		name = "_emptyworld";
+		self.sBaseWorldCfgFile = "";
+		self.sBaseWorldAttFile = nil;
+		self.sBaseWorldNPCFile = nil;
+		if(not ParaIO.DoesAssetFileExist("_emptyworld/flat.raw", true)) then	
+			ParaWorld.NewEmptyWorld("_emptyworld", 533.3333, 64);
+		end
+		return true;
+	elseif(name == "_emptyworld") then
 		-- if the empty world does not exist, the empty world will be created and used as the base world
 		self.sBaseWorldCfgFile = ParaWorld.NewEmptyWorld("_emptyworld", 533.3333, 64);
 		log(self.sBaseWorldCfgFile.."\n does not exist. _emptyworld is created and used as the base world to create the new world;\n");
 	end
+
 	local sWorldConfigName = self:GetDefaultWorldConfigName(name);
 	local sWorldAttName = self:GetDefaultAttributeDatabaseName(name);
 	local sWorldNPCFile = self:GetDefaultNPCDatabaseName(name);
