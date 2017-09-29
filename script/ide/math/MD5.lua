@@ -235,6 +235,11 @@ function lib:MD5AsTable(s)
 end
 
 function lib:MD5(s)
+	-- replaced with C++ implementation. 
+	return ParaMisc.md5(s);
+end
+
+function lib:MD5_slow(s)
 	local h = self:MD5AsTable(s)
 
 	-- Fixed lxz: "%08x" will not output correctly for interger bigger than 0x80000000. I modified the lua 5.1.3 string.format() core to make this work. 
