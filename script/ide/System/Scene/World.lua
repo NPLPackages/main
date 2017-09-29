@@ -614,7 +614,7 @@ function World:SaveWorldToDB()
 	-- sun light
 	local att = ParaScene.GetAttributeObjectSunLight();
 	db:UpdateAttribute("DayLength", att:GetField("DayLength", 10000));
-	db:UpdateAttribute("TimeOfDaySTD", att:GetField("TimeOfDaySTD", 0.4));
+	db:UpdateAttribute("TimeOfDaySTD", att:GetField("TimeOfDaySTD", 0.1));
 	db:UpdateAttribute("MaximumAngle", att:GetField("MaximumAngle", 1.5));
 	db:UpdateAttribute("AutoSunColor", att:GetField("AutoSunColor", false));
 	local color = att:GetField("Ambient", {0.3, 0.3, 0.3});
