@@ -676,7 +676,7 @@ end
 --[[set the world name from which a new world is derived
 @param name: a world name or nil or "". if "_emptyworld", a new world will be created if not exists.
 @return : true if succeeded, nil if not.]]
-function world:SetBaseWorldName(name)
+function World:SetBaseWorldName(name)
 	if(name == nil or name == "") then
 		self.sBaseWorldCfgFile = "";
 		self.sBaseWorldAttFile = nil;
