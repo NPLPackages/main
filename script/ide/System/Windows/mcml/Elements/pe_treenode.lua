@@ -132,13 +132,13 @@ function pe_treenode:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 end
 
 function pe_treenode:OnLoadComponentAfterChild(parentElem, parentLayout, css)
-	if(self.expandBtn and self.expandBtn.control) then
-		self.expandBtn.control:Connect("clicked", self, self.OnClick)
+	if(self.node and self.node.expandBtn and self.node.expandBtn.control) then
+		self.node.expandBtn.control:Connect("clicked", self, self.OnClick)
 	end
 
-	if(self.control and self.expandBtn) then
-		self.control:Connect("clicked", self.expandBtn, self.expandBtn.OnClick);
-	end
+--	if(self.control and self.expandBtn) then
+--		self.control:Connect("clicked", self.expandBtn, self.expandBtn.OnClick);
+--	end
 
 --	if(self.label and self.label.name == "button" and self.label.control) then
 --		self.label.control:Connect("clicked", self, self.OnClick)
@@ -153,10 +153,19 @@ function pe_treenode:OnLoadComponentAfterChild(parentElem, parentLayout, css)
 end
 
 function pe_treenode:CreateNode()
+	local style;
+
 	local height = self.NodeHeight;
 	if(not height and self.treeview) then
 		height = height or self.treeview.DefaultNodeHeight or 24;
 	end
+
+	if(self.treeview) then
+		style = format("min-height:%dpx;", self.treeview.DefaultNodeHeight or 24);
+	end
+
+	local node = mcml:createFromXmlNode({name="div", attr = {style = style}});
+	self.node = node;
 
 	local spacing_right;
 	if(self.treeview) then
@@ -172,17 +181,18 @@ function pe_treenode:CreateNode()
 
 	local spacing = math.floor((height - item_size)/2);
 
-	local style = "margin-top:"..tostring(spacing).."px;width:"..tostring(item_size).."px;".."height:"..tostring(item_size).."px;";
+	style = "margin-top:"..tostring(spacing).."px;width:"..tostring(item_size).."px;".."height:"..tostring(item_size).."px;";
 
-	local child_index = 1;
-	if(not self.expandBtn and #self > 0) then
+	--local child_index = 1;
+	if(#self > 0) then
 		local attr={ style=style};
 		attr["CheckedBG"] = self.treeview.ItemOpenBG or "Texture/3DMapSystem/common/itemopen.png";
 		attr["UncheckedBG"] = self.treeview.ItemCloseBG or "Texture/3DMapSystem/common/itemclosed.png";
 		attr["checked"] = self.expanded;
-		self.expandBtn = pe_checkbox:createFromXmlNode({name="button", attr = attr});
-		self:AddChild(self.expandBtn, child_index);
-		child_index = child_index + 1;
+		node = mcml:createFromXmlNode({name="checkbox", attr = attr});
+		self.node:AddChild(node);
+		self.node.expandBtn = node;
+		--child_index = child_index + 1;
 	end
 	
 
@@ -208,21 +218,31 @@ function pe_treenode:CreateNode()
 		local o = commonlib.copy(self.render_template_node);
 		o.attr = o.attr or {};
 		o.attr.style = style;
-		local class_type = mcml:GetClassByTagName(o.name or "div");
-		if(class_type) then
-			self.label = class_type:createFromXmlNode(o);
-			self:AddChild(self.label, child_index);
-		else
-			LOG.std(nil, "warn", "mcml", "can not find tag name %s", child.name or "");
-		end
+		node = mcml:createFromXmlNode(o);
+		self.node:AddChild(node);
+
+--		local class_type = mcml:GetClassByTagName(o.name or "div");
+--		if(class_type) then
+----			self.label = class_type:createFromXmlNode(o);
+----			self.node:AddChild(self.label, child_index);
+--			node = class_type:createFromXmlNode(o);
+--			self.node:AddChild(self.label, child_index);
+--		else
+--			LOG.std(nil, "warn", "mcml", "can not find tag name %s", child.name or "");
+--		end
 	else
-		
+		node = mcml:createFromXmlNode({name="div", attr={style=style}, self.text});
+		self.node:AddChild(node);
+
+
 		--style = style.."background:url(Texture/alphadot.png)"
 --		self.label = pe_button:createFromXmlNode({name="button", attr={value=self.text, style=style}});
-		self.label = pe_div:createFromXmlNode({name="div", attr={style=style}, self.text});
-		--self.label.onclickscript = self.OnClick;
-		self:AddChild(self.label, child_index);
+--		self.label = pe_div:createFromXmlNode({name="div", attr={style=style}, self.text});
+--		--self.label.onclickscript = self.OnClick;
+--		self.node:AddChild(self.label, child_index);
 	end
+
+	self:AddChild(self.node, 1);
 end
 
 function pe_treenode:GetLabelWidth()
@@ -244,7 +264,8 @@ end
 function pe_treenode:UpdateChildLayout(layout)
 	local beOffset = false;
 	for childnode in self:next() do
-		if(childnode == self.label or childnode == self.expandBtn) then
+		--if(childnode == self.label or childnode == self.expandBtn) then
+		if(childnode == self.node) then
 			--do nothing
 		else
 			if(not beOffset) then
@@ -265,17 +286,13 @@ end
 function pe_treenode:OnAfterChildLayout(layout, left, top, right, bottom)
 	if(self.control) then
 		self.control:setGeometry(left, top, right-left, bottom-top);
-
-		if(self.control.canvas) then
-			local real_w, real_h = layout:GetRealSize();
-			self.control.canvas:setGeometry(0, 0, real_w, real_h);
-		end
 	end
 end
 
 function pe_treenode:setChildrenVisible(visible)
 	for childnode in self:next() do
-		if(childnode == self.label or childnode == self.expandBtn) then
+		--if(childnode == self.label or childnode == self.expandBtn) then
+		if(childnode == self.node) then
 			-- do nothing	
 		else
 			if(self.expanded) then
@@ -288,10 +305,16 @@ function pe_treenode:setChildrenVisible(visible)
 end
 
 function pe_treenode:OnClick()
-	if(#self > 2) then
+	
+	if(#self > 1) then
 		self.expanded = not self.expanded;
 		self.selected = not self.selected;
 		self:setChildrenVisible(self.expanded);
+
+		if(self.node and self.node.expandBtn) then
+			self.node.expandBtn:setChecked(self.expanded);
+		end
+		
 		return;
 	end
 

@@ -685,7 +685,14 @@ function UIElement:childAtRecursiveHelper(p)
 end
 
 function UIElement:pointInsideRectAndMask(p)
-	return self:rect():contains(p) and (not self.mask or self.mask:contains(p));
+	local posInClip = true;
+	if(self.clip) then
+		local clip = self:ClipRegion();
+		if(clip) then
+			posInClip = clip:contains(p);
+		end
+	end
+	return self:rect():contains(p) and (not self.mask or self.mask:contains(p)) and posInClip;
 end
 
 -- @param bEnabled: if nil, it is true.

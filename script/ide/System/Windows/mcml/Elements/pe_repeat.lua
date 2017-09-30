@@ -52,7 +52,7 @@ function pe_repeat:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	self:MoveChildrenToTemplate();
 
 	local arrayValues, name, value;
-	local value = self:GetAttributeWithCode("value");
+	local value = self:GetAttributeWithCode("value", nil, true);
 	if(type(value) == "string") then
 		name, value = value:match("^([%w_]+)%s+in%s+([^%s%(]+)");
 		if(name and value) then

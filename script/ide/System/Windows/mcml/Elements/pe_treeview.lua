@@ -48,6 +48,8 @@ function pe_treeview:LoadComponent(parentElem, parentLayout, styleItem)
 	local _this = self.control;
 	if(not _this) then
 		_this = TreeView:new():init(parentElem);
+		_this:setHorizontalScrollBarPolicy("AlwaysOff");
+--		_this:setVerticalScrollBarPolicy("AlwaysOff");
 		self:SetControl(_this);
 	end
 	PageElement.LoadComponent(self, _this.viewport, parentLayout, styleItem)
@@ -61,12 +63,12 @@ function pe_treeview:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	self.ItemOpenBG = self:GetString("ItemOpenBG") or css.ItemOpenBG;
 	self.ItemCloseBG = self:GetString("ItemCloseBG") or css.ItemCloseBG;
 	self.ItemToggleSize = self:GetNumber("ItemToggleSize") or css.ItemToggleSize;
-	self.DefaultNodeHeight = self:GetNumber("DefaultNodeHeight") or css.DefaultNodeHeight;
+	self.DefaultNodeHeight = self:GetNumber("DefaultNodeHeight") or css.DefaultNodeHeight or 24;
 	self.ItemToggleRightSpacing = self:GetNumber("ItemToggleRightSpacing") or css.ItemToggleRightSpacing;
 	self.DefaultIndentation = self:GetNumber("DefaultIndentation") or css.DefaultIndentation;
 
 	--container_bg = css.background or self:GetString("background"), -- change to css background first
-	_this:SetDefaultNodeHeight(self.DefaultNodeHeight or 24);
+	_this:SetDefaultNodeHeight(self.DefaultNodeHeight);
 	_this:SetDefaultIconSize(self:GetNumber("DefaultIconSize") or css.DefaultIconSize);
 	_this:SetShowIcon(self:GetBool("ShowIcon"));
 	_this:SetItemOpenBG(self.ItemOpenBG);
@@ -78,12 +80,15 @@ function pe_treeview:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	_this:SetVerticalScrollBarPageSize(self:GetNumber("VerticalScrollBarPageSize") or css.VerticalScrollBarPageSize);
 	_this:SetMouseOverBG(self:GetString("MouseOverBG") or css.MouseOverBG);
 	--_this:SetClickThrough(self:GetBool("ClickThrough"));
-	self.onclick = self:GetAttributeWithCode("OnClick");
+	self.onclick = self:GetAttributeWithCode("OnClick", nil, true);
 
+	if(css["overflow-y"] and css["overflow-y"] == "hidden") then
+		_this:setVerticalScrollBarPolicy("AlwaysOff");
+	end
 
 
 	-- Extract from datasource if it is already provided in the input. 
-	local ds = self:GetAttributeWithCode("DataSourceID");
+	local ds = self:GetAttributeWithCode("DataSourceID", nil, true);
 	if(ds) then
 		self:SetDataSource(ds);
 	else
@@ -96,6 +101,68 @@ function pe_treeview:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 		-- instantiate child nodes from data source 
 		self:DataBind(false);
 	end
+end
+
+function pe_treeview:OnLoadComponentAfterChild(parentElem, parentLayout, css)
+	local function setNodeMinHeightRecursive(node, ignores, recursives)
+		for childnode in node:next() do
+			local setMinHeight = false;
+			if(ignores[childnode.name]) then
+				-- do nothing
+			elseif(recursives[childnode.name]) then
+				setNodeMinHeightRecursive(childnode, ignores, recursives)
+--				if(childnode.name == "pe:treenode") then
+--					setMinHeight = true;
+--				end
+			else
+				setMinHeight = true;
+			end
+			if(setMinHeight) then
+				local style = childnode:GetStyle();
+				if(not style["min-height"]) then
+					style["min-height"] = self.DefaultNodeHeight;
+				end
+			end
+		end
+	end
+
+	local ignores = {
+		["NodeTemplates"] = true,
+	}
+
+	local recursives = {
+		["pe:treenode"] = true,
+		["DataNodePlaceholder"] = true,
+	}
+
+	setNodeMinHeightRecursive(self, ignores, recursives);
+
+--	for childnode in self:next() do
+--		if(childnode.name == "NodeTemplates") then
+--			-- do nothing
+--		elseif(childnode.name == "DataNodePlaceholder") then
+--			for temp_node in childnode:next() do
+--				if(temp_node.name == "NodeTemplate") then
+--					
+--				elseif(temp_node.name == "pe:treenode") then
+--
+--				else
+--
+--				end
+--			end		
+--		elseif(childnode.name == "pe:treenode") then
+--
+--		else
+--
+--		end
+--	end
+end
+
+function pe_treeview:Rebuild(parentElem)
+	if(not parentElem and self.control) then
+		parentElem = self.control.viewport;
+	end
+	pe_treeview._super.Rebuild(self, parentElem);
 end
 
 function pe_treeview:SetDataSource(dataSource)
@@ -151,15 +218,10 @@ function pe_treeview:DataBind(bRefreshUI)
 		local indent = 0;
 
 		local function CreatePageElement(o)
-			local class_type = mcml:GetClassByTagName(o.name or "div");
-			if(class_type) then
-				if(type(o) == "table") then
-					o = commonlib.copy(o)
-				end
-				return class_type:createFromXmlNode(o);
-			else
-				LOG.std(nil, "warn", "mcml", "can not find tag name %s", child.name or "");
+			if(type(o) == "table") then
+				o = commonlib.copy(o)
 			end
+			return mcml:createFromXmlNode(o)
 		end
 
 		local function CreateTreeNode(inTable, parentNode)
@@ -187,6 +249,8 @@ function pe_treeview:DataBind(bRefreshUI)
 							tree_node = CreatePageElement(source_node); 
 						end
 					else
+						template_node = commonlib.copy(template_node);
+						template_node.name = "div";
 						tree_node = CreatePageElement(template_node);
 					end
 					if(tree_node) then
@@ -217,4 +281,47 @@ function pe_treeview:DataBind(bRefreshUI)
 			end
 		end
 	end
+end
+
+-- Clear all child nodes
+function pe_treeview:ClearAllChildren()
+	if(self.control and self.control.viewport) then
+		self.control.viewport:deleteChildren();
+	end
+	commonlib.resize(self, 0);
+end
+
+function pe_treeview:setRealSize(width, height)
+	if(self.control and self.control.viewport) then
+		width = width or self.control.viewport:width();
+		height = height or self.control.viewport:height();
+		self.control.viewport:setGeometry(0, 0, width, height);
+	end
+end
+
+function pe_treeview:AllowWheel(canWheel)
+	if(self.control) then
+		self.control:SetAllowWheel(canWheel);
+	end
+end
+
+function pe_treeview:scrollToChild(index)
+	local node = self[index];
+	local style = node:GetStyle();
+	if(self.control) then
+		self.control:scrollToPos(nil, self.DefaultNodeHeight * (index - 1));
+	end	
+end
+
+function pe_treeview:UpdateChildLayout(layout)
+	pe_treeview._super.UpdateChildLayout(self, layout);
+	
+	local width, height = layout:GetUsedSize()
+	if(self.control) then
+		width = width + self.control:GetSliderSize();
+	end
+	layout:SetUsedSize(width, height);
+
+
+	--layout:AddObject(width, height);
 end

@@ -154,7 +154,18 @@ local no_parse_nodes = {
 	["NodeTemplates"] = true,
 	["EmptyDataTemplate"] = true,
 	["FetchingDataTemplate"] = true,
+	["Columns"] = true,
+	["PagerTemplate"] = true,
 }
+
+function PageElement:Rebuild(parentElem)
+	local styleItem;
+	if(self.parent) then
+		styleItem = self.parent:GetStyle();
+		parentElem = parentElem or self.parent.control;
+	end
+	self:LoadComponent(parentElem, nil, styleItem)
+end
 
 -- virtual function: load component recursively. 
 -- generally one do not need to override this function, override 
@@ -176,7 +187,7 @@ function PageElement:LoadComponent(parentElem, parentLayout, styleItem)
 	-- process any variables that is taking place. 
 	self:ProcessVariables();
 
-	self:checkAttributes();
+	--self:checkAttributes();
 	
 	if(self:GetAttribute("trans")) then
 		-- here we will translate all child nodes recursively, using the given lang 
@@ -484,7 +495,7 @@ local reset_layout_attrs = {
 };
 
 -- set the value of an attribute of this node. This function is rarely used. 
-function PageElement:SetAttribute(attrName, value)
+function PageElement:SetAttribute(attrName, value, beForceResetLayout)
 	self.attr = self.attr or {};
 	if(self.attr[attrName] ~= value) then
 		self.attr[attrName] = value;
@@ -494,7 +505,7 @@ function PageElement:SetAttribute(attrName, value)
 			self.style = nil;
 		end
 
-		if(reset_layout_attrs[attrName]) then
+		if(beForceResetLayout ~= false and reset_layout_attrs[attrName]) then
 			self:resetLayout();
 		end
 	end
@@ -1072,6 +1083,9 @@ end
 
 -- Clear all child nodes
 function PageElement:ClearAllChildren()
+	if(self.control) then
+		self.control:deleteChildren();
+	end
 	commonlib.resize(self, 0);
 end
 

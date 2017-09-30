@@ -20,6 +20,11 @@ Label:Property({"Scale", nil, "GetScale", "SetScale", auto=true})
 function Label:ctor()
 end
 
+-- inner text width without padding. 
+function Label:CalculateTextWidth()
+	return _guihelper.GetTextWidth(self:GetText(), self:GetFont()) * (self:SetScale() or 1);
+end
+
 function Label:paintEvent(painter)
 	local text = self:GetText();
 	if(text and text~="") then

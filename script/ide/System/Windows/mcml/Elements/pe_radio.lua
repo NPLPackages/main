@@ -39,7 +39,7 @@ function pe_radio:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	_this:SetText(self:GetAttributeWithCode("Label", nil, true));
 	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
 
-	local checked = self:GetAttributeWithCode("checked");
+	local checked = self:GetAttributeWithCode("checked", nil, true);
 	if(checked) then
 		_this:setChecked(true);
 	end
@@ -52,10 +52,10 @@ end
 function pe_radio:OnClick()
 	local result;
 	local buttonName = self:GetAttribute("name");
-	local value = self:GetAttributeWithCode("value");
+	local value = self:GetAttributeWithCode("value", nil, true);
 	
-	local max = tonumber(self:GetAttributeWithCode("max")) or 1;
-	local min = tonumber(self:GetAttributeWithCode("min")) or 1;
+	local max = tonumber(self:GetAttributeWithCode("max", nil, true) or 1);
+	local min = tonumber(self:GetAttributeWithCode("min", nil, true) or 1);
 
 	local parentNode = self:GetParent("form") or self:GetParent("pe:editor") or self:GetRoot();
 	if(parentNode) then
@@ -68,7 +68,7 @@ function pe_radio:OnClick()
 			for i, radio in ipairs(radios) do
 				local ctl = radio:GetControl();
 				if(ctl) then
-					local radio_value = radio:GetAttributeWithCode("value");
+					local radio_value = radio:GetAttributeWithCode("value", nil, true);
 					if(radio_value ~= value) then
 						if(max_left>0) then
 							max_left = max_left - 1;

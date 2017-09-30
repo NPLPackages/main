@@ -54,10 +54,13 @@ function SliderBase:SetMax(max)
 	self:setRange(self.min, max);
 end
 
-function SliderBase:setRange(min, max)
+function SliderBase:setRange(min, max, emitSingal)
+	if(emitSingal ~= false) then
+		emitSingal = true;
+	end
 	self.min = min;
 	self.max = max;
-	self:SetValue(self.value, true);
+	self:SetValue(self.value, emitSingal);
 end
 
 function SliderBase:setStep(single, page)
