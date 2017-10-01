@@ -20,6 +20,9 @@ local test_Windows = commonlib.gettable("System.Core.Test.test_Windows");
 
 local window = Window:new();
 local mulLine = MultiLineEditbox:new():init(window);
+
+--mulLine:setHorizontalScrollBarPolicy("AlwaysOff");
+--mulLine:setVerticalScrollBarPolicy("AlwaysOff");
 --mulLine:SetRows(2);
 mulLine:setGeometry(100, 100, 200, 20 * 10+10);
 mulLine:AddItem("我是第一行");
@@ -196,17 +199,17 @@ end
 
 function MultiLineEditbox:updateScrollInfo()
 	local clip = self:ClipRegion();
-	if(not self.hbar:isHidden()) then
+	--if(not self.hbar:isHidden()) then
 		self.hbar:setRange(0, self.viewport:GetRealWidth() - clip:width() - 1);
 		self.hbar:setStep(self.viewport:WordWidth(), clip:width());
 		self.hbar:SetValue(self.viewport:hValue());
-	end
+	--end
 
-	if(not self.vbar:isHidden()) then
+	--if(not self.vbar:isHidden()) then
 		self.vbar:setRange(0, self.viewport:GetRow() - self:GetRow());
 		self.vbar:setStep(1, self:GetRow());
 		self.vbar:SetValue(self.viewport:vValue());
-	end
+	--end
 end
 
 function MultiLineEditbox:updateScrollValue()
@@ -222,23 +225,28 @@ end
 function MultiLineEditbox:updateScrollStatus(textbox_w, textbox_h)
 	local clip = self:ClipRegion();
 	if(textbox_w > clip:width()) then
-		self.hbar:show();
+		--self.hbar:show();
+		self:horizontalScrollBarShow();
 	else
-		self.hbar:hide();
+		--self.hbar:hide();
+		self:horizontalScrollBarHide();
 	end
 
 	clip = self:ClipRegion();
 	if(textbox_h > clip:height()) then
-		self.vbar:show();
-
+		--self.vbar:show();
+		self:verticalScrollBarShow();
 		clip = self:ClipRegion();
 		if(textbox_w > clip:width()) then
-			self.hbar:show();
+			--self.hbar:show();
+			self:horizontalScrollBarShow();
 		else
-			self.hbar:hide();
+			--self.hbar:hide();
+			self:horizontalScrollBarHide();
 		end
 	else
-		self.vbar:hide();
+		--self.vbar:hide();
+		self:verticalScrollBarHide();
 	end
 
 	self:updateScrollInfo();

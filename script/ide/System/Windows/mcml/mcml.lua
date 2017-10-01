@@ -79,7 +79,7 @@ function mcml:LoadAllElements()
 	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_text.lua");
 	Elements.pe_text:RegisterAs("text", "pe:text");
 	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_div.lua");
-	Elements.pe_div:RegisterAs("pe:mcml", "div", "pe:div", "NodeTemplate");
+	Elements.pe_div:RegisterAs("pe:mcml", "div", "pe:div", "NodeTemplate", "form");
 		NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_font.lua");
 		Elements.pe_font:RegisterAs("font");
 		NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_span.lua");
@@ -91,7 +91,7 @@ function mcml:LoadAllElements()
 	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_script.lua");
 	Elements.pe_script:RegisterAs("script", "pe:script", "unknown"); -- "unknown" will handle <% %>, etc. 
 		NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_unknown.lua");
-		Elements.pe_unknown:RegisterAs("pe:flushnode", "pe:fallthrough", "DataNodePlaceholder");
+		Elements.pe_unknown:RegisterAs("pe:flushnode", "pe:fallthrough", "DataNodePlaceholder", "PagerSettings");
 	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_input.lua");
 	Elements.pe_input:RegisterAs("input");
 		NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_editbox.lua");
@@ -126,6 +126,16 @@ function mcml:LoadAllElements()
 	Elements.pe_treenode:RegisterAs("pe:treenode");
 	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_treeview.lua");
 	Elements.pe_treeview:RegisterAs("pe:treeview");
+	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_gridview.lua");
+	Elements.pe_gridview:RegisterAs("pe:gridview");
+	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_bindingblock.lua");
+	Elements.pe_bindingblock:RegisterAs("pe:bindingblock");
+	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_pager.lua");
+	Elements.pe_pager:RegisterAs("pe:pager");
+	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_img.lua");
+	Elements.pe_img:RegisterAs("pe:img","img");
+	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_label.lua");
+	Elements.pe_label:RegisterAs("label","pe:label");
 	-- TODO: add all system defined page element here
 end
 

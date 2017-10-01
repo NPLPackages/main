@@ -22,6 +22,7 @@ local ScrollAreaBase = commonlib.inherit(commonlib.gettable("System.Windows.UIEl
 ScrollAreaBase:Property("Name", "ScrollAreaBase");
 
 ScrollAreaBase:Property({"SliderSize", 16, auto=true});
+ScrollAreaBase:Property({"AllowWheel", true, auto=true});
 -- the "scrollBarPolicy" values: "AlwaysOn", "AlwaysOff", "Auto"
 ScrollAreaBase:Property({"horizontalScrollBarPolicy", "Auto", "getHorizontalScrollBarPolicy", "setHorizontalScrollBarPolicy", auto=true});
 ScrollAreaBase:Property({"verticalScrollBarPolicy", "Auto", "getVerticalScrollBarPolicy", "setVerticalScrollBarPolicy", auto=true});
@@ -58,7 +59,9 @@ function ScrollAreaBase:initScrollBar()
 		self.hscroll = value;
 		self:updateViewportPos();
 	end);
-	self.hbar:hide();
+	self.hbar:setRange(0,0,false);
+	--self.hbar:hide();
+	self:horizontalScrollBarHide();
 
 	self.vbar = ScrollBar:new():init(self);
 	self.vbar:SetDirection("vertical");
@@ -66,7 +69,9 @@ function ScrollAreaBase:initScrollBar()
 		self.vscroll = value;
 		self:updateViewportPos();
 	end);
-	self.vbar:hide();
+	self.vbar:setRange(0,0,false);
+	--self.vbar:hide();
+	self:verticalScrollBarHide();
 end
 
 function ScrollAreaBase:scrollToPos(hbarValue, vbarValue)
@@ -76,10 +81,36 @@ function ScrollAreaBase:scrollToPos(hbarValue, vbarValue)
 	self.vbar:SetValue(vbarValue, true);
 end
 
-function ScrollAreaBase:setScrollBarVisible(scrollbar, policy, visible)
-	if(not scrollbar) then
-		return;
+function ScrollAreaBase:horizontalScrollBarShow()
+	self:setScrollBarVisible("horizontal", nil, true);
+end
+
+function ScrollAreaBase:horizontalScrollBarHide()
+	self:setScrollBarVisible("horizontal", nil, false);
+end
+
+function ScrollAreaBase:verticalScrollBarShow()
+	self:setScrollBarVisible("vertical", nil, true);
+end
+
+function ScrollAreaBase:verticalScrollBarHide()
+	self:setScrollBarVisible("vertical", nil, false);
+end
+
+function ScrollAreaBase:setScrollBarVisible(direction, policy, visible)
+	local scrollbar;
+	if(direction == "horizontal") then
+		scrollbar = self.hbar;
+		if(not policy) then
+			policy = self.horizontalScrollBarPolicy;
+		end
+	else
+		scrollbar = self.vbar;
+		if(not policy) then
+			policy = self.verticalScrollBarPolicy;
+		end
 	end
+
 	if(policy == "AlwaysOn") then
 		visible = true;
 	elseif(policy == "AlwaysOff") then
@@ -100,7 +131,7 @@ end
 function ScrollAreaBase:setHorizontalScrollBarPolicy(policy)
 	self.horizontalScrollBarPolicy = policy;
 	if(policy == "AlwaysOn" or policy == "AlwaysOff") then
-		self:setScrollBarVisible(self.hbar, policy);
+		self:setScrollBarVisible("horizontal", policy);
 	end
 end
 
@@ -108,7 +139,7 @@ end
 function ScrollAreaBase:setVerticalScrollBarPolicy(policy)
 	self.verticalScrollBarPolicy = policy;
 	if(policy == "AlwaysOn" or policy == "AlwaysOff") then
-		self:setScrollBarVisible(self.vbar, policy);
+		self:setScrollBarVisible("vertical", policy);
 	end
 end
 
@@ -155,7 +186,9 @@ end
 
 
 function ScrollAreaBase:mouseWheelEvent(e)
-	Application:sendEvent(self.vbar, e);
+	if(self.AllowWheel) then
+		Application:sendEvent(self.vbar, e);
+	end
 end
 
 function ScrollAreaBase:keyPressEvent(e)

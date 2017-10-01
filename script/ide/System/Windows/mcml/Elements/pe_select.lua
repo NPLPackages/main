@@ -55,7 +55,7 @@ function pe_select:DataBind()
 	if(ctl) then
 		local items = nil;
 		local name, value;
-		local value = self:GetAttributeWithCode("value");
+		local value = self:GetAttributeWithCode("value", nil, true);
 		if(type(value) == "string") then
 			name, value = value:match("^([%w_]+)%s+in%s+([^%s%(]+)");
 			if(name and value) then

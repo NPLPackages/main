@@ -35,21 +35,21 @@ end
 function pe_container:OnLoadComponentAfterChild(parentElem, parentLayout, css)
 end
 
-function pe_container:OnBeforeChildLayout(layout)
-	if(#self ~= 0) then
-		local myLayout = layout:new();
-		local css = self:GetStyle();
-		local width, height = layout:GetPreferredSize();
-		local padding_left, padding_top = css:padding_left(),css:padding_top();
-		myLayout:reset(padding_left,padding_top,width+padding_left, height+padding_top);
-		self:UpdateChildLayout(myLayout);
-		width, height = myLayout:GetUsedSize();
-		width = width - padding_left;
-		height = height - padding_top;
-		layout:AddObject(width, height);
-	end
-	return true;
-end
+--function pe_container:OnBeforeChildLayout(layout)
+--	if(#self ~= 0) then
+--		local myLayout = layout:new();
+--		local css = self:GetStyle();
+--		local width, height = layout:GetPreferredSize();
+--		local padding_left, padding_top = css:padding_left(),css:padding_top();
+--		myLayout:reset(padding_left,padding_top,width+padding_left, height+padding_top);
+--		self:UpdateChildLayout(myLayout);
+--		width, height = myLayout:GetUsedSize();
+--		width = width - padding_left;
+--		height = height - padding_top;
+--		layout:AddObject(width, height);
+--	end
+--	return true;
+--end
 
 function pe_container:OnAfterChildLayout(layout, left, top, right, bottom)
 	if(self.control) then

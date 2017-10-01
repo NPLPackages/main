@@ -37,12 +37,20 @@ function pe_checkbox:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
 	_this:setCheckable(self:GetBool("enabled",true));
 
-	local checked = self:GetAttributeWithCode("checked");
+	local checked = self:GetAttributeWithCode("checked", nil, true);
 	if(checked) then
 		_this:setChecked(true);
 	end
 
 	_this:Connect("clicked", self, self.OnClick)
+end
+
+function pe_checkbox:setChecked(checked)
+	if(self.control) then
+		self.control:setChecked(checked);
+	end
+	checked = if_else(checked, "true", "false");
+	self:SetAttribute("checked", checked);
 end
 
 function pe_checkbox:OnClick()
