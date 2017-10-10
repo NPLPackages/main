@@ -27,6 +27,7 @@ NPL.load("(gl)script/ide/System/Windows/KeyEvent.lua");
 NPL.load("(gl)script/ide/System/Windows/Mouse.lua");
 NPL.load("(gl)script/ide/System/Core/Event.lua");
 NPL.load("(gl)script/ide/math/Point.lua");
+NPL.load("(gl)script/ide/gui_helper.lua");
 local Point = commonlib.gettable("mathlib.Point");
 local Event = commonlib.gettable("System.Core.Event");
 local SizeEvent = commonlib.gettable("System.Windows.SizeEvent");
