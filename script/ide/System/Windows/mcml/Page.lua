@@ -90,7 +90,7 @@ function Page:Init(url, cache_policy, bRefresh)
 		Page.OnPageDownloaded_CallBack(url, nil, self)
 		return
 	end
-	url = paraworld.TranslateURL(url);
+	
 	self.url = url;
 	-- downloading
 	self.status = 0; 
