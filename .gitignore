@@ -1,6 +1,7 @@
 .svn*
 *.cs
 /*
+!/package.npl
 !/.git*
 !/*.md
 !/CMakeLists.txt

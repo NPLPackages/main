@@ -1,0 +1,6 @@
+{
+	-- do not add search path when loading the containing folder via NPL.load. default to true.
+	-- searchpath = false,
+	-- main script
+	main = "script/ide/System/System.lua",
+}
