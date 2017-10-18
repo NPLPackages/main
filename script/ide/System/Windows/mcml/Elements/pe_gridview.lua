@@ -18,6 +18,7 @@ local mcml = commonlib.gettable("System.Windows.mcml");
 local PageElement = commonlib.gettable("System.Windows.mcml.PageElement");
 local GridView = commonlib.gettable("System.Windows.Controls.GridView");
 local pe_gridview = commonlib.inherit(commonlib.gettable("System.Windows.mcml.Elements.pe_container"), commonlib.gettable("System.Windows.mcml.Elements.pe_gridview"));
+pe_gridview:Property({"class_name", "pe:gridview"});
 
 function pe_gridview:ctor()
 	self.treeview = nil;

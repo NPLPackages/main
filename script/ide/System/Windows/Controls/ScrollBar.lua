@@ -18,11 +18,11 @@ local test_Windows = commonlib.gettable("System.Core.Test.test_Windows");
 local ScrollBar = commonlib.gettable("System.Windows.Controls.ScrollBar");
 local window = Window:new();
 local scrollBar = ScrollBar:new():init(window);
-scrollBar:SetDirection("vertical");
-scrollBar:setRange(0,1)
+--scrollBar:SetDirection("vertical");
+scrollBar:setRange(0,100)
 scrollBar:setStep(1,5);
---scrollBar:setGeometry(50,50,200,30);
-scrollBar:setGeometry(50,50,30,200);
+scrollBar:setGeometry(50,50,200,30);
+--scrollBar:setGeometry(50,50,30,200);
 window:Show("my_window", nil, "_mt", 0,0, 600, 600);
 test_Windows.window = window;
 
@@ -51,16 +51,20 @@ ScrollBar:Property("Name", "ScrollBar");
 
 ScrollBar:Property({"grooveWidth", nil, nil, "SetGrooveWidth",auto=true});
 ScrollBar:Property({"grooveHeight", nil, nil, "SetGrooveHeight",auto=true});
-ScrollBar:Property({"grooveBackground", "Texture/Aries/Creator/Theme/GameCommonIcon_32bits.png;456 396 16 16:4 4 4 4",auto=true});
+--ScrollBar:Property({"grooveBackground", "Texture/Aries/Creator/Theme/GameCommonIcon_32bits.png;456 396 16 16:4 4 4 4",auto=true});
+ScrollBar:Property({"grooveBackground", nil,auto=true});
 
 ScrollBar:Property({"sliderWidth", nil, nil, "SetSliderWidth",auto=true});
 ScrollBar:Property({"sliderHeight", nil, nil, "SetSliderHeight",auto=true});
-ScrollBar:Property({"sliderBackground", "Texture/3DMapSystem/common/ThemeLightBlue/slider_button_16.png;5 5 5 5:1 1 1 1",auto=true});
+--ScrollBar:Property({"sliderBackground", "Texture/3DMapSystem/common/ThemeLightBlue/slider_button_16.png;5 5 5 5:1 1 1 1",auto=true});
+ScrollBar:Property({"sliderBackground", nil,auto=true});
 
 ScrollBar:Property({"buttonWidth", nil ,auto=true});
 ScrollBar:Property({"buttonHeight", nil, auto=true});
-ScrollBar:Property({"PrevButtonBackground", "Texture/3DMapSystem/common/ThemeLightBlue/slider_button_16.png;5 5 5 5:1 1 1 1"});
-ScrollBar:Property({"NextButtonBackground", "Texture/3DMapSystem/common/ThemeLightBlue/slider_button_16.png;5 5 5 5:1 1 1 1"});
+--ScrollBar:Property({"PrevButtonBackground", "Texture/3DMapSystem/common/ThemeLightBlue/slider_button_16.png;5 5 5 5:1 1 1 1"});
+--ScrollBar:Property({"NextButtonBackground", "Texture/3DMapSystem/common/ThemeLightBlue/slider_button_16.png;5 5 5 5:1 1 1 1"});
+ScrollBar:Property({"PrevButtonBackground", nil});
+ScrollBar:Property({"NextButtonBackground", nil});
 
 function ScrollBar:ctor()
 	self.groove = nil;
@@ -77,23 +81,43 @@ end
 
 function ScrollBar:initButton()
 	self.prevButton = Button:new():init(self);
-	self.prevButton:SetBackground(self.PrevButtonBackground);
+	self.prevButton:SetPolygonStyle("narrow");
+	--self.prevButton:SetBackground(self.PrevButtonBackground);
 	self.prevButton:Connect("pressed", function (event)
 		self:SliderSingleStepSub();
 	end)
 
 	self.nextButton = Button:new():init(self);
-	self.nextButton:SetBackground(self.NextButtonBackground);
+	self.nextButton:SetPolygonStyle("narrow");
+	--self.nextButton:SetBackground(self.NextButtonBackground);
 	self.nextButton:Connect("pressed", function (event)
 		self:SliderSingleStepAdd();
 	end)
+
+	self:UpdateButtonDirection();
+end
+
+function ScrollBar:UpdateButtonDirection()
+	local direction = self.direction;
+	if(direction == "horizontal") then
+		self.prevButton:SetDirection("left");
+		self.nextButton:SetDirection("right");
+	elseif(direction == "vertical") then
+		self.prevButton:SetDirection("up");
+		self.nextButton:SetDirection("down");
+	end
+end
+
+function ScrollBar:SetDirection(direction)
+	ScrollBar._super.SetDirection(self, direction);
+	self:UpdateButtonDirection();
 end
 
 function ScrollBar:vScrollBar(parent)
 	local vscrollbar = self:new():init(parent);
 	vscrollbar:SetDirection("vertical");
-	vscrollbar:SetBackground("Texture/Aries/Creator/Theme/GameCommonIcon_32bits.png;285 126 7 28:1 1 1 1");
-	vscrollbar:SetSliderBackground("Texture/Aries/Creator/Theme/GameCommonIcon_32bits.png;275 126 7 47:2 1 2 1");
+--	vscrollbar:SetBackground("Texture/Aries/Creator/Theme/GameCommonIcon_32bits.png;285 126 7 28:1 1 1 1");
+--	vscrollbar:SetSliderBackground("Texture/Aries/Creator/Theme/GameCommonIcon_32bits.png;275 126 7 47:2 1 2 1");
 --	vscrollbar:SetPrevButtonBackground("Texture/3DMapSystem/common/ThemeLightBlue/slider_button_16.png;5 5 5 5:1 1 1 1");
 --	vscrollbar:SetNextButtonBackground("Texture/3DMapSystem/common/ThemeLightBlue/slider_button_16.png;5 5 5 5:1 1 1 1");
 --	vscrollbar:SetPrevButtonBackground("Texture/Aries/Creator/Theme/GameCommonIcon_32bits.png;0 0 4 4:1 1 1 1");
@@ -104,8 +128,8 @@ end
 function ScrollBar:hScrollBar(parent)
 	local scrollbar = self:new():init(parent);
 	scrollbar:SetDirection("horizontal");
-	scrollbar:SetBackground("Texture/Aries/Creator/Theme/GameCommonIcon_32bits.png;285 126 7 28:1 1 1 1");
-	scrollbar:SetSliderBackground("Texture/Aries/Creator/Theme/GameCommonIcon_32bits.png;275 126 7 47:2 1 2 1");
+--	scrollbar:SetBackground("Texture/Aries/Creator/Theme/GameCommonIcon_32bits.png;285 126 7 28:1 1 1 1");
+--	scrollbar:SetSliderBackground("Texture/Aries/Creator/Theme/GameCommonIcon_32bits.png;275 126 7 47:2 1 2 1");
 --	scrollbar:SetPrevButtonBackground("Texture/3DMapSystem/common/ThemeLightBlue/slider_button_16.png;5 5 5 5:1 1 1 1");
 --	scrollbar:SetNextButtonBackground("Texture/3DMapSystem/common/ThemeLightBlue/slider_button_16.png;5 5 5 5:1 1 1 1");
 --	scrollbar:SetPrevButtonBackground("Texture/Aries/Creator/Theme/GameCommonIcon_32bits.png;0 0 4 4:1 1 1 1");
@@ -175,11 +199,11 @@ function ScrollBar:Slider()
 		if(self.direction == "horizontal") then
 			--w = self.sliderWidth or 16;
 			w = math.floor(groove:width() * self.pageStep / len + 0.5);
-			h = self.sliderHeight or self:height();
+			h = self.sliderHeight or (self:height() - 4);
 			x = self.prevButton:width();
 			y = math.floor((self:height() - h)/2 + 0.5);
 		else
-			w = self.sliderWidth or self:width();
+			w = self.sliderWidth or (self:width() - 4);
 			h = math.floor(groove:height() * self.pageStep / len + 0.5);
 			--h = self.sliderHeight or 16;
 			x = math.floor((self:width() - w)/2 + 0.5);
@@ -293,10 +317,24 @@ function ScrollBar:paintEvent(painter)
 	self:updateSlider();
 	local groove = self:Groove();
 	local groovBackground = self.grooveBackground;
+	local groove_x, groove_y, groove_w, groove_h = groove:x(), groove:y(), groove:width(), groove:height();
+	if(self.direction == "horizontal") then
+		groove_x = 0;
+		groove_w = self:width();
+	elseif(self.direction == "vertical") then
+		groove_y = 0;
+		groove_h = self:height()
+	end
 	if(groovBackground and groovBackground~="") then
 		painter:SetPen("#00ff00");
 		--painter:DrawRectTexture(self:x() + groove:x(), self:y() + groove:y(), 4, groove:height(), groovBackground);
-		painter:DrawRectTexture(self:x() + groove:x(), self:y() + groove:y(), groove:width(), groove:height(), groovBackground);
+		--painter:DrawRectTexture(self:x() + groove:x(), self:y() + groove:y(), groove:width(), groove:height(), groovBackground);
+		painter:DrawRectTexture(self:x() + groove_x, self:y() + groove_y, groove_w, groove_h, groovBackground);
+	else
+		painter:SetPen("#f1f1f1");
+		--painter:DrawRectTexture(self:x() + groove:x(), self:y() + groove:y(), 4, groove:height(), groovBackground);
+		--painter:DrawRectTexture(self:x() + groove:x(), self:y() + groove:y(), groove:width(), groove:height(), "");
+		painter:DrawRectTexture(self:x() + groove_x, self:y() + groove_y, groove_w, groove_h, "");
 	end
 
 	local slider = self:Slider();
@@ -304,5 +342,8 @@ function ScrollBar:paintEvent(painter)
 	if(sliderBackground and sliderBackground~="") then
 		painter:SetPen("#00ffff");
 		painter:DrawRectTexture(self:x() + slider:x(), self:y() + slider:y(), slider:width(), slider:height(), sliderBackground);
+	else
+		painter:SetPen("#c1c1c1");
+		painter:DrawRectTexture(self:x() + slider:x(), self:y() + slider:y(), slider:width(), slider:height(), "");
 	end
 end

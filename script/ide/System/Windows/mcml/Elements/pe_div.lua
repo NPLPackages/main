@@ -46,11 +46,12 @@ function pe_div:LoadComponent(parentElem, parentLayout, style)
 	if(not _this) then
 		if(onclick_for or onclick or tooltip or ontouch) then
 			_this = Button:new():init(parentElem);
+			_this:SetPolygonStyle("none");
+			_this:SetBackgroundColor("#ffffff00");
 			_this:Connect("clicked", self, self.OnClick)
 		else
 			_this = Rectangle:new():init(parentElem);
-			_this:SetBackground("Texture/Aries/Creator/Theme/GameCommonIcon_32bits.png;3 3 3 3:1 1 1 1");
-			_this:SetBackgroundColor();
+			_this:SetBackgroundColor("#ffffff00");
 		end
 
 		self:SetControl(_this);

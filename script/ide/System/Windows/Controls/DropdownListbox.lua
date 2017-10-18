@@ -52,7 +52,7 @@ DropdownListbox:Property({"ButtonWidth", 16, auto=true});
 
 DropdownListbox:Property({"EditHeight", 20, auto=true});
 
-DropdownListbox:Property({"ButtonBackground", "Texture/Aries/Common/ThemeKid/btn_thick_hl_32bits.png:1 1 1 1",auto=true});
+--DropdownListbox:Property({"ButtonBackground", "Texture/Aries/Common/ThemeKid/btn_thick_hl_32bits.png:1 1 1 1",auto=true});
 
 
 function DropdownListbox:ctor()
@@ -115,6 +115,8 @@ end
 
 function DropdownListbox:initButton()
 	self.button = Button:new():init(self);
+	self.button:SetPolygonStyle("narrow");
+	self.button:SetDirection("down");
 	self.button:SetBackgroundColor("#ff0000");
 	self.button:Connect("clicked", function (event)
 		if(self.listbox:isHidden()) then

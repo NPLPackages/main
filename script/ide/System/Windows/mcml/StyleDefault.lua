@@ -19,7 +19,7 @@ local items = {
 		["margin-bottom"] = 5,
 		["font-weight"] = "bold",
 		["font-size"] = "19",
-		headimage = "Texture/unradiobox.png",
+--		headimage = "Texture/unradiobox.png",
 		headimagewidth = 16,
 	},
 	["h2"] = {
@@ -28,7 +28,7 @@ local items = {
 		["margin-bottom"] = 3,
 		["font-weight"] = "bold",
 		["font-size"] = "12",
-		headimage = "Texture/unradiobox.png",
+--		headimage = "Texture/unradiobox.png",
 		headimagewidth = 14,
 	},
 	["h3"] = {
@@ -36,7 +36,7 @@ local items = {
 		["margin-left"] = 0,
 		["margin-bottom"] = 2,
 		["font-weight"] = "bold",
-		headimage = "Texture/unradiobox.png",
+--		headimage = "Texture/unradiobox.png",
 		headimagewidth = 12,
 	},
 	["h4"] = {
@@ -44,35 +44,36 @@ local items = {
 		["margin-left"] = 0,
 		["margin-bottom"] = 1,
 		["font-weight"] = "bold",
-		headimage = "Texture/unradiobox.png",
+--		headimage = "Texture/unradiobox.png",
 		headimagewidth = 10,
 	},
 	["pe:button"] = {
 		padding=5,
 		color = "#ffffff",
-		background="Texture/Aries/Creator/Theme/GameCommonIcon_32bits.png;456 396 16 16:4 4 4 4",
-		background_down="Texture/Aries/Creator/Theme/GameCommonIcon_32bits.png;473 396 16 16:4 4 4 4",
-		background_over="Texture/Aries/Creator/Theme/GameCommonIcon_32bits.png;496 400 1 1",
+--		background="Texture/Aries/Creator/Theme/GameCommonIcon_32bits.png;456 396 16 16:4 4 4 4",
+--		background_down="Texture/Aries/Creator/Theme/GameCommonIcon_32bits.png;473 396 16 16:4 4 4 4",
+--		background_over="Texture/Aries/Creator/Theme/GameCommonIcon_32bits.png;496 400 1 1",
 	},
 	["pe:editbox"] = {
 		height=24, 
 		["min-width"]=10,
 	},
 	["pe:radio"]={
-		background="Texture/unradiobox.png",
-		background_checked="Texture/radiobox.png",
+--		background="Texture/unradiobox.png",
+--		background_checked="Texture/radiobox.png",
 		iconSize = 16,
 	},
 	["pe:checkbox"]={
-		background="Texture/uncheckbox2.png",
-		background_checked="Texture/checkbox2.png",
+--		background="Texture/uncheckbox2.png",
+--		background_checked="Texture/checkbox2.png",
 		iconSize = 16,
 	},
 	["pe:sliderbar"]={
-		height = 20;
+		height = 20,
 	},
 }
 
 function StyleDefault:ctor()
 	self:LoadFromTable(items);
+	--self:LoadFromFile("script/ide/System/Windows/mcml/default_style.mcss");
 end

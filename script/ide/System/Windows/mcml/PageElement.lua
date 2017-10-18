@@ -477,10 +477,10 @@ function PageElement:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 end
 
 function PageElement:OnLoadComponentAfterChild(parentElem, parentLayout, css)
-	if(css) then
-		local default_css = mcml:GetStyleItem(self.class_name);
-		css:Merge(default_css);
-	end
+--	if(css) then
+--		local default_css = mcml:GetStyleItem(self.class_name);
+--		css:Merge(default_css);
+--	end
 end
 
 function PageElement:OnLoadChildrenComponent(parentElem, parentLayout, css)
