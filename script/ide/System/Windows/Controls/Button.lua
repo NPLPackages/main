@@ -63,7 +63,7 @@ function Button:ctor()
 		["normal"] = nil,
 		["check"] = nil,
 		["narrow"] = nil,
-		--["radiobox"] = nil
+		["radio"] = nil,
 	};
 end
 
@@ -79,6 +79,7 @@ function Button:SetPolygonStyle(style)
 		["normal"] = true,
 		["check"] = true,
 		["narrow"] = true,
+		["radio"] = true,
 	};
 	if(style and styles[style]) then
 		self.polygon_style = style;

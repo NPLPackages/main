@@ -135,8 +135,8 @@ function Button:paintWithPolygon(painter)
 		self:paintCheckButton(painter);
 	elseif(self.polygon_style == "narrow") then
 		self:paintNarrowButton(painter);
---	elseif(self.polygon_style == "radio") then
---		self:paintRadioButton(painter);
+	elseif(self.polygon_style == "radio") then
+		self:paintRadioButton(painter);
 	end
 end
 
@@ -361,3 +361,27 @@ function Button:CountTriangle(recount)
 	end
 end
 
+function Button:paintRadioButton(painter)
+	local size = self:GetSize();
+	size = math.min(size, math.min(self:width(), self:height()));
+	local radius = math.ceil(size/2);
+	local x, y = self:x() + self:width()/2, self:y() + self:height()/2;
+	
+	painter:SetPen("#b5b5b5");
+	painter:DrawCircle(x,y,0,radius,"z", true);
+
+	painter:SetPen("#dedede");
+	painter:DrawCircle(x,y,0,radius-2,"z",true);
+
+
+	if(self.down or self.menuOpen or self.checked) then
+		painter:SetPen("#666666");
+		painter:DrawCircle(x,y,0,radius-3,"z",true);
+	end
+
+	-- BackgourdOver
+	if(self:underMouse()) then
+		painter:SetPen("#ffffff33");
+		painter:DrawCircle(x,y,0,radius,"z");
+	end
+end
