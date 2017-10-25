@@ -434,6 +434,7 @@ function painter:DrawCircle(cx,cy,cz, radius, axis, bFill, segment, fromAngle, t
 	local last_x, last_y = math.cos(fromAngle)*radius, math.sin(fromAngle)*radius;
 	local nIndex = 1;
 	local triangles = if_else(bFill, circle_triangles, ring_triangles);
+	local size = #triangles;
 	for i=1, segment do
 		local angle = fromAngle+delta_angle*i;	
 		local x, y = math.cos(angle)*radius, math.sin(angle)*radius;
@@ -460,6 +461,11 @@ function painter:DrawCircle(cx,cy,cz, radius, axis, bFill, segment, fromAngle, t
 			nIndex = nIndex + 2;
 		end
 		last_x, last_y = x, y;
+	end
+	if(nIndex < size) then
+		for i = nIndex + 1, size do
+			triangles[i] = nil;
+		end
 	end
 
 	if(bFill) then

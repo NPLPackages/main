@@ -57,6 +57,18 @@ function test_Windows:TestCreateWindow()
 	
 	-- show the window natively
 	window:Show("my_window", nil, "_mt", 0,0, 200, 200);
+
+	self.windows = {window};
+end
+
+-- test destroy windows
+function test_Windows:DestroyWindows(windows)
+	windows = windows or self.windows;
+	for _,window in ipairs(windows) do
+		if(window and window.CloseWindow) then
+			window:CloseWindow(true);
+		end
+	end
 end
 
 -- test passed: 2015.4.24   LiXizhi
@@ -79,6 +91,8 @@ function test_Windows:TestPostEvents()
 	Application:sendPostedEvents(window);
 
 	echo({window.postedEvents, window2.postedEvents});
+
+	self.windows = {window, window2};
 end
 
 function test_Windows:TestMouseEnterLeaveEvents()
@@ -126,6 +140,8 @@ function test_Windows:TestMouseEnterLeaveEvents()
 	
 	-- show the window natively
 	window:Show("my_window1", nil, "_mt", 0,200, 200, 200);
+
+	self.windows = {window};
 end
 
 -- test loading componets via url
@@ -145,7 +161,8 @@ function test_Windows:TestMCMLPage()
 		alignment="_lt", left = 0, top = 0, width = 800, height = 400,
 	});
 	-- keep a reference for refresh
-	test.window = window;
+	--test.window = window;
+	self.windows = {window};
 
 	-- testing loading another mcml layout after window is created.  
 	-- window:LoadComponent("script/ide/System/test/test_mcml_page.html?page=2");
@@ -157,6 +174,7 @@ function test_Windows:test_pe_custom()
 		url="script/ide/System/test/test_pe_custom.html", 
 		alignment="_mt", left = 0, top = 0, width = 200, height = 400,
 	});
+	self.windows = {window};
 end
 
 function test_Windows:TestEditbox()
@@ -170,6 +188,7 @@ function test_Windows:TestEditbox()
 	-- elem:setMaxLength(6);
 	-- show the window natively
 	window:Show("my_window", nil, "_lt", 0,0, 200, 200);
+	self.windows = {window};
 end
 
 function test_Windows:TestMultiLineEditbox()
@@ -189,7 +208,7 @@ function test_Windows:TestMultiLineEditbox()
 	--mulLine:SetBackgroundColor("#cccccc");
 
 	window:Show("my_window", nil, "_mt", 0,0, 600, 600);
-	test_Windows.window = window;
+	self.windows = {window};
 end
 
 function test_Windows:test_draggableWindow()
@@ -202,4 +221,27 @@ function test_Windows:test_draggableWindow()
 		alignment="_mt", left = 0, top = 0, width = 200, height = 400,
 		allowDrag=true, 
 	});
+	self.windows = {window};
+end
+
+function test_Windows:test_button()
+	local window = Window:new();
+	local button = Button:new():init(window);
+	local style = "check";
+
+	button:SetPolygonStyle(style);
+	if(style == "normal") then
+		button:SetBackgroundColor("#00ff00");
+		button:setText("°´Å¥");
+	--elseif(style == "check") then
+	--	self:paintCheckButton(painter);
+	elseif(style == "narrow") then
+		button:SetDirection("down");
+	end
+
+
+	button:setGeometry(50, 50, 60, 20);
+
+	window:Show("my_window", nil, "_mt", 0,0, 600, 600);
+	test_Windows.windows = {window};
 end

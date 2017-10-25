@@ -8,45 +8,11 @@ use the lib:
 NPL.load("(gl)script/ide/System/Windows/Controls/Button.lua");
 local Button = commonlib.gettable("System.Windows.Controls.Button");
 ------------------------------------------------------------
-
--- test
-------------------------------------------------------------
-NPL.load("(gl)script/ide/System/Windows/Window.lua");
-NPL.load("(gl)script/ide/System/test/test_Windows.lua");
-NPL.load("(gl)script/ide/System/Windows/Controls/Button.lua");
-local Button = commonlib.gettable("System.Windows.Controls.Button");
-local Window = commonlib.gettable("System.Windows.Window")	
-local test_Windows = commonlib.gettable("System.Core.Test.test_Windows");
-
-local window = Window:new();
-local button = Button:new():init(window);
-local style = "check";
-
-button:SetPolygonStyle(style);
-if(style == "normal") then
-	button:SetBackgroundColor("#00ff00");
-	button:setText("Ë¢ÐÂ");
---elseif(style == "check") then
---	self:paintCheckButton(painter);
-elseif(style == "narrow") then
-	button:SetDirection("down");
-end
-
-
-button:setGeometry(50, 50, 60, 20);
-
-window:Show("my_window", nil, "_mt", 0,0, 600, 600);
-test_Windows.windows = {window};
-------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/System/Windows/Controls/Primitives/ButtonBase.lua");
 NPL.load("(gl)script/ide/System/Windows/Controls/Button_p.lua");
 local Button = commonlib.inherit(commonlib.gettable("System.Windows.Controls.Primitives.ButtonBase"), commonlib.gettable("System.Windows.Controls.Button"));
 Button:Property("Name", "Button");
---Button:Property({"Background", "Texture/Aries/Creator/Theme/GameCommonIcon_32bits.png;456 396 16 16:4 4 4 4"});
---Button:Property({"BackgroundDown", "Texture/Aries/Creator/Theme/GameCommonIcon_32bits.png;473 396 16 16:4 4 4 4"});
---Button:Property({"BackgroundChecked", nil});
---Button:Property({"BackgroundOver", "Texture/Aries/Creator/Theme/GameCommonIcon_32bits.png;496 400 1 1"});
 Button:Property({"Background", nil, auto = true});
 Button:Property({"BackgroundDown", nil, auto = true});
 Button:Property({"BackgroundChecked", nil, auto = true});
@@ -65,6 +31,13 @@ function Button:ctor()
 		["narrow"] = nil,
 		["radio"] = nil,
 	};
+	-- all direction value
+	self.directions = {
+		["up"] = true,
+		["down"] = true,
+		["left"] = true,
+		["right"] = true,
+	};
 end
 
 function Button:init(parent)
@@ -73,14 +46,15 @@ function Button:init(parent)
 	return self;
 end
 
+local styles = {
+	["none"] = true,
+	["normal"] = true,
+	["check"] = true,
+	["narrow"] = true,
+	["radio"] = true,
+};
+
 function Button:SetPolygonStyle(style)
-	local styles = {
-		["none"] = true,
-		["normal"] = true,
-		["check"] = true,
-		["narrow"] = true,
-		["radio"] = true,
-	};
 	if(style and styles[style]) then
 		self.polygon_style = style;
 	end
@@ -141,13 +115,7 @@ function Button:ApplyCss(css)
 end
 
 function Button:SetDirection(direction)
-	local directions = {
-		["up"] = true,
-		["down"] = true,
-		["left"] = true,
-		["right"] = true,
-	};
-	if(direction and directions[direction]) then
+	if(direction and self.directions[direction]) then
 		self.direction = direction;
 	end
 end

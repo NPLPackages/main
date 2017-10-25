@@ -23,26 +23,26 @@ function Button:initPolygonPensInfo()
 --	};
 end
 
+local normal = {
+	["outline_border1"] = "#171717",
+	["outline_border2"] = "#737373",
+	["background"] = "#434343"
+};
+
+local check = {
+	["outline_border"] = "#000000",
+	["background"] = "#242424"
+};
+local over = {
+	["color"] = "ffffff33"
+};
+
+local down = {
+	["outline_border"] = "#000000",
+	["background"] = "#242424"
+};
+
 function Button:initNormalPens()
-	local normal = {
-		["outline_border1"] = "#171717",
-		["outline_border2"] = "#737373",
-		["background"] = "#434343"
-	};
-
-	local check = {
-		["outline_border"] = "#000000",
-		["background"] = "#242424"
-	};
-	local over = {
-		["color"] = "ffffff33"
-	};
-
-	local down = {
-		["outline_border"] = "#000000",
-		["background"] = "#242424"
-	};
-
 	self.polygon_styles.normal = {
 		["pens"] = {
 			["normal"] = normal,
@@ -79,7 +79,7 @@ function Button:MultiplyBackgroundColor(color)
 	end
 end
 
-function Button:beUsingPolygon()
+function Button:isUsingPolygon()
 	local value = true;
 	if(self.Background and self.Background ~= "") then
 		value = false;
@@ -92,7 +92,7 @@ function Button:beUsingPolygon()
 end
 
 function Button:paintBackground(painter)
-	if(self:beUsingPolygon()) then
+	if(self:isUsingPolygon()) then
 		self:paintWithPolygon(painter);
 	else
 		self:paintWithTexture(painter);
@@ -184,38 +184,23 @@ function Button:paintNormalButton(painter)
 end
 
 function Button:paintCheckButton(painter)
+	self:CountLineList();
 	local size = self:GetSize();
 	local x, y, w, h = self:x() + (self:width() - size)/2, self:y() + (self:height() - size)/2, size, size;
 	
 	painter:SetPen("#9c9c9c");
-	--painter:SetPen(self.backgroundPens.check.outline_border);
 	painter:DrawRectTexture(x, y, w, h, "");
-
-	
---	local pointList = {{0,0},{0,w},{h,0},{w,h}};
---	painter:SetPen("#ffffff");
---	for i = 1, #pointList do
---		local pointX =  pointList[i][1];
---		local pointY =  pointList[i][2];
---		painter:DrawPoint(x + pointX, y + pointY);
---	end
-	
 			
 	painter:SetPen("#e0e0e0");
-	--painter:SetPen(self.backgroundPens.check.background);
 	painter:DrawRectTexture(x + 2, y + 2, w - 4, h - 4, "");
-
 
 	if(self.down or self.menuOpen or self.checked) then
 		painter:SetPen("#000000");
 		painter:SetPen({width = 2, color = "#000000"});
-		local lineList = {
-			{math.ceil(x + w*1/4), math.ceil(y + h/2), 0}, 
-			{math.ceil(x + w/2), math.ceil(y + h*3/4), 0}, 
-			{math.ceil(x + w/2), math.ceil(y + h*3/4), 0}, 
-			{math.ceil(x + w*3/4), math.ceil(y + h/4), 0}
-		};
-		painter:DrawLineList(lineList);
+
+		local lines = self.polygon_styles.check.lines;
+
+		painter:DrawLineList(lines);
 	end
 
 	-- BackgourdOver
@@ -252,20 +237,61 @@ function Button:paintNarrowButton(painter)
 	end
 end
 
---function Button:CountPolygon(recount)
---	self:CountTriangle(recount);
---end
+function Button:CountPolygon(recount)
+	self:CountTriangle(recount);
+	self:CountLineList(recount);
+end
 
 function Button:emitPositionChanged()
 	Button._super.emitPositionChanged(self);
-	self:CountTriangle(true);
+	self:CountPolygon(true);
 end
 
 function Button:emitSizeChanged()
 	Button._super.emitSizeChanged(self);
-	self:CountTriangle(true);
+	self:CountPolygon(true);
 end
 
+-- count the checkbox button check line
+function Button:CountLineList(recount)
+	if(self.polygon_style ~= "check") then
+		return;
+	end
+
+	self.polygon_styles.check = self.polygon_styles.check or {["lines"] = nil};
+
+	if(self.polygon_styles.check.lines) then
+		if(not recount) then
+			return;
+		end
+	else
+		self.polygon_styles.check.lines = {};
+	end
+
+	local lines = self.polygon_styles.check.lines;
+
+	local size = self:GetSize();
+	local x, y, w, h = self:x() + (self:width() - size)/2, self:y() + (self:height() - size)/2, size, size;
+
+	for i = 1, 4 do
+		lines[i] = lines[i] or {};
+		if(i == 1) then
+			lines[i][1] = math.ceil(x + w*1/4);
+			lines[i][2] = math.ceil(y + h/2);
+			lines[i][3] = 0;
+		elseif(i == 2 or i == 3) then
+			lines[i][1] = math.ceil(x + w/2);
+			lines[i][2] = math.ceil(y + h*3/4);
+			lines[i][3] = 0;
+		else
+			lines[i][1] = math.ceil(x + w*3/4);
+			lines[i][2] = math.ceil(y + h/4);
+			lines[i][3] = 0;
+		end
+	end
+end
+
+-- count the narrow button triangle
 function Button:CountTriangle(recount)
 	if(self.polygon_style ~= "narrow") then
 		return;
@@ -285,17 +311,20 @@ function Button:CountTriangle(recount)
 	local centerX, centerY = self:x() + self:width()/2, self:y() + self:height()/2;
 	local centerLineLength = math.sqrt(3) * self:GetSize() / 2;
 
-	local directions = {"up","down","left","right"};
-	for _, direction in ipairs(directions) do
-		local out_triangle = {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}};
-		local inner_triangle = {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}};
-		triangles[direction] = {
-			["out"] = out_triangle,
-			["inner"] = inner_triangle,
+	for direction, _ in pairs(self.directions) do
+		
+		triangles[direction] = triangles[direction] or {
+			["out"] = {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
+			["inner"] = {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
 		};
 
+		local out_triangle = triangles[direction]["out"];
+		local inner_triangle = triangles[direction]["inner"];
+
 		if(direction == "up") then
+			out_triangle[1][1] = 0;
 			out_triangle[1][2] = -math.ceil(centerLineLength *2 / 3);
+			inner_triangle[1][1] = 0;
 			inner_triangle[1][2] = out_triangle[1][2] + 1;
 
 			out_triangle[2][1] = -math.ceil(self:GetSize() / 2);
@@ -308,7 +337,9 @@ function Button:CountTriangle(recount)
 			inner_triangle[3][1] = out_triangle[3][1] - 1;
 			inner_triangle[3][2] = out_triangle[3][2] - 1;
 		elseif(direction == "down") then
+			out_triangle[1][1] = 0;
 			out_triangle[1][2] = math.ceil(centerLineLength *2 / 3);
+			inner_triangle[1][1] = 0;
 			inner_triangle[1][2] = out_triangle[1][2] - 1;
 
 			out_triangle[2][1] = -math.ceil(self:GetSize() / 2);
@@ -322,7 +353,9 @@ function Button:CountTriangle(recount)
 			inner_triangle[3][2] = out_triangle[3][2] + 1;
 		elseif(direction == "left") then
 			out_triangle[1][1] = -math.ceil(centerLineLength *2 / 3);
+			out_triangle[1][2] = 0;
 			inner_triangle[1][1] = out_triangle[1][1] + 1;
+			inner_triangle[1][2] = 0;
 
 			out_triangle[2][1] = math.ceil(centerLineLength / 3);
 			out_triangle[2][2] = math.ceil(self:GetSize() / 2);
@@ -335,7 +368,9 @@ function Button:CountTriangle(recount)
 			inner_triangle[3][2] = out_triangle[3][2] + 1;
 		elseif(direction == "right") then
 			out_triangle[1][1] = math.ceil(centerLineLength *2 / 3);
+			out_triangle[1][2] = 0;
 			inner_triangle[1][1] = out_triangle[1][1] - 1;
+			inner_triangle[1][2] = 0;
 
 			out_triangle[2][1] = -math.ceil(centerLineLength / 3);
 			out_triangle[2][2] = math.ceil(self:GetSize() / 2);
