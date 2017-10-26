@@ -28,9 +28,12 @@ function pe_radio:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	css["background"] = self:GetAttributeWithCode("UncheckedBG", nil, true) or default_css["background"];
 	css["background_checked"] = self:GetAttributeWithCode("CheckedBG", nil, true) or default_css["background_checked"];
 
+	local polygonStyle = self:GetAttributeWithCode("polygonStyle", nil, true);
+
 	local _this = self.control;
 	if(not _this) then
 		_this = Button:new():init(parentElem);
+		_this:SetPolygonStyle(polygonStyle or "radio");
 		self:SetControl(_this);
 	end
 	

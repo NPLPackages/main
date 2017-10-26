@@ -18,9 +18,13 @@ pe_button:Property({"class_name", "pe:button"});
 function pe_button:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	css.float = css.float or true;
 
+	local polygonStyle = self:GetAttributeWithCode("polygonStyle", nil, true);
+	local direction = self:GetAttributeWithCode("direction", nil, true);
 	local _this = self.control;
 	if(not _this) then
 		_this = Button:new():init(parentElem);
+		_this:SetPolygonStyle(polygonStyle);
+		_this:SetDirection(direction);
 		self:SetControl(_this);
 	end
 	_this:ApplyCss(css);

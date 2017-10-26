@@ -4,7 +4,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{09FA02CB-98DC-46D3-9D5B-C83AB92F8E1D}</ProjectGuid>
+    <ProjectGuid>{ABA4D99F-E00E-4E6C-AF4D-BE7BE091C438}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>NPLPackageMain</RootNamespace>
@@ -929,6 +929,7 @@
     <Content Include="script\ide\System\Scene\Overlays\ShapesDrawer.lua" />
     <Content Include="script\ide\System\System.lua" />
     <Content Include="script\ide\System\test\test_concurrency.lua" />
+    <Content Include="script\ide\System\test\test_css_page.html" />
     <Content Include="script\ide\System\test\test_file_style.mcss" />
     <Content Include="script\ide\System\test\test_mcml_page.html" />
     <Content Include="script\ide\System\test\test_Overlay.lua" />
@@ -1137,6 +1138,7 @@
     <None Include="README.md" />
     <None Include="script\ide\math\vector2d.lua" />
     <None Include="script\ide\System\Scene\Assets\ParaXModelAttr.lua" />
+    <None Include="script\ide\System\Windows\Controls\Button_p.lua" />
     <None Include="script\ide\System\Windows\Controls\Custom.lua" />
     <None Include="script\ide\System\Windows\Controls\DropdownListbox.lua" />
     <None Include="script\ide\System\Windows\Controls\GridView.lua" />
@@ -1153,6 +1155,8 @@
     <None Include="script\ide\System\Windows\Controls\TreeNode.lua" />
     <None Include="script\ide\System\Windows\Controls\TreeView.lua" />
     <None Include="script\ide\System\Windows\mcml\BrowserWnd.lua" />
+    <None Include="script\ide\System\Windows\mcml\CssSelectorItem.lua" />
+    <None Include="script\ide\System\Windows\mcml\default_style.mcss" />
     <None Include="script\ide\System\Windows\mcml\Elements\pe_bindingblock.lua" />
     <None Include="script\ide\System\Windows\mcml\Elements\pe_br.lua" />
     <None Include="script\ide\System\Windows\mcml\Elements\pe_checkbox.lua" />
@@ -1168,6 +1172,7 @@
     <None Include="script\ide\System\Windows\mcml\Elements\pe_textarea.lua" />
     <None Include="script\ide\System\Windows\mcml\Elements\pe_treenode.lua" />
     <None Include="script\ide\System\Windows\mcml\Elements\pe_treeview.lua" />
+    <None Include="script\ide\System\Windows\mcml\CssSelector.lua" />
     <None Include="script\test\MCMLV2\main.lua" />
     <None Include="script\test\MCMLV2\mcml_window.lua" />
   </ItemGroup>

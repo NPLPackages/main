@@ -127,9 +127,9 @@ end
 function UIElement:ApplyCss(css)
 	if(css["background-color"]) then
 		self:SetBackgroundColor(css["background-color"]);
-		if(not css.background) then
-			self:SetBackground("Texture/whitedot.png");
-		end
+--		if(not css.background) then
+--			self:SetBackground("Texture/whitedot.png");
+--		end
 	end	
 	if(css.background) then
 		self:SetBackground(css.background);

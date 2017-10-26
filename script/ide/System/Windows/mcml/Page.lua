@@ -764,7 +764,7 @@ end
 function Page:GetStyle()
 	if(not self.style) then
 		self.style = Style:new();
-		self.style:AddReference(mcml:GetStyle());
+		self.style:AddReference(mcml:GetStyle(), "mcss");
 	end
 	return self.style;
 end

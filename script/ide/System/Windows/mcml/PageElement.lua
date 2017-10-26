@@ -477,10 +477,10 @@ function PageElement:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 end
 
 function PageElement:OnLoadComponentAfterChild(parentElem, parentLayout, css)
-	if(css) then
-		local default_css = mcml:GetStyleItem(self.class_name);
-		css:Merge(default_css);
-	end
+--	if(css) then
+--		local default_css = mcml:GetStyleItem(self.class_name);
+--		css:Merge(default_css);
+--	end
 end
 
 function PageElement:OnLoadChildrenComponent(parentElem, parentLayout, css)
@@ -879,6 +879,8 @@ function PageElement:ApplyClasses()
 		local style = self:GetStyle();
 		-- apply name first such as "pe:button"
 		pageStyle:ApplyToStyleItem(style, self.class_name or self.name);
+
+		pageStyle:ApplyCssStyleToStyleItem(style, self);
 
 		-- apply attribute class names
 		if(self.attr and self.attr.class) then

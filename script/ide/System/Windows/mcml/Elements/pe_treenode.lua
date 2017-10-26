@@ -186,8 +186,11 @@ function pe_treenode:CreateNode()
 	--local child_index = 1;
 	if(#self > 0) then
 		local attr={ style=style};
-		attr["CheckedBG"] = self.treeview.ItemOpenBG or "Texture/3DMapSystem/common/itemopen.png";
-		attr["UncheckedBG"] = self.treeview.ItemCloseBG or "Texture/3DMapSystem/common/itemclosed.png";
+--		attr["CheckedBG"] = self.treeview.ItemOpenBG or "Texture/3DMapSystem/common/itemopen.png";
+--		attr["UncheckedBG"] = self.treeview.ItemCloseBG or "Texture/3DMapSystem/common/itemclosed.png";
+		attr["CheckedBG"] = self.treeview.ItemOpenBG;
+		attr["UncheckedBG"] = self.treeview.ItemCloseBG;
+		attr["polygonStyle"] = "narrow";
 		attr["checked"] = self.expanded;
 		node = mcml:createFromXmlNode({name="checkbox", attr = attr});
 		self.node:AddChild(node);

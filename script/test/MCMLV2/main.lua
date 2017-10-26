@@ -8,7 +8,7 @@ use the lib:
 ------------------------------------------------------------
 NPL.load("(gl)script/test/MCMLV2/main.lua"); 
 NPL.activate("source/HelloWorld/main.lua");
-Or run application with command line: bootstrapper="source/HelloWorld/main.lua"
+Or run application with command line: bootstrapper="script/test/MCMLV2/main.lua"
 ------------------------------------------------------------
 ]]
 -- 加载一些核心类库

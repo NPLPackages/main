@@ -225,3 +225,31 @@ function Color.ChangeOpacity(color, opacity)
 	end
 	return (opacity or 255)*alphaMask + band(color, 0xffffff)
 end
+
+local color1_num = {};
+local color2_num = {};
+
+-- @param color1 and color2: string like "#ff0000"
+function Color.Multiply(color1, color2)
+	local color_index = 1;
+	for s in string.gfind(color1,"%x%x") do
+		color1_num[color_index] = tonumber(s, 16);
+		color_index = color_index + 1;
+	end
+	color_index = 1;
+	for s in string.gfind(color2,"%x%x") do
+		color2_num[color_index] = tonumber(s, 16);
+		color_index = color_index + 1;
+	end
+
+	local color_num = {};
+	for i = 1,3 do
+		color_num[i] = color1_num[i] * color2_num[i] / 255;
+	end
+
+	local color = "#";
+	for i = 1, 3 do
+		color = color..string.format("%02x", color_num[i]);
+	end
+	return color;
+end
