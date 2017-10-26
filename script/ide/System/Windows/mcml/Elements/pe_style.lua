@@ -22,6 +22,7 @@ function pe_style:LoadComponent(parentElem, parentLayout, style)
 
 	-- nil or "text/mcss"
 	local scriptType = self:GetString("type");
+	local type = string.match(scriptType,"[^/]+/([^/]+)");
 	-- Defines a URL to a file that contains the script (instead of inserting the script into your HTML document, you can refer to a file that contains the script)
 	local src = self:GetString("src");
 	if(src and src ~= "") then
@@ -29,7 +30,7 @@ function pe_style:LoadComponent(parentElem, parentLayout, style)
 		if(pageStyle) then
 			local style = StyleManager:GetStyle(src);
 			if(style) then
-				pageStyle:AddReference(style);
+				pageStyle:AddReference(style, type);
 			end
 		end
 	end
@@ -38,7 +39,7 @@ function pe_style:LoadComponent(parentElem, parentLayout, style)
 	if(code~=nil and code~="") then
 		local pageStyle = self:GetPageStyle();
 		if(pageStyle) then
-			pageStyle:LoadFromString(code);
+			pageStyle:LoadFromString(code, type);
 		end
 	end
 end

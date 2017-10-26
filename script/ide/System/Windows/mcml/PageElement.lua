@@ -880,6 +880,8 @@ function PageElement:ApplyClasses()
 		-- apply name first such as "pe:button"
 		pageStyle:ApplyToStyleItem(style, self.class_name or self.name);
 
+		pageStyle:ApplyCssStyleToStyleItem(style, self);
+
 		-- apply attribute class names
 		if(self.attr and self.attr.class) then
 			local class_names = self:GetAttributeWithCode("class", nil, true);

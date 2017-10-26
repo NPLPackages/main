@@ -929,6 +929,7 @@
     <Content Include="script\ide\System\Scene\Overlays\ShapesDrawer.lua" />
     <Content Include="script\ide\System\System.lua" />
     <Content Include="script\ide\System\test\test_concurrency.lua" />
+    <Content Include="script\ide\System\test\test_css_page.html" />
     <Content Include="script\ide\System\test\test_file_style.mcss" />
     <Content Include="script\ide\System\test\test_mcml_page.html" />
     <Content Include="script\ide\System\test\test_Overlay.lua" />
@@ -1154,6 +1155,7 @@
     <None Include="script\ide\System\Windows\Controls\TreeNode.lua" />
     <None Include="script\ide\System\Windows\Controls\TreeView.lua" />
     <None Include="script\ide\System\Windows\mcml\BrowserWnd.lua" />
+    <None Include="script\ide\System\Windows\mcml\CssSelectorItem.lua" />
     <None Include="script\ide\System\Windows\mcml\default_style.mcss" />
     <None Include="script\ide\System\Windows\mcml\Elements\pe_bindingblock.lua" />
     <None Include="script\ide\System\Windows\mcml\Elements\pe_br.lua" />
@@ -1170,6 +1172,7 @@
     <None Include="script\ide\System\Windows\mcml\Elements\pe_textarea.lua" />
     <None Include="script\ide\System\Windows\mcml\Elements\pe_treenode.lua" />
     <None Include="script\ide\System\Windows\mcml\Elements\pe_treeview.lua" />
+    <None Include="script\ide\System\Windows\mcml\CssSelector.lua" />
     <None Include="script\test\MCMLV2\main.lua" />
     <None Include="script\test\MCMLV2\mcml_window.lua" />
   </ItemGroup>

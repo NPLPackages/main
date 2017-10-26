@@ -16,6 +16,8 @@ mcml:SetStyle(Style:new():LoadFromTable(styles));
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/System/Windows/mcml/StyleItem.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/CssSelector.lua");
+local CssSelector = commonlib.gettable("System.Windows.mcml.CssSelector");
 local StyleItem = commonlib.gettable("System.Windows.mcml.StyleItem");
 
 local Style = commonlib.inherit(nil, commonlib.gettable("System.Windows.mcml.Style"));
@@ -23,6 +25,8 @@ local Style = commonlib.inherit(nil, commonlib.gettable("System.Windows.mcml.Sty
 function Style:ctor()
 	self.items = {};
 	self.references = {};
+	self.css_items = {};
+	self.css_references = {};
 end
 
 -- @param name: the css class name
@@ -51,6 +55,25 @@ function Style:ApplyToStyleItem(styleItem, name)
 	styleItem:Merge(self.items[name]);
 end
 
+-- apply to styleItem for all matching classes
+function Style:ApplyCssStyleToStyleItem(styleItem, pageElement)
+	local references = self.css_references;
+	for i=1, #(references) do
+		references[i]:ApplyCssStyleToStyleItem(styleItem, pageElement);
+	end
+	for i = 1,#self.css_items do
+		local css_item = self.css_items[i];
+		local selectors = css_item.selectors;
+		for j = 1,#selectors do
+			local selector = selectors[j];
+			if(selector:match(pageElement)) then
+				styleItem:Merge(css_item.style);
+			end
+		end
+	end
+	--styleItem:Merge(style);
+end
+
 -- @param name: the css class name
 -- @param bOverwrite: true to overwrite if exist
 function Style:SetItem(name, style, bOverwrite)
@@ -70,11 +93,15 @@ function Style:LoadFromTable(styles)
 end
 
 -- merge styleitems from table string
-function Style:LoadFromString(code)
+function Style:LoadFromString(code, type)
 	if(code~=nil and code~="") then
-		local styles = commonlib.LoadTableFromString(code);
-		if(styles) then
-			self:LoadFromTable(styles);
+		if(type == "mcss") then
+			local styles = commonlib.LoadTableFromString(code);
+			if(styles) then
+				self:LoadFromTable(styles);
+			end
+		else
+			self:LoadCssFromString(code);
 		end
 	end
 end
@@ -83,11 +110,23 @@ end
 -- see also: script/ide/System/test/test_file_style.mcss
 function Style:LoadFromFile(filename)
 	self:SetFileName(filename);
-	local styles = commonlib.LoadTableFromFile(filename);
-	if(styles) then
-		self:LoadFromTable(styles)
+	if(string.match(filename,".mcss$")) then
+		local styles = commonlib.LoadTableFromFile(filename);
+		if(styles) then
+			self:LoadFromTable(styles)
+		else
+			LOG.std(nil, "warn", "mcml style", "style file %s not found", filename);
+		end
 	else
-		LOG.std(nil, "warn", "mcml style", "style file %s not found", filename);
+		-- TODO: load .css format file
+		local file = ParaIO.open(filename, "r");
+		if(file:IsValid()) then
+			local body = file:GetText();
+			if(type(body)=="string") then
+				self:LoadCssFromString(body);
+			end
+			file:close();
+		end	
 	end
 end
 
@@ -112,9 +151,15 @@ function Style:SetFileName(filename)
 end
 
 -- it does not copy and merge items in the given style, it simply add a reference to the given style
-function Style:AddReference(style)
+function Style:AddReference(style, type)
+	local references;
+	if(type == "mcss") then
+		references = self.references;
+	elseif(type == "css") then
+		references = self.css_references;
+	end
 	if(style) then
-		local references = self.references;
+		--local references = self.references;
 		for i=1, #(references) do
 			if(references[i] == style) then
 				break;
@@ -135,4 +180,30 @@ function Style:RemoveReference(style)
 		end
 	end
 	commonlib.removeArrayItem(references, index);
+end
+
+function Style:parseSelectors(selectorsString)
+	--local str = "OL OL UL, OL UL UL, OL MENU UL";
+	local selectors = {};
+	for w in string.gmatch(selectorsString,"([^,]+),?") do
+		local selectorString = string.match(w,"^%s*(.*)%s*$");
+		local selector = CssSelector:new():init(selectorString);
+		selectors[#selectors+1] = selector;
+	end
+	return selectors;
+end
+
+
+--function Style:LoadFromString(code, type)
+function Style:LoadCssFromString(code)
+	code = string.gsub(code,"/%*.-%*/","");
+	for selector_str,declaration_str in string.gmatch(code,"([^{}]+){([^{}]+)}") do
+		local selectors = self:parseSelectors(selector_str);
+		local style = StyleItem:new();
+		style:AddString(declaration_str);
+		self.css_items[#self.css_items + 1] = {
+			["selectors"] = selectors,
+			["style"] = style,
+		};
+	end
 end
