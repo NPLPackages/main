@@ -178,6 +178,8 @@ function StyleItem:GetFontSettings()
 		end
 		local font_weight = self["font-weight"] or "norm";
 		font = string.format("%s;%d;%s", font_family, font_size, font_weight);
+	else
+		font = string.format("%s;%d;%s", "System", font_size, "norm");
 	end
 	return font, font_size, scale;
 end
