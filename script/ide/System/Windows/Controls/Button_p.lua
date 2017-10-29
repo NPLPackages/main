@@ -184,7 +184,7 @@ function Button:paintNormalButton(painter)
 end
 
 function Button:paintCheckButton(painter)
-	self:CountLineList();
+	self:UpdateCheckboxGeometry();
 	local size = self:GetSize();
 	local x, y, w, h = self:x() + (self:width() - size)/2, self:y() + (self:height() - size)/2, size, size;
 	
@@ -211,7 +211,7 @@ function Button:paintCheckButton(painter)
 end
 
 function Button:paintNarrowButton(painter)
-	self:CountTriangle();
+	self:UpdateNarrowGeometry();
 	local out_triangle = self.polygon_styles.narrow.triangles[self.direction or "right"]["out"];
 	local inner_triangle = self.polygon_styles.narrow.triangles[self.direction or "right"]["inner"];
 
@@ -238,8 +238,8 @@ function Button:paintNarrowButton(painter)
 end
 
 function Button:CountPolygon(recount)
-	self:CountTriangle(recount);
-	self:CountLineList(recount);
+	self:UpdateNarrowGeometry(recount);
+	self:UpdateCheckboxGeometry(recount);
 end
 
 function Button:emitPositionChanged()
@@ -253,7 +253,7 @@ function Button:emitSizeChanged()
 end
 
 -- count the checkbox button check line
-function Button:CountLineList(recount)
+function Button:UpdateCheckboxGeometry(recount)
 	if(self.polygon_style ~= "check") then
 		return;
 	end
@@ -292,7 +292,7 @@ function Button:CountLineList(recount)
 end
 
 -- count the narrow button triangle
-function Button:CountTriangle(recount)
+function Button:UpdateNarrowGeometry(recount)
 	if(self.polygon_style ~= "narrow") then
 		return;
 	end
