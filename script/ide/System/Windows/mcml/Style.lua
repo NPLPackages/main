@@ -95,7 +95,7 @@ end
 -- merge styleitems from table string
 function Style:LoadFromString(code, type)
 	if(code~=nil and code~="") then
-		if(type == "mcss") then
+		if(not type or type == "mcss") then
 			local styles = commonlib.LoadTableFromString(code);
 			if(styles) then
 				self:LoadFromTable(styles);
@@ -153,7 +153,7 @@ end
 -- it does not copy and merge items in the given style, it simply add a reference to the given style
 function Style:AddReference(style, type)
 	local references;
-	if(type == "mcss") then
+	if(not type or type == "mcss") then
 		references = self.references;
 	elseif(type == "css") then
 		references = self.css_references;
@@ -183,7 +183,6 @@ function Style:RemoveReference(style)
 end
 
 function Style:parseSelectors(selectorsString)
-	--local str = "OL OL UL, OL UL UL, OL MENU UL";
 	local selectors = {};
 	for w in string.gmatch(selectorsString,"([^,]+),?") do
 		local selectorString = string.match(w,"^%s*(.*)%s*$");
