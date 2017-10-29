@@ -65,6 +65,12 @@ function Collection:GetProviderName()
 	return self.parent:FindProvider(self.name);
 end
 
+-- return a valid and opened provider
+function Collection:GetProvider()
+	self.storageProvider:CheckOpen();
+	return self.storageProvider;
+end
+
 
 -- whether this is a server thread
 function Collection:IsServer()
@@ -90,7 +96,7 @@ end
 --@param callbackFunc: function(err, row) end, where row._id is the internal row id.
 function Collection:findOne(query, callbackFunc, timeout)
 	if(self:IsServer()) then
-		return self.storageProvider:findOne(query, callbackFunc);
+		return self:GetProvider():findOne(query, callbackFunc);
 	else
 		return IORequest:Send("findOne", self, query, callbackFunc, timeout);
 	end
@@ -105,7 +111,7 @@ end
 -- @param callbackFunc: function(err, rows) end, where rows is array of rows found
 function Collection:find(query, callbackFunc, timeout)
 	if(self:IsServer()) then
-		return self.storageProvider:find(query, callbackFunc);
+		return self:GetProvider():find(query, callbackFunc);
 	else
 		return IORequest:Send("find", self, query, callbackFunc, timeout);
 	end
@@ -114,7 +120,7 @@ end
 -- @param query: key, value pair table, such as {name="abc"}. 
 function Collection:deleteOne(query, callbackFunc, timeout)
 	if(self:IsServer()) then
-		return self.storageProvider:deleteOne(query, callbackFunc);
+		return self:GetProvider():deleteOne(query, callbackFunc);
 	else
 		return IORequest:Send("deleteOne", self, query, callbackFunc, timeout);
 	end
@@ -131,7 +137,7 @@ function Collection:updateOne(query, update, callbackFunc, timeout)
 		update = nil;
 	end
 	if(self:IsServer()) then
-		return self.storageProvider:updateOne(query, update, callbackFunc);
+		return self:GetProvider():updateOne(query, update, callbackFunc);
 	else
 		return IORequest:Send("updateOne", self, {query = query, update = update}, callbackFunc, timeout);
 	end
@@ -143,7 +149,7 @@ function Collection:update(query, update, callbackFunc, timeout)
 		update = nil;
 	end
 	if(self:IsServer()) then
-		return self.storageProvider:update(query, update, callbackFunc);
+		return self:GetProvider():update(query, update, callbackFunc);
 	else
 		return IORequest:Send("update", self, {query = query, update = update}, callbackFunc, timeout);
 	end
@@ -155,7 +161,7 @@ end
 -- @param replacement: wholistic fields to be replace any existing doc. 
 function Collection:replaceOne(query, replacement, callbackFunc, timeout)
 	if(self:IsServer()) then
-		return self.storageProvider:replaceOne(query, replacement, callbackFunc);
+		return self:GetProvider():replaceOne(query, replacement, callbackFunc);
 	else
 		return IORequest:Send("replaceOne", self, {query = query, replacement = replacement}, callbackFunc, timeout);
 	end
@@ -174,7 +180,7 @@ function Collection:insertOne(query, update, callbackFunc, timeout)
 		query = nil;
 	end
 	if(self:IsServer()) then
-		return self.storageProvider:insertOne(query, update, callbackFunc);
+		return self:GetProvider():insertOne(query, update, callbackFunc);
 	else
 		return IORequest:Send("insertOne", self, {query = query, update = update}, callbackFunc, timeout);
 	end
@@ -184,7 +190,7 @@ end
 -- @param query: array of keys {keyname, ...}
 function Collection:removeIndex(query, callbackFunc, timeout)
 	if(self:IsServer()) then
-		return self.storageProvider:removeIndex(query, callbackFunc);
+		return self:GetProvider():removeIndex(query, callbackFunc);
 	else
 		return IORequest:Send("removeIndex", self, query, callbackFunc, timeout);
 	end
@@ -195,7 +201,7 @@ end
 -- @param callbackFunc: function(err, fFlushed) end
 function Collection:flush(query, callbackFunc, timeout)
 	if(self:IsServer()) then
-		return self.storageProvider:flush(query, callbackFunc);
+		return self:GetProvider():flush(query, callbackFunc);
 	else
 		return IORequest:Send("flush", self, query, callbackFunc, timeout);
 	end
@@ -208,7 +214,7 @@ end
 -- @param callbackFunc: function(err, fFlushed) end
 function Collection:waitflush(query, callbackFunc, timeout)
 	if(self:IsServer()) then
-		return self.storageProvider:waitflush(query, callbackFunc);
+		return self:GetProvider():waitflush(query, callbackFunc);
 	else
 		timeout = timeout or (Store.AutoFlushInterval + 3000);
 		return IORequest:Send("waitflush", self, query, callbackFunc, timeout);
@@ -219,7 +225,7 @@ end
 -- @param callbackFunc: function(err, rowDeletedCount)  end
 function Collection:makeEmpty(query, callbackFunc, timeout)
 	if(self:IsServer()) then
-		return self.storageProvider:makeEmpty(query, callbackFunc);
+		return self:GetProvider():makeEmpty(query, callbackFunc);
 	else
 		return IORequest:Send("makeEmpty", self, query, callbackFunc, timeout);
 	end
@@ -233,7 +239,7 @@ end
 -- @param callbackFunc: function(err, data)  end
 function Collection:exec(query, callbackFunc, timeout)
 	if(self:IsServer()) then
-		return self.storageProvider:exec(query, callbackFunc);
+		return self:GetProvider():exec(query, callbackFunc);
 	else
 		if(type(query) == "table") then
 			-- also make the caller's message queue size twice as big at least
@@ -256,7 +262,7 @@ end
 -- calling this function will always timeout, since the server will not reply 
 function Collection:silient(query, callbackFunc, timeout)
 	if(self:IsServer()) then
-		return self.storageProvider:silient(query, callbackFunc);
+		return self:GetProvider():silient(query, callbackFunc);
 	else
 		return IORequest:Send("silient", self, query, callbackFunc, timeout);
 	end
@@ -265,7 +271,7 @@ end
 -- calling this function will always timeout, since the server will not reply 
 function Collection:count(query, callbackFunc, timeout)
 	if(self:IsServer()) then
-		return self.storageProvider:count(query, callbackFunc);
+		return self:GetProvider():count(query, callbackFunc);
 	else
 		return IORequest:Send("count", self, query, callbackFunc, timeout);
 	end
@@ -274,7 +280,7 @@ end
 -- calling this function will always timeout, since the server will not reply 
 function Collection:delete(query, callbackFunc, timeout)
 	if(self:IsServer()) then
-		return self.storageProvider:delete(query, callbackFunc);
+		return self:GetProvider():delete(query, callbackFunc);
 	else
 		return IORequest:Send("delete", self, query, callbackFunc, timeout);
 	end
@@ -282,7 +288,7 @@ end
 
 function Collection:injectWALPage(query, callbackFunc, timeout)
 	if(self:IsServer()) then
-		return self.storageProvider:injectWALPage(query, callbackFunc);
+		return self:GetProvider():injectWALPage(query, callbackFunc);
 	else
 		return IORequest:Send("injectWALPage", self, query, callbackFunc, timeout);
 	end

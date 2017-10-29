@@ -146,10 +146,15 @@ function SqliteStore:init(collection)
 	return self;
 end
 
+function SqliteStore:CheckOpen()
+	if(not self.db) then
+		self:Reopen();
+	end
+end
+
 -- reopen connection, this is necessary when we drop index. 
 function SqliteStore:Reopen()
-	if(self._db and self.kFileName) then
-		self:ClearStatementCache();
+	if(self.kFileName) then
 		self:Close();
 		self._db, err = sqlite3.open(self.kFileName);
 		if(self._db) then
@@ -165,6 +170,7 @@ end
 
 function SqliteStore:Close()
 	if(self._db) then
+		self:ClearStatementCache();
 		self._db:close();
 		self._db = nil;
 	end
