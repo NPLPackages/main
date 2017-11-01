@@ -42,6 +42,7 @@ local Window = commonlib.inherit(commonlib.gettable("System.Windows.UIElement"),
 Window:Property("Name", "Window");
 Window:Property({"AutoClearBackground", true, nil, "SetAutoClearBackground"});
 Window:Property({"CanDrag", false, auto=true});
+Window:Property({"Alignment", "_lt", auto=true});
 
 function Window:ctor()
 	self.window = self;
@@ -102,8 +103,9 @@ function Window:ShowWithParams(params)
 				parent:AddChild(nativeWnd);
 			end
 			-- reposition/attach to parent
-			local left, top, width, height, alignment = params.left, params.top, params.width, params.height, params.alignment;
-			nativeWnd:Reposition(alignment or "_lt", left or 0, top or 0, width or self:width(), height or self:height());
+			local left, top, width, height, alignment = params.left, params.top, params.width, params.height, params.alignment or "_lt";
+			self:SetAlignment(alignment);
+			nativeWnd:Reposition(alignment, left or 0, top or 0, width or self:width(), height or self:height());
 			local x, y, width, height = nativeWnd:GetAbsPosition();
 
 			-- update geometry
@@ -318,7 +320,10 @@ function Window:setGeometry_sys(ax, ay, aw, ah)
 
 		if (self:isVisible()) then
 			if(not isMove) then
-				self.native_ui_obj:SetSize(aw, ah);
+				if(self:GetAlignment() == "_lt") then
+					-- ignore resizing the native window if the alignment type is not left top. 
+					self.native_ui_obj:SetSize(aw, ah);
+				end
 			end
 			-- generate size event
 			local event = SizeEvent:new():init(self.crect)
@@ -335,6 +340,8 @@ function Window:setGeometry_sys(ax, ay, aw, ah)
 		if(isMove) then
 			self.screen_x=ax;
 			self.screen_y=ay;
+			-- always use left top alignment when dragging a window with other alignment types. 
+			self:SetAlignment("_lt");
 			self.native_ui_obj:Reposition("_lt", ax, ay, aw, ah);
 		
 			-- generate size event
