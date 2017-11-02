@@ -20,9 +20,9 @@ Map3DSystem.App.WebBrowser.MCMLBrowserWnd.InitParams = {};
 function Map3DSystem.App.WebBrowser.MCMLBrowserWnd.ShowWnd(_app, params)
 	params = params or {}
 	params.name = params.name or "MCMLBrowserWnd";
-	if(params.x == nil) then params.x = 0 end
-	if(params.y == nil) then params.y = 70 end
-	if(params.width == nil) then params.width = 640 end
+	if(params.x == nil) then params.x = 32 end
+	if(params.y == nil) then params.y = 32 end
+	if(params.width == nil) then params.width = 900 end
 	if(params.height == nil) then params.height = 600 end
 	if(params.icon == nil) then params.icon = "Texture/3DMapSystem/common/Home.png" end
 	if(params.iconsize == nil) then params.iconsize = 16 end

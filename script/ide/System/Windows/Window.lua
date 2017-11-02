@@ -43,6 +43,7 @@ Window:Property("Name", "Window");
 Window:Property({"AutoClearBackground", true, nil, "SetAutoClearBackground"});
 Window:Property({"CanDrag", false, auto=true});
 Window:Property({"Alignment", "_lt", auto=true});
+Window:Signal("urlChanged", function(url) end)
 
 function Window:ctor()
 	self.window = self;
@@ -71,16 +72,23 @@ function Window:Show(name_or_params, parent, alignment, left, top, width, height
 	return self:ShowWithParams(params);
 end
 
+-- goto a new mcml v2 url
+function Window:Goto(url)
+	self.url = url;
+	self:RefreshUrlComponent();
+end
+
 function Window:RefreshUrlComponent()
 	if(self.url) then
 		self:LoadComponent(self.url);
+		self:urlChanged(self.url);
 		-- generate size event
 		local event = SizeEvent:new():init(self.crect)
 		Application:sendEvent(self, event);
 	end
 end
 
--- @param params: {url="", alignment, x,y,width, height, allowDrag,zorder, enable_esc_key, DestroyOnClose}
+-- @param params: {url="", alignment, x,y,width, height, allowDrag,zorder, enable_esc_key, DestroyOnClose, parent}
 function Window:ShowWithParams(params)
 	self.name = params.name;
 	-- load component if url has changed
@@ -88,6 +96,7 @@ function Window:ShowWithParams(params)
 		self.url = params.url;
 		if(params.url) then
 			self:LoadComponent(params.url);
+			self:urlChanged(self.url);
 		end
 	end
 	if(not self:isCreated()) then
