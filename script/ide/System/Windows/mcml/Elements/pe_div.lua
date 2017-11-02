@@ -17,6 +17,7 @@ local Button = commonlib.gettable("System.Windows.Controls.Button");
 local Rectangle = commonlib.gettable("System.Windows.Shapes.Rectangle");
 
 local pe_div = commonlib.inherit(commonlib.gettable("System.Windows.mcml.PageElement"), commonlib.gettable("System.Windows.mcml.Elements.pe_div"));
+pe_div:Property({"class_name", "pe:div"});
 
 function pe_div:ctor()
 	
@@ -47,18 +48,15 @@ function pe_div:LoadComponent(parentElem, parentLayout, style)
 		if(onclick_for or onclick or tooltip or ontouch) then
 			_this = Button:new():init(parentElem);
 			_this:SetPolygonStyle("none");
-			_this:SetBackgroundColor("#ffffff00");
 			_this:Connect("clicked", self, self.OnClick)
 		else
 			_this = Rectangle:new():init(parentElem);
-			_this:SetBackgroundColor("#ffffff00");
 		end
 
 		self:SetControl(_this);
 	end
 
 	pe_div._super.LoadComponent(self, _this, parentLayout, style);
-	_this:ApplyCss(self:GetStyle());
 end
 
 function pe_div:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
@@ -93,8 +91,12 @@ function pe_div:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 --		end
 --	end
 
-	if(css["background-color"] and not css.background and not css.background2) then
-		css.background = "Texture/whitedot.png";
+	if(not css.background and not css.background2) then
+		if(css["background-color"]) then
+			css.background = "Texture/whitedot.png";	
+		else
+			css["background-color"] = "#ffffff00";
+		end
 	end
 
 	local _this = self.control;
