@@ -250,7 +250,7 @@ end
 
 -- this function is called automatically after page component is loaded and whenever the window resize. 
 function PageElement:UpdateLayout(parentLayout)
-	if(self:GetAttribute("display") == "none") then 
+	if(self:isHidden()) then 
 		return 
 	end
 	if(no_parse_nodes[self.name]) then
@@ -433,11 +433,9 @@ function PageElement:UpdateLayout(parentLayout)
 		myLayout:IncWidth(-margin_right-padding_right);
 		myLayout:IncHeight(-margin_bottom-padding_bottom);
 		myLayout:ResetUsedSize();
-		self:OnBeforeChildLayout(myLayout);
---		for childnode in self:next() do
---			childnode:UpdateLayout(myLayout);
---		end
-		self:UpdateChildLayout(myLayout);
+		if(not self:OnBeforeChildLayout(myLayout)) then
+			self:UpdateChildLayout(myLayout);
+		end
 		local right, bottom = left+size_width, top+size_height
 		myLayout:SetUsedSize(right, bottom);
 		self:OnAfterChildLayout(myLayout, left+margin_left, top+margin_top, right-margin_right, bottom-margin_bottom);
@@ -1712,6 +1710,10 @@ function PageElement:isHidden()
 	local parent = self;
 	while (parent ~= nil) do
 		if(parent:GetAttribute("display") == "none") then
+			return true;
+		end
+		local css = parent:GetStyle();
+		if(css and css["display"] == "none") then
 			return true;
 		end
 		parent = parent.parent;
