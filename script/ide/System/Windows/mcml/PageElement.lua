@@ -1714,7 +1714,7 @@ function PageElement:isHidden()
 		if(parent:GetAttribute("display") == "none") then
 			return true;
 		end
-		local css = self:GetStyle();
+		local css = parent:GetStyle();
 		if(css and css["display"] == "none") then
 			return true;
 		end
