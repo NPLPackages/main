@@ -293,7 +293,7 @@ function BrowserWnd:GetUrl()
 	if(self.pageType == "mcml2") then
 		return "mcml2://"..(self:GetPageRenderer().url or "");
 	else
-		return "mcml://"..(self:GetPageRenderer().url or "");
+		return "mcml1://"..(self:GetPageRenderer().url or "");
 	end
 end
 
