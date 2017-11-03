@@ -147,7 +147,7 @@ function SqliteStore:init(collection)
 end
 
 function SqliteStore:CheckOpen()
-	if(not self.db) then
+	if(not self._db) then
 		self:Reopen();
 	end
 end

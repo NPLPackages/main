@@ -5,20 +5,22 @@ Date: 2008/4/28
 use the lib:
 ------------------------------------------------------------
 NPL.load("(gl)script/kids/3DMapSystemApp/WebBrowser/MCMLBrowserWnd.lua");
+Map3DSystem.App.WebBrowser.MCMLBrowserWnd.ShowWnd();
 Map3DSystem.App.WebBrowser.MCMLBrowserWnd.ShowWnd(_app, {url="...", forcerefresh, name, title, zorder, DisplayNavBar, x,y, width, height, icon, iconsize, })
 ------------------------------------------------------------
 ]]
 
 -- create
-commonlib.setfield("Map3DSystem.App.WebBrowser.MCMLBrowserWnd", {});
-Map3DSystem.App.WebBrowser.MCMLBrowserWnd.InitParams = {};
+local MCMLBrowserWnd = commonlib.gettable("Map3DSystem.App.WebBrowser.MCMLBrowserWnd");
+MCMLBrowserWnd.InitParams = {};
 
+local _defaultApp;
 -- display a MCML browser window and goto its url. 
--- @param _app: the host app object
+-- @param _app: the host app object or nil to use default internal app
 -- @param params: nil or a table containing following field {name, title, url, zorder, DisplayNavBar, x,y, width, height, icon, iconsize, DestroyOnClose=nil}
 -- @return the window object.
-function Map3DSystem.App.WebBrowser.MCMLBrowserWnd.ShowWnd(_app, params)
-	params = params or {}
+function MCMLBrowserWnd.ShowWnd(_app, params)
+	params = params or {url="", name="MyBrowser", title="My browser", DisplayNavBar = true}
 	params.name = params.name or "MCMLBrowserWnd";
 	if(params.x == nil) then params.x = 32 end
 	if(params.y == nil) then params.y = 32 end
@@ -26,10 +28,14 @@ function Map3DSystem.App.WebBrowser.MCMLBrowserWnd.ShowWnd(_app, params)
 	if(params.height == nil) then params.height = 600 end
 	if(params.icon == nil) then params.icon = "Texture/3DMapSystem/common/Home.png" end
 	if(params.iconsize == nil) then params.iconsize = 16 end
-	Map3DSystem.App.WebBrowser.MCMLBrowserWnd.InitParams[params.name] = commonlib.clone(params);
+	MCMLBrowserWnd.InitParams[params.name] = commonlib.clone(params);
 	
 	-- create window
-	local _wnd = _app:FindWindow(params.name) or _app:RegisterWindow(params.name, nil, Map3DSystem.App.WebBrowser.MCMLBrowserWnd.MSGProc);	
+	if(not _app) then
+		_defaultApp = _defaultApp or CommonCtrl.os.CreateApp("DefaultMCMLBrowserWndApp");
+		_app = _defaultApp;
+	end
+	local _wnd = _app:FindWindow(params.name) or _app:RegisterWindow(params.name, nil, MCMLBrowserWnd.MSGProc);	
 	local _wndFrame = _wnd:GetWindowFrame();
 	if(not _wndFrame) then
 		_wndFrame = _wnd:CreateWindowFrame{
@@ -54,7 +60,7 @@ function Map3DSystem.App.WebBrowser.MCMLBrowserWnd.ShowWnd(_app, params)
 			initialHeight = params.height,
 			zorder = params.zorder;
 			alignment = nil, -- Free|Left|Right|Bottom
-			ShowUICallback = Map3DSystem.App.WebBrowser.MCMLBrowserWnd.Show,
+			ShowUICallback = MCMLBrowserWnd.Show,
 		};
 	else
 		if(params.x or params.y or params.width or params.height) then
@@ -84,7 +90,7 @@ function Map3DSystem.App.WebBrowser.MCMLBrowserWnd.ShowWnd(_app, params)
 end
 
 -- normal windows messages here
-function Map3DSystem.App.WebBrowser.MCMLBrowserWnd.MSGProc(window, msg)
+function MCMLBrowserWnd.MSGProc(window, msg)
 	if(msg.type == CommonCtrl.os.MSGTYPE.WM_CLOSE) then
 		local ctl = CommonCtrl.GetControl("MCMLBrowserWnd."..window.name);
 		if(ctl) then
@@ -98,13 +104,13 @@ function Map3DSystem.App.WebBrowser.MCMLBrowserWnd.MSGProc(window, msg)
 	end
 end
 
-function Map3DSystem.App.WebBrowser.MCMLBrowserWnd.Show(bShow,_parent,parentWindow)
+function MCMLBrowserWnd.Show(bShow,_parent,parentWindow)
 	local windowName
 	if(parentWindow) then
 		windowName = parentWindow.name;
 	end	
 	windowName = (windowName or "");
-	local params = Map3DSystem.App.WebBrowser.MCMLBrowserWnd.InitParams[windowName] or {};
+	local params = MCMLBrowserWnd.InitParams[windowName] or {};
 
 	local ctl = CommonCtrl.GetControl("MCMLBrowserWnd."..windowName);
 	if(not ctl) then
