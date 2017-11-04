@@ -97,7 +97,7 @@ end
 -- this function can be called many times for different or same directory path. 
 function npl_page_manager:monitor_directory(dir)
 	if(dir) then
-		if(not string.find(dir, "/$")) then
+		if(dir~="" and not string.find(dir, "/$")) then
 			dir = dir.."/";
 		end
 		local root = self:GetRootDirectory();
