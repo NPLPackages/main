@@ -439,6 +439,7 @@ function PageElement:UpdateLayout(parentLayout)
 		local right, bottom = left+size_width, top+size_height
 		myLayout:SetUsedSize(right, bottom);
 		self:OnAfterChildLayout(myLayout, left+margin_left, top+margin_top, right-margin_right, bottom-margin_bottom);
+		width, height = myLayout:GetUsedSize();
 	end
 
 	if(bUseSpace) then
