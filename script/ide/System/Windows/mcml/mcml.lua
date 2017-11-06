@@ -13,6 +13,8 @@ mcml:RegisterPageElement("pe:div", Elements.pe_div);
 ]]
 NPL.load("(gl)script/ide/System/Windows/mcml/PageElement.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/StyleDefault.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/css/StyleColor.lua");
+local StyleColor = commonlib.gettable("System.Windows.mcml.css.StyleColor");
 local PageElement = commonlib.gettable("System.Windows.mcml.PageElement");
 local Elements = commonlib.gettable("System.Windows.mcml.Elements");
 local mcml = commonlib.gettable("System.Windows.mcml");
@@ -46,6 +48,8 @@ function mcml:StaticInit()
 		return
 	end
 	isInited = true;
+
+	StyleColor.ProcessPresetColors();
 
 	if(not self.style) then
 		self:SetStyle(mcml.StyleDefault:new());

@@ -168,6 +168,14 @@ local presetColors = {
 	["YellowGreen"]="#9ACD32"
 }
 
+function StyleColor.ProcessPresetColors()
+	local temp = {};
+	for name, value in pairs(presetColors) do
+		temp[string.lower(name)] = value;
+	end
+	presetColors = temp;
+end
+
 local function convertRGBTo16(color)
 	local temp_color;
 	local r,g,b,a = string.match(color,"(%d+),(%d+),(%d+),(%d+[.]?%d*)");
