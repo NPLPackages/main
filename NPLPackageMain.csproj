@@ -1156,6 +1156,7 @@
     <None Include="script\ide\System\Windows\Controls\TreeView.lua" />
     <None Include="script\ide\System\Windows\mcml\BrowserWnd.lua" />
     <None Include="script\ide\System\Windows\mcml\CssSelectorItem.lua" />
+    <None Include="script\ide\System\Windows\mcml\css\StyleColor.lua" />
     <None Include="script\ide\System\Windows\mcml\default_style.mcss" />
     <None Include="script\ide\System\Windows\mcml\Elements\pe_bindingblock.lua" />
     <None Include="script\ide\System\Windows\mcml\Elements\pe_br.lua" />
