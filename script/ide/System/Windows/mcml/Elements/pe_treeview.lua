@@ -40,6 +40,7 @@ local TreeView = commonlib.gettable("System.Windows.Controls.TreeView");
 local mcml = commonlib.gettable("System.Windows.mcml");
 
 local pe_treeview = commonlib.inherit(commonlib.gettable("System.Windows.mcml.Elements.pe_scrollarea"), commonlib.gettable("System.Windows.mcml.Elements.pe_treeview"));
+pe_treeview:Property({"class_name", "pe:treeview"});
 
 function pe_treeview:ctor()
 end
@@ -85,6 +86,19 @@ function pe_treeview:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	if(css["overflow-y"] and css["overflow-y"] == "hidden") then
 		_this:setVerticalScrollBarPolicy("AlwaysOff");
 	end
+
+	if(not css.background and not css.background2) then
+		if(css["background-color"]) then
+			css.background = "Texture/whitedot.png";	
+		else
+			css["background-color"] = "#ffffff00";
+		end
+	end
+
+	if(self.control) then
+		self.control:ApplyCss(css);
+	end
+	
 
 
 	-- Extract from datasource if it is already provided in the input. 

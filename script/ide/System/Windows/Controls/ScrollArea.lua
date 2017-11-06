@@ -175,6 +175,12 @@ function ScrollArea:updateScrollGeometry()
 	end
 end
 
+function ScrollArea:ApplyCss(css)
+	if(self.viewport) then
+		self.viewport:ApplyCss(css);
+	end
+end
+
 function ScrollArea:paintEvent(painter)
 	self:updateScrollGeometry();
 --	painter:SetPen(self:GetBackgroundColor());
