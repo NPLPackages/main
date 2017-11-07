@@ -209,6 +209,7 @@ local function convertHSLTo16(color)
 end
 
 function StyleColor.ConvertTo16(color)
+	color = string.lower(color);
 	local temp_color;
 	if(string.match(color,"^#%x%x%x%x%x%x") or string.match(color,"^#%x%x%x%x%x%x%x%x")) then
 		-- do nothing
