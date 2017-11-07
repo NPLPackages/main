@@ -10,6 +10,9 @@ local StyleItem = commonlib.gettable("System.Windows.mcml.StyleItem");
 local style = StyleItem:new();
 ------------------------------------------------------------
 ]]
+NPL.load("(gl)script/ide/System/Windows/mcml/css/StyleColor.lua");
+local StyleColor = commonlib.gettable("System.Windows.mcml.css.StyleColor");
+
 local type = type;
 local tonumber = tonumber;
 local string_gsub = string.gsub;
@@ -87,6 +90,18 @@ local number_fields = {
 	["font-size"] = true,
 	["spacing"] = true,
 	["base-font-size"] = true,
+	["border-width"] = true,
+};
+
+local color_fields = {
+	["color"] = true,
+	["border-color"] = true,
+	["background-color"] = true,
+};
+
+
+local complex_fields = {
+	["border"] = "border-width border-style border-color",
 };
 
 function StyleItem.isResetField(name)
@@ -99,19 +114,43 @@ function StyleItem:AddString(style_code)
 	for name, value in string.gfind(style_code, "([%w%-]+)%s*:%s*([^;]*)[;]?") do
 		name = string_lower(name);
 		value = string_gsub(value, "%s*$", "");
-		if(number_fields[name] or string_find(name,"^margin") or string_find(name,"^padding")) then
-			local _, _, selfvalue = string_find(value, "([%+%-]?%d+)");
-			if(selfvalue~=nil) then
-				value = tonumber(selfvalue);
-			else
-				value = nil;
-			end
-		elseif(string_match(name, "^background[2]?$") or name == "background-image") then
-			value = string_gsub(value, "url%((.*)%)", "%1");
-			value = string_gsub(value, "#", ";");
+		local complex_name = complex_fields[name];
+		if(complex_name) then
+			self:AddComplexField(complex_name,value);
+		else
+			self:AddItem(name,value);
 		end
-		self[name] = value;
 	end
+end
+
+function StyleItem:AddComplexField(names_code,values_code)
+	local names = commonlib.split(names_code, "%s");
+	local values = commonlib.split(values_code, "%s");
+	for i = 1, #names do
+		self:AddItem(names[i], values[i]);
+	end
+end
+
+function StyleItem:AddItem(name,value)
+	if(not name or not value) then
+		return;
+	end
+	name = string_lower(name);
+	value = string_gsub(value, "%s*$", "");
+	if(number_fields[name] or string_find(name,"^margin") or string_find(name,"^padding")) then
+		local _, _, selfvalue = string_find(value, "([%+%-]?%d+)");
+		if(selfvalue~=nil) then
+			value = tonumber(selfvalue);
+		else
+			value = nil;
+		end
+	elseif(color_fields[name]) then
+		value = StyleColor.ConvertTo16(value);
+	elseif(string_match(name, "^background[2]?$") or name == "background-image") then
+		value = string_gsub(value, "url%((.*)%)", "%1");
+		value = string_gsub(value, "#", ";");
+	end
+	self[name] = value;
 end
 
 function StyleItem:padding_left()
