@@ -71,7 +71,7 @@ end
 
 function pe_button:OnClick()
 	local bindingContext;
-	local onclick = self.onclickscript or self:GetString("onclick");
+	local onclick = self.onclickscript or self:GetAttributeWithCode("onclick",nil,true);
 	if(onclick == "")then
 		onclick = nil;
 	end
