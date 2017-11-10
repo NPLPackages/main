@@ -80,7 +80,7 @@ function pe_button:OnClick()
 		onclick_for = nil;
 	end
 	local result;
-	local buttonName = self:GetAttribute("name");
+	local buttonName = self:GetAttributeWithCode("name",nil,true);
 	if(onclick) then
 		local btnType = self:GetString("type");
 		if( btnType=="submit") then
