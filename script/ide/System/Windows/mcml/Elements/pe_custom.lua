@@ -18,11 +18,12 @@ NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_custom.lua");
 Elements.pe_custom:RegisterAs("pe:custom");
 ------------------------------------------------------------
 ]]
-NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_div.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/PageElement.lua");
 NPL.load("(gl)script/ide/System/Windows/Controls/Canvas.lua");
 local Canvas = commonlib.gettable("System.Windows.Controls.Canvas");
 
-local pe_custom = commonlib.inherit(commonlib.gettable("System.Windows.mcml.Elements.pe_div"), commonlib.gettable("System.Windows.mcml.Elements.pe_custom"));
+local pe_custom = commonlib.inherit(commonlib.gettable("System.Windows.mcml.PageElement"), commonlib.gettable("System.Windows.mcml.Elements.pe_custom"));
+pe_custom:Property({"class_name", "pe:custom"});
 
 function pe_custom:ctor()
 end
@@ -50,7 +51,6 @@ end
 
 function pe_custom:OnAfterChildLayout(layout, left, top, right, bottom)
 	if(self.control) then
-		self:setGeometry(left, top, right-left, bottom-top);
-		--self.control:setGeometry(left, top, right-left, bottom-top);
+		self.control:setGeometry(left, top, right-left, bottom-top);
 	end
 end
