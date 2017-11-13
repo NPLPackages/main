@@ -848,7 +848,6 @@ end
 function TextControl:paste(mode)
 	local clip = ParaMisc.GetTextFromClipboard();
 	if(clip or self:hasSelectedText()) then
-		clip = commonlib.Encoding.DefaultToUtf8(clip);
 		--self:separate(); -- make it a separate undo/redo command
         --self:InsertTextAddToCommand(clip);
 		self:InsertTextInCursorPos(clip);
@@ -953,7 +952,7 @@ function TextControl:InsertText(text, line, pos , addToCommand, moveCursor)
 	end
 end
 
-function TextControl:scopeText(startLine, startPos, endLine, endPos, beUtf8)
+function TextControl:scopeText(startLine, startPos, endLine, endPos)
 	local text;
 
 	if(startLine == endLine) then
@@ -974,15 +973,12 @@ function TextControl:scopeText(startLine, startPos, endLine, endPos, beUtf8)
 			end
 		end
 	end
-	if(beUtf8) then
-		text = commonlib.Encoding.Utf8ToDefault(tostring(text));
-	end
 	return text;
 end
 
 function TextControl:selectedText()
 	if(self:hasSelectedText()) then
-		return self:scopeText(self.m_selLineStart, self.m_selPosStart, self.m_selLineEnd, self.m_selPosEnd, true);
+		return self:scopeText(self.m_selLineStart, self.m_selPosStart, self.m_selLineEnd, self.m_selPosEnd);
 	end
 end
 
@@ -1019,7 +1015,7 @@ function TextControl:RemoveText(startLine, startPos, endLine, endPos , addToComm
 
 	--local move = not (self.cursorLine == startLine and self.cursorPos == startPos);
 
-	local text = self:scopeText(startLine, startPos, endLine, endPos, false);
+	local text = self:scopeText(startLine, startPos, endLine, endPos);
 
 	if(startLine == endLine) then
 		self:lineInternalRemove(self:GetLine(startLine), startPos+1, endPos - startPos);

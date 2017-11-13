@@ -260,7 +260,7 @@ end
 function EditBox:selectedText()
 	if(self:hasSelectedText()) then
 		local text = self.m_text:substr(self.m_selstart+1, self.m_selend);
-		return commonlib.Encoding.Utf8ToDefault(text);
+		return text;
 	end
 end
 
@@ -718,7 +718,6 @@ end
 function EditBox:paste(mode)
 	local clip = ParaMisc.GetTextFromClipboard();
 	if(clip or self:hasSelectedText()) then
-		clip = commonlib.Encoding.DefaultToUtf8(clip);
 		self:separate(); -- make it a separate undo/redo command
         self:insert(clip);
         self:separate();
