@@ -40,6 +40,7 @@ local Button = commonlib.gettable("System.Windows.Controls.Button");
 local Rectangle = commonlib.gettable("System.Windows.Shapes.Rectangle");
 
 local pe_repeat = commonlib.inherit(commonlib.gettable("System.Windows.mcml.PageElement"), commonlib.gettable("System.Windows.mcml.Elements.pe_repeat"));
+pe_repeat:Property({"class_name", "pe:repeat"});
 
 function pe_repeat:ctor()
 end

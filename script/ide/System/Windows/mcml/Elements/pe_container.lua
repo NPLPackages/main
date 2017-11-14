@@ -14,6 +14,7 @@ NPL.load("(gl)script/ide/System/Windows/Controls/Canvas.lua");
 local Canvas = commonlib.gettable("System.Windows.Controls.Canvas");
 
 local pe_container = commonlib.inherit(commonlib.gettable("System.Windows.mcml.Elements.pe_div"), commonlib.gettable("System.Windows.mcml.Elements.pe_container"));
+pe_container:Property({"class_name", "pe:container"});
 
 function pe_container:ctor()
 end

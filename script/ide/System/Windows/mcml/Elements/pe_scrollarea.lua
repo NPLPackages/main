@@ -15,6 +15,7 @@ local ScrollArea = commonlib.gettable("System.Windows.Controls.ScrollArea");
 local PageElement = commonlib.gettable("System.Windows.mcml.PageElement");
 
 local pe_scrollarea = commonlib.inherit(commonlib.gettable("System.Windows.mcml.Elements.pe_container"), commonlib.gettable("System.Windows.mcml.Elements.pe_scrollarea"));
+pe_scrollarea:Property({"class_name", "pe:scrollarea"});
 
 function pe_scrollarea:ctor()
 end

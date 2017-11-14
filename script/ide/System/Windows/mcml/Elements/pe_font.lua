@@ -11,6 +11,7 @@ System.Windows.mcml.Elements.pe_font:RegisterAs("font");
 ]]
 NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_div.lua");
 local pe_font = commonlib.inherit(commonlib.gettable("System.Windows.mcml.Elements.pe_div"), commonlib.gettable("System.Windows.mcml.Elements.pe_font"));
+pe_font:Property({"class_name", "pe:font"});
 
 function pe_font:ctor()
 end

@@ -48,7 +48,10 @@ function pe_div:LoadComponent(parentElem, parentLayout, style)
 		if(onclick_for or onclick or tooltip or ontouch) then
 			_this = Button:new():init(parentElem);
 			_this:SetPolygonStyle("none");
-			_this:Connect("clicked", self, self.OnClick)
+			local buttonName = self:GetAttributeWithCode("name",nil,true);
+			_this:Connect("clicked", function()
+				self:OnClick(buttonName);
+			end);
 		else
 			_this = Rectangle:new():init(parentElem);
 		end
@@ -183,14 +186,13 @@ function pe_div:OnAfterChildLayout(layout, left, top, right, bottom)
 	end
 end
 
-function pe_div:OnClick()
+function pe_div:OnClick(buttonName)
 	local bindingContext;
 	local onclick = self.onclickscript or self:GetAttributeWithCode("onclick",nil,true);
 	if(onclick == "")then
 		onclick = nil;
 	end
 	local result;
-	local buttonName = self:GetAttributeWithCode("name",nil,true);
 	if(onclick) then
 		local btnType = self:GetString("type");
 		if( btnType=="submit") then

@@ -48,13 +48,14 @@ function pe_radio:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	end
 
 	self.groupName = self:GetAttribute("name") or "_defaultRadioGroup";
-
-	_this:Connect("clicked", self, self.OnClick)
+	local buttonName = self:GetAttributeWithCode("name",nil,true);
+	_this:Connect("clicked", function()
+		self:OnClick(buttonName);
+	end);
 end
 
-function pe_radio:OnClick()
+function pe_radio:OnClick(buttonName)
 	local result;
-	local buttonName = self:GetAttribute("name");
 	local value = self:GetAttributeWithCode("value", nil, true);
 	
 	local max = tonumber(self:GetAttributeWithCode("max", nil, true) or 1);

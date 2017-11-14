@@ -13,6 +13,7 @@ NPL.load("(gl)script/ide/System/Windows/mcml/PageElement.lua");
 NPL.load("(gl)script/ide/System/Windows/Controls/Label.lua");
 local Label = commonlib.gettable("System.Windows.Controls.Label");
 local pe_label = commonlib.inherit(commonlib.gettable("System.Windows.mcml.PageElement"), commonlib.gettable("System.Windows.mcml.Elements.pe_label"));
+pe_label:Property({"class_name", "pe:label"});
 
 function pe_label:ctor()
 end

@@ -11,6 +11,7 @@ System.Windows.mcml.Elements.pe_bindingblock:RegisterAs("pe:bindingblock");
 ]]
 NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_div.lua");
 local pe_bindingblock = commonlib.inherit(commonlib.gettable("System.Windows.mcml.Elements.pe_div"), commonlib.gettable("System.Windows.mcml.Elements.pe_bindingblock"));
+pe_bindingblock:Property({"class_name", "pe:bindingblock"});
 
 function pe_bindingblock:ctor()
 end

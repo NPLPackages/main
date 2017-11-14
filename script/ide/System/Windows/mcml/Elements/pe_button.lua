@@ -31,9 +31,11 @@ function pe_button:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	_this:SetText(self:GetAttributeWithCode("value", nil, true));
 	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
 
-	local buttonName = self:GetAttributeWithCode("name"); -- touch name
+	local buttonName = self:GetAttributeWithCode("name",nil,true); -- touch name
 
-	_this:Connect("clicked", self, self.OnClick)
+	_this:Connect("clicked", function()
+		self:OnClick(buttonName);
+	end)
 end
 
 function pe_button:OnBeforeChildLayout(layout)
@@ -69,7 +71,7 @@ function pe_button:GetValue()
 	return self:GetAttribute("value");
 end
 
-function pe_button:OnClick()
+function pe_button:OnClick(buttonName)
 	local bindingContext;
 	local onclick = self.onclickscript or self:GetAttributeWithCode("onclick",nil,true);
 	if(onclick == "")then
@@ -80,7 +82,6 @@ function pe_button:OnClick()
 		onclick_for = nil;
 	end
 	local result;
-	local buttonName = self:GetAttributeWithCode("name",nil,true);
 	if(onclick) then
 		local btnType = self:GetString("type");
 		if( btnType=="submit") then
