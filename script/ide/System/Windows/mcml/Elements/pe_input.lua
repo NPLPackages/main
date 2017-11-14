@@ -17,7 +17,12 @@ function pe_input:createFromXmlNode(o)
 	local type = pe_input.GetType(o);
 	
 	if(type == nil or type == "text") then
-		return Elements.pe_editbox:createFromXmlNode(o);	
+		local rows = tonumber(pe_input.GetRows(o) or 1);
+		if(rows and rows > 1) then
+			return Elements.pe_textarea:createFromXmlNode(o);	
+		else
+			return Elements.pe_editbox:createFromXmlNode(o);	
+		end
 	elseif(type == "password") then
 		return Elements.pe_editbox:createFromXmlNode(o);	
 	elseif(type == "radio") then
@@ -39,6 +44,13 @@ end
 function pe_input.GetType(self)
 	if(self.attr) then
 		return self.attr["type"];
+	end
+end
+
+-- static function. same as GetAttribute("rows"). but it can operate on a pure xmlNode. 
+function pe_input.GetRows(self)
+	if(self.attr) then
+		return self.attr["rows"];
 	end
 end
 

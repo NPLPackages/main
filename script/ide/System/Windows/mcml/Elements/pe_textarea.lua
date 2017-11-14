@@ -22,7 +22,7 @@ function pe_textarea:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 		(css["margin-left"] or css["margin"] or 0),(css["margin-top"] or css["margin"] or 0),
 		(css["margin-bottom"] or css["margin"] or 0),(css["margin-right"] or css["margin"] or 0);	
 
-	local width = css.width;
+	css.width = css.width or 60;
 	local lineheight = 20;
 	if(css["line-height"]) then
 		lineheight = tonumber(css["line-height"]);
@@ -32,9 +32,6 @@ function pe_textarea:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 		height = lineheight * self:GetNumber("rows",10);
 		css.height = height;
 	end
-
-	parentLayout:AddObject(width+margin_left+margin_right, margin_top+margin_bottom+height);
-
 	local _this = self.control;
 	if(not _this) then
 		_this = MultiLineEditbox:new():init(parentElem);
