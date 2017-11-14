@@ -46,7 +46,7 @@ if(is_ajax()) then
       local objpath = ObjectPath:new():init(obj_path);
       local data = objpath:data();
       if(data and data.GetFieldNum) then
-        for nFieldIndex = 1, data:GetFieldNum() do
+        for nFieldIndex = 0, data:GetFieldNum() - 1 do
           local row = convert_to_row(path, data, nFieldIndex);
           if(row) then
             rows[#rows+1] = row;

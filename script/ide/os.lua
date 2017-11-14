@@ -459,12 +459,12 @@ function CommonCtrl.os.app:ProcessMessage(msg)
 		return;
 	end
 	
+	local result;
 	if(msg.wndName == "*") then
-		local _, window;
 		for _, window in pairs(self.windows) do
 			if(window~=nil)	 then
 				if(window.msg_handler~=nil) then
-					window:msg_handler(msg);
+					result = window:msg_handler(msg);
 				end
 			end
 		end
@@ -472,13 +472,15 @@ function CommonCtrl.os.app:ProcessMessage(msg)
 		local window = self:FindWindow(msg.wndName);
 		if(window~=nil)	 then
 			if(window.msg_handler~=nil) then
-				window:msg_handler(msg);
+				result = window:msg_handler(msg);
 			end
 		end
 	end
 	
 	-- call the hook 
 	hook_class.Invoke(HookType.WH_CALLWNDPROCRET, 0, self.name, msg);
+
+	return result;
 end
 
 -------------------------------------------------------------

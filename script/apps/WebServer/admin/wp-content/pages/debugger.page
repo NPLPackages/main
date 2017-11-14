@@ -473,9 +473,30 @@ echo(format("<script>window.debuggerInfo = {workspaceDir:'%s', devDir:'%s'};</sc
             if (position) {
                 var markedText = editor.session.doc.getTextRange(editor.selection.getRange());
                 if (!markedText || markedText == "") {
-                    var token = editor.session.getTokenAt(position.row, position.column);
-                    if (token && token.type == "identifier")
-                        markedText = token.value;
+					// auto-get identifier with dot like "a.b.c"
+					var TokenIterator = ace.require("ace/token_iterator").TokenIterator;
+					var iterator = new TokenIterator(editor.session, position.row, position.column);
+					var x = iterator.stepForward()
+
+					markedText = "";
+					var isDot = false;
+					while((x = iterator.stepBackward()) != null){
+						if(x.type == "identifier" || x.type == "variable.language"){
+							if(isDot)
+								markedText = x.value + "." + markedText;
+							else if(markedText == "")
+								markedText = x.value;
+							else
+								break;
+							isDot = false;
+	    				}
+						else if(x.value == "." && markedText!="" && !isDot){
+							isDot = true;
+						}
+						else{
+							break;
+						}
+	    			}
                 }
                 if (markedText && markedText!= "") {
                     $scope.expression = markedText;

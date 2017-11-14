@@ -249,7 +249,12 @@ end
 -- @param relpath: like "/helloworld.lua"
 -- @return nil if not found. 
 function common_handlers.GetValidFileName(docroot, relpath)
-	local filename = docroot..relpath;
+	local filename;
+	if(docroot and docroot~="") then
+		filename = docroot..relpath;
+	else
+		filename = relpath:gsub("^/", "");
+	end
 	filename = filename:gsub("/[/]+", "/");
 	if(ParaIO.DoesFileExist(filename, true)) then
 		return filename;

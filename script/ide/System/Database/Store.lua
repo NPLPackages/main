@@ -63,6 +63,11 @@ function Store:GetStats()
 	return self.stats;
 end
 
+-- virtual function to ensure the database is open for some operation. 
+-- if your database is never closed, this function can do nothing.
+function Store:CheckOpen()
+end
+
 -- add statistics for a given name
 -- @param name: such as "select", "update", "insert", "delete"
 -- @param count: if nil it is 1.

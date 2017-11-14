@@ -167,13 +167,15 @@ local TableDatabase = commonlib.gettable("System.Database.TableDatabase");
 
 -- writing NPL thread name
 TableDatabase.writerThread = "tdb";
---TableDatabase.writerThread = "main"; -- this is for debugging in main thread
+-- TableDatabase.writerThread = "main"; -- this is for debugging in main thread
 TableDatabase.isServer = 0;
 TableDatabase.rootFolder = "temp/TableDatabase/";
+TableDatabase.DefaultProviderName = "sqlite";
 
 function TableDatabase:new()
 	local o = {
 		collections = {},
+		collectionProvider = {},
 	};
 	setmetatable(o, self);
 	return o;
@@ -205,6 +207,10 @@ end
 function TableDatabase:EnableSyncMode(bEnabled)
 	IORequest.EnableSyncMode = bEnabled;
 	LOG.std(nil, "system", "TableDatabase", "sync mode api is %s in thread %s", bEnabled and "enabled" or "disabled", __rts__:GetName());
+end
+
+function TableDatabase:FindProvider(name)
+	return self.collectionProvider[name] or self.DefaultProviderName;
 end
 
 -- create or get a collection on the client
@@ -244,10 +250,51 @@ function TableDatabase:ToData()
 	-- should always return nil;
 end
 
+NPL.load("(gl)script/ide/System/Database/StorageProvider.lua");
+local StorageProvider = commonlib.gettable("System.Database.StorageProvider");
+local config_filename = "/tabledb.config.xml";
 -- automatically called from IO thread
 function TableDatabase:open(rootFolder)
 	self.rootFolder = rootFolder;
+
 	ParaIO.CreateDirectory(rootFolder);
+
+	local config = ParaIO.open(rootFolder .. config_filename, "r");
+	if config:IsValid() then
+		local str = config:GetText(0, -1);
+		local xml = ParaXML.LuaXML_ParseString(str);
+
+		if xml[1] and xml[1].name == "tabledb" then
+			for i,item in ipairs(xml[1]) do
+				-- providers should always comes first
+				if item.name == "providers" then
+					for i,provider in ipairs(item) do
+						if provider.name == "provider" then
+
+							local init_args = commonlib.split(provider[1], ",")
+
+							NPL.load(provider.attr.file);
+							local storage = commonlib.gettable(provider.attr.type);
+							StorageProvider:RegisterStorageClass(provider.attr.name, storage, init_args)
+
+						end
+					end
+				end
+				if item.name == "tables" then
+					for i,table in ipairs(item) do
+						if table.name == "table" then
+							if table.attr.name == "default" then
+								self.DefaultProviderName = table.attr.provider;
+								StorageProvider:SetStorageClass(StorageProvider:GetStorageClass(table.attr.provider));
+							else
+								self.collectionProvider[table.attr.name] = table.attr.provider;
+							end
+						end
+					end
+				end
+			end
+		end
+	end
 	LOG.std(nil, "info", "TableDatabase", "table database: %s is opened.", rootFolder);	
 	return self;
 end

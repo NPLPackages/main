@@ -7,8 +7,18 @@ use the lib:
 ------------------------------------------------------------
 NPL.load("(gl)script/ide/System/Concurrent/rpc.lua");
 local rpc = commonlib.gettable("System.Concurrent.Async.rpc");
+-- the third parameter is usually a file that contains the rpc init code (debug.getinfo(1, "S").source will do that)
+-- you can also explicitly specify a shared central API file where all 
+-- RPC functions in your application are defined, such as "XXX_API.lua"
 rpc:new():init("Test.testRPC", function(self, msg) 
-	LOG.std(nil, "info", "category", msg);
+	LOG.std(nil, "info", "Test.testRPC", msg);
+	msg.output=true; 
+	return msg; 
+end, debug.getinfo(1, "S").source)
+
+-- if the third parameter is nil, the filename where init() function is called is used as activation file.
+rpc:new():init("Test.testRPC2", function(self, msg) 
+	LOG.std(nil, "info", "Test.testRPC2", msg);
 	msg.output=true; 
 	ParaEngine.Sleep(1);
 	return msg; 
@@ -22,13 +32,14 @@ Test.testRPC("", {"input"}, function(err, msg)
 	echo(msg);
 end);
 
--- time out in 500ms
-Test.testRPC("(worker1)", {"input"}, function(err, msg) 
+-- This will time out in 500ms because of ParaEngine.Sleep(1)
+Test.testRPC2("(worker1)", {"input"}, function(err, msg) 
 	assert(err == "timeout" and msg==nil)
 	echo(err);
 end, 500);
 ------------------------------------------------------------
 ]]
+NPL.load("(gl)script/ide/System/System.lua");
 local rpc = commonlib.gettable("System.Concurrent.Async.rpc");
 
 local rpc_instances = {};
@@ -44,11 +55,12 @@ end
 
 -- @param funcName: global function name, such as "API.Auth"
 -- @param handle_request_func: rpc handler function of function(self, msg)  end
--- @param publicFileName: the activation file, if nil, it defaults to current file
+-- @param publicFileName: the activation file, if nil, it defaults filename where the function is defined. 
+-- usually this file should call rpc:init() when it is loaded. 
 function rpc:init(funcName, handle_request_func, publicFileName)
 	self:SetFuncName(funcName);
 	self.handle_request = handle_request_func or echo;
-	self:SetPublicFile(publicFileName);
+	self:SetPublicFile(publicFileName or debug.getinfo(2, "S").source);
 	return self;
 end
 
@@ -64,7 +76,8 @@ function rpc:SetFuncName(funcName)
 	rpc.AddInstance(funcName, self);
 end
 
--- @param filename: the activation file, if nil, it defaults to this file
+-- The public filename is 
+-- @param filename: the activation file, if nil, it defaults to rpc/[funcName].lua
 function rpc:SetPublicFile(filename)
 	filename = filename or format("rpc/%s.lua", self.fullname);
 	self.filename = filename;
@@ -103,7 +116,12 @@ function rpc:OnActivated(msg)
 	end
 	if(msg.type=="run") then
 		local result = self:handle_request(msg.msg);
-		NPL.activate(format("%s%s", msg.callbackThread, self.filename), {type="result", result = result, err=nil, callbackId = msg.callbackId});
+		NPL.activate(format("%s%s", msg.callbackThread, self.filename), {
+			type="result", 
+			name=self.fullname, 
+			result = result, 
+			err=nil, callbackId = msg.callbackId
+		});
 	elseif(msg.type== "result" and msg.callbackId) then
 		self:InvokeCallback(msg.callbackId, msg.err, msg.result);
 	end
@@ -157,9 +175,7 @@ function rpc:activate(address, msg, callbackFunc, timeout)
 			end
 		end
 	end
-	thread_name = thread_name or "osAsync";
-	NPL.CreateRuntimeState(thread_name, 0):Start();
-
+	
 	local callbackId = self.next_run_id + 1;
 	self.next_run_id = callbackId
 	local callback = {

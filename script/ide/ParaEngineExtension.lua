@@ -184,9 +184,11 @@ function ParaCamera.SetLookAtPos(x, y, z)
 	player:ToCharacter():SetFocus();
 end
 
+local lookat_pos = {0,0,0};
 function ParaCamera.GetLookAtPos()
-	return unpack(ParaCamera.GetAttributeObject():GetField("Lookat position", {0,0,0}));
+	return unpack(ParaCamera.GetAttributeObject():GetField("Lookat position", lookat_pos));
 end
+
 -- it returns polar coordinate system.
 -- @return camobjDist, LifeupAngle, CameraRotY
 function ParaCamera.GetEyePos()

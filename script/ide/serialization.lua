@@ -8,6 +8,7 @@ Use Lib:
 NPL.load("(gl)script/ide/commonlib.lua");
 -- include commonlib to use this lib
 NPL.load("(gl)script/ide/serialization.lua");
+commonlib.serialize_in_length(_G, 100)
 -------------------------------------------------------
 ]]
 
@@ -124,9 +125,68 @@ function commonlib.serialize(o, bBeautify)
 	end
 end
 
+-- serialize to string. it will stop after string length is longer than nMaxLength.
+-- @param o: the object to serialize
+-- @param nMaxLength: default to 256 bytes. The maximum length of the returned string. 
+-- @param bBeautify: if true, it will generate with line breakings. if nil, it will use the C++ function to serialize. 
+function commonlib.serialize_in_length(o, nMaxLength)
+	nMaxLength = nMaxLength or 256;
+	if(nMaxLength<=0) then
+		return "";
+	end
+	local obj_type = type(o)
+	if obj_type == "number" then
+		return (tostring(o))
+	elseif obj_type == "nil" then
+		return ("nil")
+	elseif obj_type == "string" then
+		return string.sub(string_format("%q", o), 1, nMaxLength);
+	elseif obj_type == "boolean" then	
+		if(o) then
+			return "true"
+		else
+			return "false"
+		end
+	elseif obj_type == "function" then
+		return (tostring(o))
+	elseif obj_type == "userdata" then
+		return ("nil")
+	elseif obj_type == "table" then
+		local str = "{"
+		nMaxLength = nMaxLength - 3;
+		for k,v in pairs(o) do
+			local valueStr
+			if(type(k) == "string" and k:match("^%a[%w_]*$")) then
+				-- identifier without quotation marks.
+				valueStr = k.."=";
+			else
+				valueStr = ("[")..commonlib.serialize_in_length(k, nMaxLength).."]=";
+			end
+			valueStr = valueStr..commonlib.serialize_in_length(v, nMaxLength - #valueStr - 3);
+			str = str..valueStr;
+			nMaxLength = nMaxLength - #valueStr;
+			if(nMaxLength <=0) then
+				break;
+			else
+				str = str..",";
+			end
+		end
+		if(nMaxLength >=3) then
+			str = str.."}";
+		end
+		return str
+	else
+		log("--cannot serialize a " .. obj_type.."\r\n")
+	end
+end
+
 -- this is the fatest serialization method using native API. 
-function commonlib.serialize_compact(o) 
-	return NPL.SerializeToSCode("", o);
+function commonlib.serialize_compact(o, sortByKey) 
+	if(sortByKey) then
+		return NPL.SerializeToSCode("", o, true);
+	else
+		return NPL.SerializeToSCode("", o);
+	end
 end
 
 -- same as commonlib.serialize, except that it is more compact by removing all \r\n and comments, etc. 

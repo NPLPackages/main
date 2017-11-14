@@ -1,0 +1,114 @@
+﻿<!--script/kids/3DMapSystemApp/DebugApp/DebugConsole.htm-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+</head>
+<body>
+<pe:mcml>
+<script type="text/npl" ><![CDATA[
+    NPL.load("(gl)script/kids/3DMapSystemApp/DebugApp/DebugConsole.lua")
+    local DebugConsole = commonlib.gettable("Map3DSystem.App.DebugConsole");
+
+    DebugConsole:OnInit()
+
+    function Main_Func(e)
+        DebugConsole.Main_Func(e);
+    end
+
+    function GetDataSource()
+        return DebugConsole.GetDataSource();
+    end
+
+    function GetViewVariables()
+        return DebugConsole.GetViewVariables();
+    end
+
+    function onModify(index)
+        local item = DebugConsole.HistoryDataSource[index];
+        DebugConsole.OnOpenCodeFile("rthNPL",item.filepath);
+    end
+
+    function onDelete(index)
+        local item = DebugConsole.HistoryDataSource[index];
+        DebugConsole.OnDeleteDoCodeFileNode(item.filepath);
+    end
+]]></script>
+<div style="width:670px;height:400px;">
+    <div style="float:left;width:190px;height:286px;background:url(Texture/whitedot.png)">
+        <div style="margin-left:1px;height:26px">NPL.load</div>
+
+        <div style="margin-left:1px;margin-top:7px;background:url(Texture/UnCheckBox2.png#0 0 32 32: 10 10 10 10)">
+            <div><b style="color:#000000;text-align:center">NPL History</b></div><hr />
+            <pe:gridview name="pegvwDebugDostringHistory" CellPadding="1"  style="margin-left:1px;margin-right:3px;"
+            DataSource='<%=GetDataSource() %>'
+            DefaultNodeHeight="2" >
+            <Columns name="gvwHistoryColumn">
+                <input type="button" tooltip="edit current script" name='<%=Eval("index")%>' onclick="onModify"
+                style="margin-left:1px;width:16px;height:16px;background:url(Texture/3DMapSystem/common/edit.png#0.5 0.5 16 16)" />
+                <input type="button" tooltip="delete current script" name='<%=Eval("index")%>' onclick="onDelete"
+                style="margin-left:1px;width:16px;height:16px;background:url(Texture/3DMapSystem/common/delete.png#0 0 16 16)" />
+                <div style="float:left;width:140px;margin-left:1px"><%=Eval("filename")%></div>
+                 <hr />
+            </Columns>
+
+            <EmptyDataTemplate>
+                <b>No data to display.</b>
+            </EmptyDataTemplate>
+            <FetchingDataTemplate>
+                <b>Loading data,Pls wait ... </b>
+            </FetchingDataTemplate>
+
+        </pe:gridview>
+        </div>
+
+        <div style="margin-left:1px;margin-top:5px;height:26px">Watcher</div>
+    </div>
+
+    <div style="float:left;width:480px;height:400px;background:url(Texture/whitedot.png)">
+        <select name="sltLoadedNPLFile" style="margin-left:3px;width:400;height:26px" >
+        </select>
+        <input type="button" name="btnLoadNPL" value="Load" style="margin-left:2px;" onclick="Main_Func"/>
+
+    <div style="margin-left:3px;margin-top:5px;background:url(Texture/UnCheckBox2.png#0 0 32 32: 10 10 10 10)">
+        <div><b style="color:#000000;text-align:center">NPL Editor</b></div><hr />
+        <textarea name="rthNPL" rows="10" style="margin-left:2px;margin-right:4px" ShowLineNumber="true" WordWrap="false"/>
+        <input type="button" name="btnExecNPL" value="Run Code" style="margin-left:3px;" onclick="Main_Func"/>
+        <input type="button" name="btnClear" value="Clear" style="margin-left:1px;" onclick="Main_Func"/>
+        <input type="button" name="btnSave" value="Save" style="margin-left:1px;" onclick="Main_Func"/>
+    </div>
+
+        <input type="text" style="margin-left:2px;margin-top:5px;width:300px" name="txtVarName" />
+        <input type="button" name="btnView" value="View" style="margin-left:1px;"  onclick="Main_Func"/>
+        <input type="button" name="btnClearView" value="Clear" style="margin-left:1px;"  onclick="Main_Func"/>
+        <div style="margin-left:1px;height:100px;margin-top:3px; background:url(Texture/UnCheckBox2.png#0 0 32 32: 10 10 10 10)">
+            <div style="float:left;width:200px;margin-left:10px"><b style="text-align:left">Name</b></div>
+            <div style="float:left;width:150px;margin-left:10px"><b style="text-align:left">Value</b></div>
+            <div style="float:left;width:50px;margin-left:10px"><b style="text-align:left">Type</b></div>
+            <hr />
+            <pe:gridview name="pegvwVariablesView" CellPadding="1"  style="margin-left:1px;margin-right:3px;"
+            DataSource='<%= GetViewVariables()%>'
+            DataBind="{}"
+            DefaultNodeHeight="2" >
+            <Columns name="gvwContent">
+                <div style="float:left;width:200px;margin-left:10px"><%=Eval("Name")%></div>
+                <div style="float:left;width:150px;margin-left:10px"><%=Eval("Value")%></div>
+                <div style="float:left;width:50px;margin-left:10px"><%=Eval("Type")%></div>
+                 <hr />
+            </Columns>
+
+            <EmptyDataTemplate>
+                <b style="text-align:center; color:#888888">No data to display.</b>
+            </EmptyDataTemplate>
+            <FetchingDataTemplate>
+                <b>Loading data,Pls wait ... </b>
+            </FetchingDataTemplate>
+
+        </pe:gridview>
+        </div>
+    </div>
+
+</div>
+</pe:mcml>
+</body>
+</html>

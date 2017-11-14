@@ -62,6 +62,7 @@ SceneContext:Property({"m_bCaptureMouse", true, "isCaptureMouse", "setCaptureMou
 SceneContext:Property({"m_hasMouseTracking", nil, "hasMouseTracking", "setMouseTracking", auto=true});
 -- most recent picking result id
 SceneContext:Property({"m_pickingName", 0, "GetPickingName", "SetPickingName", auto=true});
+SceneContext:Property({"PickingRenderFrame", 1, auto=true});
 
 SceneContext:Signal("selected")
 SceneContext:Signal("unselected")
@@ -148,6 +149,7 @@ end
 
 function SceneContext:FetchPickingResult()
 	local bHasPicking;
+	self:SetPickingRenderFrame(commonlib.TimerManager.GetCurrentTime());
 	if(self.manipulators) then
 		for i, manip in pairs(self.manipulators) do
 			if(manip.EnablePicking) then
@@ -171,8 +173,9 @@ function SceneContext:GetObjectAtMousePos()
 	local obj;
 	if(pickingName and pickingName~=0) then
 		if(self.manipulators) then
+			local nLastTick = self:GetPickingRenderFrame();
 			for i, manip in pairs(self.manipulators) do
-				if(manip.EnablePicking) then
+				if(manip.EnablePicking and manip:GetPickingRenderFrame() >= nLastTick) then
 					obj = manip:GetChildByPickingName(pickingName); 
 					if(not obj and manip:HasPickingName(pickingName)) then
 						obj = manip;
@@ -211,8 +214,9 @@ function SceneContext:handleMouseEvent(event)
 		if(receiver == self) then
 			-- let the manipulators to process it first, before passing to self. 
 			if(self.manipulators) then
+				local nLastTick = self:GetPickingRenderFrame();
 				for i, manip in pairs(self.manipulators) do
-					if(manip.EnablePicking) then
+					if(manip.EnablePicking and manip:GetPickingRenderFrame() >= nLastTick) then
 						self:notify(manip, event);
 						if(event:isAccepted()) then
 							break;
@@ -318,6 +322,7 @@ function SceneContext:AddManipulator(manip)
 		self.manipulators = commonlib.Array:new();
 	end
 	self.manipulators:add(manip);
+	manip:SetSceneContext(self);
 end
 
 -- automatically called when SceneContext is Unselected or destroyed. However, one may needs to call this manually

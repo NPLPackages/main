@@ -67,10 +67,11 @@ function IndexTable:getCount(value)
 		greaterthan = value["gt"];
 		lessthan = value["lt"];
 		local rangedKeyIndex = 1;
-		local sql = "SELECT count(*) as count FROM "..self:GetTableName().." WHERE ";
+		local sql = "SELECT count(*) as count FROM "..self:GetTableName();
+		local whereClause = "";
 		for i, subkey in ipairs(self.subkeys) do
 			if(value[i] ~= nil) then
-				sql = sql..format("%sname%d=? ", i==1 and "" or "AND ",  i);
+				whereClause = whereClause..format("%sname%d=? ", i==1 and "" or "AND ",  i);
 				params[#params+1] = value[i];
 				rangedKeyIndex = rangedKeyIndex+1;
 			else
@@ -81,17 +82,23 @@ function IndexTable:getCount(value)
 
 		if(greaterthan or lessthan) then
 			if(greaterthan) then
-				sql = sql..format("%sname%d>? ", #params==0 and "" or "AND ", rangedKeyIndex);
+				whereClause = whereClause..format("%sname%d>? ", #params==0 and "" or "AND ", rangedKeyIndex);
 				params[#params+1] = greaterthan;
 			end
 			if(lessthan) then
-				sql = sql..format("%sname%d<? ",  greaterthan and "AND " or "", rangedKeyIndex);
+				whereClause = whereClause..format("%sname%d<? ",  greaterthan and "AND " or "", rangedKeyIndex);
 				params[#params+1] = lessthan;
 			end
 		end
 
+		if(whereClause ~= "") then
+			sql = sql .. " WHERE "..whereClause;
+		end
+
 		local stat = self:GetStatement(sql);
-		stat:bind(unpack(params));
+		if(whereClause ~= "") then
+			stat:bind(unpack(params));
+		end
 		local row, err = stat:first_row();
 		if(row) then
 			count = row.count;
@@ -117,10 +124,11 @@ function IndexTable:getIds(value)
 		greaterthan = value["gt"];
 		lessthan = value["lt"];
 		local rangedKeyIndex = 1;
-		local sql = "SELECT cid FROM "..self:GetTableName().." WHERE ";
+		local whereClause = "";
+		local sql = "SELECT cid FROM "..self:GetTableName();
 		for i, subkey in ipairs(self.subkeys) do
 			if(value[i] ~= nil) then
-				sql = sql..format("%sname%d=? ", i==1 and "" or "AND ",  i);
+				whereClause = whereClause..format("%sname%d=? ", i==1 and "" or "AND ",  i);
 				params[#params+1] = value[i];
 				rangedKeyIndex = rangedKeyIndex+1;
 			else
@@ -131,13 +139,16 @@ function IndexTable:getIds(value)
 		
 		if(greaterthan or lessthan) then
 			if(greaterthan) then
-				sql = sql..format("%sname%d>? ", #params==0 and "" or "AND ", rangedKeyIndex);
+				whereClause = whereClause..format("%sname%d>? ", #params==0 and "" or "AND ", rangedKeyIndex);
 				params[#params+1] = greaterthan;
 			end
 			if(lessthan) then
-				sql = sql..format("%sname%d<? ",  greaterthan and "AND " or "", rangedKeyIndex);
+				whereClause = whereClause..format("%sname%d<? ",  greaterthan and "AND " or "", rangedKeyIndex);
 				params[#params+1] = lessthan;
 			end
+		end
+		if(whereClause ~= "") then
+			sql = sql .. " WHERE "..whereClause;
 		end
 		local limit = value.limit or default_limit;
 		local offset = value.offset or value.skip or 0;

@@ -1,9 +1,15 @@
 --[[
-Title: MD5 (Message-Digest algorithm 5)
+Title: (DEPRECATED)MD5 (Message-Digest algorithm 5)
 Author(s): LiXizhi, code is based on http://svn.wowace.com/root/trunk/MD5Lib/MD5-2.0
 Desc: MD5 (Message-Digest algorithm 5) implementation.
 Use Lib:
 -------------------------------------------------------
+THIS FILE IS DEPRECATED: please use ParaMisc.md5() like below
+
+assert(ParaMisc.md5('') == 'd41d8cd98f00b204e9800998ecf8427e')
+assert(ParaMisc.md5('message digest') == 'f96b697d7cb7938d525a2f31aaf161d0')
+
+-- BELOW IS DEPRECATED. NOT RECOMMENDED TO USE. 
 NPL.load("(gl)script/ide/math/MD5.lua");
 local md5 = commonlib.LibStub("MD5")
 local s0 = 'message digest'
@@ -229,6 +235,11 @@ function lib:MD5AsTable(s)
 end
 
 function lib:MD5(s)
+	-- replaced with C++ implementation. 
+	return ParaMisc.md5(s);
+end
+
+function lib:MD5_slow(s)
 	local h = self:MD5AsTable(s)
 
 	-- Fixed lxz: "%08x" will not output correctly for interger bigger than 0x80000000. I modified the lua 5.1.3 string.format() core to make this work. 

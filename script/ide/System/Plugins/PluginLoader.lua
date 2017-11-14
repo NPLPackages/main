@@ -140,7 +140,11 @@ function PluginLoader:GetPluginManager()
 end
 
 function PluginLoader:IsDevMode()
-	return System.options.isDevEnv;
+	if(System and System.options)then
+		return System.options.isDevEnv;
+	else
+		return false;
+	end
 end
 
 -- @param filename: if nil, it will use the file GetPluginFolder()+"ModsConfig.xml"
@@ -187,7 +191,7 @@ function PluginLoader:SaveModTableToFile(filename)
 			end
 		end
 		if(root) then
-			file:WriteString(commonlib.Lua2XmlString(root,true) or "");
+			file:WriteString(commonlib.Lua2XmlString(root,true,true) or "");
 		end
 		file:close();
 	end

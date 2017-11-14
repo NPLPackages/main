@@ -43,7 +43,16 @@ local function RunWithResult(output)
   end
   if(not request:get("btnRunPage")) then
     local fromLogPos = commonlib.log.GetLogPos();
-    local code_func, errormsg = NPL.loadstring(code, request:get("src"));
+	local filename = request:get("src");
+	if(not filename or filename == "") then
+		filename = "temp/console.lua";
+		local tmp_file = ParaIO.open(filename, "w");
+		if(tmp_file) then
+			tmp_file:write(code, #code);
+			tmp_file:close();
+		end
+	end
+    local code_func, errormsg = NPL.loadstring(code, filename);
     if(code_func) then
 	  local env = CreateSandBoxEnv();
       setfenv(code_func, env);

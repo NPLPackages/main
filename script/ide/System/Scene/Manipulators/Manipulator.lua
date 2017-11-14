@@ -72,6 +72,15 @@ function Manipulator:Destroy()
 end
 
 
+function Manipulator:SetSceneContext(context)
+	self.scene_context = scene_context;
+end
+
+function Manipulator:GetSceneContext()
+	return self.scene_context;
+end
+
+
 function Manipulator:BeginModify()
 	if(not self.m_bIsBeginModify) then
 		self.m_bIsBeginModify = true;

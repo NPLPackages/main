@@ -1,0 +1,4 @@
+use this file to access the debug app
+please refer to script/kids/3DMapSystemApp/AppManager.lua Ln90:
+if(ParaIO.DoesFileExist("script/kids/3DMapSystemApp/DebugApp/whosyourdaddy.mom")) then
+    blablabla ... 

@@ -1,7 +1,9 @@
 --[[
 Title: SHA1
-Author(s): LiXizhi, code is based on https://gist.github.com/creationix/7ce3796e65b66549c4b0
+Author(s): LiXizhi
 Desc: 
+The default implementation uses the C++ ParaMisc.sha1(). 
+Encoding.Sha1ByScript is NPL version, which is based on https://gist.github.com/creationix/7ce3796e65b66549c4b0
 Use Lib:
 -------------------------------------------------------
 NPL.load("(gl)script/ide/System/Encoding/sha1.lua");
@@ -10,6 +12,7 @@ assert(Encoding.sha1("The quick brown fox jumps over the lazy dog", "hex") == "2
 assert(Encoding.sha1("The quick brown fox jumps over the lazy dog", "base64") == "L9ThxnotKPzthJ7hu3bnORuT6xI=");
 -------------------------------------------------------
 ]]
+NPL.load("(gl)script/ide/System/Encoding/base64.lua");
 NPL.load("(gl)script/ide/math/bit.lua");
 local Encoding = commonlib.gettable("System.Encoding");
 
@@ -120,24 +123,19 @@ local function dump(hash)
   return table.concat(hex)
 end
 
-local bytes = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
--- return base64
-function Encoding.base64(s)
-	local parts = {}
-	for i = 1, #s, 3 do
-		local a, b, c = byte(s, i, i + 3)
-		parts[#parts + 1] = char(
-		byte(bytes, rshift(a, 2) + 1),
-		byte(bytes, bor(lshift(band(a, 3), 4), rshift(b or 0, 4)) + 1),
-		b and byte(bytes, bor(lshift(band(b, 15), 2), rshift(c or 0, 6)) + 1) or 61,
-		c and byte(bytes, band(c, 63) + 1) or 61)
+-- @param format: nil or "hex" or "base64". if nil it is in binary format
+function Encoding.sha1(message, format)
+	if not format then
+		return ParaMisc.sha1(message, true);
+	elseif (format == "hex") then
+		return ParaMisc.sha1(message, false);
+	elseif (format == "base64") then
+		return ParaMisc.base64(ParaMisc.sha1(message, true));
 	end
-	return table.concat(parts)
 end
 
 -- @param format: nil or "hex" or "base64". if nil it is in binary format
-function Encoding.sha1(message, format)
+function Encoding.Sha1ByScript(message, format)
 	local hash = sha1(message);
 	if(not format) then
 		return hash;
@@ -146,4 +144,9 @@ function Encoding.sha1(message, format)
 	elseif(format == "base64") then
 		return Encoding.base64(hash);
 	end
+end
+
+if(not ParaMisc.sha1 or not ParaMisc.base64) then
+	log("warning: C++ version of sha1 or base64 not available. Default to script implementation. \n");
+	Encoding.sha1 = Encoding.Sha1ByScript;
 end

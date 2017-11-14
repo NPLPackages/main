@@ -65,8 +65,8 @@ local ipairs = ipairs;
 local type = type;
 local ParaGlobal_timeGetTime = ParaGlobal.timeGetTime
 	
--- max allowed timer due time
-local MAX_TIMER_DUE_TIME = 10000000
+-- max allowed timer due time. 30 days.
+local MAX_TIMER_DUE_TIME = 30*24*60*60*1000;
 
 -- mapping from id to the timer object. 
 local timer_pool_ = {};

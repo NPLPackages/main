@@ -14,6 +14,7 @@ echo({event.x, event.y, event.mouse_button});
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/math/Point.lua");
+NPL.load("(gl)script/ide/event_mapping.lua");
 local Point = commonlib.gettable("mathlib.Point");
 
 ------------------------------

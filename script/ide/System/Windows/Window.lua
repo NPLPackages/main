@@ -27,6 +27,7 @@ NPL.load("(gl)script/ide/System/Windows/KeyEvent.lua");
 NPL.load("(gl)script/ide/System/Windows/Mouse.lua");
 NPL.load("(gl)script/ide/System/Core/Event.lua");
 NPL.load("(gl)script/ide/math/Point.lua");
+NPL.load("(gl)script/ide/gui_helper.lua");
 local Point = commonlib.gettable("mathlib.Point");
 local Event = commonlib.gettable("System.Core.Event");
 local SizeEvent = commonlib.gettable("System.Windows.SizeEvent");
@@ -41,6 +42,8 @@ local Window = commonlib.inherit(commonlib.gettable("System.Windows.UIElement"),
 Window:Property("Name", "Window");
 Window:Property({"AutoClearBackground", true, nil, "SetAutoClearBackground"});
 Window:Property({"CanDrag", false, auto=true});
+Window:Property({"Alignment", "_lt", auto=true});
+Window:Signal("urlChanged", function(url) end)
 
 function Window:ctor()
 	self.window = self;
@@ -69,16 +72,23 @@ function Window:Show(name_or_params, parent, alignment, left, top, width, height
 	return self:ShowWithParams(params);
 end
 
+-- goto a new mcml v2 url
+function Window:Goto(url)
+	self.url = url;
+	self:RefreshUrlComponent();
+end
+
 function Window:RefreshUrlComponent()
 	if(self.url) then
 		self:LoadComponent(self.url);
+		self:urlChanged(self.url);
 		-- generate size event
 		local event = SizeEvent:new():init(self.crect)
 		Application:sendEvent(self, event);
 	end
 end
 
--- @param params: {url="", alignment, x,y,width, height, allowDrag,zorder, enable_esc_key, DestroyOnClose}
+-- @param params: {url="", alignment, x,y,width, height, allowDrag,zorder, enable_esc_key, DestroyOnClose, parent}
 function Window:ShowWithParams(params)
 	self.name = params.name;
 	-- load component if url has changed
@@ -86,6 +96,7 @@ function Window:ShowWithParams(params)
 		self.url = params.url;
 		if(params.url) then
 			self:LoadComponent(params.url);
+			self:urlChanged(self.url);
 		end
 	end
 	if(not self:isCreated()) then
@@ -101,8 +112,9 @@ function Window:ShowWithParams(params)
 				parent:AddChild(nativeWnd);
 			end
 			-- reposition/attach to parent
-			local left, top, width, height, alignment = params.left, params.top, params.width, params.height, params.alignment;
-			nativeWnd:Reposition(alignment or "_lt", left or 0, top or 0, width or self:width(), height or self:height());
+			local left, top, width, height, alignment = params.left, params.top, params.width, params.height, params.alignment or "_lt";
+			self:SetAlignment(alignment);
+			nativeWnd:Reposition(alignment, left or 0, top or 0, width or self:width(), height or self:height());
 			local x, y, width, height = nativeWnd:GetAbsPosition();
 
 			-- update geometry
@@ -317,7 +329,10 @@ function Window:setGeometry_sys(ax, ay, aw, ah)
 
 		if (self:isVisible()) then
 			if(not isMove) then
-				self.native_ui_obj:SetSize(aw, ah);
+				if(self:GetAlignment() == "_lt") then
+					-- ignore resizing the native window if the alignment type is not left top. 
+					self.native_ui_obj:SetSize(aw, ah);
+				end
 			end
 			-- generate size event
 			local event = SizeEvent:new():init(self.crect)
@@ -334,6 +349,8 @@ function Window:setGeometry_sys(ax, ay, aw, ah)
 		if(isMove) then
 			self.screen_x=ax;
 			self.screen_y=ay;
+			-- always use left top alignment when dragging a window with other alignment types. 
+			self:SetAlignment("_lt");
 			self.native_ui_obj:Reposition("_lt", ax, ay, aw, ah);
 		
 			-- generate size event

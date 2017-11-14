@@ -1,0 +1,42 @@
+﻿<!-- "script/kids/3DMapSystemApp/WebBrowser/OpenInBrowserDlgPage.html" -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>
+    <title>open in browser dialog LiXizhi 2008.6.22</title>
+</head>
+<body>
+<pe:mcml trans="ParaworldMCML">
+<script type="text/npl" src="OpenInBrowserDlgPage.lua"><![CDATA[
+Map3DSystem.App.WebBrowser.OpenInBrowserDlgPage.OnInit();
+]]></script>
+<div style="margin:10px">
+    <img src="Texture/3DMapSystem/QuestionMark_BG.png" width="64" height="64"/>
+    <div style="float:left;height:70px;margin-left:10px">
+        是否打开外部网页:<br />
+        <div name="url" style="color:#0000AA;font-weight:bold">http://www.unknownurl.com</div>
+        <div name="SaftyNotice">
+            <img style="background:url(Texture/3DMapSystem/common/exclamation.png);width:16px;height:16px;"/>
+            <div style="margin-left:5px;float:left;color:#808080;font-weight:bold">
+                安全警告: 此域名为未知URL
+            </div>
+        </div>
+    </div>
+    <div style="margin-top:10px">
+        <div style="float:left;" width="80%">
+            <input tooltip="目前内置浏览器在有些PC上不稳定, 如果发生异常, 请用打开按钮" type="button" value="用内置浏览器打开" onclick="Map3DSystem.App.WebBrowser.OpenInBrowserDlgPage.OnOpenInternal"/>
+        </div>
+        <input tooltip="用外部系统浏览器打开, 会弹出新窗口" type="button" class="defaultbutton" value="打开" onclick="Map3DSystem.App.WebBrowser.OpenInBrowserDlgPage.OnOpenExternal"/>
+        <input type="button" style="margin-left:5px" value="取消" onclick="Map3DSystem.App.WebBrowser.OpenInBrowserDlgPage.OnClose"/>
+    </div>
+    <hr />
+    <div style="color:#808080">点击打开按钮, 将使用外部系统浏览器访问网址</div>
+    <div>
+        <img style="background:url(Texture/3DMapSystem/common/exclamation.png);width:16px;height:16px;"/>
+        <div style="margin-left:5px;float:left;color:#808080">
+            目前内置浏览器在有些PC上不稳定, 如果发生异常, 请用打开按钮
+        </div>
+    </div>
+</div>    
+</pe:mcml>
+</body>
+</html>

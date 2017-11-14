@@ -1039,8 +1039,6 @@ end
 -- @return: it always returns absolute path. however, if path cannot be resolved, the input is returned unchanged. 
 function PageElement:GetAbsoluteURL(url)
 	if(not url or url=="") then return url end
-	-- it will replace %NAME% with their values before processing next. 
-	url = paraworld.TranslateURL(url);
 	
 	if(string_find(url, "^([%w]*)://"))then
 		-- already absolute path
