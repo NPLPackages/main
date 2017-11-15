@@ -59,6 +59,10 @@ System.os.GetUrl({
 	url = "http://localhost:8099/ajax/log?action=log", 
 	form = {filecontent = "binary string here", }
 }, function(err, msg, data)		echo(data)  end);
+
+-- synchronous API in current NPL thread
+local err, msg, data = System.os.GetUrl({url = "http://www.baidu.com", form = {key="value",} });
+echo({err, msg, data})
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/Json.lua");
@@ -203,19 +207,23 @@ end
 --  `data` contains the translated response data if data format is a known format like json
 --    or it contains the binary response body from server, which is same as `msg.data`
 -- @param option: mostly nil. "-I" for headers only
--- @return: return nil if callbackFunc is a function. or the string content in sync call. 
+-- @return: return nil if callbackFunc is a function. or (rcode, msg, data) in sync call. 
 function os.GetUrl(url, callbackFunc, option)
 	local options = GetUrlOptions(url, option);
 
-	if(not callbackFunc) then
-		-- NOT recommended
-		return GetUrlSync(options.url);
+	if(callbackFunc) then
+		-- async call. 
+		local req = Request:new():init(options, callbackFunc);
+		NPL.AppendURLRequest(options, format("(%s)CallbackURLRequest__(%d)", npl_thread_name, req.id), nil, "r");	
+	else
+		-- sync interface
+		local rcode_, msg_, data_;
+		local req = Request:new():init(options, function(rcode, msg, data)
+			rcode_, msg_, data_ = rcode, msg, data;
+		end);
+		NPL.AppendURLRequest(options, format("(%s)CallbackURLRequest__(%d)", npl_thread_name, req.id), nil, "self"); -- "self" means this thread
+		return rcode_, msg_, data_;
 	end
-	
-	local req = Request:new():init(options, callbackFunc);
-
-	-- async call. 
-	NPL.AppendURLRequest(options, format("(%s)CallbackURLRequest__(%d)", npl_thread_name, req.id), nil, "r");
 end
 
 
