@@ -15,9 +15,12 @@ function pe_if:LoadComponent(parentElem, parentLayout, style)
 	local condition = self:GetAttributeWithCode("condition", nil, true);
 	self.isConditionTrue = (condition==true or condition=="true");
 	if (self.isConditionTrue) then
+		self:show();
 		for childnode in self:next() do
 			childnode:LoadComponent(parentElem, parentLayout, style);
 		end
+	else
+		self:hide();
 	end
 end
 
