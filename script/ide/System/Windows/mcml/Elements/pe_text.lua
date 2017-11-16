@@ -147,7 +147,7 @@ function pe_text:CalculateTextLayout_helper(labelText, parentLayout, css)
 
 		local _this = Label:new():init();
 		_this:SetText(labelText);
-		_this:setGeometry(left, top+line_padding, width, height);
+		_this:setGeometry(left, top, width, height);
 		self.labels:add(_this);
 
 		if(css) then
@@ -207,12 +207,12 @@ function pe_text:paintEvent(painter)
 		local css = self:GetStyle();
 		painter:SetFont(self.font);
 		painter:SetPen(css.color or "#000000");
-
+		local textAlignment = css:GetTextAlignment();
 		for i = 1, #self.labels do
 			local label = self.labels[i];
 			if(label) then
 				local text = label:GetText();
-				painter:DrawTextScaled(label.crect:x(), label.crect:y(), text, self.scale);
+				painter:DrawTextScaledEx(label.crect:x(), label.crect:y()+self.line_padding, label.crect:width(), label.crect:height()-self.line_padding-self.line_padding, text, textAlignment, self.scale);
 			end
 		end
 	end
