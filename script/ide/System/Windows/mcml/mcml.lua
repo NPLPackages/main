@@ -140,6 +140,8 @@ function mcml:LoadAllElements()
 	Elements.pe_img:RegisterAs("pe:img","img");
 	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_label.lua");
 	Elements.pe_label:RegisterAs("label","pe:label");
+	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_progressbar.lua");
+	Elements.pe_progressbar:RegisterAs("pe:progressbar", "progressbar");
 	-- TODO: add all system defined page element here
 end
 
