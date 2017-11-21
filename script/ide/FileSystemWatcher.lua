@@ -94,8 +94,12 @@ end
 
 -- remove this file watcher. 
 function FileSystemWatcher:Destroy()
+	self:RemoveAllDirectories();
 	unregisterCallback(self.name, self);
-	watcher_dirs[self.name] = nil;
+	
+	if( not call_backs[self.name]) then
+		watcher_dirs[self.name] = nil;
+	end
 end
 
 
@@ -234,6 +238,18 @@ function FileSystemWatcher:RemoveDirectory(dir)
 				watcher_dirs[self.name][dir] = watcher_dirs[self.name][dir] -1;
 			end	
 		end	
+	end
+end
+
+-- unwatch all directories
+function FileSystemWatcher:RemoveAllDirectories()
+	while(true) do
+		local dir = next(self.dirs, nil);
+		if(dir) then
+			self:RemoveDirectory(dir);
+		else
+			break;
+		end
 	end
 end
 
