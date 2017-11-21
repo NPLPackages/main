@@ -19,9 +19,9 @@ ProgressBar:Property("Name", "ProgressBar");
 
 ProgressBar:Property({"grooveWidth", nil, nil, "SetGrooveWidth",auto=true});
 ProgressBar:Property({"grooveHeight", nil, nil, "SetGrooveHeight",auto=true});
-ProgressBar:Property({"grooveBackground", "Texture/Aries/Creator/Theme/GameCommonIcon_32bits.png;456 396 16 16:4 4 4 4",auto=true});
+ProgressBar:Property({"grooveBackground", nil, auto=true});
 
-ProgressBar:Property({"sliderBackground", "Texture/3DMapSystem/common/ThemeLightBlue/slider_button_16.png;5 5 5 5:1 1 1 1",auto=true});
+ProgressBar:Property({"sliderBackground", nil, auto=true});
 
 function ProgressBar:ctor()
 	self.groove = nil;
@@ -63,7 +63,7 @@ end
 
 function ProgressBar:Groove()
 	if(not self.groove) then
-		self.groove = self:rect();
+		self.groove = Rect:new():init(0, 0, self:width(), self:height());
 	end
 	return self.groove;
 end
@@ -109,14 +109,20 @@ function ProgressBar:paintEvent(painter)
 	local groove = self:Groove();
 	local groovBackground = self.grooveBackground;
 	if(groovBackground and groovBackground~="") then
+		painter:SetPen("#ffffff");
+	else
 		painter:SetPen("#ff0000");
-		painter:DrawRectTexture(self:x() + groove:x(), self:y() + groove:y(), groove:width(), groove:height(), groovBackground);
 	end
+	painter:DrawRectTexture(self:x() + groove:x(), self:y() + groove:y(), groove:width(), groove:height(), groovBackground);
 
 	local slider = self:Slider();
 	local sliderBackground = self.sliderBackground;
-	if(sliderBackground and sliderBackground~="" and slider:width() > 0 and slider:height() > 0) then
-		painter:SetPen("#ffffff");
+	if(slider:width() > 0 and slider:height() > 0) then
+		if(sliderBackground and sliderBackground~="") then
+			painter:SetPen("#ffffff");
+		else
+			painter:SetPen("#00ff00");
+		end
 		painter:DrawRectTexture(self:x() + slider:x(), self:y() + slider:y(), slider:width(), slider:height(), sliderBackground);
 	end
 end

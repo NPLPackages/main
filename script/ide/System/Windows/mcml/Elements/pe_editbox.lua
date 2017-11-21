@@ -29,7 +29,7 @@ function pe_editbox:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	
 	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
 
-	_this:Connect("textChanged", self, self.OnTextChanged)
+	_this:Connect("textChanged", self, self.OnTextChanged, "UniqueConnection")
 end
 
 function pe_editbox:OnLoadComponentAfterChild(parentElem, parentLayout, css)

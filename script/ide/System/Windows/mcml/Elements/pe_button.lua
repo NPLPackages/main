@@ -31,11 +31,9 @@ function pe_button:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	_this:SetText(self:GetAttributeWithCode("value", nil, true));
 	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
 
-	local buttonName = self:GetAttributeWithCode("name",nil,true); -- touch name
+	self.buttonName = self:GetAttributeWithCode("name",nil,true); -- touch name
 
-	_this:Connect("clicked", function()
-		self:OnClick(buttonName);
-	end)
+	_this:Connect("clicked", self, self.OnClick, "UniqueConnection")
 end
 
 function pe_button:OnBeforeChildLayout(layout)
@@ -71,7 +69,7 @@ function pe_button:GetValue()
 	return self:GetAttribute("value");
 end
 
-function pe_button:OnClick(buttonName)
+function pe_button:OnClick()
 	local bindingContext;
 	local onclick = self.onclickscript or self:GetAttributeWithCode("onclick",nil,true);
 	if(onclick == "")then
@@ -92,11 +90,11 @@ function pe_button:OnClick(buttonName)
 				--bindingContext:UpdateControlsToData();
 				--values = bindingContext.values
 			--end	
-			result = self:DoPageEvent(onclick, buttonName, self);
+			result = self:DoPageEvent(onclick, self.buttonName, self);
 		else
 			-- user clicks the button, yet without form info
 			-- the callback function format is function(buttonName, self) end
-			result = self:DoPageEvent(onclick, buttonName, self)
+			result = self:DoPageEvent(onclick, self.buttonName, self)
 		end
 	end
 	if(onclick_for) then

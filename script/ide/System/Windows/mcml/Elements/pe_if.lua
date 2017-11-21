@@ -25,6 +25,9 @@ function pe_if:LoadComponent(parentElem, parentLayout, style)
 end
 
 function pe_if:UpdateLayout(parentLayout)
+	if(self:isHidden()) then 
+		return 
+	end
 	if (self.isConditionTrue) then
 		for childnode in self:next() do
 			childnode:UpdateLayout(parentLayout);

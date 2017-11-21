@@ -40,7 +40,7 @@ end
 function pe_label:SetValue(value)
 	self:SetAttribute("value", value);
 	if(self.control) then
-		return self.control:SetText(self.value);
+		return self.control:SetText(value);
 	end
 end
 

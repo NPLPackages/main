@@ -42,11 +42,11 @@ SliderBar:Property("Name", "SliderBar");
 
 SliderBar:Property({"grooveWidth", nil, nil, "SetGrooveWidth",auto=true});
 SliderBar:Property({"grooveHeight", nil, nil, "SetGrooveHeight",auto=true});
-SliderBar:Property({"grooveBackground", "Texture/Aries/Creator/Theme/GameCommonIcon_32bits.png;456 396 16 16:4 4 4 4",auto=true});
+SliderBar:Property({"grooveBackground", nil,auto=true});
 
 SliderBar:Property({"sliderWidth", nil, nil, "SetSliderWidth",auto=true});
 SliderBar:Property({"sliderHeight", nil, nil, "SetSliderHeight",auto=true});
-SliderBar:Property({"sliderBackground", "Texture/3DMapSystem/common/ThemeLightBlue/slider_button_16.png;5 5 5 5:1 1 1 1",auto=true});
+SliderBar:Property({"sliderBackground", nil,auto=true});
 
 function SliderBar:ctor()
 	self.groove = nil;

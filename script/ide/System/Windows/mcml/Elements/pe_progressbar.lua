@@ -41,7 +41,7 @@ function pe_progressbar:OnLoadComponentBeforeChild(parentElem, parentLayout, css
 
 	--local buttonName = self:GetAttributeWithCode("name"); -- touch name
 
-	_this:Connect("valueChanged", self, self.OnStep)
+	_this:Connect("valueChanged", self, self.OnStep, "UniqueConnection")
 end
 
 function pe_progressbar:OnAfterChildLayout(layout, left, top, right, bottom)
@@ -51,6 +51,7 @@ function pe_progressbar:OnAfterChildLayout(layout, left, top, right, bottom)
 end
 
 function pe_progressbar:SetValue(value)
+	self:SetAttribute("value", value);
 	if(self.control) then
 		self.control:SetValue(value, true);
 	end
