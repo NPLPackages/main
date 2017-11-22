@@ -21,8 +21,8 @@ function pe_progressbar:OnLoadComponentBeforeChild(parentElem, parentLayout, css
 	css.float = css.float or true;
 	css.height = css.height or default_css.iconSize;
 
-	self.min = self:GetAttributeWithCode("min", 0, true);
-	self.max = self:GetAttributeWithCode("max", 100, true);
+	self.min = tonumber(self:GetAttributeWithCode("Minimum", 0, true));
+	self.max = tonumber(self:GetAttributeWithCode("Maximum", 100, true));
 
 	local _this = self.control;
 	if(not _this) then
@@ -32,7 +32,7 @@ function pe_progressbar:OnLoadComponentBeforeChild(parentElem, parentLayout, css
 	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
 	_this:SetMin(self.min);
 	_this:SetMax(self.max);
-	_this:SetValue(self:GetAttributeWithCode("value", 0, true));
+	_this:SetValue(tonumber(self:GetAttributeWithCode("Value", 0, true)));
 	_this:SetDirection(if_else(self:GetBool("is_vertical",false) == true, "vertical" , "horizontal"));
 	_this:SetSliderBackground(self:GetAttributeWithCode("blockimage", nil, true) or css["blockimage"]);
 	_this:SetGrooveBackground(self:GetAttributeWithCode("background", nil, true) or css["background"]);
@@ -51,7 +51,7 @@ function pe_progressbar:OnAfterChildLayout(layout, left, top, right, bottom)
 end
 
 function pe_progressbar:SetValue(value)
-	self:SetAttribute("value", value);
+	self:SetAttribute("Value", value);
 	if(self.control) then
 		self.control:SetValue(value, true);
 	end
