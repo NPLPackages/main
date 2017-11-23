@@ -303,7 +303,7 @@ function IndexTable:removeIdInIds(cid, ids)
 	else
 		-- TODO: optimize this function with C++
 		local tmp_ids = ","..ids..",";
-		local new_ids = tmp_ids:gsub(",("..cid..",)", "");
+		local new_ids = tmp_ids:gsub(",("..cid..",)", ",");
 		if(new_ids~=tmp_ids) then
 			return new_ids:gsub("^,", ""):gsub(",$", "");
 		else
