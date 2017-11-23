@@ -279,7 +279,7 @@ function Map3DSystem.CreateWorld(NewWorldpath, BaseWorldPath, bUseBaseWorldNPC, 
 		return L"世界已经存在了, 如想重新创建, 请手工删除文件夹./"..commonlib.Encoding.DefaultToUtf8(NewWorldpath);
 	else
 		if(world:SetBaseWorldName(BaseWorldPath) ==  true) then
-			local sConfigFileName = ParaWorld.NewWorld(NewWorldpath, world.sBaseWorldCfgFile);
+			local sConfigFileName = ParaWorld.NewWorld(NewWorldpath.."/", world.sBaseWorldCfgFile);
 			if(sConfigFileName ~= "") then
 				world.sConfigFile = sConfigFileName;
 				-- copy the base world's attribute file to the newly created world.
