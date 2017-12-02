@@ -17,88 +17,96 @@ Print all url params
 ]]
 NPL.load("(gl)script/ide/System/Compiler/nplc.lua");
 if(not is_admin()) then
-  exit("access denied")
+	exit("access denied")
 end
 
 local code = request:get("text");
 local function GetCode()
-  return code or "";
+	return code or "";
 end
 
 local function CreateSandBoxEnv()
-  local env = {
-    alert = _guihelper and _guihelper.MessageBox or commonlib.echo,
-    GameLogic = commonlib.gettable("GameLogic"),
-    cmd = GameLogic and GameLogic.RunCommand or commonlib.echo,
-  };
-  local meta = {__index = _G};
-	setmetatable (env, meta);
-  return env;
+	local env = {
+		alert = _guihelper and _guihelper.MessageBox or commonlib.echo,
+		GameLogic = commonlib.gettable("GameLogic"),
+		cmd = GameLogic and GameLogic.RunCommand or commonlib.echo,
+	};
+	local meta = {__index = _G};
+	setmetatable(env, meta);
+	return env;
+end
+
+-- return filename
+local function SaveCode()
+	local filename = "temp/console.lua";
+	local tmp_file = ParaIO.open(filename, "w");
+	if(tmp_file) then
+		tmp_file:write(code, #code);
+		tmp_file:close();
+	end
+	return filename;
 end
 
 -- Run code and print result
 local function RunWithResult(output)
-  if(not code or code == "") then
-    return;
-  end
-  if(not request:get("btnRunPage")) then
-    local fromLogPos = commonlib.log.GetLogPos();
+	if(not code or code == "") then
+		return;
+	end
 	local filename = request:get("src");
 	if(not filename or filename == "") then
-		filename = "temp/console.lua";
-		local tmp_file = ParaIO.open(filename, "w");
-		if(tmp_file) then
-			tmp_file:write(code, #code);
-			tmp_file:close();
-		end
+		filename = SaveCode();
 	end
-    local code_func, errormsg = NPL.loadstring(code, filename);
-    if(code_func) then
-	  local env = CreateSandBoxEnv();
-      setfenv(code_func, env);
-	    local ok, result = pcall(code_func);
-		if(output) then
-			if(ok) then
-				if(type(env.main) == "function") then
-					setfenv(env.main, env);
-					ok, result = pcall(env.main);
+
+	if(not request:get("btnRunPage")) then
+		local fromLogPos = commonlib.log.GetLogPos();
+	
+		local code_func, errormsg = NPL.loadstring(code, filename);
+		if(code_func) then
+			local env = CreateSandBoxEnv();
+			setfenv(code_func, env);
+			local ok, result = pcall(code_func);
+			if(output) then
+				if(ok) then
+					if(type(env.main) == "function") then
+						setfenv(env.main, env);
+						ok, result = pcall(env.main);
+					end
+				end
+				output.success = ok;
+				if(not ok) then
+					output.error = result;
+				else
+					output.result = result or ParaGlobal.GetLog(fromLogPos, -1);
+				end
+			else
+				if(ok) then
+					echo("<p style='color:green'>success!</p>")
+					echo(string.gsub(sanitize(ParaGlobal.GetLog(fromLogPos, -1) or ""), "\n", "<br/>"));
+				else
+					echo("<p style='color:red'>Runtime error: </p>")
+					echo(sanitize(result));
 				end
 			end
-			output.success = ok;
-			if(not ok) then
-				output.error = result;
-			else
-				output.result = result or ParaGlobal.GetLog(fromLogPos, -1);
-			end
 		else
-			if(ok) then
-			  echo("<p style='color:green'>success!</p>")
-			  echo(string.gsub(sanitize(ParaGlobal.GetLog(fromLogPos, -1) or ""), "\n", "<br/>"));
+			if(output) then
+				output.error = errormsg;
 			else
-			  echo("<p style='color:red'>Runtime error: </p>")
-			  echo(sanitize(result));
+				echo("<p style='color:red'>Syntax error: </p>")
+				echo(sanitize(errormsg));
 			end
 		end
-    else
-		if(output) then
-			output.error = errormsg;
-		else
-			echo("<p style='color:red'>Syntax error: </p>")
-			echo(sanitize(errormsg));
+	else
+		if(not output) then
+			include_pagecode(code, filename);
 		end
-    end
-  else
-	if(not output) then
-		include_pagecode(code);
 	end
-  end
 end
 
 if(is_ajax()) then
 	-- run code
 	add_action('wp_ajax_runcode', function()
 		if(request:get("btnRunPage")) then
-			include_pagecode(code);
+			RunWithResult();
 		else
 			local output = {};
 			RunWithResult(output);
@@ -109,6 +117,10 @@ if(is_ajax()) then
 	-- get request params
 	add_action('wp_ajax_getparams', function()
 		wp_send_json(request:getparams());
+    end)
+
+	add_action('wp_ajax_savecode', function()
+		wp_send_json({filename = SaveCode()});
     end)
 
 	-- get process id
@@ -135,7 +147,7 @@ if(is_ajax()) then
 	return;
 end
 ?>
-<style type="text/css" media="screen">
+<style type = "text/css" media = "screen">
   .ace_editor {
   border: 1px solid lightgray;
   margin: auto;
@@ -176,6 +188,7 @@ wp_enqueue_script("ngSanitize", "/wp-includes/js/angular/angular-sanitize.min.js
 			var editor = ace.edit("editor");
 			editor.session.getUndoManager().markClean();
             $scope.isModified = false;
+			$.post("/ajax/console?action=savecode", {text:text})
 		};
 		$scope.openFile = function (index, line, bForceReopen, bForceNoPrompt) {
             var editor = ace.edit("editor");
@@ -192,6 +205,7 @@ wp_enqueue_script("ngSanitize", "/wp-includes/js/angular/angular-sanitize.min.js
 					$scope.$storage.currentFileIndex = index;
 					if (line && line > 0)
 						editor.gotoLine(line);
+					$.post("/ajax/console?action=savecode", {text:file.text})
 				}
             }
         }
