@@ -46,6 +46,19 @@ if(is_ajax()) then
     add_action('wp_ajax_removebreakpoint', function()
 		NPL.activate(targetFile, {filename="delb", code={filename=request:get("filename"), line=tonumber(request:get("line"))}});
 	end)
+	
+	-- @param msg : {filename="cmd_name", ... }
+	local function AddPendingMessage(msg)
+		local pending_msg = commonlib.gettable("commonlib.NPLCodeWiki.debugger.last_msg");	
+		pending_msg[#pending_msg+1] = msg;
+		if(#pending_msg > 1) then -- at most 1 message
+			commonlib.removeArrayItem(pending_msg, 1);
+		end
+	end
+
+	add_action('wp_ajax_openfile', function()
+		AddPendingMessage({filename = "openfile", file = request:get("filename"), line=tonumber(request:get("line"))})
+	end)
 	add_action('wp_ajax_poll_msg', function()
 		local output = {msgs={}};
 		local output_queue = HTTPDebugger.GetOutputMsgList();
@@ -54,6 +67,13 @@ if(is_ajax()) then
 			output.msgs[#(output.msgs)+1] = msg;
             msg = output_queue:remove(msg);
 		end
+		-- for send out all pending messages
+		local pending_msg = commonlib.gettable("commonlib.NPLCodeWiki.debugger.last_msg");	
+		for i=#pending_msg, 1, -1 do
+			output.msgs[#(output.msgs)+1] = pending_msg[i];
+			pending_msg[i] = nil;
+		end
+
         wp_send_json(output, true);
 	end)
     return;
@@ -390,6 +410,10 @@ echo(format("<script>window.debuggerInfo = {workspaceDir:'%s', devDir:'%s'};</sc
             }
 			else if (cmd == "exit") {
                 $scope.stop();
+			}
+			else if (cmd == "openfile") {
+				msg.param1 = msg.file; msg.param2 = msg.line;
+                $scope.gotoSourceLine(msg.file, msg.line, true);
 			}
 			else if (cmd == "listBreakpoint" && msg.code != null) {
 			    //for (var i = 0; i < $scope.$storage.breakpoints.length; i++) {
