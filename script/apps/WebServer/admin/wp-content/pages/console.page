@@ -255,7 +255,13 @@ wp_enqueue_script("ngSanitize", "/wp-includes/js/angular/angular-sanitize.min.js
 				$scope.$apply();
 			})
 		}
-
+		$scope.OpenInDebugger = function(){
+			var text = editor.getValue();
+			$scope.save(text);
+			window.open("/debugger", '_blank');
+			$.post("/ajax/debugger?action=openfile", {filename:"temp/console.lua", line:0})
+		}
+		
 		if(typeof Page != 'undefined')
             Page.ShowSideBar(false);
 	 });
@@ -272,6 +278,7 @@ wp_enqueue_script("ngSanitize", "/wp-includes/js/angular/angular-sanitize.min.js
 	  <p>
 		<button class="btn btn-primary" name="btnRunCode" ng-click='runcode()' title="Run code (Ctrl+R)">Run as code (F5)</button>
 		<button class="btn" name="btnRunPage" ng-click='runpage()'>Run as page</button>
+		<button class="btn" style="margin-left:30px;" name="btnOpenInDebugger" ng-click='OpenInDebugger()'>Open in debugger...</button>
 	  </p>
 	</div>
 	<p style='color:green' ng-show="success==true">success!</p>
