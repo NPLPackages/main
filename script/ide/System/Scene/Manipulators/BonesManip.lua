@@ -702,15 +702,25 @@ function BonesManip:keyPressEvent(event)
 		elseif(keyname == "DIK_ADD" or keyname == "DIK_EQUALS") then
 			-- select first child bone
 			local childBone = self.selectedBone:GetChildAt(1);
-			if(childBone) then
-				self:SelectBonesByPickName(childBone.pickName);
+			while(childBone) do
+				if(childBone:IsEditable()) then
+					self:SelectBonesByPickName(childBone.pickName);
+					break;
+				else
+					childBone = childBone:GetChildAt(1);
+				end
 			end
 			event:accept();
 		elseif(keyname == "DIK_SUBTRACT" or keyname == "DIK_MINUS") then
 			-- select parent bone
 			local parentBone = self.selectedBone:GetParent();
-			if(parentBone) then
-				self:SelectBonesByPickName(parentBone.pickName);
+			while(parentBone) do
+				if(parentBone:IsEditable()) then
+					self:SelectBonesByPickName(parentBone.pickName);
+					break;
+				else
+					parentBone = parentBone:GetParent();
+				end
 			end
 			event:accept();
 		elseif(keyname == "DIK_K") then
@@ -801,94 +811,96 @@ function BonesManip:paintEvent(painter)
 	end
 	local bones = self.bones;
 	for i, bone in ipairs(bones) do
-		local pickName, pickIKHandleName;
-		if(isDrawingPickable) then
-			pickName = self:GetNextPickingName();
-			pickIKHandleName = self:GetNextPickingName();
-		end
+		if(bone:IsEditable()) then
+			local pickName, pickIKHandleName;
+			if(isDrawingPickable) then
+				pickName = self:GetNextPickingName();
+				pickIKHandleName = self:GetNextPickingName();
+			end
 		
-		if(name == bone.pickName) then
-			-- hover over
-			self:SetColorAndName(painter, self.hoverColor, pickName);
-		elseif(bone:IsSelected() and not self:GetIKHandleBone()) then
-			-- mouse 
-			self:SetColorAndName(painter, self.selectedColor, pickName);
-		else
-			self:SetColorAndName(painter, self.lineColor, pickName);
-		end
+			if(name == bone.pickName) then
+				-- hover over
+				self:SetColorAndName(painter, self.hoverColor, pickName);
+			elseif(bone:IsSelected() and not self:GetIKHandleBone()) then
+				-- mouse 
+				self:SetColorAndName(painter, self.selectedColor, pickName);
+			else
+				self:SetColorAndName(painter, self.lineColor, pickName);
+			end
 		
-		local pivot = bone:GetPivot();
-		-- draw connections from this to all child bones
-		local pickWithParent = false; -- picking with parent or children
-		if(pickWithParent) then
-			local parentBone = bone:GetParent();
-			if(parentBone) then
-				local parentPivot = parentBone:GetPivot();
-				ShapesDrawer.DrawLine(painter, pivot[1],pivot[2],pivot[3], parentPivot[1],parentPivot[2],parentPivot[3]);
-			end
-		else
-			for i, childBone in ipairs(bones) do
-				if(childBone:GetParent() == bone) then
-					local childPivot = childBone:GetPivot();	
-					ShapesDrawer.DrawLine(painter, pivot[1],pivot[2],pivot[3], childPivot[1],childPivot[2],childPivot[3]);
-				end
-			end
-		end
-
-		-- draw this bone and IK handle if any
-		painter:PushMatrix();
-		painter:TranslateMatrix(pivot[1],pivot[2],pivot[3]);
-		if(self.selectedBone == bone or bone:HasIKHandle()) then
-			if(bone:CanHasIKHandle() and not (self:GetIKHandleBone() == bone and isDrawingPickable)) then
-				if(self:GetIKHandleBone() == bone) then
-					self:SetColorAndName(painter, self.editColor, pickIKHandleName);
-				elseif(name == bone.pickIKHandleName) then
-					self:SetColorAndName(painter, self.hoverColor, pickIKHandleName);
-				else
-					self:SetColorAndName(painter, self.IKHandleColor, pickIKHandleName);
-				end
-				-- draw IK handle
-				local length = 0.2;
-				ShapesDrawer.DrawLine(painter, 0,0,0, length,0,0);
-				ShapesDrawer.DrawLine(painter, 0,0,0, 0,length,0);
-				ShapesDrawer.DrawLine(painter, 0,0,0, 0,0,length);
-			end
-			if(self:GetIKHandleBone() == bone) then
-				if(name == bone.pickName) then
-					-- hover over
-					self:SetColorAndName(painter, self.hoverColor, pickName);
-				else
-					self:SetColorAndName(painter, self.selectedColor, pickName);
+			local pivot = bone:GetPivot();
+			-- draw connections from this to all child bones
+			local pickWithParent = false; -- picking with parent or children
+			if(pickWithParent) then
+				local parentBone = bone:GetParent();
+				if(parentBone) then
+					local parentPivot = parentBone:GetPivot();
+					ShapesDrawer.DrawLine(painter, pivot[1],pivot[2],pivot[3], parentPivot[1],parentPivot[2],parentPivot[3]);
 				end
 			else
-				if(bone:HasIKHandle()) then
-					self:SetColorAndName(painter, self.IKHandleColor, pickName);
-				else
-					self:SetColorAndName(painter, self.editColor, pickName);
+				for i, childBone in ipairs(bones) do
+					if(childBone:GetParent() == bone) then
+						local childPivot = childBone:GetPivot();	
+						ShapesDrawer.DrawLine(painter, pivot[1],pivot[2],pivot[3], childPivot[1],childPivot[2],childPivot[3]);
+					end
 				end
 			end
-		else
-			self:SetColorAndName(painter, self.PivotColor, pickName);
-		end
-		-- draw this bone
-		ShapesDrawer.DrawCircle(painter, 0,0,0, bone_radius, "x", false);
-		ShapesDrawer.DrawCircle(painter, 0,0,0, bone_radius, "y", false);
-		ShapesDrawer.DrawCircle(painter, 0,0,0, bone_radius, "z", false);
-		painter:PopMatrix();
-		 
-		if(not isDrawingPickable and 
-			(((self.ShowBoneName) and (name == bone.pickName or self.selectedBone == bone))
-				or (not self.selectedBone and name == bone.pickName))) then
-			-- display bone text for mouse hover bone
+
+			-- draw this bone and IK handle if any
 			painter:PushMatrix();
-			painter:TranslateMatrix(pivot[1]+0.1,pivot[2]+0.3*lineScale,pivot[3]);
-			painter:LoadBillboardMatrix();
-			painter:DrawTextScaled(0, 0, bone:GetDisplayName(), self.textScale*lineScale);
+			painter:TranslateMatrix(pivot[1],pivot[2],pivot[3]);
+			if(self.selectedBone == bone or bone:HasIKHandle()) then
+				if(bone:CanHasIKHandle() and not (self:GetIKHandleBone() == bone and isDrawingPickable)) then
+					if(self:GetIKHandleBone() == bone) then
+						self:SetColorAndName(painter, self.editColor, pickIKHandleName);
+					elseif(name == bone.pickIKHandleName) then
+						self:SetColorAndName(painter, self.hoverColor, pickIKHandleName);
+					else
+						self:SetColorAndName(painter, self.IKHandleColor, pickIKHandleName);
+					end
+					-- draw IK handle
+					local length = 0.2;
+					ShapesDrawer.DrawLine(painter, 0,0,0, length,0,0);
+					ShapesDrawer.DrawLine(painter, 0,0,0, 0,length,0);
+					ShapesDrawer.DrawLine(painter, 0,0,0, 0,0,length);
+				end
+				if(self:GetIKHandleBone() == bone) then
+					if(name == bone.pickName) then
+						-- hover over
+						self:SetColorAndName(painter, self.hoverColor, pickName);
+					else
+						self:SetColorAndName(painter, self.selectedColor, pickName);
+					end
+				else
+					if(bone:HasIKHandle()) then
+						self:SetColorAndName(painter, self.IKHandleColor, pickName);
+					else
+						self:SetColorAndName(painter, self.editColor, pickName);
+					end
+				end
+			else
+				self:SetColorAndName(painter, self.PivotColor, pickName);
+			end
+			-- draw this bone
+			ShapesDrawer.DrawCircle(painter, 0,0,0, bone_radius, "x", false);
+			ShapesDrawer.DrawCircle(painter, 0,0,0, bone_radius, "y", false);
+			ShapesDrawer.DrawCircle(painter, 0,0,0, bone_radius, "z", false);
 			painter:PopMatrix();
-		end
-		if(isDrawingPickable) then
-			bone.pickName = pickName;
-			bone.pickIKHandleName = pickIKHandleName;
+		 
+			if(not isDrawingPickable and 
+				(((self.ShowBoneName) and (name == bone.pickName or self.selectedBone == bone))
+					or (not self.selectedBone and name == bone.pickName))) then
+				-- display bone text for mouse hover bone
+				painter:PushMatrix();
+				painter:TranslateMatrix(pivot[1]+0.1,pivot[2]+0.3*lineScale,pivot[3]);
+				painter:LoadBillboardMatrix();
+				painter:DrawTextScaled(0, 0, bone:GetDisplayName(), self.textScale*lineScale);
+				painter:PopMatrix();
+			end
+			if(isDrawingPickable) then
+				bone.pickName = pickName;
+				bone.pickIKHandleName = pickIKHandleName;
+			end
 		end
 	end
 
