@@ -74,6 +74,9 @@ MultiLineEditbox:Property({"leftTextMargin", 2});
 MultiLineEditbox:Property({"topTextMargin", 2});
 MultiLineEditbox:Property({"rightTextMargin", 2});
 MultiLineEditbox:Property({"bottomTextMargin", 2});
+-- TODO: for lipeng 2017.12.6, text to show when text is empty. such as "click to enter text..."
+MultiLineEditbox:Property({"EmptyText", nil, "GetEmptyText", "SetEmptyText", auto=true})
+MultiLineEditbox:Property({"m_readOnly", false, "isReadOnly", "setReadOnly"})
 --MultiLineEditbox:Property({"m_readOnly", false, "  ", "setReadOnly"})
 --MultiLineEditbox:Property({"m_maxLength", 65535, "getMaxLength", "setMaxLength", auto=true})
 --MultiLineEditbox:Property({"rows", nil, "GetRows", "SetRows"})
@@ -111,6 +114,18 @@ function MultiLineEditbox:initViewport()
 	self.viewport:SetClip(true);
 	self.viewport:Connect("SizeChanged", self, "updateScrollStatus");
 	self.viewport:Connect("PositionChanged", self, "updateScrollValue");
+end
+
+function MultiLineEditbox:isReadOnly()
+	if(self.viewport) then
+		return self.viewport:isReadOnly();
+	end
+end
+
+function MultiLineEditbox:setReadOnly(bReadonly)
+	if(self.viewport) then
+		self.viewport:setReadOnly(bReadonly);
+	end
 end
 
 function MultiLineEditbox:echoMode()

@@ -59,37 +59,45 @@ function Map3DSystem.App.Debug.DebugWnd.Show(bShow, _parent, parentWindow)
 		_parent = _this;
 
 		-- TODO: implement each one. 
+		local btnBG = "Texture/Taurus/Button_Normal.png:8 8 7 7";
 		_this = ParaUI.CreateUIObject("button", "button1", "_rt", -147, 4, 69, 23)
 		_this.text = "file...";
+		_this.background = btnBG;
 		_parent:AddChild(_this);
 
 		_this = ParaUI.CreateUIObject("button", "button6", "_rt", -72, 4, 69, 23)
 		_this.text = "Load";
+		_this.background = btnBG;
 		_parent:AddChild(_this);
 
 		_this = ParaUI.CreateUIObject("button", "RunCode", "_lt", 145, 31, 88, 23)
 		_this.text = "Run Code";
+		_this.background = btnBG;
 		_this.onclick = ";Map3DSystem.App.Debug.DebugWnd.OnClickRunCode();"
 		_parent:AddChild(_this);
 		
 		_this = ParaUI.CreateUIObject("button", "button7", "_lt", 239, 31, 88, 23)
 		_this.text = "Clear";
+		_this.background = btnBG;
 		_this.onclick = ";Map3DSystem.App.Debug.DebugWnd.OnClickClearCode();"
 		_parent:AddChild(_this);
 		
 		_this = ParaUI.CreateUIObject("button", "button7", "_lt", 333, 31, 88, 23)
 		_this.text = "Save ...";
+		_this.background = btnBG;
 		_this.onclick = ";Map3DSystem.App.Debug.DebugWnd.OnClickSaveCode();"
 		_parent:AddChild(_this);
 		
 
 		_this = ParaUI.CreateUIObject("button", "button3", "_rt", -147, 258, 69, 23)
 		_this.text = "view";
+		_this.background = btnBG;
 		_this.onclick = ";Map3DSystem.App.Debug.DebugWnd.OnClickViewVariable();"
 		_parent:AddChild(_this);
 		
 		_this = ParaUI.CreateUIObject("button", "button5", "_rt", -72, 258, 69, 23)
 		_this.text = "add";
+		_this.background = btnBG;
 		_parent:AddChild(_this);
 
 		_this = ParaUI.CreateUIObject("text", "label8", "_lt", 3, 7, 79, 15)
@@ -183,6 +191,7 @@ function Map3DSystem.App.Debug.DebugWnd.Show(bShow, _parent, parentWindow)
 			parent = _parent,
 			ShowLineNumber = true,
 			syntax_map = CommonCtrl.MultiLineEditbox.syntax_map_NPL,
+			bUseSystemControl = true,
 		};
 		ctl:Show();
 
