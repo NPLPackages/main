@@ -412,6 +412,14 @@ function EditBox:focusOutEvent(event)
 	self:setCursorBlinkPeriod(0);
 end
 
+function EditBox:GetPasswordText()
+	local text = self:GetText();
+	if(self._page_element and self._page_element:isPasswordButton()) then	
+		text = string.rep("*",string.len(text))	
+	end
+	return text;
+end
+
 function EditBox:naturalTextWidth()
 	return self.m_text:GetWidth(self:GetFont());
 end
@@ -449,6 +457,7 @@ function EditBox:paintEvent(painter)
 	local textTop = lineRect:y();
 
 	local text = self:GetText();
+
 	if(hasTextClipping) then
 		-- obsoleted: we will clip the text in software, instead of doing hardware clipping. 
 		-- local endClipOfText = self.m_text:xToCursor(self.hscroll+lineRect:width()-1, nil, self:GetFont());
@@ -488,7 +497,7 @@ function EditBox:paintEvent(painter)
 		painter:SetFont(self:GetFont());
 		--painter:SetPen(self:GetColor());
 		local scale = self:GetScale();
-		painter:DrawTextScaled(self:x() + textLeft, self:y() + textTop, text, scale);
+		painter:DrawTextScaled(self:x() + textLeft, self:y() + textTop, self:GetPasswordText(), scale);
 	end
 
 	if(hasTextClipping) then
