@@ -15,6 +15,7 @@ test
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/System/Windows/UIElement.lua");
+NPL.load("(gl)script/ide/System/Core/UniString.lua");
 local Rect = commonlib.gettable("mathlib.Rect");
 local UniString = commonlib.gettable("System.Core.UniString");
 local Application = commonlib.gettable("System.Windows.Application");
@@ -27,9 +28,9 @@ TextControl:Property("Name", "TextControl");
 TextControl:Property({"Background", "", auto=true});
 TextControl:Property({"BackgroundColor", "#cccccc", auto=true});
 TextControl:Property({"Color", "#000000", auto=true})
-TextControl:Property({"CursorColor", "#33333388", auto=true})
-TextControl:Property({"SelectedBackgroundColor", "#006680", auto=true})
-TextControl:Property({"CurLineBackgroundColor", "#87ceff", auto=true})
+TextControl:Property({"CursorColor", "#000000", auto=true})
+TextControl:Property({"SelectedBackgroundColor", "#99c9ef", auto=true})
+TextControl:Property({"CurLineBackgroundColor", "#e5ebf180", auto=true})
 TextControl:Property({"m_cursor", 0, "cursorPosition", "setCursorPosition"})
 TextControl:Property({"cursorVisible", false, "isCursorVisible", "setCursorVisible"})
 TextControl:Property({"m_readOnly", false, "isReadOnly", "setReadOnly", auto=true})
@@ -41,6 +42,7 @@ TextControl:Property({"m_maxLength", 65535, "getMaxLength", "setMaxLength", auto
 TextControl:Property({"text", nil, "GetText", "SetText"})
 TextControl:Property({"lineWrap", nil, "GetLineWrap", "SetLineWrap", auto=true})
 TextControl:Property({"lineHeight", 20, "GetLineHeight", "SetLineHeight", auto=true})
+TextControl:Property({"AutoTabToSpaces", true, "IsAutoTabToSpaces", "SetAutoTabToSpaces", auto=true})
 
 --TextControl:Signal("SizeChanged",function(width,height) end);
 --TextControl:Signal("PositionChanged");
@@ -210,6 +212,9 @@ function TextControl:SetText(text)
 			self:AddItem(line_text);
 		end	
 	end
+	if(self:GetRow() == 0) then
+		self:initDoc();
+	end
 end
 
 function TextControl:GetText()
@@ -225,7 +230,7 @@ function TextControl:GetText()
 end
 
 function TextControl:AddItem(text)
-	self:InsertItem(#self.items, text);
+	self:InsertItem(#self.items + 1, text);
 end
 
 function TextControl:clear()
@@ -847,6 +852,9 @@ end
 
 function TextControl:paste(mode)
 	local clip = ParaMisc.GetTextFromClipboard();
+	if(clip and self:IsAutoTabToSpaces()) then
+		clip = clip:gsub("\t", "    ");
+	end
 	if(clip or self:hasSelectedText()) then
 		--self:separate(); -- make it a separate undo/redo command
         --self:InsertTextAddToCommand(clip);
