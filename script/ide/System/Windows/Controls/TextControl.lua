@@ -270,32 +270,56 @@ function TextControl:InsertItem(pos, text)
 		item = text;
 	end
 
-	local width = self:GetLineWidth(item);
-
 	if(pos > #self.items) then
 		self.items:push_back(item);
 	else
 		self.items:insert(pos, item);
 	end
-	if(width > self:width()) then
-		self:setWidth(width);
+
+	-- TODO: optimize this to avoid width calculation
+	local width = self:GetLineWidth(item);
+	if(width > self:GetRealWidth()) then
+		self:SetRealWidth(width);
 	end
-
 	self:RecountHeight();
-
-	self.needUpdate = true;
 end
 
 function TextControl:RemoveItem(index)
 	self.items:remove(index);
-
+	-- TODO: only reset width when width is bigger than real width.
 	self:RecountWidth();
 	self:RecountHeight();
+end
 
-	self.needUpdate = true;
+function TextControl:SetRealWidth(width)
+	if(self.m_realWidth ~= width) then
+		self.m_realWidth = width;
+		self.needUpdate = true;
+	end
 end
 
 function TextControl:GetRealWidth()
+	return self.m_realWidth or 0;
+end
+
+function TextControl:GetRealHeight()
+	return self.m_realHeight or 0;
+end
+
+function TextControl:SetRealHeight(height)
+	if(self.m_realHeight~=height) then
+		self.m_realHeight = height;
+		self.needUpdate = true;
+	end
+end
+
+-- recompute real height (total text width)
+function TextControl:RecountHeight()
+	self:SetRealHeight(self.lineHeight * (#self.items))
+end
+
+-- recompute real width (total text width, the longest line)
+function TextControl:RecountWidth()
 	local width = 0;
 	for i = 1, self.items:size() do
 		local itemText = self.items:get(i).text;
@@ -304,21 +328,7 @@ function TextControl:GetRealWidth()
 			width = itemWidth;
 		end
 	end
-	return width;
-end
-
-function TextControl:GetRealHeight()
-	return self.lineHeight * #self.items;
-end
-
-function TextControl:RecountHeight()
-	self:setHeight(self:GetRealHeight());
-	--self:GetTextRect():setHeight(self.lineHeight * #self.items);
-end
-
-function TextControl:RecountWidth()
-	local width = self:GetRealWidth();
-	self:setWidth(width);
+	self:SetRealWidth(width);
 end
 
 function TextControl:setX(x, emitSingal)
@@ -329,7 +339,6 @@ function TextControl:setX(x, emitSingal)
 	if(emitSingal) then
 		self:emitPositionChanged();
 	end
-	
 end
 
 function TextControl:setY(y, emitSingal)
@@ -376,6 +385,7 @@ function TextControl:GetTextWidth(text)
 	end
 end
 
+-- this function is slow, avoid calling it. 
 function TextControl:naturalTextWidth(text)
 	return text:GetWidth(self:GetFont());
 end
@@ -896,7 +906,7 @@ function TextControl:InsertTextNotAddToCommand(text, line, pos, moveCursor)
 end
 
 function TextControl:InsertText(text, line, pos , addToCommand, moveCursor)
-	if(text == "") then
+	if(text == "" or not text) then
 		return;
 	end
 
@@ -906,7 +916,7 @@ function TextControl:InsertText(text, line, pos , addToCommand, moveCursor)
 	local before_pos = {line = line, pos = pos};
 	if(string.find(text,"\r\n")) then
 		local newLines = {};
-		local line_text, breaker_text;
+		
 		for line_text, breaker_text in string.gfind(text or "", "([^\r\n]*)(\r?\n?)") do
 			if(line_text ~= "" or breaker_text ~= "") then
 				if(#newLines > 0) then
@@ -1165,8 +1175,8 @@ function TextControl:lineInternalInsert(line, pos, s)
         lineText:insert(pos, s);
 
 		local width = self:GetLineWidth(line);
-		if(width > self:width()) then
-			self:setWidth(width);
+		if(width > self:GetRealWidth()) then
+			self:SetRealWidth(width);
 		end
 		return s;
     end
@@ -1336,7 +1346,12 @@ function TextControl:WordWidth()
 end
 
 function TextControl:CharWidth()
-	return _guihelper.GetTextWidth("a", self:GetFont());
+	if(not self.m_charWidth or self.m_lastCharWidthFont ~= self:GetFont()) then
+		-- cache width here to increase performance 
+		self.m_lastCharWidthFont = self:GetFont();
+		self.m_charWidth = _guihelper.GetTextWidth("a", self.m_lastCharWidthFont);
+	end
+	return self.m_charWidth or 5;
 end
 
 function TextControl:emitPositionChanged()
@@ -1356,6 +1371,7 @@ function TextControl:updateGeometry()
 		self:setWidth(clip:width() - self:x());
 		--self
 	else
+		self:setWidth(self:GetRealWidth());
 		local offset_r = (clip:x() + clip:width()) - (self:x() + self:width());
 		if(offset_r > 0) then
 			self:scrollX(offset_r);
@@ -1368,24 +1384,23 @@ function TextControl:updateGeometry()
 		--self:setY(clip:y());
 		self:setHeight(clip:height() - self:y());
 	else
+		self:setHeight(self:GetRealHeight());
 		local offset_b = (clip:y() + clip:height()) - (self:y() + self:height());
 		if(offset_b >= self.lineHeight) then
 			self:scrollY(self.lineHeight * math.floor(offset_b / self.lineHeight));
 		end
 	end
+	self.needUpdate = false;
 end
 
 function TextControl:paintEvent(painter)
-	self:updateGeometry();
-	--self:UpdateCursor();
+	if(self.needUpdate) then
+		self:updateGeometry();
+	end
+	local clipRegion = self:ClipRegion();
+	local from_line = math.max(1, 1 + math.floor((-self:y()) / self.lineHeight)); 
+	local to_line = math.min(self.items:size(), 1 + math.ceil((-self:y() + clipRegion:height()) / self.lineHeight));
 
---	local clip =  self:ClipRegion();
---	local hasTextClipping = self:width() > clip:width() or self:height() > clip:height();
-
---	if(hasTextClipping) then
---		painter:Save();
---		painter:SetClipRegion(self:x() +clip:x(), self:y() +clip:y(),clip:width(),clip:height());
---	end
 
 	if(self.cursorVisible and self:hasFocus() and not self:isReadOnly()) then
 		-- the curor line backgroud
@@ -1422,7 +1437,7 @@ function TextControl:paintEvent(painter)
 				end
 			end
 		else
-			for i = self.m_selLineStart, self.m_selLineEnd do
+			for i = math.max(from_line, self.m_selLineStart), math.min(to_line, self.m_selLineEnd) do
 				if(i == self.m_selLineEnd and self.m_selPosEnd == 0) then
 					break;
 				end
@@ -1471,7 +1486,7 @@ function TextControl:paintEvent(painter)
 		painter:SetFont(self:GetFont());
 		local scale = self:GetScale();
 
-		for i = 1, self.items:size() do
+		for i = from_line, to_line do
 			local item = self.items:get(i);
 			painter:DrawTextScaled(self:x(), self:y() + self.lineHeight * (i - 1), item.text:GetText(), scale);
 		end
@@ -1486,9 +1501,5 @@ function TextControl:paintEvent(painter)
 			painter:DrawRect(self:x() + cursor_x, self:y() + cursor_y, self.m_cursorWidth, self.lineHeight);
 		end
 	end
-
---	if(hasTextClipping) then
---		painter:Restore();
---	end
 end
 
