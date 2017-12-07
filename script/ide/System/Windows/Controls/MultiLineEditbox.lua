@@ -229,11 +229,13 @@ end
 
 function MultiLineEditbox:updateScrollValue()
 	if(not self.hbar:isHidden()) then
-		self.hbar:SetValue(self.viewport:hValue());
+		self.hscroll = self.viewport:hValue();
+		self.hbar:SetValue(self.hscroll);
 	end
 
 	if(not self.vbar:isHidden()) then
-		self.vbar:SetValue(self.viewport:vValue());
+		self.vscroll = self.viewport:vValue();
+		self.vbar:SetValue(self.vscroll);
 	end
 end
 
