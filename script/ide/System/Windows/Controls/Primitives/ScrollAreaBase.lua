@@ -24,7 +24,7 @@ ScrollAreaBase:Property("Name", "ScrollAreaBase");
 ScrollAreaBase:Property({"SliderSize", 16, auto=true});
 ScrollAreaBase:Property({"AllowWheel", true, auto=true});
 -- the "scrollBarPolicy" values: "AlwaysOn", "AlwaysOff", "Auto"
-ScrollAreaBase:Property({"horizontalScrollBarPolicy", "Auto", "getHorizontalScrollBarPolicy", "setHorizontalScrollBarPolicy", auto=true});
+ScrollAreaBase:Property({"horizontalScrollBarPolicy", "AlwaysOff", "getHorizontalScrollBarPolicy", "setHorizontalScrollBarPolicy", auto=true});
 ScrollAreaBase:Property({"verticalScrollBarPolicy", "Auto", "getVerticalScrollBarPolicy", "setVerticalScrollBarPolicy", auto=true});
 
 function ScrollAreaBase:ctor()
