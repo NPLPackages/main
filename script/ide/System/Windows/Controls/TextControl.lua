@@ -79,6 +79,9 @@ function TextControl:ctor()
 	self.m_undoState = 0;
 	self.m_history = commonlib.Array:new();
 
+	self.needRecountWidth = true;
+	self.needRecountHeight = true;
+
 	self:setFocusPolicy(FocusPolicy.StrongFocus);
 	self:setAttribute("WA_InputMethodEnabled");
 	self:setMouseTracking(true);
@@ -281,20 +284,24 @@ function TextControl:InsertItem(pos, text)
 	if(width > self:GetRealWidth()) then
 		self:SetRealWidth(width);
 	end
-	self:RecountHeight();
+	self.needRecountHeight = true;
+	--self:RecountHeight();
 end
 
 function TextControl:RemoveItem(index)
 	self.items:remove(index);
+	local width = self:GetLineWidth(self:GetLine(index));
 	-- TODO: only reset width when width is bigger than real width.
-	self:RecountWidth();
-	self:RecountHeight();
+	if(width >= self:width()) then
+		self.needRecountWidth = true;
+	end
+	self.needRecountHeight = true;
 end
 
 function TextControl:SetRealWidth(width)
 	if(self.m_realWidth ~= width) then
 		self.m_realWidth = width;
-		self.needUpdate = true;
+		self:setWidth(width);
 	end
 end
 
@@ -309,7 +316,20 @@ end
 function TextControl:SetRealHeight(height)
 	if(self.m_realHeight~=height) then
 		self.m_realHeight = height;
-		self.needUpdate = true;
+		self:setHeight(height);
+	end
+end
+
+function TextControl:RecountSize()
+	echo("TextControl:RecountSize");
+	if(self.needRecountWidth) then
+		self:RecountWidth();	
+		self.needRecountWidth = false;
+	end
+
+	if(self.needRecountHeight) then
+		self:RecountHeight();	
+		self.needRecountHeight = false;
 	end
 end
 
@@ -914,7 +934,7 @@ function TextControl:InsertText(text, line, pos , addToCommand, moveCursor)
 	local cursorPos = pos;
 
 	local before_pos = {line = line, pos = pos};
-	if(string.find(text,"\r\n")) then
+	if(string.find(text,"\n")) then
 		local newLines = {};
 		
 		for line_text, breaker_text in string.gfind(text or "", "([^\r\n]*)(\r?\n?)") do
@@ -1132,8 +1152,13 @@ end
 
 function TextControl:lineInternalRemove(line, pos, count)
 	local text = line.text;
+	local width = self:GetLineWidth(line);
 	text:remove(pos, count);
-	self:RecountWidth();
+	
+	if(width >= self:width()) then
+		self.needRecountWidth = true;
+	end
+	--self:RecountWidth();
 end
 
 function TextControl:newLine(mark)
@@ -1317,7 +1342,7 @@ function TextControl:adjustCursor()
 		end
 
 		if(cursor_x_to_self > max_cursor_x) then
-			cursor_x_to_clip = clip:width();
+			cursor_x_to_clip = clip:width() - 2;
 		end
 
 		local clip_x_to_self = cursor_x_to_self - cursor_x_to_clip;
@@ -1365,36 +1390,21 @@ function TextControl:emitSizeChanged()
 end
 
 function TextControl:updateGeometry()
+	self:RecountSize();
 	local clip = self.parent:ClipRegion();
 	if(self:GetRealWidth() < clip:width()) then
 		self:setX(clip:x(), true);
 		self:setWidth(clip:width() - self:x());
-		--self
-	else
-		self:setWidth(self:GetRealWidth());
-		local offset_r = (clip:x() + clip:width()) - (self:x() + self:width());
-		if(offset_r > 0) then
-			self:scrollX(offset_r);
-		end
 	end
 
-	--local offset_y = self:y() + self:height();
 	if(self:GetRealHeight() < clip:height()) then
 		self:scrollY(clip:y() - self:y());
-		--self:setY(clip:y());
 		self:setHeight(clip:height() - self:y());
-	else
-		self:setHeight(self:GetRealHeight());
-		local offset_b = (clip:y() + clip:height()) - (self:y() + self:height());
-		if(offset_b >= self.lineHeight) then
-			self:scrollY(self.lineHeight * math.floor(offset_b / self.lineHeight));
-		end
 	end
-	self.needUpdate = false;
 end
 
 function TextControl:paintEvent(painter)
-	if(self.needUpdate) then
+	if(self.needRecountHeight or self.needRecountWidth) then
 		self:updateGeometry();
 	end
 	local clipRegion = self:ClipRegion();
@@ -1485,7 +1495,6 @@ function TextControl:paintEvent(painter)
 		painter:SetPen(self:GetColor());
 		painter:SetFont(self:GetFont());
 		local scale = self:GetScale();
-
 		for i = from_line, to_line do
 			local item = self.items:get(i);
 			painter:DrawTextScaled(self:x(), self:y() + self.lineHeight * (i - 1), item.text:GetText(), scale);
