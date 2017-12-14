@@ -12,8 +12,8 @@ local page = Page:new();
 ]]
 NPL.load("(gl)script/ide/System/Core/ToolBase.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/PageLayout.lua");
-NPL.load("(gl)script/ide/System/Windows/mcml/Style.lua");
-local Style = commonlib.gettable("System.Windows.mcml.Style");
+NPL.load("(gl)script/ide/System/Windows/mcml/css/CSSStyleSelector.lua");
+local CSSStyleSelector = commonlib.gettable("System.Windows.mcml.css.CSSStyleSelector");
 local mcml = commonlib.gettable("System.Windows.mcml");
 local Elements = commonlib.gettable("System.Windows.mcml.Elements");
 local PageLayout = commonlib.gettable("System.Windows.mcml.PageLayout");
@@ -763,8 +763,8 @@ end
 -- Get the page style object
 function Page:GetStyle()
 	if(not self.style) then
-		self.style = Style:new();
-		self.style:AddReference(mcml:GetStyle(), "mcss");
+		self.style = CSSStyleSelector:new();
+		--self.style:AddReference(mcml:GetStyle());
 	end
 	return self.style;
 end

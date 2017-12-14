@@ -23,6 +23,9 @@ local type = type;
 -- control mapping: from tag name to page element
 local element_map = {};
 
+-- control class name set
+local element_class_set = {};
+
 -- register a given mcml tag with a custom user control.
 -- @param tag_name: the mcml tag name, such as "pe:my_user_control"
 -- @param tag_class: the tag class table used to create the control at runtime. At minimum it should be a table containing a create() function
@@ -30,11 +33,20 @@ local element_map = {};
 --   please see the rich number existing tag classes for examples. 
 function mcml:RegisterPageElement(tag_name, tag_class)
 	element_map[tag_name] = tag_class;
+	local class_name = tag_class.class_name;
+	if(class_name) then
+		element_class_set[class_name] = true;
+	end
 end
 
 -- unregister a tag
 function mcml:UnRegisterPageElement(tag_name)
 	element_map[tag_name] = nil;
+end
+
+function mcml:isElementClass(flag)
+	self:StaticInit();
+	return element_class_set[flag];
 end
 
 -- get page element class by its registered name. 

@@ -9,8 +9,7 @@ NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_style.lua");
 Elements.pe_style:RegisterAs("pe:if");
 ------------------------------------------------------------
 ]]
-NPL.load("(gl)script/ide/System/Windows/mcml/StyleManager.lua");
-local StyleManager = commonlib.gettable("System.Windows.mcml.StyleManager");
+NPL.load("(gl)script/ide/System/Windows/mcml/css/CSSStyleSelector.lua");
 
 local pe_style = commonlib.inherit(commonlib.gettable("System.Windows.mcml.PageElement"), commonlib.gettable("System.Windows.mcml.Elements.pe_style"));
 
@@ -28,10 +27,9 @@ function pe_style:LoadComponent(parentElem, parentLayout, style)
 	if(src and src ~= "") then
 		local pageStyle = self:GetPageStyle();
 		if(pageStyle) then
-			local style = StyleManager:GetStyle(src);
-			if(style) then
-				pageStyle:AddReference(style, type);
-			end
+			src = string.gsub(src, "^(%(.*%)).*$", "");
+			src = self:GetAbsoluteURL(src);
+			pageStyle:AddStyleSheetFromFile(src);
 		end
 	end
 
@@ -39,7 +37,14 @@ function pe_style:LoadComponent(parentElem, parentLayout, style)
 	if(code~=nil and code~="") then
 		local pageStyle = self:GetPageStyle();
 		if(pageStyle) then
-			pageStyle:LoadFromString(code, type);
+			if(type == "css") then
+				pageStyle:AddStyleSheetFromString(code);
+			elseif(type == "mcss") then
+				local t = commonlib.LoadTableFromString(code);
+				if(t and type(t) == "table") then
+					pageStyle:AddStyleSheetFromTable(code);
+				end
+			end
 		end
 	end
 end

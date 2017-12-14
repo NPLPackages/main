@@ -1,89 +1,50 @@
-<!-- "script/ide/System/test/test_css_page.html" -->
+﻿<!-- "mcml2://script/ide/System/test/test_css_page.html" -->
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <title>test page</title>
 </head>
 <pe:mcml>
-<script type="text/npl" refresh="false">
-<![CDATA[
-globalVar = "test global var";
-function OnButtonClick()
-    _guihelper.MessageBox("refresh page now?", function()
-        Page:SetValue("myBtn", "refreshed");
-        Page:Refresh(0);
-    end);
-end
+<style type="text/css" src="test_css_style.css" />
+<!--<style type="text/css">
+    div input[type="button"] {
+        color:white;background-color:blueviolet;
+    }
+    h1, h3 {
+        color:cornflowerblue;
+    }
+    h2 {
+        color:greenyellow;
+    }
 
-repeat_data = { {a=1}, {a=2} };
-function GetDS()
-    return repeat_data;
-end
-isSearching = false;
-function SearchBlock()
-    isSearching = true;
-end
-function OnSearchBlock()
-    isSearching = false;
-end
-]]>
-</script>
-<style type="text/css" src="script/ide/System/test/test_css_style.css">
-</style>
-    <div style="margin:10px;padding:10px;min-width:400px;">
-        <button value="Button"></button>
-        <span class="color_red" >css class red</span>
-        <textarea rows="3" style="width:200px;"></textarea>
-        <!--<div align="right" style="padding:5px;background:url(Texture/Aries/Common/ThemeKid/btn_thick_hl_32bits.png:7 7 7 7)">
-            <div style="float:left;background-color:#000000;color:#ffd800;font-size:20px;">
-                hello world中文<font color="#ff0000">fontColor</font>
-            </div>
-            <div style="float:left;background-color:#0000ff;margin-left:10px;width:20px;height:20px;">
-            </div>
-        </div>-->
-        <!--<div>
-            hello world中文<font color="#ff0000">fontColor</font>
-            <br/>
-            <span class="color_red bold" style="color:#0094ff">css class red</span>
-            <br />
-            <span class="color_blue bold">css class blue</span>
-        </div>-->
-        <!--<div valign="bottom">
-            <div style="float:left;background-color:#00ff00;width:60px;height:20px;">
-            </div>
-            <div style="float:left;background-color:#0000ff;margin-left:10px;width:20px;height:20px;">
-            </div>
-        </div>-->
+    input[type="text"] {
+        color:seagreen;
+        width:60px;
+    }
+
+    #redBackground {
+        background-color:red;
+    }
+    .greenBackground {
+        background-color:green;
+    }
+    .blueFontColor {
+        color:blue;
+    }
+</style>-->
+<div>
+    <input type="button" value="Button" />
+    <input type="text"/>
+    <h1>一号标题</h1>
+    <h2>二号标题</h2>
+    <h3>三号标题</h3>
+    <div id="redBackground">
+        我的背景是红色
     </div>
-    <!--<div>
-        hello world中文<font color="#ff0000">fontColor</font>
-        <span class="color_blue bold">css class</span>
+    <div class="greenBackground blueFontColor">
+        我的背景是绿色，字体是蓝色
     </div>
-    <span color="#ff0000">
-        <%=Eval('globalVar')%>
-        <%   document.write('hello '); document.write('world'); %>
-    </span>
-    <pe:container style="padding:5px;background-color:#ff0000">
-        button:<input type="button" name="myBtn" value="RefreshPage" onclick="OnButtonClick" style=""/>
-        editbox:<input type="text" name="myEditbox" value="" style="margin-left:2px;width:64px;height:25px"/><br/>
-        password1:<input type="text" name="myPassword" value="123" style="margin-left:2px;width:64px;height:25px" /><br />
-        pe_if: <pe:if condition='<%=globalVar=="test global var"%>'>true</pe:if>
-    </pe:container>-->
-    <!--<pe:repeat value="item in repeat_data" style="float:left">
-        <div style="float:left;"><%=item.a%></div>
-    </pe:repeat>
-    <pe:repeat value="item in GetDS()" style="float:left">
-        <div style="float:left;"><%=item.a%></div>
-    </pe:repeat>
-    <pe:repeat DataSource='<%=GetDS()%>' style="float:left">
-        <div style="float:left;"><%=a%></div>
-    </pe:repeat>
-    <pe:if condition='<%= isSearching%>'>
-        <input type="text" autofocus="true" name="block_search_text_ctl" uiname="block_search_text_obj" caretcolor="#FFFFFFFF" style="margin-top:2px;margin-left:5px;textcolor:#cccccc;height:25px;background:;" onmodify="SearchBlock" />
-    </pe:if>
-    <pe:if condition='<%= not isSearching%>'>
-        <input type="button" value="搜索: 输入ID或名字" style="margin-left:5px;color:#cccccc;height:22px;background:;" onclick="OnSearchBlock" />
-    </pe:if>-->
+</div>
 </pe:mcml>
 </html>
 

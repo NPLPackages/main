@@ -46,6 +46,7 @@ local PageElement = commonlib.inherit(commonlib.gettable("System.Core.ToolBase")
 -- default style sheet
 PageElement:Property("Name", "PageElement");
 PageElement:Property({"class_name", nil});
+PageElement:Property({"classNames", nil, "GetClassNames", "SetClassNames", auto=true});
 local pairs = pairs
 local ipairs = ipairs
 local tostring = tostring
@@ -876,20 +877,7 @@ function PageElement:ApplyClasses()
 	local pageStyle = self:GetPageStyle();
 	if(pageStyle) then
 		local style = self:GetStyle();
-		-- apply name first such as "pe:button"
-		pageStyle:ApplyToStyleItem(style, self.class_name or self.name);
-
-		pageStyle:ApplyCssStyleToStyleItem(style, self);
-
-		-- apply attribute class names
-		if(self.attr and self.attr.class) then
-			local class_names = self:GetAttributeWithCode("class", nil, true);
-			if(class_names) then
-				for class_name in class_names:gmatch("[^ ]+") do
-					pageStyle:ApplyToStyleItem(style, class_name);
-				end
-			end
-		end
+		pageStyle:ApplyToStyleItem(style, self);
 	end
 end
 
@@ -930,6 +918,27 @@ function PageElement:AddChild(child, index)
 		commonlib.insertArrayItem(self, index, child)
 	end	
 	self:resetLayout();
+end
+
+function PageElement:GetClassNames()
+	if(not self.classNames) then
+		local classes = nil;
+		local classStr = self:GetAttributeWithCode("class",nil,true);
+		if(classStr) then
+			classes = commonlib.split(classStr,"%s");
+		end
+		if(self.class_name) then
+			classes = classes or {};
+			classes[#classes+1] = self.class_name;
+		end
+		if(classes) then
+			self.classNames = {};
+			for i = 1,#classes do
+				self.classNames[classes[i]] = true;
+			end
+		end
+	end
+	return self.classNames;
 end
 
 -- detach this node from its parent node. 

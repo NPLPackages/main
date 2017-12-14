@@ -1,13 +1,30 @@
 /*Testing mcml css: script/ide/System/test/test_css_style.css*/
-
-span
-{
-    color:#ff0000;
-    margin:20px;
+div input[type="button"] {
+    color: white;
+    background-color: blueviolet;
 }
-pe:button 
-{
-    padding:10px;
-    color:#00ffff
 
+h1, h3 {
+    color: cornflowerblue;
+}
+
+h2 {
+    color: greenyellow;
+}
+
+input[type="text"] {
+    color: seagreen;
+    width: 60px;
+}
+
+#redBackground {
+    background-color: red;
+}
+
+.greenBackground {
+    background-color: green;
+}
+
+.blueFontColor {
+    color: blue;
 }
