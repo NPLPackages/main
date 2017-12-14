@@ -158,7 +158,7 @@ function pe_treenode:OnLoadComponentAfterChild(parentElem, parentLayout, css)
 end
 
 function pe_treenode:CreateNode()
-	local style;
+	local style="";
 
 	local height = self.NodeHeight;
 	if(not height and self.treeview) then
@@ -168,7 +168,7 @@ function pe_treenode:CreateNode()
 	if(self.treeview) then
 		style = format("min-height:%dpx;", self.treeview.DefaultNodeHeight or 24);
 	end
-
+	style = style.."background-color:#ffffff00;";
 	local node = mcml:createFromXmlNode({name="div", attr = {style = style}});
 	self.node = node;
 
@@ -239,6 +239,7 @@ function pe_treenode:CreateNode()
 --			LOG.std(nil, "warn", "mcml", "can not find tag name %s", child.name or "");
 --		end
 	else
+		style = style.."background-color:#ffffff00;";
 		node = mcml:createFromXmlNode({name="div", attr={style=style}, self.text});
 		self.node:AddChild(node);
 

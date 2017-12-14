@@ -14,13 +14,19 @@ local Button = commonlib.gettable("System.Windows.Controls.Button");
 
 function Button:initPolygonPensInfo()
 	self:initNormalPens();
-
+	self:resetNormalPens();
 --	self.polygon_styles.none = 
 --	{
 --		["pens"] = {
 --			["pen"] = "#ffffff00"
 --		}
 --	};
+
+	
+end
+
+function Button:resetPolygonPensInfo()
+	self:resetNormalPens();
 end
 
 local normal = {
@@ -45,12 +51,19 @@ local down = {
 function Button:initNormalPens()
 	self.polygon_styles.normal = {
 		["pens"] = {
-			["normal"] = normal,
-			["check"] = check,
-			["over"] = over,
-			["down"] = down,
+			["normal"] = {},
+			["check"] = {},
+			["over"] = {},
+			["down"] = {},
 		}
 	};
+end
+
+function Button:resetNormalPens()
+	commonlib.partialcopy(self.polygon_styles.normal.pens.normal, normal);
+	commonlib.partialcopy(self.polygon_styles.normal.pens.check, check);
+	commonlib.partialcopy(self.polygon_styles.normal.pens.over, over);
+	commonlib.partialcopy(self.polygon_styles.normal.pens.down, down);
 end
 
 --function Button:initCheckboxPens()
@@ -67,6 +80,7 @@ end
 --end
 
 function Button:MultiplyBackgroundColor(color)
+	self:resetPolygonPensInfo();
 	for _,polygon_info in pairs(self.polygon_styles) do
 		local pens = polygon_info.pens;
 		for k,v in pairs(pens) do
