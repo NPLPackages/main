@@ -30,7 +30,7 @@ TextControl:Property({"BackgroundColor", "#cccccc", auto=true});
 TextControl:Property({"Color", "#000000", auto=true})
 TextControl:Property({"CursorColor", "#000000", auto=true})
 TextControl:Property({"SelectedBackgroundColor", "#99c9ef", auto=true})
-TextControl:Property({"CurLineBackgroundColor", "#e5ebf180", auto=true})
+TextControl:Property({"CurLineBackgroundColor", "#e5ebf1e0", auto=true})
 TextControl:Property({"m_cursor", 0, "cursorPosition", "setCursorPosition"})
 TextControl:Property({"cursorVisible", false, "isCursorVisible", "setCursorVisible"})
 TextControl:Property({"m_readOnly", false, "isReadOnly", "setReadOnly", auto=true})
@@ -79,8 +79,8 @@ function TextControl:ctor()
 	self.m_undoState = 0;
 	self.m_history = commonlib.Array:new();
 
-	self.needRecountWidth = true;
-	self.needRecountHeight = true;
+	self.needRecomputeTextWidth = true;
+	self.needRecomputeTextHeight = true;
 
 	self:setFocusPolicy(FocusPolicy.StrongFocus);
 	self:setAttribute("WA_InputMethodEnabled");
@@ -284,24 +284,24 @@ function TextControl:InsertItem(pos, text)
 	if(width > self:GetRealWidth()) then
 		self:SetRealWidth(width);
 	end
-	self.needRecountHeight = true;
-	--self:RecountHeight();
+	self.needRecomputeTextHeight = true;
 end
 
 function TextControl:RemoveItem(index)
-	self.items:remove(index);
-	local width = self:GetLineWidth(self:GetLine(index));
-	-- TODO: only reset width when width is bigger than real width.
-	if(width >= self:width()) then
-		self.needRecountWidth = true;
+	local width = self:GetLineWidth(self:GetLine(index)) or 0;
+	-- only reset width when width is bigger than real width.
+	if(width >= self:GetRealWidth()) then
+		self.needRecomputeTextWidth = true;
 	end
-	self.needRecountHeight = true;
+	self.needRecomputeTextHeight = true;
+
+	self.items:remove(index);
 end
 
 function TextControl:SetRealWidth(width)
 	if(self.m_realWidth ~= width) then
 		self.m_realWidth = width;
-		self:setWidth(width);
+		self.needUpdateControlSize = true;
 	end
 end
 
@@ -314,32 +314,19 @@ function TextControl:GetRealHeight()
 end
 
 function TextControl:SetRealHeight(height)
-	if(self.m_realHeight~=height) then
+	if(self.m_realHeight ~= height) then
 		self.m_realHeight = height;
-		self:setHeight(height);
-	end
-end
-
-function TextControl:RecountSize()
-	echo("TextControl:RecountSize");
-	if(self.needRecountWidth) then
-		self:RecountWidth();	
-		self.needRecountWidth = false;
-	end
-
-	if(self.needRecountHeight) then
-		self:RecountHeight();	
-		self.needRecountHeight = false;
+		self.needUpdateControlSize = true;
 	end
 end
 
 -- recompute real height (total text width)
-function TextControl:RecountHeight()
+function TextControl:RecomputeTextHeight()
 	self:SetRealHeight(self.lineHeight * (#self.items))
 end
 
 -- recompute real width (total text width, the longest line)
-function TextControl:RecountWidth()
+function TextControl:RecomputeTextWidth()
 	local width = 0;
 	for i = 1, self.items:size() do
 		local itemText = self.items:get(i).text;
@@ -376,7 +363,6 @@ function TextControl:setWidth(w)
 		return;
 	end
 	if(w > self:width() or w > self:ClipRegion():width()) then
-		--self.crect:setWidth(w);
 		TextControl._super.setWidth(self, w);
 	end
 	self:emitSizeChanged();
@@ -387,7 +373,6 @@ function TextControl:setHeight(h)
 		return;
 	end
 	if(h > self:height() or h > self:ClipRegion():height()) then
-		--self.crect:setHeight(h);
 		TextControl._super.setHeight(self, h);
 	end
 	self:emitSizeChanged();
@@ -1155,10 +1140,9 @@ function TextControl:lineInternalRemove(line, pos, count)
 	local width = self:GetLineWidth(line);
 	text:remove(pos, count);
 	
-	if(width >= self:width()) then
-		self.needRecountWidth = true;
+	if(width >= self:GetRealWidth()) then
+		self.needRecomputeTextWidth = true;
 	end
-	--self:RecountWidth();
 end
 
 function TextControl:newLine(mark)
@@ -1390,21 +1374,37 @@ function TextControl:emitSizeChanged()
 end
 
 function TextControl:updateGeometry()
-	self:RecountSize();
-	local clip = self.parent:ClipRegion();
-	if(self:GetRealWidth() < clip:width()) then
-		self:setX(clip:x(), true);
-		self:setWidth(clip:width() - self:x());
+	if(self.needRecomputeTextWidth) then
+		self:RecomputeTextWidth();	
+		self.needRecomputeTextWidth = false;
 	end
 
-	if(self:GetRealHeight() < clip:height()) then
-		self:scrollY(clip:y() - self:y());
-		self:setHeight(clip:height() - self:y());
+	if(self.needRecomputeTextHeight) then
+		self:RecomputeTextHeight();	
+		self.needRecomputeTextHeight = false;
+	end
+
+	if(self.needUpdateControlSize) then
+		self.needUpdateControlSize = false;
+		local clip = self.parent:ClipRegion();
+		if(self:GetRealWidth() < clip:width()) then
+			self:setX(clip:x(), true);
+			self:setWidth(clip:width() - self:x());
+		else
+			self:setWidth(self:GetRealWidth());
+		end
+
+		if(self:GetRealHeight() < clip:height()) then
+			self:scrollY(clip:y() - self:y());
+			self:setHeight(clip:height() - self:y());
+		else
+			self:setHeight(self:GetRealHeight());
+		end
 	end
 end
 
 function TextControl:paintEvent(painter)
-	if(self.needRecountHeight or self.needRecountWidth) then
+	if(self.needRecomputeTextHeight or self.needRecomputeTextWidth or self.needUpdateControlSize) then
 		self:updateGeometry();
 	end
 	local clipRegion = self:ClipRegion();

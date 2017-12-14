@@ -87,7 +87,7 @@ function TestInsertThroughputNoIndex()
 	local npl_profiler = commonlib.gettable("commonlib.npl_profiler");
 	npl_profiler.perf_reset();
 
-	npl_profiler.perf_begin("tableDB_BlockingAPILatency", true)
+	npl_profiler.perf_begin("tableDB_InsertThroughputNoIndex", true)
 	local total_times = 1000000; -- a million non-indexed insert operation
 	local max_jobs = 1000; -- concurrent jobs count
 	NPL.load("(gl)script/ide/System/Concurrent/Parallel.lua");
@@ -101,7 +101,7 @@ function TestInsertThroughputNoIndex()
 			p:Next();
 		end)
 	end, total_times, max_jobs):OnFinished(function(total)
-		npl_profiler.perf_end("tableDB_BlockingAPILatency", true)
+		npl_profiler.perf_end("tableDB_InsertThroughputNoIndex", true)
 		log(commonlib.serialize(npl_profiler.perf_get(), true));			
 	end);
 end
@@ -677,7 +677,21 @@ function TestOpenDatabase()
 
 end
 
-NPL.load("(gl)script/ide/commonlib.lua");
-TestOpenDatabase()
--- TestDelete()
-ParaGlobal.Exit(0)
+function TestUpdateIndex()
+	NPL.load("(gl)script/ide/System/Database/TableDatabase.lua");
+	local TableDatabase = commonlib.gettable("System.Database.TableDatabase");
+	local db = TableDatabase:new():connect("temp/mydatabase/");	
+	
+	db.updateIndexTest:makeEmpty({}, function(err, count) echo("deleted"..(count or 0)) end);
+
+	db.updateIndexTest:insertOne(nil, {name="user"}, function(err, data) assert(data.name=="user") end)
+	db.updateIndexTest:insertOne(nil, {name="user", age=15}, function(err, data) assert(data.name=="user") end)
+	db.updateIndexTest:insertOne(nil, {name="user"}, function(err, data) assert(data.name=="user") end)
+
+	db.updateIndexTest:updateOne({name="user", age=15}, {name="user2"}, function(err, data) assert(data.name=="user2") end)
+	
+	db.updateIndexTest:find({name="user"}, function(err, rows) assert(#rows==2); end)
+end
+
+-- NPL.load("(gl)script/ide/commonlib.lua");
+-- TestUpdateIndex();
