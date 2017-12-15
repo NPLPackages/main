@@ -128,6 +128,11 @@ function MultiLineEditbox:Show(bShow)
 			end
 			if(self.textcolor) then
 				self.ctrlEditbox:SetColor(self.textcolor);
+				if(self.textcolor == "#ffffff") then
+					self.ctrlEditbox:SetSelectedBackgroundColor("#1456b4");
+					self.ctrlEditbox:SetCurLineBackgroundColor("#444444e0");
+					self.ctrlEditbox:SetCursorColor("#ffffff");
+				end
 			end
 			if(self.container_bg ~= "") then
 				self.ctrlEditbox:SetBackground(self.container_bg);

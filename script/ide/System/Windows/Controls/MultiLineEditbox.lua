@@ -58,9 +58,10 @@ MultiLineEditbox:Property("Name", "MultiLineEditbox");
 
 MultiLineEditbox:Property({"Background", "", auto=true});
 MultiLineEditbox:Property({"BackgroundColor", "#cccccc", auto=true});
-MultiLineEditbox:Property({"Color", "#000000", auto=true})
-MultiLineEditbox:Property({"CursorColor", "#33333388", auto=true})
-MultiLineEditbox:Property({"SelectedBackgroundColor", "#00006680", auto=true})
+MultiLineEditbox:Property({"Color", "#000000", })
+MultiLineEditbox:Property({"CursorColor", "#33333388"})
+MultiLineEditbox:Property({"SelectedBackgroundColor", "#99c9ef", auto=true})
+MultiLineEditbox:Property({"CurLineBackgroundColor", "#e5ebf1e0", auto=true})
 MultiLineEditbox:Property({"m_cursor", nil, "cursorPosition", "setCursorPosition"})
 MultiLineEditbox:Property({"cursorVisible", false, "isCursorVisible", "setCursorVisible"})
 MultiLineEditbox:Property({"m_cursorWidth", 2,})
@@ -114,6 +115,54 @@ function MultiLineEditbox:initViewport()
 	self.viewport:SetClip(true);
 	self.viewport:Connect("SizeChanged", self, "updateScrollStatus");
 	self.viewport:Connect("PositionChanged", self, "updateScrollValue");
+end
+
+function MultiLineEditbox:SetColor(color)
+	if(self.viewport) then
+		self.viewport:SetColor(color);
+	end
+end
+
+function MultiLineEditbox:GetColor()
+	if(self.viewport) then
+		return self.viewport:GetColor();
+	end
+end
+
+function MultiLineEditbox:SetCursorColor(color)
+	if(self.viewport) then
+		self.viewport:SetCursorColor(color);
+	end
+end
+
+function MultiLineEditbox:GetCursorColor()
+	if(self.viewport) then
+		return self.viewport:GetCursorColor();
+	end
+end
+
+function MultiLineEditbox:SetCurLineBackgroundColor(color)
+	if(self.viewport) then
+		self.viewport:SetCurLineBackgroundColor(color);
+	end
+end
+
+function MultiLineEditbox:GetCurLineBackgroundColor()
+	if(self.viewport) then
+		return self.viewport:GetCurLineBackgroundColor();
+	end
+end
+
+function MultiLineEditbox:SetSelectedBackgroundColor(color)
+	if(self.viewport) then
+		self.viewport:SetSelectedBackgroundColor(color);
+	end
+end
+
+function MultiLineEditbox:GetSelectedBackgroundColor()
+	if(self.viewport) then
+		return self.viewport:GetSelectedBackgroundColor();
+	end
 end
 
 function MultiLineEditbox:isReadOnly()
