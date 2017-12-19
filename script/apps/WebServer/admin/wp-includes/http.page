@@ -48,7 +48,12 @@ end
 function send_origin_headers()
 	local origin = get_http_origin();
 
-	if ( is_allowed_http_origin( origin ) ) then
+	if ( is_allowed_http_origin(origin) ) then
+		addheader('Access-Control-Allow-Origin', origin);
+		addheader('Access-Control-Allow-Credentials', "true");
+		if ( 'OPTIONS' == request:GetMethod() ) then
+			exit();
+		end
 		return origin;
 	end
 
