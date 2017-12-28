@@ -76,6 +76,9 @@ function TextControl:ctor()
 	self.m_selLineEnd = 0;
 	self.m_selPosEnd = 0;
 
+	self.from_line= 0;
+	self.to_line= 0;
+
 	self.m_undoState = 0;
 	self.m_history = commonlib.Array:new();
 
@@ -128,7 +131,7 @@ end
 
 -- clip region. 
 function TextControl:ClipRegion()
-	local r = self.parent:ClipRegion();
+	local r = self.parent:ViewRegion();
 	r:setX(r:x() - self:x());
 	r:setY(r:y() - self:y());
 	return r;
@@ -218,6 +221,9 @@ function TextControl:SetText(text)
 	if(self:GetRow() == 0) then
 		self:initDoc();
 	end
+
+	local clip = self.parent:ViewRegion();
+	self:setX(clip:x(), true);
 end
 
 function TextControl:GetText()
@@ -402,7 +408,7 @@ end
 
 function TextControl:vValue()
 	local clip = self:ClipRegion();
-	return clip:y()/self.lineHeight;
+	return math.floor(clip:y()/self.lineHeight+0.5);
 end
 
 function TextControl:mousePressEvent(e)
@@ -685,14 +691,14 @@ function TextControl:scrollY(offst_y)
 end
 
 function TextControl:updatePos(hscroll, vscroll)
-	local x = -hscroll;
-	local y = -vscroll * self.lineHeight;
+	local x = -hscroll + self.parent:ViewRegionOffsetX();
+	local y = -vscroll * self.lineHeight + self.parent:ViewRegionOffsetY();
 	self:setX(x);
 	self:setY(y);
 end
 
 function TextControl:ScrollLineForward()
-	if((self:y() + self.lineHeight) <= self.parent:ClipRegion():y()) then
+	if((self:y() + self.lineHeight) <= self.parent:ViewRegion():y()) then
 		self:scrollY(self.lineHeight);
 		--self:setY(self:y() + self.lineHeight);
 
@@ -704,7 +710,7 @@ function TextControl:ScrollLineForward()
 end
 
 function TextControl:ScrollLineBackward()
-	if((self:y() + self:height() - self.lineHeight) > (self.parent:ClipRegion():y() + self.parent:ClipRegion():height())) then
+	if((self:y() + self:height() - self.lineHeight) > (self.parent:ViewRegion():y() + self.parent:ViewRegion():height())) then
 		self:scrollY(-self.lineHeight);
 		--self:setY(self:y() - self.lineHeight);
 		local cursor_y = (self.cursorLine - 1) * self.lineHeight;
@@ -1330,7 +1336,7 @@ function TextControl:adjustCursor()
 		end
 
 		local clip_x_to_self = cursor_x_to_self - cursor_x_to_clip;
-		local self_x = self.parent:ClipRegion():x() - clip_x_to_self;
+		local self_x = self.parent:ViewRegion():x() - clip_x_to_self;
 		self:setX(self_x, true);
 	end
 
@@ -1386,17 +1392,18 @@ function TextControl:updateGeometry()
 
 	if(self.needUpdateControlSize) then
 		self.needUpdateControlSize = false;
-		local clip = self.parent:ClipRegion();
+		local clip = self.parent:ViewRegion();
 		if(self:GetRealWidth() < clip:width()) then
 			self:setX(clip:x(), true);
-			self:setWidth(clip:width() - self:x());
+			self:setWidth(clip:width());
 		else
 			self:setWidth(self:GetRealWidth());
 		end
 
 		if(self:GetRealHeight() < clip:height()) then
-			self:scrollY(clip:y() - self:y());
-			self:setHeight(clip:height() - self:y());
+			--self:scrollY(clip:y() - self:y());
+			self:setY(clip:y(),true);
+			self:setHeight(clip:height());
 		else
 			self:setHeight(self:GetRealHeight());
 		end
@@ -1408,8 +1415,8 @@ function TextControl:paintEvent(painter)
 		self:updateGeometry();
 	end
 	local clipRegion = self:ClipRegion();
-	local from_line = math.max(1, 1 + math.floor((-self:y()) / self.lineHeight)); 
-	local to_line = math.min(self.items:size(), 1 + math.ceil((-self:y() + clipRegion:height()) / self.lineHeight));
+	self.from_line = math.max(1, 1 + math.floor((-(self:y() - self.parent:ViewRegionOffsetY())) / self.lineHeight)); 
+	self.to_line = math.min(self.items:size(), 1 + math.ceil((-self:y() + clipRegion:height()) / self.lineHeight));
 
 
 	if(self.cursorVisible and self:hasFocus() and not self:isReadOnly()) then
@@ -1447,7 +1454,7 @@ function TextControl:paintEvent(painter)
 				end
 			end
 		else
-			for i = math.max(from_line, self.m_selLineStart), math.min(to_line, self.m_selLineEnd) do
+			for i = math.max(self.from_line, self.m_selLineStart), math.min(self.to_line, self.m_selLineEnd) do
 				if(i == self.m_selLineEnd and self.m_selPosEnd == 0) then
 					break;
 				end
@@ -1495,7 +1502,7 @@ function TextControl:paintEvent(painter)
 		painter:SetPen(self:GetColor());
 		painter:SetFont(self:GetFont());
 		local scale = self:GetScale();
-		for i = from_line, to_line do
+		for i = self.from_line, self.to_line do
 			local item = self.items:get(i);
 			painter:DrawTextScaled(self:x(), self:y() + self.lineHeight * (i - 1), item.text:GetText(), scale);
 		end
