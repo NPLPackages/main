@@ -25,16 +25,16 @@ local mulLine = MultiLineEditbox:new():init(window);
 --mulLine:setVerticalScrollBarPolicy("AlwaysOff");
 --mulLine:SetRows(2);
 mulLine:setGeometry(100, 100, 200, 20 * 10+10);
-mulLine:AddItem("ÎÒÊÇµÚÒ»ÐÐ");
-mulLine:AddItem("ÎÒÊÇµÚ¶þÐÐ");
-mulLine:AddItem("ÎÒÊÇµÚÈýÐÐ");
-mulLine:AddItem("ÎÒÊÇµÚËÄÐÐ");
-mulLine:AddItem("ÎÒÊÇµÚÎåÐÐ");
-mulLine:AddItem("ÎÒÊÇµÚÁùÐÐ");
-mulLine:AddItem("ÎÒÊÇµÚÆßÐÐ");
-mulLine:AddItem("ÎÒÊÇµÚ°ËÐÐ");
-mulLine:AddItem("ÎÒÊÇµÚ¾ÅÐÐ");
-mulLine:AddItem("ÎÒÊÇµÚÊ®ÐÐ");
+mulLine:AddItem("ï¿½ï¿½ï¿½Çµï¿½Ò»ï¿½ï¿½");
+mulLine:AddItem("ï¿½ï¿½ï¿½ÇµÚ¶ï¿½ï¿½ï¿½");
+mulLine:AddItem("ï¿½ï¿½ï¿½Çµï¿½ï¿½ï¿½ï¿½ï¿½");
+mulLine:AddItem("ï¿½ï¿½ï¿½Çµï¿½ï¿½ï¿½ï¿½ï¿½");
+mulLine:AddItem("ï¿½ï¿½ï¿½Çµï¿½ï¿½ï¿½ï¿½ï¿½");
+mulLine:AddItem("ï¿½ï¿½ï¿½Çµï¿½ï¿½ï¿½ï¿½ï¿½");
+mulLine:AddItem("ï¿½ï¿½ï¿½Çµï¿½ï¿½ï¿½ï¿½ï¿½");
+mulLine:AddItem("ï¿½ï¿½ï¿½ÇµÚ°ï¿½ï¿½ï¿½");
+mulLine:AddItem("ï¿½ï¿½ï¿½ÇµÚ¾ï¿½ï¿½ï¿½");
+mulLine:AddItem("ï¿½ï¿½ï¿½Çµï¿½Ê®ï¿½ï¿½");
 --mulLine:SetBackgroundColor("#cccccc");
 
 window:Show("my_window", nil, "_mt", 0,0, 600, 600);
@@ -58,6 +58,8 @@ MultiLineEditbox:Property("Name", "MultiLineEditbox");
 
 MultiLineEditbox:Property({"Background", "", auto=true});
 MultiLineEditbox:Property({"BackgroundColor", "#cccccc", auto=true});
+MultiLineEditbox:Property({"LineNumberBackground", "", auto=true});
+MultiLineEditbox:Property({"LineNumberBackgroundColor", "#eeeeee", auto=true});
 MultiLineEditbox:Property({"Color", "#000000", })
 MultiLineEditbox:Property({"CursorColor", "#33333388"})
 MultiLineEditbox:Property({"SelectedBackgroundColor", "#99c9ef", auto=true})
@@ -97,11 +99,13 @@ MultiLineEditbox:Signal("textChanged");
 --MultiLineEditbox:Signal("editingFinished");
 --MultiLineEditbox:Signal("updateNeeded");
 
+MultiLineEditbox:Property({"showLineNumber", true, nil, "ShowLineNumber", auto=true})
 
 function MultiLineEditbox:ctor()
 --	self:setFocusPolicy(FocusPolicy.StrongFocus);
 --	self:setAttribute("WA_InputMethodEnabled");
 --	self:setMouseTracking(true);
+	self.clip = self.showLineNumber;
 end
 
 --function MultiLineEditbox:init(parent)
@@ -117,6 +121,10 @@ function MultiLineEditbox:initViewport()
 	self.viewport:Connect("PositionChanged", self, "updateScrollValue");
 end
 
+function MultiLineEditbox:ShowLineNumber(value)
+	self.showLineNumber = value;
+	self.clip = value;
+end
 function MultiLineEditbox:SetColor(color)
 	if(self.viewport) then
 		self.viewport:SetColor(color);
@@ -181,7 +189,6 @@ function MultiLineEditbox:echoMode()
     return self.m_echoMode;
 end
 
-
 function MultiLineEditbox:setEchoMode(mode)
 	if(self.m_echoMode == mode) then
 		return;
@@ -206,17 +213,6 @@ function MultiLineEditbox:GetRows()
 end
 
 function MultiLineEditbox:ViewPort()
-	if(not self.viewport) then
---		local x = self.leftTextMargin;
---		local y = self.topTextMargin;
---		local w = self:width() - self.leftTextMargin;
---		local h = self:height() - self.topTextMargin;
-		local x = 0;
-		local y = 0;
-		local w = self:width();
-		local h = self:height();
-		self.viewport = Rect:new():init(x, y, w, h);
-	end
 	return self.viewport;
 end
 
@@ -258,11 +254,11 @@ function MultiLineEditbox:updateViewportPos()
 end
 
 function MultiLineEditbox:GetRow()
-	return math.floor(self:ClipRegion():height()/self.viewport:GetLineHeight());
+	return math.floor(self:ViewRegion():height()/self.viewport:GetLineHeight());
 end
 
 function MultiLineEditbox:updateScrollInfo()
-	local clip = self:ClipRegion();
+	local clip = self:ViewRegion();
 	--if(not self.hbar:isHidden()) then
 		self.hbar:setRange(0, self.viewport:GetRealWidth() - clip:width() - 1);
 		self.hbar:setStep(self.viewport:WordWidth(), clip:width());
@@ -289,7 +285,7 @@ function MultiLineEditbox:updateScrollValue()
 end
 
 function MultiLineEditbox:updateScrollStatus(textbox_w, textbox_h)
-	local clip = self:ClipRegion();
+	local clip = self:ViewRegion();
 	if(textbox_w > clip:width()) then
 		--self.hbar:show();
 		self:horizontalScrollBarShow();
@@ -298,11 +294,11 @@ function MultiLineEditbox:updateScrollStatus(textbox_w, textbox_h)
 		self:horizontalScrollBarHide();
 	end
 
-	clip = self:ClipRegion();
+	clip = self:ViewRegion();
 	if(textbox_h > clip:height()) then
 		--self.vbar:show();
 		self:verticalScrollBarShow();
-		clip = self:ClipRegion();
+		clip = self:ViewRegion();
 		if(textbox_w > clip:width()) then
 			--self.hbar:show();
 			self:horizontalScrollBarShow();
@@ -336,9 +332,69 @@ function MultiLineEditbox:updateScrollGeometry()
 	end
 end
 
+-- text region. 
+function MultiLineEditbox:ViewRegion()
+	local x = self.leftTextMargin;
+	local y = self.topTextMargin;
+	local w = self:width() - self.leftTextMargin - self.rightTextMargin;
+	local h = self:height() - self.topTextMargin - self.bottomTextMargin;
+
+	if(self.hbar and not self.hbar:isHidden()) then
+		h = h - self.SliderSize;
+	end
+
+	if(self.vbar and not self.vbar:isHidden()) then
+		w = w - self.SliderSize;
+	end
+
+	if(self.showLineNumber) then
+		x = x + self:LineNumberWidth();
+		w = w - self:LineNumberWidth();
+	end
+	return Rect:new_from_pool(x,y,w,h);
+end
+
+function MultiLineEditbox:ViewRegionOffsetX()
+	local offset_x = self.leftTextMargin;
+	if(self.showLineNumber) then
+		offset_x = offset_x + self:LineNumberWidth();
+	end
+	return offset_x;
+end
+
+function MultiLineEditbox:ViewRegionOffsetY()
+	local offset_y = self.topTextMargin;
+	return offset_y;
+end
+
+function MultiLineEditbox:LineNumberWidth()
+	if(not self.lineNumberWidth) then
+		self.lineNumberWidth = self.viewport:WordWidth();
+	end
+	return self.lineNumberWidth;
+end
+
+function MultiLineEditbox:GetLineNumberAlignment()
+	-- default to right,top and no clipping.
+	return 2+256;
+end
+
 function MultiLineEditbox:paintEvent(painter)
 	self:updateScrollGeometry();
 	painter:SetPen(self:GetBackgroundColor());
 	painter:DrawRectTexture(self:x(), self:y(), self:width(), self:height(), self:GetBackground());
+
+	if(self.showLineNumber) then
+		painter:SetPen(self:GetLineNumberBackgroundColor());
+		painter:DrawRectTexture(self:x(), self:y(), self:LineNumberWidth(), self:height(), self:GetLineNumberBackground());
+
+		painter:SetPen(self:GetColor());
+		painter:SetFont(self:GetFont());
+		local scale = self:GetScale();
+		local lineHeight = self.viewport:GetLineHeight();
+		for i = 0, self.viewport.to_line - self.viewport.from_line do
+			painter:DrawTextScaledEx(self:x(), self:y() + lineHeight * i + self.topTextMargin, self:LineNumberWidth() ,lineHeight, tostring(self.viewport.from_line + i), self:GetLineNumberAlignment(), scale);
+		end
+	end
 end
 

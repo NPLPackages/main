@@ -44,10 +44,8 @@ function pe_checkbox:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	if(checked) then
 		_this:setChecked(true);
 	end
-	local buttonName = self:GetAttributeWithCode("name",nil,true);
-	_this:Connect("clicked", function()
-		self:OnClick(buttonName);
-	end)
+	self.buttonName = self:GetAttributeWithCode("name",nil,true);
+	_this:Connect("clicked", self, self.OnClick, "UniqueConnection");
 end
 
 function pe_checkbox:setChecked(checked)
@@ -58,7 +56,7 @@ function pe_checkbox:setChecked(checked)
 	self:SetAttribute("checked", checked);
 end
 
-function pe_checkbox:OnClick(buttonName)
+function pe_checkbox:OnClick()
 	local ctl = self:GetControl();
 	if(ctl and ctl:isCheckable()) then
 		local checked = not (ctl:isChecked());
@@ -72,7 +70,7 @@ function pe_checkbox:OnClick(buttonName)
 	end
 	if(onclick) then
 		-- the callback function format is function(buttonName, self) end
-		result = self:DoPageEvent(onclick, buttonName, self);
+		result = self:DoPageEvent(onclick, self.buttonName, self);
 	end
 	return result;
 end

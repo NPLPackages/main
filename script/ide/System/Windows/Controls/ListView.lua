@@ -79,7 +79,7 @@ function ListView:SelEnd()
 end
 
 function ListView:getClip()
-	local r = self.parent:ClipRegion();
+	local r = self.parent:ViewRegion();
 	if(not self.mask) then
 		self.mask = Rect:new():init(0,0,0,0);
 	end
@@ -470,7 +470,7 @@ function ListView:updatePos(hscroll, vscroll)
 end
 
 function ListView:ScrollLineForward()
-	if((self:y() + self.lineHeight) <= self.parent:ClipRegion():y()) then
+	if((self:y() + self.lineHeight) <= self.parent:ViewRegion():y()) then
 		self:scrollY(self.lineHeight);
 		--self:setY(self:y() + self.lineHeight);
 
@@ -482,7 +482,7 @@ function ListView:ScrollLineForward()
 end
 
 function ListView:ScrollLineBackward()
-	if((self:y() + self:height() - self.lineHeight) > (self.parent:ClipRegion():y() + self.parent:ClipRegion():height())) then
+	if((self:y() + self:height() - self.lineHeight) > (self.parent:ViewRegion():y() + self.parent:ViewRegion():height())) then
 		self:scrollY(-self.lineHeight);
 		--self:setY(self:y() - self.lineHeight);
 		local cursor_y = (self.cursorLine - 1) * self.lineHeight;
@@ -631,7 +631,7 @@ function ListView:emitSizeChanged()
 end
 
 function ListView:updateGeometry()
-	local clip = self.parent:ClipRegion();
+	local clip = self.parent:ViewRegion();
 	if(self:GetRealWidth() < clip:width()) then
 		self:setX(clip:x(), true);
 		self:setWidth(clip:width() - self:x());

@@ -54,10 +54,8 @@ function pe_treenode:LoadComponent(parentElem, parentLayout, styleItem)
 		_this = TreeNode:new():init(parentElem);
 		self:SetControl(_this);
 	end
-	local buttonName = self:GetAttributeWithCode("name",nil,true);
-	_this:Connect("clicked", function()
-		self:OnClick(buttonName);
-	end);
+	self.buttonName = self:GetAttributeWithCode("name",nil,true);
+	_this:Connect("clicked", self, self.OnClick, "UniqueConnection");
 	PageElement.LoadComponent(self, _this, parentLayout, styleItem)
 end
 
@@ -135,10 +133,7 @@ end
 
 function pe_treenode:OnLoadComponentAfterChild(parentElem, parentLayout, css)
 	if(self.node and self.node.expandBtn and self.node.expandBtn.control) then
-		local buttonName = self:GetAttributeWithCode("name",nil,true);
-		self.node.expandBtn.control:Connect("clicked", function()
-			self:OnClick(buttonName);
-		end);
+		self.node.expandBtn.control:Connect("clicked", self, self.OnClick, "UniqueConnection");
 	end
 
 --	if(self.control and self.expandBtn) then
@@ -312,7 +307,7 @@ function pe_treenode:setChildrenVisible(visible)
 	end
 end
 
-function pe_treenode:OnClick(buttonName)
+function pe_treenode:OnClick()
 	
 	if(#self > 1) then
 		self.expanded = not self.expanded;
@@ -342,7 +337,7 @@ function pe_treenode:OnClick(buttonName)
 
 	local result;
 	if(onclick) then
-		result = self:DoPageEvent(onclick, buttonName, self)
+		result = self:DoPageEvent(onclick, self.buttonName, self)
 	end
 	return result;
 end

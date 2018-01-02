@@ -196,7 +196,7 @@ function ScrollAreaBase:keyPressEvent(e)
 end
 
 -- clip region. 
-function ScrollAreaBase:ClipRegion()
+function ScrollAreaBase:ViewRegion()
 	local w = self:width();
 	local h = self:height();
 --	echo("ScrollAreaBase:ClipRegion");

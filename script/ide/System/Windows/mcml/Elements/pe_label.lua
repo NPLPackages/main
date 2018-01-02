@@ -33,44 +33,36 @@ end
 
 -- get value: it is usually one of the editor tag, such as <input>
 function pe_label:GetValue()
-	return self.value;
+	return self:GetAttribute("value");
 end
 
 -- set value: it is usually one of the editor tag, such as <input>
 function pe_label:SetValue(value)
-	self.value = tostring(value);
+	self:SetAttribute("value", value);
 	if(self.control) then
-		return self.control:SetText(self.value);
+		return self.control:SetText(value);
+	end
+end
+
+function pe_label:OnBeforeChildLayout(layout)
+	if(self.control) then
+		local css = self:GetStyle();
+		local width, height;
+		if(not css.width) then
+			width = self.control:CalculateTextWidth();
+		end
+		if(not css.height) then
+			height = self.control:CalculateTextHeight();
+		end
+		if(width or height) then
+			layout:AddObject(width or 0, height or 0);
+		end
 	end
 end
 
 function pe_label:OnAfterChildLayout(layout, left, top, right, bottom)
 	if(self.control) then
-		local text_width = self.control:CalculateTextWidth();
-		local x, y, w, h = left, top, right-left, bottom-top;
-		local css = self:GetStyle();
-		if(css["text-align"]) then
---			if(css["text-singleline"] == "true") then
---				alignFormat = alignFormat + 32;
---			end
---			if(css["text-noclip"] == "true") then
---				alignFormat = alignFormat + 256;
---			end
---			if(css["text-valign"] == "center") then
---				alignFormat = alignFormat + 4;
---			end
-			if(css["text-align"] == "right") then
-				if(text_width < w) then
-					x = x + w - text_width;
-				end
-			elseif(css["text-align"] == "center") then
-				if(text_width < w) then
-					x = x + math.floor((w - text_width)/2);
-				end
-			end
-		end
-
-		self.control:setGeometry(x, y, w, h);
+		self.control:setGeometry(left, top, right-left, bottom-top);
 	end
 end
 

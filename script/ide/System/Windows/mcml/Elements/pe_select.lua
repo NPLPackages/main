@@ -47,7 +47,7 @@ function pe_select:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 		css.height = height;
 	end
 	
-	_this:Connect("onselect", self, self.OnSelect)
+	_this:Connect("onselect", self, self.OnSelect, "UniqueConnection")
 end
 
 function pe_select:DataBind()
@@ -106,6 +106,7 @@ function pe_select:GetText()
 end
 
 function pe_select:SetValue(value)
+	self:SetAttribute("value", value);
 	if(self.control) then
 		return self.control:SetValue(value);
 	end

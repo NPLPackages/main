@@ -48,10 +48,8 @@ function pe_div:LoadComponent(parentElem, parentLayout, style)
 		if(onclick_for or onclick or tooltip or ontouch) then
 			_this = Button:new():init(parentElem);
 			_this:SetPolygonStyle("none");
-			local buttonName = self:GetAttributeWithCode("name",nil,true);
-			_this:Connect("clicked", function()
-				self:OnClick(buttonName);
-			end);
+			self.buttonName = self:GetAttributeWithCode("name",nil,true);
+			_this:Connect("clicked", self, self.OnClick, "UniqueConnection");
 		else
 			_this = Rectangle:new():init(parentElem);
 		end
@@ -186,7 +184,7 @@ function pe_div:OnAfterChildLayout(layout, left, top, right, bottom)
 	end
 end
 
-function pe_div:OnClick(buttonName)
+function pe_div:OnClick()
 	local bindingContext;
 	local onclick = self.onclickscript or self:GetAttributeWithCode("onclick",nil,true);
 	if(onclick == "")then
@@ -203,11 +201,11 @@ function pe_div:OnClick(buttonName)
 				--bindingContext:UpdateControlsToData();
 				--values = bindingContext.values
 			--end	
-			result = self:DoPageEvent(onclick, buttonName, self);
+			result = self:DoPageEvent(onclick, self.buttonName, self);
 		else
 			-- user clicks the button, yet without form info
 			-- the callback function format is function(buttonName, self) end
-			result = self:DoPageEvent(onclick, buttonName, self)
+			result = self:DoPageEvent(onclick, self.buttonName, self)
 		end
 	end
 

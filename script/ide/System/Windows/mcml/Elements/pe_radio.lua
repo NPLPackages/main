@@ -48,13 +48,11 @@ function pe_radio:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	end
 
 	self.groupName = self:GetAttribute("name") or "_defaultRadioGroup";
-	local buttonName = self:GetAttributeWithCode("name",nil,true);
-	_this:Connect("clicked", function()
-		self:OnClick(buttonName);
-	end);
+	self.buttonName = self:GetAttributeWithCode("name",nil,true);
+	_this:Connect("clicked", self, self.OnClick, "UniqueConnection");
 end
 
-function pe_radio:OnClick(buttonName)
+function pe_radio:OnClick()
 	local result;
 	local value = self:GetAttributeWithCode("value", nil, true);
 	
@@ -98,7 +96,7 @@ function pe_radio:OnClick(buttonName)
 	end
 	if(onclick) then
 		-- the callback function format is function(buttonName, self) end
-		result = self:DoPageEvent(onclick, buttonName, self);
+		result = self:DoPageEvent(onclick, self.buttonName, self);
 	end
 
 	return result;
