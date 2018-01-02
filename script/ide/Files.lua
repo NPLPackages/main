@@ -54,6 +54,16 @@ function Files.IsAbsolutePath(filename)
 	end
 end
 
+-- replace / with \ under win32, and vice versa on linux. 
+function Files.ToCanonicalFilePath(filename)
+	if(System.os.GetPlatform()=="win32") then
+		filename = filename:gsub("/", "\\");
+	else
+		filename = filename:gsub("\\", "/");
+	end
+	return filename;
+end
+
 local dev_dir;
 -- @return "" if no dev directory is specified. 
 function Files.GetDevDirectory()
