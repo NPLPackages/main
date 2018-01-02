@@ -59,7 +59,9 @@ MultiLineEditbox:Property("Name", "MultiLineEditbox");
 MultiLineEditbox:Property({"Background", "", auto=true});
 MultiLineEditbox:Property({"BackgroundColor", "#cccccc", auto=true});
 MultiLineEditbox:Property({"LineNumberBackground", "", auto=true});
-MultiLineEditbox:Property({"LineNumberBackgroundColor", "#eeeeee", auto=true});
+MultiLineEditbox:Property({"LineNumberBackgroundColor", "#eeeeee80", auto=true});
+MultiLineEditbox:Property({"LineNumberColor", "#808080", auto=true});
+MultiLineEditbox:Property({"showLineNumber", false, nil, "ShowLineNumber", auto=true})
 MultiLineEditbox:Property({"Color", "#000000", })
 MultiLineEditbox:Property({"CursorColor", "#33333388"})
 MultiLineEditbox:Property({"SelectedBackgroundColor", "#99c9ef", auto=true})
@@ -99,7 +101,7 @@ MultiLineEditbox:Signal("textChanged");
 --MultiLineEditbox:Signal("editingFinished");
 --MultiLineEditbox:Signal("updateNeeded");
 
-MultiLineEditbox:Property({"showLineNumber", false, nil, "ShowLineNumber", auto=true})
+
 
 function MultiLineEditbox:ctor()
 --	self:setFocusPolicy(FocusPolicy.StrongFocus);
@@ -386,14 +388,21 @@ function MultiLineEditbox:paintEvent(painter)
 
 	if(self.showLineNumber) then
 		painter:SetPen(self:GetLineNumberBackgroundColor());
-		painter:DrawRectTexture(self:x(), self:y(), self:LineNumberWidth(), self:height(), self:GetLineNumberBackground());
+		painter:DrawRectTexture(self:x() + self.leftTextMargin, self:y() + self.topTextMargin, self:LineNumberWidth(), self:height()- self.topTextMargin - self.bottomTextMargin, self:GetLineNumberBackground());
 
-		painter:SetPen(self:GetColor());
+		local lineHeight = self.viewport:GetLineHeight();
+		if(self.viewport and self.viewport.cursorVisible and self.viewport:hasFocus() and not self.viewport:isReadOnly()) then
+			-- draw the cursor line bg
+			painter:SetPen(self.viewport:GetCurLineBackgroundColor());
+			painter:DrawRect(self:x() + self.leftTextMargin, self:y() + self.topTextMargin + lineHeight * (self.viewport.cursorLine-self.viewport.from_line), self:LineNumberWidth(), lineHeight);
+		end
+
+		painter:SetPen(self:GetLineNumberColor());
 		painter:SetFont(self:GetFont());
 		local scale = self:GetScale();
-		local lineHeight = self.viewport:GetLineHeight();
+		local lineNumWidth = self:LineNumberWidth()-5; -- add some padding
 		for i = 0, self.viewport.to_line - self.viewport.from_line do
-			painter:DrawTextScaledEx(self:x(), self:y() + lineHeight * i + self.topTextMargin, self:LineNumberWidth() ,lineHeight, tostring(self.viewport.from_line + i), self:GetLineNumberAlignment(), scale);
+			painter:DrawTextScaledEx(self:x() + self.leftTextMargin, self:y() + lineHeight * i + self.topTextMargin, lineNumWidth, lineHeight, tostring(self.viewport.from_line + i), self:GetLineNumberAlignment(), scale);
 		end
 	end
 end
