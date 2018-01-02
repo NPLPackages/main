@@ -21,8 +21,6 @@ end
 function Canvas:paintEvent(painter)
 	local background = self:GetBackground();
 	local x, y = self:x(), self:y();
-	if(background and background~="") then
-		painter:SetPen(self:GetBackgroundColor());
-		painter:DrawRectTexture(x, y, self:width(), self:height(), self:GetBackground());
-	end
+	painter:SetPen(self:GetBackgroundColor());
+	painter:DrawRectTexture(x, y, self:width(), self:height(), self:GetBackground());
 end
