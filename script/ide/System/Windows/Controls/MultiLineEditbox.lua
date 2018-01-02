@@ -25,16 +25,16 @@ local mulLine = MultiLineEditbox:new():init(window);
 --mulLine:setVerticalScrollBarPolicy("AlwaysOff");
 --mulLine:SetRows(2);
 mulLine:setGeometry(100, 100, 200, 20 * 10+10);
-mulLine:AddItem("ÎÒÊÇµÚÒ»ÐÐ");
-mulLine:AddItem("ÎÒÊÇµÚ¶þÐÐ");
-mulLine:AddItem("ÎÒÊÇµÚÈýÐÐ");
-mulLine:AddItem("ÎÒÊÇµÚËÄÐÐ");
-mulLine:AddItem("ÎÒÊÇµÚÎåÐÐ");
-mulLine:AddItem("ÎÒÊÇµÚÁùÐÐ");
-mulLine:AddItem("ÎÒÊÇµÚÆßÐÐ");
-mulLine:AddItem("ÎÒÊÇµÚ°ËÐÐ");
-mulLine:AddItem("ÎÒÊÇµÚ¾ÅÐÐ");
-mulLine:AddItem("ÎÒÊÇµÚÊ®ÐÐ");
+mulLine:AddItem("ï¿½ï¿½ï¿½Çµï¿½Ò»ï¿½ï¿½");
+mulLine:AddItem("ï¿½ï¿½ï¿½ÇµÚ¶ï¿½ï¿½ï¿½");
+mulLine:AddItem("ï¿½ï¿½ï¿½Çµï¿½ï¿½ï¿½ï¿½ï¿½");
+mulLine:AddItem("ï¿½ï¿½ï¿½Çµï¿½ï¿½ï¿½ï¿½ï¿½");
+mulLine:AddItem("ï¿½ï¿½ï¿½Çµï¿½ï¿½ï¿½ï¿½ï¿½");
+mulLine:AddItem("ï¿½ï¿½ï¿½Çµï¿½ï¿½ï¿½ï¿½ï¿½");
+mulLine:AddItem("ï¿½ï¿½ï¿½Çµï¿½ï¿½ï¿½ï¿½ï¿½");
+mulLine:AddItem("ï¿½ï¿½ï¿½ÇµÚ°ï¿½ï¿½ï¿½");
+mulLine:AddItem("ï¿½ï¿½ï¿½ÇµÚ¾ï¿½ï¿½ï¿½");
+mulLine:AddItem("ï¿½ï¿½ï¿½Çµï¿½Ê®ï¿½ï¿½");
 --mulLine:SetBackgroundColor("#cccccc");
 
 window:Show("my_window", nil, "_mt", 0,0, 600, 600);
@@ -60,9 +60,10 @@ MultiLineEditbox:Property({"Background", "", auto=true});
 MultiLineEditbox:Property({"BackgroundColor", "#cccccc", auto=true});
 MultiLineEditbox:Property({"LineNumberBackground", "", auto=true});
 MultiLineEditbox:Property({"LineNumberBackgroundColor", "#eeeeee", auto=true});
-MultiLineEditbox:Property({"Color", "#000000", auto=true})
-MultiLineEditbox:Property({"CursorColor", "#33333388", auto=true})
-MultiLineEditbox:Property({"SelectedBackgroundColor", "#00006680", auto=true})
+MultiLineEditbox:Property({"Color", "#000000", })
+MultiLineEditbox:Property({"CursorColor", "#33333388"})
+MultiLineEditbox:Property({"SelectedBackgroundColor", "#99c9ef", auto=true})
+MultiLineEditbox:Property({"CurLineBackgroundColor", "#e5ebf1e0", auto=true})
 MultiLineEditbox:Property({"m_cursor", nil, "cursorPosition", "setCursorPosition"})
 MultiLineEditbox:Property({"cursorVisible", false, "isCursorVisible", "setCursorVisible"})
 MultiLineEditbox:Property({"m_cursorWidth", 2,})
@@ -124,6 +125,53 @@ function MultiLineEditbox:ShowLineNumber(value)
 	self.showLineNumber = value;
 	self.clip = value;
 end
+function MultiLineEditbox:SetColor(color)
+	if(self.viewport) then
+		self.viewport:SetColor(color);
+	end
+end
+
+function MultiLineEditbox:GetColor()
+	if(self.viewport) then
+		return self.viewport:GetColor();
+	end
+end
+
+function MultiLineEditbox:SetCursorColor(color)
+	if(self.viewport) then
+		self.viewport:SetCursorColor(color);
+	end
+end
+
+function MultiLineEditbox:GetCursorColor()
+	if(self.viewport) then
+		return self.viewport:GetCursorColor();
+	end
+end
+
+function MultiLineEditbox:SetCurLineBackgroundColor(color)
+	if(self.viewport) then
+		self.viewport:SetCurLineBackgroundColor(color);
+	end
+end
+
+function MultiLineEditbox:GetCurLineBackgroundColor()
+	if(self.viewport) then
+		return self.viewport:GetCurLineBackgroundColor();
+	end
+end
+
+function MultiLineEditbox:SetSelectedBackgroundColor(color)
+	if(self.viewport) then
+		self.viewport:SetSelectedBackgroundColor(color);
+	end
+end
+
+function MultiLineEditbox:GetSelectedBackgroundColor()
+	if(self.viewport) then
+		return self.viewport:GetSelectedBackgroundColor();
+	end
+end
 
 function MultiLineEditbox:isReadOnly()
 	if(self.viewport) then
@@ -140,7 +188,6 @@ end
 function MultiLineEditbox:echoMode()
     return self.m_echoMode;
 end
-
 
 function MultiLineEditbox:setEchoMode(mode)
 	if(self.m_echoMode == mode) then
