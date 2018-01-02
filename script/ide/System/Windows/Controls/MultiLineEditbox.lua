@@ -99,7 +99,7 @@ MultiLineEditbox:Signal("textChanged");
 --MultiLineEditbox:Signal("editingFinished");
 --MultiLineEditbox:Signal("updateNeeded");
 
-MultiLineEditbox:Property({"showLineNumber", true, nil, "ShowLineNumber", auto=true})
+MultiLineEditbox:Property({"showLineNumber", false, nil, "ShowLineNumber", auto=true})
 
 function MultiLineEditbox:ctor()
 --	self:setFocusPolicy(FocusPolicy.StrongFocus);
