@@ -94,6 +94,7 @@ local function cmd_exec(args)
                     cmd.run(params)
                 end,
                 function(e)
+                    print(e)
                     print(debug.traceback())
                 end
             )
