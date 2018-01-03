@@ -26,6 +26,7 @@ please don't use relative path of your script file here.
 NPL.load("(gl)script/ide/System/nplcmd/console.npl")
 
 local system_print = print
+local system_log = log
 local write = io.write
 local binder = "%+"
 
@@ -35,10 +36,16 @@ local function cmd_begin()
         write(tostring(msg))
         write("\n")
     end
+    log = function(msg)
+        system_log(msg)
+        write(tostring(msg))
+        write("\n")
+    end
 end
 
 local function cmd_end()
     print = system_print -- reset print function
+    log = system_log
     ParaGlobal.Exit(0)
 end
 
@@ -81,7 +88,16 @@ local function cmd_exec(args)
         console.run()
     else
         local cmd = NPL.load(file)
-        if type(cmd.run) == "function" then cmd.run(params) end
+        if type(cmd.run) == "function" then
+            xpcall(
+                function()
+                    cmd.run(params)
+                end,
+                function(e)
+                    print(debug.traceback())
+                end
+            )
+        end
     end
 end
 
