@@ -677,7 +677,8 @@ function TextControl:internalRedo()
 end
 
 function TextControl:scrollX(offst_x)
-	local x = math.min(0,self:x() + offst_x);
+	local min_x = self.parent:ViewRegionOffsetX();
+	local x = math.min(min_x,self:x() + offst_x);
 	self:setX(x, true);
 end
 
@@ -686,7 +687,8 @@ function TextControl:scrollY(offst_y)
 		local tmp_offset = math.ceil(math.abs(offst_y) / self.lineHeight) * self.lineHeight;
 		offst_y = if_else(offst_y >0 ,tmp_offset ,-tmp_offset);
 	end
-	local y = math.min(0,self:y() + offst_y);
+	local min_y = self.parent:ViewRegionOffsetY();
+	local y = math.min(min_y,self:y() + offst_y);
 	self:setY(y, true);
 end
 
