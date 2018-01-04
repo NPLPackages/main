@@ -22,6 +22,28 @@ local string_find = string.find;
 
 local StyleItem = commonlib.inherit(nil, commonlib.gettable("System.Windows.mcml.StyleItem"));
 
+local remoteTextrue = {};
+
+function StyleItem:ctor()
+	self.style = nil;
+	self.pageElement = nil;
+	self.remoteResource = {};
+end
+
+function StyleItem:init(style,pageElement)
+	self.style = style;
+	self.pageElement = pageElement;
+	return self;
+end
+
+function StyleItem:GetPageCachePolicy()
+	local cache_policy;
+--	if(self.style and self.style.page) then
+--		cache_policy =  self.style.page.cache_policy;
+--	end
+	return cache_policy or System.localserver.CachePolicy:new("access plus 1 hour");
+end
+
 -- merge style with current style. 
 function StyleItem:Merge(style)
 	if(style) then
@@ -99,10 +121,20 @@ local color_fields = {
 	["background-color"] = true,
 };
 
+local image_fields = 
+{
+	["background"] = true,
+	["background2"] = true,
+	["background-image"] = true,
+}
 
 local complex_fields = {
 	["border"] = "border-width border-style border-color",
 };
+
+function StyleItem.AddRemoteTextureLocalPath(url, path)
+	remoteTextrue[url] = path;
+end
 
 function StyleItem.isResetField(name)
 	return reset_fields[name];
@@ -150,7 +182,32 @@ function StyleItem:AddItem(name,value)
 		value = string_gsub(value, "url%((.*)%)", "%1");
 		value = string_gsub(value, "#", ";");
 	end
+	if(image_fields[name] and string.match(value,"^http")) then
+		local url = value;
+		if(remoteTextrue[url]) then
+			value = remoteTextrue[url];
+		else
+			self.remoteResource[url] = self.remoteResource[url] or {};
+			self.remoteResource[url][#self.remoteResource[url]+1] = name;
+			if(self.style) then
+				self.style:AddRemoteResourceItem(self, url);
+			end
+			return;
+		end
+	end
 	self[name] = value;
+end
+
+function StyleItem:UpdateRemoteResource()
+	for url, names in pairs(self.remoteResource) do
+		local value = remoteTextrue[url];
+		for i = 1,#names do
+			self:AddItem(names[i],value);
+		end
+	end
+	if(self.pageElement) then
+		self.pageElement:UpdateCssStyle();
+	end
 end
 
 function StyleItem:padding_left()

@@ -862,6 +862,14 @@ function PageElement:GetCssStyle(attrName)
 	end
 end
 
+-- update the css attribute.
+-- this function is called when the texture attribute changed, such as "background", "background-color","background2", "background2-color", "background-image"
+function PageElement:UpdateCssStyle()
+	if(self.control) then
+		self.control:ApplyCss(self.style);
+	end
+end
+
 function PageElement:InvalidateStyle()
 	self.style = nil;
 end
@@ -900,7 +908,7 @@ end
 -- @param base_baseStyle: this is optional. where to copy inheritable fields, usually from parent element's style object. 
 -- @return: style table is a table of name value pairs. such as {color=string, href=string}
 function PageElement:CreateStyle(baseStyle, base_baseStyle)
-	local style = StyleItem:new();
+	local style = StyleItem:new():init(self:GetPageCtrl():GetStyle(), self);
 	self.style = style;
 
 	style:MergeInheritable(base_baseStyle);

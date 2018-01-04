@@ -30,6 +30,7 @@ function pe_style:LoadComponent(parentElem, parentLayout, style)
 		if(pageStyle) then
 			local style = StyleManager:GetStyle(src);
 			if(style) then
+				style:SetPage(self:GetPageCtrl());
 				pageStyle:AddReference(style, type);
 			end
 		end
@@ -51,6 +52,7 @@ function pe_style:LoadStyleFile(src)
 		src = self:GetAbsoluteURL(src);
 		local style = StyleManager:GetStyle(src);
 		if(style) then
+			style:SetPage(self:GetPageCtrl());
 			local pageStyle = self:GetPageStyle();
 			if(pageStyle) then
 				pageStyle:AddReference(style);

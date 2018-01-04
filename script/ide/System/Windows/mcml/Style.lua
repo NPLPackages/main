@@ -27,6 +27,52 @@ function Style:ctor()
 	self.references = {};
 	self.css_items = {};
 	self.css_references = {};
+
+	self.page = nil;
+	self.hasRemoteResourceItems = {};
+	self.remoteResource = {};
+end
+
+function Style:init(page)
+	self.page = page;
+	return self;
+end
+
+function Style:SetPage(page)
+	if(self.page == page) then
+		return;
+	end
+	self.page = page;
+end
+
+function Style:AddRemoteResourceItem(styleItem, url)
+	self.hasRemoteResourceItems[#self.hasRemoteResourceItems+1] = styleItem;
+	self.remoteResource[#self.remoteResource+1] = url;
+end
+
+function Style:GetPageCachePolicy()
+	local cache_policy;
+--	if(self.page) then
+--		cache_policy =  self.page.cache_policy;
+--	end
+	return cache_policy or System.localserver.CachePolicy:new("access plus 1 hour");
+end
+
+function Style:GetRometeResource()
+	local urls = self.remoteResource;
+	if(next(urls) == nil) then
+		return;
+	end
+	ParaAsset.GetRemoteTexture(urls, self:GetPageCachePolicy(), function (entry)
+		if(entry and entry.entry and entry.entry.url and entry.payload and entry.payload.cached_filepath) then
+			StyleItem.AddRemoteTextureLocalPath(entry.entry.url, entry.payload.cached_filepath);
+		end
+	end);
+
+	for i = 1,#self.hasRemoteResourceItems do
+		local systemItem = self.hasRemoteResourceItems[i];
+		systemItem:UpdateRemoteResource();
+	end
 end
 
 -- @param name: the css class name
@@ -86,7 +132,7 @@ end
 function Style:LoadFromTable(styles)
 	if(styles) then
 		for name, style in pairs(styles) do
-			self:SetItem(name, StyleItem:new(style), true);
+			self:SetItem(name, StyleItem:new(style):init(self), true);
 		end
 	end
 	return self;
@@ -198,7 +244,7 @@ function Style:LoadCssFromString(code)
 	code = string.gsub(code,"/%*.-%*/","");
 	for selector_str,declaration_str in string.gmatch(code,"([^{}]+){([^{}]+)}") do
 		local selectors = self:parseSelectors(selector_str);
-		local style = StyleItem:new();
+		local style = StyleItem:new():init(self);
 		style:AddString(declaration_str);
 		self.css_items[#self.css_items + 1] = {
 			["selectors"] = selectors,
