@@ -209,7 +209,7 @@ function _guihelper.MessageBox(content,MsgBoxClick_CallBack, buttons, icon, mcml
 	end
 	
 	local width, height = 370, 250;
-	if(System.options.IsMobilePlatform and System.options.mc) then
+	if(System and System.options and System.options.IsMobilePlatform and System.options.mc) then
 		width, height = 590, 320;
 	end
 	if(type(mcmlTemplate) ~= "string") then
