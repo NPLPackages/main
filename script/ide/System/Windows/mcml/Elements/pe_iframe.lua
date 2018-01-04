@@ -9,8 +9,8 @@ NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_iframe.lua");
 System.Windows.mcml.Elements.pe_iframe:RegisterAs("iframe");
 ------------------------------------------------------------
 ]]
-NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_container.lua");
-local pe_iframe = commonlib.inherit(commonlib.gettable("System.Windows.mcml.Elements.pe_container"), commonlib.gettable("System.Windows.mcml.Elements.pe_iframe"));
+NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_div.lua");
+local pe_iframe = commonlib.inherit(commonlib.gettable("System.Windows.mcml.Elements.pe_div"), commonlib.gettable("System.Windows.mcml.Elements.pe_iframe"));
 pe_iframe:Property({"class_name", "pe:iframe"});
 
 function pe_iframe:ctor()
@@ -22,6 +22,8 @@ function pe_iframe:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	srcPage:Attach(parentElem);
 	srcPage:Init(url);
 	self.page = srcPage;
+
+	pe_iframe._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css);
 end
 
 function pe_iframe:OnBeforeChildLayout(layout)
@@ -39,11 +41,5 @@ function pe_iframe:OnBeforeChildLayout(layout)
 	height = height - padding_top;
 	layout:AddObject(width, height);
 	return true;
-end
-
-function pe_iframe:OnAfterChildLayout(layout, left, top, right, bottom)
-	if(self.control) then
-		self.control:setGeometry(left, top, right-left, bottom-top);
-	end
 end
 
