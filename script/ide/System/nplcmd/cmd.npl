@@ -1,0 +1,109 @@
+--[[
+title: NPL cmd
+author: chenqh
+date: 2017/12/29
+desc: default bootstrapper for nplc, automate parse the nplc commands and execute it
+------------------------------------------------------------------------------------
+nplc script sample:
+------------------------------------------------------------------------------------
+#!/usr/bin/env nplc
+
+local _M = {}
+
+-- Important: cmd will load the file and try to execute function "run" if it exists
+function _M.run()
+    print("hello world!")
+end
+
+return _M
+------------------------------------------------------------------------------------
+It's recommend to put the script into /usr/local/bin, same as nplc.
+And you can run "nplc your_script" to test it in development in any folder,
+please don't use relative path of your script file here.
+------------------------------------------------------------------------------------
+]]
+
+NPL.load("(gl)script/ide/System/nplcmd/console.npl")
+
+local system_print = print
+local system_log = log
+local write = io.write
+local binder = "%+"
+
+local function cmd_begin()
+    print = function(msg)
+        system_print(msg)
+        write(tostring(msg))
+        write("\n")
+    end
+    log = function(msg)
+        system_log(msg)
+        write(tostring(msg))
+        write("\n")
+    end
+end
+
+local function cmd_end()
+    print = system_print -- reset print function
+    log = system_log
+    ParaGlobal.Exit(0)
+end
+
+-- example
+-- in: "-i+-p+test+specs"
+-- out: {"-i", "-p"}, "test", {"spec"}
+local function cmd_parser(args)
+    local options = {}
+    local file = nil
+    local params = {}
+    local step = "option" -- 1.options 2.file 3.params
+
+    for arg in args:gmatch(format("[^%s]+", binder)) do
+        if step == "option" then
+            if arg:match("^-%w$") then
+                table.insert(options, arg)
+            else
+                file = arg
+                step = "params"
+            end
+        elseif(step == "params") then
+            table.insert(params, arg)
+        else
+            error(format("invalid args %s on arg %s", args, arg))
+        end
+    end
+
+    return options, file, params
+end
+
+-- nplc will concat the command line args with '+'
+-- for example:
+-- command line: nplc -i  -p test specs
+-- args: "-i+-p+test+specs"
+local function cmd_exec(args)
+    local options, file, params = cmd_parser(args)
+
+    if(not file) then
+        local console = commonlib.gettable("System.Nplcmd.Console")
+        console.run()
+    else
+        local cmd = NPL.load(file)
+        if type(cmd.run) == "function" then
+            xpcall(
+                function()
+                    cmd.run(params)
+                end,
+                function(e)
+                    print(e)
+                    print(debug.traceback())
+                end
+            )
+        end
+    end
+end
+
+cmd_begin()
+cmd_exec(ParaEngine.GetAppCommandLineByParam("nplcmd", ""))
+cmd_end()
+
+NPL.this(function() end)
