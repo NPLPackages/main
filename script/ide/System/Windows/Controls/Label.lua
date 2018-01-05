@@ -9,8 +9,8 @@ NPL.load("(gl)script/ide/System/Windows/Controls/Label.lua");
 local Label = commonlib.gettable("System.Windows.Controls.Label");
 ------------------------------------------------------------
 ]]
-NPL.load("(gl)script/ide/System/Windows/UIElement.lua");
-local Label = commonlib.inherit(commonlib.gettable("System.Windows.UIElement"), commonlib.gettable("System.Windows.Controls.Label"));
+NPL.load("(gl)script/ide/System/Windows/UITextElement.lua");
+local Label = commonlib.inherit(commonlib.gettable("System.Windows.UITextElement"), commonlib.gettable("System.Windows.Controls.Label"));
 Label:Property("Name", "Label");
 Label:Property({"Text", auto=true})
 Label:Property({"Color", "#000000", auto=true})
@@ -49,21 +49,13 @@ function Label:paintEvent(painter)
 	if(text and text~="") then
 		painter:SetFont(self:GetFont());
 		painter:SetPen(self:GetColor());
-		painter:DrawTextScaledEx(x+self.padding_left, y+self.padding_top, self:width()-self.padding_left-self.padding_right, self:height()-self.padding_top-self.padding_bottom, text, self:GetAlignment(), self:GetFontScaling());
+		self:DrawTextScaledEx(painter, x+self.padding_left, y+self.padding_top, self:width()-self.padding_left-self.padding_right, self:height()-self.padding_top-self.padding_bottom, text, self:GetAlignment(), self:GetFontScaling());
 	end
 end
 
 -- virtual: apply css style
 function Label:ApplyCss(css)
 	Label._super.ApplyCss(self, css);
-	local font, font_size, font_scaling = css:GetFontSettings();
-	self:SetFont(font);
-	self:SetFontSize(font_size);
-	self:SetFontScaling(font_scaling);
-	self:SetAlignment(css:GetTextAlignment());
 	self:SetPaddings(css:paddings());
-	if(css.color) then
-		self:SetColor(css.color);
-	end
 end
 
