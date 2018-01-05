@@ -8,11 +8,6 @@ use the lib:
 NPL.load("(gl)script/ide/System/Windows/Controls/TextControl.lua");
 local TextControl = commonlib.gettable("System.Windows.Controls.TextControl");
 ------------------------------------------------------------
-
-test
-------------------------------------------------------------
-
-------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/System/Windows/UIElement.lua");
 NPL.load("(gl)script/ide/System/Core/UniString.lua");
@@ -223,7 +218,8 @@ function TextControl:SetText(text)
 	end
 
 	local clip = self.parent:ViewRegion();
-	self:setX(clip:x(), true);
+	self:scrollX(clip:x() - self:x());
+	--self:setX(clip:x(), true);
 end
 
 function TextControl:GetText()
@@ -1339,7 +1335,8 @@ function TextControl:adjustCursor()
 
 		local clip_x_to_self = cursor_x_to_self - cursor_x_to_clip;
 		local self_x = self.parent:ViewRegion():x() - clip_x_to_self;
-		self:setX(self_x, true);
+		self:scrollX(self_x - self:x());
+		--self:setX(self_x, true);
 	end
 
 	local cursor_y = (self.cursorLine - 1) * self.lineHeight;
@@ -1395,16 +1392,20 @@ function TextControl:updateGeometry()
 	if(self.needUpdateControlSize) then
 		self.needUpdateControlSize = false;
 		local clip = self.parent:ViewRegion();
+
+		self:scrollX(clip:x() - self:x());
 		if(self:GetRealWidth() < clip:width()) then
-			self:setX(clip:x(), true);
+			--self:setX(clip:x(), true);
+			
 			self:setWidth(clip:width());
 		else
 			self:setWidth(self:GetRealWidth());
 		end
 
+		self:scrollY(clip:y() - self:y());
 		if(self:GetRealHeight() < clip:height()) then
-			--self:scrollY(clip:y() - self:y());
-			self:setY(clip:y(),true);
+			
+			--self:setY(clip:y(),true);
 			self:setHeight(clip:height());
 		else
 			self:setHeight(self:GetRealHeight());
