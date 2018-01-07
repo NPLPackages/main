@@ -51,7 +51,12 @@ local function InitApp()
 		{app={app_key="Debug_GUID"}, IP_file="script/kids/3DMapSystemApp/DebugApp/IP.xml"},
 	})
 
-	System.App.Commands.Call("Help.Debug");
+--	System.App.Commands.Call("Help.Debug");
+--	System.App.Commands.Call("File.MCMLBrowser");
+
+	NPL.load("(gl)script/ide/System/test/test_Windows.lua");
+	local test_Windows = commonlib.gettable("System.Core.Test.test_Windows");
+	test_Windows:TestMCMLPage("script/test/mcmlv2/mcml_window.html");
 
 --	local app = Map3DSystem.App.Registration.GetApp("Debug_GUID");
 --
