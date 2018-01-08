@@ -35,7 +35,7 @@ MultiLineEditbox:Property({"BackgroundColor", "#cccccc", auto=true});
 MultiLineEditbox:Property({"LineNumberBackground", "", auto=true});
 MultiLineEditbox:Property({"LineNumberBackgroundColor", "#eeeeee80", auto=true});
 MultiLineEditbox:Property({"LineNumberColor", "#808080", auto=true});
-MultiLineEditbox:Property({"showLineNumber", true, nil, "ShowLineNumber", auto=true})
+MultiLineEditbox:Property({"showLineNumber", false, nil, "ShowLineNumber", auto=true})
 MultiLineEditbox:Property({"Color", "#000000", })
 MultiLineEditbox:Property({"CursorColor", "#33333388"})
 MultiLineEditbox:Property({"SelectedBackgroundColor", "#99c9ef", auto=true})
