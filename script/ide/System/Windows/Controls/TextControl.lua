@@ -1392,22 +1392,22 @@ function TextControl:updateGeometry()
 	if(self.needUpdateControlSize) then
 		self.needUpdateControlSize = false;
 		local clip = self.parent:ViewRegion();
-
-		self:scrollX(clip:x() - self:x());
+		
 		if(self:GetRealWidth() < clip:width()) then
-			--self:setX(clip:x(), true);
-			
+			self:scrollX(clip:x() - self:x());	
 			self:setWidth(clip:width());
 		else
 			self:setWidth(self:GetRealWidth());
 		end
 
-		self:scrollY(clip:y() - self:y());
 		if(self:GetRealHeight() < clip:height()) then
-			
-			--self:setY(clip:y(),true);
+			self:scrollY(clip:y() - self:y());			
 			self:setHeight(clip:height());
 		else
+			if(self:y() == 0) then
+				-- 第一次渲染时调整垂直位置
+				self:scrollY(clip:y() - self:y());
+			end
 			self:setHeight(self:GetRealHeight());
 		end
 	end
