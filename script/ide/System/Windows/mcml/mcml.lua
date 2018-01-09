@@ -49,8 +49,6 @@ function mcml:StaticInit()
 	end
 	isInited = true;
 
-	StyleColor.ProcessPresetColors();
-
 	if(not self.style) then
 		self:SetStyle(mcml.StyleDefault:new());
 	end
