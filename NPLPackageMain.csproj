@@ -1177,6 +1177,7 @@
     <None Include="script\ide\System\Windows\mcml\Elements\pe_treenode.lua" />
     <None Include="script\ide\System\Windows\mcml\Elements\pe_treeview.lua" />
     <None Include="script\ide\System\Windows\mcml\CssSelector.lua" />
+    <None Include="script\ide\System\Windows\mcml\LocalCache.lua" />
     <None Include="script\test\MCMLV2\main.lua" />
     <None Include="script\test\MCMLV2\mcml_window.lua" />
   </ItemGroup>
