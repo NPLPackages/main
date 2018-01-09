@@ -88,7 +88,7 @@ local function cmd_exec(args)
         console.run()
     else
         local cmd = NPL.load(file)
-        if type(cmd.run) == "function" then
+        if type(cmd) == "table" and type(cmd.run) == "function" then
             xpcall(
                 function()
                     cmd.run(params)
