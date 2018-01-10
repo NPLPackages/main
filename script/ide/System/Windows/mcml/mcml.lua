@@ -49,8 +49,6 @@ function mcml:StaticInit()
 	end
 	isInited = true;
 
-	StyleColor.ProcessPresetColors();
-
 	if(not self.style) then
 		self:SetStyle(mcml.StyleDefault:new());
 	end
@@ -142,6 +140,8 @@ function mcml:LoadAllElements()
 	Elements.pe_label:RegisterAs("label","pe:label");
 	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_progressbar.lua");
 	Elements.pe_progressbar:RegisterAs("pe:progressbar", "progressbar");
+	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_iframe.lua");
+	Elements.pe_iframe:RegisterAs("iframe");
 	-- TODO: add all system defined page element here
 end
 

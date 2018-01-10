@@ -134,6 +134,9 @@ end
 function OpenFileDialog.ShowDialog_Win32(filters, title, initialdir, isSaveMode)
 	if(initialdir) then
 		initialdir = initialdir:gsub("/","\\");
+		if(not commonlib.Files.IsAbsolutePath(initialdir)) then
+			initialdir = ParaIO.GetCurDirectory(0)..initialdir;
+		end
 	end
 	local input = {
 			filter = GetFilterString(filters), 

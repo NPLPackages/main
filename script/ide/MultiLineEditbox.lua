@@ -137,6 +137,7 @@ function MultiLineEditbox:Show(bShow)
 			if(self.container_bg ~= "") then
 				self.ctrlEditbox:SetBackground(self.container_bg);
 			end
+			self.ctrlEditbox:ShowLineNumber(self.ShowLineNumber == true);
 			self.ctrlEditbox:SetBackgroundColor("#00000000");
 			self.ctrlEditbox:SetItemHeight(self.DefaultNodeHeight);
 			if(self.ReadOnly) then

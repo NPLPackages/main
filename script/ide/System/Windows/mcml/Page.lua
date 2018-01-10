@@ -736,6 +736,9 @@ function Page:OnRefresh()
 		self.mcmlNode:SetAttribute("page_ctrl", self);
 
 		self:LoadComponent();
+
+		self:DownloadResource();
+
 		self.used_width, self.used_height = layout:GetUsedSize();	
 
 		self:OnCreate();
@@ -760,10 +763,16 @@ function Page:LoadComponent()
 	end
 end
 
+function Page:DownloadResource()
+	if(self.style) then
+		self.style:GetRometeResource();
+	end
+end
+
 -- Get the page style object
 function Page:GetStyle()
 	if(not self.style) then
-		self.style = Style:new();
+		self.style = Style:new():init(self);
 		self.style:AddReference(mcml:GetStyle(), "mcss");
 	end
 	return self.style;
