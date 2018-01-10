@@ -8,10 +8,8 @@ nplc script is another core feature, now you can use npl or lua code to implemen
 for example:
 
 ```lua
-local _M = {}
-
--- Important: cmd will load the file and try to execute function "run" if it exists
-function _M.run()
+-- Important: return a function to handle the cmd
+return function(ctx)
     print("hello world!")
 end
 
@@ -28,14 +26,11 @@ filename: hello
 ```lua
 #!/usr/bin/env nplc
 
-local _M = {}
-
--- Important: cmd will load the file and try to execute function "run" if it exists
-function _M.run()
+-- Important: return a function to handle the cmd
+return function(ctx)
     print("hello world!")
 end
 
-return _M
 ```
 
 move file "hello" to /usr/local/bin/, then input "hello" in the console :)

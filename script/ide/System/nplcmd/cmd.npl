@@ -24,29 +24,18 @@ please don't use relative path of your script file here.
 ]]
 
 NPL.load("(gl)script/ide/System/nplcmd/console.npl")
+NPL.load("(gl)script/ide/System/nplcmd/extension.npl")
 
-local system_print = print
-local system_log = log
-local write = io.write
 local binder = "%+"
+local ctx = {}
+local args = ParaEngine.GetAppCommandLineByParam("nplcmd", "")
 
 local function cmd_begin()
-    print = function(msg)
-        system_print(msg)
-        write(tostring(msg))
-        write("\n")
-    end
-    log = function(msg)
-        system_log(msg)
-        write(tostring(msg))
-        write("\n")
-    end
+    ctx.path = ParaEngine.GetAppCommandLineByParam("cmd_path", "")
 end
 
 local function cmd_end()
-    print = system_print -- reset print function
-    log = system_log
-    ParaGlobal.Exit(0)
+    if not ctx.keep_alive then ParaGlobal.Exit(0) end
 end
 
 -- example
@@ -80,30 +69,35 @@ end
 -- for example:
 -- command line: nplc -i  -p test specs
 -- args: "-i+-p+test+specs"
-local function cmd_exec(args)
+local function cmd_exec(args, ctx)
     local options, file, params = cmd_parser(args)
+    ctx.arg = params
 
     if(not file) then
         local console = commonlib.gettable("System.Nplcmd.Console")
         console.run()
     else
         local cmd = NPL.load(file)
-        if type(cmd.run) == "function" then
-            xpcall(
-                function()
-                    cmd.run(params)
-                end,
-                function(e)
-                    print(e)
-                    print(debug.traceback())
-                end
-            )
+        if type(cmd) == "function" then
+            cmd(ctx)
+        elseif cmd == false then
+            print(format("Load script %s failed!", file))
+        else
+            print("Warning: no function to handle the cmd!")
         end
     end
 end
 
 cmd_begin()
-cmd_exec(ParaEngine.GetAppCommandLineByParam("nplcmd", ""))
+xpcall(
+    function()
+        cmd_exec(args, ctx)
+    end,
+    function(e)
+        print(e)
+        print(debug.traceback())
+    end
+)
 cmd_end()
 
 NPL.this(function() end)

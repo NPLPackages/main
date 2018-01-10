@@ -15,4 +15,4 @@ binder="+"
 
 options=$(join $binder $*)
 
-npl bootstrapper="(gl)script/ide/System/nplcmd/cmd.npl" i="true" servermode="true" nplcmd="$options"
+npl bootstrapper="(gl)script/ide/System/nplcmd/cmd.npl" i="true" servermode="true" nplcmd="$options" cmd_path="$PWD" # logfile="/var/log/nplc/log.txt"
