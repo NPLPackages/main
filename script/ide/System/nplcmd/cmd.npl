@@ -23,9 +23,8 @@ please don't use relative path of your script file here.
 ------------------------------------------------------------------------------------
 ]]
 
-NPL.load("(gl)script/ide/System/nplcmd/console.npl")
 NPL.load("(gl)script/ide/System/nplcmd/extension.npl")
-
+local Embeded = NPL.load("(gl)script/ide/System/nplcmd/embeded_cmd.npl")
 local binder = "%+"
 local ctx = {}
 local args = ParaEngine.GetAppCommandLineByParam("nplcmd", "")
@@ -45,17 +44,17 @@ local function cmd_parser(args)
     local options = {}
     local file = nil
     local params = {}
-    local step = "option" -- 1.options 2.file 3.params
+    local state = "option"
 
     for arg in args:gmatch(format("[^%s]+", binder)) do
-        if step == "option" then
+        if state == "option" then
             if arg:match("^-%w$") then
-                table.insert(options, arg)
+                options[arg] = true
             else
                 file = arg
-                step = "params"
+                state = "params"
             end
-        elseif(step == "params") then
+        elseif(state == "params") then
             table.insert(params, arg)
         else
             error(format("invalid args %s on arg %s", args, arg))
@@ -65,25 +64,63 @@ local function cmd_parser(args)
     return options, file, params
 end
 
+local function show_version()
+    print("Version 0.0.1")
+end
+
+local function show_usage()
+    local text = [[
+NPL Command Line
+
+usage: nplc [options] script [params]
+
+Description:
+    "nplc" is a simple implementation of npl cli, with it you can write script to add some useful tools by using npl.
+    There are some embedded scripts like "console" and "install".
+
+Options:
+
+-h,      --help         show help
+-v,      --version      show version
+
+Embedded scripts:
+
+console - nplc console
+
+]]
+    print(text)
+end
+
 -- nplc will concat the command line args with '+'
 -- for example:
 -- command line: nplc -i  -p test specs
 -- args: "-i+-p+test+specs"
 local function cmd_exec(args, ctx)
-    local options, file, params = cmd_parser(args)
+    local options, script, params = cmd_parser(args)
     ctx.arg = params
 
-    if(not file) then
-        local console = commonlib.gettable("System.Nplcmd.Console")
-        console.run()
+    if options["-h"] or options["--help"] then
+        show_usage()
+        return
+    elseif options["-v"] or options["--version"] then
+        show_version()
+        return
+    end
+
+    if(not script) then
+        Embeded.run("console", ctx)
     else
-        local cmd = NPL.load(file)
-        if type(cmd) == "function" then
-            cmd(ctx)
-        elseif cmd == false then
-            print(format("Load script %s failed!", file))
+        if Embeded.include_cmd(script) then
+            Embeded.run(script, ctx)
         else
-            print("Warning: no function to handle the cmd!")
+            local cmd = NPL.load(script)
+            if type(cmd) == "function" then
+                cmd(ctx)
+            elseif cmd == false then
+                print(format("Load script %s failed!", script))
+            else
+                print("Warning: no function to handle the cmd!")
+            end
         end
     end
 end

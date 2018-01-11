@@ -5,9 +5,9 @@ date: 2017/12/29
 desc: read and exec npl code
 ]]
 
-local _M = commonlib.gettable("System.Nplcmd.Console")
 local write = io.write
 local read = io.read
+local quit = false
 
 local function getline(line)
     line = line or ""
@@ -41,7 +41,7 @@ end
 
 local function open_console()
     q = function()
-        _M.quit = true
+        quit = true
     end
     print("======================================")
     print("welcome to npl console :)")
@@ -53,10 +53,10 @@ local function exit_console()
     q = nil -- remove global function q
 end
 
-function _M.run()
+return function(ctx)
     open_console()
     local line = getline("")
-    while not _M.quit do
+    while not quit do
         local code, error_msg = getcode(line)
         if code ~= nil then
             local result = table.pack(pcall(code))
@@ -72,7 +72,7 @@ function _M.run()
             line = ""
             print(error_msg)
         end
-        if not _M.quit then line = getline(line) end
+        if not quit then line = getline(line) end
     end
     exit_console()
 end
