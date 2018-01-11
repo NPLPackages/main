@@ -8,11 +8,6 @@ use the lib:
 NPL.load("(gl)script/ide/System/Windows/Controls/TextControl.lua");
 local TextControl = commonlib.gettable("System.Windows.Controls.TextControl");
 ------------------------------------------------------------
-
-test
-------------------------------------------------------------
-
-------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/System/Windows/UIElement.lua");
 NPL.load("(gl)script/ide/System/Core/UniString.lua");
@@ -223,7 +218,8 @@ function TextControl:SetText(text)
 	end
 
 	local clip = self.parent:ViewRegion();
-	self:setX(clip:x(), true);
+	self:scrollX(clip:x() - self:x());
+	--self:setX(clip:x(), true);
 end
 
 function TextControl:GetText()
@@ -677,7 +673,8 @@ function TextControl:internalRedo()
 end
 
 function TextControl:scrollX(offst_x)
-	local x = math.min(0,self:x() + offst_x);
+	local min_x = self.parent:ViewRegionOffsetX();
+	local x = math.min(min_x,self:x() + offst_x);
 	self:setX(x, true);
 end
 
@@ -686,7 +683,8 @@ function TextControl:scrollY(offst_y)
 		local tmp_offset = math.ceil(math.abs(offst_y) / self.lineHeight) * self.lineHeight;
 		offst_y = if_else(offst_y >0 ,tmp_offset ,-tmp_offset);
 	end
-	local y = math.min(0,self:y() + offst_y);
+	local min_y = self.parent:ViewRegionOffsetY();
+	local y = math.min(min_y,self:y() + offst_y);
 	self:setY(y, true);
 end
 
@@ -1337,7 +1335,8 @@ function TextControl:adjustCursor()
 
 		local clip_x_to_self = cursor_x_to_self - cursor_x_to_clip;
 		local self_x = self.parent:ViewRegion():x() - clip_x_to_self;
-		self:setX(self_x, true);
+		self:scrollX(self_x - self:x());
+		--self:setX(self_x, true);
 	end
 
 	local cursor_y = (self.cursorLine - 1) * self.lineHeight;
@@ -1393,18 +1392,22 @@ function TextControl:updateGeometry()
 	if(self.needUpdateControlSize) then
 		self.needUpdateControlSize = false;
 		local clip = self.parent:ViewRegion();
+		
 		if(self:GetRealWidth() < clip:width()) then
-			self:setX(clip:x(), true);
+			self:scrollX(clip:x() - self:x());	
 			self:setWidth(clip:width());
 		else
 			self:setWidth(self:GetRealWidth());
 		end
 
 		if(self:GetRealHeight() < clip:height()) then
-			--self:scrollY(clip:y() - self:y());
-			self:setY(clip:y(),true);
+			self:scrollY(clip:y() - self:y());			
 			self:setHeight(clip:height());
 		else
+			if(self:y() == 0) then
+				-- 第一次渲染时调整垂直位置
+				self:scrollY(clip:y() - self:y());
+			end
 			self:setHeight(self:GetRealHeight());
 		end
 	end

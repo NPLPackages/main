@@ -1147,6 +1147,7 @@
     <None Include="script\ide\System\Windows\Controls\MultiLineEditbox.lua" />
     <None Include="script\ide\System\Windows\Controls\Primitives\ScrollAreaBase.lua" />
     <None Include="script\ide\System\Windows\Controls\Primitives\SliderBase.lua" />
+    <None Include="script\ide\System\Windows\UITextElement.lua" />
     <None Include="script\ide\System\Windows\Controls\ProgressBar.lua" />
     <None Include="script\ide\System\Windows\Controls\ScrollArea.lua" />
     <None Include="script\ide\System\Windows\Controls\ScrollBar.lua" />
@@ -1159,6 +1160,7 @@
     <None Include="script\ide\System\Windows\mcml\CssSelectorItem.lua" />
     <None Include="script\ide\System\Windows\mcml\css\StyleColor.lua" />
     <None Include="script\ide\System\Windows\mcml\default_style.mcss" />
+    <None Include="script\ide\System\Windows\mcml\Elements\pe_a.lua" />
     <None Include="script\ide\System\Windows\mcml\Elements\pe_bindingblock.lua" />
     <None Include="script\ide\System\Windows\mcml\Elements\pe_br.lua" />
     <None Include="script\ide\System\Windows\mcml\Elements\pe_checkbox.lua" />
@@ -1173,6 +1175,7 @@
     <None Include="script\ide\System\Windows\mcml\Elements\pe_scrollarea.lua" />
     <None Include="script\ide\System\Windows\mcml\Elements\pe_select.lua" />
     <None Include="script\ide\System\Windows\mcml\Elements\pe_sliderbar.lua" />
+    <None Include="script\ide\System\Windows\mcml\Elements\pe_tab.lua" />
     <None Include="script\ide\System\Windows\mcml\Elements\pe_textarea.lua" />
     <None Include="script\ide\System\Windows\mcml\Elements\pe_treenode.lua" />
     <None Include="script\ide\System\Windows\mcml\Elements\pe_treeview.lua" />

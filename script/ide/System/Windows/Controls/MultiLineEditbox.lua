@@ -11,34 +11,8 @@ local MultiLineEditbox = commonlib.gettable("System.Windows.Controls.MultiLineEd
 
 test
 ------------------------------------------------------------
-NPL.load("(gl)script/ide/System/Windows/Window.lua");
-NPL.load("(gl)script/ide/System/test/test_Windows.lua");
-NPL.load("(gl)script/ide/System/Windows/Controls/MultiLineEditbox.lua");
-local MultiLineEditbox = commonlib.gettable("System.Windows.Controls.MultiLineEditbox");
-local Window = commonlib.gettable("System.Windows.Window")	
-local test_Windows = commonlib.gettable("System.Core.Test.test_Windows");
-
-local window = Window:new();
-local mulLine = MultiLineEditbox:new():init(window);
-
---mulLine:setHorizontalScrollBarPolicy("AlwaysOff");
---mulLine:setVerticalScrollBarPolicy("AlwaysOff");
---mulLine:SetRows(2);
-mulLine:setGeometry(100, 100, 200, 20 * 10+10);
-mulLine:AddItem("我是第一行");
-mulLine:AddItem("我是第二行");
-mulLine:AddItem("我是第三行");
-mulLine:AddItem("我是第四行");
-mulLine:AddItem("我是第五行");
-mulLine:AddItem("我是第六行");
-mulLine:AddItem("我是第七行");
-mulLine:AddItem("我是第八行");
-mulLine:AddItem("我是第九行");
-mulLine:AddItem("我是第十行");
---mulLine:SetBackgroundColor("#cccccc");
-
-window:Show("my_window", nil, "_mt", 0,0, 600, 600);
-test_Windows.windows = {window};
+NPL.load("(gl)script/ide/test/test_multiline_editbox.lua");
+test.test_multiline_generalV2();
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/System/Windows/Controls/Primitives/ScrollAreaBase.lua");
@@ -59,10 +33,13 @@ MultiLineEditbox:Property("Name", "MultiLineEditbox");
 MultiLineEditbox:Property({"Background", "", auto=true});
 MultiLineEditbox:Property({"BackgroundColor", "#cccccc", auto=true});
 MultiLineEditbox:Property({"LineNumberBackground", "", auto=true});
-MultiLineEditbox:Property({"LineNumberBackgroundColor", "#eeeeee", auto=true});
-MultiLineEditbox:Property({"Color", "#000000", auto=true})
-MultiLineEditbox:Property({"CursorColor", "#33333388", auto=true})
-MultiLineEditbox:Property({"SelectedBackgroundColor", "#00006680", auto=true})
+MultiLineEditbox:Property({"LineNumberBackgroundColor", "#eeeeee80", auto=true});
+MultiLineEditbox:Property({"LineNumberColor", "#808080", auto=true});
+MultiLineEditbox:Property({"showLineNumber", false, nil, "ShowLineNumber", auto=true})
+MultiLineEditbox:Property({"Color", "#000000", })
+MultiLineEditbox:Property({"CursorColor", "#33333388"})
+MultiLineEditbox:Property({"SelectedBackgroundColor", "#99c9ef", auto=true})
+MultiLineEditbox:Property({"CurLineBackgroundColor", "#e5ebf1e0", auto=true})
 MultiLineEditbox:Property({"m_cursor", nil, "cursorPosition", "setCursorPosition"})
 MultiLineEditbox:Property({"cursorVisible", false, "isCursorVisible", "setCursorVisible"})
 MultiLineEditbox:Property({"m_cursorWidth", 2,})
@@ -98,7 +75,7 @@ MultiLineEditbox:Signal("textChanged");
 --MultiLineEditbox:Signal("editingFinished");
 --MultiLineEditbox:Signal("updateNeeded");
 
-MultiLineEditbox:Property({"showLineNumber", true, nil, "ShowLineNumber", auto=true})
+
 
 function MultiLineEditbox:ctor()
 --	self:setFocusPolicy(FocusPolicy.StrongFocus);
@@ -124,6 +101,65 @@ function MultiLineEditbox:ShowLineNumber(value)
 	self.showLineNumber = value;
 	self.clip = value;
 end
+function MultiLineEditbox:SetColor(color)
+	if(self.viewport) then
+		self.viewport:SetColor(color);
+	end
+end
+
+function MultiLineEditbox:SetFont(font)
+	if(self.viewport) then
+		return self.viewport:SetFont(font);
+	end
+end
+
+function MultiLineEditbox:SetScale(scale)
+	if(self.viewport) then
+		return self.viewport:SetScale(scale);
+	end
+end
+
+function MultiLineEditbox:GetColor()
+	if(self.viewport) then
+		return self.viewport:GetColor();
+	end
+end
+
+function MultiLineEditbox:SetCursorColor(color)
+	if(self.viewport) then
+		self.viewport:SetCursorColor(color);
+	end
+end
+
+function MultiLineEditbox:GetCursorColor()
+	if(self.viewport) then
+		return self.viewport:GetCursorColor();
+	end
+end
+
+function MultiLineEditbox:SetCurLineBackgroundColor(color)
+	if(self.viewport) then
+		self.viewport:SetCurLineBackgroundColor(color);
+	end
+end
+
+function MultiLineEditbox:GetCurLineBackgroundColor()
+	if(self.viewport) then
+		return self.viewport:GetCurLineBackgroundColor();
+	end
+end
+
+function MultiLineEditbox:SetSelectedBackgroundColor(color)
+	if(self.viewport) then
+		self.viewport:SetSelectedBackgroundColor(color);
+	end
+end
+
+function MultiLineEditbox:GetSelectedBackgroundColor()
+	if(self.viewport) then
+		return self.viewport:GetSelectedBackgroundColor();
+	end
+end
 
 function MultiLineEditbox:isReadOnly()
 	if(self.viewport) then
@@ -140,7 +176,6 @@ end
 function MultiLineEditbox:echoMode()
     return self.m_echoMode;
 end
-
 
 function MultiLineEditbox:setEchoMode(mode)
 	if(self.m_echoMode == mode) then
@@ -320,9 +355,24 @@ function MultiLineEditbox:ViewRegionOffsetY()
 	return offset_y;
 end
 
+-- virtual: apply css style
+function MultiLineEditbox:ApplyCss(css)
+	MultiLineEditbox._super.ApplyCss(self, css);
+	if(self.viewport) then
+		self.viewport:ApplyCss(css);
+	end
+--	local font, font_size, font_scaling = css:GetFontSettings();
+--	self:SetFont(font);
+--	self:SetFontSize(font_size);
+--	self:SetScale(font_scaling);
+--	if(css.color) then
+--		self:SetColor(css.color);
+--	end
+end
+
 function MultiLineEditbox:LineNumberWidth()
 	if(not self.lineNumberWidth) then
-		self.lineNumberWidth = self.viewport:WordWidth();
+		self.lineNumberWidth = self.viewport:WordWidth() + self.leftTextMargin;
 	end
 	return self.lineNumberWidth;
 end
@@ -339,14 +389,21 @@ function MultiLineEditbox:paintEvent(painter)
 
 	if(self.showLineNumber) then
 		painter:SetPen(self:GetLineNumberBackgroundColor());
-		painter:DrawRectTexture(self:x(), self:y(), self:LineNumberWidth(), self:height(), self:GetLineNumberBackground());
+		painter:DrawRectTexture(self:x(), self:y() + self.topTextMargin, self:LineNumberWidth(), self:height()- self.topTextMargin - self.bottomTextMargin, self:GetLineNumberBackground());
 
-		painter:SetPen(self:GetColor());
+		local lineHeight = self.viewport:GetLineHeight();
+		if(self.viewport and self.viewport.cursorVisible and self.viewport:hasFocus() and not self.viewport:isReadOnly()) then
+			-- draw the cursor line bg
+			painter:SetPen(self.viewport:GetCurLineBackgroundColor());
+			painter:DrawRect(self:x(), self:y() + self.topTextMargin + lineHeight * (self.viewport.cursorLine-self.viewport.from_line), self:LineNumberWidth(), lineHeight);
+		end
+
+		painter:SetPen(self:GetLineNumberColor());
 		painter:SetFont(self:GetFont());
 		local scale = self:GetScale();
-		local lineHeight = self.viewport:GetLineHeight();
+		local lineNumWidth = self:LineNumberWidth()-5; -- add some padding
 		for i = 0, self.viewport.to_line - self.viewport.from_line do
-			painter:DrawTextScaledEx(self:x(), self:y() + lineHeight * i + self.topTextMargin, self:LineNumberWidth() ,lineHeight, tostring(self.viewport.from_line + i), self:GetLineNumberAlignment(), scale);
+			painter:DrawTextScaledEx(self:x(), self:y() + lineHeight * i + self.topTextMargin, lineNumWidth, lineHeight, tostring(self.viewport.from_line + i), self:GetLineNumberAlignment(), scale);
 		end
 	end
 end

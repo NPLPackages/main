@@ -16,6 +16,8 @@ if(is_ajax()) then
         local output = {success = false};
 		local fileitem = request:get("json");
         if(fileitem and fileitem.text) then
+			local dir = src:gsub("[^/\\]*$", "")
+			ParaIO.CreateDirectory(dir);
             local file = ParaIO.open(src, "w");
 	        if(file:IsValid()) then
                 file:WriteString(fileitem.text);

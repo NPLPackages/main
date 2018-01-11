@@ -38,14 +38,6 @@ function StyleItem:init(style,pageElement)
 	return self;
 end
 
-function StyleItem:GetPageCachePolicy()
-	local cache_policy;
---	if(self.style and self.style.page) then
---		cache_policy =  self.style.page.cache_policy;
---	end
-	return cache_policy or System.localserver.CachePolicy:new("access plus 1 hour");
-end
-
 -- merge style with current style. 
 function StyleItem:Merge(style)
 	if(style) then
@@ -65,16 +57,22 @@ local inheritable_fields = {
 	["font-size"] = true,
 	["font-weight"] = true,
 	["text-shadow"] = true,
+	["shadow-color"] = true,
+	["text-shadow-offset-x"] = true,
+	["text-shadow-offset-y"] = true,
 };
 
 -- only merge inheritable style like font, color, etc. 
 function StyleItem:MergeInheritable(style)
 	if(style) then
-		self.color = self.color or style.color;
-		self["font-family"] = self["font-family"] or style["font-family"];
-		self["font-size"] = self["font-size"] or style["font-size"];
-		self["font-weight"] = self["font-weight"] or style["font-weight"];
-		self["text-shadow"] = self["text-shadow"] or style["text-shadow"];
+		for field,_ in pairs(inheritable_fields) do
+			self[field] = self[field] or style[field];
+		end
+--		self.color = self.color or style.color;
+--		self["font-family"] = self["font-family"] or style["font-family"];
+--		self["font-size"] = self["font-size"] or style["font-size"];
+--		self["font-weight"] = self["font-weight"] or style["font-weight"];
+--		self["text-shadow"] = self["text-shadow"] or style["text-shadow"];
 	end
 end
 
@@ -115,12 +113,20 @@ local number_fields = {
 	["spacing"] = true,
 	["base-font-size"] = true,
 	["border-width"] = true,
+	["shadow-quality"] = true,
+	["text-shadow-offset-x"] = true,
+	["text-shadow-offset-y"] = true,
 };
+
+local boolean_fields = {
+	["text-shadow"] = true,
+}
 
 local color_fields = {
 	["color"] = true,
 	["border-color"] = true,
 	["background-color"] = true,
+	["shadow-color"] = true,
 };
 
 local image_fields = 
@@ -129,7 +135,7 @@ local image_fields =
 	["background2"] = true,
 	["background-image"] = true,
 }
-
+-- these fields are made up of the other simple fields.
 local complex_fields = {
 	["border"] = "border-width border-style border-color",
 };
@@ -177,6 +183,12 @@ function StyleItem:AddItem(name,value)
 			value = tonumber(selfvalue);
 		else
 			value = nil;
+		end
+	elseif(boolean_fields[name]) then
+		if(value=="true") then
+			value = true;
+		elseif(value=="false") then
+			value = false;
 		end
 	elseif(color_fields[name]) then
 		value = StyleColor.ConvertTo16(value);
@@ -263,22 +275,42 @@ function StyleItem:GetFontSettings()
 		local font_family = self["font-family"] or "System";
 		-- this is tricky. we convert font size to integer, and we will use scale if font size is either too big or too small. 
 		font_size = math.floor(tonumber(self["font-size"] or 12));
-		local max_font_size = tonumber(self["base-font-size"]) or 14;
-		local min_font_size = tonumber(self["base-font-size"]) or 11;
-		if(font_size>max_font_size) then
-			scale = font_size / max_font_size;
-			font_size = max_font_size;
-		end
-		if(font_size<min_font_size) then
-			scale = font_size / min_font_size;
-			font_size = min_font_size;
-		end
+--		local max_font_size = tonumber(self["base-font-size"]) or 14;
+--		local min_font_size = tonumber(self["base-font-size"]) or 11;
+--		if(font_size>max_font_size) then
+--			scale = font_size / max_font_size;
+--			font_size = max_font_size;
+--		end
+--		if(font_size<min_font_size) then
+--			scale = font_size / min_font_size;
+--			font_size = min_font_size;
+--		end
 		local font_weight = self["font-weight"] or "norm";
 		font = string.format("%s;%d;%s", font_family, font_size, font_weight);
 	else
 		font = string.format("%s;%d;%s", "System", font_size, "norm");
 	end
 	return font, font_size, scale;
+end
+
+function StyleItem:TextShadow()
+	return self["text-shadow"] or false;
+end
+
+function StyleItem:TextShadowOffsetX()
+	return self["text-shadow-offset-x"] or 3;
+end
+
+function StyleItem:TextShadowOffsetY()
+	return self["text-shadow-offset-y"] or 3;
+end
+
+function StyleItem:TextShadowColor()
+	return self["shadow-color"] or "#00000088";
+end
+
+function StyleItem:GetTextShadow()
+	return self:TextShadow(), self:TextShadowOffsetX(), self:TextShadowOffsetY(), self:TextShadowColor();
 end
 
 function StyleItem:GetTextAlignment()

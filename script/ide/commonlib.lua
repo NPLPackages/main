@@ -37,6 +37,22 @@ if(not math.mod) then
 	math.mod = math.fmod; -- lua 5.1/5.2 has replaced mod with fmod. 
 end
 
+-- table.clear is available in luajit 2.1 and lua 5.3
+if(not table.clear) then
+	local ok, tc = pcall(require, "table.clear")
+	if not ok then
+		tc = function(tab)
+			local k = next(tab)
+			while k ~= nil do
+			  tab[k] = nil
+			  k = next(tab)
+			end
+		end 
+	end
+	table.clear = tc;
+end
+
+
 -- this function is a shortcut to if(bStatement) then A else B. 
 -- e.g. 
 -- local c = if_else(a>0, 1, 0)
@@ -528,13 +544,7 @@ function commonlib.moveArrayItem(t, nIndex1, nIndex2)
 end
 
 -- empty a given table
-function commonlib.cleartable(tab)
-	local k = next(tab)
-	while k ~= nil do
-	  tab[k] = nil
-	  k = next(tab, k)
-	end
-end
+commonlib.cleartable = table.clear;
 
 -------------------------
 -- a simple UTF8 lib
