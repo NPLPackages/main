@@ -125,7 +125,6 @@ end
 
 -- virtual: apply css style
 function UIElement:ApplyCss(css)
-	echo("UIElement:ApplyCss");
 	if(css["background-color"]) then
 		self:SetBackgroundColor(css["background-color"]);
 --		if(not css.background) then

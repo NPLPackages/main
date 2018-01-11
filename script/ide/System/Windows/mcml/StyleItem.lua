@@ -38,6 +38,14 @@ function StyleItem:init(style,pageElement)
 	return self;
 end
 
+function StyleItem:GetPageCachePolicy()
+	local cache_policy;
+--	if(self.style and self.style.page) then
+--		cache_policy =  self.style.page.cache_policy;
+--	end
+	return cache_policy or System.localserver.CachePolicy:new("access plus 1 hour");
+end
+
 -- merge style with current style. 
 function StyleItem:Merge(style)
 	if(style) then
