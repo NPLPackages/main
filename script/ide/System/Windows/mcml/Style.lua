@@ -29,8 +29,6 @@ function Style:ctor()
 	self.css_references = {};
 
 	self.page = nil;
-	self.hasRemoteResourceItems = {};
-	self.remoteResource = {};
 end
 
 function Style:init(page)
@@ -43,36 +41,6 @@ function Style:SetPage(page)
 		return;
 	end
 	self.page = page;
-end
-
-function Style:AddRemoteResourceItem(styleItem, url)
-	self.hasRemoteResourceItems[#self.hasRemoteResourceItems+1] = styleItem;
-	self.remoteResource[#self.remoteResource+1] = url;
-end
-
-function Style:GetPageCachePolicy()
-	local cache_policy;
---	if(self.page) then
---		cache_policy =  self.page.cache_policy;
---	end
-	return cache_policy or System.localserver.CachePolicy:new("access plus 1 hour");
-end
-
-function Style:GetRometeResource()
-	local urls = self.remoteResource;
-	if(next(urls) == nil) then
-		return;
-	end
-	ParaAsset.GetRemoteTexture(urls, self:GetPageCachePolicy(), function (entry)
-		if(entry and entry.entry and entry.entry.url and entry.payload and entry.payload.cached_filepath) then
-			StyleItem.AddRemoteTextureLocalPath(entry.entry.url, entry.payload.cached_filepath);
-		end
-	end);
-
-	for i = 1,#self.hasRemoteResourceItems do
-		local systemItem = self.hasRemoteResourceItems[i];
-		systemItem:UpdateRemoteResource();
-	end
 end
 
 -- @param name: the css class name

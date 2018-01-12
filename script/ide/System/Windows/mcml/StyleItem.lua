@@ -11,6 +11,8 @@ local style = StyleItem:new();
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/System/Windows/mcml/css/StyleColor.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/LocalCache.lua");
+local LocalCache = commonlib.gettable("System.Windows.mcml.LocalCache");
 local StyleColor = commonlib.gettable("System.Windows.mcml.css.StyleColor");
 
 local type = type;
@@ -34,6 +36,14 @@ function StyleItem:init(style,pageElement)
 	self.style = style;
 	self.pageElement = pageElement;
 	return self;
+end
+
+function StyleItem:GetPageCachePolicy()
+	local cache_policy;
+--	if(self.style and self.style.page) then
+--		cache_policy =  self.style.page.cache_policy;
+--	end
+	return cache_policy or System.localserver.CachePolicy:new("access plus 1 hour");
 end
 
 -- merge style with current style. 
@@ -194,32 +204,19 @@ function StyleItem:AddItem(name,value)
 		value = string_gsub(value, "url%((.*)%)", "%1");
 		value = string_gsub(value, "#", ";");
 	end
-	if(image_fields[name] and string.match(value,"^http")) then
-		local url = value;
-		if(remoteTextrue[url]) then
-			value = remoteTextrue[url];
-		else
-			self.remoteResource[url] = self.remoteResource[url] or {};
-			self.remoteResource[url][#self.remoteResource[url]+1] = name;
-			if(self.style) then
-				self.style:AddRemoteResourceItem(self, url);
-			end
+	if(image_fields[name] and string.match(value,"^http[s]?")) then
+		if(self.pageElement) then
+			-- mcml v2 http texture process
+			LocalCache:GetRemoteTexture(value, self:GetPageCachePolicy(), function (entry)
+				if(entry and entry.entry and entry.entry.url and entry.payload and entry.payload.cached_filepath) then
+					self[name] = entry.payload.cached_filepath;
+					self.pageElement:UpdateCssStyle();
+				end
+			end);
 			return;
 		end
 	end
 	self[name] = value;
-end
-
-function StyleItem:UpdateRemoteResource()
-	for url, names in pairs(self.remoteResource) do
-		local value = remoteTextrue[url];
-		for i = 1,#names do
-			self:AddItem(names[i],value);
-		end
-	end
-	if(self.pageElement) then
-		self.pageElement:UpdateCssStyle();
-	end
 end
 
 function StyleItem:padding_left()

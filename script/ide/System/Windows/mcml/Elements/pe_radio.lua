@@ -1,7 +1,7 @@
 --[[
 Title: radio element
 Author(s): LiPeng
-Date: 2015/4/29
+Date: 2017/10/3
 Desc: it handles HTML tags of <radio> in HTML. 
 use the lib:
 ------------------------------------------------------------
@@ -44,7 +44,8 @@ function pe_radio:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 
 	local checked = self:GetAttributeWithCode("checked", nil, true);
 	if(checked) then
-		_this:setChecked(true);
+		checked = if_else(checked == "true" or checked == "checked",true,false);
+		_this:setChecked(checked);
 	end
 
 	self.groupName = self:GetAttribute("name") or "_defaultRadioGroup";
@@ -77,7 +78,7 @@ function pe_radio:OnClick()
 							count = count + 1;
 						else
 							ctl:setChecked(false);
-							radio:SetAttribute("checked", nil);
+							radio:SetAttribute("checked", "false");
 						end
 					elseif(radio_value == value) then
 						is_last_checked = false;
@@ -96,7 +97,7 @@ function pe_radio:OnClick()
 	end
 	if(onclick) then
 		-- the callback function format is function(buttonName, self) end
-		result = self:DoPageEvent(onclick, self.buttonName, self);
+		result = self:DoPageEvent(onclick, value, self);
 	end
 
 	return result;

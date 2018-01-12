@@ -147,7 +147,7 @@ function test_Windows:TestMouseEnterLeaveEvents()
 end
 
 -- test loading componets via url
-function test_Windows:TestMCMLPage()
+function test_Windows:TestMCMLPage(url)
 	-- remove old window
 	local window = commonlib.gettable("test.window")
 	if(window and window.CloseWindow) then
@@ -159,7 +159,7 @@ function test_Windows:TestMCMLPage()
 	local Window = commonlib.gettable("System.Windows.Window")
 	local window = Window:new();
 	window:Show({
-		url="script/ide/System/test/test_mcml_page.html", 
+		url=url or "script/ide/System/test/test_mcml_page.html", 
 		alignment="_lt", left = 0, top = 0, width = 800, height = 400,
 	});
 	-- keep a reference for refresh

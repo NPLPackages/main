@@ -1,127 +1,21 @@
 ﻿<!-- "script/test/mcmlv2/mcml_window.html" -->
 <html>
 <pe:mcml>
-<script type="text/npl" refresh="false">
-<![CDATA[
-    function tvwOnClickNode(treenode)
-        echo("tvwOnClickNode");
-    end
-    function tvwOnClickNode2(treenode)
-        echo("tvwOnClickNode2");
-        --_guihelper.MessageBox("This is per treenode click!");
-    end
-]]>
-</script>
-<!--<div style="color:#33ff33;background-color:#808080">
-    <div style="margin:100px;">
-        Hello World from MCML page!
-    </div>
-    <div style="margin:10px;">
-        <input type="text" name="content" style="width:200px;height:25px;" />
-        <input type="button" name="ok" value="确定" onclick="OnClickOK"/>
-    </div>
-</div>-->
-<Resource style="display:none" name="MySampleDataSource" >
-    <folder text="folder1" expanded="true">
-        <folder text="folder1_1" expanded="true">
-            <file text="some file1" finished="true"></file>
-            <file text="some file1_2" finished="true"></file>
-        </folder>
-        <file text="some file2"></file>
-        <file text="some file3"></file>
-    </folder>
-    <mcml_folder text="folder2">
-        <file text="some file4" finished="true"></file>
-    </mcml_folder>
-    <file_canclick text="some file5 (Click me!!!)"></file_canclick>
-    <file_canclick2 text="some file6 (Click me unique!!!)"></file_canclick2>
-</Resource>
+    <div style="width:600px;height:600px;">
+        <div style="width:100px;height:100px;background:url(http://img1.3lian.com/2015/a1/95/d/105.jpg)">
+        </div>
+        <!--<div style="width:100px;height:100px;background:url(http://pic.58pic.com/58pic/11/83/15/95958PICy2B.jpg)">
 
-<div style="background-color:#ff0000;margin:10px;padding:10px;min-width:200px;min-height:150px;">
-    <div>
-        <input type="checkbox" />
-        <input type="radio" name="radio" value="1" />
-        <input type="radio" name="radio" value="2" />
+            22222
+        </div>-->
+        <!--<div style="margin-top:50px;width:100px;height:100px;background:url(http://pic.58pic.com/58pic/13/16/06/29k58PICvAT_1024.jpg)">
+
+            22222
+        </div>
+        <div style="margin-top:50px;width:100px;height:100px;background:url(http://imgsrc.baidu.com/image/c0%3Dshijue1%2C0%2C0%2C294%2C40/sign=b3fe501071ec54e755e1125dd151f125/37d12f2eb9389b50dd033d7c8f35e5dde7116e24.jpg)">
+
+            333333
+        </div>-->
     </div>
-    <pe:treeview name="tvwXMLTest2" DataSourceID='MySampleDataSource' DefaultNodeHeight="30" OnClick="tvwOnClickNode()" style="height:100px;">
-	    <NodeTemplates>
-		    <NodeTemplate DataType="folder">
-                <pe:treenode text='<%=XPath("this|text")%>' expanded='<%=XPath("this|expanded")%>'></pe:treenode>
-            </NodeTemplate>
-            <NodeTemplate DataType="mcml_folder" >
-                <pe:treenode RenderTemplate="mcml_folder_template" expanded='<%=XPath("this|expanded")%>' MouseOverBG=""/>
-            </NodeTemplate>
-            <NodeTemplate DataType="mcml_folder_template">
-                <div color="#008000" style="font-weight:bold"><%=XPath("this|text")%> [with mcml]</div>
-            </NodeTemplate>
-            <NodeTemplate DataType="file">
-                <div style="height:20px;">
-                    <%=XPath("this|text")%>
-                    <pe:if condition='<%=XPath("this|finished")%>'>
-				        <span color="#008000">(已完成)</span>
-                    </pe:if>
-                </div>
-            </NodeTemplate>
-            <NodeTemplate DataType="file_canclick">
-                <pe:treenode RenderTemplate="file" MouseOverBG=""/>
-            </NodeTemplate>
-            <NodeTemplate DataType="file_canclick2">
-                <pe:treenode RenderTemplate="file" MouseOverBG="" OnClick="tvwOnClickNode2()"/>
-            </NodeTemplate>
-            <NodeTemplate DataType="mcml_finished_template">
-                <div color="#008000" style="font-weight:bold">[finished nodes] [with mcml]</div>
-            </NodeTemplate>
-	    </NodeTemplates>
-        <!--<DataNodePlaceholder xpath="*"/>-->
-        <pe:treenode text="[all nodes without filter]" expanded="true">
-            <DataNodePlaceholder xpath="*"/>
-        </pe:treenode>
-        <!--<pe:treenode RenderTemplate="mcml_finished_template" MouseOverBG="" expanded="true">
-            <DataNodePlaceholder xpath="//file[@finished = 'true']"/>
-	    </pe:treenode>-->
-    </pe:treeview>
-    <!--<input type="radio" name="gender" value="0" checked="true" UncheckedBG="Texture/uncheckbox2.png" CheckedBG="Texture/checkbox2.png" /><div style="float:left;">男</div>-->
-    <!--<br/>
-    <input type="text" name="sliderbarValue" style="width:200px;height:25px;background:url(Texture/Aries/Common/ThemeKid/btn_thick_hl_32bits.png:7 7 7 7)" />
-    <br/>
-    <textarea rows="13" style="width:200px;" />-->
-    
-    <!--<input type="button" style="margin-left:50px;width:30px;height:25px;" value="1" onclick="OnRefresh"/>-->
-    <!--<input type="text" name="content" style="width:200px;height:25px;font-size:20;background:url(Texture/radiobox.png)" onchange="Textchange"/>-->
-    
-    
-    <!--<h1>111111</h1>-->
-    <!--<h4>11111</h4>-->
-    <!--<pe:repeat value="item in repeat_data" style="float:left">
-        <div style="float:left;"><%=item.a%></div>
-    </pe:repeat>
-    <pe:repeat value="item in GetDS()" style="float:left">
-        <div style="float:left;"><%=item.a%></div>
-    </pe:repeat>
-    <pe:repeat DataSource='<%=GetDS()%>' style="float:left">
-        <div style="float:left;"><%=a%></div>
-    </pe:repeat>-->
-    <!--<pe:if condition='<%= isSearching%>'>
-        <input type="text" autofocus="true" name="block_search_text_ctl" uiname="block_search_text_obj" caretcolor="#FFFFFFFF" style="margin-top:2px;margin-left:5px;textcolor:#cccccc;height:25px;background:;" onmodify="SearchBlock" />
-    </pe:if>
-    <pe:if condition='<%= not isSearching%>'>
-        <input type="button" value="搜索: 输入ID或名字" style="margin-left:5px;color:#cccccc;height:22px;background:;" onclick="OnSearchBlock" />
-    </pe:if>-->
-    <!--<div align="right" style="padding:5px;background:url(Texture/Aries/Common/ThemeKid/btn_thick_hl_32bits.png:7 7 7 7)">
-        <div style="float:left;background-color:#000000;color:#ffd800;font-size:20px;">
-            hello world中文<font color="#ff0000">fontColor</font>
-        </div>
-        <pe:if condition="true">
-            <div style="float:left;background-color:#0000ff;margin-left:10px;width:20px;height:20px;">
-            </div>
-        </pe:if>
-    </div>
-    <div valign="bottom">
-        <div style="float:left;background-color:#00ff00;width:60px;height:20px;">
-        </div>
-        <div style="float:left;background-color:#0000ff;margin-left:10px;width:20px;height:20px;">
-        </div>
-    </div>-->
-</div>
 </pe:mcml>
 </html>
