@@ -29,6 +29,7 @@ local system_print = print
 local system_log = log
 local write = io.write
 local binder = "%+"
+local file_result;
 
 local function cmd_begin()
     print = function(msg)
@@ -46,7 +47,7 @@ end
 local function cmd_end()
     print = system_print -- reset print function
     log = system_log
-    ParaGlobal.Exit(0)
+    ParaGlobal.Exit(file_result or 0);
 end
 
 -- example
@@ -88,16 +89,21 @@ local function cmd_exec(args)
         console.run()
     else
         local cmd = NPL.load(file)
-        if type(cmd.run) == "function" then
+        if type(cmd)=="table" and type(cmd.run) == "function" then
             xpcall(
                 function()
-                    cmd.run(params)
+                    local result = cmd.run(params)
+					if(type(result) == "number") then
+						file_result = tonumber(result);
+					end
                 end,
                 function(e)
                     print(e)
                     print(debug.traceback())
                 end
             )
+		elseif(type(cmd) == "number") then
+			file_result = tonumber(cmd);
         end
     end
 end
