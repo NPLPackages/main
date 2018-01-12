@@ -1,7 +1,7 @@
 --[[
 Title: sliderbar
-Author(s): LiXizhi
-Date: 2015/5/3
+Author(s): LiPeng
+Date: 2017/10/3
 Desc: 
 use the lib:
 ------------------------------------------------------------

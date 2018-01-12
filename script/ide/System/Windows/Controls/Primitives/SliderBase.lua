@@ -1,7 +1,7 @@
 --[[
 Title: SliderBase
-Author(s): LiXizhi
-Date: 2015/4/29
+Author(s): LiPeng
+Date: 2017/10/3
 Desc:
 use the lib:
 ------------------------------------------------------------
