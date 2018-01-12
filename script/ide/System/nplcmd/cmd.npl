@@ -27,7 +27,7 @@ NPL.load("(gl)script/ide/System/nplcmd/console.npl")
 
 local system_print = print
 local system_log = log
-local write = io.write
+local write = ParaIO.WriteString;
 local binder = "%+"
 local file_result;
 

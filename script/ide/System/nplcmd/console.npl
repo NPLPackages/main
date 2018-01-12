@@ -6,9 +6,6 @@ desc: read and exec npl code
 ]]
 
 local _M = commonlib.gettable("System.Nplcmd.Console")
-local write = io.write
---local read = io.read
-local read = ParaIO.readline; -- this will support linux tty with readline and addhistory lib if found
 
 local function getline(line)
     line = line or ""
