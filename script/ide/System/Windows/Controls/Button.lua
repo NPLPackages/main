@@ -96,7 +96,7 @@ function Button:paintEvent(painter)
 	if(text and text~="") then
 		painter:SetFont(self:GetFont());
 		painter:SetPen(self:GetColor());
-		painter:DrawTextScaledEx(x+self.padding_left, y+self.padding_top, self:width()-self.padding_left-self.padding_right, self:height()-self.padding_top-self.padding_bottom, text, self:GetAlignment(), self:GetFontScaling());
+		self:DrawTextScaledEx(painter, x+self.padding_left, y+self.padding_top, self:width()-self.padding_left-self.padding_right, self:height()-self.padding_top-self.padding_bottom, text, self:GetAlignment(), self:GetFontScaling());
 	else
 		local icon = self:GetIcon();
 		if(icon and icon~="") then
