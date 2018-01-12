@@ -219,18 +219,6 @@ function StyleItem:AddItem(name,value)
 	self[name] = value;
 end
 
-function StyleItem:UpdateRemoteResource()
-	for url, names in pairs(self.remoteResource) do
-		local value = remoteTextrue[url];
-		for i = 1,#names do
-			self:AddItem(names[i],value);
-		end
-	end
-	if(self.pageElement) then
-		self.pageElement:UpdateCssStyle();
-	end
-end
-
 function StyleItem:padding_left()
 	return (self["padding-left"] or self["padding"] or 0);
 end

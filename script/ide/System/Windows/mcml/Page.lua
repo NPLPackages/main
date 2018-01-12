@@ -737,8 +737,6 @@ function Page:OnRefresh()
 
 		self:LoadComponent();
 
-		self:DownloadResource();
-
 		self.used_width, self.used_height = layout:GetUsedSize();	
 
 		self:OnCreate();
@@ -760,12 +758,6 @@ function Page:LoadComponent()
 		if(parentElem) then
 			self.mcmlNode:LoadComponent(parentElem, layout, nil);
 		end
-	end
-end
-
-function Page:DownloadResource()
-	if(self.style) then
-		self.style:GetRometeResource();
 	end
 end
 
