@@ -3,9 +3,6 @@ title: nplc bootstrapper
 author: chenqh
 date: 2018/1/15
 desc: load boot.lua automatically
-sample:
-nplc -d|-D start dev
-will load app and pass params{"dev"} to boot.lua
 ]]
 
 local function add_param(args, key, value)
