@@ -5,19 +5,15 @@ date: 2017/12/29
 desc: read and exec npl code
 ]]
 
-local write = io.write
-local read = io.read
 local quit = false
 
 local function getline(line)
     line = line or ""
     if line~="" then
-        write(">> ")
-        return line .. "\n" .. read()
+        return line .. "\n" .. (ParaIO.readline(">> ") or "")
     end
 
-    write("> ")
-    return read() or ""
+    return ParaIO.readline("> ") or ""
 end
 
 local function getcode(line)

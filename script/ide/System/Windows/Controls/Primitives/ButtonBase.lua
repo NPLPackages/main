@@ -9,8 +9,8 @@ NPL.load("(gl)script/ide/System/Windows/Controls/Primitives/ButtonBase.lua");
 local ButtonBase = commonlib.gettable("System.Windows.Controls.Primitives.ButtonBase");
 ------------------------------------------------------------
 ]]
-NPL.load("(gl)script/ide/System/Windows/UIElement.lua");
-local ButtonBase = commonlib.inherit(commonlib.gettable("System.Windows.UIElement"), commonlib.gettable("System.Windows.Controls.Primitives.ButtonBase"));
+NPL.load("(gl)script/ide/System/Windows/UITextElement.lua");
+local ButtonBase = commonlib.inherit(commonlib.gettable("System.Windows.UITextElement"), commonlib.gettable("System.Windows.Controls.Primitives.ButtonBase"));
 ButtonBase:Property("Name", "ButtonBase");
 ButtonBase:Property({"BackgroundColor", "#ffffff", auto=true});
 ButtonBase:Property({"Icon", nil, auto=true});
@@ -225,13 +225,5 @@ end
 -- virtual: apply css style
 function ButtonBase:ApplyCss(css)
 	ButtonBase._super.ApplyCss(self, css);
-	local font, font_size, font_scaling = css:GetFontSettings();
-	self:SetFont(font);
-	self:SetFontSize(font_size);
-	self:SetFontScaling(font_scaling);
-	self:SetAlignment(css:GetTextAlignment());
 	self:SetPaddings(css:paddings());
-	if(css.color) then
-		self:SetColor(css.color);
-	end
 end

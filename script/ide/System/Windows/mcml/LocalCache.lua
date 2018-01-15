@@ -1,8 +1,8 @@
 --[[
 Title: local cache
-Author(s): LiXizhi
-Date: 2016/10/12
-Desc: singleton class for managing all internet resource. 
+Author(s): LiPeng
+Date: 2018/1/12
+Desc: singleton class for local cache for mcml page resource. 
 
 use the lib:
 ------------------------------------------------------------

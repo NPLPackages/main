@@ -28,13 +28,14 @@ local Embeded = NPL.load("(gl)script/ide/System/nplcmd/embeded_cmd.npl")
 local binder = "%+"
 local ctx = {}
 local args = ParaEngine.GetAppCommandLineByParam("nplcmd", "")
+local file_result
 
 local function cmd_begin()
     ctx.path = ParaEngine.GetAppCommandLineByParam("cmd_path", "")
 end
 
 local function cmd_end()
-    if not ctx.keep_alive then ParaGlobal.Exit(0) end
+    if not ctx.keep_alive then ParaGlobal.Exit(file_result or 0) end
 end
 
 -- example
@@ -42,16 +43,16 @@ end
 -- out: {"-i", "-p"}, "test", {"spec"}
 local function cmd_parser(args)
     local options = {}
-    local file = nil
+    local script = nil
     local params = {}
     local state = "option"
 
     for arg in args:gmatch(format("[^%s]+", binder)) do
         if state == "option" then
-            if arg:match("^-%w$") then
+            if arg:match("^%-%-?%w*$") then
                 options[arg] = true
             else
-                file = arg
+                script = arg
                 state = "params"
             end
         elseif(state == "params") then
@@ -61,7 +62,7 @@ local function cmd_parser(args)
         end
     end
 
-    return options, file, params
+    return options, script, params
 end
 
 local function show_version()
@@ -108,14 +109,16 @@ local function cmd_exec(args, ctx)
     end
 
     if(not script) then
-        Embeded.run("console", ctx)
+        file_result = Embeded.run("console", ctx)
     else
-        if Embeded.include_cmd(script) then
-            Embeded.run(script, ctx)
+        if Embeded.include_cmd(script) then -- run default commands first
+            file_result = Embeded.run(script, ctx)
         else
             local cmd = NPL.load(script)
             if type(cmd) == "function" then
                 cmd(ctx)
+            elseif type(cmd) == "number" then
+                file_result = tonumber(cmd)
             elseif cmd == false then
                 print(format("Load script %s failed!", script))
             else

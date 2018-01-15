@@ -1,7 +1,7 @@
 --[[
 Title: radio element
 Author(s): LiPeng
-Date: 2015/4/29
+Date: 2017/10/3
 Desc: it handles HTML tags of <radio> in HTML. 
 use the lib:
 ------------------------------------------------------------
