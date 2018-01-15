@@ -11,7 +11,9 @@ local function add_param(args, key, value)
     elseif key == "-p" or key == "--port" then
         args["port"] = value
     else
-        error("Invalid option " .. key)
+        -- still parse the options to boot
+        key = key:gsub("-", "")
+        args[key] = value
     end
 end
 
