@@ -20,4 +20,12 @@ binder="+"
 
 options=$(join $binder $*)
 
-npl $option bootstrapper="(gl)script/ide/System/nplcmd/cmd.npl" i="true" servermode="true" nplcmd="$options" cmd_path="$PWD" logfile="/var/log/nplc/log.txt"
+if [ ! -d $HOME/.nplc ]; then
+    mkdir $HOME/.nplc
+fi
+
+if [ ! -d $HOME/.nplc/log ]; then
+    mkdir $HOME/.nplc/log
+fi
+
+npl $option bootstrapper="(gl)script/ide/System/nplcmd/cmd.npl" i="true" servermode="true" nplcmd="$options" cmd_path="$PWD" logfile="$HOME/.nplc/log/cmd.log"

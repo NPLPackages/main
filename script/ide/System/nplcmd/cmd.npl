@@ -88,7 +88,9 @@ Options:
 Embedded scripts:
 
 console - nplc console
-start - nplc bootstrapper, will load boot.lua and pass your params to it
+start   - nplc bootstrapper, will load boot.lua and pass your params to it
+
+input nplc script --help to get more info
 
 ]]
     print(text)
