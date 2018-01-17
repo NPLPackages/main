@@ -1,7 +1,7 @@
 --[[
 Title: pe:treeview element
-Author(s): LiXizhi
-Date: 2016/7/19
+Author(s): LiPeng
+Date: 2017/10/3
 Desc: pe:treeview element
 
 ### `pe:treeview` tag

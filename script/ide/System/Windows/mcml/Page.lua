@@ -736,6 +736,7 @@ function Page:OnRefresh()
 		self.mcmlNode:SetAttribute("page_ctrl", self);
 
 		self:LoadComponent();
+
 		self.used_width, self.used_height = layout:GetUsedSize();	
 
 		self:OnCreate();
@@ -763,7 +764,7 @@ end
 -- Get the page style object
 function Page:GetStyle()
 	if(not self.style) then
-		self.style = Style:new();
+		self.style = Style:new():init(self);
 		self.style:AddReference(mcml:GetStyle(), "mcss");
 	end
 	return self.style;

@@ -1,7 +1,7 @@
 --[[
 Title: ScrollBar
-Author(s): LiXizhi
-Date: 2015/4/29
+Author(s): LiPeng
+Date: 2017/10/3
 Desc:
 use the lib:
 ------------------------------------------------------------
@@ -265,14 +265,18 @@ function ScrollBar:updateSlider()
 		span = groove:width() - slider:width();
 		pos = self:positionFromValue(self.value, span);
 		slider:setX(groove:x() + pos);
-		local w = math.floor(groove:width() * self.pageStep / len + 0.5);
-		slider:setWidth(w);
+		if(slider:width() > slider:height()) then
+			local w = math.floor(groove:width() * self.pageStep / len + 0.5);
+			slider:setWidth(w);
+		end
 	else
 		span = groove:height() - slider:height();
 		pos = self:positionFromValue(self.value, span);
 		slider:setY(groove:y() + pos);
-		local h = math.floor(groove:height() * self.pageStep / len + 0.5);
-		slider:setHeight(h);
+		if(slider:height() > slider:width()) then
+			local h = math.floor(groove:height() * self.pageStep / len + 0.5);
+			slider:setHeight(h);
+		end
 	end
 end
 

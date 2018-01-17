@@ -1,7 +1,7 @@
 --[[
 Title: Button
-Author(s): LiXizhi
-Date: 2015/5/7
+Author(s): LiPeng
+Date: 2017/10/18
 Desc: because Button class is too big, we will move private functions to this file.
 use the lib:
 ------------------------------------------------------------

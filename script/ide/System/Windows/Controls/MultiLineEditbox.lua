@@ -1,7 +1,7 @@
 --[[
 Title: MultiLineEditbox
-Author(s): LiXizhi
-Date: 2015/4/29
+Author(s): LiPeng
+Date: 2017/10/3
 Desc:
 use the lib:
 ------------------------------------------------------------
@@ -11,34 +11,8 @@ local MultiLineEditbox = commonlib.gettable("System.Windows.Controls.MultiLineEd
 
 test
 ------------------------------------------------------------
-NPL.load("(gl)script/ide/System/Windows/Window.lua");
-NPL.load("(gl)script/ide/System/test/test_Windows.lua");
-NPL.load("(gl)script/ide/System/Windows/Controls/MultiLineEditbox.lua");
-local MultiLineEditbox = commonlib.gettable("System.Windows.Controls.MultiLineEditbox");
-local Window = commonlib.gettable("System.Windows.Window")	
-local test_Windows = commonlib.gettable("System.Core.Test.test_Windows");
-
-local window = Window:new();
-local mulLine = MultiLineEditbox:new():init(window);
-
---mulLine:setHorizontalScrollBarPolicy("AlwaysOff");
---mulLine:setVerticalScrollBarPolicy("AlwaysOff");
---mulLine:SetRows(2);
-mulLine:setGeometry(100, 100, 200, 20 * 10+10);
-mulLine:AddItem("���ǵ�һ��");
-mulLine:AddItem("���ǵڶ���");
-mulLine:AddItem("���ǵ�����");
-mulLine:AddItem("���ǵ�����");
-mulLine:AddItem("���ǵ�����");
-mulLine:AddItem("���ǵ�����");
-mulLine:AddItem("���ǵ�����");
-mulLine:AddItem("���ǵڰ���");
-mulLine:AddItem("���ǵھ���");
-mulLine:AddItem("���ǵ�ʮ��");
---mulLine:SetBackgroundColor("#cccccc");
-
-window:Show("my_window", nil, "_mt", 0,0, 600, 600);
-test_Windows.windows = {window};
+NPL.load("(gl)script/ide/test/test_multiline_editbox.lua");
+test.test_multiline_generalV2();
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/System/Windows/Controls/Primitives/ScrollAreaBase.lua");
@@ -130,6 +104,18 @@ end
 function MultiLineEditbox:SetColor(color)
 	if(self.viewport) then
 		self.viewport:SetColor(color);
+	end
+end
+
+function MultiLineEditbox:SetFont(font)
+	if(self.viewport) then
+		return self.viewport:SetFont(font);
+	end
+end
+
+function MultiLineEditbox:SetScale(scale)
+	if(self.viewport) then
+		return self.viewport:SetScale(scale);
 	end
 end
 
@@ -369,9 +355,24 @@ function MultiLineEditbox:ViewRegionOffsetY()
 	return offset_y;
 end
 
+-- virtual: apply css style
+function MultiLineEditbox:ApplyCss(css)
+	MultiLineEditbox._super.ApplyCss(self, css);
+	if(self.viewport) then
+		self.viewport:ApplyCss(css);
+	end
+--	local font, font_size, font_scaling = css:GetFontSettings();
+--	self:SetFont(font);
+--	self:SetFontSize(font_size);
+--	self:SetScale(font_scaling);
+--	if(css.color) then
+--		self:SetColor(css.color);
+--	end
+end
+
 function MultiLineEditbox:LineNumberWidth()
 	if(not self.lineNumberWidth) then
-		self.lineNumberWidth = self.viewport:WordWidth();
+		self.lineNumberWidth = self.viewport:WordWidth() + self.leftTextMargin;
 	end
 	return self.lineNumberWidth;
 end
@@ -388,13 +389,13 @@ function MultiLineEditbox:paintEvent(painter)
 
 	if(self.showLineNumber) then
 		painter:SetPen(self:GetLineNumberBackgroundColor());
-		painter:DrawRectTexture(self:x() + self.leftTextMargin, self:y() + self.topTextMargin, self:LineNumberWidth(), self:height()- self.topTextMargin - self.bottomTextMargin, self:GetLineNumberBackground());
+		painter:DrawRectTexture(self:x(), self:y() + self.topTextMargin, self:LineNumberWidth(), self:height()- self.topTextMargin - self.bottomTextMargin, self:GetLineNumberBackground());
 
 		local lineHeight = self.viewport:GetLineHeight();
 		if(self.viewport and self.viewport.cursorVisible and self.viewport:hasFocus() and not self.viewport:isReadOnly()) then
 			-- draw the cursor line bg
 			painter:SetPen(self.viewport:GetCurLineBackgroundColor());
-			painter:DrawRect(self:x() + self.leftTextMargin, self:y() + self.topTextMargin + lineHeight * (self.viewport.cursorLine-self.viewport.from_line), self:LineNumberWidth(), lineHeight);
+			painter:DrawRect(self:x(), self:y() + self.topTextMargin + lineHeight * (self.viewport.cursorLine-self.viewport.from_line), self:LineNumberWidth(), lineHeight);
 		end
 
 		painter:SetPen(self:GetLineNumberColor());
@@ -402,7 +403,7 @@ function MultiLineEditbox:paintEvent(painter)
 		local scale = self:GetScale();
 		local lineNumWidth = self:LineNumberWidth()-5; -- add some padding
 		for i = 0, self.viewport.to_line - self.viewport.from_line do
-			painter:DrawTextScaledEx(self:x() + self.leftTextMargin, self:y() + lineHeight * i + self.topTextMargin, lineNumWidth, lineHeight, tostring(self.viewport.from_line + i), self:GetLineNumberAlignment(), scale);
+			painter:DrawTextScaledEx(self:x(), self:y() + lineHeight * i + self.topTextMargin, lineNumWidth, lineHeight, tostring(self.viewport.from_line + i), self:GetLineNumberAlignment(), scale);
 		end
 	end
 end

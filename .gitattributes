@@ -1,4 +1,5 @@
 # Declare files that will always have CRLF line endings on checkout.
 *.bat text eol=crlf
+*.sh text eol=lf
 # Ignore all differences in line endings
 # *        -crlf

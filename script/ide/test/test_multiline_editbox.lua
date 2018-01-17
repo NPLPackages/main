@@ -7,6 +7,7 @@ Use Lib:
 -------------------------------------------------------
 NPL.load("(gl)script/ide/test/test_multiline_editbox.lua");
 test.test_multiline_general();
+test.test_multiline_generalV2();
 %TESTCASE{"General Editbox", func="test.test_multiline_general", }%
 -------------------------------------------------------
 ]]
@@ -53,4 +54,40 @@ function test.test_multiline_general(input)
 			ctl:Show(true);
 			ctl:SetText("Right Click to open the context menu\r\nTest with editable Line Number");
 		end);
+end
+
+function test.test_multiline_generalV2(input)
+	NPL.load("(gl)script/ide/System/Windows/Window.lua");
+	NPL.load("(gl)script/ide/System/test/test_Windows.lua");
+	NPL.load("(gl)script/ide/System/Windows/Controls/MultiLineEditbox.lua");
+	local MultiLineEditbox = commonlib.gettable("System.Windows.Controls.MultiLineEditbox");
+	local Window = commonlib.gettable("System.Windows.Window")	
+	local test_Windows = commonlib.gettable("System.Core.Test.test_Windows");
+
+	local window = Window:new();
+	local mulLine = MultiLineEditbox:new():init(window);
+
+	--mulLine:setHorizontalScrollBarPolicy("AlwaysOff");
+	--mulLine:setVerticalScrollBarPolicy("AlwaysOff");
+	--mulLine:SetRows(2);
+	mulLine:setGeometry(100, 100, 200, 20 * 5+10);
+	--mulLine:AddItem("1");
+	--mulLine:AddItem("2");
+	--mulLine:AddItem("3");
+	--mulLine:AddItem("4");
+	--mulLine:AddItem("Œ“5");
+	--mulLine:AddItem("6");
+	--mulLine:AddItem("7");
+	--mulLine:AddItem("8");
+	--mulLine:AddItem("9");
+	--mulLine:AddItem("10");
+	--mulLine:AddItem("11");
+	--mulLine:AddItem("12");
+	--mulLine:AddItem("13");
+	--mulLine:AddItem("14");
+	--mulLine:AddItem("15");
+	--mulLine:SetBackgroundColor("#cccccc");
+
+	window:Show("my_window", nil, "_mt", 0,0, 600, 600);
+	test_Windows.windows = {window};
 end

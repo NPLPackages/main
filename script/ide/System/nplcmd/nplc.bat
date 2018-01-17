@@ -22,6 +22,6 @@ goto loop
 
 :run_npl
 
-npl bootstrapper="(gl)script/ide/System/nplcmd/cmd.npl" i="true" servermode="true" nplcmd=%options%
+npl bootstrapper="(gl)script/ide/System/nplcmd/cmd.npl" i="true" servermode="true" nplcmd=%options% cmd_path=%cd%
 
 endlocal

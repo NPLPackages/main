@@ -259,13 +259,13 @@ ParaAsset.RemoteTexture_cache_policy = System.localserver.CachePolicy:new("acces
 An internal ResourceStore (local server) called "_default_" is used to serve http textures. 
 An internal time is also used so that we can sequence downloader threads. 
 ]]
-function ParaAsset.GetRemoteTexture(url)
+function ParaAsset.GetRemoteTexture(url, cache_policy, callback)
 	local ls = System.localserver.CreateStore();
 	if(not ls) then
 		log("error: failed creating local server resource store \n")
 		return
 	end
-	ls:GetFile(ParaAsset.RemoteTexture_cache_policy, url, ParaAsset.GetRemoteTexture_callback);
+	ls:GetFile(cache_policy or ParaAsset.RemoteTexture_cache_policy, url, callback or ParaAsset.GetRemoteTexture_callback);
 end
 
 function ParaAsset.GetRemoteTexture_callback(entry)

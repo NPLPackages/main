@@ -60,7 +60,17 @@ function MoveManipContainer:connectToDependNode(node)
 
 		self:addPlugToManipConversionCallback(manipPosPlug, function(self, manipPlug)
 			local pos = plugPos:GetValue();
-			return (pos and pos[1] and pos) or {0.01, 0.01, 0.01};
+			if(pos and pos[1]) then
+				return pos;
+			elseif(node.GetPosition) then
+				-- this is our last try for finding the position. 
+				local x, y, z = node:GetPosition();
+				if(type(x) == "number") then
+					return {x or 0.01, y or 0.01, z or 0.01};
+				else
+					return {0.01, 0.01, 0.01};
+				end
+			end
 		end);
 	end
 	-- should be called only once after all conversion callbacks to setup real connections

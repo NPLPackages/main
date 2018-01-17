@@ -132,6 +132,12 @@ function UIElement:ApplyCss(css)
 --		end
 	end	
 	if(css.background) then
+		local bkcolor = self:GetBackgroundColor();
+		if(bkcolor and string.match(bkcolor,"#%x%x%x%x%x%x00")) then
+			-- if background color alpha is 0(0 - 1),then set background color white("#ffffff")
+			-- 如果背景色为全透明，那么设置背景色为白色（#ffffff）
+			self:SetBackgroundColor("#ffffff");
+		end
 		self:SetBackground(css.background);
 	end
 end

@@ -1147,6 +1147,7 @@
     <None Include="script\ide\System\Windows\Controls\MultiLineEditbox.lua" />
     <None Include="script\ide\System\Windows\Controls\Primitives\ScrollAreaBase.lua" />
     <None Include="script\ide\System\Windows\Controls\Primitives\SliderBase.lua" />
+    <None Include="script\ide\System\Windows\UITextElement.lua" />
     <None Include="script\ide\System\Windows\Controls\ProgressBar.lua" />
     <None Include="script\ide\System\Windows\Controls\ScrollArea.lua" />
     <None Include="script\ide\System\Windows\Controls\ScrollBar.lua" />
@@ -1179,6 +1180,7 @@
     <None Include="script\ide\System\Windows\mcml\Elements\pe_treenode.lua" />
     <None Include="script\ide\System\Windows\mcml\Elements\pe_treeview.lua" />
     <None Include="script\ide\System\Windows\mcml\CssSelector.lua" />
+    <None Include="script\ide\System\Windows\mcml\LocalCache.lua" />
     <None Include="script\test\MCMLV2\main.lua" />
     <None Include="script\test\MCMLV2\mcml_window.lua" />
   </ItemGroup>

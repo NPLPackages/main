@@ -205,14 +205,26 @@ end
 function pe_text:paintEvent(painter)
 	if(self.labels) then
 		local css = self:GetStyle();
+		local be_shadow,shadow_offset_x,shadow_offset_y,shadow_color = css:GetTextShadow();
 		painter:SetFont(self.font);
 		painter:SetPen(css.color or "#000000");
 		local textAlignment = css:GetTextAlignment();
 		for i = 1, #self.labels do
 			local label = self.labels[i];
 			if(label) then
+				local x = label.crect:x();
+				local y = label.crect:y()+self.line_padding;
+				local w = label.crect:width();
+				local h = label.crect:height()-self.line_padding-self.line_padding;
 				local text = label:GetText();
-				painter:DrawTextScaledEx(label.crect:x(), label.crect:y()+self.line_padding, label.crect:width(), label.crect:height()-self.line_padding-self.line_padding, text, textAlignment, self.scale);
+
+				if(be_shadow) then
+					painter:SetPen(shadow_color);
+					painter:DrawTextScaledEx(x + shadow_offset_x, y + shadow_offset_y, w, h, text, textAlignment, self.scale);
+					painter:SetPen(css.color or "#000000");
+				end
+
+				painter:DrawTextScaledEx(x, y, w, h, text, textAlignment, self.scale);
 			end
 		end
 	end
