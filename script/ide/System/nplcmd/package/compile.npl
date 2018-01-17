@@ -1,0 +1,32 @@
+
+NPL.load("common.npl")
+
+
+
+function run(ctx)
+	local package_config_filename = ctx.path .. "/package.npl"
+	if not file_is_exist(package_config_filename) then
+		log.fatal("不存在包配置文件 无法编译")
+		return
+	end
+
+	local file = io.open(package_config_filename, "r")
+	if not file then
+		log.warn("打开包配置文件失败:" .. package_config_filename)
+		return
+	end
+
+	local package_config_content = file:read("*a")
+	file:close()
+
+	local package_config = NPL.LoadTableFromString(package_config_content)
+	if not package_config then
+		log.warn("包配置文件格式错误", package_config_content)
+		return
+	end
+
+	
+end
+
+
+return run

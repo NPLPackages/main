@@ -1,0 +1,53 @@
+
+NPL.load("(gl)script/ide/commonlib.lua")
+NPL.load("(gl)script/ide/System/os/GetUrl.lua")
+NPL.load("(gl)script/ide/Files.lua")
+
+NPL.load("geturl.npl")
+
+log = NPL.load("log.npl")
+g_packages = NPL.load("packages.npl")
+g_file = NPL.load("file.npl")
+--local packages = NPL.load("packages.npl")
+--local g_packages = packages:new()
+
+g_lfs = commonlib.Files.GetLuaFileSystem()
+g_package_path = "/usr/local/lib/npl_packages"
+
+if not g_packages:load(g_package_path .. "/.package.list") then
+	log.warn("加载全局包列表失败...")
+end
+
+-- 文件是否存在
+function file_is_exist(path)
+	return (g_lfs.attributes(path))
+end
+
+-- 字符串比较
+function string_compare(str1, str2)
+	local str_byte1 = string.byte(str1, 1, #str1)
+	local str_byte2 = string.byte(str2, 1, #str2)
+
+	for i, _ in ipairs(str_byte1) do
+		local n1 = str_byte1[i] or 0
+		local n2 = str_byte2[i] or 0
+		if n1 > n2 then
+			return 1
+		end
+		if n1 < n2 then
+			return -1
+		end
+	end
+
+
+	if #str_byte1 > #str_byte2 then
+		return 1
+	end
+
+	if #str_byte1 < #str_byte2 then
+		return -1
+	end
+
+	return 0
+end
+

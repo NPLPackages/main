@@ -1,0 +1,34 @@
+
+local requests = require("requests")
+function get_url(params)
+	local method = params.method or "GET"
+
+	if params.headers then
+		params.headers['Content-Type'] = params.headers['Content-Type'] or "application/json"
+	else
+		params.headers = {['Content-Type'] = "application/json"}
+	end
+
+	if string.lower(method) == "get" then
+		params.params = params.data
+	end
+	local res = requests.request(method, params)
+
+	res.data = res.json() or res.text
+
+	return res
+end
+
+--function util.get_url(params, callback)
+	--local method = params.method or "GET"
+
+	--if string.upper(method) == "GET" then
+		--params.qs = params.data
+	--else
+		--params.form = params.data
+	--end
+
+	--local _, data = System.os.GetUrl(params)
+	--data.status_code = data.rcode
+	--return data
+--end

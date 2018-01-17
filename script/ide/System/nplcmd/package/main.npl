@@ -1,0 +1,176 @@
+
+NPL.load("common.npl")
+
+local npm = NPL.load("npm.npl")
+
+-- 加载包
+local function load_package(args)
+	local package_config_filename = args.package_config_filename
+
+	if not package_config_filename then
+		log.fatal("参数有误")
+		return
+	end
+
+	local package_list = npm:get_package_list_by_filename(package_config_filename)
+	local  init_script = nil
+
+	for _, package in ipairs(package_list or {}) do
+		NPL.load(package.install_dir)
+		init_script = package.install_dir .. "init.npl"
+		NPL.load(init_script) -- 执行初始化脚本
+	end
+
+end
+
+-- 编译包
+local function compile_package_config(args)
+	local package_config_filename = args.package_config_filename
+
+	if not package_config_filename then
+		log.fatal("参数有误")
+		return
+	end
+
+	local package_list = npm:get_package_list_by_filename(package_config_filename)
+	local  init_script = nil
+
+	for _, package in ipairs(package_list or {}) do
+		NPL.load(package.install_dir)
+		init_script = package.install_dir .. "init.npl"
+		NPL.load(init_script) -- 执行初始化脚本
+	end
+end
+
+--download_package("wxaxiaoyao/nws")
+--install_package("wxaxiaoyao/nws")
+--install_package({
+	--download_url = "http://localhost:9000/test.zip",
+	--package_name = "test",
+--})
+
+local function get_option_value(args, option)
+	local option_value = nil
+	for _, x in ipairs(args or {}) do
+		option_value = string.match(x, option)
+		--log(option_value, option)
+		if option_value then
+			return option_value
+		end
+	end
+
+	return nil
+end
+
+local function npm_init(ctx)
+	local path = ctx.path
+	local package_config_filename = path .. '/package.npl'
+	local force = false
+	local ctx_args = ctx.arg or {}
+	local args = {}
+
+	local package_name = string.match(ctx_args[2] or "", '^[%w%d]+$')
+	force = get_option_value(ctx_args, "-f") or get_option_value(ctx_args, "--force")
+	args.name = package_name or get_option_value(ctx_args, "--name=(.-)%s*$")
+	args.version = get_option_value(ctx_args, "--version=(.-)%s*$") or "1.0.0"
+	args.author = get_option_value(ctx_args, "--author=(.-)%s*$") or "unknow"
+
+	if not args.name then
+		log.fatal("缺少包名参数")
+		return
+	end
+
+	args.description = "package description"
+	args.keywords = {args.name, args.author}
+	args.rendme = "README.md"
+	args.dependencies = {}
+	args.repository = {}
+	args.download_url = nil
+
+	if g_file:is_exist(package_config_filename) then
+		log.fatal("包配置文件已存在")
+		if not force then
+			return
+		end
+		log.info("重新生成包配置文件")
+	end
+
+	local content = commonlib.serialize2(args, 1)
+	if not g_file:write(package_config_filename, content) then
+		log.fatal("写包配置文件失败")
+		return
+	end
+
+	log.info("已生成包配置文件:" .. package_config_filename)
+	return
+end
+
+-- 删除包
+local function npm_remove(ctx)
+	local path = ctx.path
+	local package_config_filename = path .. '/package.npl'
+	local ctx_args = ctx.arg or {}
+	local args = {}
+
+	local package_name = string.match(ctx_args[2] or "", '^[%w%d]+$')
+	local all = get_option_value(ctx_args, "-a") or get_option_value(ctx_args, "--all")
+	args.name = package_name or get_option_value(ctx_args, "--name=(.-)%s*$")
+	args.version = get_option_value(ctx_args, "--version=(.-)%s*$")
+
+	if not args.name or (not all and not args.version) then
+		log.fatal("缺少参数")
+		return
+	end
+
+	local package_list = g_packages:get_by_name(args.name)
+	for _, x in ipairs(package_list) do
+		g_packages:delete_package(x)
+		log.info("移除包:" .. x.name .. " 版本:" .. x.version)
+	end
+	g_packages:save()
+end
+
+-- 安装包
+local function npm_install(ctx)
+	local path = ctx.path
+	local package_config_filename = path .. '/package.npl'
+	local ctx_args = ctx.arg or {}
+	local args = {}
+
+	local force = get_option_value(ctx_args, "-f") or get_option_value(ctx_args, "--force")
+	local package_name = string.match(ctx_args[2] or "", '^[%w%d]+$')
+	args.name = package_name or get_option_value(ctx_args, "--name=(.-)%s*$")
+	args.package_src = get_option_value(ctx_args, "--package_src=(.-)%s*$")
+	args.download_url = get_option_value(ctx_args, "--download_url=(.-)%s*$")
+	args.version = get_option_value(ctx_args, "--version=(.-)%s*$")
+	args.force = force
+
+	if not args.name then
+		log.fatal("缺少包名参数")
+		return
+	end
+
+	npm:install_package(args)
+end
+
+
+return function(ctx)
+	local args = ctx.arg
+	
+	local package_args = {}
+	local cmd_name = args[1]
+	if cmd_name == "install" then
+		-- npm install 安装包
+		npm_install(ctx)
+	elseif cmd_name == "init" then
+		-- npm init 构建项目package文件
+		npm_init(ctx)
+	elseif cmd_name == "remove" then
+		npm_remove(ctx)
+	end
+end
+
+
+
+
+

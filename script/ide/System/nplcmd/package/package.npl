@@ -1,0 +1,15 @@
+{
+      ["keywords"] = {
+        [1] = "keepwork",
+        [2] = "unknow",
+      },
+      ["description"] = "package description",
+      ["version"] = "1.0.0",
+      ["author"] = "unknow",
+      ["dependencies"] = {
+      },
+      ["rendme"] = "README.md",
+      ["name"] = "keepwork",
+      ["repository"] = {
+      },
+    }
