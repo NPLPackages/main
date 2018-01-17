@@ -6,10 +6,12 @@ desc: register all embedded nplc script here
 ]]
 
 local console = NPL.load("(gl)script/ide/System/nplcmd/embed/console.npl")
+local package = NPL.load("(gl)script/ide/System/nplcmd/package/main.npl")
 
 local _M = {}
 local cmd_list = {
     console = console,
+	package = package,
     -- "install",
     -- "package"
 }
