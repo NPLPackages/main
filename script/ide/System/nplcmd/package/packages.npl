@@ -26,6 +26,15 @@ function packages:insert_package(package)
 		return 
 	end
 
+	-- 移除已存在的配置信息
+	for i, x in ipairs(self.package_list or {}) do
+		if x.name == package.name and x.version == package.version then
+			table.remove(self.package_list, i)
+			break
+		end
+	end
+	
+	-- 添加新信息
 	table.insert(self.package_list, package)
 end
 
@@ -61,6 +70,11 @@ function packages:get_by_name(package_name)
 	return list
 end
 
+-- 获取全部包
+function packages:get_all()
+	return self.package_list or {}
+end
+
 -- 获取包
 function packages:get(package) 
 	local result = nil
@@ -85,6 +99,10 @@ end
 
 -- 判断包是否存在
 function packages:is_exist(package)
+	if not package.name or not package.version then
+		return false
+	end
+
 	for _, x in ipairs(self.package_list or {}) do
 		if x.name == package.name and x.version == package.version then
 			return true

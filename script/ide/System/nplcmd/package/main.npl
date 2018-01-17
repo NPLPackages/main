@@ -3,52 +3,6 @@ NPL.load("common.npl")
 
 local npm = NPL.load("npm.npl")
 
--- 加载包
-local function load_package(args)
-	local package_config_filename = args.package_config_filename
-
-	if not package_config_filename then
-		log.fatal("参数有误")
-		return
-	end
-
-	local package_list = npm:get_package_list_by_filename(package_config_filename)
-	local  init_script = nil
-
-	for _, package in ipairs(package_list or {}) do
-		NPL.load(package.install_dir)
-		init_script = package.install_dir .. "init.npl"
-		NPL.load(init_script) -- 执行初始化脚本
-	end
-
-end
-
--- 编译包
-local function compile_package_config(args)
-	local package_config_filename = args.package_config_filename
-
-	if not package_config_filename then
-		log.fatal("参数有误")
-		return
-	end
-
-	local package_list = npm:get_package_list_by_filename(package_config_filename)
-	local  init_script = nil
-
-	for _, package in ipairs(package_list or {}) do
-		NPL.load(package.install_dir)
-		init_script = package.install_dir .. "init.npl"
-		NPL.load(init_script) -- 执行初始化脚本
-	end
-end
-
---download_package("wxaxiaoyao/nws")
---install_package("wxaxiaoyao/nws")
---install_package({
-	--download_url = "http://localhost:9000/test.zip",
-	--package_name = "test",
---})
-
 local function get_option_value(args, option)
 	local option_value = nil
 	for _, x in ipairs(args or {}) do
@@ -114,8 +68,32 @@ local function npm_remove(ctx)
 
 	local package_name = string.match(ctx_args[2] or "", '^[%w%d]+$')
 	local all = get_option_value(ctx_args, "-a") or get_option_value(ctx_args, "--all")
+	local _local = get_option_value(ctx_args, "-l") or get_option_value(ctx_args, "--local")
 	args.name = package_name or get_option_value(ctx_args, "--name=(.-)%s*$")
 	args.version = get_option_value(ctx_args, "--version=(.-)%s*$")
+
+	if not args.name then
+		log.fatal("参数错误")
+		return
+	end
+
+	if _local then
+		if not g_file:is_exist(package_config_filename) then
+			log.info("包配置文件不存在")
+			return
+		end
+		local package_config = commonlib.LoadTableFromFile(package_config_filename)
+		if not package_config then
+			log.info("包配置文件错误")
+			return
+		end
+		package_config.dependencies = package_config.dependencies or {}
+		package_config.dependencies[args.name] = nil
+		commonlib.SaveTableToFile(package_config, package_config_filename, true)
+		log.info("已从配置文件中移除包:", args.name)
+		return
+	end
+
 
 	if not args.name or (not all and not args.version) then
 		log.fatal("缺少参数")
@@ -130,6 +108,54 @@ local function npm_remove(ctx)
 	g_packages:save()
 end
 
+-- 通过配置文件安装
+local function npm_install_by_config(ctx)
+	local force = get_option_value(ctx_args, "-f") or get_option_value(ctx_args, "--force")
+	local package_config_filename = ctx.path .. "/package.lock"
+	local config_file_type = "lock"
+	if not g_file:is_exist(package_config_filename) then
+		log.info("package.lock配置文件不存在")
+		package_config_filename = ctx.path .. "/package.npl"
+		config_file_type = "npl"
+		if not g_file:is_exist(package_config_filename) then
+			log.info("package.npl配置文件不存在")
+			return;
+		end
+	end
+
+	local package = commonlib.LoadTableFromFile(package_config_filename)
+	if not package then
+		log.fatal("配置文件格式错误")
+		return
+	end
+
+	if config_file_type == "lock" then
+		for _, x in ipairs(package or {}) do
+			x.force = force
+			npm:install_package(x)
+		end
+
+		return
+	end
+
+	local dependencies = package.dependencies or {}
+	local args = {}
+	for key, dep in pairs(dependencies or {}) do
+		args.name = key
+		if type(dep) == "table" then
+			args.package_src = dep.package_src
+			args.download_url = dep.download_url
+			args.version = dep.version
+		else 
+			args.version = dep
+		end
+		args.force = force
+		npm:install_package(args)
+	end
+
+	--npm_compile({path=ctx.path, arg={}})
+end
+
 -- 安装包
 local function npm_install(ctx)
 	local path = ctx.path
@@ -138,6 +164,7 @@ local function npm_install(ctx)
 	local args = {}
 
 	local force = get_option_value(ctx_args, "-f") or get_option_value(ctx_args, "--force")
+	local _local = get_option_value(ctx_args, "-l") or get_option_value(ctx_args, "--local")
 	local package_name = string.match(ctx_args[2] or "", '^[%w%d]+$')
 	args.name = package_name or get_option_value(ctx_args, "--name=(.-)%s*$")
 	args.package_src = get_option_value(ctx_args, "--package_src=(.-)%s*$")
@@ -146,27 +173,117 @@ local function npm_install(ctx)
 	args.force = force
 
 	if not args.name then
-		log.fatal("缺少包名参数")
+		--log.fatal("缺少包名参数")
+		npm_install_by_config(ctx)
 		return
 	end
 
-	npm:install_package(args)
+	local ok, package = npm:install_package(args)
+	if not ok then
+		log.fatal("安装失败")
+		return
+	end
+
+	if _local and g_file:is_exist(package_config_filename) then
+		local package_config = commonlib.LoadTableFromFile(package_config_filename)
+		if not package_config then
+			log.info("配置文件格式错误")
+			return
+		end
+		package_config.dependencies = package_config.dependencies or {}
+		package_config.dependencies[package.name] = package.version
+		commonlib.SaveTableToFile(package_config, package_config_filename, true)
+	end
 end
 
+-- 列出已安装的包
+local function npm_list(ctx)
+	local package_list = g_packages:get_all()
+	print("已安装的包列表:")
+	for _, x in ipairs(package_list or {}) do
+		print("包名:" .. x.name .. " 版本:" .. x.version)
+	end
+end
 
+-- 加载应用程序依赖包
+local function npm_loader(ctx)
+	local path = ctx.path
+	local package_config_filename = ctx.path .. "/package.lock"
+
+	if not g_file:is_exist(package_config_filename) then
+		log.info("package.lock配置文件不存在")
+		package_config_filename = ctx.path .. "/package.npl"
+		if not g_file:is_exist(package_config_filename) then
+			log.info("package.npl配置文件不存在")
+			return;
+		end
+	end
+
+	local package_list = npm:get_package_list_by_filename(package_config_filename)
+	for _, x in ipairs(package_list) do
+		npm:load_package(x)
+		log.info("加载包:" .. x.name .. " 版本:" .. x.version)
+		-- 返回值有问题
+		--if not npm:load_package(x) then
+			--log.warn("包:" .. x.name .. "加载失败")
+		--else 
+			--log.info("加载包:" .. x.name .. " 版本:" .. x.version)
+		--end
+	end
+end
+
+-- 编译package.npl文件成package.lock
+local function npm_compile(ctx)
+	local path = ctx.path
+	local package_config_filename = ctx.path .. "/package.npl"
+	local force = get_option_value(ctx_args, "-f") or get_option_value(ctx_args, "--force")
+
+	if not g_file:is_exist(package_config_filename) then
+		log.fatal("package.npl配置文件不存在")
+		return 
+	end
+
+	local package_lock_filename = ctx.path .. "/package.lock"
+	if not force and g_file:is_exist(package_lock_filename) then
+		log.fatal("package.lock配置文件已存在")
+		return;
+	end
+
+	local package_list = npm:get_package_list_by_filename(package_config_filename)
+	local content = commonlib.serialize2(package_list, 1)
+	if not g_file:write(package_lock_filename, content) then
+		log.fatal("写文件失败:" .. package_lock_filename)
+		return
+	end
+
+	log.info("已成功生成package.lock")
+end
+
+-- 入口函数
 return function(ctx)
 	local args = ctx.arg
 	
 	local package_args = {}
 	local cmd_name = args[1]
+	--log(args)
 	if cmd_name == "install" then
 		-- npm install 安装包
 		npm_install(ctx)
 	elseif cmd_name == "init" then
 		-- npm init 构建项目package文件
 		npm_init(ctx)
+	elseif cmd_name == "list" then
+		-- npm list 列出已安装
+		npm_list(ctx)
 	elseif cmd_name == "remove" then
+		-- npm remove 移除包
 		npm_remove(ctx)
+	elseif cmd_name == "compile" then
+		--  npm compile 编译包配置
+		npm_compile(ctx)
+	elseif cmd_name == "loader" then
+		-- npm loader 加载包配置
+		npm_loader(ctx)
 	end
 end
 

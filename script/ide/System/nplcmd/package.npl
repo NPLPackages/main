@@ -1,6 +1,0 @@
-
-NPL.load("(gl)script/ide/commonlib.lua")
-
-
-
-print('hello world')

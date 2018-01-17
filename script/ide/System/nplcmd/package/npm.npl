@@ -242,9 +242,17 @@ end
 
 -- 安装包
 function npm:install_package(package_args)
+	local package = nil
 	if not package_args.name then
 		log.fatal("缺少参数")
 		return false
+	end
+	
+	-- 检测是否已安装
+	if not package_args.force and g_packages:is_exist(package_args) then
+		log.info("包已安装...")
+		package = g_packages:get(package_args)
+		return true, package
 	end
 
 	log.info("开始安装包:" .. package_args.name)
@@ -272,7 +280,8 @@ function npm:install_package(package_args)
 		log.info("依赖包:" .. key)
 
 		args.force = package_args.force
-		if not self:install_package(args) then
+		local ok = self:install_package(args)
+		if not ok then
 			log.fatal("安装包依赖失败")
 			clean_tmp_package(package)
 			return false
@@ -281,9 +290,10 @@ function npm:install_package(package_args)
 
 	-- 检测是否已安装
 	if not package_args.force and g_packages:is_exist(package_config) then
-		log.info("包已安装...")
+		log.info(package_config.name .. "包已安装...")
 		clean_tmp_package(package)
-		return true
+		package = g_packages:get(package_config)
+		return true, package
 	end
 
 	-- 安装包
@@ -306,7 +316,14 @@ function npm:install_package(package_args)
 	end
 
 	clean_tmp_package(package)
-	return true
+
+	package = g_packages:get(package_config)
+	return true, package
+end
+
+-- 加载包
+function npm:load_package(package)
+	return NPL.load(package.install_dir)
 end
 
 -- 加载配置文件
@@ -361,7 +378,23 @@ function npm:get_package_list_by_filename(package_config_filename)
 		end
 	end
 
-	return package_list
+	local map, list, tmp, index = {}, {}
+	-- 去重选择相同包的最高版本
+	for _, x in ipairs(package_list) do 
+		index = map[x.name]
+		if not index then
+			list[#list+1] = x
+			map[x.name] = #list
+		else 
+			tmp = list[index]
+			-- 存在高版本则替换
+			if string_compare(tmp.version, x.version) < 0 then
+				list[index] = x
+			end
+		end
+	end
+
+	return list
 end
 
 return npm
