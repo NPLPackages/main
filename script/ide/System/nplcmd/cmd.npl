@@ -115,7 +115,7 @@ local function cmd_exec(args, ctx)
             file_result = Embeded.run(script, ctx)
         else
 			-- 执行用户脚本前，先加载依赖包
-			Embeded.run("loader", ctx)
+			--Embeded.run("loader", {path = ctx.path, arg = {}})
 
             local cmd = NPL.load(script)
             if type(cmd) == "function" then
