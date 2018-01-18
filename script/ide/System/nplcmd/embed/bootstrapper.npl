@@ -1,0 +1,69 @@
+--[[
+title: nplc bootstrapper
+author: chenqh
+date: 2018/1/15
+desc: load boot.lua automatically
+]]
+
+local function add_param(args, key, value)
+    if key == "-e" or key == "--env" then
+        args["env"] = value
+    elseif key == "-p" or key == "--port" then
+        args["port"] = value
+    else
+        -- still parse the options to boot
+        key = key:gsub("-", "")
+        args[key] = value
+    end
+end
+
+local function parse_params(params)
+    local args = {}
+    for i = 1, #params, 2 do
+        if params[i]:match("^%-%-?%w*$") then
+            add_param(args, params[i], params[i+1])
+        else
+            error("Invalid param " .. params[i])
+        end
+    end
+    return args
+end
+
+local function show_usage()
+    local text = [[
+NPLC bootstrapper
+
+usage: nplc [options] start [params]
+
+Description:
+    NPLC bootstrapper will load boot.lua under current folder and pass params to it.
+    Please make sure your boot.lua will return a function to handle the params.
+    The bootstrapper will decode the nplc params and put them in a table, like {env="dev", port="8088"}.
+
+Options:
+
+-h,      --help         show help
+-e,      --env          set env
+-p,      --port         set port
+
+Samples:
+nplc -d start -e dev -p 8080
+
+]]
+    print(text)
+end
+
+return function(ctx)
+    if(ctx.arg[1] == "-h" or ctx.arg[1] == "--help") then
+        show_usage()
+        return
+    end
+
+    local boot = NPL.load(ctx.path .. "/boot.lua")
+    if type(boot) == "function" then
+        boot(parse_params(ctx.arg))
+        ctx.keep_alive = true
+    else
+        error("Invalid boot.lua in folder " .. ctx.path)
+    end
+end

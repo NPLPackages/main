@@ -1,0 +1,32 @@
+--[[
+title: nplc extension
+author: chenqh
+date: 2018/1/10
+]]
+
+local system_print = print
+local system_log = log
+local write = io.write
+
+print = function(msg)
+    system_print(msg)
+    write(tostring(msg))
+    write("\n")
+end
+log = function(msg)
+    system_log(msg)
+    write(tostring(msg))
+    write("\n")
+end
+
+-- local npl_package_path = os.getenv("NPL_PACKAGES")
+-- if npl_package_path then NPL.load(npl_package_path .. "/") end
+NPL.load_package = function(package)
+    local npl_package_path = os.getenv("NPL_PACKAGES")
+    if npl_package_path then
+        local full_path = format("%s/%s/", npl_package_path, package)
+        return NPL.load(full_path)
+    else
+        return NPL.load(package)
+    end
+end

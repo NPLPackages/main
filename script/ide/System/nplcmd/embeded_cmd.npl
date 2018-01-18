@@ -1,0 +1,27 @@
+--[[
+title: default command handler
+author: chenqh
+date: 2018/1/11
+desc: register all embedded nplc script here
+]]
+
+local console = NPL.load("(gl)script/ide/System/nplcmd/embed/console.npl")
+local bootstrapper = NPL.load("(gl)script/ide/System/nplcmd/embed/bootstrapper.npl")
+
+local _M = {}
+local cmd_list = {
+    console = console,
+    start = bootstrapper,
+    -- "install",
+    -- "package"
+}
+
+function _M.run(command, ctx)
+    cmd_list[command](ctx)
+end
+
+function _M.include_cmd(command)
+    return cmd_list[command] ~= nil
+end
+
+return _M
