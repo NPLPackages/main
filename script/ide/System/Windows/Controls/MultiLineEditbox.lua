@@ -84,12 +84,6 @@ function MultiLineEditbox:ctor()
 	self.clip = self.showLineNumber;
 end
 
---function MultiLineEditbox:init(parent)
---	MultiLineEditbox._super.init(self, parent);
---
---	return self;
---end
-
 function MultiLineEditbox:initViewport()
 	self.viewport = TextControl:new():init(self);
 	self.viewport:SetClip(true);
@@ -175,6 +169,10 @@ end
 
 function MultiLineEditbox:echoMode()
     return self.m_echoMode;
+end
+
+function MultiLineEditbox:SetEmptyText(text)
+	self.viewport:SetEmptyText(text)
 end
 
 function MultiLineEditbox:setEchoMode(mode)
