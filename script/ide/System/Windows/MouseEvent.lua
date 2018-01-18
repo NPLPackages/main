@@ -24,10 +24,40 @@ local MouseEvent = commonlib.inherit(commonlib.gettable("System.Core.Event"), co
 MouseEvent.event_type = "mouseEvent";
 MouseEvent.global_pos = Point:new();
 MouseEvent.local_pos = Point:new();
+MouseEvent.left_click_info= {
+	first_click_time = 0,
+	second_click_time = 0,
+}
 
 function MouseEvent:ctor()
 	self.global_pos = Point:new();
 	self.local_pos = Point:new();
+	self.isDoubleClick = false;
+	self.isTripleClick = false;
+end
+
+
+function MouseEvent:isDoubleAndTripleClick()
+	if(self:button() == "left" and self.event_type == "mousePressEvent") then
+		self.isTripleClick = self:isTriplePress()
+		self.isDoubleClick = self:isDoublePress()
+	end
+end																			
+
+function MouseEvent:isDoublePress()
+	if(ParaGlobal.timeGetTime() - MouseEvent.left_click_info.first_click_time < 250) then
+		MouseEvent.left_click_info.event_type = self.event_type;
+		MouseEvent.left_click_info.second_click_time = ParaGlobal.timeGetTime();
+		return true;	
+	end
+	MouseEvent.left_click_info.event_type = self.event_type;
+	MouseEvent.left_click_info.first_click_time = ParaGlobal.timeGetTime();
+end
+
+function MouseEvent:isTriplePress()
+	if(ParaGlobal.timeGetTime() - MouseEvent.left_click_info.second_click_time < 250) then
+		return true;
+	end
 end
 
 function MouseEvent:updateModifiers()
@@ -85,6 +115,9 @@ function MouseEvent:init(event_type, window, localPos, windowPos, screenPos)
 	self.mouse_button = mouse_button;
 	self.mouse_wheel = mouse_wheel;
 	self.accepted = nil;
+
+	self:isDoubleAndTripleClick();
+
 	return self;
 end
 

@@ -26,6 +26,7 @@ EditBox:Property({"BackgroundColor", "#cccccc", auto=true});
 EditBox:Property({"m_text", nil, "GetText", "SetText"})
 EditBox:Property({"Color", "#000000", auto=true})
 EditBox:Property({"CursorColor", "#33333388", auto=true})
+EditBox:Property({"EmptyTextColor", "#888888", auto=true})
 EditBox:Property({"SelectedBackgroundColor", "#00006680", auto=true})
 EditBox:Property({"m_placeholderText", "", "placeholderText", "setPlaceholderText"})
 EditBox:Property({"m_echoMode", "Normal", "echoMode", "setEchoMode"})
@@ -42,6 +43,7 @@ EditBox:Property({"leftTextMargin", 0});
 EditBox:Property({"topTextMargin", 2});
 EditBox:Property({"rightTextMargin", 0});
 EditBox:Property({"bottomTextMargin", 2});
+EditBox:Property({"EmptyText", nil, "GetEmptyText", "SetEmptyText", auto=true});				  --*********************************************	 
 
 EditBox:Signal("resetInputContext");
 EditBox:Signal("selectionChanged");
@@ -491,13 +493,20 @@ function EditBox:paintEvent(painter)
 		end
 	end
 	
-	if(text and text~="") then
+	painter:SetFont(self:GetFont());
+	local scale = self:GetScale();	
+
+	if(text and text~="") then							
 		-- draw text
 		painter:SetPen(self:GetColor());
-		painter:SetFont(self:GetFont());
-		--painter:SetPen(self:GetColor());
-		local scale = self:GetScale();
 		painter:DrawTextScaled(self:x() + textLeft, self:y() + textTop, self:GetPasswordText(), scale);
+	else
+		local emptyText = self:GetEmptyText();	
+		if(emptyText and emptyText~="" and not self:hasFocus()) then
+				painter:SetPen(self:GetEmptyTextColor());
+			painter:DrawTextScaled(self:x() + textLeft, self:y() + textTop, emptyText, scale);																																				
+		end
+
 	end
 
 	if(hasTextClipping) then
@@ -551,6 +560,16 @@ function EditBox:mousePressEvent(e)
 		local mark = e.shift_pressed;
 		local cursor = self:xToPos(e:pos():x());
 		self:moveCursor(cursor, mark);
+		if(e.isDoubleClick) then
+			local begin_pos , end_pos = self.m_text:wordPosition(cursor);		
+			self:moveCursor(begin_pos, false);
+	   		self:moveCursor(end_pos, true);
+		elseif(e.isTripleClick) then
+			-- move to line begin			
+			self:moveCursor(0, false);					  
+			-- move to line end
+	   		self:moveCursor(self.m_text:length(), true);				  
+		end
 		e:accept();
 	end
 end

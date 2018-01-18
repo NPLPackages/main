@@ -1,7 +1,7 @@
 --[[
 Title: textarea
-Author(s): LiPeng
-Date: 2017/10/3
+Author(s): LiXizhi
+Date: 2015/5/3
 Desc: 
 use the lib:
 ------------------------------------------------------------
@@ -39,6 +39,7 @@ function pe_textarea:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	end
 
 	_this:ShowLineNumber(self:GetBool("ShowLineNumber",false));
+	_this:SetEmptyText(self:GetAttributeWithCode("EmptyText", nil, true));
 
 	_this:ApplyCss(css);
 	_this:setReadOnly(self:GetBool("ReadOnly",false));
