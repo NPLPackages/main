@@ -83,10 +83,14 @@ Options:
 
 -h,      --help         show help
 -v,      --version      show version
+-i,                     end with console
 
 Embedded scripts:
 
 console - nplc console
+start   - nplc bootstrapper, will load boot.lua and pass your params to it
+
+input nplc script --help to get more info
 
 ]]
     print(text)
@@ -109,6 +113,7 @@ local function cmd_exec(args, ctx)
     end
 
     if(not script) then
+        options["-i"] = nil -- ignore -i option
         file_result = Embeded.run("console", ctx)
     else
         if Embeded.include_cmd(script) then -- run default commands first
@@ -128,6 +133,11 @@ local function cmd_exec(args, ctx)
                 print("Warning: no function to handle the cmd!")
             end
         end
+    end
+
+    if options["-i"] and script ~= "console" then
+        file_result = Embeded.run("console", ctx)
+        ctx.keep_alive = false --force to quit
     end
 end
 

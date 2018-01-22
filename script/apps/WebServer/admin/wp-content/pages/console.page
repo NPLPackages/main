@@ -41,7 +41,9 @@ local function SaveCode()
 	local filename = "temp/console.lua";
 	local tmp_file = ParaIO.open(filename, "w");
 	if(tmp_file) then
-		tmp_file:write(code, #code);
+		if(code) then
+			tmp_file:write(code, #code);
+		end
 		tmp_file:close();
 	end
 	return filename;
