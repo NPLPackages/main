@@ -16,7 +16,7 @@ local g_packages = common.packages
 local g_file = common.file
 local g_lfs = common.lfs
 local g_config = common.config
-local g_package_path = common.package_path
+local g_package_path = common.config.global_package_path
 local string_compare = common.string_compare
 local get_url = common.get_url
 local encode_base64 = common.encode_base64
@@ -373,7 +373,7 @@ local function npm_loader(ctx)
 	local package_list = npm:get_package_list_by_filename(package_config_filename)
 	for _, x in ipairs(package_list) do
 		npm:load_package(x)
-		g_log.info("加载包:" .. x.name .. " 版本:" .. x.version)
+		--g_log.info("加载包:" .. x.name .. " 版本:" .. x.version)
 		-- 返回值有问题
 		--if not npm:load_package(x) then
 			--g_log.warn("包:" .. x.name .. "加载失败")

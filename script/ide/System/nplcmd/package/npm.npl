@@ -5,7 +5,7 @@ local g_packages = common.packages
 local g_file = common.file
 local g_lfs = common.lfs
 local g_config = common.config
-local g_package_path = common.package_path
+local g_package_path = common.config.global_package_path
 local string_compare = common.string_compare
 local get_url = common.get_url
 local encode_base64 = common.encode_base64
@@ -32,6 +32,7 @@ end
 
 -- 清理安装过程的垃圾文件
 local function clean_tmp_package(opt)
+
 	ParaIO.DeleteFile(opt.package_zip_file)
 end
 
@@ -48,7 +49,7 @@ local function download_package_by_url(package_args)
 	})	
 
 	if res.status_code ~= 200 then
-		g_log("download package failed: " .. download_url)
+		g_log.fatal("download package failed: " .. download_url)
 		return false
 	end
 
@@ -61,13 +62,13 @@ local function download_package_by_url(package_args)
 	if not g_file:is_exist(tmp_file_dir) then
 		local ok, err = ParaIO.CreateDirectory(tmp_file_dir)
 		if not ok then
-			g_log("创建临时目录失败:" .. err)
+			g_log.fatal("创建临时目录失败:" .. err)
 			return false
 		end
 	end
 
-	g_log("成功下载安装包:" .. download_url)
-	g_log("创建临时文件:", tmp_file)
+	g_log.info("成功下载安装包:" .. download_url)
+	g_log.info("创建临时文件:", tmp_file)
 	if not g_file:write(tmp_file, data) then
 		g_log.fatal("无法创建临时文件:" .. tmp_file)
 		return false
@@ -126,7 +127,7 @@ local function get_package_config_by_url(url)
 	})	
 
 	if res.status_code ~= 200 then
-		g_log("download package config failed: " .. download_url)
+		g_log.fatal("download package config failed: " .. download_url)
 		return false
 	end
 	
@@ -178,7 +179,7 @@ local function install_package_by_zip(package)
 					local content = file:GetText(0, -1);
 					file:close();
 
-					g_log("写文件:", filename)
+					g_log.info("写文件:", filename)
 					--g_log("文件内容", binData)
 					if not g_file:write(filename, content) then
 						g_log.warn("写文件出错:" .. filename)
