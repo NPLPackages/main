@@ -1,3 +1,4 @@
+local common = NPL.load("./common.npl")
 local log = {}
 
 local function console(obj, out)
@@ -49,6 +50,10 @@ local function console(obj, out)
 end
 
 local function get_file_pos(dept)
+	if common.config.debug then
+		return ""
+	end
+
 	local info = debug.getinfo(dept)
 	local pos =  info.source .. ":" .. tostring(info.currentline)
 

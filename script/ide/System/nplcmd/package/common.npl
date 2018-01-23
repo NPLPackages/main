@@ -1,36 +1,10 @@
-
-NPL.load("(gl)script/ide/commonlib.lua")
-NPL.load("(gl)script/ide/System/os/GetUrl.lua")
-NPL.load("(gl)script/ide/Files.lua")
-
-NPL.load("geturl.npl")
-
-log = NPL.load("log.npl")
-g_packages = NPL.load("packages.npl")
-g_file = NPL.load("file.npl")
---local packages = NPL.load("packages.npl")
---local g_packages = packages:new()
-
-g_lfs = commonlib.Files.GetLuaFileSystem()
-g_package_path = "/usr/local/lib/npl_packages"
-
-if not g_packages:load(g_package_path .. "/.package.list") then
-	log.warn("加载全局包列表失败...")
-end
-
--- 文件是否存在
-function file_is_exist(path)
-	return (g_lfs.attributes(path))
-end
+local common = {}
 
 -- 字符串比较
-function string_compare(str1, str2)
-	local str_byte1 = string.byte(str1, 1, #str1)
-	local str_byte2 = string.byte(str2, 1, #str2)
-
-	for i, _ in ipairs(str_byte1) do
-		local n1 = str_byte1[i] or 0
-		local n2 = str_byte2[i] or 0
+function common.string_compare(str1, str2)
+	for i = 1, #str1, 1 do
+		local n1 = string.byte(str1, i, i) or 0
+		local n2 = string.byte(str2, i, i) or 0
 		if n1 > n2 then
 			return 1
 		end
@@ -40,14 +14,68 @@ function string_compare(str1, str2)
 	end
 
 
-	if #str_byte1 > #str_byte2 then
+	if #str1 > #str2 then
 		return 1
 	end
 
-	if #str_byte1 < #str_byte2 then
+	if #str1 < #str2 then
 		return -1
 	end
 
 	return 0
 end
 
+--local requests = require("requests")
+
+--function get_url(params)
+	--local method = params.method or "GET"
+
+	--if params.headers then
+		--params.headers['Content-Type'] = params.headers['Content-Type'] or "application/json"
+	--else
+		--params.headers = {['Content-Type'] = "application/json"}
+	--end
+
+	--if string.lower(method) == "get" then
+		--params.params = params.data
+	--end
+	--local res = requests.request(method, params)
+
+	--res.data = res.json() or res.text
+
+	--return res
+--end
+
+function common.get_url(params)
+	local method = params.method or "GET"
+
+	if string.upper(method) == "GET" then
+		params.qs = params.data
+	else
+		params.form = params.data
+	end
+	
+	--if params.headers then
+		--params.headers['Content-Type'] = params.headers['Content-Type'] or "application/json"
+	--else
+		--params.headers = {['Content-Type'] = "application/json"}
+	--end
+
+	local _, data = System.os.GetUrl(params)
+	data.status_code = data.rcode
+	return data
+end
+
+
+function common.encode_base64(text)
+	--return Encoding.base64(text)
+	return ParaMisc.base64(text)
+end
+
+function common.decode_base64(text)
+	--return Encoding.unbase64(text)
+	return ParaMisc.unbase64(text)
+end
+
+
+return common

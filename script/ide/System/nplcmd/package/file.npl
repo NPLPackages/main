@@ -1,4 +1,6 @@
 
+local g_lfs = commonlib.Files.GetLuaFileSystem()
+
 local file = {}
 
 -- 判断文件是否存在
@@ -66,6 +68,15 @@ function file:write(filename, content)
 	return true
 end
 
+-- 读表
+function file:read_table(filename)
+	return commonlib.LoadTableFromFile(filename)
+end
+
+-- 写表
+function file:write_table(filename, t)
+	return commonlib.SaveTableToFile(t, filename, true)
+end
 
 return file
 

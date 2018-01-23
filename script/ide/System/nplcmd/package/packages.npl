@@ -1,5 +1,4 @@
-NPL.load("(gl)script/ide/commonlib.lua")
-
+local common = NPL.load("common.npl")
 local packages = {}
 
 -- 构造实例
@@ -87,7 +86,7 @@ function packages:get(package)
 			else
 				if not result then
 					result = x
-				elseif string_compare(result.version, x.version) < 0 then
+				elseif common.string_compare(result.version, x.version) < 0 then
 					result = x
 				end
 			end
