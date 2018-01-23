@@ -50,7 +50,7 @@ local function console(obj, out)
 end
 
 local function get_file_pos(dept)
-	if common.config.debug then
+	if not common.config.debug then
 		return ""
 	end
 

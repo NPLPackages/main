@@ -77,5 +77,31 @@ function common.decode_base64(text)
 	return ParaMisc.unbase64(text)
 end
 
+function common.get_npl_package_path()
+	local npl_package_path = os.getenv("NPL_PACKAGES")
+	local dirname = ParaIO.GetCurDirectory(21)
+	local filelist = {}
+
+	-- 优先取环境变量中值
+	if npl_package_path then
+		return npl_package_path
+	end
+
+	while true do
+		filelist = {}
+		commonlib.Files.Find(filelist, dirname, 1000, 1000000, "npl_packages", nil)
+		for _, x in ipairs(filelist) do
+			if x.filename == "npl_packages" then
+				return dirname .. "npl_packages/packages/"
+			end
+		end
+		if not string.match(dirname, "[^/]+/?$") then
+			break
+		end
+		dirname = string.gsub(dirname, "[^/]+/?$", "")
+	end
+
+	return dirname .. "npl_packages/"
+end
 
 return common

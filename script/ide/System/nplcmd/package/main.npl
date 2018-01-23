@@ -10,6 +10,7 @@ common.packages = NPL.load("./packages.npl")
 common.file = NPL.load("./file.npl")
 common.lfs = commonlib.Files.GetLuaFileSystem()
 common.config = common.file:read_table(common.config.config_filename) or common.config
+common.config.global_package_path = common.get_npl_package_path()
 
 local g_log = common.log
 local g_packages = common.packages
@@ -22,12 +23,14 @@ local get_url = common.get_url
 local encode_base64 = common.encode_base64
 local decode_base64 = common.decode_base64
 
-local g_package_path = g_config.global_package_path
-
 if not g_packages:load(g_package_path .. ".package.list") then
 	g_log.warn("加载全局包列表失败...")
 end
+
+--g_log(common.config)
 local npm = NPL.load("./npm.npl")
+
+-- 获取选项值
 local function get_option_value(args, option)
 	local option_value = nil
 	for _, x in ipairs(args or {}) do
@@ -362,11 +365,11 @@ local function npm_loader(ctx)
 	local package_config_filename = ctx.path .. "/package.lock"
 
 	if not g_file:is_exist(package_config_filename) then
-		g_log.info("package.lock配置文件不存在")
+		--g_log.info("package.lock配置文件不存在")
 		package_config_filename = ctx.path .. "/package.npl"
 		if not g_file:is_exist(package_config_filename) then
-			g_log.info("package.npl配置文件不存在")
-			return;
+			--g_log.info("package.npl配置文件不存在")
+			return
 		end
 	end
 
@@ -470,7 +473,7 @@ local function npm_package(ctx)
 	local filelist = {}
 	--g_log(zipname)
 
-	commonlib.Files.Find(filelist, path, 1000, 1000000, "*.*", nil)
+	--commonlib.Files.Find(filelist, path, 1000, 1000000, "*.*", nil)
 	--for _, x in ipairs(filelist) do
 		--if x.fileattr == 0 then
 			--writer:ZipAdd(package_config.name .. "/" .. x.filename, path .. x.filename)
