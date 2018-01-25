@@ -84,6 +84,9 @@ function common.get_npl_package_path()
 
 	-- 优先取环境变量中值
 	if npl_package_path then
+		if not string.match(npl_package_path, "/$") then
+			npl_package_path = npl_package_path .. "/"
+		end
 		return npl_package_path
 	end
 
