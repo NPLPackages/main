@@ -1,15 +1,15 @@
 {
-      ["author"] = "unknow",
-      ["keywords"] = {
-        [1] = "keepwork",
-        [2] = "unknow",
-      },
-      ["version"] = "1.0.0",
-      ["description"] = "package description",
-      ["dependencies"] = {
-      },
-      ["repository"] = {
-      },
-      ["name"] = "keepwork",
-      ["rendme"] = "README.md",
-    }
+  ["author"] = "unknow",
+  ["keywords"] = {
+    [1] = "keepwork",
+    [2] = "unknow",
+  },
+  ["version"] = "1.0.0",
+  ["description"] = "package description",
+  ["dependencies"] = {
+  },
+  ["repository"] = {
+  },
+  ["name"] = "keepwork",
+  ["rendme"] = "README.md",
+}
