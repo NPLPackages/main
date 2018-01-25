@@ -157,8 +157,9 @@ local function install_package_by_zip(package)
 		return false
 	end
 
+	--g_log.info("包配置文件:" .. package.package_config_filename)
 	local package_config_filename = package.package_config_filename
-	local dir_prefix = string.match(package_config_filename, "(.*)package.npl$")
+	local dir_prefix = string.match(package_config_filename, "(.*)package.npl$") or ""
 	local package_name = package_config.name
 	local tmp_file = package.package_zip_file
 	local tmp_file_dir = string.gsub(tmp_file, "[^/]*$", "")
@@ -166,11 +167,7 @@ local function install_package_by_zip(package)
 		local filesOut = {};
 		commonlib.Files.Find(filesOut, "", 0, 100000, ":.", tmp_file);
 		for _,item in ipairs(filesOut) do 
-			local filename = item.filename
-			if dir_prefix then
-				filename = string.gsub(item.filename, "^" .. dir_prefix , "")
-			end
-			filename = package_dir .. filename
+			local filename = package_dir .. string.sub(item.filename, #dir_prefix + 1)
 			if item.filesize > 0 then
 				local file_dir = string.gsub(filename, "[^/]*$", "")
 				ParaIO.CreateDirectory(file_dir)
