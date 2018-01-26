@@ -75,6 +75,17 @@ function packages:get_all()
 end
 
 -- 获取包
+function packages:get_by_name_version(params) 
+	for i, x in ipairs(self.package_list or {}) do
+		if x.name == params.name and x.version == params.version then
+			return x
+		end
+	end
+
+	return nil
+end
+
+-- 获取包
 function packages:get(package) 
 	local result = nil
 	for i, x in ipairs(self.package_list or {}) do

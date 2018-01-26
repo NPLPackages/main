@@ -359,8 +359,33 @@ local function npm_list(ctx)
 	end
 end
 
+-- 初始化加载包函数
+local function npm_init_load_package()
+	-- 包装加载包函数
+	local _load_package = NPL.load_package
+	NPL.load_package = function(name, version)
+		local package = g_packages:get({name = name, version = version})
+		local package_name = name
+		if package then
+			package_name = package.install_dir
+		end
+
+		--g_log.info("加载包:" .. package_name)
+		if type(_load_package) == "function" then
+			_load_package(package_name)
+		else 
+			NPL.load(package_name)
+		end
+		
+		return
+	end
+end
+
 -- 加载应用程序依赖包
 local function npm_loader(ctx)
+	-- 初始化加载包
+	npm_init_load_package()
+
 	local path = ctx.path
 	local package_config_filename = ctx.path .. "/package.lock"
 
