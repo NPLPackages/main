@@ -7,11 +7,30 @@ desc: register all embedded nplc script here
 
 local console = NPL.load("(gl)script/ide/System/nplcmd/embed/console.npl")
 local bootstrapper = NPL.load("(gl)script/ide/System/nplcmd/embed/bootstrapper.npl")
+local package = NPL.load("(gl)script/ide/System/nplcmd/package/main.npl")
+
+-- 包管理接口
+local function npl_package_manager(cmdName)
+	return function(ctx) 
+		ctx.arg = ctx.arg or {}
+		table.insert(ctx.arg, 1, cmdName)
+		--log(ctx)
+		package(ctx)
+	end
+end
 
 local _M = {}
 local cmd_list = {
     console = console,
     start = bootstrapper,
+
+	package = npl_package_manager("package"),
+	install = npl_package_manager("install"),
+	remove = npl_package_manager("remove"),
+	list = npl_package_manager("list"),
+	init = npl_package_manager("init"),
+	compile = npl_package_manager("compile"),
+	loader = npl_package_manager("loader"),
     -- "install",
     -- "package"
 }

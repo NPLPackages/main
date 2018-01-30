@@ -1,0 +1,593 @@
+NPL.load("(gl)script/ide/commonlib.lua")
+NPL.load("(gl)script/ide/System/os/GetUrl.lua")
+NPL.load("(gl)script/ide/Files.lua")
+NPL.load("(gl)script/ide/Encoding.lua") 
+
+local common = NPL.load("./common.npl")
+common.log = NPL.load("./log.npl")
+common.config = NPL.load("./config.npl")
+common.packages = NPL.load("./packages.npl")
+common.file = NPL.load("./file.npl")
+common.lfs = commonlib.Files.GetLuaFileSystem()
+common.config = common.file:read_table(common.config.config_filename) or common.config
+common.config.global_package_path = common.get_npl_package_path()
+
+local g_log = common.log
+local g_packages = common.packages
+local g_file = common.file
+local g_lfs = common.lfs
+local g_config = common.config
+local g_package_path = common.config.global_package_path
+local string_compare = common.string_compare
+local get_url = common.get_url
+local encode_base64 = common.encode_base64
+local decode_base64 = common.decode_base64
+
+if not g_packages:load(g_package_path .. ".package.list") then
+	g_log.warn("加载全局包列表失败...")
+end
+
+--g_log(common.config)
+local npm = NPL.load("./npm.npl")
+
+-- 获取选项值
+local function get_option_value(args, option)
+	local option_value = nil
+	for _, x in ipairs(args or {}) do
+		option_value = string.match(x, option)
+		--g_log(option_value, option)
+		if option_value then
+			return option_value
+		end
+	end
+
+	return nil
+end
+
+local function npm_init_usage()
+	print([[
+
+nplc init 包名 [选项]
+描述:
+    生成包配置文件
+
+选项:
+--name           包名, 优先命令中包名  
+--version        版本号, 默认1.0.0
+--force          强制(存在覆盖)
+--author         作者
+--help           打印帮助信息      短选项 -h
+
+示例:
+nplc init packagename --version=1.0.0
+
+	]])
+end
+
+local function npm_init(ctx)
+	local path = ctx.path
+	local package_config_filename = path .. '/package.npl'
+	local force = false
+	local args = {}
+	local ctx_args = ctx.arg or {}
+	local help = get_option_value(ctx_args, "-h") or get_option_value(ctx_args, "--help")
+	if help then
+		npm_init_usage()
+		return
+	end
+
+	local package_name = string.match(ctx_args[2] or "", '^[%w%d]+$')
+	force = get_option_value(ctx_args, "-f") or get_option_value(ctx_args, "--force")
+	args.name = package_name or get_option_value(ctx_args, "--name=(.-)%s*$")
+	args.version = get_option_value(ctx_args, "-v=(.-)%s*$") or get_option_value(ctx_args, "--version=(.-)%s*$") or "1.0.0"
+	args.author = get_option_value(ctx_args, "--author=(.-)%s*$") or "unknow"
+
+	if not args.name then
+		g_log.fatal("缺少包名参数")
+
+		npm_init_usage()
+		return
+	end
+
+	args.description = "package description"
+	args.keywords = {args.name, args.author}
+	args.rendme = "README.md"
+	args.dependencies = {}
+	--args.repository = {}
+	args.download_url = nil
+
+	if g_file:is_exist(package_config_filename) then
+		g_log.fatal("包配置文件已存在")
+		if not force then
+			return
+		end
+		g_log.info("重新生成包配置文件")
+	end
+
+	local content = commonlib.serialize2(args, 1)
+	if not g_file:write(package_config_filename, content) then
+		g_log.fatal("写包配置文件失败")
+		return
+	end
+
+	g_log.info("已生成包配置文件:" .. package_config_filename)
+	return
+end
+
+local function npm_remove_usage() 
+	print([[
+nplc remove 包名 [选项]
+    移除包
+
+选项:
+--name           包名, 优先命令中包名  
+--all            移除指定包的所有版本   短选项 -a
+--version        移除指定版本号         短选项 -v 
+--local          仅移除本地配置文件中的包依赖  短选项 -l
+--help           打印帮助信息           短选项 -h
+
+示例:
+nplc remove packagename --version=1.0.0
+nplc remove packagename -l
+nplc remove packagename -a
+
+	]])
+end
+
+-- 删除包
+local function npm_remove(ctx)
+	local args = {}
+	local path = ctx.path
+	local package_config_filename = path .. '/package.npl'
+	local ctx_args = ctx.arg or {}
+	local help = get_option_value(ctx_args, "-h") or get_option_value(ctx_args, "--help")
+	if help then
+		npm_remove_usage()
+		return
+	end
+
+	local package_name = string.match(ctx_args[2] or "", '^[%w%d]+$')
+	local all = get_option_value(ctx_args, "-a") or get_option_value(ctx_args, "--all")
+	local _local = get_option_value(ctx_args, "-l") or get_option_value(ctx_args, "--local")
+	args.name = package_name or get_option_value(ctx_args, "--name=(.-)%s*$")
+	args.version = get_option_value(ctx_args, "-v=(.-)%s*$") or get_option_value(ctx_args, "--version=(.-)%s*$")
+
+	if not args.name then
+		g_log.fatal("参数错误")
+		return
+	end
+
+	local package_config = commonlib.LoadTableFromFile(package_config_filename)
+	if package_config then
+		--g_log.info("包配置文件错误")
+		--return
+		package_config.dependencies = package_config.dependencies or {}
+		package_config.dependencies[args.name] = nil
+		commonlib.SaveTableToFile(package_config, package_config_filename, true)
+		if _local then
+			g_log.info("已从配置文件中移除包:", args.name)
+			return
+		end
+	end
+
+	if not args.name or (not all and not args.version) then
+		g_log.fatal("缺少参数")
+		return
+	end
+
+	local package_list = g_packages:get_by_name(args.name)
+	for _, x in ipairs(package_list) do
+		g_packages:delete_package(x)
+		g_log.info("移除包:" .. x.name .. " 版本:" .. x.version)
+	end
+	g_packages:save()
+end
+
+-- 通过配置文件安装
+local function npm_install_by_config(ctx)
+	local force = get_option_value(ctx_args, "-f") or get_option_value(ctx_args, "--force")
+	local package_config_filename = ctx.path .. "/package.lock"
+	local config_file_type = "lock"
+	if not g_file:is_exist(package_config_filename) then
+		g_log.info("package.lock配置文件不存在")
+		package_config_filename = ctx.path .. "/package.npl"
+		config_file_type = "npl"
+		if not g_file:is_exist(package_config_filename) then
+			g_log.info("package.npl配置文件不存在")
+			return;
+		end
+	end
+
+	local package = commonlib.LoadTableFromFile(package_config_filename)
+	if not package then
+		g_log.fatal("配置文件格式错误")
+		return
+	end
+
+	if config_file_type == "lock" then
+		for _, x in ipairs(package or {}) do
+			x.force = force
+			npm:install_package(x)
+		end
+
+		return
+	end
+
+	local dependencies = package.dependencies or {}
+	local args = {}
+	for key, dep in pairs(dependencies or {}) do
+		args.name = key
+		if type(dep) == "table" then
+			args.package_src = dep.package_src
+			args.download_url = dep.download_url
+			args.version = dep.version
+		else 
+			args.version = dep
+		end
+		args.force = force
+		npm:install_package(args)
+	end
+
+	--npm_compile({path=ctx.path, arg={}})
+end
+
+local function npm_install_usage()
+--name           包名, 优先命令中包名  
+	print([[
+nplc install [包源] [选项]
+选项:
+--name           包名
+--version        移除指定版本号                短选项 -v 
+--local          添加包依赖到本地配置文件      短选项 -l
+--force          是否强制安装(已存在覆盖)      短选项 -f
+--download_url   zip包下载地址
+--package_src    仅针对github库使用 username/repositoryname   
+--help           打印帮助信息                  短选项 -h
+
+示例:
+从包管理服务器安装: nplc install packagename   或 nplc install --name=packagename
+从github安装: nplc install username/packagename 或 nplc install --package_src=username/packagename
+从指定包地址安装: nplc install http://nplpackages/packagename.zip  或 nplc install --download_url=http://nplpackages/packagename.zip
+
+	]])
+end
+-- 安装包
+local function npm_install(ctx)
+	local path = ctx.path
+	local package_config_filename = path .. '/package.npl'
+	local ctx_args = ctx.arg or {}
+	local args = {}
+
+	local help = get_option_value(ctx_args, "-h") or get_option_value(ctx_args, "--help")
+	if help then
+		npm_install_usage()
+		return
+	end
+
+	local package_src = nil
+	local force = get_option_value(ctx_args, "-f") or get_option_value(ctx_args, "--force")
+	local _local = get_option_value(ctx_args, "-l") or get_option_value(ctx_args, "--local")
+	if string.match(ctx_args[2] or "", '^[^-]+') then
+		package_src = ctx_args[2]
+	end
+
+	args.name = get_option_value(ctx_args, "--name=(.-)%s*$")
+	args.package_src = package_src or get_option_value(ctx_args, "--package_src=(.-)%s*$")
+	args.download_url = get_option_value(ctx_args, "--download_url=(.-)%s*$")
+	args.version = get_option_value(ctx_args, "-v=(.-)%s*$") or get_option_value(ctx_args, "--version=(.-)%s*$")
+	args.force = force
+
+	if not args.name and not args.package_src and not args.download_url then
+		--g_log.fatal("缺少包名参数")
+		npm_install_by_config(ctx)
+		return
+	end
+
+	local ok, package = npm:install_package(args)
+	if not ok then
+		g_log.fatal("安装失败")
+		return
+	end
+
+	if _local and g_file:is_exist(package_config_filename) then
+		local package_config = commonlib.LoadTableFromFile(package_config_filename)
+		if not package_config then
+			g_log.info("配置文件格式错误")
+			return
+		end
+		package_config.dependencies = package_config.dependencies or {}
+		package_config.dependencies[package.name] = package.version
+		commonlib.SaveTableToFile(package_config, package_config_filename, true)
+	end
+end
+
+local function npm_list_usage()
+	print([[
+nplc list [选项]
+描述:
+    打印已安装的包列表
+
+选项:
+--local    打印本地配置依赖   短选项 -l
+--help     打印帮助信息       短选项 -h
+
+示例:
+nplc list
+
+	]])
+end
+
+-- 列出已安装的包
+local function npm_list(ctx)
+	local ctx_args = ctx.arg or {}
+	local help = get_option_value(ctx_args, "-h") or get_option_value(ctx_args, "--help")
+	local _local = get_option_value(ctx_args, "-l") or get_option_value(ctx_args, "--local")
+	if help then
+		npm_list_usage()
+		return
+	end
+
+	local path = ctx.path
+	local package_config_filename = ctx.path .. "/package.lock"
+
+	if _local then
+		if not g_file:is_exist(package_config_filename) then
+			--g_log.info("package.lock配置文件不存在")
+			package_config_filename = ctx.path .. "/package.npl"
+			if not g_file:is_exist(package_config_filename) then
+				g_log.info("package.npl配置文件不存在")
+				return;
+			end
+		end
+		local package_config = commonlib.LoadTableFromFile(package_config_filename)
+		print("依赖包列表:")
+		for k, x in pairs(package_config.dependencies or {}) do
+			if type(x) == "table" then 
+				print("包名:" .. k .. " 版本:" .. (x.version or "unknow"))
+			else
+				print("包名:" .. k .. " 版本:" .. x)
+			end
+		end
+
+		return
+	end
+
+	local package_list = g_packages:get_all()
+	print("已安装的包列表:")
+	for _, x in ipairs(package_list or {}) do
+		print("包名:" .. x.name .. " 版本:" .. x.version)
+	end
+end
+
+-- 初始化加载包函数
+local function npm_init_load_package()
+	-- 包装加载包函数
+	local _load_package = NPL.load_package
+	NPL.load_package = function(name, version)
+		local package = g_packages:get({name = name, version = version})
+		local package_name = name
+		if package then
+			package_name = package.install_dir
+		end
+
+		--g_log.info("加载包:" .. package_name)
+		if type(_load_package) == "function" then
+			_load_package(package_name)
+		else 
+			NPL.load(package_name)
+		end
+		
+		return
+	end
+end
+
+-- 加载应用程序依赖包
+local function npm_loader(ctx)
+	-- 初始化加载包
+	npm_init_load_package()
+
+	local path = ctx.path
+	local package_config_filename = ctx.path .. "/package.lock"
+
+	if not g_file:is_exist(package_config_filename) then
+		--g_log.info("package.lock配置文件不存在")
+		package_config_filename = ctx.path .. "/package.npl"
+		if not g_file:is_exist(package_config_filename) then
+			--g_log.info("package.npl配置文件不存在")
+			return
+		end
+	end
+
+	local package_list = npm:get_package_list_by_filename(package_config_filename)
+	for _, x in ipairs(package_list) do
+		npm:load_package(x)
+		--g_log.info("加载包:" .. x.name .. " 版本:" .. x.version)
+		-- 返回值有问题
+		--if not npm:load_package(x) then
+			--g_log.warn("包:" .. x.name .. "加载失败")
+		--else 
+			--g_log.info("加载包:" .. x.name .. " 版本:" .. x.version)
+		--end
+	end
+end
+
+local function npm_compile_usage()
+	print([[
+nplc list [选项]
+描述:
+	解析包配置文件, 生成具有明确包依赖的lock文件
+
+选项:
+	无
+
+示例:
+nplc compile
+
+	]])
+end
+
+-- 编译package.npl文件成package.lock
+local function npm_compile(ctx)
+	local path = ctx.path
+	local package_config_filename = ctx.path .. "/package.npl"
+	local ctx_args = ctx.arg or {}
+	local help = get_option_value(ctx_args, "-h") or get_option_value(ctx_args, "--help")
+	if help then
+		npm_compile_usage()
+		return
+	end
+
+	local force = get_option_value(ctx_args, "-f") or get_option_value(ctx_args, "--force")
+
+	if not g_file:is_exist(package_config_filename) then
+		g_log.fatal("package.npl配置文件不存在")
+		return 
+	end
+
+	local package_lock_filename = ctx.path .. "/package.lock"
+	if not force and g_file:is_exist(package_lock_filename) then
+		g_log.fatal("package.lock配置文件已存在")
+		return;
+	end
+
+	local package_list = npm:get_package_list_by_filename(package_config_filename)
+	local content = commonlib.serialize2(package_list, 1)
+	if not g_file:write(package_lock_filename, content) then
+		g_log.fatal("写文件失败:" .. package_lock_filename)
+		return
+	end
+
+	g_log.info("已成功生成package.lock")
+end
+
+local function npm_package_usage()
+	print([[
+nplc list [选项]
+描述:
+	打包当前目录，使用当前目打包生成一个zip并上传至包管理服务器
+
+选项:
+--help     打印帮助信息  短选项 -h
+
+示例:
+nplc package
+
+	]])
+end
+
+-- 打包目录
+local function npm_package(ctx)
+	local path = ctx.path .. "/"
+	local package_config_filename = path .. "package.npl"
+	local ctx_args = ctx.arg or {}
+	local help = get_option_value(ctx_args, "-h") or get_option_value(ctx_args, "--help")
+	
+	if help then
+		npm_package_usage()
+		return
+	end
+
+	local package_config = commonlib.LoadTableFromFile(package_config_filename)
+	if not package_config or not package_config.name or not package_config.version then
+		g_log.fatal("包配置文件解析失败")
+		return
+	end
+
+	local zipname = path .. package_config.name .. ".zip"
+	local writer = ParaIO.CreateZip(zipname, "")
+	local filelist = {}
+	--g_log(zipname)
+
+	--commonlib.Files.Find(filelist, path, 1000, 1000000, "*.*", nil)
+	--for _, x in ipairs(filelist) do
+		--if x.fileattr == 0 then
+			--writer:ZipAdd(package_config.name .. "/" .. x.filename, path .. x.filename)
+		--elseif x.fileattr == 16 then
+			--writer:ZipAddFolder(package_config.name .. "/" .. x.filename)
+		--end
+	--end
+	--writer:AddDirectory(package_config.name .. "/", path .. "/*.*", 10000)
+	writer:AddDirectory(package_config.name .. "/", "*.*", 10000)
+	writer:close()
+
+	local params = {
+		name = package_config.name,
+		version = package_config.version,
+		username = "xiaoyao",
+		content = encode_base64(g_file:read(zipname) or ""),
+		--content = "hello owrld",
+	}
+
+	local res = get_url({
+		method = "POST",
+		url = "http://localhost:8888/api/v1/wikimod/npl_package_manager/package/upload",
+		data = params,
+		json = true,
+	})
+
+	if res.status_code ~= 200 then
+		g_log.fatal("上传包失败:", res.data)
+		return
+	end
+	local data = res.data
+
+	if data and data.error and data.error.id == 0 then
+		g_log("包已成功上传至服务器")
+	else 
+		g_log.fatal(data)
+		return
+	end
+end
+
+local function npm_usage()
+	print([[
+nplc package cmdname [args] [options]
+描述:
+    NPL包管理器命令
+
+命令:
+init     包初始化 生成配置文件
+install  安装包
+remove   删除包
+compile  编译包配置 生成具体版本包依赖配置文件
+package  生成安装包并上传至包服务器
+
+	]])
+end
+
+-- 入口函数
+return function(ctx)
+	local args = ctx.arg
+	
+	local package_args = {}
+	local cmd_name = args[1]
+	--g_log(ctx)
+	if cmd_name == "install" then
+		-- npm install 安装包
+		npm_install(ctx)
+	elseif cmd_name == "init" then
+		-- npm init 构建项目package文件
+		npm_init(ctx)
+	elseif cmd_name == "list" then
+		-- npm list 列出已安装
+		npm_list(ctx)
+	elseif cmd_name == "remove" then
+		-- npm remove 移除包
+		npm_remove(ctx)
+	elseif cmd_name == "compile" then
+		--  npm compile 编译包配置
+		npm_compile(ctx)
+	elseif cmd_name == "loader" then
+		-- npm loader 加载包配置
+		npm_loader(ctx)
+	elseif cmd_name == "package" then
+		npm_package(ctx)
+	else
+		npm_usage()
+	end
+end
+
+
+
+
+

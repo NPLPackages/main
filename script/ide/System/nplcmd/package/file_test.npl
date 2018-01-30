@@ -1,0 +1,9 @@
+
+NPL.load("(gl)script/ide/commonlib.lua")
+NPL.load("(gl)script/ide/System/os/GetUrl.lua")
+NPL.load("(gl)script/ide/Files.lua")
+
+local file = NPL.load("file.npl")
+
+
+file:write("testfile.txt", "hello world")

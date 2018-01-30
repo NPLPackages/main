@@ -1,0 +1,110 @@
+local common = {}
+
+-- 字符串比较
+function common.string_compare(str1, str2)
+	for i = 1, #str1, 1 do
+		local n1 = string.byte(str1, i, i) or 0
+		local n2 = string.byte(str2, i, i) or 0
+		if n1 > n2 then
+			return 1
+		end
+		if n1 < n2 then
+			return -1
+		end
+	end
+
+
+	if #str1 > #str2 then
+		return 1
+	end
+
+	if #str1 < #str2 then
+		return -1
+	end
+
+	return 0
+end
+
+--local requests = require("requests")
+
+--function get_url(params)
+	--local method = params.method or "GET"
+
+	--if params.headers then
+		--params.headers['Content-Type'] = params.headers['Content-Type'] or "application/json"
+	--else
+		--params.headers = {['Content-Type'] = "application/json"}
+	--end
+
+	--if string.lower(method) == "get" then
+		--params.params = params.data
+	--end
+	--local res = requests.request(method, params)
+
+	--res.data = res.json() or res.text
+
+	--return res
+--end
+
+function common.get_url(params)
+	local method = params.method or "GET"
+
+	if string.upper(method) == "GET" then
+		params.qs = params.data
+	else
+		params.form = params.data
+	end
+	
+	--if params.headers then
+		--params.headers['Content-Type'] = params.headers['Content-Type'] or "application/json"
+	--else
+		--params.headers = {['Content-Type'] = "application/json"}
+	--end
+
+	local _, data = System.os.GetUrl(params)
+	data.status_code = data.rcode
+	return data
+end
+
+
+function common.encode_base64(text)
+	--return Encoding.base64(text)
+	return ParaMisc.base64(text)
+end
+
+function common.decode_base64(text)
+	--return Encoding.unbase64(text)
+	return ParaMisc.unbase64(text)
+end
+
+function common.get_npl_package_path()
+	local npl_package_path = os.getenv("NPL_PACKAGES")
+	local dirname = ParaIO.GetCurDirectory(21)
+	local filelist = {}
+
+	-- 优先取环境变量中值
+	if npl_package_path then
+		if not string.match(npl_package_path, "/$") then
+			npl_package_path = npl_package_path .. "/"
+		end
+		return npl_package_path
+	end
+
+	while true do
+		filelist = {}
+		commonlib.Files.Find(filelist, dirname, 1000, 1000000, "npl_packages", nil)
+		for _, x in ipairs(filelist) do
+			if x.filename == "npl_packages" then
+				return dirname .. "npl_packages/packages/"
+			end
+		end
+		if not string.match(dirname, "[^/]+/?$") then
+			break
+		end
+		dirname = string.gsub(dirname, "[^/]+/?$", "")
+	end
+
+	return dirname .. "npl_packages/"
+end
+
+return common

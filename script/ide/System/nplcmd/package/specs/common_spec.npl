@@ -1,0 +1,35 @@
+
+local common = NPL.load("(gl)script/ide/System/nplcmd/package/common.npl")
+
+describe(
+    "package common library",
+    function()
+        context(
+            "#get url",
+            function()
+                it(
+                    "should return url data",
+                    function()
+                        local params = {
+                            method = "GET",
+                            url = "www.baidu.com"
+                        }
+                        local data = common.get_url(params)
+                        assert_equal(data.status_code, 200)
+                    end
+                )
+                it(
+                    "should return error code",
+                    function()
+                        local params = {
+                            method = "GET",
+                            url = "error.adb231aa-1b9f-49f1-a086-b11347180bbb.abcderror"
+                        }
+                        local data = common.get_url(params)
+                        assert_not_equal(data.status_code, 200)
+                    end
+                )
+            end
+        )
+    end
+)

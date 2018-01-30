@@ -1,0 +1,419 @@
+
+local common = NPL.load("./common.npl")
+local g_log = common.log
+local g_packages = common.packages
+local g_file = common.file
+local g_lfs = common.lfs
+local g_config = common.config
+local g_package_path = common.config.global_package_path
+local string_compare = common.string_compare
+local get_url = common.get_url
+local encode_base64 = common.encode_base64
+local decode_base64 = common.decode_base64
+local npm = {}
+
+-- 解析包
+local function parse_package_src(package_src)
+	--local package_src = {type = nil, package_src = nil}
+	if string.match(package_src, "^http") then	
+		return "download_url"
+	end
+
+	if string.match(package_src, "^http.*package%.npl$") then
+		return "package_config_url"
+	end
+
+	if string.match(package_src, "^[^/]*/[^/]*$") then
+		return "github"
+	end
+
+	return "server"
+end
+
+-- 清理安装过程的垃圾文件
+local function clean_tmp_package(opt)
+
+	ParaIO.DeleteFile(opt.package_zip_file)
+end
+
+
+-- 通过url下载包
+local function download_package_by_url(package_args)
+	local download_url = package_args.download_url
+	local package_name = package_args.name or os.time()
+	local result = {}
+	g_log.info("开始下载安装包, 请耐心等待...")
+	local res = get_url({
+		method = "GET",
+		url = download_url,
+	})	
+
+	if res.status_code ~= 200 then
+		g_log.fatal("download package failed: " .. download_url)
+		return false
+	end
+
+	local data = res.data
+	--g_log(data)
+	
+	local tmp_file_dir = g_package_path .. ".tmp/"
+	local tmp_file = tmp_file_dir .. package_name .. ".zip";
+	--g_log.info("临时目录:", tmp_file_dir)
+	if not g_file:is_exist(tmp_file_dir) then
+		local ok, err = ParaIO.CreateDirectory(tmp_file_dir)
+		if not ok then
+			g_log.fatal("创建临时目录失败:" .. err)
+			return false
+		end
+	end
+
+	g_log.info("成功下载安装包:" .. download_url)
+	g_log.info("创建临时文件:", tmp_file)
+	if not g_file:write(tmp_file, data) then
+		g_log.fatal("无法创建临时文件:" .. tmp_file)
+		return false
+	end
+
+	result.package_zip_file = tmp_file
+
+	--if not is_parse_package_config then
+		--return true, tmp_file
+	--end
+
+	if(ParaAsset.OpenArchive(tmp_file, true)) then
+		local filesOut = {};
+		--commonlib.Files.Find(filesOut, "", 0, 10000, ":package.npl", zipPath);
+		commonlib.Files.Find(filesOut, "", 0, 10000, ":^[^/]*/?package.npl$", tmp_file);
+		if #filesOut == 0 then
+			g_log.fatal("安装包内没有配置文件")
+			ParaAsset.CloseArchive(tmp_file);
+			return false
+		end
+		--g_log(filesOut)
+		local item = filesOut[1]
+		for _, x in ipairs(filesOut) do
+			if #x.filename < #item.filename then
+				item = x
+			end
+		end
+
+		local file = ParaIO.open(tmp_file_dir .. item.filename, "r")
+		if(file:IsValid()) then
+			local content = file:GetText();
+			file:close();
+
+			result.package_config_filename = item.filename
+			result.package_config = content
+			ParaAsset.CloseArchive(tmp_file);
+			--g_log(binData)
+			return true, result
+		end
+		ParaAsset.CloseArchive(tmp_file);
+
+		g_log.fatal("无效配置文件")
+		return false
+	end
+
+	g_log.fatal("无法打开安装包")
+	return false
+end
+
+-- 获取package config 通过url
+local function get_package_config_by_url(url)
+	g_log.info("package config url:" .. url)
+	local res = get_url({
+		method = "GET",
+		url = url,
+	})	
+
+	if res.status_code ~= 200 then
+		g_log.fatal("download package config failed: " .. download_url)
+		return false
+	end
+	
+	return true, res.data
+end
+
+-- 用git安装包
+local function install_package_by_zip(package)
+	local package_config = package.package_config
+	if not package_config.name or not package_config.version then
+		g_log.fatal("包配置文件错误")
+		return false
+	end
+
+	local package_dir = g_package_path .. package_config.name .. "/" .. package_config.version .. "/"
+	package.install_dir = package_dir
+	g_log.info("包路径:" .. package_dir)
+	if g_file:is_exist(package_dir) then
+		g_log.info("包已存在, 删除旧目录...")
+		commonlib.Files.DeleteFolder(package_dir)
+		--return false
+	end
+
+	local ok = ParaIO.CreateDirectory(package_dir)
+	if not ok then
+		g_log.fatal("创建包目录失败")
+		return false
+	end
+
+	--g_log.info("包配置文件:" .. package.package_config_filename)
+	local package_config_filename = package.package_config_filename
+	local dir_prefix = string.match(package_config_filename, "(.*)package.npl$") or ""
+	local package_name = package_config.name
+	local tmp_file = package.package_zip_file
+	local tmp_file_dir = string.gsub(tmp_file, "[^/]*$", "")
+	if(ParaAsset.OpenArchive(tmp_file, true)) then
+		local filesOut = {};
+		commonlib.Files.Find(filesOut, "", 0, 100000, ":.", tmp_file);
+		for _,item in ipairs(filesOut) do 
+			local filename = package_dir .. string.sub(item.filename, #dir_prefix + 1)
+			if item.filesize > 0 then
+				local file_dir = string.gsub(filename, "[^/]*$", "")
+				ParaIO.CreateDirectory(file_dir)
+				local file = ParaIO.open(tmp_file_dir .. item.filename, "r")
+				if file:IsValid() then
+					local content = file:GetText(0, -1);
+					file:close();
+
+					g_log.info("写文件:", filename)
+					--g_log("文件内容", binData)
+					if not g_file:write(filename, content) then
+						g_log.warn("写文件出错:" .. filename)
+					end
+				end
+			else
+				-- dir
+			end
+		end
+		ParaAsset.CloseArchive(tmp_file);
+	else 
+		g_log.fatal("打开包文件出错....")
+		return false
+	end
+
+	-- 加载执行包安装脚本
+	local install_file = package_dir .. "install.lua"
+	if g_file:is_exist(install_file) then
+		pcall(function()
+			NPL.load(install_file)
+		end)
+	end
+	return true
+end
+
+-- 下载包
+function npm:download_package(package_args)
+	local package_src = package_args.download_url or package_args.package_src or package_args.name
+	local package, package_config, package_zip_file, download_url = nil
+	local package_src_type = parse_package_src(package_src)
+
+	if package_src_type == "download_url" then
+		download_url = package_src
+	--elseif package_src_type == "package_config_url" then
+		--_, package_config = get_package_config_by_url(package_name)
+	elseif package_src_type == "github" then
+		--local url = "https://raw.githubusercontent.com/" .. package_name .. "/master/package.npl"
+		download_url = "https://codeload.github.com/" .. package_src .. "/zip/master"
+	elseif package_src_type == "server" then
+		download_url = "http://localhost:8888/api/v1/wikimod/npl_package_manager/package/get_zip?name=" .. package_src
+		if package_args.version then
+			download_url = download_url .. "&verson=" .. package_args.version
+		end
+	else 
+		g_log.fatal("无法解析包名")
+		return false
+	end
+
+	package_args.download_url = download_url
+	_, package = download_package_by_url(package_args)
+	if not package then
+		g_log.fatal("无法下载解析安装包")
+		return false
+	end
+
+	package_zip_file = package.package_zip_file
+	package_config = package.package_config
+	if not package_config or not package_zip_file then
+		if package_zip_file then
+			ParaIO.DeleteFile(package_zip_file)
+		end
+		g_log.fatal("无法获取包或无法解析包配置文件...", package_config, package_zip_file)
+		return false
+	end
+
+	package_config = NPL.LoadTableFromString(package_config)
+	
+	if not package_config then
+		ParaIO.DeleteFile(package_zip_file)
+		g_log.fatal("包配置文件格式错误")
+		g_log.info(package.package_config)
+		return false
+	end
+
+	local opt = {
+		package_config = package_config,
+		package_config_filename = package.package_config_filename,
+		package_src = package_src,
+		download_url = download_url,
+		package_src_type = package_src_type,
+		package_zip_file = package_zip_file,
+	}
+
+	return true, opt
+end
+
+-- 安装包
+function npm:install_package(package_args)
+	local package = nil
+	
+	-- 检测是否已安装
+	if not package_args.force and g_packages:is_exist(package_args) then
+		g_log.info("包已安装...")
+		package = g_packages:get(package_args)
+		return true, package
+	end
+
+	g_log.info("开始安装包:" .. (package_args.name or package_args.package_src or package_args.download_url))
+
+	-- 下载包, 并读取包配置
+	local _, package = self:download_package(package_args)
+	if not package or not package.package_config then
+		g_log.fatal("下载解析包失败")
+		return false
+	end
+	local package_config = package.package_config
+	--g_log.info(package_config)
+	-- 安装包依赖
+	local dependencies = package_config.dependencies or {}
+	local args = {}
+	for key, dep in pairs(dependencies or {}) do
+		args.name = key
+		if type(dep) == "table" then
+			args.package_src = dep.package_src
+			args.download_url = dep.download_url
+			args.version = dep.version
+		else 
+			args.version = dep
+		end
+		g_log.info("依赖包:" .. key)
+
+		args.force = package_args.force
+		local ok = self:install_package(args)
+		if not ok then
+			g_log.fatal("安装包依赖失败")
+			clean_tmp_package(package)
+			return false
+		end
+	end
+
+	-- 检测是否已安装
+	if not package_args.force and g_packages:is_exist(package_config) then
+		g_log.info(package_config.name .. "包已安装...")
+		clean_tmp_package(package)
+		package = g_packages:get(package_config)
+		return true, package
+	end
+
+	-- 安装包
+	local ok = install_package_by_zip(package)
+	if ok then
+		g_packages:insert_package({
+			name = package_config.name,
+			version = package_config.version,
+			package_src = package.package_src,
+			download_url = package.download_url,
+			install_dir = package.install_dir,
+			instll_date = os.date("%Y-%m-%d"),
+		})
+		g_packages:save()
+		g_log.info("成功安装包:" .. package_config.name)
+	else
+		g_log.fatal("安装失败")
+		clean_tmp_package(package)
+		return false
+	end
+
+	clean_tmp_package(package)
+
+	package = g_packages:get(package_config)
+	return true, package
+end
+
+-- 加载包
+function npm:load_package(package)
+	return NPL.load(package.install_dir)
+end
+
+-- 加载配置文件
+function npm:get_package_config_by_filename(package_config_filename)
+	local file = io.open(package_config_filename, "r")
+	if not file then
+		g_log.warn("打开包配置文件失败:" .. package_config_filename)
+		return
+	end
+
+	local package_config_content = file:read("*a")
+	file:close()
+
+	local package_config = NPL.LoadTableFromString(package_config_content)
+	if not package_config then
+		g_log.warn("包配置文件格式错误", package_config_filename, package_config_content)
+		return
+	end
+
+	return package_config
+end
+
+-- 获取全部依赖包
+function npm:get_package_list_by_filename(package_config_filename)
+	local package_list = {}
+	local package_config = self:get_package_config_by_filename(package_config_filename)
+
+	if not package_config then
+		return 
+	end
+
+	local dependencies = package_config.dependencies or {}
+	local package_args, package = {}
+	for key, value in pairs(dependencies or {}) do
+		package_args.name = key
+		if type(dep) == "table" then
+			package_args.version = dep.version
+		else 
+			package_args.version = dep
+		end
+		
+		package = g_packages:get(package_args)	
+
+		if not package then
+			g_log.warn("找不到安装包:" .. package_args.name .. " 版本:" .. (package_args.version or "nil"))
+		else
+			local tmp_list = self:get_package_list_by_filename(package.install_dir .. "package.npl")
+			for _, x in ipairs(tmp_list or {}) do
+				package_list[#package_list+1] = x
+			end
+			package_list[#package_list+1] = package
+		end
+	end
+
+	local map, list, tmp, index = {}, {}
+	-- 去重选择相同包的最高版本
+	for _, x in ipairs(package_list) do 
+		index = map[x.name]
+		if not index then
+			list[#list+1] = x
+			map[x.name] = #list
+		else 
+			tmp = list[index]
+			-- 存在高版本则替换
+			if string_compare(tmp.version, x.version) < 0 then
+				list[index] = x
+			end
+		end
+	end
+
+	return list
+end
+
+return npm

@@ -1,0 +1,7 @@
+demo/
+npl_packages/
+test/
+tmp/
+assets.log
+log.txt
+*.zip

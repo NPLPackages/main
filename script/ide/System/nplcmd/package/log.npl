@@ -1,0 +1,101 @@
+local common = NPL.load("./common.npl")
+local log = {}
+
+local function console(obj, out)
+	out = out or print
+	outstr = {}
+
+	local outlist = {}
+	function _print(obj, level, flag)
+		-- 避免循环输出
+		local obj_str = tostring(obj)
+		for _, str in ipairs(outlist) do
+			if str == obj_str then
+				return
+			end
+		end
+		outlist[#outlist+1] = obj_str
+
+		level = level or 0
+		local indent_str = ""
+		for i = 1, level do
+		  indent_str = indent_str.."    "
+		end
+	  
+		if not flag then
+			table.insert(outstr, indent_str.."{")
+		end
+	  
+		for k,v in pairs(obj) do
+			if type(v) == "table" then 
+				table.insert(outstr, string.format("%s    %s = {", indent_str, tostring(k)))
+				_print(v, level + 1, true)
+			elseif type(v) == "string" then
+				table.insert(outstr, string.format('%s    %s = "%s"', indent_str, tostring(k), tostring(v)))
+			else
+				table.insert(outstr, string.format("%s    %s = %s", indent_str, tostring(k), tostring(v)))
+			end
+		end
+		table.insert(outstr, indent_str.."}")
+	end
+	
+	if type(obj) == "table" then
+		_print(obj)
+		out(table.concat(outstr, "\n"))
+	--elseif type(obj) == "string" then
+		--out('"' .. obj .. '"')
+	else
+		out(tostring(obj))
+	end
+end
+
+local function get_file_pos(dept)
+	if not common.config.debug then
+		return ""
+	end
+
+	local info = debug.getinfo(dept)
+	local pos =  info.source .. ":" .. tostring(info.currentline)
+
+	return pos
+end
+
+-- 控制台输出
+function log.console(...)
+	local count = select("#", ...)
+	local out = {}
+	for i=1, count,1 do
+		console((select(i, ...)), function(msg) table.insert(out, msg) end)
+	end
+
+	print(table.concat(out, " "))
+end
+
+
+function log.debug(...)
+	local file_pos = get_file_pos(3)
+	log.console("DEBUG", file_pos, ...)
+end
+
+function log.info(...)
+	local file_pos = get_file_pos(3)
+	log.console("INFO", file_pos, ...)
+end
+
+function log.warn(...)
+	local file_pos = get_file_pos(3)
+	log.console("WARN", file_pos, ...)
+end
+
+function log.fatal(...)
+	local file_pos = get_file_pos(3)
+	log.console("FATAL", file_pos, ...)
+end
+
+log = setmetatable(log, {
+	__call = function(self, ...)
+		log.console(get_file_pos(3), ...)
+	end,
+})
+
+return log
