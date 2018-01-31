@@ -1,13 +1,10 @@
-
 local config = {}
 
-
--- ParaIO.GetCurDirectory(21)
-local global_package_path = "/usr/local/lib/npl_packages/"
-config.global_package_path = global_package_path
-config.config_filename = global_package_path .. ".config.npl"
-config.package_filename = global_package_path .. ".package.list"
+config.global_package_path = NPL.nplc_package_path()
+config.config_filename = config.global_package_path .. ".config.npl"
+config.package_filename = config.global_package_path .. ".package.list"
 config.debug = false
+
 -- 用户账号
 --config.username = "xiaoyao"
 --config.password = "password"

@@ -3,7 +3,6 @@ title: nplc extension
 author: chenqh
 date: 2018/1/10
 ]]
-
 local system_print = print
 local system_log = log
 local write = io.write
@@ -19,14 +18,18 @@ log = function(msg)
     write("\n")
 end
 
--- local npl_package_path = os.getenv("NPL_PACKAGES")
--- if npl_package_path then NPL.load(npl_package_path .. "/") end
-NPL.load_package = function(package)
-    local npl_package_path = os.getenv("NPL_PACKAGES")
-    if npl_package_path then
-        local full_path = format("%s/%s/", npl_package_path, package)
-        return NPL.load(full_path)
-    else
-        return NPL.load(package)
+NPL.nplc_package_path = function()
+    return NPL.nplc_path() .. "packages/"
+end
+
+NPL.nplc_path = function()
+    local path = os.getenv("NPLC_PATH")
+    if not path then
+        local home = os.getenv("HOME")
+        if not home then
+            error("Can not load NPLC_PATH from your env. ")
+        end
+        path = home .. "/.nplc/"
     end
+    return path
 end

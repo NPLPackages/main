@@ -3,136 +3,136 @@ local packages = {}
 
 -- 构造实例
 function packages:new()
-	local obj = {}
+    local obj = {}
 
-	setmetatable(obj, self)
-	self.__index = self
+    setmetatable(obj, self)
+    self.__index = self
 
-	return obj
+    return obj
 end
 
 -- 加载已安装的包的列表
 function packages:load(path)
-	self.package_list_path = path
-	self.package_list = commonlib.LoadTableFromFile(path) or {}  -- 加载已安装的包的列表
-	
-	return self.package_list
+    self.package_list_path = path
+    self.package_list = commonlib.LoadTableFromFile(path) or {} -- 加载已安装的包的列表
+
+    return self.package_list
 end
 
 -- 添加包
 function packages:insert_package(package)
-	if not package.name or not package.version then
-		return 
-	end
+    if not package.name or not package.version then
+        return
+    end
 
-	-- 移除已存在的配置信息
-	for i, x in ipairs(self.package_list or {}) do
-		if x.name == package.name and x.version == package.version then
-			table.remove(self.package_list, i)
-			break
-		end
-	end
-	
-	-- 添加新信息
-	table.insert(self.package_list, package)
+    -- 移除已存在的配置信息
+    for i, x in ipairs(self.package_list or {}) do
+        if x.name == package.name and x.version == package.version then
+            table.remove(self.package_list, i)
+            break
+        end
+    end
+
+    -- 添加新信息
+    table.insert(self.package_list, package)
 end
 
 -- 删除包
 function packages:delete_package(package)
-	local pkg = nil
-	for i, x in ipairs(self.package_list or {}) do
-		if x.name == package.name and x.version == package.version then
-			table.remove(self.package_list, i)
-			pkg = x
-			break
-		end
-	end
+    local pkg = nil
+    for i, x in ipairs(self.package_list or {}) do
+        if x.name == package.name and x.version == package.version then
+            table.remove(self.package_list, i)
+            pkg = x
+            break
+        end
+    end
 
-	if not pkg then
-		return
-	end
+    if not pkg then
+        return
+    end
 
-	--local dirname = string.gsub(pkg.install_dir, "/$", "")
-	local dirname = pkg.install_dir 
-	commonlib.Files.DeleteFolder(dirname)
+    --local dirname = string.gsub(pkg.install_dir, "/$", "")
+    local dirname = pkg.install_dir
+    commonlib.Files.DeleteFolder(dirname)
 end
 
 -- 通过包名获取
 function packages:get_by_name(package_name)
-	local list = {}
-	for i, x in ipairs(self.package_list or {}) do
-		if x.name == package_name then
-			table.insert(list, x)
-		end
-	end
+    local list = {}
+    for i, x in ipairs(self.package_list or {}) do
+        if x.name == package_name then
+            table.insert(list, x)
+        end
+    end
 
-	return list
+    return list
 end
 
 -- 获取全部包
 function packages:get_all()
-	return self.package_list or {}
+    return self.package_list or {}
 end
 
 -- 获取包
-function packages:get_by_name_version(params) 
-	for i, x in ipairs(self.package_list or {}) do
-		if x.name == params.name and x.version == params.version then
-			return x
-		end
-	end
+function packages:get_by_name_version(params)
+    for i, x in ipairs(self.package_list or {}) do
+        if x.name == params.name and x.version == params.version then
+            return x
+        end
+    end
 
-	return nil
+    return nil
 end
 
 -- 获取包
-function packages:get(package) 
-	local result = nil
-	for i, x in ipairs(self.package_list or {}) do
-		if x.name == package.name then
-			if package.version then
-				if package.version == x.version then
-					return x
-				end
-			else
-				if not result then
-					result = x
-				elseif common.string_compare(result.version, x.version) < 0 then
-					result = x
-				end
-			end
-		end
-	end
+function packages:get(package)
+    local result = nil
+    for i, x in ipairs(self.package_list or {}) do
+        if x.name == package.name then
+            if package.version then
+                if package.version == x.version then
+                    return x
+                end
+            else
+                if not result then
+                    result = x
+                elseif result.version <= x.version < 0 then
+                    result = x
+                end
+            end
+        end
+    end
 
-	return result
+    return result
 end
 
 -- 判断包是否存在
 function packages:is_exist(package)
-	if not package.name or not package.version then
-		return false
-	end
+    if not package.name or not package.version then
+        return false
+    end
 
-	for _, x in ipairs(self.package_list or {}) do
-		if x.name == package.name and x.version == package.version then
-			return true
-		end
-	end
-	return false
+    for _, x in ipairs(self.package_list or {}) do
+        if x.name == package.name and x.version == package.version then
+            return true
+        end
+    end
+    return false
 end
 
 function packages:save()
-	--return commonlib.SaveTableToFile(self.package_list, self.package_list_path, true)
-	local str = commonlib.serialize2(self.package_list, 1)
-	local file = io.open(self.package_list_path, "w")
-	if not file then
-		return false
-	end
+    --return commonlib.SaveTableToFile(self.package_list, self.package_list_path, true)
+    local str = commonlib.serialize2(self.package_list, 1)
+    local file = io.open(self.package_list_path, "w")
+    if not file then
+        return false
+    end
 
-	file:write(str)
-	file:close()
+    file:write(str)
+    file:close()
 
-	return true
+    return true
 end
 
 return packages

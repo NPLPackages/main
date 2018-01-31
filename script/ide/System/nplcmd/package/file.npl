@@ -1,82 +1,77 @@
-
 local g_lfs = commonlib.Files.GetLuaFileSystem()
 
 local file = {}
 
 -- 判断文件是否存在
 function file:is_exist(filename)
-	return (g_lfs.attributes(filename))
+    return (g_lfs.attributes(filename))
 end
 
 -- lua 读文件
 --function file:read(filename)
-	--local f = io.open(filename, "r")
+--local f = io.open(filename, "r")
 
-	--if not f then
-		--return 
-	--end
+--if not f then
+--return
+--end
 
-	--local content = f:read("*a")
+--local content = f:read("*a")
 
-	--f:close()
+--f:close()
 
-
-	--return content
+--return content
 --end
 
 ---- lua 写文件
 --function file:write(filename, content)
-	--local f = io.open(filename, "w")
+--local f = io.open(filename, "w")
 
-	--if not f then
-		--return false
-	--end
+--if not f then
+--return false
+--end
 
-	--local content = f:write(content)
+--local content = f:write(content)
 
-	--f:close()
+--f:close()
 
-
-	--return true
+--return true
 --end
 
 -- npl 读文件
-function file:read(filename) 
-	local f = ParaIO.open(filename, "r")
-	if not f:IsValid() then
-		return
-	end
+function file:read(filename)
+    local f = ParaIO.open(filename, "r")
+    if not f:IsValid() then
+        return
+    end
 
-	local content = f:GetText(0, -1)
-	f:close()
+    local content = f:GetText(0, -1)
+    f:close()
 
-
-	return content
+    return content
 end
 
 -- npl 写文件
 function file:write(filename, content)
-	local f = ParaIO.open(filename, "w")
-	if not f:IsValid() then
-		return false
-	end
+    local f = ParaIO.open(filename, "w")
+    if not f:IsValid() then
+        return false
+    end
 
-	f:WriteString(content, #content)
-	
-	f:close()
+    f:WriteString(content, #content)
 
-	return true
+    f:close()
+
+    return true
 end
 
 -- 读表
 function file:read_table(filename)
-	return commonlib.LoadTableFromFile(filename)
+    return commonlib.LoadTableFromFile(filename)
 end
 
 -- 写表
 function file:write_table(filename, t)
-	return commonlib.SaveTableToFile(t, filename, true)
+    return commonlib.SaveTableToFile(t, filename, true)
 end
 
 return file
-
