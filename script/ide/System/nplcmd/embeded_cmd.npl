@@ -10,12 +10,9 @@ local bootstrapper = NPL.load("(gl)script/ide/System/nplcmd/embed/bootstrapper.n
 local package = NPL.load("(gl)script/ide/System/nplcmd/package/main.npl")
 
 -- 包管理接口
-local function npl_package_manager(cmdName)
-	return function(ctx) 
-		ctx.arg = ctx.arg or {}
-		table.insert(ctx.arg, 1, cmdName)
-		--log(ctx)
-		package(ctx)
+local function npl_package_manager(cmd)
+	return function(ctx)
+		package(cmd, ctx)
 	end
 end
 

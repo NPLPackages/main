@@ -59,7 +59,9 @@ return function(ctx)
         return
     end
 
-    local boot = NPL.load(ctx.path .. "/boot.lua")
+    local package = NPL.load("(gl)script/ide/System/nplcmd/package/main.npl")
+    package("loader", ctx) -- load packages before boot
+    local boot = NPL.load("boot.lua")
     if type(boot) == "function" then
         boot(parse_params(ctx.arg))
         ctx.keep_alive = true

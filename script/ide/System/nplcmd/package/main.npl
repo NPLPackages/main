@@ -79,7 +79,7 @@ local function npm_init(ctx)
         return
     end
 
-    local package_name = string.match(ctx_args[2] or "", "^[%w%d]+$")
+    local package_name = string.match(ctx_args[1] or "", "^[%w%d]+$")
     force = get_option_value(ctx_args, "-f") or get_option_value(ctx_args, "--force")
     args.name = package_name or get_option_value(ctx_args, "--name=(.-)%s*$")
     args.version =
@@ -152,7 +152,7 @@ local function npm_remove(ctx)
         return
     end
 
-    local package_name = string.match(ctx_args[2] or "", "^[%w%d]+$")
+    local package_name = string.match(ctx_args[1] or "", "^[%w%d]+$")
     local all = get_option_value(ctx_args, "-a") or get_option_value(ctx_args, "--all")
     local _local = get_option_value(ctx_args, "-l") or get_option_value(ctx_args, "--local")
     args.name = package_name or get_option_value(ctx_args, "--name=(.-)%s*$")
@@ -275,8 +275,8 @@ local function npm_install(ctx)
     local package_src = nil
     local force = get_option_value(ctx_args, "-f") or get_option_value(ctx_args, "--force")
     local _local = get_option_value(ctx_args, "-l") or get_option_value(ctx_args, "--local")
-    if string.match(ctx_args[2] or "", "^[^-]+") then
-        package_src = ctx_args[2]
+    if string.match(ctx_args[1] or "", "^[^-]+") then
+        package_src = ctx_args[1]
     end
 
     args.name = get_option_value(ctx_args, "--name=(.-)%s*$")
@@ -396,7 +396,7 @@ local function npm_loader(ctx)
     -- 初始化加载包
     npm_init_load_package()
 
-    local path = ctx.path
+    local path = ctx.path or g_lfs.currentdir()
     local package_config_filename = ctx.path .. "/package.lock"
 
     if not g_file:is_exist(package_config_filename) then
@@ -411,7 +411,8 @@ local function npm_loader(ctx)
 	local packages = npm:get_package_list_by_filename(package_config_filename)
 	NPL.PackageManager.init(packages)
     for _, x in ipairs(packages) do
-		npm:load_package(x)
+        npm:load_package(x)
+        -- g_log.info(format("load package %s v~%s", x.name, x.version))
     end
 end
 
@@ -567,31 +568,29 @@ package  生成安装包并上传至包服务器
 end
 
 -- 入口函数
-return function(ctx)
+return function(cmd, ctx)
     local args = ctx.arg
 
-    local package_args = {}
-    local cmd_name = args[1]
     --g_log(ctx)
-    if cmd_name == "install" then
+    if cmd == "install" then
         -- npm install 安装包
         npm_install(ctx)
-    elseif cmd_name == "init" then
+    elseif cmd == "init" then
         -- npm init 构建项目package文件
         npm_init(ctx)
-    elseif cmd_name == "list" then
+    elseif cmd == "list" then
         -- npm list 列出已安装
         npm_list(ctx)
-    elseif cmd_name == "remove" then
+    elseif cmd == "remove" then
         -- npm remove 移除包
         npm_remove(ctx)
-    elseif cmd_name == "compile" then
+    elseif cmd == "compile" then
         --  npm compile 编译包配置
         npm_compile(ctx)
-    elseif cmd_name == "loader" then
+    elseif cmd == "loader" then
         -- npm loader 加载包配置
         npm_loader(ctx)
-    elseif cmd_name == "package" then
+    elseif cmd == "package" then
         npm_package(ctx)
     else
         npm_usage()
