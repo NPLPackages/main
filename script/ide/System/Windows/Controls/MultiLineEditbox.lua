@@ -143,6 +143,12 @@ function MultiLineEditbox:GetCurLineBackgroundColor()
 	end
 end
 
+function MultiLineEditbox:setLinePosColor(line, begin_pos, end_pos, font, color, scale)
+	if(self.viewport) then
+		self.viewport:setLinePosColor(line, begin_pos, end_pos, font, color, scale)
+	end
+end
+
 function MultiLineEditbox:SetSelectedBackgroundColor(color)
 	if(self.viewport) then
 		self.viewport:SetSelectedBackgroundColor(color);
