@@ -9,6 +9,7 @@ Use Lib:
 NPL.load("(gl)script/ide/math/Quaternion.lua");
 local Quaternion = commonlib.gettable("mathlib.Quaternion");
 echo({Quaternion:new():FromEulerAngles(1.57, 1.1, 1.1):ToEulerAngles()});
+echo({Quaternion:new():FromEulerAnglesSequence(1.57, 1.1, 1.1, "zxy"):ToEulerAnglesSequence("zxy")});
 local q1 = Quaternion:new():identity();
 local q2 = Quaternion:new():identity();
 local q = q1 * q2;
@@ -166,16 +167,10 @@ function Quaternion:TransformAxisByMatrix(mat)
 	return self:FromAngleAxis(angle, axis);
 end
 
--- Conversion Euler to Quaternion
+-- Conversion Euler to Quaternion, see also self:FromEulerAnglesSequence
 -- @param heading(yaw), attitude(roll), bank(pitch)
 -- @returns: self
 function Quaternion:FromEulerAngles(heading, attitude, bank) 
-	-- same as following code
-	--local q1 = Quaternion:new():FromAngleAxis(self:GetField("yaw"), vector3d.unit_y);
-	--local q2 = Quaternion:new():FromAngleAxis(self:GetField("pitch"), vector3d.unit_x);
-	--local q3 = Quaternion:new():FromAngleAxis(self:GetField("roll"), vector3d.unit_z);
-	--self.rot:set(q1*q2*q3);
-
     -- Assuming the angles are in radians.    
     local c1 = math.cos(heading/2);    
     local s1 = math.sin(heading/2);    
@@ -192,8 +187,33 @@ function Quaternion:FromEulerAngles(heading, attitude, bank)
 	self[1], self[2], self[3], self[4] =  x,y,z,w;
 	return self;
 end
+local q1 = Quaternion:new();
+local q2 = Quaternion:new();
+local q3 = Quaternion:new();
 
--- @return heading, attitude, bank (yaw, roll, pitch)
+-- Conversion Euler to Quaternion, 
+-- @param rotSeq: "zxy"(if nil, this is default), "yzx"
+-- "zxy": roll pitch and yaw, which is the order used in BipedObject. 
+function Quaternion:FromEulerAnglesSequence(angle1,angle2,angle3, rotSeq) 
+	-- same as following code
+	if(not rotSeq or rotSeq == "zxy") then
+		-- roll(z), pitch(x), yaw(y),  first roll and then pitch and yaw
+		q1:FromAngleAxis(angle1, vector3d.unit_z);
+		q2:FromAngleAxis(angle2, vector3d.unit_x);
+		q3:FromAngleAxis(angle3, vector3d.unit_y);
+	elseif(rotSeq == "yzx") then
+		q1:FromAngleAxis(angle1, vector3d.unit_y);
+		q2:FromAngleAxis(angle2, vector3d.unit_z);
+		q3:FromAngleAxis(angle3, vector3d.unit_x);
+	end
+	--self:set(q3:multiplyInplace(q2:multiplyInplace(q1)));
+	self:set(q1:multiplyInplace(q2:multiplyInplace(q3)));
+	
+	return self;
+end
+
+-- see also: self:ToEulerAnglesSequence
+-- @return heading, attitude, bank (yaw(y), roll(z), pitch(x))
 function Quaternion:ToEulerAngles() 
 	local heading, attitude, bank;
 	local test = self[1]*self[2] + self[3]*self[4];
@@ -216,6 +236,35 @@ function Quaternion:ToEulerAngles()
 	attitude = math.asin(2*test);
 	bank = math.atan2(2*self[1]*self[4]-2*self[2]*self[3] , 1 - 2*sqx - 2*sqz)
 	return heading, attitude, bank
+end
+
+local function threeaxisrot(r11, r12, r21, r31, r32)
+	return math.atan2( r11, r12 ), math.asin( r21 ), math.atan2( r31, r32 );
+end
+
+-- ported from: http://bediyap.com/programming/convert-quaternion-to-euler-rotations/
+-- similar to ToEulerAngles(), but the order can be specified.
+-- @param rotSeq: "zxy"(if nil, this is default), "yzx"
+-- "zxy": roll pitch and yaw, which is the order used in BipedObject. 
+-- @return the order is same as rotSeq
+function Quaternion:ToEulerAnglesSequence(rotSeq)
+	rotSeq = rotSeq or "zxy"
+	local x, y, z, w = self[1], self[2], self[3], self[4];
+	if(rotSeq == "zxy") then
+		-- roll(z), pitch(x), yaw(y)
+		return threeaxisrot( -2*(x*y - w*z),
+                      w*w - x*x + y*y - z*z,
+                      2*(y*z + w*x),
+                     -2*(x*z - w*y),
+                      w*w - x*x - y*y + z*z);
+	elseif(rotSeq == "yzx") then
+		-- yaw(y), roll(z), pitch(x)
+		return threeaxisrot( -2*(x*z - w*y),
+                      w*w + x*x - y*y - z*z,
+                      2*(x*y + w*z),
+                     -2*(y*z - w*x),
+                      w*w - x*x + y*y - z*z);
+	end
 end
 
 local s_iNext = { [0] = 1, 2, 0 };
