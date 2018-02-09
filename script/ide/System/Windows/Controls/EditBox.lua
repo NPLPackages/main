@@ -560,15 +560,15 @@ function EditBox:mousePressEvent(e)
 		local mark = e.shift_pressed;
 		local cursor = self:xToPos(e:pos():x());
 		self:moveCursor(cursor, mark);
-		if(e.isDoubleClick) then
-			local begin_pos , end_pos = self.m_text:wordPosition(cursor);		
-			self:moveCursor(begin_pos, false);
-	   		self:moveCursor(end_pos, true);
-		elseif(e.isTripleClick) then
+		if(e.isTripleClick) then
 			-- move to line begin			
 			self:moveCursor(0, false);					  
 			-- move to line end
-	   		self:moveCursor(self.m_text:length(), true);				  
+	   		self:moveCursor(self.m_text:length(), true);
+		elseif(e.isDoubleClick) then
+			local begin_pos , end_pos = self.m_text:wordPosition(cursor);		
+			self:moveCursor(begin_pos, false);
+	   		self:moveCursor(end_pos, true);				  
 		end
 		e:accept();
 	end

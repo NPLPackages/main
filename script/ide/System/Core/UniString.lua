@@ -365,7 +365,7 @@ end
 		end_pos = self:wordEndPosition(oldPos);								
 	elseif(oldPos >= len ) then															
 		begin_pos = self:wordBeginPosition(oldPos);															 
-		end_pos = oldpos;
+		end_pos = len;
 	else
 		local prev_char = self:at(oldPos);
 		local next_char = self:at(oldPos+1);

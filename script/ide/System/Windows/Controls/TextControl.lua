@@ -417,15 +417,16 @@ function TextControl:mousePressEvent(e)
 		local pos = self:xToPos(text, e:pos():x());
 		local mark = e.shift_pressed;
 		self:moveCursor(line,pos,mark,true);
-		if(e.isDoubleClick) then
+
+   		if(e.isTripleClick) then	
+			-- triple click select the line
+			self:moveCursor(line,0, false);
+		   	self:moveCursor(line,text:length(), true);
+		elseif(e.isDoubleClick) then
 			-- double click select the word
 			local begin_pos,end_pos = self:GetLineText(line):wordPosition(pos);
 			self:moveCursor(line,begin_pos, false);
 	   		self:moveCursor(line,end_pos, true);
-		elseif(e.isTripleClick) then
-			-- triple click select the line
-			self:moveCursor(line,0, false);
-		   	self:moveCursor(line,text:length(), true);
 		end
 		e:accept();
 		self:docPos();
