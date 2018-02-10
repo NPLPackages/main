@@ -56,6 +56,7 @@ function Quaternion.__sub(a,b)
 	return Quaternion:new({a[1]-b[1], a[2]-b[2], a[3]-b[3], a[4]-b[4]})
 end
 
+-- q3*(q2*q1) = rotate q1 and then q2, then q3
 -- @param b: can be vector3d or Quaternion
 function Quaternion.__mul(a,b)
 	return Quaternion:new({
@@ -67,6 +68,7 @@ function Quaternion.__mul(a,b)
 end
 
 -- multiplay in place without creating a new quaternion
+-- -- q3*(q2*q1) = rotate q1 and then q2, then q3
 function Quaternion:multiplyInplace(b)
 	local a = self;
 	self[1], self[2], self[3], self[4] = a[4] * b[1] + a[1] * b[4] + a[2] * b[3] - a[3] * b[2],
@@ -167,7 +169,7 @@ function Quaternion:TransformAxisByMatrix(mat)
 	return self:FromAngleAxis(angle, axis);
 end
 
--- Conversion Euler to Quaternion, see also self:FromEulerAnglesSequence
+-- Conversion Euler(pitch first) to Quaternion, see also self:FromEulerAnglesSequence(a1,a2,a2, "xzy")
 -- @param heading(yaw), attitude(roll), bank(pitch)
 -- @returns: self
 function Quaternion:FromEulerAngles(heading, attitude, bank) 
@@ -205,14 +207,30 @@ function Quaternion:FromEulerAnglesSequence(angle1,angle2,angle3, rotSeq)
 		q1:FromAngleAxis(angle1, vector3d.unit_y);
 		q2:FromAngleAxis(angle2, vector3d.unit_z);
 		q3:FromAngleAxis(angle3, vector3d.unit_x);
+	elseif(rotSeq == "xzy") then
+		q1:FromAngleAxis(angle1, vector3d.unit_x);
+		q2:FromAngleAxis(angle2, vector3d.unit_z);
+		q3:FromAngleAxis(angle3, vector3d.unit_y);
+	elseif(rotSeq == "yxz") then
+		q1:FromAngleAxis(angle1, vector3d.unit_y);
+		q2:FromAngleAxis(angle2, vector3d.unit_x);
+		q3:FromAngleAxis(angle3, vector3d.unit_z);
+	elseif(rotSeq == "xyz") then
+		q1:FromAngleAxis(angle1, vector3d.unit_x);
+		q2:FromAngleAxis(angle2, vector3d.unit_y);
+		q3:FromAngleAxis(angle3, vector3d.unit_z);
+	elseif(rotSeq == "zyx") then
+		q1:FromAngleAxis(angle1, vector3d.unit_z);
+		q2:FromAngleAxis(angle2, vector3d.unit_y);
+		q3:FromAngleAxis(angle3, vector3d.unit_x);
 	end
-	--self:set(q3:multiplyInplace(q2:multiplyInplace(q1)));
-	self:set(q1:multiplyInplace(q2:multiplyInplace(q3)));
+	self:set(q3:multiplyInplace(q2:multiplyInplace(q1)));
 	
 	return self;
 end
 
--- see also: self:ToEulerAnglesSequence
+-- from quaternion to euler angle pitch first. 
+-- see also: self:ToEulerAnglesSequence("xzy")
 -- @return heading, attitude, bank (yaw(y), roll(z), pitch(x))
 function Quaternion:ToEulerAngles() 
 	local heading, attitude, bank;
@@ -239,31 +257,53 @@ function Quaternion:ToEulerAngles()
 end
 
 local function threeaxisrot(r11, r12, r21, r31, r32)
-	return math.atan2( r11, r12 ), math.asin( r21 ), math.atan2( r31, r32 );
+	return math.atan2( r31, r32 ), math.asin( r21 ), math.atan2( r11, r12 );
 end
 
 -- ported from: http://bediyap.com/programming/convert-quaternion-to-euler-rotations/
 -- similar to ToEulerAngles(), but the order can be specified.
 -- @param rotSeq: "zxy"(if nil, this is default), "yzx"
--- "zxy": roll pitch and yaw, which is the order used in BipedObject. 
+-- "zxy": roll(first) pitch and yaw, which is the order used in BipedObject. 
 -- @return the order is same as rotSeq
 function Quaternion:ToEulerAnglesSequence(rotSeq)
-	rotSeq = rotSeq or "zxy"
+	rotSeq = rotSeq or "yxz"
 	local x, y, z, w = self[1], self[2], self[3], self[4];
-	if(rotSeq == "zxy") then
-		-- roll(z), pitch(x), yaw(y)
+	if(rotSeq == "yxz") then
 		return threeaxisrot( -2*(x*y - w*z),
-                      w*w - x*x + y*y - z*z,
-                      2*(y*z + w*x),
-                     -2*(x*z - w*y),
-                      w*w - x*x - y*y + z*z);
-	elseif(rotSeq == "yzx") then
-		-- yaw(y), roll(z), pitch(x)
+			w*w - x*x + y*y - z*z,
+			2*(y*z + w*x),
+			-2*(x*z - w*y),
+			w*w - x*x - y*y + z*z);
+	elseif(rotSeq == "xzy") then
 		return threeaxisrot( -2*(x*z - w*y),
-                      w*w + x*x - y*y - z*z,
-                      2*(x*y + w*z),
-                     -2*(y*z - w*x),
-                      w*w - x*x + y*y - z*z);
+			w*w + x*x - y*y - z*z,
+			2*(x*y + w*z),
+			-2*(y*z - w*x),
+			w*w - x*x + y*y - z*z);
+	elseif(rotSeq == "zxy") then
+		return threeaxisrot( 2*(x*z + w*y),
+			w*w - x*x - y*y + z*z,
+			-2*(y*z - w*x),
+			2*(x*y + w*z),
+			w*w - x*x + y*y - z*z);
+	elseif(rotSeq == "xyz") then
+		return threeaxisrot( 2*(x*y + w*z),
+			w*w + x*x - y*y - z*z,
+			-2*(x*z - w*y),
+			2*(y*z + w*x),
+			w*w - x*x - y*y + z*z);
+	elseif(rotSeq == "zyx") then
+		return threeaxisrot( -2*(y*z - w*x),
+			w*w - x*x - y*y + z*z,
+			2*(x*z + w*y),
+			-2*(x*y - w*z),
+			w*w + x*x - y*y - z*z);
+	elseif(rotSeq == "yzx") then
+		return threeaxisrot( 2*(y*z + w*x),
+			w*w - x*x + y*y - z*z,
+			-2*(x*y - w*z),
+			2*(x*z + w*y),
+			w*w + x*x - y*y - z*z);
 	end
 end
 
