@@ -3,4 +3,10 @@
 	-- searchpath = false,
 	-- main script
 	main = "script/ide/System/System.lua",
+    ["dependencies"] = {
+      ["telescope"] = {
+        ["package_src"] = "leopoldchen/telescope",
+        ["version"] = "1.0.0"
+      }
+    }
 }
