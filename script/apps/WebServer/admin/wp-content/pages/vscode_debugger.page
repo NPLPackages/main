@@ -52,6 +52,16 @@ if(is_ajax())then
 		result.currentDir = ParaIO.GetCurDirectory(0);
 		result.devDir = commonlib.Files.GetDevDirectory();
 	end
+	if(action == "setmainloop")then
+		local bootstrapper = request:get("bootstrapper");
+		if(bootstrapper) then
+			ParaGlobal.SetGameLoop(bootstrapper);
+			LOG.std(nil, "info", "mainloop", "main loop changed to %s", bootstrapper);
+		end
+	end
+	if(action == "exitapp")then
+		ParaGlobal.Exit(1);
+	end
 	if(action == "poll_msg")then
 		local output = {msgs={}};
 		local output_queue = HTTPDebugger.GetOutputMsgList();
