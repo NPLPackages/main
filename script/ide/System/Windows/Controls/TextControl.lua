@@ -24,6 +24,7 @@ TextControl:Property({"Background", "", auto=true});
 TextControl:Property({"BackgroundColor", "#cccccc", auto=true});
 TextControl:Property({"Color", "#000000", auto=true})
 TextControl:Property({"CursorColor", "#000000", auto=true})
+TextControl:Property({"EmptyTextColor", "#888888", auto=true})
 TextControl:Property({"SelectedBackgroundColor", "#99c9ef", auto=true})
 TextControl:Property({"CurLineBackgroundColor", "#e5ebf1e0", auto=true})
 TextControl:Property({"m_cursor", 0, "cursorPosition", "setCursorPosition"})
@@ -38,6 +39,7 @@ TextControl:Property({"text", nil, "GetText", "SetText"})
 TextControl:Property({"lineWrap", nil, "GetLineWrap", "SetLineWrap", auto=true})
 TextControl:Property({"lineHeight", 20, "GetLineHeight", "SetLineHeight", auto=true})
 TextControl:Property({"AutoTabToSpaces", true, "IsAutoTabToSpaces", "SetAutoTabToSpaces", auto=true})
+TextControl:Property({"EmptyText", nil, "GetEmptyText", "SetEmptyText", auto=true})
 
 --TextControl:Signal("SizeChanged",function(width,height) end);
 --TextControl:Signal("PositionChanged");
@@ -261,6 +263,25 @@ function TextControl:GetLineText(index)
 	return nil;
 end
 
+
+function TextControl:setLinePosColor(line, begin_pos, end_pos, font, color, scale)
+	if(not begin_pos or not end_pos or begin_pos == end_pos or begin_pos > end_pos) then
+		return;
+	end
+	local lineItem = self:GetLine(line)
+	if(lineItem) then
+		lineItem.highlightBlocks = lineItem.highlightBlocks or {};
+		for i = 1,#lineItem.highlightBlocks do 
+			local highlight_block = lineItem.highlightBlocks[i];
+			if(not (begin_pos >= highlight_block.end_pos or end_pos <= highlight_block.begin_pos)) then
+				return;
+			end
+		end
+		local block = {begin_pos = begin_pos, end_pos = end_pos, font = font, color = color, scale = scale};
+		lineItem.highlightBlocks[#lineItem.highlightBlocks+1] =  block;
+	end
+end
+
 function TextControl:InsertItem(pos, text)
 	text = text or "";
 	local item;
@@ -415,7 +436,17 @@ function TextControl:mousePressEvent(e)
 		local pos = self:xToPos(text, e:pos():x());
 		local mark = e.shift_pressed;
 		self:moveCursor(line,pos,mark,true);
-		--self:adjustCursor();
+
+   		if(e.isTripleClick) then	
+			-- triple click select the line
+			self:moveCursor(line,0, false);
+		   	self:moveCursor(line,text:length(), true);
+		elseif(e.isDoubleClick) then
+			-- double click select the word
+			local begin_pos,end_pos = self:GetLineText(line):wordPosition(pos);
+			self:moveCursor(line,begin_pos, false);
+	   		self:moveCursor(line,end_pos, true);
+		end
 		e:accept();
 		self:docPos();
 	end
@@ -1413,6 +1444,19 @@ function TextControl:updateGeometry()
 	end
 end
 
+function TextControl:CalculateTextWidth(text,font)
+	return _guihelper.GetTextWidth(text, font);
+end
+
+function TextControl:DrawTextScaledWithPosition(painter, x, y, text, font, color, scale)
+	font = font or self:GetFont();
+	scale = scale or self:GetScale();
+	color = color or self:GetColor();
+	painter:SetFont(font);
+	painter:SetPen(color);
+	painter:DrawTextScaled(x, y, text, scale);
+end
+
 function TextControl:paintEvent(painter)
 	if(self.needRecomputeTextHeight or self.needRecomputeTextWidth or self.needUpdateControlSize) then
 		self:updateGeometry();
@@ -1501,13 +1545,57 @@ function TextControl:paintEvent(painter)
 		end
 	end
 
-	if(not self.items:empty()) then
-		painter:SetPen(self:GetColor());
-		painter:SetFont(self:GetFont());
-		local scale = self:GetScale();
+	if(not self.items:empty() and self:GetText() ~= "") then
 		for i = self.from_line, self.to_line do
-			local item = self.items:get(i);
-			painter:DrawTextScaled(self:x(), self:y() + self.lineHeight * (i - 1), item.text:GetText(), scale);
+			local item = self.items:get(i);	
+			local text = item.text;
+			local total_width = 0;
+			local sub_text;
+			local next_block;
+
+			if(item.highlightBlocks and next(item.highlightBlocks)) then
+				-- this line have highlight blocks;				
+				if(item.highlightBlocks[1].begin_pos > 1 ) then
+					sub_text = text:substr(1 , item.highlightBlocks[1].begin_pos - 1);
+					total_width = self:CalculateTextWidth(sub_text, self:GetFont());
+					self:DrawTextScaledWithPosition(painter, self:x(), self:y() + self.lineHeight * (i - 1), sub_text);
+				end
+				
+				local next_pos;
+				for j = 1, #item.highlightBlocks do
+					local block = item.highlightBlocks[j];						
+						
+					sub_text = text:substr(block.begin_pos , block.end_pos);
+					self:DrawTextScaledWithPosition(painter, self:x() + total_width, self:y() + self.lineHeight * (i - 1), sub_text, block.font, block.color, block.scale);
+					total_width = total_width +  self:CalculateTextWidth(sub_text, block.font);
+
+					if(j < #item.highlightBlocks) then
+						next_block = item.highlightBlocks[j+1];
+						sub_text = text:substr(block.end_pos + 1 , next_block.begin_pos - 1);
+						self:DrawTextScaledWithPosition(painter, self:x() + total_width, self:y() + self.lineHeight * (i - 1), sub_text);
+						total_width = total_width +  self:CalculateTextWidth(sub_text, self:GetFont());
+					elseif(j == #item.highlightBlocks) then
+						if(block.end_pos < text:length()) then
+							sub_text = text:substr(block.end_pos + 1 , text:length());													
+							self:DrawTextScaledWithPosition(painter, self:x() + total_width, self:y() + self.lineHeight * (i - 1), sub_text);
+						end
+					end
+				end							
+			else
+				self:DrawTextScaledWithPosition(painter, self:x(), self:y() + self.lineHeight * (i - 1), item.text:GetText());
+			end
+		end
+	else
+		local EmptyText = self:GetEmptyText();
+		if(EmptyText and EmptyText~="" and not self:hasFocus()) then
+			local i = 1;
+			painter:SetPen(self:GetEmptyTextColor());
+			for line_text, breaker_text in string.gfind(EmptyText, "([^\r\n]*)(\r?\n?)") do
+				if(line_text ~= "") then
+					self:DrawTextScaledWithPosition(painter, self:x(), self:y() + self.lineHeight * (i - 1), line_text);
+				end	
+				i = i + 1;
+			end
 		end
 	end
 

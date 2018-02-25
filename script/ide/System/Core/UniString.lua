@@ -10,19 +10,19 @@ use the lib:
 ------------------------------------------------------------
 NPL.load("(gl)script/ide/System/Core/UniString.lua");
 local UniString = commonlib.gettable("System.Core.UniString");
-local s1 = UniString:new("ä¸€äºŒä¸‰å››äº”");
+local s1 = UniString:new("Ò»¶þÈýËÄÎå");
 echo("cursorToX"..s1:cursorToX(2))
 echo("xToCursor"..s1:xToCursor(10))
 
-assert(s1[3] == "ä¸‰" and s1:at(3) == "ä¸‰", "test index")
+assert(s1[3] == "Èý" and s1:at(3) == "Èý", "test index")
 assert(s1:length() == 5, "test length")
-assert(tostring(s1) == "ä¸€äºŒä¸‰å››äº”", "test eq")
-assert(tostring(s1.."å…­") == "ä¸€äºŒä¸‰å››äº”å…­", "test concat")
-assert(tostring(s1:sub(1,2)) == "ä¸€äºŒ", "test sub")
+assert(tostring(s1) == "Ò»¶þÈýËÄÎå", "test eq")
+assert(tostring(s1.."Áù") == "Ò»¶þÈýËÄÎåÁù", "test concat")
+assert(tostring(s1:sub(1,2)) == "Ò»¶þ", "test sub")
 s1:insert(1,"insert");
-assert(tostring(s1) == "ä¸€insertäºŒä¸‰å››äº”", "test insert")
+assert(tostring(s1) == "Ò»insert¶þÈýËÄÎå", "test insert")
 s1:remove(2, 6);
-assert(tostring(s1) == "ä¸€äºŒä¸‰å››äº”", "test remove")
+assert(tostring(s1) == "Ò»¶þÈýËÄÎå", "test remove")
 ------------------------------------------------------------
 ]]
 local type = type;
@@ -326,4 +326,62 @@ end
 
 function UniString:rightCursorPosition(oldPos)
 	return oldPos + 1;
+end
+
+function UniString:wordEndPosition(oldPos)
+	local end_pos = oldPos + 1;
+	if(self:at(end_pos) == ' ') then
+		while(self:at(end_pos + 1) == ' ')  do
+			end_pos = end_pos + 1;
+		end																																					   
+		return end_pos;
+	end
+	local end_pos = self:nextCursorPosition(oldPos , "SkipWords")
+	while(self:at(end_pos) == ' ')  do
+		end_pos = end_pos - 1;
+	end	
+	return end_pos;
+end
+
+function UniString:wordBeginPosition(oldPos)
+	local begin_pos = oldPos;
+	if(self:at(begin_pos) == ' ') then
+		begin_pos = begin_pos - 1;
+		while(self:at(begin_pos) == ' ')  do
+			begin_pos = begin_pos - 1;
+		end																																					   
+		return begin_pos;
+	end
+	begin_pos = self:previousCursorPosition(oldPos, "SkipWords")
+	return begin_pos;
+end
+
+ function UniString:wordPosition(oldPos)
+	local len = self:length();
+	local begin_pos ;
+	local end_pos ;
+	if(oldPos <= 0 ) then
+		begin_pos = oldPos;
+		end_pos = self:wordEndPosition(oldPos);								
+	elseif(oldPos >= len ) then															
+		begin_pos = self:wordBeginPosition(oldPos);															 
+		end_pos = len;
+	else
+		local prev_char = self:at(oldPos);
+		local next_char = self:at(oldPos+1);
+		if(prev_char == ' ' and next_char == ' ') then
+			begin_pos = self:wordBeginPosition(oldPos);
+			end_pos = self:wordEndPosition(oldPos);
+		elseif(prev_char == ' ') then
+			begin_pos = oldPos;
+			end_pos = self:wordEndPosition(oldPos);		
+		elseif(next_char == ' ') then
+			begin_pos = self:wordBeginPosition(oldPos);
+			end_pos = oldPos;
+		else
+			begin_pos = self:wordBeginPosition(oldPos);
+			end_pos = self:wordEndPosition(oldPos);
+		end
+	end	
+	return begin_pos,end_pos;
 end

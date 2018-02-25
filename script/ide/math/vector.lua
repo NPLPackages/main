@@ -187,6 +187,24 @@ function vector3d:MulVector(a)
 end
 
 -- cross product with a vector3d, or transform by a float or Matrix4
+function vector3d:multiplyInPlace(b)
+	local a = self;
+	if(type(b) == "table") then
+		if(#b == 16) then
+			local x,y,z = a[1], a[2], a[3];
+			self[1], self[2], self[3] = x*b[1] + y*b[5] + z*b[9] + b[13],
+				x*b[2] + y*b[6] + z*b[10] + b[14],
+				x*b[3] + y*b[7] + z*b[11] + b[15];
+		else
+			self[1], self[2], self[3] = a[2] * b[3] -a[3] * b[2],a[3] * b[1] - a[1] * b[3],a[1] * b[2] - a[2] * b[1];
+		end
+	elseif(type(b) == "number") then
+		self[1], self[2], self[3] = a[1] * b, a[2] * b, a[3] * b;
+	end
+	return self;
+end
+
+-- cross product with a vector3d, or transform by a float or Matrix4
 -- @param b: can be number, vector3d or Matrix4
 function vector3d.__mul(a,b)
 	if(type(b) == "table") then
@@ -332,6 +350,22 @@ function vector3d:rotateBy(q)
 					- rw * qy +  ry * qw - rz * qx + rx * qz,
 					- rw * qz +  rz * qw - rx * qy + ry * qx);
 end
+
+-- Returns the vector that represents the rotation of this vector by the given quaternion.
+function vector3d:rotateByQuatInplace(q)
+	-- Simply carry out the quaternion multiplications: result = q.conjugate() * (*this) * q
+	local x, y, z = self[1], self[2], self[3];
+	local qx, qy, qz, qw = q[1], q[2], q[3], q[4];
+	local rw = - qx * x - qy * y - qz * z;
+	local rx = qw * x + qy * z - qz * y;
+	local ry = qw * y + qz * x - qx * z;
+	local rz = qw * z + qx * y - qy * x;
+	self[1], self[2], self[3] = - rw * qx +  rx * qw - ry * qz + rz * qy,
+					- rw * qy +  ry * qw - rz * qx + rx * qz,
+					- rw * qz +  rz * qw - rx * qy + ry * qx;
+	return self;
+end
+
 
 -- Returns TRUE if the vectors are parallel, that is, pointing in
 -- the same or opposite directions, but not necessarily of the same magnitude.
