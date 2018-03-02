@@ -36,6 +36,7 @@ function npl_http.LoadBuildinHandlers()
 	NPL.load("(gl)script/apps/WebServer/npl_file_handler.lua");
 	NPL.load("(gl)script/apps/WebServer/npl_script_handler.lua");
 	NPL.load("(gl)script/apps/WebServer/npl_page_handler.lua");
+	NPL.load("(gl)script/apps/WebServer/npl_thread_handler.lua");
 	-- TODO: add your buildin handlers here. 
 end
 
