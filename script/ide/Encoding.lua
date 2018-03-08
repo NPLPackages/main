@@ -29,19 +29,19 @@ if(not commonlib.Encoding) then commonlib.Encoding={}; end
 local Encoding = commonlib.Encoding;
 
 function Encoding.Utf8ToDefault(text)
-	return ParaMisc.EncodingConvert("utf-8", "", text);
+	return text and ParaMisc.EncodingConvert("utf-8", "", text);
 end
 
 function Encoding.DefaultToUtf8(text)
-	return ParaMisc.EncodingConvert("", "utf-8", text)
+	return text and ParaMisc.EncodingConvert("", "utf-8", text)
 end
 
 function Encoding.Utf8ToUtf16(text)
-	return ParaMisc.UTF8ToUTF16(text);
+	return text and ParaMisc.UTF8ToUTF16(text);
 end
 
 function Encoding.Utf16ToUtf8(text)
-	return ParaMisc.UTF16ToUTF8(text)
+	return text and ParaMisc.UTF16ToUTF8(text)
 end
 
 

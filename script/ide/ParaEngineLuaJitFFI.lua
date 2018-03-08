@@ -132,11 +132,6 @@ if(use_ffi) then
 		if(libName=="C") then
 			libNamespace = ffi.C;
 		else
-			local is_debugging = ParaEngine.GetAttributeObject():GetField("Is Debugging", false);
-			if(is_debugging) then
-				libName = libName.."_d";
-			end
-
 			local func = loadstring(string.format([[local ffi = require("ffi"); return ffi.load("%s")]], libName));
 			if(func) then
 				local result, param1 = pcall(func);
@@ -157,187 +152,192 @@ if(use_ffi) then
 		-- using the default C namespace (which is the main executable plus standard C library)
 		ParaEngineClient = LoadSharedLib("C");
 	else
-		ParaEngineClient = LoadSharedLib("ParaEngineClient");
-	end
-	if(not ParaEngineClient) then
-		return;
-	end
-
-	--------------------------------------------
-	-- shared by client/server
-	--------------------------------------------
-
-	if(not ParaEngineClient.ParaGlobal_timeGetTime) then
-		ParaGlobal.WriteToLogFile("error: LuaJit FFI not working, possibly because dll is not found\n");
-		return;
+		local name = ParaEngine.GetAttributeObject():GetField("GetModuleFileName");
+		if(not name) then
+			-- backward compatibility if "GetModuleFileName" not exist. 
+			name = "ParaEngineClient";
+			local is_debugging = ParaEngine.GetAttributeObject():GetField("Is Debugging", false);
+			if(is_debugging) then
+				name = name.."_d";
+			end
+		end
+		ParaEngineClient = LoadSharedLib(name);
 	end
 
-	ParaGlobal.WriteToLogFile = function(strMessage)
-		return ParaEngineClient.ParaGlobal_WriteToLogFile(strMessage);
-	end
+	if(ParaEngineClient) then
+		--------------------------------------------
+		-- shared by client/server
+		--------------------------------------------
+		if(not ParaEngineClient.ParaGlobal_timeGetTime) then
+			ParaGlobal.WriteToLogFile("error: LuaJit FFI not working, possibly because dll is not found\n");
+			return;
+		end
 
+		ParaGlobal.WriteToLogFile = function(strMessage)
+			return ParaEngineClient.ParaGlobal_WriteToLogFile(strMessage);
+		end
 
-	ParaGlobal.timeGetTime = function()
-		return ParaEngineClient.ParaGlobal_timeGetTime();
-	end
+		ParaGlobal.timeGetTime = function()
+			return ParaEngineClient.ParaGlobal_timeGetTime();
+		end
 
-	ParaGlobal.getAccurateTime = function()
-		return ParaEngineClient.ParaGlobal_getAccurateTime();
-	end
+		ParaGlobal.getAccurateTime = function()
+			return ParaEngineClient.ParaGlobal_getAccurateTime();
+		end
 
-	--------------------------------------------
-	-- following is client only
-	--------------------------------------------
-	if(not ParaTerrain) then
-		return
-	end
+		--------------------------------------------
+		-- following is client only
+		--------------------------------------------
+		if(ParaTerrain) then
+			ParaGlobal.WriteToLogFile("FFI for ParaTerrain installed \n");
+			ParaTerrain.GetElevation = function(x,y)
+				return ParaEngineClient.ParaTerrain_GetElevation(x,y);
+			end
 
-	ParaTerrain.GetElevation = function(x,y)
-		return ParaEngineClient.ParaTerrain_GetElevation(x,y);
-	end
+			ParaTerrain.SelectBlock = function(x,y,z,isSelect, nGroupID)
+				return ParaEngineClient.ParaTerrain_SelectBlock(x,y,z,isSelect, nGroupID or 0);
+			end
 
-	ParaTerrain.SelectBlock = function(x,y,z,isSelect, nGroupID)
-		return ParaEngineClient.ParaTerrain_SelectBlock(x,y,z,isSelect, nGroupID or 0);
-	end
+			ParaTerrain.SetBlockTemplate = function(x,y,z,templateId)
+				ParaEngineClient.ParaTerrain_SetBlockTemplateId(x,y,z,templateId);
+			end
 
-	ParaTerrain.SetBlockTemplate = function(x,y,z,templateId)
-		ParaEngineClient.ParaTerrain_SetBlockTemplateId(x,y,z,templateId);
-	end
+			ParaTerrain.SetBlockTemplateByIdx = function(x,y,z,templateId)
+				ParaEngineClient.ParaTerrain_SetBlockTemplateIdByIdx(x,y,z,templateId);
+			end
 
-	ParaTerrain.SetBlockTemplateByIdx = function(x,y,z,templateId)
-		ParaEngineClient.ParaTerrain_SetBlockTemplateIdByIdx(x,y,z,templateId);
-	end
+			ParaTerrain.GetBlockTemplate = function(x,y,z)
+				return ParaEngineClient.ParaTerrain_GetBlockTemplateId(x,y,z);
+			end
 
-	ParaTerrain.GetBlockTemplate = function(x,y,z)
-		return ParaEngineClient.ParaTerrain_GetBlockTemplateId(x,y,z);
-	end
+			ParaTerrain.GetBlockTemplateByIdx = function(x,y,z)
+				return ParaEngineClient.ParaTerrain_GetBlockTemplateIdByIdx(x,y,z);
+			end
 
-	ParaTerrain.GetBlockTemplateByIdx = function(x,y,z)
-		return ParaEngineClient.ParaTerrain_GetBlockTemplateIdByIdx(x,y,z);
-	end
+			ParaTerrain.SetBlockUserData = function(x,y,z, data)
+				ParaEngineClient.ParaTerrain_SetBlockUserData(x,y,z, data);
+			end
 
-	ParaTerrain.SetBlockUserData = function(x,y,z, data)
-		ParaEngineClient.ParaTerrain_SetBlockUserData(x,y,z, data);
-	end
+			ParaTerrain.SetBlockUserDataByIdx = function(x,y,z, data)
+				ParaEngineClient.ParaTerrain_SetBlockUserDataByIdx(x,y,z, data);
+			end
 
-	ParaTerrain.SetBlockUserDataByIdx = function(x,y,z, data)
-		ParaEngineClient.ParaTerrain_SetBlockUserDataByIdx(x,y,z, data);
-	end
+			ParaTerrain.GetBlockUserData = function(x,y,z)
+				return ParaEngineClient.ParaTerrain_GetBlockUserData(x,y,z);
+			end
 
-	ParaTerrain.GetBlockUserData = function(x,y,z)
-		return ParaEngineClient.ParaTerrain_GetBlockUserData(x,y,z);
-	end
-
-	ParaTerrain.GetBlockUserDataByIdx = function(x,y,z)
-		return ParaEngineClient.ParaTerrain_GetBlockUserDataByIdx(x,y,z);
-	end
-	
-	ParaTerrain.UpdateHoles = function(x,y)
-		ParaEngineClient.ParaTerrain_UpdateHoles(x,y);
-	end
-
-	ParaTerrain.IsHole = function(x,y)
-		return ParaEngineClient.ParaTerrain_IsHole(x,y);
-	end
-
-	ParaTerrain.SetHole = function(x,y, bIsHold)
-		ParaEngineClient.ParaTerrain_SetHole(x,y, bIsHold);
-	end
-
-	ParaTerrain.FindFirstBlock = function(x,y,z, nSide, max_dist, attrFilter, nCategoryID)
-		return ParaEngineClient.ParaTerrain_FindFirstBlock( x,y,z, nSide or 4, max_dist or 32, attrFilter or 0xffffffff, nCategoryID or -1);
-	end
-
-	ParaTerrain.GetFirstBlock = function(x,y,z, nBlockID, nSide, max_dist)
-		return ParaEngineClient.ParaTerrain_GetFirstBlock( x,y,z, nBlockID, nSide or 5, max_dist or 32);
-	end
-	
-	if(ParaTerrain.GetBlockFullData) then
-		local pTmpId = ffi.new'uint16_t[1]';
-		local pTmpUserData = ffi.new'uint32_t[1]';
-
-		ParaTerrain.GetBlockFullData = function(x, y, z)
-			--local pId = ffi.stack'uint16_t[1]';
-			--local pUserData = ffi.stack'uint32_t[1]';
+			ParaTerrain.GetBlockUserDataByIdx = function(x,y,z)
+				return ParaEngineClient.ParaTerrain_GetBlockUserDataByIdx(x,y,z);
+			end
 		
-			ParaEngineClient.ParaTerrain_GetBlockFullData(x, y, z, pTmpId, pTmpUserData);
+			ParaTerrain.UpdateHoles = function(x,y)
+				ParaEngineClient.ParaTerrain_UpdateHoles(x,y);
+			end
+
+			ParaTerrain.IsHole = function(x,y)
+				return ParaEngineClient.ParaTerrain_IsHole(x,y);
+			end
+
+			ParaTerrain.SetHole = function(x,y, bIsHold)
+				ParaEngineClient.ParaTerrain_SetHole(x,y, bIsHold);
+			end
+
+			ParaTerrain.FindFirstBlock = function(x,y,z, nSide, max_dist, attrFilter, nCategoryID)
+				return ParaEngineClient.ParaTerrain_FindFirstBlock( x,y,z, nSide or 4, max_dist or 32, attrFilter or 0xffffffff, nCategoryID or -1);
+			end
+
+			ParaTerrain.GetFirstBlock = function(x,y,z, nBlockID, nSide, max_dist)
+				return ParaEngineClient.ParaTerrain_GetFirstBlock( x,y,z, nBlockID, nSide or 5, max_dist or 32);
+			end
 		
-			return pTmpId[0], pTmpUserData[0];
+			if(ParaTerrain.GetBlockFullData) then
+				local pTmpId = ffi.new'uint16_t[1]';
+				local pTmpUserData = ffi.new'uint32_t[1]';
+
+				ParaTerrain.GetBlockFullData = function(x, y, z)
+					--local pId = ffi.stack'uint16_t[1]';
+					--local pUserData = ffi.stack'uint32_t[1]';
+			
+					ParaEngineClient.ParaTerrain_GetBlockFullData(x, y, z, pTmpId, pTmpUserData);
+			
+					return pTmpId[0], pTmpUserData[0];
+				end
+			end
+
+			--------------------------------------
+			-- ParaBlockWorld
+			--------------------------------------
+			ParaBlockWorld.SetBlockId = function(self, x,y,z, templateId)
+				return ParaEngineClient.ParaBlockWorld_SetBlockId(self, x, y, z, templateId);
+			end
+
+			ParaBlockWorld.GetBlockId = function(self, x,y,z)
+				return ParaEngineClient.ParaBlockWorld_GetBlockId(self, x, y, z);
+			end
+
+			ParaBlockWorld.SetBlockData = function(self, x,y,z, data)
+				return ParaEngineClient.ParaBlockWorld_SetBlockData(self, x, y, z, data);
+			end
+
+			ParaBlockWorld.GetBlockData = function(self, x,y,z)
+				return ParaEngineClient.ParaBlockWorld_GetBlockData(self, x, y, z);
+			end
+
+			ParaBlockWorld.GetBlockId = function(self, x,y,z)
+				return ParaEngineClient.ParaBlockWorld_GetBlockId(self, x, y, z);
+			end
+
+			ParaBlockWorld.FindFirstBlock = function(self, x,y,z, nSide, max_dist, attrFilter, nCategoryID)
+				return ParaEngineClient.ParaBlockWorld_FindFirstBlock(self, x, y, z, nSide, max_dist, attrFilter, nCategoryID);
+			end
+
+			ParaBlockWorld.GetFirstBlock = function(self, x,y,z, nBlockId, nSide, max_dist)
+				return ParaEngineClient.ParaBlockWorld_GetFirstBlock(self, x, y, z, nBlockId, nSide, max_dist);
+			end
+
+			--------------------------------------
+			-- ParaScene
+			--------------------------------------
+			if(ParaScene.CheckExist) then
+				ParaScene.CheckExist = function(nID)
+					return ParaEngineClient.ParaScene_CheckExist(nID);
+				end
+			end
 		end
-	end
 
-	--------------------------------------
-	-- ParaBlockWorld
-	--------------------------------------
-	ParaBlockWorld.SetBlockId = function(self, x,y,z, templateId)
-		return ParaEngineClient.ParaBlockWorld_SetBlockId(self, x, y, z, templateId);
-	end
+		--------------------------------------
+		-- ParaAttributeObject
+		--------------------------------------
 
-	ParaBlockWorld.GetBlockId = function(self, x,y,z)
-		return ParaEngineClient.ParaBlockWorld_GetBlockId(self, x, y, z);
-	end
-
-	ParaBlockWorld.SetBlockData = function(self, x,y,z, data)
-		return ParaEngineClient.ParaBlockWorld_SetBlockData(self, x, y, z, data);
-	end
-
-	ParaBlockWorld.GetBlockData = function(self, x,y,z)
-		return ParaEngineClient.ParaBlockWorld_GetBlockData(self, x, y, z);
-	end
-
-	ParaBlockWorld.GetBlockId = function(self, x,y,z)
-		return ParaEngineClient.ParaBlockWorld_GetBlockId(self, x, y, z);
-	end
-
-	ParaBlockWorld.FindFirstBlock = function(self, x,y,z, nSide, max_dist, attrFilter, nCategoryID)
-		return ParaEngineClient.ParaBlockWorld_FindFirstBlock(self, x, y, z, nSide, max_dist, attrFilter, nCategoryID);
-	end
-
-	ParaBlockWorld.GetFirstBlock = function(self, x,y,z, nBlockId, nSide, max_dist)
-		return ParaEngineClient.ParaBlockWorld_GetFirstBlock(self, x, y, z, nBlockId, nSide, max_dist);
-	end
-
-	--------------------------------------
-	-- ParaScene
-	--------------------------------------
-	if(ParaScene.CheckExist) then
-		ParaScene.CheckExist = function(nID)
-			return ParaEngineClient.ParaScene_CheckExist(nID);
+		local curSelection;
+		-- ffi based cdata
+		ParaAttributeObject.SetFieldCData = function(self, name, cdata)
+			if(curSelection~=self) then
+				ParaGlobal.SelectAttributeObject(self);
+			end
+			return ParaEngineClient.ParaGlobal_SetFieldCData(name, cdata);
 		end
-	end
-
-	--------------------------------------
-	-- ParaAttributeObject
-	--------------------------------------
-
-	local curSelection;
-	-- ffi based cdata
-	ParaAttributeObject.SetFieldCData = function(self, name, cdata)
-		if(curSelection~=self) then
-			ParaGlobal.SelectAttributeObject(self);
+		-- ffi based cdata
+		ParaAttributeObject.GetFieldCData = function(self, name, cdata)
+			if(curSelection~=self) then
+				ParaGlobal.SelectAttributeObject(self);
+			end
+			return ParaEngineClient.ParaGlobal_GetFieldCData(name, cdata);
 		end
-		return ParaEngineClient.ParaGlobal_SetFieldCData(name, cdata);
-	end
-	-- ffi based cdata
-	ParaAttributeObject.GetFieldCData = function(self, name, cdata)
-		if(curSelection~=self) then
-			ParaGlobal.SelectAttributeObject(self);
-		end
-		return ParaEngineClient.ParaGlobal_GetFieldCData(name, cdata);
 	end
 else
 	-- using standard lua without jit and ffi
 	ParaGlobal.WriteToLogFile(string.format("ParaEngine Lua %s version:%s\r\n", str64BitsSystem, tostring(_VERSION)));
+end
 
-	if(ParaTerrain) then
-		local ParaTerrain_FindFirstBlock = ParaTerrain.FindFirstBlock;
-		ParaTerrain.FindFirstBlock = function(x,y,z, nSide, max_dist, attrFilter, nCategoryID)
-			return ParaTerrain_FindFirstBlock( x,y,z, nSide or 4, max_dist or 32, attrFilter or 0xffffffff, nCategoryID or -1);
-		end
+if(ParaTerrain) then
+	local ParaTerrain_FindFirstBlock = ParaTerrain.FindFirstBlock;
+	ParaTerrain.FindFirstBlock = function(x,y,z, nSide, max_dist, attrFilter, nCategoryID)
+		return ParaTerrain_FindFirstBlock( x,y,z, nSide or 4, max_dist or 32, attrFilter or 0xffffffff, nCategoryID or -1);
+	end
 
-		local ParaTerrain_GetFirstBlock = ParaTerrain.GetFirstBlock;
-		ParaTerrain.GetFirstBlock = function(x,y,z, nBlockID, nSide, max_dist)
-			return ParaTerrain_GetFirstBlock( x,y,z, nBlockID or 0, nSide or 5, max_dist or 32);
-		end
+	local ParaTerrain_GetFirstBlock = ParaTerrain.GetFirstBlock;
+	ParaTerrain.GetFirstBlock = function(x,y,z, nBlockID, nSide, max_dist)
+		return ParaTerrain_GetFirstBlock( x,y,z, nBlockID or 0, nSide or 5, max_dist or 32);
 	end
 end
