@@ -38,8 +38,13 @@ local elem = PageElement:new();
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/System/localserver/UrlHelper.lua");
-NPL.load("(gl)script/ide/System/Windows/mcml/StyleItem.lua");
-local StyleItem = commonlib.gettable("System.Windows.mcml.StyleItem");
+NPL.load("(gl)script/ide/System/Windows/mcml/css/CSSStyleDeclaration.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyle.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutTreeBuilder.lua");
+local LayoutTreeBuilder = commonlib.gettable("System.Windows.mcml.layout.LayoutTreeBuilder");
+local LayoutObject = commonlib.gettable("System.Windows.mcml.layout.LayoutObject");
+local ComputedStyle = commonlib.gettable("System.Windows.mcml.style.ComputedStyle");
+local CSSStyleDeclaration = commonlib.gettable("System.Windows.mcml.css.CSSStyleDeclaration");
 local mcml = commonlib.gettable("System.Windows.mcml");
 local Elements = commonlib.gettable("System.Windows.mcml.Elements");
 local PageElement = commonlib.inherit(commonlib.gettable("System.Core.ToolBase"), commonlib.gettable("System.Windows.mcml.PageElement"));
@@ -62,6 +67,12 @@ local NameNodeMap_ = {};
 local commonlib = commonlib.gettable("commonlib");
 
 function PageElement:ctor()
+	self.layout_object = nil;
+	-- inline style, CSSStyleDeclaration from the attribute "style". According to inlineStyleDecl in webkit;
+	self.style = nil;
+
+	self.previousSibling = nil;
+	self.nextSibling = nil;
 end
 
 -- virtual public function: create a page element (and recursively all its children) according to input xmlNode o.
@@ -93,6 +104,7 @@ end
 -- static public function
 function PageElement:createChildRecursive_helper()
 	if(#self ~= 0) then
+		local previous;
 		for i, child in ipairs(self) do
 			if(type(child) == "table") then
 				local class_type = mcml:GetClassByTagName(child.name or "div");
@@ -108,6 +120,13 @@ function PageElement:createChildRecursive_helper()
 			end
 			child.parent = self;
 			child.index = i;
+			
+			if(previous) then
+				child.previousSibling = previous;
+				previous.nextSibling = child;
+			end
+
+			previous = child;
 		end
 	end
 end
@@ -160,12 +179,31 @@ local no_parse_nodes = {
 }
 
 function PageElement:Rebuild(parentElem)
-	local styleItem;
-	if(self.parent) then
-		styleItem = self.parent:GetStyle();
-		parentElem = parentElem or self.parent.control;
+--	local styleItem;
+--	if(self.parent) then
+--		styleItem = self.parent:GetStyle();
+--		parentElem = parentElem or self.parent.control;
+--	end
+--	self:LoadComponentIfNeeded(parentElem, nil, styleItem)
+end
+
+function PageElement:NeedsLoadComponent()
+	if(self:GetAttribute("display") == "none" or no_parse_nodes[self.name]) then
+		return false;
 	end
-	self:LoadComponent(parentElem, nil, styleItem)
+	return true;
+end
+
+function PageElement:LoadComponentIfNeeded(parentElem, parentLayout, style_decl)
+	--self:CreateStyle(nil, style_decl);
+	
+	self:attachLayoutTree();
+
+	if(self:NeedsLoadComponent(parentElem, parentLayout, style_decl)) then
+		self:LoadComponent(parentElem, parentLayout, style_decl);
+	end
+
+	--
 end
 
 -- virtual function: load component recursively. 
@@ -174,14 +212,6 @@ end
 -- @param parentLayout: only for casual initial layout. 
 -- @return used_width, used_height
 function PageElement:LoadComponent(parentElem, parentLayout, styleItem)
-	if(self:GetAttribute("display") == "none") then 
-		return 
-	end
-	if(no_parse_nodes[self.name]) then
-		return;
-	end
-
-
 	-- apply models
 	self:ApplyPreValues();
 
@@ -196,9 +226,11 @@ function PageElement:LoadComponent(parentElem, parentLayout, styleItem)
 		self:TranslateMe();
 	end
 
-	local css = self:CreateStyle(nil, styleItem);
+	--local css = self:GetStyle();
 
-	css.background = css.background or self:GetAttribute("background", nil);
+	--self:attachLayoutTree();
+
+	--css.background = css.background or self:GetAttribute("background", nil);
 
 	self:OnLoadComponentBeforeChild(parentElem, parentLayout, css);
 
@@ -219,6 +251,38 @@ function PageElement:LoadComponent(parentElem, parentLayout, styleItem)
 		Elements.pe_script.EndCode(rootName, self, bindingContext, _parent, left, top, width, height,style, parentLayout);
 	end
 	self:UnapplyPreValues();
+end
+
+
+function PageElement:LayoutObjectIsNeeded(style)
+	style = style or self:GetStyle();
+	if(style and style["display"] == "none") then
+		return false;
+	end
+	return true;
+end
+
+-- 暂时不使用该函数，目前直接在LayoutTreeBuilder:createObject中创建LayoutObject对象
+function PageElement:CreateLayoutObject(computed_style)
+	return LayoutObject:createObject(self, computed_style);
+end
+
+function PageElement:GetLayoutObject()
+	return self.layout_object;
+end
+
+function PageElement:SetLayoutObject(layout_object)
+	self.layout_object = layout_object;
+end
+
+function PageElement:attachLayoutTree()
+	local computed_style = self:StyleForLayoutObject();
+	--local computed_style = if_else(self.style, self.style.computed_style, nil);
+	LayoutTreeBuilder:init(self, computed_style):CreateLayoutObjectIfNeeded();
+end
+
+function PageElement:detachLayoutTree()
+	
 end
 
 -- private: redirector
@@ -368,7 +432,6 @@ function PageElement:UpdateLayout(parentLayout)
 	-----------------------------
 	-- self and child layout recursively.
 	-----------------------------
-
 	if(not self:OnBeforeChildLayout(myLayout)) then
 		self:UpdateChildLayout(myLayout);
 	end
@@ -443,6 +506,12 @@ function PageElement:UpdateLayout(parentLayout)
 		width, height = myLayout:GetUsedSize();
 	end
 
+--	if(self.layout_object) then
+--		self.layout_object:setLayout(myLayout)
+--	end
+
+	
+
 	if(bUseSpace) then
 		parentLayout:AddObject(width-left, height-top);
 		if(not css.float) then
@@ -485,7 +554,7 @@ end
 
 function PageElement:OnLoadChildrenComponent(parentElem, parentLayout, css)
 	for childnode in self:next() do
-		childnode:LoadComponent(parentElem, parentLayout, css);
+		childnode:LoadComponentIfNeeded(parentElem, parentLayout, css);
 	end
 end
 
@@ -836,6 +905,15 @@ function PageElement:print()
 	end
 end
 
+function PageElement:ChangeCSSValue(attrName, value)
+	if(self.layout_object) then
+		local computed_style = self.layout_object:Style();
+		if(computed_style) then
+			computed_style:ChangeValue(attrName, value);
+		end
+	end
+end
+
 -- set the value of a css style attribute after mcml node is evaluated. This function is rarely used. 
 -- @note: one can only call this function when the mcml node is evaluated at least once, calling this function prior to evaluation will cause the style not to inherit its parent style 
 -- alternatively, we can use self:SetAttribute("style", value) to change the entire attribute. 
@@ -850,9 +928,17 @@ function PageElement:SetCssStyle(attrName, value)
 		if(self.control) then
 			self.control:ApplyCss(self.style);
 		end
-		if(StyleItem.isResetField(attrName)) then
-			self:resetLayout();
-		end
+--		if(StyleItem.isResetField(attrName)) then
+--			self:resetLayout();
+--		end
+	end
+end
+
+-- update the css attribute.
+-- this function is called when the non-layout attribute changed, such as "background", "background-color","font-size", "color", etc.
+function PageElement:UpdateCssStyle(style)
+	if(self.control) then
+		self.control:ApplyCss(style);
 	end
 end
 
@@ -873,11 +959,14 @@ function PageElement:GetStyle()
 end
 
 -- apply any css classnames in class attribute
-function PageElement:ApplyClasses()
+-- History:
+--	name			date			declaration
+--	lipeng			2018.1.21		now apply the style of the style sheet according to the attribute "id", "class" and its tag, its "class_name";
+function PageElement:ApplyClasses(style)
 	local pageStyle = self:GetPageStyle();
 	if(pageStyle) then
-		local style = self:GetStyle();
-		pageStyle:ApplyToStyleItem(style, self);
+		--local style = self:GetStyle();
+		pageStyle:ApplyToStyleDeclaration(style, self);
 	end
 end
 
@@ -888,22 +977,48 @@ end
 -- @param base_baseStyle: this is optional. where to copy inheritable fields, usually from parent element's style object. 
 -- @return: style table is a table of name value pairs. such as {color=string, href=string}
 function PageElement:CreateStyle(baseStyle, base_baseStyle)
-	local style = StyleItem:new();
-	self.style = style;
+	local style = CSSStyleDeclaration:new():init(self);
 
 	style:MergeInheritable(base_baseStyle);
 	style:Merge(baseStyle);
 
-	self:ApplyClasses();
+	self:ApplyClasses(style);
 	
 	--
 	-- apply instance if any
 	--
 	if(self.attr and self.attr.style) then
 		local style_code = self:GetAttributeWithCode("style", nil, true);
-		style:Merge(style_code);
+		if(style_code) then
+			self.style = CSSStyleDeclaration:CreateProxy(self);
+			self.style:Merge(style_code);
+		end
 	end
-	return style;
+
+	style:Merge(self.style);
+
+	local computed_style = ComputedStyle:new():init(style);
+	--self:CreateLayoutObject(computed_style);
+
+	return computed_style;
+end
+
+function PageElement:GetComputedStyle()
+	if(self.layout_object) then
+		return self.layout_object:Style();
+	end
+	return;
+end
+
+function PageElement:StyleForLayoutObject()
+	local parent_style;
+	if(self.parent) then
+		local parent_computed_style = self.parent:GetComputedStyle();
+		if(parent_computed_style) then
+			parent_style = parent_computed_style:GetStyle();
+		end
+	end
+	return self:CreateStyle(nil, parent_style);
 end
 
 -- @param child: it can be mcmlNode or string node. 

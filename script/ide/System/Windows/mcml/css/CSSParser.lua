@@ -15,10 +15,10 @@ NPL.load("(gl)script/ide/System/Windows/mcml/css/CSSSelector.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/css/CSSStyleSheet.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/css/CSSStyleRule.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/css/CSSSelectorParser.lua");
-NPL.load("(gl)script/ide/System/Windows/mcml/StyleItem.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/css/CSSStyleDeclaration.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/mcml.lua");
 local mcml = commonlib.gettable("System.Windows.mcml");
-local StyleItem = commonlib.gettable("System.Windows.mcml.StyleItem");
+local CSSStyleDeclaration = commonlib.gettable("System.Windows.mcml.css.CSSStyleDeclaration");
 local CSSSelectorParser = commonlib.gettable("System.Windows.mcml.css.CSSSelectorParser");
 local CSSStyleRule = commonlib.gettable("System.Windows.mcml.css.CSSStyleRule");
 local CSSStyleSheet = commonlib.gettable("System.Windows.mcml.css.CSSStyleSheet");
@@ -58,19 +58,20 @@ function CSSParser:parse(filename,stylesheet)
 	--return stylesheet;
 end
 
--- merge styleitems from table
+-- merge properties from table
 function CSSParser:LoadFromTable(styles, stylesheet)
 	self:StaticInit();
 	if(styles) then
 		for flag, style in pairs(styles) do
 			local matchtype;
-			if(mcml:isElementClass(flag)) then
-				matchtype = CSSSelector.MatchType.kClass;
-			else
-				matchtype = CSSSelector.MatchType.kTag;
-			end
+--			if(mcml:isElementClass(flag)) then
+--				matchtype = CSSSelector.MatchType.kClass;
+--			else
+--				matchtype = CSSSelector.MatchType.kTag;
+--			end
+			matchtype = CSSSelector.MatchType.kTag;
 			local selector_list = {CSSSelector:new():init(flag, matchtype)};
-			local properties = StyleItem:new(style);
+			local properties = CSSStyleDeclaration:new(style);
 			local rule = CSSStyleRule:new():init(selector_list, properties);
 			stylesheet:AddStyleRule(rule);
 		end
@@ -83,7 +84,7 @@ function CSSParser:LoadCssFromString(code, stylesheet)
 	code = string.gsub(code,"/%*.-%*/","");
 	for selector_str,declaration_str in string.gmatch(code,"([^{}]+){([^{}]+)}") do
 		local selectors = self:ParseSelectors(selector_str);
-		local properties = StyleItem:new();
+		local properties = CSSStyleDeclaration:new();
 		properties:AddString(declaration_str);
 		stylesheet:AddStyleRule(CSSStyleRule:new():init(selectors,properties));
 	end

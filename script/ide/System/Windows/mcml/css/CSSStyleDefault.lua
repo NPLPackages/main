@@ -1,7 +1,7 @@
 --[[
 Title: default mcml style sheet
-Author(s): LiXizhi
-Date: 2015/5/4
+Author(s): LiPeng
+Date: 2017/11/3
 Desc: 
 use the lib:
 ------------------------------------------------------------
@@ -12,6 +12,12 @@ local CSSStyleDefault = commonlib.gettable("System.Windows.mcml.css.CSSStyleDefa
 local CSSStyleDefault = commonlib.gettable("System.Windows.mcml.css.CSSStyleDefault");
 
 CSSStyleDefault.items = {
+	["pe:div"] = {
+		["background-color"] = "#ffffff00",
+	},
+--	["pe:style"] = {
+--		["display"] = "none",
+--	},
 	["h1"] = {
 		["margin-top"] = 3,
 		["margin-left"] = 0,

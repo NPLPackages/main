@@ -94,18 +94,18 @@ function pe_div:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 --		end
 --	end
 
-	if(not css.background and not css.background2) then
-		if(css["background-color"]) then
-			css.background = "Texture/whitedot.png";	
-		else
-			css["background-color"] = "#ffffff00";
-		end
-	end
+--	if(not css.background and not css.background2) then
+--		if(css["background-color"]) then
+--			css.background = "Texture/whitedot.png";	
+--		else
+--			css["background-color"] = "#ffffff00";
+--		end
+--	end
 
 	local _this = self.control;
 	if(_this) then
 		_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
-		_this:ApplyCss(css);
+		--_this:ApplyCss(css);
 	end
 
 
@@ -236,4 +236,11 @@ function pe_div:OnClick(buttonName)
 		end
 	end
 	return result;
+end
+
+local pe_mcml = commonlib.inherit(commonlib.gettable("System.Windows.mcml.Elements.pe_div"), commonlib.gettable("System.Windows.mcml.Elements.pe_mcml"));
+pe_mcml:Property({"class_name", "pe:mcml"});
+
+function pe_mcml:attachLayoutTree()
+
 end

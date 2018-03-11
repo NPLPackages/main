@@ -10,7 +10,7 @@ NPL.load("(gl)script/ide/System/Windows/mcml/css/CSSStyleSelector.lua");
 local CSSStyleSelector = commonlib.gettable("System.Windows.mcml.css.CSSStyleSelector");
 ------------------------------------------------------------
 ]]
-NPL.load("(gl)script/ide/System/Windows/mcml/StyleItem.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/css/CSSStyleDeclaration.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/css/CSSStyleSheet.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/css/StyleSheetManager.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/css/RuleSet.lua");
@@ -21,14 +21,20 @@ local CSSStyleDefault = commonlib.gettable("System.Windows.mcml.css.CSSStyleDefa
 local RuleSet = commonlib.gettable("System.Windows.mcml.css.RuleSet");
 local StyleSheetManager = commonlib.gettable("System.Windows.mcml.css.StyleSheetManager");
 local CSSStyleSheet = commonlib.gettable("System.Windows.mcml.css.CSSStyleSheet");
-local StyleItem = commonlib.gettable("System.Windows.mcml.StyleItem");
+local CSSStyleDeclaration = commonlib.gettable("System.Windows.mcml.css.CSSStyleDeclaration");
 
 local CSSStyleSelector = commonlib.inherit(nil, commonlib.gettable("System.Windows.mcml.css.CSSStyleSelector"));
 
 local function LoalDefaultStyle()
-	local stylesheet = CSSStyleSheet:new():loadFromTable(CSSStyleDefault.items);
 	local rule_set = RuleSet:new();
+
+	local stylesheet = CSSStyleSheet:new():loadFromTable(CSSStyleDefault.items);
 	rule_set:AddRulesFromSheet(stylesheet);
+
+	stylesheet = CSSStyleSheet:new():loadFromFile("script/ide/System/Windows/mcml/css/html.css")
+	rule_set:AddRulesFromSheet(stylesheet);
+
+
 	return rule_set;
 end
 
@@ -43,6 +49,10 @@ function CSSStyleSelector:ctor()
 	self.authorStyle = nil;
 	
 	self.stylesheets = {};
+
+
+	-- 应该是存储匹配结果，暂时没用到
+	self.matchedDels = nil;
 end
 
 function CSSStyleSelector:AddStyleSheetFromFile(filename)
@@ -103,50 +113,50 @@ function CSSStyleSelector:MapStyleSheetToRuleSet(stylesheet)
 	self.authorStyle:AddRulesFromSheet(stylesheet);
 end
 
-function CSSStyleSelector:ApplyToStyleItem(styleItem, pageElement)
-	if(styleItem and pageElement) then
-		self:MatchUARules(styleItem, pageElement);
-		self:MatchAuthorRules(styleItem, pageElement);
+function CSSStyleSelector:ApplyToStyleDeclaration(style_decl, pageElement)
+	if(style_decl and pageElement) then
+		self:MatchUARules(style_decl, pageElement);
+		self:MatchAuthorRules(style_decl, pageElement);
 	end
 end
 
 -- user agent rule: here is default style
-function CSSStyleSelector:MatchUARules(styleItem, pageElement)
-	self:MatchRules(styleItem, pageElement, defaultStyle);
+function CSSStyleSelector:MatchUARules(style_decl, pageElement)
+	self:MatchRules(style_decl, pageElement, defaultStyle);
 end
 
-function CSSStyleSelector:MatchAuthorRules(styleItem, pageElement)
-	self:MatchRules(styleItem, pageElement, self.authorStyle);
+function CSSStyleSelector:MatchAuthorRules(style_decl, pageElement)
+	self:MatchRules(style_decl, pageElement, self.authorStyle);
 end
 
-function CSSStyleSelector:MatchRules(styleItem, pageElement, rule_set)
+function CSSStyleSelector:MatchRules(style_decl, pageElement, rule_set)
 	if(not rule_set) then
 		return;
 	end
 	local id = pageElement:GetAttributeWithCode("id",nil,true);
 	if(id) then
-		self:MatchRulesForList(styleItem, pageElement,rule_set:idRules()[id]);
+		self:MatchRulesForList(style_decl, pageElement,rule_set:idRules()[id]);
 	end
 
 	local classNames = pageElement:GetClassNames();
 	if(classNames) then
 		for class, _ in pairs(classNames) do
 			--local class = classNames[i];
-			self:MatchRulesForList(styleItem, pageElement,rule_set:classRules()[class]);
+			self:MatchRulesForList(style_decl, pageElement,rule_set:classRules()[class]);
 		end
 	end
 
 	local tag = pageElement.name;
-	self:MatchRulesForList(styleItem, pageElement,rule_set:tagRules()[tag]);
-	self:MatchRulesForList(styleItem, pageElement,rule_set:universalRules());
+	self:MatchRulesForList(style_decl, pageElement,rule_set:tagRules()[tag]);
+	self:MatchRulesForList(style_decl, pageElement,rule_set:universalRules());
 end
 
-function CSSStyleSelector:MatchRulesForList(styleItem, pageElement, rule_list)
+function CSSStyleSelector:MatchRulesForList(style_decl, pageElement, rule_list)
 	if(rule_list) then
 		for i = 1,#rule_list do
 			local rule_data = rule_list[i];
 			if(self:checkSelector(rule_data, pageElement)) then
-				styleItem:Merge(rule_data:Rule():GetProperties());
+				style_decl:Merge(rule_data:Rule():GetProperties());
 			end
 		end
 	end

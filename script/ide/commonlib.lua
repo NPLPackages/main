@@ -49,6 +49,10 @@ function if_else(bStatement, true_value, false_value)
 	end
 end
 
+function math.round(number)
+	return math.floor(number+0.5);
+end
+
 NPL.load("(gl)script/ide/ParaEngineLuaJitFFI.lua");
 NPL.load("(gl)script/ide/oo.lua");
 NPL.load("(gl)script/ide/log.lua");

@@ -953,6 +953,7 @@
     <Content Include="script\ide\System\Windows\KeyEvent.lua" />
     <Content Include="script\ide\System\Windows\Layout.lua" />
     <Content Include="script\ide\System\Windows\LayoutItem.lua" />
+    <Content Include="script\ide\System\Windows\mcml\css\html.css" />
     <Content Include="script\ide\System\Windows\mcml\DOM.lua" />
     <Content Include="script\ide\System\Windows\mcml\Elements\pe_button.lua" />
     <Content Include="script\ide\System\Windows\mcml\Elements\pe_container.lua" />
@@ -1070,6 +1071,7 @@
     <Content Include="script\test\gridviewtest.lua" />
     <Content Include="script\test\IDE_Test.lua" />
     <Content Include="script\test\MCMLV2\mcml_window.html" />
+    <Content Include="script\test\MCMLV2\test_layout_block.html" />
     <Content Include="script\test\MCML_Sample.xml" />
     <Content Include="script\test\media\bumpMap.dds" />
     <Content Include="script\test\media\cloud.dds" />
@@ -1157,6 +1159,7 @@
     <None Include="script\ide\System\Windows\Controls\TreeView.lua" />
     <None Include="script\ide\System\Windows\mcml\css\CSSParser.lua" />
     <None Include="script\ide\System\Windows\mcml\css\CSSSelectorParser.lua" />
+    <None Include="script\ide\System\Windows\mcml\css\CSSStyleDeclaration.lua" />
     <None Include="script\ide\System\Windows\mcml\css\CSSStyleSelector.lua" />
     <None Include="script\ide\System\Windows\mcml\css\CSSStyleSheet.lua" />
     <None Include="script\ide\System\Windows\mcml\css\CSSStyleDefault.lua" />
@@ -1184,6 +1187,26 @@
     <None Include="script\ide\System\Windows\mcml\Elements\pe_treenode.lua" />
     <None Include="script\ide\System\Windows\mcml\Elements\pe_treeview.lua" />
     <None Include="script\ide\System\Windows\mcml\css\CSSSelector.lua" />
+    <None Include="script\ide\System\Windows\mcml\geometry\IntPoint.lua" />
+    <None Include="script\ide\System\Windows\mcml\geometry\IntRect.lua" />
+    <None Include="script\ide\System\Windows\mcml\geometry\IntSize.lua" />
+    <None Include="script\ide\System\Windows\mcml\geometry\Length.lua" />
+    <None Include="script\ide\System\Windows\mcml\layout\LayoutBlock.lua" />
+    <None Include="script\ide\System\Windows\mcml\layout\LayoutBlockLineLayout.lua" />
+    <None Include="script\ide\System\Windows\mcml\layout\LayoutBox.lua" />
+    <None Include="script\ide\System\Windows\mcml\layout\LayoutBoxModelObject.lua" />
+    <None Include="script\ide\System\Windows\mcml\layout\LayoutButton.lua" />
+    <None Include="script\ide\System\Windows\mcml\layout\LayoutFullScreen.lua" />
+    <None Include="script\ide\System\Windows\mcml\layout\LayoutInline.lua" />
+    <None Include="script\ide\System\Windows\mcml\layout\LayoutLayer.lua" />
+    <None Include="script\ide\System\Windows\mcml\layout\LayoutModel.lua" />
+    <None Include="script\ide\System\Windows\mcml\layout\LayoutObject.lua" />
+    <None Include="script\ide\System\Windows\mcml\layout\LayoutObjectChildList.lua" />
+    <None Include="script\ide\System\Windows\mcml\layout\LayoutText.lua" />
+    <None Include="script\ide\System\Windows\mcml\layout\LayoutTreeBuilder.lua" />
+    <None Include="script\ide\System\Windows\mcml\layout\LayoutView.lua" />
+    <None Include="script\ide\System\Windows\mcml\page\FrameView.lua" />
+    <None Include="script\ide\System\Windows\mcml\style\ComputedStyle.lua" />
     <None Include="script\test\MCMLV2\main.lua" />
     <None Include="script\test\MCMLV2\mcml_window.lua" />
   </ItemGroup>

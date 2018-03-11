@@ -13,6 +13,10 @@ local page = Page:new();
 NPL.load("(gl)script/ide/System/Core/ToolBase.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/PageLayout.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/css/CSSStyleSelector.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/page/FrameView.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutView.lua");
+local LayoutView = commonlib.gettable("System.Windows.mcml.layout.LayoutView");
+local FrameView = commonlib.gettable("System.Windows.mcml.page.FrameView");
 local CSSStyleSelector = commonlib.gettable("System.Windows.mcml.css.CSSStyleSelector");
 local mcml = commonlib.gettable("System.Windows.mcml");
 local Elements = commonlib.gettable("System.Windows.mcml.Elements");
@@ -753,18 +757,31 @@ end
 function Page:LoadComponent()
 	local layout = self.layout;
 	if(layout and self.mcmlNode) then
+		local layoutView = LayoutView:new():init(self.mcmlNode, layout);
+		self.mcmlNode:SetLayoutObject(layoutView);
+		--self:SetLayoutObject(LayoutView:new():init(self.mcmlNode, layout));
+
 		local parentElem = layout:widget();	
 		if(parentElem) then
-			self.mcmlNode:LoadComponent(parentElem, layout, nil);
+			self.mcmlNode:LoadComponentIfNeeded(parentElem, layout, nil);
 		end
+
+		layoutView:SetStyle(self.mcmlNode:StyleForLayoutObject());
 	end
 end
+
+--function Page:SetLayoutObject(layout_object)
+--	self.layout_object = layout_object;
+--end
+--
+--function Page:GetLayoutObject()
+--	return self.layout_object;
+--end
 
 -- Get the page style object
 function Page:GetStyle()
 	if(not self.style) then
 		self.style = CSSStyleSelector:new();
-		--self.style:AddReference(mcml:GetStyle());
 	end
 	return self.style;
 end
@@ -783,7 +800,7 @@ function Page:Attach(uiElement)
 			uiElement.layout = nil;
 		end
 		self:Detach();
-		self.layout = PageLayout:new();
+		self.layout = FrameView:new();
 		self.layout:SetPage(self, uiElement);
 		uiElement.layout = self.layout;
 	end

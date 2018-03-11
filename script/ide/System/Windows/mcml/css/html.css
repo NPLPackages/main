@@ -1,0 +1,7 @@
+pe:mcml, div {
+    display:block;
+}
+
+button, input[type="button"] {
+    display: inline-block;
+}

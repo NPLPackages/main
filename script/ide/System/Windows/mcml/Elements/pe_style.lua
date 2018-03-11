@@ -13,7 +13,16 @@ NPL.load("(gl)script/ide/System/Windows/mcml/css/CSSStyleSelector.lua");
 
 local pe_style = commonlib.inherit(commonlib.gettable("System.Windows.mcml.PageElement"), commonlib.gettable("System.Windows.mcml.Elements.pe_style"));
 
+function pe_style:ctor()
+	self.sheet = nil;
+end
+
+function pe_style:attachLayoutTree()
+	
+end
+
 function pe_style:LoadComponent(parentElem, parentLayout, style)
+	--echo("pe_style:LoadComponent");
 	if(self.isLoaded) then
 		return
 	end
@@ -23,7 +32,7 @@ function pe_style:LoadComponent(parentElem, parentLayout, style)
 	local scriptType = self:GetString("type");
 	local type = string.match(scriptType,"[^/]+/([^/]+)");
 	-- Defines a URL to a file that contains the script (instead of inserting the script into your HTML document, you can refer to a file that contains the script)
-	local src = self:GetString("src");
+	local src = self:GetString("src") or self:GetString("href");
 	if(src and src ~= "") then
 		local pageStyle = self:GetPageStyle();
 		if(pageStyle) then

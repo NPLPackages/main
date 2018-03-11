@@ -1,7 +1,7 @@
 --[[
 Title: selector checker
-Author(s): LiXizhi
-Date: 2016/10/12
+Author(s): LiPeng
+Date: 2017/11/3
 Desc: 
 
 use the lib:

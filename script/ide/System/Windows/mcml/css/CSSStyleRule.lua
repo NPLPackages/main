@@ -10,8 +10,8 @@ NPL.load("(gl)script/ide/System/Windows/mcml/css/CSSStyleRule.lua");
 local CSSStyleRule = commonlib.gettable("System.Windows.mcml.css.CSSStyleRule");
 ------------------------------------------------------------
 ]]
-NPL.load("(gl)script/ide/System/Windows/mcml/StyleItem.lua");
-local StyleItem = commonlib.gettable("System.Windows.mcml.StyleItem");
+NPL.load("(gl)script/ide/System/Windows/mcml/css/CSSStyleDeclaration.lua");
+local CSSStyleDeclaration = commonlib.gettable("System.Windows.mcml.css.CSSStyleDeclaration");
 
 local CSSStyleRule = commonlib.inherit(nil, commonlib.gettable("System.Windows.mcml.css.CSSStyleRule"));
 
@@ -21,7 +21,7 @@ function CSSStyleRule:ctor()
 	--[[
 	-- selector列表 
 	CSSSelectorList selector_list_;
-	-- property 集合，对应 StyleItem 对象
+	-- property 集合，对应 CSSStyleDeclaration 对象
 	mutable Member<CSSPropertyValueSet> properties_;
 	mutable Member<CSSLazyPropertyParser> lazy_property_parser_;
 	]]
@@ -50,7 +50,7 @@ end
 
 function CSSStyleRule:GetProperties()
 	if(not self.properties) then
-		self.properties = StyleItem:new();
+		self.properties = CSSStyleDeclaration:new();
 	end
 	return self.properties;
 end

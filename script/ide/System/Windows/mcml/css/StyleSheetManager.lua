@@ -1,7 +1,7 @@
 --[[
 Title: stylesheet manager
-Author(s): LiXizhi
-Date: 2016/10/12
+Author(s): LiPeng
+Date: 2017/11/3
 Desc: singleton class for managing all file based stylesheets globally. 
 
 use the lib:

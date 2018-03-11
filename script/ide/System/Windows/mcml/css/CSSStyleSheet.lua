@@ -17,9 +17,10 @@ local CSSStyleSheet = commonlib.inherit(nil, commonlib.gettable("System.Windows.
 
 function CSSStyleSheet:ctor()
 	self.filename = nil;
-	-- CSSStyleRule สýื้
+	-- CSSStyleRule 
 	self.child_rules = {};
-	--self.is_inline_stylesheet = true;
+	-- determined self created from <pe:style> <style> <link> or external css file.
+	self.is_inline_stylesheet = true;
 end
 
 function CSSStyleSheet:loadFromFile(filename)

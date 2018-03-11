@@ -39,7 +39,7 @@ function pe_text:GetTextTrimmed()
 end
 
 function pe_text:LoadComponent(parentElem, parentLayout, style)
-	local css = self:CreateStyle(mcml:GetStyleItem(self.class_name), style);
+	local css = self:CreateStyle(nil, style);
 
 	local value = self:GetTextTrimmed();
 	self.value = value;

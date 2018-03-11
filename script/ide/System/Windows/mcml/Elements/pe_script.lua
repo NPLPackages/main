@@ -312,4 +312,6 @@ function pe_script.EndCode(self)
 	end	
 end
 
+function pe_script:attachLayoutTree()
 
+end

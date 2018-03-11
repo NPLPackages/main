@@ -52,6 +52,7 @@ local function InitApp()
 	})
 
 	System.App.Commands.Call("Help.Debug");
+	System.App.Commands.Call("File.MCMLBrowser");
 
 --	local app = Map3DSystem.App.Registration.GetApp("Debug_GUID");
 --
