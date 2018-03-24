@@ -11,6 +11,9 @@ local Keyboard = commonlib.gettable("System.Windows.Keyboard");
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/System/Core/ToolBase.lua");
+NPL.load("(gl)script/ide/System/Windows/Screen.lua");
+local Screen = commonlib.gettable("System.Windows.Screen");
+
 local Keyboard = commonlib.inherit(commonlib.gettable("System.Core.ToolBase"), commonlib.gettable("System.Windows.Keyboard"));
 Keyboard:Property("Name", "Keyboard");
 
@@ -27,6 +30,17 @@ end
 
 function Keyboard:IsShiftKeyPressed()
 	return ParaUI.IsKeyPressed(DIK_SCANCODE.DIK_LSHIFT) or ParaUI.IsKeyPressed(DIK_SCANCODE.DIK_RSHIFT);
+end
+
+-- send a simulated raw key event to paraengine. 
+-- @param event_type: "keyDownEvent", "keyUpEvent"
+-- @param vKey: virtual key like DIK_SPACE
+function Keyboard:SendKeyEvent(event_type, vKey)
+	if(event_type == "keyDownEvent") then
+		Screen:GetGUIRoot():SetField("SendKeyDownEvent", vKey);
+	elseif(event_type == "keyPressedEvent") then
+		Screen:GetGUIRoot():SetField("SendKeyUpEvent", vKey);
+	end
 end
 
 -- this is a singleton class

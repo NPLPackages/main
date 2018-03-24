@@ -63,7 +63,7 @@ ParaEngine.SetWindowText(string.format("www.paraengine.com -- powered by ParaEng
 -- whether we are in a web browser plugin. 
 options.IsWebBrowser = ((ParaEngine.GetAttributeObject():GetField("CoreUsage", 1) % 2) == 0);
 -- whether we are in the mobile platform
-options.IsMobilePlatform = ParaEngine.GetAttributeObject():GetField("IsMobilePlatform", false);
+options.IsMobilePlatform = (ParaEngine.GetAppCommandLineByParam("IsMobilePlatform", "false") == "true"); -- ParaEngine.GetAttributeObject():GetField("IsMobilePlatform", false);
 -- do not allow resizing windows when running standalone mode. Allow resizing in web browser
 ParaEngine.GetAttributeObject():SetField("IgnoreWindowSizeChange", not options.IsWebBrowser);
 
