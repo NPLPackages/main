@@ -38,8 +38,15 @@ end
 function Keyboard:SendKeyEvent(event_type, vKey)
 	if(event_type == "keyDownEvent") then
 		Screen:GetGUIRoot():SetField("SendKeyDownEvent", vKey);
-	elseif(event_type == "keyPressedEvent") then
+	elseif(event_type == "keyUpEvent") then
 		Screen:GetGUIRoot():SetField("SendKeyUpEvent", vKey);
+	end
+end
+
+-- emulate the IME 
+function Keyboard:SendInputMethodEvent(str)
+	if(str) then
+		Screen:GetGUIRoot():SetField("SendInputMethodEvent", str);
 	end
 end
 
