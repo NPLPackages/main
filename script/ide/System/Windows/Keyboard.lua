@@ -43,6 +43,13 @@ function Keyboard:SendKeyEvent(event_type, vKey)
 	end
 end
 
+
+-- whether to enable system IME for all edit box control. 
+-- sometimes, we will prefer virtual keyboard in NPL, instead of system IME. 
+function Keyboard:EnableIME(bEnabled)
+	Screen:GetGUIRoot():SetField("EnableIME", bEnabled == true);
+end
+
 -- emulate the IME 
 function Keyboard:SendInputMethodEvent(str)
 	if(str) then
