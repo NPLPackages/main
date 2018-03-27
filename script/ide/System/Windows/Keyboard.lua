@@ -57,5 +57,12 @@ function Keyboard:SendInputMethodEvent(str)
 	end
 end
 
+-- whether any of the UI has key focus
+function Keyboard:HasKeyFocus()
+	return Screen:GetGUIRoot():GetField("HasKeyFocus", false);
+end
+
+
+
 -- this is a singleton class
 Keyboard:InitSingleton();
