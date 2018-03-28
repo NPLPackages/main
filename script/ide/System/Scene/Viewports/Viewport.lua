@@ -41,14 +41,31 @@ function Viewport:GetAttrObject()
 	end
 end
 
+-- set alignment and position
+function Viewport:SetPosition(alignment, left, top, width, height)
+	local attr = self:GetAttrObject(self.nIndex);
+	attr:SetField("alignment", alignment);
+	attr:SetField("left", left);
+	attr:SetField("top", top);
+	attr:SetField("width", width);
+	attr:SetField("height", height);
+end
+
+function Viewport:Apply()
+	local attr = self:GetAttrObject(self.nIndex);
+	attr:CallField("ApplyViewport");
+end
+
 -- assume "_fi" fill alignment
 function Viewport:SetMarginBottom(margin)
-	local attr = self:GetAttrObject();
-	if(attr) then
-		margin = margin or 0;
-		self.margin_bottom = margin;
-		attr:SetField("height", margin);
-		self:sizeChanged();
+	if(self:GetMarginBottom() ~= margin) then
+		local attr = self:GetAttrObject();
+		if(attr) then
+			margin = margin or 0;
+			self.margin_bottom = margin;
+			attr:SetField("height", margin);
+			self:sizeChanged();
+		end
 	end
 end
 
@@ -59,12 +76,14 @@ end
 
 -- assume "_fi" fill alignment
 function Viewport:SetMarginRight(margin)
-	local attr = self:GetAttrObject();
-	if(attr) then
-		margin = margin or 0;
-		self.margin_right = margin;
-		attr:SetField("width", margin);
-		self:sizeChanged();
+	if(self:GetMarginRight() ~= margin) then
+		local attr = self:GetAttrObject();
+		if(attr) then
+			margin = margin or 0;
+			self.margin_right = margin;
+			attr:SetField("width", margin);
+			self:sizeChanged();
+		end
 	end
 end
 

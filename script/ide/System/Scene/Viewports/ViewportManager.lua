@@ -9,7 +9,7 @@ NPL.load("(gl)script/ide/System/Scene/Viewports/ViewportManager.lua");
 local ViewportManager = commonlib.gettable("System.Scene.Viewports.ViewportManager");
 local viewport = ViewportManager:GetSceneViewport();
 viewport:SetMarginBottom(100)
-viewport:SetMarginBottom(0)
+viewport:SetPosition("_fi", 100,200, 100,100)
 ------------------------------------------------------------
 ]]
 
