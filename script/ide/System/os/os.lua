@@ -53,3 +53,30 @@ function os.GetCurrentProcessId()
 	end
 	return os.pid;
 end
+
+local externalStoragePath;
+-- this is "" on PC, but is valid on android/ios mobile devices. 
+-- this will always ends with "/"
+function os.GetExternalStoragePath()
+	if(not externalStoragePath) then
+		externalStoragePath = ParaIO.GetCurDirectory(22);
+
+		if(ParaIO.GetCurDirectory(0) == externalStoragePath) then
+			externalStoragePath = "";
+		else
+			if(externalStoragePath ~= "" and not externalStoragePath:match("[/\\]$")) then
+				externalStoragePath = externalStoragePath .. "/";
+			end
+		end
+	end
+	return externalStoragePath;
+end
+
+
+-- a writable directory. on Android,iOS this is the default app internal storage. 
+-- when app is uninstalled, data in this directory will be gone. 
+function os.GetWritablePath()
+	return ParaIO.GetWritablePath();
+end
+
+

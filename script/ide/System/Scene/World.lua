@@ -373,10 +373,10 @@ function World:CreateWorld(NewWorldpath, BaseWorldPath, bUseBaseWorldNPC, bClone
 				--TODO: keep other info from the user.
 				return true;
 			else 
-				return false, "世界创建失败了。";
+				return false, L"世界创建失败了。";
 			end
 		else
-			return false, "被派生的世界不存在。";
+			return false, L"被派生的世界不存在。";
 		end
 	end
 end

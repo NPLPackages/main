@@ -398,10 +398,10 @@ function Map3DSystem.CreateWorld(NewWorldpath, BaseWorldPath, bUseBaseWorldNPC, 
 				--TODO: keep other info from the user.
 				return true;
 			else 
-				return "世界创建失败了。";
+				return L"世界创建失败了。";
 			end
 		else
-			return "被派生的世界不存在。";
+			return L"被派生的世界不存在。";
 		end
 	end
 end

@@ -62,6 +62,15 @@ function Keyboard:HasKeyFocus()
 	return Screen:GetGUIRoot():GetField("HasKeyFocus", false);
 end
 
+-- return the ParaUIObject that is currently have key focus or nil. 
+function Keyboard:GetKeyFocus()
+	local id = Screen:GetGUIRoot():GetField("KeyFocusObjectId", -1);
+	if(id >= 0 ) then
+		return ParaUI.GetUIObject(id);
+	end
+end
+
+
 
 
 -- this is a singleton class
