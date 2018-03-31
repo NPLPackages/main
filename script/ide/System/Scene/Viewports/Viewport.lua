@@ -7,6 +7,9 @@ use the lib:
 ------------------------------------------------------------
 NPL.load("(gl)script/ide/System/Scene/Viewports/Viewport.lua");
 local Viewport = commonlib.gettable("System.Scene.Viewports.Viewport");
+Viewport:init(0):SetMarginBottom(100)
+Viewport:init("GUI"):SetMarginBottom(100)
+Viewport:init("scene"):SetMarginBottom(100)
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/System/Windows/Screen.lua");
@@ -20,8 +23,15 @@ Viewport:Signal("sizeChanged");
 function Viewport:ctor()
 end
 
-function Viewport:init(name)
-	self.name = name;
+function Viewport:init(name_or_id)
+	if(type(name_or_id) == "string") then
+		self.name = name_or_id;
+	elseif(type(name_or_id) == "number") then
+		if(name_or_id < 0) then
+			name_or_id = 0;
+		end
+		self.id = name_or_id;
+	end
 	return self;
 end
 
@@ -33,7 +43,12 @@ function Viewport:GetAttrObject()
 		NPL.load("(gl)script/ide/System/Core/DOM.lua");
 		local DOM = commonlib.gettable("System.Core.DOM")
 		local attrManager = ParaEngine.GetAttributeObject():GetChild("ViewportManager");	
-		local attr = attrManager:GetChild(self.name);
+		local attr;
+		if(self.name) then
+			attr = attrManager:GetChild(self.name);
+		else
+			attr = attrManager:GetChildAt(self.id or 0);
+		end
 		if(attr:IsValid()) then
 			self.attr = attr;
 			return attr;

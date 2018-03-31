@@ -34,9 +34,10 @@ function Screen:GetHeight()
 	return self:GetGUIRoot().height;
 end
 
+local scaling = {1,1}
 -- return {scaleX, scaleY}
 function Screen:GetUIScaling()
-	return self:GetGUIRoot():GetField("UIScale", {1, 1})
+	return self:GetGUIRoot():GetField("UIScale", scaling)
 end
 
 Screen:InitSingleton();
