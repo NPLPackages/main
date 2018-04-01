@@ -631,8 +631,8 @@ local function CreateDummy_functions()
 	end
 end
 
--- for mobile platform
-if(ParaEngine.GetAttributeObject():GetField("IsMobilePlatform", false)) then
+-- OBSOLETED: for mobile platform
+if(false and ParaEngine.GetAttributeObject():GetField("IsMobilePlatform", false)) then
 	-- load related api
 	NPL.load("(gl)script/mobile/API/LocalBridgePBAPI.lua");
 	if(MobileDevice) then
