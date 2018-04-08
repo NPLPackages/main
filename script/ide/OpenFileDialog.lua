@@ -16,6 +16,7 @@ local ctl = CommonCtrl.OpenFileDialog:new{
 	parent = nil,
 	-- initial file name to be displayed, usually "" 
 	FileName = "",
+	folderlevels = 0,
 	fileextensions = {"all files(*.*)", "images(*.jpg; *.png; *.dds)", "animations(*.swf; *.wmv; *.avi)", "web pages(*.htm; *.html)", },
 	folderlinks = {
 		{path = "model/", text = "model"},
@@ -91,6 +92,8 @@ local OpenFileDialog = {
 	main_bg = nil, -- use default container bg
 	-- oncheck event, it can be nil, a string to be executed or a function of type void ()(sCtrlName, filename)
 	onopen = nil,
+	-- folder depth to search, default to 0, which means selected folder only
+	folderlevels = 0,
 }
 CommonCtrl.OpenFileDialog = OpenFileDialog;
 
@@ -413,6 +416,7 @@ function OpenFileDialog:Update()
 		if(FilesCtrl~=nil)then
 			FilesCtrl.rootfolder = self.currentFolder;
 			FilesCtrl.filter = fileExt;
+			FilesCtrl.folderlevels = self.folderlevels;
 			FilesCtrl:ResetTreeView();
 		end
 		

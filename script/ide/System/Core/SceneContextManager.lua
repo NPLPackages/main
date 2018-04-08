@@ -146,6 +146,13 @@ function SceneContextManager.OnMouseDown(nCode, appName, msg)
 				ParaEngine.GetAttributeObject():SetField("CaptureMouse", true);
 			end
 			-- prevent any other hooks
+			local attr = ParaCamera.GetAttributeObject();
+
+			if(attr:GetField("EnableMouseLeftDrag", false)) then
+				SceneContextManager.restoreCameraMouseLeftDrag = true;
+				attr:SetField("EnableMouseLeftDrag", false);
+			end
+
 			return nil;
 		end
 	end
@@ -191,11 +198,17 @@ function SceneContextManager.OnMouseUp(nCode, appName, msg)
 		context:handleMouseEvent(event);
 		ParaEngine.GetAttributeObject():SetField("CaptureMouse", false);
 
+		if(SceneContextManager.restoreCameraMouseLeftDrag) then
+			SceneContextManager.restoreCameraMouseLeftDrag = nil;
+			ParaCamera.GetAttributeObject():SetField("EnableMouseLeftDrag", true);
+		end
+
 		if(event:isAccepted() or context:IsAcceptAllEvents()) then
 			-- prevent any other hooks
 			return nil;
 		end
 	end
+	
 	if(self:IsAcceptAllEvents()) then
 		-- prevent any other hooks
 		return nil;
