@@ -164,16 +164,14 @@ function Canvas3D:Show(bShow)
 			_this.onmousewheel = string.format(";CommonCtrl.Canvas3D.OnMouseWheel(%q);", self.name);
 			_this.onmouseenter = string.format(";CommonCtrl.Canvas3D.OnMouseEnter(%q);", self.name); 
 			_this.onmouseleave = string.format(";CommonCtrl.Canvas3D.OnMouseLeave(%q);", self.name);
-			_this.onframemove = string.format(";CommonCtrl.Canvas3D.OnFrameMove(%q);", self.name);
 		else
 			_this:GetAttributeObject():SetField("ClickThrough", true)
-			if(self.FrameMoveCallback) then
-				_this:SetScript("onframemove", function()
-					self:FrameMoveCallback();
-				end);
-			end
 		end	
 
+		if(self.IsInteractive or self.autoRotateSpeed or self.FrameMoveCallback) then
+			_this.onframemove = string.format(";CommonCtrl.Canvas3D.OnFrameMove(%q);", self.name);
+		end
+		
 		if(self.zorder) then
 			_this.zorder = self.zorder;
 		end
