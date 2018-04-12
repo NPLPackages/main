@@ -882,9 +882,8 @@ function BonesManip:paintEvent(painter)
 				self:SetColorAndName(painter, self.PivotColor, pickName);
 			end
 			-- draw this bone
-			ShapesDrawer.DrawCircle(painter, 0,0,0, bone_radius, "x", false);
-			ShapesDrawer.DrawCircle(painter, 0,0,0, bone_radius, "y", false);
-			ShapesDrawer.DrawCircle(painter, 0,0,0, bone_radius, "z", false);
+			painter:LoadBillboardMatrix();
+			ShapesDrawer.DrawCircle(painter, 0,0,0, bone_radius, "z", true);
 			painter:PopMatrix();
 		 
 			if(not isDrawingPickable and 
