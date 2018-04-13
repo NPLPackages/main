@@ -161,15 +161,27 @@ function BufferPicking:Pick(x, y, width, height, nViewportId)
 	return self:GetPickingResult();
 end
 
--- return an array of unique picking id in the last pick call. it may return nil if nothing is picked
+
+-- return array, size:  an array of unique picking id in the last pick call. it may return nil if nothing is picked
+-- array start from index 0.
 function BufferPicking:GetPickingResult()
 	local count = self:GetPickingCount();
 	if(count > 0) then
-		local result = {};
-		for i=0, count-1 do
-			result[#result+1] = self:GetPickingID(i);
+		if(ParaEngine.hasFFI) then
+			if(not self.result) then
+				local ffi = require('ffi');
+				self.result = ffi.new('uint32_t* [1]');
+			end
+			self.engine:GetFieldCData("FetchPickingResult", self.result);
+			return self.result[0], count;
+		else
+			self.result = self.result or {};
+			local result = self.result;
+			for i=0, count-1 do
+				result[i] = self:GetPickingID(i);
+			end
+			return result, count;
 		end
-		return result;
 	end
 end
 

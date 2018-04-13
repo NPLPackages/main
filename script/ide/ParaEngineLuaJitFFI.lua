@@ -34,6 +34,9 @@ sample code: https://gist.github.com/gaspard/1087380
 
 -------------------------------------------------------
 NPL.load("(gl)script/ide/ParaEngineLuaJitFFI.lua");
+if(ParaEngine.hasFFI) then
+	-- we have ffi
+end
 -------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/commonlib.lua");
@@ -108,6 +111,29 @@ if(use_ffi) then
 		float x;
 		float y;
 	};
+
+	void ParaPainter_Flush();
+	void ParaPainter_Save();
+	void ParaPainter_Restore();
+	void ParaPainter_CallField(const char*  sFieldname);
+
+	void ParaPainter_SetCompositionMode(int mode);
+	int ParaPainter_GetCompositionMode();
+	void ParaPainter_SetOpacity(float fOpacity);
+	void ParaPainter_SetClipRegion(int x, int y, int w, int h);
+	void ParaPainter_SetClipping(bool enable);
+	bool ParaPainter_HasClipping();
+	void ParaPainter_Scale(float sx, float sy);
+	void ParaPainter_Shear(float sh, float sv);
+	void ParaPainter_Rotate(float a);
+	void ParaPainter_Translate(float dx, float dy);
+	void ParaPainter_DrawPoint(float x, float y);
+	void ParaPainter_DrawLine(float x1, float y1, float x2, float y2);
+	void ParaPainter_DrawRect(float x1, float y1, float w, float h);
+	void ParaPainter_DrawTriangleList(struct Vector3* triangleList, int nTriangleCount, int nIndexOffset);
+	void ParaPainter_DrawLineList(struct Vector3* lineList, int nLineCount, int nIndexOffset);
+	void ParaPainter_DrawText(float x, float y, const char* s);
+	void ParaPainter_DrawText2(float x, float y, float w, float h, const char* s, int textOption);
 	]]);
 
 
@@ -323,6 +349,90 @@ if(use_ffi) then
 				ParaGlobal.SelectAttributeObject(self);
 			end
 			return ParaEngineClient.ParaGlobal_GetFieldCData(name, cdata);
+		end
+
+		--------------------------------------
+		-- ParaPainter
+		--------------------------------------
+		if(not ParaEngineClient.ParaPainter_Flush) then
+			ParaGlobal.WriteToLogFile("warning: FFI for ParaPainter NOT installed\n");
+		else
+			-- this will means that we have full FFI support. 
+			ParaEngine.hasFFI = true;
+			ParaPainter.Flush = function() 
+				ParaEngineClient.ParaPainter_Flush();
+			end
+			ParaPainter.Save = function()
+				ParaEngineClient.ParaPainter_Save();
+			end
+			ParaPainter.Restore = function()
+				ParaEngineClient.ParaPainter_Restore();
+			end
+			ParaPainter.CallField = function(sFieldname)
+				ParaEngineClient.ParaPainter_CallField(sFieldname);
+			end
+
+			ParaPainter.SetCompositionMode = function(mode)
+				ParaEngineClient.ParaPainter_SetCompositionMode(mode)
+			end
+			ParaPainter.GetCompositionMode = function ()
+				return ParaEngineClient.ParaPainter_GetCompositionMode();
+			end
+			ParaPainter.SetOpacity = function (fOpacity)
+				ParaEngineClient.ParaPainter_SetOpacity(fOpacity);
+			end
+			ParaPainter.SetClipRegion = function(x, y, w, h)
+				ParaEngineClient.ParaPainter_SetClipRegion(x, y, w, h);
+			end
+			ParaPainter.SetClipping = function (enable)
+				ParaEngineClient.ParaPainter_SetClipping(enable);
+			end
+			ParaPainter.HasClipping = function ()
+				return ParaEngineClient.ParaPainter_HasClipping();
+			end
+			ParaPainter.Scale = function (sx, sy)
+				ParaEngineClient.ParaPainter_Scale(sx, sy);
+			end
+			ParaPainter.Shear = function(sh, sv)
+				ParaEngineClient.ParaPainter_Shear(sh, sv);
+			end
+			ParaPainter.Rotate = function (a)
+				ParaEngineClient.ParaPainter_Rotate(a);
+			end
+			ParaPainter.Translate = function (dx, dy)
+				ParaEngineClient.ParaPainter_Translate(dx, dy);
+			end
+			ParaPainter.DrawPoint = function (x, y)
+				ParaEngineClient.ParaPainter_DrawPoint(x, y);
+			end
+			ParaPainter_DrawLine = function(x1, y1, x2, y2)
+				ParaEngineClient.ParaPainter_DrawLine(x1, y1, x2, y2);
+			end
+			ParaPainter.DrawRect = function (x1, y1, w, h)
+				ParaEngineClient.ParaPainter_DrawRect(x1, y1, w, h);
+			end
+			local old_DrawTriangleList = ParaPainter.DrawTriangleList;
+			ParaPainter.DrawTriangleList = function (triangleList, nTriangleCount, nIndexOffset)
+				if(type(triangleList) == "table") then
+					old_DrawTriangleList(triangleList, nTriangleCount, nIndexOffset);
+				else
+					ParaEngineClient.ParaPainter_DrawTriangleList(triangleList, nTriangleCount, nIndexOffset);
+				end
+			end
+			local old_DrawLineList = ParaPainter.DrawLineList;
+			ParaPainter.DrawLineList = function (lineList, nLineCount, nIndexOffset)
+				if(type(lineList) == "table") then
+					old_DrawLineList(lineList, nLineCount, nIndexOffset);
+				else
+					ParaEngineClient.ParaPainter_DrawLineList(lineList, nLineCount, nIndexOffset);
+				end
+			end
+			ParaPainter.DrawText = function (x, y, s)
+				ParaEngineClient.ParaPainter_DrawText(x, y, s);
+			end
+			ParaPainter.DrawText2 = function(x, y, w, h, s, textOption)
+				ParaEngineClient.ParaPainter_DrawText2(x, y, w, h, s, textOption);
+			end
 		end
 	end
 else

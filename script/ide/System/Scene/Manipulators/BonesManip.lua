@@ -72,6 +72,7 @@ BonesManip:Property({"editColor", "#ff4264"});
 BonesManip:Property({"IKHandleColor", "#00ffff"});
 BonesManip:Property({"PoleVectorColor", "#ffffff"});
 BonesManip:Property({"PivotColor", "#40ff20"});
+BonesManip:Property({"hoverPivotColor", "#663399"});
 BonesManip:Property({"PivotRadius", 0.025});
 BonesManip:Property({"ShowBoneName", false});
 -- whether to update values during dragging
@@ -879,7 +880,12 @@ function BonesManip:paintEvent(painter)
 					end
 				end
 			else
-				self:SetColorAndName(painter, self.PivotColor, pickName);
+				if(name == bone.pickName) then
+					-- hover over color
+					self:SetColorAndName(painter, self.hoverPivotColor, pickName);
+				else
+					self:SetColorAndName(painter, self.PivotColor, pickName);
+				end
 			end
 			-- draw this bone
 			painter:LoadBillboardMatrix();

@@ -45,7 +45,7 @@ local xzDirectionsConst = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
 
 function OverlayPicking:GetPickingResult()
 	local nPickedId = 0; 
-	local result = OverlayPicking._super.GetPickingResult(self);
+	local result, nCount = OverlayPicking._super.GetPickingResult(self);
 	if(result) then
 		local width, height = self:GetPickWidthHeight()
 		if(height>2 and width>2 and width==height) then
@@ -54,7 +54,7 @@ function OverlayPicking:GetPickingResult()
 			local nIndex = 0;
 			local dx = 0;
 			local dz = 0;
-			local nSize = #result;
+			local nSize = nCount;
 			local width = math.floor(math.sqrt(nSize));
 			local cx,cz = math.floor(width/2), math.floor(width/2);
 			for length = 1, width do
@@ -64,9 +64,9 @@ function OverlayPicking:GetPickingResult()
 					for i = 1, length do
 						dx = dx + dir[1];
 						dz = dz + dir[2];
-						local nIndex = (cx + dx) + (cz + dz)*width;
-						if(nIndex >= 0 and nIndex<nSize and result[nIndex] ~= 0) then
-							nPickedId = result[nIndex];
+						local nIndex_ = (cx + dx) + (cz + dz)*width;
+						if(nIndex_ >= 0 and nIndex_<nSize and result[nIndex_] ~= 0) then
+							nPickedId = result[nIndex_];
 							self:SetActivePickingName(nPickedId);
 							return result;
 						end
@@ -78,16 +78,16 @@ function OverlayPicking:GetPickingResult()
 			for length = 1, width do
 				dx = dx + xzDirectionsConst[nIndex][1];
 				dz = dz + xzDirectionsConst[nIndex][2];
-				local nIndex = (cx + dx) + (cz + dz)*width;
-				if(nIndex >= 0 and nIndex<nSize and result[nIndex] ~= 0) then
-					nPickedId = result[nIndex];
+				local nIndex_ = (cx + dx) + (cz + dz)*width;
+				if(nIndex_ >= 0 and nIndex_<nSize and result[nIndex_] ~= 0) then
+					nPickedId = result[nIndex_];
 					self:SetActivePickingName(nPickedId);
 					return result;
 				end
 			end
 		else
 			-- brutal force search 
-			for i =1, #result do
+			for i = 0, nCount-1 do
 				if(result[i] ~= 0) then
 					nPickedId = result[i];
 					break;
