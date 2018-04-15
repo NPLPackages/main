@@ -427,11 +427,14 @@ if(use_ffi) then
 					ParaEngineClient.ParaPainter_DrawLineList(lineList, nLineCount, nIndexOffset);
 				end
 			end
-			ParaPainter.DrawText = function (x, y, s)
-				ParaEngineClient.ParaPainter_DrawText(x, y, s);
-			end
-			ParaPainter.DrawText2 = function(x, y, w, h, s, textOption)
-				ParaEngineClient.ParaPainter_DrawText2(x, y, w, h, s, textOption);
+			-- @param w: width or text. if width, h, s, textOption can not be nil.
+			-- @param s: text 
+			ParaPainter.DrawText = function (x, y, w, h, s, textOption)
+				if(not h) then
+					ParaEngineClient.ParaPainter_DrawText(x, y, w);
+				else
+					ParaEngineClient.ParaPainter_DrawText2(x, y, w, h, s, textOption);
+				end
 			end
 		end
 	end

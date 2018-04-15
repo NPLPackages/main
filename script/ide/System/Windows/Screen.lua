@@ -20,8 +20,7 @@ Screen:Signal("sizeChanged", function(width, height) end)
 
 function Screen:ctor()
 	commonlib.EventSystem.getInstance():AddEventListener("RendererRecreated", function(self)
-		local frame_size = ParaEngine.GetAttributeObject():GetField("ScreenResolution", {960,560});
-		self:OnSizeChange(frame_size[1], frame_size[2]);
+		self:OnSizeChange(self:GetWidth(), self:GetHeight());
 	end, self);
 end
 
@@ -33,17 +32,11 @@ function Screen:GetGUIRoot()
 end
 
 function Screen:GetWidth()
-	if(not self.last_width) then
-		self.last_width = self:GetGUIRoot().width;
-	end
-	return self.last_width;
+	return self:GetGUIRoot().width;
 end
 
 function Screen:GetHeight()
-	if(not self.last_height) then
-		self.last_height = self:GetGUIRoot().height;
-	end
-	return self.last_height;
+	return self:GetGUIRoot().height;
 end
 
 local scaling = {1,1}
