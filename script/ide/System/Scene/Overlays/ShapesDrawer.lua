@@ -85,6 +85,7 @@ if(ParaEngine.hasFFI) then
 				local from = cube_template[i] 
 				to.x, to.y, to.z = cx+from.x*ex, cy+from.y*ey, cz+from.z*ez;
 			end	
+			FillCubeTriangles_();
 			painter:DrawTriangleList(cube_triangles, 12);
 		else
 			local pt;
