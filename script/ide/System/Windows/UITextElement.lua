@@ -71,6 +71,15 @@ function UITextElement:DrawTextScaledEx(painter, x, y, width, height, text, alig
 	painter:DrawTextScaledEx(x, y, width, height, text, alignment, scale);
 end
 
+function UITextElement:DrawTextScaledEx2(painter, x, y, width, height, text, alignment, scale)
+	if(self:HasTextShadow()) then
+		painter:SetPen(self:GetShadowColor());
+		painter:DrawTextScaledEx(x + self.ShadowOffsetX, y + self.ShadowOffsetY, width, height, text, alignment, scale);
+	end
+
+	painter:DrawTextScaledEx(x, y, width, height, text, alignment, scale);
+end
+
 -- virtual: apply css style
 function UITextElement:ApplyCss(css)
 	UITextElement._super.ApplyCss(self, css);

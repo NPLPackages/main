@@ -12,14 +12,14 @@ NPL.load("(gl)script/ide/System/Windows/Controls/EditBox.lua");
 local EditBox = commonlib.gettable("System.Windows.Controls.EditBox");
 ------------------------------------------------------------
 ]]
-NPL.load("(gl)script/ide/System/Windows/UIElement.lua");
+NPL.load("(gl)script/ide/System/Windows/UITextElement.lua");
 NPL.load("(gl)script/ide/System/Core/UniString.lua");
 NPL.load("(gl)script/ide/math/Rect.lua");
 local Rect = commonlib.gettable("mathlib.Rect");
 local UniString = commonlib.gettable("System.Core.UniString");
 local Application = commonlib.gettable("System.Windows.Application");
 local FocusPolicy = commonlib.gettable("System.Core.Namespace.FocusPolicy");
-local EditBox = commonlib.inherit(commonlib.gettable("System.Windows.UIElement"), commonlib.gettable("System.Windows.Controls.EditBox"));
+local EditBox = commonlib.inherit(commonlib.gettable("System.Windows.UITextElement"), commonlib.gettable("System.Windows.Controls.EditBox"));
 EditBox:Property("Name", "EditBox");
 EditBox:Property({"Background", "", auto=true});
 EditBox:Property({"BackgroundColor", "#cccccc", auto=true});
@@ -499,12 +499,12 @@ function EditBox:paintEvent(painter)
 	if(text and text~="") then							
 		-- draw text
 		painter:SetPen(self:GetColor());
-		painter:DrawTextScaled(self:x() + textLeft, self:y() + textTop, self:GetPasswordText(), scale);
+		self:DrawTextScaledEx2(painter, self:x() + textLeft, self:y() + textTop, lineRect:width(), lineRect:height(), self:GetPasswordText(), self:GetAlignment(), scale);
 	else
 		local emptyText = self:GetEmptyText();	
 		if(emptyText and emptyText~="" and not self:hasFocus()) then
-				painter:SetPen(self:GetEmptyTextColor());
-			painter:DrawTextScaled(self:x() + textLeft, self:y() + textTop, emptyText, scale);																																				
+			painter:SetPen(self:GetEmptyTextColor());
+			self:DrawTextScaledEx2(painter, self:x() + textLeft, self:y() + textTop, lineRect:width(), lineRect:height(), emptyText, self:GetAlignment(), scale);																																				
 		end
 
 	end
