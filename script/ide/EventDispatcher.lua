@@ -92,6 +92,14 @@ end
 -----------------------------------
 local EventSystem = commonlib.inherit(nil, commonlib.gettable("commonlib.EventSystem"))
 
+function EventSystem.getInstance()
+	if not EventSystem.sInstance then
+		EventSystem.sInstance = EventSystem:new();
+	end
+	
+	return EventSystem.sInstance;
+end
+
 --constructor
 function EventSystem:ctor()
 	self.event_pools = {}

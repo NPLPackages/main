@@ -572,6 +572,8 @@ Sys_Event = {
 	SYS_WM_DESTROY = AutoEnum(),
 	-- such as the slate or dock mode is changing under win8. 
 	SYS_WM_SETTINGCHANGE = AutoEnum(),
+	--
+	SYS_RENDERER_RECREATED = AutoEnum(),
 };
 
 -- NPL return code. it is also the NPL network event code

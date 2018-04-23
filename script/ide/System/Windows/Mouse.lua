@@ -13,6 +13,8 @@ Mouse:Capture(uiElement);
 ]]
 NPL.load("(gl)script/ide/System/Core/ToolBase.lua");
 NPL.load("(gl)script/ide/math/Point.lua");
+NPL.load("(gl)script/ide/System/Windows/Screen.lua");
+local Screen = commonlib.gettable("System.Windows.Screen");
 local Point = commonlib.gettable("mathlib.Point");
 
 local Mouse = commonlib.inherit(commonlib.gettable("System.Core.ToolBase"), commonlib.gettable("System.Windows.Mouse"));
@@ -58,6 +60,27 @@ end
 function Mouse:GetMousePosition()
 	return ParaUI.GetMousePosition()
 end
+
+-- return true if left/right mouse button should be swapped. 
+function Mouse:IsMouseButtonSwapped()
+	return Screen:GetGUIRoot():GetField("MouseButtonSwapped", false);
+end
+
+-- set if left/right mouse button should be swapped. 
+function Mouse:SetMouseButtonSwapped(bSwapped)
+	Screen:GetGUIRoot():SetField("MouseButtonSwapped", bSwapped==true);
+end
+
+-- if false, the left touch is left mouse button.
+function Mouse:IsTouchButtonSwapped()
+	return Screen:GetGUIRoot():GetField("TouchButtonSwapped", false);
+end
+
+-- if false, the left touch is left mouse button.
+function Mouse:SetTouchButtonSwapped(bSwapped)
+	Screen:GetGUIRoot():SetField("TouchButtonSwapped", bSwapped==true);
+end
+
 
 -- this is a singleton class
 Mouse:InitSingleton();
