@@ -259,7 +259,9 @@ function System.localserver.ProcessFile_result(request_id, index)
 			payload = WebCacheDB.PayloadInfo:new({
 				status_code = System.localserver.HttpConstants.HTTP_OK,
 				cached_filepath = DestFile,
-				data = nil,
+				-- data = nil,
+				-- we will save file size as data, and TODO: possibly a file hash here? 
+				data = {totalFileSize = msg.totalFileSize}, 
 			}),
 		};
 		
