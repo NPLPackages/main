@@ -71,6 +71,7 @@ Overlay:Property({"PickingRenderFrame", 0, auto=true});
 Overlay:Property({"m_hasMouseTracking", nil, "hasMouseTracking", "setMouseTracking", auto=true});
 Overlay:Property({"m_render_pass", false, });
 Overlay:Property({"m_position", nil, "getPosition", "setPosition"});
+Overlay:Property({"isSolid", nil, "IsSolid", "SetSolid"});
 -- always use camera position
 Overlay:Property({"UseCameraPos", false, "IsUseCameraPos", "SetUseCameraPos"});
 -- default to nil, which self:Tick() is not called. 
@@ -154,7 +155,26 @@ function Overlay:create_sys(native_scene_obj, x, y, z)
 		self:SetPickingRenderFrame(commonlib.TimerManager.GetCurrentTime())
 		self:handleRender();
 	end);
+
+	if(self:IsSolid()) then
+		self.native_scene_obj:SetField("transparent", false);
+	end
 end
+
+-- default to false. solid object is rendered before all transparent ones in the scene. 
+function Overlay:SetSolid(bIsSolid)
+	if(self.isSolid ~= bIsSolid) then
+		self.isSolid = bIsSolid;
+		if(self.native_scene_obj) then
+			self.native_scene_obj:SetField("transparent", not bIsSolid);
+		end
+	end
+end
+
+function Overlay:IsSolid()
+	return self.isSolid;
+end
+
 
 -- send key events to all child nodes
 function Overlay:handleKeyEvent(event)

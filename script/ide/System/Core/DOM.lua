@@ -11,6 +11,7 @@ Buildin DOM path:
 	/viewport			DOM of the C++ viewport object. 
 	/player				DOM of the C++ current focused player object. 
 	/AsyncLoader		DOM of the C++ current AsyncLoader object. 
+	/gameFRC			DOM of the C++ game frame rate controller
 
 See also: ObjectPath.lua
 
@@ -59,6 +60,8 @@ function DOM.GetDOM(name)
 		dom = ParaEngine.GetAttributeObject():GetChild("ViewportManager");
 	elseif(name == "AsyncLoader") then
 		dom = ParaEngine.GetAttributeObject():GetChild("AsyncLoader");
+	elseif(name == "gameFRC") then
+		dom = ParaEngine.GetAttributeObject():GetChild("gameFRC");
 	elseif(name == "player") then
 		dom = ParaScene.GetPlayer():GetAttributeObject();
 	elseif(name == "npl") then
