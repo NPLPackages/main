@@ -49,10 +49,22 @@ function BonesManipContainer:createChildren()
 	self.BonesManip:Connect("boneChanged",  self, self.boneChanged);
 end
 
+-- @param node: usually ActorNPC
 function BonesManipContainer:connectToDependNode(node)
-	local plugPos = node:findPlug(self.PositionPlugName);
+	local plugPos;
+	if(node.GetEntity and self.PositionPlugName == "position") then
+		-- we will use the entity's position, instead of the ActorNPC's position value. Just in case the actor is a child object of a parent object. 
+		local entity = node:GetEntity();
+		if(entity and entity.GetAttributeObject and entity.Connect) then
+			plugPos = entity:GetAttributeObject():findPlug("position");
+			if(plugPos) then
+				self:addPlugNode(entity);
+			end
+		end
+	end
+	plugPos = plugPos or node:findPlug(self.PositionPlugName);
 	
-	if(plugPos ) then
+	if(plugPos) then
 		local manipPosPlug = self.BonesManip:findPlug("position");	
 		
 		if(node.GetInnerObject) then
