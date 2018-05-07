@@ -1019,7 +1019,7 @@ end
 function PageElement:GetParentAttribute(attrName)
 	local parent = self.parent;
 	while (parent~=nil) do
-		if(parent:GetAttribute(attrName)~=nil) then
+		if(parent.GetAttribute and parent:GetAttribute(attrName)~=nil) then
 			return parent:GetAttribute(attrName);
 		end
 		parent = parent.parent;
