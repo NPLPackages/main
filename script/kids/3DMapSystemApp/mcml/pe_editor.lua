@@ -1384,6 +1384,11 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 			end
 		end
 		
+		if(System.options.IsTouchDevice and mcmlNode:GetBool("auto_virtual_keyboard", System.options.auto_virtual_keyboard)) then
+			-- _this:SetField("InputMethodEnabled", false);
+			_this:SetScript("onfocusin", pe_editor_text.onfocusin, mcmlNode, instName, bindingContext, name);
+		end
+		
 
 		local text_color = mcmlNode:GetString("textcolor") or css.textcolor;
 		if(text_color) then
@@ -1395,7 +1400,7 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 		end
 	end	
 end
--- this is the new on_click handler. 
+
 function pe_editor_text.onactivate(uiobj, mcmlNode, instName, bindingContext, name)
 	if(not mcmlNode or not uiobj) then
 		return
@@ -1404,6 +1409,23 @@ function pe_editor_text.onactivate(uiobj, mcmlNode, instName, bindingContext, na
 	-- the callback function format is function(name, mcmlNode) end
 	Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, onactivate, name, mcmlNode,uiobj);
 end
+
+function pe_editor_text.onfocusin(uiobj, mcmlNode, instName, bindingContext, name)
+	if(not mcmlNode or not uiobj) then
+		return
+	end
+
+	if(mcmlNode:GetBool("auto_virtual_keyboard", System.options.auto_virtual_keyboard)) then
+		NPL.load("(gl)script/apps/Aries/Creator/Game/GUI/TouchVirtualKeyboardIcon.lua");
+		local TouchVirtualKeyboardIcon = commonlib.gettable("MyCompany.Aries.Game.GUI.TouchVirtualKeyboardIcon");
+		TouchVirtualKeyboardIcon.GetSingleton():ShowKeyboard(true)
+	end
+
+	local onclick = mcmlNode:GetString("onfocusin") or "";
+	-- the callback function format is function(name, mcmlNode) end
+	Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, onclick, name, mcmlNode,uiobj);
+end
+
 
 -- this is the new on_click handler. 
 function pe_editor_text.onkeyup(uiobj, mcmlNode, instName, bindingContext, name)
