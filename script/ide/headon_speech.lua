@@ -161,6 +161,19 @@ local function MonitorUILifeTime(uiobject, lifetime, ProlongLifeTimeWhenMouseOve
 end
 
 
+function headon_speech.SpeakClear(charName)
+	if(type(charName) == "userdata") then
+		charName = tostring(charName.id);
+	end
+	-- we will force using an existing ID, if the charName has been attached before.
+	for i = 1, headon_speech.MaxConcurrentSpeech do 
+		if(IDNameMap[i] == charName) then
+			local sCtrlName = headon_speech.GetNextSpeechGUIName(i);
+			ParaUI.Destroy(sCtrlName);
+		end
+	end
+end
+
 --[[ display a simple 3D text on the head of a given character for a given seconds. 
 @param charName: character name or the object itself, to which the text is attached.it first searches the global object, if not found, it will search the OPC list.  
 @param text: the text to be displayed on the head of the character. if nil, displays nothing. if it is pure text, it will displayed using centered text control
