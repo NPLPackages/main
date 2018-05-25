@@ -1243,6 +1243,26 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 	if(css["line-height"]) then
 		lineheight = tonumber(css["line-height"]);
 	end
+	if(mcmlNode:GetAttribute("height")) then
+		local height = mcmlNode:GetAttribute("height");
+		css.height = tonumber(string.match(height, "%d+"));
+		if(css.height and string.match(height, "%%$")) then
+			if(css.position == "screen") then
+				css.height = ParaUI.GetUIObject("root").height * css.height/100;
+			else	
+				local availWidth, availHeight = parentLayout:GetPreferredSize();
+				local maxWidth, maxHeight = parentLayout:GetMaxSize();
+				css.height=math.floor((maxHeight-margin_top-margin_bottom)*css.height/100);
+				if(availHeight<(css.height+margin_top+margin_bottom)) then
+					css.height=availHeight-margin_top-margin_bottom;
+				end
+				if(css.height<=0) then
+					css.height = nil;
+				end
+			end	
+		end	
+	end
+
 	width, height = width-left-margin_left-margin_right, css.height or (lineheight or 20)*rows;
 	if(css.width and (rows==1 or css.width<width)) then
 		width = css.width
