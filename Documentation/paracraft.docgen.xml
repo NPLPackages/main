@@ -437,34 +437,15 @@ Sets the block metadata at a given location.
 				<parameter name="y"/>
 				<parameter name="z"/>
 			</function>
-			<function line="748" name="GetBlockEntityData">
-				<summary>function BlockEngine:GetBlockEntityData(x,y,z)
+			<function line="748" name="GetBlockIdAndData">
+				<summary>function BlockEngine:GetBlockIdAndData(x, y, z)
 
 				</summary>
 				<parameter name="x"/>
 				<parameter name="y"/>
 				<parameter name="z"/>
 			</function>
-			<function line="758" name="GetBlockEntity">
-				<summary>function BlockEngine:GetBlockEntity(x,y,z)
-
-				</summary>
-				<parameter name="x"/>
-				<parameter name="y"/>
-				<parameter name="z"/>
-			</function>
-			<function line="765" name="GetBlockEntityList">
-				<summary>function BlockEngine:GetBlockEntityList(from_x,from_y,from_z, to_x, to_y, to_z)
-
-				</summary>
-				<parameter name="from_x"/>
-				<parameter name="from_y"/>
-				<parameter name="from_z"/>
-				<parameter name="to_x"/>
-				<parameter name="to_y"/>
-				<parameter name="to_z"/>
-			</function>
-			<function line="785" name="GetBlockFull">
+			<function line="754" name="GetBlockFull">
 				<summary>function BlockEngine:GetBlockFull(x,y,z)
 get full info about a given block
    @return block_id, block_data, entity_data
@@ -475,13 +456,51 @@ get full info about a given block
 				<returns>return , block_data, entity_data
 				</returns>
 			</function>
-			<function line="795" name="GetAllBlocksInfoInAABB">
+			<function line="774" name="GetBlockEntityData">
+				<summary>function BlockEngine:GetBlockEntityData(x,y,z)
+
+				</summary>
+				<parameter name="x"/>
+				<parameter name="y"/>
+				<parameter name="z"/>
+			</function>
+			<function line="784" name="GetBlockEntity">
+				<summary>function BlockEngine:GetBlockEntity(x,y,z)
+
+				</summary>
+				<parameter name="x"/>
+				<parameter name="y"/>
+				<parameter name="z"/>
+			</function>
+			<function line="791" name="GetBlockEntityList">
+				<summary>function BlockEngine:GetBlockEntityList(from_x,from_y,from_z, to_x, to_y, to_z)
+
+				</summary>
+				<parameter name="from_x"/>
+				<parameter name="from_y"/>
+				<parameter name="from_z"/>
+				<parameter name="to_x"/>
+				<parameter name="to_y"/>
+				<parameter name="to_z"/>
+			</function>
+			<function line="811" name="GetBlockFull">
+				<summary>function BlockEngine:GetBlockFull(x,y,z)
+get full info about a given block
+   @return block_id, block_data, entity_data
+				</summary>
+				<parameter name="x"/>
+				<parameter name="y"/>
+				<parameter name="z"/>
+				<returns>return , block_data, entity_data
+				</returns>
+			</function>
+			<function line="832" name="GetAllBlocksInfoInAABB">
 				<summary>function BlockEngine:GetAllBlocksInfoInAABB(aabb)
 return array of {x,y,z, id, data, entity_data}
 				</summary>
 				<parameter name="aabb"/>
 			</function>
-			<function line="814" name="GetBlock">
+			<function line="851" name="GetBlock">
 				<summary>function BlockEngine:GetBlock(x,y,z)
 return the block template object. 
 				</summary>
@@ -489,7 +508,7 @@ return the block template object.
 				<parameter name="y"/>
 				<parameter name="z"/>
 			</function>
-			<function line="822" name="GetBlockTemplateByIdx">
+			<function line="859" name="GetBlockTemplateByIdx">
 				<summary>function BlockEngine:GetBlockTemplateByIdx(bX, bY, bZ)
 return the block template table. 
 				</summary>
@@ -497,7 +516,7 @@ return the block template table.
 				<parameter name="bY"/>
 				<parameter name="bZ"/>
 			</function>
-			<function line="831" name="SetBlockTemplateByIdx">
+			<function line="868" name="SetBlockTemplateByIdx">
 				<summary>function BlockEngine.SetBlockTemplateByIdx(x,y,z,block_id, block_data)
 Obsoleted: use BlockEngine:SetBlock
    @param x, y, z: the block index. 
@@ -509,7 +528,7 @@ Obsoleted: use BlockEngine:SetBlock
 				<parameter name="block_id"/>
 				<parameter name="block_data"/>
 			</function>
-			<function line="836" name="SetBlockUserDataByIdx">
+			<function line="873" name="SetBlockUserDataByIdx">
 				<summary>function BlockEngine.SetBlockUserDataByIdx(x,y,z,block_data)
 Obsoleted: use BlockEngine:SetBlockData
 				</summary>
@@ -518,7 +537,7 @@ Obsoleted: use BlockEngine:SetBlockData
 				<parameter name="z"/>
 				<parameter name="block_data"/>
 			</function>
-			<function line="842" name="IsInLiquid">
+			<function line="879" name="IsInLiquid">
 				<summary>function BlockEngine:IsInLiquid(bX, bY, bZ)
 is point under water
    @param bX, bY, bZ: if nil, we will use the camera eye position. 
@@ -528,7 +547,7 @@ is point under water
 				<parameter name="bY"/>
 				<parameter name="bZ"/>
 			</function>
-			<function line="857" name="IsInAir">
+			<function line="894" name="IsInAir">
 				<summary>function BlockEngine:IsInAir(x,y,z)
 if all 6 neighbour are empty. 
 				</summary>
@@ -536,7 +555,7 @@ if all 6 neighbour are empty.
 				<parameter name="y"/>
 				<parameter name="z"/>
 			</function>
-			<function line="869" name="IsInLiquidReal">
+			<function line="906" name="IsInLiquidReal">
 				<summary>function BlockEngine:IsInLiquidReal(realX, realY, realZ)
 TODO: is point under water
    @param realX, realY, realZ: if nil, we will use the camera eye position. 
@@ -546,7 +565,7 @@ TODO: is point under water
 				<parameter name="realY"/>
 				<parameter name="realZ"/>
 			</function>
-			<function line="908" name="NotifyNeighborBlocksChange">
+			<function line="945" name="NotifyNeighborBlocksChange">
 				<summary>function BlockEngine:NotifyNeighborBlocksChange(x, y, z, from_block_id)
 Notifies all six neighboring blocks that from_block_id changed  
 				</summary>
@@ -555,7 +574,7 @@ Notifies all six neighboring blocks that from_block_id changed
 				<parameter name="z"/>
 				<parameter name="from_block_id"/>
 			</function>
-			<function line="919" name="NotifyNeighborBlocksChangeNoSide">
+			<function line="956" name="NotifyNeighborBlocksChangeNoSide">
 				<summary>function BlockEngine:NotifyNeighborBlocksChangeNoSide(x, y, z, from_block_id, side)
 Notifies all six neighboring blocks that from_block_id changed, except the one on the given side.
    @param side: the block on this side is not notified. 
@@ -567,7 +586,7 @@ Notifies all six neighboring blocks that from_block_id changed, except the one o
 				<parameter name="side">the block on this side is not notified. 
 				</parameter>
 			</function>
-			<function line="948" name="OnNeighborBlockChange">
+			<function line="985" name="OnNeighborBlockChange">
 				<summary>function BlockEngine:OnNeighborBlockChange(x, y, z, from_block_id)
 Notifies a block that one of its neighbor change to the specified type
    @param from_block_id: the block id that has changed
@@ -578,7 +597,7 @@ Notifies a block that one of its neighbor change to the specified type
 				<parameter name="from_block_id">the block id that has changed
 				</parameter>
 			</function>
-			<function line="959" name="GetBlockMaterial">
+			<function line="996" name="GetBlockMaterial">
 				<summary>function BlockEngine:GetBlockMaterial(x,y,z)
 get block material
 				</summary>
@@ -586,7 +605,7 @@ get block material
 				<parameter name="y"/>
 				<parameter name="z"/>
 			</function>
-			<function line="973" name="isBlockProvidingStrongPowerTo">
+			<function line="1010" name="isBlockProvidingStrongPowerTo">
 				<summary>function BlockEngine:isBlockProvidingStrongPowerTo(x, y, z, direction)
 Is this block powering in the specified direction 
 				</summary>
@@ -595,7 +614,7 @@ Is this block powering in the specified direction
 				<parameter name="z"/>
 				<parameter name="direction"/>
 			</function>
-			<function line="988" name="getBlockStrongPowerInput">
+			<function line="1025" name="getBlockStrongPowerInput">
 				<summary>function BlockEngine:getBlockStrongPowerInput(x,y,z)
 Returns the highest strong power input from this block's six neighbors. 
 				</summary>
@@ -603,7 +622,7 @@ Returns the highest strong power input from this block's six neighbors.
 				<parameter name="y"/>
 				<parameter name="z"/>
 			</function>
-			<function line="1025" name="hasWeakPowerOutputTo">
+			<function line="1062" name="hasWeakPowerOutputTo">
 				<summary>function BlockEngine:hasWeakPowerOutputTo(x,y,z,dir)
 Returns the weak power being outputted by the given block to the given direction.
 				</summary>
@@ -612,7 +631,7 @@ Returns the weak power being outputted by the given block to the given direction
 				<parameter name="z"/>
 				<parameter name="dir"/>
 			</function>
-			<function line="1030" name="isBlockNormalCube">
+			<function line="1067" name="isBlockNormalCube">
 				<summary>function BlockEngine:isBlockNormalCube(x,y,z)
 Indicate if a material is a normal solid opaque cube.
 				</summary>
@@ -620,7 +639,7 @@ Indicate if a material is a normal solid opaque cube.
 				<parameter name="y"/>
 				<parameter name="z"/>
 			</function>
-			<function line="1039" name="getWeakPowerOutputTo">
+			<function line="1074" name="getWeakPowerOutputTo">
 				<summary>function BlockEngine:getWeakPowerOutputTo(x,y,z,dir)
 Gets the indirect(weak) power level of this block to a given side. 
 Normal cube block will output the highest strong power input as weak output to all of its six faces. 
@@ -630,16 +649,16 @@ Normal cube block will output the highest strong power input as weak output to a
 				<parameter name="z"/>
 				<parameter name="dir"/>
 			</function>
-			<function line="1054" name="isBlockIndirectlyGettingPowered">
+			<function line="1089" name="isBlockIndirectlyGettingPowered">
 				<summary>function BlockEngine:isBlockIndirectlyGettingPowered(x, y, z)
 Used to see if one of the blocks next to you or your block is getting power from a neighboring block. Used by
-items like TNT or Doors so they don't have redstone going straight into them.  
+items like TNT or Doors so they don't have going straight into them.  
 				</summary>
 				<parameter name="x"/>
 				<parameter name="y"/>
 				<parameter name="z"/>
 			</function>
-			<function line="1065" name="getStrongestIndirectPower">
+			<function line="1100" name="getStrongestIndirectPower">
 				<summary>function BlockEngine:getStrongestIndirectPower(x, y, z)
 get strongest indirect power from the neighboring 6 blocks. wires will transmit indirect power to its neighbor
 				</summary>
@@ -647,7 +666,7 @@ get strongest indirect power from the neighboring 6 blocks. wires will transmit 
 				<parameter name="y"/>
 				<parameter name="z"/>
 			</function>
-			<function line="1085" name="DoesBlockHaveSolidTopSurface">
+			<function line="1120" name="DoesBlockHaveSolidTopSurface">
 				<summary>function BlockEngine:DoesBlockHaveSolidTopSurface(x,y,z)
 Performs check to see if the block is a normal, solid block, or if the metadata of the block indicates that its
 facing puts its solid side upwards. (inverted stairs, for example)
@@ -657,60 +676,65 @@ Returns true if the block at the given coordinate has a solid (buildable) top su
 				<parameter name="y"/>
 				<parameter name="z"/>
 			</function>
-			<function line="1095" name="Dump">
+			<function line="1130" name="Dump">
 				<summary>function BlockEngine:Dump()
 dump the current state of the block engine
 				</summary>
 			</function>
 		</table>
 		<table name="GameLogic" src="script/apps/Aries/Creator/Game/game_logic.lua">
-			<function line="125" name="ctor">
+			<function line="126" name="ctor">
 				<summary>function GameLogic:ctor()
 one time singleton init
 				</summary>
 			</function>
-			<function line="141" name="InitAPIPath">
+			<function line="142" name="InitAPIPath">
 				<summary>function GameLogic:InitAPIPath()
 
 				</summary>
 			</function>
-			<function line="164" name="InitMod">
+			<function line="166" name="InitMod">
 				<summary>function GameLogic.InitMod()
 static method called at the very beginning when paracraft start
 				</summary>
 			</function>
-			<function line="170" name="InitCommon">
+			<function line="172" name="InitCommon">
 				<summary>function GameLogic.InitCommon()
 called by both Init() and StaticInit()
 				</summary>
 			</function>
-			<function line="201" name="Init">
+			<function line="204" name="Init">
 				<summary>function GameLogic.Init(worldObj)
 call this when user first enters a game world.
 				</summary>
 				<parameter name="worldObj"/>
 			</function>
-			<function line="273" name="OnBeforeBlockWorldLoaded">
+			<function line="276" name="OnBeforeBlockWorldLoaded">
 				<summary>function GameLogic.OnBeforeBlockWorldLoaded()
 
 				</summary>
 			</function>
-			<function line="284" name="GetWorld">
+			<function line="287" name="GetWorld">
 				<summary>function GameLogic.GetWorld()
 get the current world. 
 				</summary>
 			</function>
-			<function line="288" name="GetPlayerController">
+			<function line="291" name="GetPlayerController">
 				<summary>function GameLogic.GetPlayerController()
 
 				</summary>
 			</function>
-			<function line="292" name="GetPlayer">
+			<function line="298" name="GetPlayer">
 				<summary>function GameLogic.GetPlayer()
 
 				</summary>
 			</function>
-			<function line="297" name="OnBeforeLoadBlockRegion">
+			<function line="302" name="CreateGetAutoSaver">
+				<summary>function GameLogic.CreateGetAutoSaver()
+
+				</summary>
+			</function>
+			<function line="312" name="OnBeforeLoadBlockRegion">
 				<summary>function GameLogic.OnBeforeLoadBlockRegion(bContinue, region_x, region_y)
 
    @return false to disable loading region from file
@@ -721,7 +745,7 @@ get the current world.
 				<returns>return to disable loading region from file
 				</returns>
 			</function>
-			<function line="302" name="OnSaveBlockRegion">
+			<function line="317" name="OnSaveBlockRegion">
 				<summary>function GameLogic.OnSaveBlockRegion(bContinue, region_x, region_y, region_type)
 
 				</summary>
@@ -730,44 +754,44 @@ get the current world.
 				<parameter name="region_y"/>
 				<parameter name="region_type"/>
 			</function>
-			<function line="307" name="ReplaceWorld">
+			<function line="322" name="ReplaceWorld">
 				<summary>function GameLogic.ReplaceWorld(world)
 this is used to secretely replace current world object, such as from a standalone world into a multplayer worldserver. 
 				</summary>
 				<parameter name="world"/>
 			</function>
-			<function line="320" name="GetParticleManager">
+			<function line="335" name="GetParticleManager">
 				<summary>function GameLogic.GetParticleManager()
 
 				</summary>
 			</function>
-			<function line="325" name="GetSaveHandler">
+			<function line="340" name="GetSaveHandler">
 				<summary>function GameLogic.GetSaveHandler()
 Returns the current world's current save handler
 				</summary>
 			</function>
-			<function line="330" name="GetEvents">
+			<function line="345" name="GetEvents">
 				<summary>function GameLogic.GetEvents()
 get events
 				</summary>
 			</function>
-			<function line="338" name="GetProfile">
+			<function line="353" name="GetProfile">
 				<summary>function GameLogic.GetProfile()
 get current user profile. 
 				</summary>
 			</function>
-			<function line="343" name="GetBlockWorld">
+			<function line="358" name="GetBlockWorld">
 				<summary>function GameLogic.GetBlockWorld()
 get the block world raw pointer
 				</summary>
 			</function>
-			<function line="353" name="SetBlockWorld">
+			<function line="368" name="SetBlockWorld">
 				<summary>function GameLogic.SetBlockWorld(world)
 set current block world.
 				</summary>
 				<parameter name="world"/>
 			</function>
-			<function line="361" name="SetTipText">
+			<function line="376" name="SetTipText">
 				<summary>function GameLogic.SetTipText(text, target, duration)
 set cody's text
    @param text: any HTML text
@@ -782,13 +806,13 @@ set cody's text
 				<returns>return if text changed. 
 				</returns>
 			</function>
-			<function line="368" name="HideTipText">
+			<function line="383" name="HideTipText">
 				<summary>function GameLogic.HideTipText(target)
 hide cody's text
 				</summary>
 				<parameter name="target"/>
 			</function>
-			<function line="376" name="Login">
+			<function line="391" name="Login">
 				<summary>function GameLogic.Login(server, callback)
 login a given server
    @param server:if nil, it means the local server
@@ -797,12 +821,12 @@ login a given server
 				</parameter>
 				<parameter name="callback"/>
 			</function>
-			<function line="383" name="GetBlockGenerator">
+			<function line="398" name="GetBlockGenerator">
 				<summary>function GameLogic.GetBlockGenerator()
 
 				</summary>
 			</function>
-			<function line="389" name="StaticInit">
+			<function line="404" name="StaticInit">
 				<summary>function GameLogic.StaticInit(load_level)
 this function is used for loading static world without editing features.
    @param load_level: nil to load only blocks, 1 load NPC and neuron logics.
@@ -810,57 +834,57 @@ this function is used for loading static world without editing features.
 				<parameter name="load_level">nil to load only blocks, 1 load NPC and neuron logics.
 				</parameter>
 			</function>
-			<function line="450" name="AutoFindLoginPos">
+			<function line="465" name="AutoFindLoginPos">
 				<summary>function GameLogic.AutoFindLoginPos()
 find the most suitable login position. 
 				</summary>
 			</function>
-			<function line="456" name="Reset">
+			<function line="471" name="Reset">
 				<summary>function GameLogic.Reset()
 clear all old game level objects. 
 				</summary>
 			</function>
-			<function line="459" name="NewGame">
+			<function line="474" name="NewGame">
 				<summary>function GameLogic.NewGame()
 
 				</summary>
 			</function>
-			<function line="464" name="GetWorldDirectory">
+			<function line="479" name="GetWorldDirectory">
 				<summary>function GameLogic.GetWorldDirectory()
 return current world directory (fast)
 				</summary>
 			</function>
-			<function line="469" name="LoadGame">
+			<function line="484" name="LoadGame">
 				<summary>function GameLogic.LoadGame()
 load from the current world directory. 
 				</summary>
 			</function>
-			<function line="509" name="Pause">
+			<function line="528" name="Pause">
 				<summary>function GameLogic.Pause()
 
 				</summary>
 			</function>
-			<function line="513" name="Resume">
+			<function line="532" name="Resume">
 				<summary>function GameLogic.Resume()
 
 				</summary>
 			</function>
-			<function line="517" name="IsPaused">
+			<function line="536" name="IsPaused">
 				<summary>function GameLogic.IsPaused()
 
 				</summary>
 			</function>
-			<function line="521" name="RemoveWorldFileWatcher">
+			<function line="540" name="RemoveWorldFileWatcher">
 				<summary>function GameLogic.RemoveWorldFileWatcher()
 
 				</summary>
 			</function>
-			<function line="528" name="CheckCreateFileWatcher">
+			<function line="547" name="CheckCreateFileWatcher">
 				<summary>function GameLogic.CheckCreateFileWatcher()
 
 				</summary>
 			</function>
-			<function line="552" name="BuildResourceFilepath">
+			<function line="571" name="BuildResourceFilepath">
 				<summary>function GameLogic.BuildResourceFilepath(filename)
 build resource filepath
    @param filename: relative to current world directory. 
@@ -868,32 +892,32 @@ build resource filepath
 				<parameter name="filename">relative to current world directory. 
 				</parameter>
 			</function>
-			<function line="558" name="ToggleGameMode">
+			<function line="577" name="ToggleGameMode">
 				<summary>function GameLogic.ToggleGameMode()
 
 				</summary>
 			</function>
-			<function line="569" name="ToggleFly">
+			<function line="588" name="ToggleFly">
 				<summary>function GameLogic.ToggleFly()
 
 				</summary>
 			</function>
-			<function line="588" name="GetPickingDist">
+			<function line="607" name="GetPickingDist">
 				<summary>function GameLogic.GetPickingDist()
 
 				</summary>
 			</function>
-			<function line="593" name="QuickSave">
+			<function line="612" name="QuickSave">
 				<summary>function GameLogic.QuickSave()
 call this function every 1 min
 				</summary>
 			</function>
-			<function line="597" name="GetUnSavedTime">
+			<function line="616" name="GetUnSavedTime">
 				<summary>function GameLogic.GetUnSavedTime()
 
 				</summary>
 			</function>
-			<function line="602" name="SaveAll">
+			<function line="621" name="SaveAll">
 				<summary>function GameLogic.SaveAll(bSaveToLastSaveFolder)
 
    @param bSaveToLastSaveFolder: whether to save block to "blockworld.lastsave" folder
@@ -901,7 +925,7 @@ call this function every 1 min
 				<parameter name="bSaveToLastSaveFolder">whether to save block to "blockworld.lastsave" folder
 				</parameter>
 			</function>
-			<function line="638" name="PlayAnimation">
+			<function line="659" name="PlayAnimation">
 				<summary>function GameLogic.PlayAnimation(params)
 let a given character to play an animation.
    @param params: {nid, animationName=string, facingTarget={x,y,z}}
@@ -909,38 +933,46 @@ let a given character to play an animation.
 				<parameter name="params">{nid, animationName=string, facingTarget={x,y,z}}
 				</parameter>
 			</function>
-			<function line="651" name="Exit">
+			<function line="672" name="Exit">
 				<summary>function GameLogic.Exit()
 
 				</summary>
 			</function>
-			<function line="713" name="CheckTickShiftWalkingMode">
+			<function line="739" name="GetCodeGlobal">
+				<summary>function GameLogic.GetCodeGlobal()
+global sandbox user defined variables in the world. It is recreated on each world load on demand.
+   @return CodeGlobals object associated with the current world.
+				</summary>
+				<returns>return object associated with the current world.
+				</returns>
+			</function>
+			<function line="748" name="CheckTickShiftWalkingMode">
 				<summary>function GameLogic.CheckTickShiftWalkingMode()
 
 				</summary>
 			</function>
-			<function line="725" name="GetCurrentPlayerObj">
+			<function line="760" name="GetCurrentPlayerObj">
 				<summary>function GameLogic.GetCurrentPlayerObj()
 
 				</summary>
 			</function>
-			<function line="734" name="CheckCurrentPlayerLocation">
+			<function line="769" name="CheckCurrentPlayerLocation">
 				<summary>function GameLogic.CheckCurrentPlayerLocation()
 ensure the player never goes too high or too low. If too low, it should die in game mode. 
 disable fly mode, if player feet is on ground
 				</summary>
 			</function>
-			<function line="784" name="IsRemoteWorld">
+			<function line="819" name="IsRemoteWorld">
 				<summary>function GameLogic.IsRemoteWorld()
 if true, we will disable all block entity simulation on the local world. 
 				</summary>
 			</function>
-			<function line="789" name="IsServerWorld">
+			<function line="824" name="IsServerWorld">
 				<summary>function GameLogic.IsServerWorld()
 if true, the entity may need to send update to clients. 
 				</summary>
 			</function>
-			<function line="795" name="SetIsRemoteWorld">
+			<function line="830" name="SetIsRemoteWorld">
 				<summary>function GameLogic.SetIsRemoteWorld(bRemoteWorld, bIsServerWorld)
 if true, we will disable all block entity simulation on the local world.
    @param bRemoteWorld: this is set to true, if self.world is a WorldClient type. 
@@ -949,77 +981,77 @@ if true, we will disable all block entity simulation on the local world.
 				</parameter>
 				<parameter name="bIsServerWorld"/>
 			</function>
-			<function line="801" name="IsTick">
+			<function line="836" name="IsTick">
 				<summary>function GameLogic:IsTick(deltaTime)
 
 				</summary>
 				<parameter name="deltaTime"/>
 			</function>
-			<function line="809" name="FrameMove">
+			<function line="844" name="FrameMove">
 				<summary>function GameLogic.FrameMove(timer)
 called 30 FPS framemove.
 				</summary>
 				<parameter name="timer"/>
 			</function>
-			<function line="848" name="OnDead">
+			<function line="898" name="OnDead">
 				<summary>function GameLogic.OnDead()
 
 				</summary>
 			</function>
-			<function line="854" name="RunCommand">
+			<function line="904" name="RunCommand">
 				<summary>function GameLogic.RunCommand(...)
 
 				</summary>
 			</function>
-			<function line="858" name="RefreshPlayerDensity">
+			<function line="908" name="RefreshPlayerDensity">
 				<summary>function GameLogic.RefreshPlayerDensity()
 
 				</summary>
 			</function>
-			<function line="882" name="CanCollectItem">
+			<function line="932" name="CanCollectItem">
 				<summary>function GameLogic.CanCollectItem()
 whether we can collect items when player hit it. 
 				</summary>
 			</function>
-			<function line="889" name="IsReadOnly">
+			<function line="939" name="IsReadOnly">
 				<summary>function GameLogic.IsReadOnly()
 whether we can edit the world 
 				</summary>
 			</function>
-			<function line="894" name="CheckReadOnly">
+			<function line="944" name="CheckReadOnly">
 				<summary>function GameLogic.CheckReadOnly()
 return true if read only and display a message box. 
 				</summary>
 			</function>
-			<function line="902" name="SetMode">
+			<function line="952" name="SetMode">
 				<summary>function GameLogic.SetMode(mode, bFireModeChangeEvent)
 set mode 
 				</summary>
 				<parameter name="mode"/>
 				<parameter name="bFireModeChangeEvent"/>
 			</function>
-			<function line="914" name="EnterGameMode">
+			<function line="964" name="EnterGameMode">
 				<summary>function GameLogic.EnterGameMode(bIsSurvival)
 call this to enter game mode and begin to spawn all kinds of creatures and display game UI 
 				</summary>
 				<parameter name="bIsSurvival"/>
 			</function>
-			<function line="928" name="EnterEditorMode">
+			<function line="978" name="EnterEditorMode">
 				<summary>function GameLogic.EnterEditorMode()
 call this to enter editor mode and disable game creature AI and display editor UI 
 				</summary>
 			</function>
-			<function line="932" name="EnterTutorialMode">
+			<function line="982" name="EnterTutorialMode">
 				<summary>function GameLogic.EnterTutorialMode()
 
 				</summary>
 			</function>
-			<function line="937" name="EnterMovieMode">
+			<function line="987" name="EnterMovieMode">
 				<summary>function GameLogic.EnterMovieMode()
 call this to enter editor mode and disable game creature AI and display editor UI 
 				</summary>
 			</function>
-			<function line="943" name="GetMode">
+			<function line="993" name="GetMode">
 				<summary>function GameLogic.GetMode()
 get the current game mode
    @return "game", "editor", "survival"
@@ -1027,18 +1059,18 @@ get the current game mode
 				<returns>return "game", "editor", "survival"
 				</returns>
 			</function>
-			<function line="948" name="GetBlockInRightHand">
+			<function line="998" name="GetBlockInRightHand">
 				<summary>function GameLogic.GetBlockInRightHand()
 return the block id in the right hand of the player. 
 				</summary>
 			</function>
-			<function line="952" name="SetBlockInRightHand">
+			<function line="1002" name="SetBlockInRightHand">
 				<summary>function GameLogic.SetBlockInRightHand(block_id)
 
 				</summary>
 				<parameter name="block_id"/>
 			</function>
-			<function line="960" name="CreateObject">
+			<function line="1010" name="CreateObject">
 				<summary>function GameLogic.CreateObject(name, x, y, z, bAddToHistory)
 create a game object at the given position. 
 please note that all creation must ensure a closed space.
@@ -1053,12 +1085,12 @@ please note that all creation must ensure a closed space.
 				<parameter name="bAddToHistory">true to add to history for a possible undo function in future. Only some object support history.
 				</parameter>
 			</function>
-			<function line="1018" name="UndoBlock">
+			<function line="1068" name="UndoBlock">
 				<summary>function GameLogic.UndoBlock()
 undo the block creation, only for testing
 				</summary>
 			</function>
-			<function line="1028" name="CreatePortal">
+			<function line="1078" name="CreatePortal">
 				<summary>function GameLogic.CreatePortal(x, y, z)
 create a portal at the current player's position to the block world.
 				</summary>
@@ -1066,12 +1098,12 @@ create a portal at the current player's position to the block world.
 				<parameter name="y"/>
 				<parameter name="z"/>
 			</function>
-			<function line="1034" name="GotoBlockWorld">
+			<function line="1084" name="GotoBlockWorld">
 				<summary>function GameLogic.GotoBlockWorld()
 teleport the user to the closest block world teleport position. If there is no such a position, we will create one in the block world. 
 				</summary>
 			</function>
-			<function line="1046" name="TeleportPlayer">
+			<function line="1096" name="TeleportPlayer">
 				<summary>function GameLogic.TeleportPlayer(x, y, z)
 teleport the current player to a givn position. 
 				</summary>
@@ -1079,22 +1111,22 @@ teleport the current player to a givn position.
 				<parameter name="y"/>
 				<parameter name="z"/>
 			</function>
-			<function line="1050" name="GetPlayerPosition">
+			<function line="1100" name="GetPlayerPosition">
 				<summary>function GameLogic.GetPlayerPosition()
 
 				</summary>
 			</function>
-			<function line="1055" name="IsOwner">
+			<function line="1105" name="IsOwner">
 				<summary>function GameLogic.IsOwner()
 is owner
 				</summary>
 			</function>
-			<function line="1061" name="GotoOverworld">
+			<function line="1111" name="GotoOverworld">
 				<summary>function GameLogic.GotoOverworld()
 teleport the user to the over world at the current block world position. 
 				</summary>
 			</function>
-			<function line="1072" name="GetNearestNPC">
+			<function line="1122" name="GetNearestNPC">
 				<summary>function GameLogic.GetNearestNPC(radius)
 get the nearest npc around the current player position.
    @param radius: we will search for all npcs within this radius. if nil, it is 6 meters
@@ -1105,22 +1137,22 @@ get the nearest npc around the current player position.
 				<returns>return , dist: nil may be returned if not found. 
 				</returns>
 			</function>
-			<function line="1099" name="WalkForward">
+			<function line="1149" name="WalkForward">
 				<summary>function GameLogic.WalkForward()
 
 				</summary>
 			</function>
-			<function line="1111" name="TalkToNearestNPC">
+			<function line="1161" name="TalkToNearestNPC">
 				<summary>function GameLogic.TalkToNearestNPC()
 talk with the nearest npc if any. 
 				</summary>
 			</function>
-			<function line="1123" name="DoJump">
+			<function line="1173" name="DoJump">
 				<summary>function GameLogic.DoJump()
 
 				</summary>
 			</function>
-			<function line="1177" name="SetTouchMode">
+			<function line="1227" name="SetTouchMode">
 				<summary>function GameLogic.SetTouchMode(mode)
 
    @param mode: "add", "del"
@@ -1128,7 +1160,7 @@ talk with the nearest npc if any.
 				<parameter name="mode">"add", "del"
 				</parameter>
 			</function>
-			<function line="1182" name="GetTouchMode">
+			<function line="1232" name="GetTouchMode">
 				<summary>function GameLogic.GetTouchMode()
 
    @return: "add", "del"
@@ -1136,7 +1168,7 @@ talk with the nearest npc if any.
 				<returns>return "add", "del"
 				</returns>
 			</function>
-			<function line="1188" name="SetHomePosition">
+			<function line="1238" name="SetHomePosition">
 				<summary>function GameLogic.SetHomePosition(x,y,z)
 set player home position.
    @param x, y, z: if nil, the current player position is used. 
@@ -1146,32 +1178,32 @@ set player home position.
 				<parameter name="y"/>
 				<parameter name="z"/>
 			</function>
-			<function line="1193" name="GetHomePosition">
+			<function line="1243" name="GetHomePosition">
 				<summary>function GameLogic.GetHomePosition()
 get player home spawn position. 
 				</summary>
 			</function>
-			<function line="1198" name="GetDesktopEntity">
+			<function line="1248" name="GetDesktopEntity">
 				<summary>function GameLogic.GetDesktopEntity()
 create get desktop entity
 				</summary>
 			</function>
-			<function line="1214" name="GetSkyEntity">
+			<function line="1264" name="GetSkyEntity">
 				<summary>function GameLogic.GetSkyEntity()
 create get sky entity
 				</summary>
 			</function>
-			<function line="1228" name="GetFreeCamera">
+			<function line="1278" name="GetFreeCamera">
 				<summary>function GameLogic.GetFreeCamera()
 create get free camera entity
 				</summary>
 			</function>
-			<function line="1248" name="GetHomeEntity">
+			<function line="1298" name="GetHomeEntity">
 				<summary>function GameLogic.GetHomeEntity()
 may return nil if there is no home entity. 
 				</summary>
 			</function>
-			<function line="1254" name="AppendChat">
+			<function line="1304" name="AppendChat">
 				<summary>function GameLogic.AppendChat(text, entity)
 append chat message
    @param entity: if not nil, entity display name is prepended
@@ -1180,7 +1212,7 @@ append chat message
 				<parameter name="entity">if not nil, entity display name is prepended
 				</parameter>
 			</function>
-			<function line="1275" name="ShowMsg">
+			<function line="1325" name="ShowMsg">
 				<summary>function GameLogic.ShowMsg(text, level)
 display message such as script syntax or runtime error.
    @param level: default to 1, which only show in bbs window. 
@@ -1189,41 +1221,41 @@ display message such as script syntax or runtime error.
 				<parameter name="level">default to 1, which only show in bbs window. 
 				</parameter>
 			</function>
-			<function line="1301" name="ToggleRunning">
+			<function line="1351" name="ToggleRunning">
 				<summary>function GameLogic.ToggleRunning(bRunning)
 
 				</summary>
 				<parameter name="bRunning"/>
 			</function>
-			<function line="1325" name="OnCameraFrameMove">
+			<function line="1375" name="OnCameraFrameMove">
 				<summary>function GameLogic.OnCameraFrameMove()
 
 				</summary>
 			</function>
-			<function line="1350" name="GetShaderManager">
+			<function line="1400" name="GetShaderManager">
 				<summary>function GameLogic.GetShaderManager()
 
 				</summary>
 			</function>
-			<function line="1360" name="ToggleDesktop">
+			<function line="1410" name="ToggleDesktop">
 				<summary>function GameLogic.ToggleDesktop(name)
 toggle desktop view
 				</summary>
 				<parameter name="name"/>
 			</function>
-			<function line="1390" name="OnToggleViewBobbing">
+			<function line="1440" name="OnToggleViewBobbing">
 				<summary>function GameLogic.OnToggleViewBobbing(bChecked)
 
 				</summary>
 				<parameter name="bChecked"/>
 			</function>
-			<function line="1394" name="OnToggleLockMouseWheel">
+			<function line="1444" name="OnToggleLockMouseWheel">
 				<summary>function GameLogic.OnToggleLockMouseWheel(bChecked)
 
 				</summary>
 				<parameter name="bChecked"/>
 			</function>
-			<function line="1400" name="AddBBS">
+			<function line="1450" name="AddBBS">
 				<summary>function GameLogic.AddBBS(channel, text, max_duration, color)
 
    @param text: nil to clear text on that channel.
@@ -1236,7 +1268,7 @@ e.g. GameLogic.AddBBS("channel", format("hi"), 4000, "0 255 0")
 				<parameter name="max_duration"/>
 				<parameter name="color"/>
 			</function>
-			<function line="1405" name="SetStatus">
+			<function line="1455" name="SetStatus">
 				<summary>function GameLogic.SetStatus(text)
 
    @param text: text to show in the status bar.  if nil, it will clear it. 
@@ -1244,13 +1276,13 @@ e.g. GameLogic.AddBBS("channel", format("hi"), 4000, "0 255 0")
 				<parameter name="text">text to show in the status bar.  if nil, it will clear it. 
 				</parameter>
 			</function>
-			<function line="1409" name="OnToggleUIScaling">
+			<function line="1459" name="OnToggleUIScaling">
 				<summary>function GameLogic.OnToggleUIScaling(bChecked)
 
 				</summary>
 				<parameter name="bChecked"/>
 			</function>
-			<function line="1415" name="ToggleCamera">
+			<function line="1465" name="ToggleCamera">
 				<summary>function GameLogic.ToggleCamera(IsFPSView)
 
    @param IsFPSView: nil to toggle, otherwise to set
@@ -1258,50 +1290,50 @@ e.g. GameLogic.AddBBS("channel", format("hi"), 4000, "0 255 0")
 				<parameter name="IsFPSView">nil to toggle, otherwise to set
 				</parameter>
 			</function>
-			<function line="1420" name="GetSim">
+			<function line="1470" name="GetSim">
 				<summary>function GameLogic.GetSim()
 get world simulator
 				</summary>
 			</function>
-			<function line="1424" name="GetCurrentSelection">
+			<function line="1474" name="GetCurrentSelection">
 				<summary>function GameLogic.GetCurrentSelection()
 
 				</summary>
 			</function>
-			<function line="1430" name="GetFilters">
+			<function line="1480" name="GetFilters">
 				<summary>function GameLogic.GetFilters()
 filters are only used by plugins, mods. Standard customization should use Entity:event() and rule bag items.
 some commands, or items use filters for plugin functions. 
 				</summary>
 			</function>
-			<function line="1440" name="ActivateDefaultContext">
+			<function line="1490" name="ActivateDefaultContext">
 				<summary>function GameLogic.ActivateDefaultContext()
 please note this function may return nil if context can not be switched since we are in the middle of some operation. 
 				</summary>
 			</function>
-			<function line="1445" name="GetSceneContext">
+			<function line="1495" name="GetSceneContext">
 				<summary>function GameLogic.GetSceneContext()
 get current scene context
 				</summary>
 			</function>
-			<function line="1450" name="UserAction">
+			<function line="1500" name="UserAction">
 				<summary>function GameLogic:UserAction(name)
 record a user action to keep track of user behavior. 
 				</summary>
 				<parameter name="name"/>
 			</function>
-			<function line="1456" name="GetLastUserAction">
+			<function line="1506" name="GetLastUserAction">
 				<summary>function GameLogic:GetLastUserAction()
 
 				</summary>
 			</function>
-			<function line="1461" name="GetText">
+			<function line="1511" name="GetText">
 				<summary>function GameLogic:GetText(text)
 get a translated text
 				</summary>
 				<parameter name="text"/>
 			</function>
-			<function line="1467" name="event">
+			<function line="1517" name="event">
 				<summary>function GameLogic:event(event)
 custom user or game event
 				</summary>
@@ -1324,7 +1356,21 @@ return player_entity, cmd_text_remain, hasInputName
 				</parameter>
 				<parameter name="fromEntity"/>
 			</function>
-			<function line="58" name="ParsePos">
+			<function line="58" name="ParseEntities">
+				<summary>function CmdParser.ParseEntities(cmd_text, fromEntity)
+get array of entities using with given filter conditions.  This is advanced way of CmdParser.ParsePlayer
+   @param cmd_text:
+   @category{name=value, ...}, such as '
+   @e{r=10, type="Railcar"}'
+   @return entities, cmd_text_remain: entities may be nil, empty table, or entity array. 
+				</summary>
+				<parameter name="cmd_text">
+				</parameter>
+				<parameter name="fromEntity"/>
+				<returns>return , cmd_text_remain: entities may be nil, empty table, or entity array. 
+				</returns>
+			</function>
+			<function line="82" name="ParsePos">
 				<summary>function CmdParser.ParsePos(cmd_text, entity)
 3d position absolute or relative with ~
 e.g. "20000 0 20000" or "~ ~1 ~" or "~1 ~-2 ~-3"
@@ -1333,13 +1379,13 @@ return x,y,z, cmd_text_remain: cmd_text_remaining is remaining unparsed text.
 				<parameter name="cmd_text"/>
 				<parameter name="entity"/>
 			</function>
-			<function line="94" name="ParsePosInBrackets">
+			<function line="118" name="ParsePosInBrackets">
 				<summary>function CmdParser.ParsePosInBrackets(cmd_text)
 additional pos in brackets like "(2 -1 0)", "(2 ~ ~)"
 				</summary>
 				<parameter name="cmd_text"/>
 			</function>
-			<function line="126" name="ParseBlockId">
+			<function line="150" name="ParseBlockId">
 				<summary>function CmdParser.ParseBlockId(cmd_text)
 block_id can be number or block name.
 return block_id, cmd_text_remain
@@ -1353,7 +1399,7 @@ return block_id, cmd_text_remain
 call this when command
 				</summary>
 			</function>
-			<function line="85" name="RunCommand">
+			<function line="88" name="RunCommand">
 				<summary>function CommandManager:RunCommand(cmd_name, cmd_text, ...)
 run one text command
    @param cmd_name: this can be command name or full command text that begin with "/" or nothing. 
@@ -1362,13 +1408,13 @@ run one text command
 				</parameter>
 				<parameter name="cmd_text"/>
 			</function>
-			<function line="100" name="GetCommandName">
+			<function line="103" name="GetCommandName">
 				<summary>function CommandManager:GetCommandName(cmd_text)
 
 				</summary>
 				<parameter name="cmd_text"/>
 			</function>
-			<function line="107" name="RunText">
+			<function line="110" name="RunText">
 				<summary>function CommandManager:RunText(text, ...)
 run text with may contain one or several commands. 
 it will treat ; or \r\n as a new line of command
@@ -1376,7 +1422,7 @@ it will treat ; or \r\n as a new line of command
 				</summary>
 				<parameter name="text"/>
 			</function>
-			<function line="119" name="RunInlineCommand">
+			<function line="122" name="RunInlineCommand">
 				<summary>function CommandManager:RunInlineCommand(cmd_text, ...)
 like linux bash shell, text inside $() is regarded as inline command, whose returned value is used in current command. 
 brackets can be nested
@@ -1386,7 +1432,7 @@ brackets can be nested
 				<returns>return new cmd_text after inline command is executed. 
 				</returns>
 			</function>
-			<function line="143" name="Run">
+			<function line="146" name="Run">
 				<summary>function CommandManager:Run(cmd, ... )
 run commands
    @return p1, p2: if p1 is false, then p2 is the label name where to goto. If p2 is nil, it means end of all lines. 
@@ -1397,7 +1443,7 @@ if p1 is not false, such as nil or any other value, the next command will be inv
 if p1 is not false, such as nil or any other value, the next command will be invoked normally. 
 				</returns>
 			</function>
-			<function line="148" name="GetCmdByString">
+			<function line="151" name="GetCmdByString">
 				<summary>function CommandManager:GetCmdByString(cmd)
 
    @return cmd_class, cmd_name, cmd_text;
@@ -1406,7 +1452,7 @@ if p1 is not false, such as nil or any other value, the next command will be inv
 				<returns>return , cmd_name, cmd_text;
 				</returns>
 			</function>
-			<function line="163" name="RunWithVariables">
+			<function line="166" name="RunWithVariables">
 				<summary>function CommandManager:RunWithVariables(variables, cmd, ...)
 
    @param variables: nil or a must be an object containning Compile() function.
@@ -1420,7 +1466,7 @@ if p1 is not false, such as nil or any other value, the next command will be inv
 if p1 is not false, such as nil or any other value, the next command will be invoked normally. 
 				</returns>
 			</function>
-			<function line="181" name="RunFromConsole">
+			<function line="184" name="RunFromConsole">
 				<summary>function CommandManager:RunFromConsole(cmd, player)
 run command from console for the current player
    @param player: fromEntity, if nil, this is current player. last trigger entity is also set to this player. 
@@ -1431,18 +1477,18 @@ after command is run, it will set back to previous value.
 after command is run, it will set back to previous value. 
 				</parameter>
 			</function>
-			<function line="216" name="Destroy">
+			<function line="219" name="Destroy">
 				<summary>function CommandManager:Destroy()
 destroy the command manager
 				</summary>
 			</function>
-			<function line="228" name="Register">
+			<function line="231" name="Register">
 				<summary>function CommandManager:Register(slash_command)
 call this function to register the slash command and init
 				</summary>
 				<parameter name="slash_command"/>
 			</function>
-			<function line="244" name="GetCmdList">
+			<function line="247" name="GetCmdList">
 				<summary>function CommandManager:GetCmdList(cmds_str, line_reg_exp)
 get command list
    @param line_reg_exp: default to "([%-]*)%s*(/?[^\r\n]+)", change this if one uses different line endings. 
@@ -1451,7 +1497,7 @@ get command list
 				<parameter name="line_reg_exp">default to "([%-]*)%s*(/?[^\r\n]+)", change this if one uses different line endings. 
 				</parameter>
 			</function>
-			<function line="265" name="CallFunction">
+			<function line="268" name="CallFunction">
 				<summary>function CommandManager:CallFunction(cmd_list, func_name, variables, fromEntity)
 
    @param cmd_list: array of command text. if nil, the current command list is used.
@@ -1472,12 +1518,12 @@ return true, function_return_value:  if function is found and called. otherwise 
 				<parameter name="variables"/>
 				<parameter name="fromEntity"/>
 			</function>
-			<function line="299" name="GetCurrentCmdList">
+			<function line="302" name="GetCurrentCmdList">
 				<summary>function CommandManager:GetCurrentCmdList()
 get the current command list if any that is being executed;
 				</summary>
 			</function>
-			<function line="307" name="RunCmdSegment">
+			<function line="310" name="RunCmdSegment">
 				<summary>function CommandManager:RunCmdSegment(cmd_list, fromLine, toLine, variables, fromEntity)
 run command from fromLine to toLine
    @param cmd_list: array of cmd strings
@@ -1493,7 +1539,7 @@ run command from fromLine to toLine
 				<parameter name="variables"/>
 				<parameter name="fromEntity"/>
 			</function>
-			<function line="418" name="RunCmdList">
+			<function line="421" name="RunCmdList">
 				<summary>function CommandManager:RunCmdList(cmd_list, variables, fromEntity)
 run command list and return the result. 
 				</summary>
@@ -1501,17 +1547,17 @@ run command list and return the result.
 				<parameter name="variables"/>
 				<parameter name="fromEntity"/>
 			</function>
-			<function line="423" name="LoadCmdHelpFile">
+			<function line="426" name="LoadCmdHelpFile">
 				<summary>function CommandManager:LoadCmdHelpFile()
 
 				</summary>
 			</function>
-			<function line="534" name="GetCmdHelpDS">
+			<function line="535" name="GetCmdHelpDS">
 				<summary>function CommandManager:GetCmdHelpDS()
 lazy load all command help
 				</summary>
 			</function>
-			<function line="541" name="GetCmdTypeDS">
+			<function line="542" name="GetCmdTypeDS">
 				<summary>function CommandManager:GetCmdTypeDS()
 
 				</summary>
@@ -1523,20 +1569,20 @@ lazy load all command help
 
 				</summary>
 			</function>
-			<function line="126" name="RegisterEntityClass">
+			<function line="129" name="RegisterEntityClass">
 				<summary>function EntityManager.RegisterEntityClass(name, entity)
 register a new entity class
 				</summary>
 				<parameter name="name"/>
 				<parameter name="entity"/>
 			</function>
-			<function line="131" name="GetEntityClass">
+			<function line="134" name="GetEntityClass">
 				<summary>function EntityManager.GetEntityClass(class_name)
 get entity class
 				</summary>
 				<parameter name="class_name"/>
 			</function>
-			<function line="140" name="GetChild">
+			<function line="143" name="GetChild">
 				<summary>function EntityManager:GetChild(sName)
 -------------------------------
 attribute interface
@@ -1546,7 +1592,7 @@ once you get an attribute object, you can use this model class to access all dat
 				</summary>
 				<parameter name="sName"/>
 			</function>
-			<function line="145" name="GetChildAt">
+			<function line="148" name="GetChildAt">
 				<summary>function EntityManager:GetChildAt(nRowIndex, nColumnIndex)
 
    @param nColumnIndex: nil to default to 0;
@@ -1555,7 +1601,7 @@ once you get an attribute object, you can use this model class to access all dat
 				<parameter name="nColumnIndex">nil to default to 0;
 				</parameter>
 			</function>
-			<function line="156" name="GetChildCount">
+			<function line="159" name="GetChildCount">
 				<summary>function EntityManager:GetChildCount(nColumnIndex)
 
    @param nColumnIndex: if nil, default to 0. 
@@ -1563,12 +1609,12 @@ once you get an attribute object, you can use this model class to access all dat
 				<parameter name="nColumnIndex">if nil, default to 0. 
 				</parameter>
 			</function>
-			<function line="165" name="Clear">
+			<function line="168" name="Clear">
 				<summary>function EntityManager.Clear()
 
 				</summary>
 			</function>
-			<function line="188" name="IsBlocked">
+			<function line="196" name="IsBlocked">
 				<summary>function EntityManager.IsBlocked(bx, by, bz)
 whether the given block is blocked. 
 TODO: cache the query result for a single framemove. this function may be called many times in a single frame. 
@@ -1577,37 +1623,37 @@ TODO: cache the query result for a single framemove. this function may be called
 				<parameter name="by"/>
 				<parameter name="bz"/>
 			</function>
-			<function line="194" name="AddObject">
+			<function line="202" name="AddObject">
 				<summary>function EntityManager.AddObject(entity)
 add entity. 
 				</summary>
 				<parameter name="entity"/>
 			</function>
-			<function line="219" name="AddEntityCount">
+			<function line="227" name="AddEntityCount">
 				<summary>function EntityManager.AddEntityCount(item_id, delta_count)
 
 				</summary>
 				<parameter name="item_id"/>
 				<parameter name="delta_count"/>
 			</function>
-			<function line="226" name="RemoveObject">
+			<function line="234" name="RemoveObject">
 				<summary>function EntityManager.RemoveObject(entity)
 remove entity from manager. 
 				</summary>
 				<parameter name="entity"/>
 			</function>
-			<function line="245" name="GetAllEntities">
+			<function line="254" name="GetAllEntities">
 				<summary>function EntityManager.GetAllEntities()
 
 				</summary>
 			</function>
-			<function line="250" name="GetItemCount">
+			<function line="259" name="GetItemCount">
 				<summary>function EntityManager.GetItemCount(item_id)
 get item count by block_id
 				</summary>
 				<parameter name="item_id"/>
 			</function>
-			<function line="257" name="LoadFromFile">
+			<function line="266" name="LoadFromFile">
 				<summary>function EntityManager.LoadFromFile(filename)
 Load all entity data from a given XML file.
    @param filename: if nil, it search the "[currentworld]/entity.xml"
@@ -1618,18 +1664,18 @@ Load all entity data from a given XML file.
 				<returns>return if there is local NPC file. or nil if not. 
 				</returns>
 			</function>
-			<function line="279" name="InitPlayers">
+			<function line="288" name="InitPlayers">
 				<summary>function EntityManager.InitPlayers()
 init player. Set and load current player. 
 				</summary>
 			</function>
-			<function line="293" name="GetPlayerFileName">
+			<function line="302" name="GetPlayerFileName">
 				<summary>function EntityManager.GetPlayerFileName(name)
 
 				</summary>
 				<parameter name="name"/>
 			</function>
-			<function line="298" name="CheckNoEntityCollision">
+			<function line="307" name="CheckNoEntityCollision">
 				<summary>function EntityManager.CheckNoEntityCollision(x,y,z, excludingEntity)
 Returns true if there are no solid, live entities in the specified location, excluding the given entity
    @param excludingEntity: usually the current player. 
@@ -1640,24 +1686,24 @@ Returns true if there are no solid, live entities in the specified location, exc
 				<parameter name="excludingEntity">usually the current player. 
 				</parameter>
 			</function>
-			<function line="311" name="GetLastTriggerEntity">
+			<function line="320" name="GetLastTriggerEntity">
 				<summary>function EntityManager.GetLastTriggerEntity()
 the lastest trigger entity, such as the one that pressed a button or step on a pressure plat, etc.  
 				</summary>
 			</function>
-			<function line="316" name="SetLastTriggerEntity">
+			<function line="325" name="SetLastTriggerEntity">
 				<summary>function EntityManager.SetLastTriggerEntity(entity)
 set lastest trigger entity. 
 				</summary>
 				<parameter name="entity"/>
 			</function>
-			<function line="321" name="LoadPlayer">
+			<function line="330" name="LoadPlayer">
 				<summary>function EntityManager.LoadPlayer(name)
 get or load or create a player of the given name. 
 				</summary>
 				<parameter name="name"/>
 			</function>
-			<function line="341" name="SetMainPlayer">
+			<function line="350" name="SetMainPlayer">
 				<summary>function EntityManager.SetMainPlayer(playerEntity)
 set the main player that is being controlled. After this call, EntityManager.GetPlayer() will return the given player. 
 the main player is always the player being controlled by the PlayerController.
@@ -1669,12 +1715,12 @@ the main player is always the player being controlled by the PlayerController.
 				<returns>return the previous player if any. 
 				</returns>
 			</function>
-			<function line="352" name="SaveAllPlayers">
+			<function line="361" name="SaveAllPlayers">
 				<summary>function EntityManager.SaveAllPlayers()
 
 				</summary>
 			</function>
-			<function line="365" name="GetPlayer">
+			<function line="374" name="GetPlayer">
 				<summary>function EntityManager.GetPlayer(name)
 get player
    @param name: if nil or "player", the current player is returned. 
@@ -1682,25 +1728,25 @@ get player
 				<parameter name="name">if nil or "player", the current player is returned. 
 				</parameter>
 			</function>
-			<function line="374" name="GetEntityByObjectID">
+			<function line="383" name="GetEntityByObjectID">
 				<summary>function EntityManager.GetEntityByObjectID(obj_id)
 get entity
 				</summary>
 				<parameter name="obj_id"/>
 			</function>
-			<function line="379" name="GetEntity">
+			<function line="388" name="GetEntity">
 				<summary>function EntityManager.GetEntity(name)
 get by name. 
 				</summary>
 				<parameter name="name"/>
 			</function>
-			<function line="386" name="GetEntityById">
+			<function line="395" name="GetEntityById">
 				<summary>function EntityManager.GetEntityById(entityId)
 get by id. 
 				</summary>
 				<parameter name="entityId"/>
 			</function>
-			<function line="393" name="RenameEntity">
+			<function line="402" name="RenameEntity">
 				<summary>function EntityManager.RenameEntity(entity, old_name, new_name)
 rename a given entity in the manager. 
 				</summary>
@@ -1708,7 +1754,7 @@ rename a given entity in the manager.
 				<parameter name="old_name"/>
 				<parameter name="new_name"/>
 			</function>
-			<function line="407" name="GetEntitiesByItemID">
+			<function line="416" name="GetEntitiesByItemID">
 				<summary>function EntityManager.GetEntitiesByItemID(item_id)
 get all entities by block id.
    @return nil or array of entities. 
@@ -1717,14 +1763,14 @@ get all entities by block id.
 				<returns>return or array of entities. 
 				</returns>
 			</function>
-			<function line="418" name="SetEntityByObjectID">
+			<function line="427" name="SetEntityByObjectID">
 				<summary>function EntityManager.SetEntityByObjectID(obj_id, entity)
 
 				</summary>
 				<parameter name="obj_id"/>
 				<parameter name="entity"/>
 			</function>
-			<function line="424" name="HasEntityInBlock">
+			<function line="433" name="HasEntityInBlock">
 				<summary>function EntityManager.HasEntityInBlock(bx, by, bz)
 return true if there is at least one entity at the blocok position. 
 				</summary>
@@ -1732,7 +1778,7 @@ return true if there is at least one entity at the blocok position.
 				<parameter name="by"/>
 				<parameter name="bz"/>
 			</function>
-			<function line="435" name="HasNonPlayerEntityInBlock">
+			<function line="444" name="HasNonPlayerEntityInBlock">
 				<summary>function EntityManager.HasNonPlayerEntityInBlock(bx, by, bz)
 has non-player entity
 				</summary>
@@ -1740,7 +1786,7 @@ has non-player entity
 				<parameter name="by"/>
 				<parameter name="bz"/>
 			</function>
-			<function line="447" name="GetEntitiesInBlock">
+			<function line="456" name="GetEntitiesInBlock">
 				<summary>function EntityManager.GetEntitiesInBlock(bx, by, bz)
 get all entities in block. 
 				</summary>
@@ -1748,7 +1794,7 @@ get all entities in block.
 				<parameter name="by"/>
 				<parameter name="bz"/>
 			</function>
-			<function line="456" name="GetBlockEntity">
+			<function line="465" name="GetBlockEntity">
 				<summary>function EntityManager.GetBlockEntity(bx, by, bz)
 get the block entity excluding other entity
 				</summary>
@@ -1756,7 +1802,7 @@ get the block entity excluding other entity
 				<parameter name="by"/>
 				<parameter name="bz"/>
 			</function>
-			<function line="464" name="GetEntityInBlock">
+			<function line="473" name="GetEntityInBlock">
 				<summary>function EntityManager.GetEntityInBlock(bx, by, bz, class_name)
 get the first entity that matches the class_name
 				</summary>
@@ -1765,7 +1811,7 @@ get the first entity that matches the class_name
 				<parameter name="bz"/>
 				<parameter name="class_name"/>
 			</function>
-			<function line="476" name="GetEntitiesByAABBOfType">
+			<function line="485" name="GetEntitiesByAABBOfType">
 				<summary>function EntityManager.GetEntitiesByAABBOfType(entity_class, aabb)
 
    @param entity_class: nil to match any entity. 
@@ -1774,7 +1820,7 @@ get the first entity that matches the class_name
 				</parameter>
 				<parameter name="aabb"/>
 			</function>
-			<function line="504" name="GetEntitiesByAABBExcept">
+			<function line="513" name="GetEntitiesByAABBExcept">
 				<summary>function EntityManager.GetEntitiesByAABBExcept(aabb, excludingEntity)
 Will get all entities within the specified AABB excluding the one passed into it. Args: entityToExclude, aabb
    @return array of entities
@@ -1784,7 +1830,7 @@ Will get all entities within the specified AABB excluding the one passed into it
 				<returns>return of entities
 				</returns>
 			</function>
-			<function line="533" name="RemoveBlockEntity">
+			<function line="542" name="RemoveBlockEntity">
 				<summary>function EntityManager.RemoveBlockEntity(bx, by, bz, class_name)
 remove entity by its class_name at the given block position. 
 all matching entities will be removed. 
@@ -1794,7 +1840,7 @@ all matching entities will be removed.
 				<parameter name="bz"/>
 				<parameter name="class_name"/>
 			</function>
-			<function line="560" name="GetBlockContainer">
+			<function line="569" name="GetBlockContainer">
 				<summary>function EntityManager.GetBlockContainer(bx,by,bz)
 private: 
 				</summary>
@@ -1802,7 +1848,7 @@ private:
 				<parameter name="by"/>
 				<parameter name="bz"/>
 			</function>
-			<function line="572" name="SetBlockContainer">
+			<function line="581" name="SetBlockContainer">
 				<summary>function EntityManager.SetBlockContainer(bx,by,bz, block_container)
 
 				</summary>
@@ -1811,7 +1857,7 @@ private:
 				<parameter name="bz"/>
 				<parameter name="block_container"/>
 			</function>
-			<function line="579" name="GetEntitiesInChunkColumn">
+			<function line="588" name="GetEntitiesInChunkColumn">
 				<summary>function EntityManager.GetEntitiesInChunkColumn(cx, cz, bCreateIfNotExist)
 
    @param cx, cz: chunk pos, if cz is nil, cx is packed index
@@ -1823,20 +1869,20 @@ return array of all entities in a given chunk column
 				<parameter name="cz"/>
 				<parameter name="bCreateIfNotExist"/>
 			</function>
-			<function line="590" name="GetRegionContainer">
+			<function line="599" name="GetRegionContainer">
 				<summary>function EntityManager.GetRegionContainer(bx,bz)
 get region object
 				</summary>
 				<parameter name="bx"/>
 				<parameter name="bz"/>
 			</function>
-			<function line="605" name="SaveToFile">
+			<function line="614" name="SaveToFile">
 				<summary>function EntityManager.SaveToFile(bSaveToLastSaveFolder)
 
 				</summary>
 				<parameter name="bSaveToLastSaveFolder"/>
 			</function>
-			<function line="638" name="SetChunkActive">
+			<function line="670" name="SetChunkActive">
 				<summary>function EntityManager.SetChunkActive(chunkX, chunkZ, isActive)
 
    @param chunkX, chunkZ: chunk pos, if chunkZ is nil, chunkX is packed index
@@ -1848,7 +1894,7 @@ make the chunk at location always active or not.
 				<parameter name="chunkZ"/>
 				<parameter name="isActive"/>
 			</function>
-			<function line="655" name="TickChunk">
+			<function line="687" name="TickChunk">
 				<summary>function EntityManager.TickChunk(chunkX, chunkZ, tick)
 
    @param chunkX, chunkZ: chunk pos, if chunkZ is nil, chunkX is packed index
@@ -1860,30 +1906,30 @@ make the chunk at location always active or not.
 				<parameter name="tick">if nil, default to current frame_count
 				</parameter>
 			</function>
-			<function line="665" name="AddToSentientList">
+			<function line="697" name="AddToSentientList">
 				<summary>function EntityManager.AddToSentientList(entity)
 set an entity so that its framemove function should always be called regardless of player position
 				</summary>
 				<parameter name="entity"/>
 			</function>
-			<function line="672" name="RemoveFromSentientList">
+			<function line="704" name="RemoveFromSentientList">
 				<summary>function EntityManager.RemoveFromSentientList(entity)
 remove an entity so that its framemove function should not be called unless it falls into player sensible range.
 				</summary>
 				<parameter name="entity"/>
 			</function>
-			<function line="687" name="GetDeltaTime">
+			<function line="719" name="GetDeltaTime">
 				<summary>function EntityManager:GetDeltaTime()
 
 				</summary>
 			</function>
-			<function line="692" name="FrameMove">
+			<function line="724" name="FrameMove">
 				<summary>function EntityManager.FrameMove(deltaTime)
 called every frame to simulate objects 
 				</summary>
 				<parameter name="deltaTime"/>
 			</function>
-			<function line="738" name="FrameMoveQueueThisFrame">
+			<function line="774" name="FrameMoveQueueThisFrame">
 				<summary>function EntityManager.FrameMoveQueueThisFrame(deltaTime, cur_time, destroy_list)
 pending list to framemove
 				</summary>
@@ -1891,19 +1937,19 @@ pending list to framemove
 				<parameter name="cur_time"/>
 				<parameter name="destroy_list"/>
 			</function>
-			<function line="748" name="SetFocus">
+			<function line="784" name="SetFocus">
 				<summary>function EntityManager.SetFocus(entity)
 set focus to the given entity. 
 The entity class's SetFocus() function should always call this fuction before it return true. 
 				</summary>
 				<parameter name="entity"/>
 			</function>
-			<function line="761" name="GetFocus">
+			<function line="797" name="GetFocus">
 				<summary>function EntityManager.GetFocus()
 get current focus
 				</summary>
 			</function>
-			<function line="766" name="FrameMoveDynamicObjects">
+			<function line="802" name="FrameMoveDynamicObjects">
 				<summary>function EntityManager.FrameMoveDynamicObjects(deltaTime, cur_time, destroy_list)
 dynamic object is always framemoved until they are dead. 
 				</summary>
@@ -1911,7 +1957,7 @@ dynamic object is always framemoved until they are dead.
 				<parameter name="cur_time"/>
 				<parameter name="destroy_list"/>
 			</function>
-			<function line="783" name="FrameMoveAllActiveChunks">
+			<function line="819" name="FrameMoveAllActiveChunks">
 				<summary>function EntityManager.FrameMoveAllActiveChunks(deltaTime, cur_time, destroy_list)
 
 				</summary>
@@ -1919,7 +1965,7 @@ dynamic object is always framemoved until they are dead.
 				<parameter name="cur_time"/>
 				<parameter name="destroy_list"/>
 			</function>
-			<function line="809" name="MakeChunksNearPlayerActive">
+			<function line="845" name="MakeChunksNearPlayerActive">
 				<summary>function EntityManager.MakeChunksNearPlayerActive(playerEntity, grid_radius)
 all entities in the radius of the given player is framemoved.
    @param grid_radius: if nil, default to playerEntity:GetSentientRadius(). 
@@ -1928,7 +1974,7 @@ all entities in the radius of the given player is framemoved.
 				<parameter name="grid_radius">if nil, default to playerEntity:GetSentientRadius(). 
 				</parameter>
 			</function>
-			<function line="822" name="FrameMoveEntities">
+			<function line="858" name="FrameMoveEntities">
 				<summary>function EntityManager.FrameMoveEntities(entities, deltaTime, cur_time, destroy_list)
 all entities in the list is framemoved. 
 				</summary>
@@ -1937,7 +1983,7 @@ all entities in the list is framemoved.
 				<parameter name="cur_time"/>
 				<parameter name="destroy_list"/>
 			</function>
-			<function line="842" name="FrameMoveSentientList">
+			<function line="878" name="FrameMoveSentientList">
 				<summary>function EntityManager.FrameMoveSentientList(deltaTime, cur_time, destroy_list)
 for always sentient objects, like CommandEntity with timed event
    @param deltaTime: in seconds
@@ -1948,6 +1994,64 @@ for always sentient objects, like CommandEntity with timed event
 				<parameter name="cur_time">in seconds
 				</parameter>
 				<parameter name="destroy_list"/>
+			</function>
+			<function line="901" name="FilterEntity">
+				<summary>function EntityManager.FilterEntity(entity, params, entities)
+filter entity by params
+   @param params: {name, type, nontype, mname, count}
+name: only entities with given name.
+mname: match regular expression of the given name
+type: only entities of given type. 
+nontype: only entities not of the given type
+r: get entities only less than r blocks from the origin
+rm: get entities only more than rm blocks from the origin.
+count: return as most this number of objects, usually in order of distance from the origin.
+   @param entities: nil or array of comparing entities
+   @return entity of nil
+				</summary>
+				<parameter name="entity"/>
+				<parameter name="params">{name, type, nontype, mname, count}
+name: only entities with given name.
+mname: match regular expression of the given name
+type: only entities of given type. 
+nontype: only entities not of the given type
+r: get entities only less than r blocks from the origin
+rm: get entities only more than rm blocks from the origin.
+count: return as most this number of objects, usually in order of distance from the origin.
+				</parameter>
+				<parameter name="entities">nil or array of comparing entities
+				</parameter>
+				<returns>return of nil
+				</returns>
+			</function>
+			<function line="951" name="FindEntities">
+				<summary>function EntityManager.FindEntities(params)
+find entities by a number of matching parameters. block entities are always escaped
+   @param params: {category, type, nontype, name, x,y,z,dz,dy,dz,r,rm, count}
+category: "e" all entities (if nil, it default to "e"),"p" for nearest player, "r" random player, "a" all players
+name: only entities with given name.
+type: only entities of given type. 
+nontype: only entities not of the given type
+x,y,z: center of origin to selects entities. 
+r: get entities only less than r blocks from the origin
+rm: get entities only more than rm blocks from the origin.
+dx,dy,dz: this is a cubic volume as defined by extending these blocks from the origin.
+count: return as most this number of objects, usually in order of distance from the origin.
+   @return nil or array of entities
+				</summary>
+				<parameter name="params">{category, type, nontype, name, x,y,z,dz,dy,dz,r,rm, count}
+category: "e" all entities (if nil, it default to "e"),"p" for nearest player, "r" random player, "a" all players
+name: only entities with given name.
+type: only entities of given type. 
+nontype: only entities not of the given type
+x,y,z: center of origin to selects entities. 
+r: get entities only less than r blocks from the origin
+rm: get entities only more than rm blocks from the origin.
+dx,dy,dz: this is a cubic volume as defined by extending these blocks from the origin.
+count: return as most this number of objects, usually in order of distance from the origin.
+				</parameter>
+				<returns>return or array of entities
+				</returns>
 			</function>
 		</table>
 		<table name="Entity" src="script/apps/Aries/Creator/Game/Entity/Entity.lua">
@@ -1987,64 +2091,82 @@ Custom events may be sent to any entity via /sendevent command to achieve any us
 				</summary>
 				<parameter name="event"/>
 			</function>
-			<function line="161" name="GetType">
+			<function line="162" name="GetType">
 				<summary>function Entity:GetType()
-
+static method
 				</summary>
 			</function>
-			<function line="165" name="Reset">
+			<function line="168" name="IsOfType">
+				<summary>function Entity:IsOfType(class_name)
+static method: recursively check if entity is derived from a given type.
+   @param class_name: if nil, it will always return true. 
+				</summary>
+				<parameter name="class_name">if nil, it will always return true. 
+				</parameter>
+			</function>
+			<function line="172" name="Reset">
 				<summary>function Entity:Reset()
 
 				</summary>
 			</function>
-			<function line="174" name="IsRemote">
+			<function line="181" name="IsRemote">
 				<summary>function Entity:IsRemote()
 return true if the entity is controlled remotely by the server. 
 i.e. whether this entity is a client proxy of server entity. 
 				</summary>
 			</function>
-			<function line="180" name="SetLocal">
+			<function line="187" name="SetLocal">
 				<summary>function Entity:SetLocal(bForceLocal)
 set whether this entity is a local entity even the game logic is in remote mode.
    @sa self:IsRemote().
 				</summary>
 				<parameter name="bForceLocal"/>
 			</function>
-			<function line="185" name="GetEditModel">
+			<function line="192" name="GetEditModel">
 				<summary>function Entity:GetEditModel()
 created on demand for editors
 				</summary>
 			</function>
-			<function line="197" name="SetPersistent">
+			<function line="204" name="GetInventory">
+				<summary>function Entity:GetInventory()
+get the inventory object if any
+				</summary>
+			</function>
+			<function line="209" name="GetInventoryView">
+				<summary>function Entity:GetInventoryView()
+get the inventory view object if any. It will create one if inventory exist but view not exist. 
+				</summary>
+			</function>
+			<function line="219" name="SetPersistent">
 				<summary>function Entity:SetPersistent(bIsPersistent)
 whether the entity should be serialized to disk. 
 				</summary>
 				<parameter name="bIsPersistent"/>
 			</function>
-			<function line="203" name="EnableAnimation">
+			<function line="225" name="EnableAnimation">
 				<summary>function Entity:EnableAnimation(bEnable)
 whether automatically advance local time of current animation id. true by default. 
 Maybe set to false during movie actor action playback 
 				</summary>
 				<parameter name="bEnable"/>
 			</function>
-			<function line="210" name="IsBiped">
+			<function line="232" name="IsBiped">
 				<summary>function Entity:IsBiped()
 
 				</summary>
 			</function>
-			<function line="214" name="SetDummy">
+			<function line="236" name="SetDummy">
 				<summary>function Entity:SetDummy(bIsDummy)
 whether it will check for collision detection 
 				</summary>
 				<parameter name="bIsDummy"/>
 			</function>
-			<function line="219" name="IsDummy">
+			<function line="241" name="IsDummy">
 				<summary>function Entity:IsDummy()
 whether it will check for collision detection 
 				</summary>
 			</function>
-			<function line="225" name="FaceTarget">
+			<function line="247" name="FaceTarget">
 				<summary>function Entity:FaceTarget(x,y,z)
 
 				</summary>
@@ -2052,36 +2174,37 @@ whether it will check for collision detection
 				<parameter name="y"/>
 				<parameter name="z"/>
 			</function>
-			<function line="228" name="ToggleFly">
+			<function line="250" name="ToggleFly">
 				<summary>function Entity:ToggleFly(bFly)
 
 				</summary>
 				<parameter name="bFly"/>
 			</function>
-			<function line="232" name="SetWorld">
+			<function line="254" name="SetWorld">
 				<summary>function Entity:SetWorld(world)
 Sets the reference to the World object.
 				</summary>
 				<parameter name="world"/>
 			</function>
-			<function line="237" name="LoadFromXMLNode">
+			<function line="259" name="LoadFromXMLNode">
 				<summary>function Entity:LoadFromXMLNode(node)
 load from an xml node. 
 				</summary>
 				<parameter name="node"/>
 			</function>
-			<function line="305" name="GetVariables">
+			<function line="327" name="GetVariables">
 				<summary>function Entity:GetVariables()
 get the variable class. 
 				</summary>
 			</function>
-			<function line="309" name="SaveToXMLNode">
-				<summary>function Entity:SaveToXMLNode(node)
+			<function line="331" name="SaveToXMLNode">
+				<summary>function Entity:SaveToXMLNode(node, bSort)
 
 				</summary>
 				<parameter name="node"/>
+				<parameter name="bSort"/>
 			</function>
-			<function line="355" name="SetFocus">
+			<function line="377" name="SetFocus">
 				<summary>function Entity:SetFocus()
 let the camera focus on this player and take control of it.
    @note: please note if this return nil, and does not call EntityManager.SetFocus(), OnFocusIn and OnFocusOut will never be called
@@ -2090,80 +2213,80 @@ let the camera focus on this player and take control of it.
 				<returns>return true if focus can be set
 				</returns>
 			</function>
-			<function line="358" name="HasFocus">
+			<function line="380" name="HasFocus">
 				<summary>function Entity:HasFocus()
 
 				</summary>
 			</function>
-			<function line="363" name="OnFocusIn">
+			<function line="385" name="OnFocusIn">
 				<summary>function Entity:OnFocusIn()
 called after focus is set
 				</summary>
 			</function>
-			<function line="378" name="OnFocusOut">
+			<function line="400" name="OnFocusOut">
 				<summary>function Entity:OnFocusOut()
 called before focus is lost
 				</summary>
 			</function>
-			<function line="389" name="SetVisible">
+			<function line="411" name="SetVisible">
 				<summary>function Entity:SetVisible(bVisible)
 
 				</summary>
 				<parameter name="bVisible"/>
 			</function>
-			<function line="397" name="IsVisible">
+			<function line="419" name="IsVisible">
 				<summary>function Entity:IsVisible()
 
 				</summary>
 			</function>
-			<function line="401" name="IsFlying">
+			<function line="423" name="IsFlying">
 				<summary>function Entity:IsFlying()
 
 				</summary>
 			</function>
-			<function line="404" name="IsRunning">
+			<function line="426" name="IsRunning">
 				<summary>function Entity:IsRunning()
 
 				</summary>
 			</function>
-			<function line="407" name="ToggleRunning">
+			<function line="429" name="ToggleRunning">
 				<summary>function Entity:ToggleRunning()
 
 				</summary>
 			</function>
-			<function line="410" name="GetSpeedScale">
+			<function line="432" name="GetSpeedScale">
 				<summary>function Entity:GetSpeedScale()
 
 				</summary>
 			</function>
-			<function line="415" name="GetCurrentSpeedScale">
+			<function line="437" name="GetCurrentSpeedScale">
 				<summary>function Entity:GetCurrentSpeedScale()
 take running and flying into account. 
 				</summary>
 			</function>
-			<function line="430" name="GetWalkSpeed">
+			<function line="452" name="GetWalkSpeed">
 				<summary>function Entity:GetWalkSpeed()
 
 				</summary>
 			</function>
-			<function line="434" name="SetWalkSpeed">
+			<function line="456" name="SetWalkSpeed">
 				<summary>function Entity:SetWalkSpeed(speed)
 
 				</summary>
 				<parameter name="speed"/>
 			</function>
-			<function line="438" name="SetSpeedScale">
+			<function line="460" name="SetSpeedScale">
 				<summary>function Entity:SetSpeedScale(value)
 
 				</summary>
 				<parameter name="value"/>
 			</function>
-			<function line="442" name="GetJumpupSpeed">
+			<function line="464" name="GetJumpupSpeed">
 				<summary>function Entity:GetJumpupSpeed()
 
 				</summary>
 			</function>
-			<function line="446" name="CanReachBlockAt">
+			<function line="468" name="CanReachBlockAt">
 				<summary>function Entity:CanReachBlockAt(x,y,z, mode)
 
 				</summary>
@@ -2172,12 +2295,12 @@ take running and flying into account.
 				<parameter name="z"/>
 				<parameter name="mode"/>
 			</function>
-			<function line="451" name="CanTeleport">
+			<function line="473" name="CanTeleport">
 				<summary>function Entity:CanTeleport()
 whether the entity can be teleported to another place, by teleport stone for instance. 
 				</summary>
 			</function>
-			<function line="458" name="ToggleWalkRun">
+			<function line="480" name="ToggleWalkRun">
 				<summary>function Entity:ToggleWalkRun(bWalking)
 usually holding shift key will toggle to walk mode.
    @param bWalking: if nil it will toggle. if true, it will force walk or run. 
@@ -2185,12 +2308,23 @@ usually holding shift key will toggle to walk mode.
 				<parameter name="bWalking">if nil it will toggle. if true, it will force walk or run. 
 				</parameter>
 			</function>
-			<function line="473" name="IsWalking">
+			<function line="495" name="EnableLOD">
+				<summary>function Entity:EnableLOD(bEnable)
+enable internel mesh level of details if any. 
+				</summary>
+				<parameter name="bEnable"/>
+			</function>
+			<function line="502" name="IsLODEnabled">
+				<summary>function Entity:IsLODEnabled()
+
+				</summary>
+			</function>
+			<function line="511" name="IsWalking">
 				<summary>function Entity:IsWalking()
 all entity default to running (not walking). 
 				</summary>
 			</function>
-			<function line="486" name="SetAnimation">
+			<function line="524" name="SetAnimation">
 				<summary>function Entity:SetAnimation(filenames)
 build animation sequence table to be fed to entity.
    @param filenames: can be filename, animation name, animation id or array of above things. currently only two animation is supported. 
@@ -2200,30 +2334,30 @@ such as {4,0}
 such as {4,0} 
 				</parameter>
 			</function>
-			<function line="520" name="GetLastAnimId">
+			<function line="558" name="GetLastAnimId">
 				<summary>function Entity:GetLastAnimId()
 get last animation id. this may return nil, which usually mean 0.
 				</summary>
 			</function>
-			<function line="526" name="ShowHeadOnDisplay">
+			<function line="564" name="ShowHeadOnDisplay">
 				<summary>function Entity:ShowHeadOnDisplay(bShow)
 enable headon display
 				</summary>
 				<parameter name="bShow"/>
 			</function>
-			<function line="529" name="IsShowHeadOnDisplay">
+			<function line="567" name="IsShowHeadOnDisplay">
 				<summary>function Entity:IsShowHeadOnDisplay()
 
 				</summary>
 			</function>
-			<function line="533" name="AddStat">
+			<function line="571" name="AddStat">
 				<summary>function Entity:AddStat(id, delta_count)
 add stat
 				</summary>
 				<parameter name="id"/>
 				<parameter name="delta_count"/>
 			</function>
-			<function line="537" name="GetPortaitObjectParams">
+			<function line="575" name="GetPortaitObjectParams">
 				<summary>function Entity:GetPortaitObjectParams(bForceRefresh)
 add stat
 get object params table to create the portait in entity dialog.
@@ -2232,7 +2366,7 @@ get object params table to create the portait in entity dialog.
 				<parameter name="bForceRefresh">if true, it will fetch again from innerObject. 
 				</parameter>
 			</function>
-			<function line="569" name="CreateInnerObject">
+			<function line="607" name="CreateInnerObject">
 				<summary>function Entity:CreateInnerObject(filename, isCharacter, offsetY, scaling)
 this is helper function that derived class can use to create an inner mesh or character object. 
 				</summary>
@@ -2241,27 +2375,27 @@ this is helper function that derived class can use to create an inner mesh or ch
 				<parameter name="offsetY"/>
 				<parameter name="scaling"/>
 			</function>
-			<function line="600" name="DestroyInnerObject">
+			<function line="638" name="DestroyInnerObject">
 				<summary>function Entity:DestroyInnerObject()
 this is helper function that derived class can use to destroy an inner mesh or character object. 
 				</summary>
 			</function>
-			<function line="610" name="OnShiftKeyPressed">
+			<function line="648" name="OnShiftKeyPressed">
 				<summary>function Entity:OnShiftKeyPressed()
 this is called on each tick, when this entity has focus and user is pressing and holding shift key. 
 				</summary>
 			</function>
-			<function line="614" name="OnShiftKeyReleased">
+			<function line="652" name="OnShiftKeyReleased">
 				<summary>function Entity:OnShiftKeyReleased()
 this is called, when this entity has focus and user is just released the shift key. 
 				</summary>
 			</function>
-			<function line="617" name="Jump">
+			<function line="655" name="Jump">
 				<summary>function Entity:Jump()
 
 				</summary>
 			</function>
-			<function line="633" name="SetGravity">
+			<function line="671" name="SetGravity">
 				<summary>function Entity:SetGravity(value)
 
    @param value: if nil, it will use the global gravity. 
@@ -2269,40 +2403,40 @@ this is called, when this entity has focus and user is just released the shift k
 				<parameter name="value">if nil, it will use the global gravity. 
 				</parameter>
 			</function>
-			<function line="637" name="GetGravity">
+			<function line="675" name="GetGravity">
 				<summary>function Entity:GetGravity()
 
 				</summary>
 			</function>
-			<function line="642" name="GetDataContainer">
+			<function line="680" name="GetDataContainer">
 				<summary>function Entity:GetDataContainer()
 get data container. 
 				</summary>
 			</function>
-			<function line="652" name="IsPersistent">
+			<function line="690" name="IsPersistent">
 				<summary>function Entity:IsPersistent()
 whether its persistent. 
 				</summary>
 			</function>
-			<function line="658" name="OnActivated">
+			<function line="696" name="OnActivated">
 				<summary>function Entity:OnActivated(triggerEntity)
 virtual function: handle some external input. 
 default is do nothing. return true is something is processed. 
 				</summary>
 				<parameter name="triggerEntity"/>
 			</function>
-			<function line="666" name="IsRegional">
+			<function line="704" name="IsRegional">
 				<summary>function Entity:IsRegional()
 if true, always serialize to 512*512 regional entity file
 block based entity has this set to true. 
 				</summary>
 			</function>
-			<function line="671" name="init">
+			<function line="709" name="init">
 				<summary>function Entity:init()
 virtual function: 
 				</summary>
 			</function>
-			<function line="676" name="OnCollideWithPlayer">
+			<function line="714" name="OnCollideWithPlayer">
 				<summary>function Entity:OnCollideWithPlayer(from_entity, bx,by,bz)
 player entity collided with this entity
 				</summary>
@@ -2311,7 +2445,7 @@ player entity collided with this entity
 				<parameter name="by"/>
 				<parameter name="bz"/>
 			</function>
-			<function line="680" name="OnHit">
+			<function line="718" name="OnHit">
 				<summary>function Entity:OnHit(attack_value, fromX, fromY, fromZ)
 virtual function: when the entity is hit (attacked) by the missile
 				</summary>
@@ -2320,7 +2454,7 @@ virtual function: when the entity is hit (attacked) by the missile
 				<parameter name="fromY"/>
 				<parameter name="fromZ"/>
 			</function>
-			<function line="684" name="OnClick">
+			<function line="722" name="OnClick">
 				<summary>function Entity:OnClick(x,y,z, mouse_button,entity,side)
 virtual function:
 				</summary>
@@ -2331,49 +2465,49 @@ virtual function:
 				<parameter name="entity"/>
 				<parameter name="side"/>
 			</function>
-			<function line="687" name="GetBlockId">
+			<function line="725" name="GetBlockId">
 				<summary>function Entity:GetBlockId()
 
 				</summary>
 			</function>
-			<function line="692" name="GetCommandTable">
+			<function line="730" name="GetCommandTable">
 				<summary>function Entity:GetCommandTable()
 return a table array containing all commands or comments. 
 				</summary>
 			</function>
-			<function line="705" name="SetCommandTable">
+			<function line="743" name="SetCommandTable">
 				<summary>function Entity:SetCommandTable(commands)
 set command table
 				</summary>
 				<parameter name="commands"/>
 			</function>
-			<function line="715" name="GetCommandList">
+			<function line="753" name="GetCommandList">
 				<summary>function Entity:GetCommandList()
 get latest command list. comments is empty line
 it will cache last parsed result
 				</summary>
 			</function>
-			<function line="728" name="HasCommand">
+			<function line="766" name="HasCommand">
 				<summary>function Entity:HasCommand()
 bool: whether has command panel
 				</summary>
 			</function>
-			<function line="733" name="GetCommandTitle">
+			<function line="771" name="GetCommandTitle">
 				<summary>function Entity:GetCommandTitle()
 the title text to display (can be mcml)
 				</summary>
 			</function>
-			<function line="737" name="HasRule">
+			<function line="775" name="HasRule">
 				<summary>function Entity:HasRule()
 bool: whether show the rule panel
 				</summary>
 			</function>
-			<function line="742" name="GetRuleTitle">
+			<function line="780" name="GetRuleTitle">
 				<summary>function Entity:GetRuleTitle()
 the title text to display (can be mcml)
 				</summary>
 			</function>
-			<function line="747" name="ActivateCommands">
+			<function line="785" name="ActivateCommands">
 				<summary>function Entity:ActivateCommands(triggerEntity)
 This function is called manually. Such as during OnActivated().
    @param triggerEntity: this is the triggering player or sometimes the entity itself if /activate self is used. 
@@ -2381,7 +2515,7 @@ This function is called manually. Such as during OnActivated().
 				<parameter name="triggerEntity">this is the triggering player or sometimes the entity itself if /activate self is used. 
 				</parameter>
 			</function>
-			<function line="767" name="ActivateRules">
+			<function line="805" name="ActivateRules">
 				<summary>function Entity:ActivateRules(triggerEntity)
 this function is called automatically when this entity is activated. 
 override this function to change behavior.
@@ -2389,73 +2523,73 @@ build, reload and activate all rules in the self.rulebag
 				</summary>
 				<parameter name="triggerEntity"/>
 			</function>
-			<function line="784" name="HasBag">
+			<function line="822" name="HasBag">
 				<summary>function Entity:HasBag()
 bool: whether show the bag panel
 				</summary>
 			</function>
-			<function line="789" name="GetBagTitle">
+			<function line="827" name="GetBagTitle">
 				<summary>function Entity:GetBagTitle()
 the title text to display (can be mcml)
 				</summary>
 			</function>
-			<function line="794" name="SetDisplayName">
+			<function line="832" name="SetDisplayName">
 				<summary>function Entity:SetDisplayName(v)
 virtual function:
 				</summary>
 				<parameter name="v"/>
 			</function>
-			<function line="798" name="GetDisplayName">
+			<function line="836" name="GetDisplayName">
 				<summary>function Entity:GetDisplayName()
 
 				</summary>
 			</function>
-			<function line="803" name="SetName">
+			<function line="841" name="SetName">
 				<summary>function Entity:SetName(v)
 internal name 
 				</summary>
 				<parameter name="v"/>
 			</function>
-			<function line="811" name="GetName">
+			<function line="849" name="GetName">
 				<summary>function Entity:GetName()
 
 				</summary>
 			</function>
-			<function line="816" name="SetCommand">
+			<function line="854" name="SetCommand">
 				<summary>function Entity:SetCommand(cmd)
 virtual function:
 				</summary>
 				<parameter name="cmd"/>
 			</function>
-			<function line="820" name="GetCommand">
+			<function line="858" name="GetCommand">
 				<summary>function Entity:GetCommand()
 
 				</summary>
 			</function>
-			<function line="825" name="Refresh">
+			<function line="863" name="Refresh">
 				<summary>function Entity:Refresh()
 virtual function
 				</summary>
 			</function>
-			<function line="829" name="CreateFromPool">
+			<function line="867" name="CreateFromPool">
 				<summary>function Entity:CreateFromPool()
 static function: in the Destroy function, the entity are recollected
 				</summary>
 			</function>
-			<function line="835" name="Create">
+			<function line="873" name="Create">
 				<summary>function Entity:Create(o, xml_node)
 factory class to create an instance of the entity 
 				</summary>
 				<parameter name="o"/>
 				<parameter name="xml_node"/>
 			</function>
-			<function line="843" name="SetInnerObject">
+			<function line="881" name="SetInnerObject">
 				<summary>function Entity:SetInnerObject(obj)
 
 				</summary>
 				<parameter name="obj"/>
 			</function>
-			<function line="854" name="GetInnerObject">
+			<function line="892" name="GetInnerObject">
 				<summary>function Entity:GetInnerObject()
 get the ParaObject from self.obj_id. 
 performace optimized: since we will cache obj in self.obj on first call. 
@@ -2463,69 +2597,70 @@ and use ParaScene.CheckExist to check validity on subsequent calls, which is Lua
 thus calling this function each frame is fine. 
 				</summary>
 			</function>
-			<function line="870" name="GetObjID">
+			<function line="908" name="GetObjID">
 				<summary>function Entity:GetObjID()
 
 				</summary>
 			</function>
-			<function line="880" name="SetObjID">
+			<function line="918" name="SetObjID">
 				<summary>function Entity:SetObjID(id)
 obsoleted, use SetInnerObject instead
 				</summary>
 				<parameter name="id"/>
 			</function>
-			<function line="886" name="GetOpacity">
+			<function line="924" name="GetOpacity">
 				<summary>function Entity:GetOpacity()
 
 				</summary>
 			</function>
-			<function line="890" name="SetOpacity">
+			<function line="928" name="SetOpacity">
 				<summary>function Entity:SetOpacity(value)
 
 				</summary>
 				<parameter name="value"/>
 			</function>
-			<function line="895" name="GetItemClass">
+			<function line="933" name="GetItemClass">
 				<summary>function Entity:GetItemClass()
 get the associated item class. 
 				</summary>
 			</function>
-			<function line="902" name="GetBlock">
+			<function line="940" name="GetBlock">
 				<summary>function Entity:GetBlock()
 get the associated block template class. 
 				</summary>
 			</function>
-			<function line="912" name="SetDead">
+			<function line="950" name="SetDead">
 				<summary>function Entity:SetDead()
 set as dead and will be destroyed in the next framemove.
 				</summary>
 			</function>
-			<function line="916" name="IsDead">
+			<function line="954" name="IsDead">
 				<summary>function Entity:IsDead()
 
 				</summary>
 			</function>
-			<function line="920" name="Destroy">
+			<function line="958" name="Destroy">
 				<summary>function Entity:Destroy()
 
 				</summary>
 			</function>
-			<function line="932" name="Detach">
+			<function line="970" name="Detach">
 				<summary>function Entity:Detach()
 detach from entity manager
 				</summary>
 			</function>
-			<function line="947" name="OnAddEntity">
-				<summary>function Entity:OnAddEntity()
-
+			<function line="987" name="OnRemoved">
+				<summary>function Entity:OnRemoved()
+virtual, called when this entity is removed from EntityManager, either detached or during world exit.
+this function is also called when entity is destroyed if it is attached to EntityManager.
 				</summary>
 			</function>
-			<function line="950" name="GetWorldServer">
+			<function line="990" name="GetWorldServer">
 				<summary>function Entity:GetWorldServer()
 
 				</summary>
 			</function>
-			<function line="959" name="Say">
+			<function line="999" name="Say">
 				<summary>function Entity:Say(text, duration, bAbove3D)
 let the entity say something on top of its head for some seconds.
    @param text: text to show
@@ -2541,12 +2676,12 @@ return true if we actually said something, otherwise nil.
 return true if we actually said something, otherwise nil.
 				</parameter>
 			</function>
-			<function line="974" name="Attach">
+			<function line="1019" name="Attach">
 				<summary>function Entity:Attach()
 attach to entity manager
 				</summary>
 			</function>
-			<function line="984" name="canPlaceBlockAt">
+			<function line="1029" name="canPlaceBlockAt">
 				<summary>function Entity:canPlaceBlockAt(x,y,z, block)
 virtual function: whether we can place a block where this entity stands in. 
 in most cases, this is false, unless the entity is wise enough to move around to other free spaces. 
@@ -2556,7 +2691,7 @@ in most cases, this is false, unless the entity is wise enough to move around to
 				<parameter name="z"/>
 				<parameter name="block"/>
 			</function>
-			<function line="989" name="OnBlockEvent">
+			<function line="1034" name="OnBlockEvent">
 				<summary>function Entity:OnBlockEvent(x,y,z, event_id, event_param)
 when ever an event is received. 
 				</summary>
@@ -2566,65 +2701,65 @@ when ever an event is received.
 				<parameter name="event_id"/>
 				<parameter name="event_param"/>
 			</function>
-			<function line="993" name="SetScaling">
+			<function line="1038" name="SetScaling">
 				<summary>function Entity:SetScaling(v)
 virtual function:
 				</summary>
 				<parameter name="v"/>
 			</function>
-			<function line="1001" name="GetScaling">
+			<function line="1046" name="GetScaling">
 				<summary>function Entity:GetScaling(v)
 
 				</summary>
 				<parameter name="v"/>
 			</function>
-			<function line="1010" name="SetScalingDelta">
+			<function line="1055" name="SetScalingDelta">
 				<summary>function Entity:SetScalingDelta(v)
 virtual function:
 				</summary>
 				<parameter name="v"/>
 			</function>
-			<function line="1015" name="SetFacingDelta">
+			<function line="1060" name="SetFacingDelta">
 				<summary>function Entity:SetFacingDelta(v)
 virtual function:
 				</summary>
 				<parameter name="v"/>
 			</function>
-			<function line="1019" name="SetFacing">
+			<function line="1064" name="SetFacing">
 				<summary>function Entity:SetFacing(facing)	
 set facing of the lower object. 
 				</summary>
 				<parameter name="facing"/>
 			</function>
-			<function line="1027" name="GetFacing">
+			<function line="1072" name="GetFacing">
 				<summary>function Entity:GetFacing()	
 
 				</summary>
 			</function>
-			<function line="1032" name="PlaySound">
+			<function line="1077" name="PlaySound">
 				<summary>function Entity:PlaySound(sound_name)
 
 				</summary>
 				<parameter name="sound_name"/>
 			</function>
-			<function line="1035" name="IsServerEntity">
+			<function line="1080" name="IsServerEntity">
 				<summary>function Entity:IsServerEntity()
 
 				</summary>
 			</function>
-			<function line="1040" name="OpenEditor">
+			<function line="1085" name="OpenEditor">
 				<summary>function Entity:OpenEditor(editor_name, entity)
 virtual function: right click to edit. 
 				</summary>
 				<parameter name="editor_name"/>
 				<parameter name="entity"/>
 			</function>
-			<function line="1057" name="UpdateBlockContainer">
+			<function line="1102" name="UpdateBlockContainer">
 				<summary>function Entity:UpdateBlockContainer()
 
 				</summary>
 			</function>
-			<function line="1084" name="GetBlockPos">
+			<function line="1129" name="GetBlockPos">
 				<summary>function Entity:GetBlockPos()
 
    @return bx, by, bz in block world. 
@@ -2632,12 +2767,12 @@ virtual function: right click to edit.
 				<returns>return , by, bz in block world. 
 				</returns>
 			</function>
-			<function line="1091" name="doesEntityTriggerPressurePlate">
+			<function line="1136" name="doesEntityTriggerPressurePlate">
 				<summary>function Entity:doesEntityTriggerPressurePlate()
 
 				</summary>
 			</function>
-			<function line="1096" name="SetBlockPos">
+			<function line="1141" name="SetBlockPos">
 				<summary>function Entity:SetBlockPos(bx, by, bz)
 update block position according to the associated object. 
 				</summary>
@@ -2645,7 +2780,7 @@ update block position according to the associated object.
 				<parameter name="by"/>
 				<parameter name="bz"/>
 			</function>
-			<function line="1117" name="GetDistanceSq">
+			<function line="1162" name="GetDistanceSq">
 				<summary>function Entity:GetDistanceSq(x,y,z)
 
    @sa DistanceSqTo() for block pos
@@ -2654,7 +2789,7 @@ update block position according to the associated object.
 				<parameter name="y"/>
 				<parameter name="z"/>
 			</function>
-			<function line="1124" name="SetLocationAndAngles">
+			<function line="1169" name="SetLocationAndAngles">
 				<summary>function Entity:SetLocationAndAngles(x,y,z, yaw, pitch)
 Sets the location and Yaw/Pitch of an entity in the world. It will teleport the player at the exact location.
 				</summary>
@@ -2664,7 +2799,7 @@ Sets the location and Yaw/Pitch of an entity in the world. It will teleport the 
 				<parameter name="yaw"/>
 				<parameter name="pitch"/>
 			</function>
-			<function line="1134" name="TeleportToBlockPos">
+			<function line="1179" name="TeleportToBlockPos">
 				<summary>function Entity:TeleportToBlockPos(x,y,z)
 teleport to a given block position. 
 				</summary>
@@ -2672,7 +2807,7 @@ teleport to a given block position.
 				<parameter name="y"/>
 				<parameter name="z"/>
 			</function>
-			<function line="1139" name="SetPositionAndRotation">
+			<function line="1184" name="SetPositionAndRotation">
 				<summary>function Entity:SetPositionAndRotation(x,y,z,yaw, pitch)
 Sets the entity's position and rotation. But it does not change last tick position. 
 				</summary>
@@ -2682,14 +2817,14 @@ Sets the entity's position and rotation. But it does not change last tick positi
 				<parameter name="yaw"/>
 				<parameter name="pitch"/>
 			</function>
-			<function line="1144" name="SetRotation">
+			<function line="1189" name="SetRotation">
 				<summary>function Entity:SetRotation(facing, pitch)
 
 				</summary>
 				<parameter name="facing"/>
 				<parameter name="pitch"/>
 			</function>
-			<function line="1152" name="SetPositionAndRotation2">
+			<function line="1197" name="SetPositionAndRotation2">
 				<summary>function Entity:SetPositionAndRotation2(x,y,z,yaw, pitch, posRotIncrements)
 Sets the entity's position and rotation. it will correct y so it will snap to ground.
    @param posRotIncrements: smoothed frames. we will move to x,y,z in this number of ticks. 
@@ -2702,7 +2837,7 @@ Sets the entity's position and rotation. it will correct y so it will snap to gr
 				<parameter name="posRotIncrements">smoothed frames. we will move to x,y,z in this number of ticks. 
 				</parameter>
 			</function>
-			<function line="1159" name="SetPosition">
+			<function line="1204" name="SetPosition">
 				<summary>function Entity:SetPosition(x, y, z)
 set real world position for the object. 
 				</summary>
@@ -2710,7 +2845,7 @@ set real world position for the object.
 				<parameter name="y"/>
 				<parameter name="z"/>
 			</function>
-			<function line="1182" name="getPosition">
+			<function line="1227" name="getPosition">
 				<summary>function Entity:getPosition()
 
    @return a clone of {x,y,z}
@@ -2718,7 +2853,7 @@ set real world position for the object.
 				<returns>return clone of {x,y,z}
 				</returns>
 			</function>
-			<function line="1187" name="setPosition">
+			<function line="1232" name="setPosition">
 				<summary>function Entity:setPosition(pos)
 
    @param pos: {x,y,z}
@@ -2726,18 +2861,18 @@ set real world position for the object.
 				<parameter name="pos">{x,y,z}
 				</parameter>
 			</function>
-			<function line="1195" name="GetPosition">
+			<function line="1240" name="GetPosition">
 				<summary>function Entity:GetPosition()
 virtual function: Get real world position. if not exist, we will convert from block position. 
 				</summary>
 			</function>
-			<function line="1208" name="GetNextPosition">
+			<function line="1253" name="GetNextPosition">
 				<summary>function Entity:GetNextPosition(deltaTime)
 get next position using its current speed with deltaTime
 				</summary>
 				<parameter name="deltaTime"/>
 			</function>
-			<function line="1221" name="DistanceSqTo">
+			<function line="1266" name="DistanceSqTo">
 				<summary>function Entity:DistanceSqTo(x,y,z)
 get block world distance to the give block position.
    @sa GetDistanceSq() for real pos
@@ -2746,17 +2881,17 @@ get block world distance to the give block position.
 				<parameter name="y"/>
 				<parameter name="z"/>
 			</function>
-			<function line="1227" name="GetPickingDist">
+			<function line="1272" name="GetPickingDist">
 				<summary>function Entity:GetPickingDist()
 get the picking distance of this entity. 
 				</summary>
 			</function>
-			<function line="1232" name="UpdateRotation">
+			<function line="1277" name="UpdateRotation">
 				<summary>function Entity:UpdateRotation()
 virtual function: only used by EntityPlayer to update Yaw,pitch from player controlled object. 
 				</summary>
 			</function>
-			<function line="1239" name="UpdatePosition">
+			<function line="1284" name="UpdatePosition">
 				<summary>function Entity:UpdatePosition(x,y,z)
 virtual function: only used by EntityPlayer to update block position from player controlled object. 
 do not call this if object is controlled completely from scripting interface.
@@ -2770,56 +2905,56 @@ do not call this if object is controlled completely from scripting interface.
 				<returns>return object if x, y, z is not specified. 
 				</returns>
 			</function>
-			<function line="1268" name="ApplyEntityCollision">
+			<function line="1313" name="ApplyEntityCollision">
 				<summary>function Entity:ApplyEntityCollision(fromEntity, deltaTime)
 Applies a velocity to each of the entities pushing them away from each other. 
 				</summary>
 				<parameter name="fromEntity"/>
 				<parameter name="deltaTime"/>
 			</function>
-			<function line="1301" name="CanPushBlock">
+			<function line="1346" name="CanPushBlock">
 				<summary>function Entity:CanPushBlock()
 whether this entity can push block
 				</summary>
 			</function>
-			<function line="1306" name="CanBePushedBy">
+			<function line="1351" name="CanBePushedBy">
 				<summary>function Entity:CanBePushedBy(fromEntity)
 Returns true if this entity should push and be pushed by other entities when colliding.
 				</summary>
 				<parameter name="fromEntity"/>
 			</function>
-			<function line="1311" name="CanBeCollidedWith">
+			<function line="1356" name="CanBeCollidedWith">
 				<summary>function Entity:CanBeCollidedWith()
 Returns true if other Entities should be prevented from moving through this Entity.
 				</summary>
 			</function>
-			<function line="1316" name="CanBeMounted">
+			<function line="1361" name="CanBeMounted">
 				<summary>function Entity:CanBeMounted()
 return true if this entity can be ridden by a player. 
 				</summary>
 			</function>
-			<function line="1321" name="CollideWithEntity">
+			<function line="1366" name="CollideWithEntity">
 				<summary>function Entity:CollideWithEntity(fromEntity)
 this function is called when this entity collide with another entity. 
 				</summary>
 				<parameter name="fromEntity"/>
 			</function>
-			<function line="1324" name="GetPhysicsRadius">
+			<function line="1369" name="GetPhysicsRadius">
 				<summary>function Entity:GetPhysicsRadius()
 
 				</summary>
 			</function>
-			<function line="1328" name="GetPhysicsHeight">
+			<function line="1373" name="GetPhysicsHeight">
 				<summary>function Entity:GetPhysicsHeight()
 
 				</summary>
 			</function>
-			<function line="1333" name="GetCollisionAABB">
+			<function line="1378" name="GetCollisionAABB">
 				<summary>function Entity:GetCollisionAABB()
 in real world coordinates
 				</summary>
 			</function>
-			<function line="1350" name="CheckGetCollisionBox">
+			<function line="1395" name="CheckGetCollisionBox">
 				<summary>function Entity:CheckGetCollisionBox(entity)
 returns a boundingBox used to collide the entity with other entities and blocks. 
 This enables the entity to be pushable on contact
@@ -2828,7 +2963,7 @@ This enables the entity to be pushable on contact
 				<parameter name="entity">the entity to check against
 				</parameter>
 			</function>
-			<function line="1356" name="PushOutOfBlocks">
+			<function line="1401" name="PushOutOfBlocks">
 				<summary>function Entity:PushOutOfBlocks(x,y,z)
 Adds velocity to push the entity out of blocks at the specified x, y, z position
    @return true if successfully pushed
@@ -2839,13 +2974,24 @@ Adds velocity to push the entity out of blocks at the specified x, y, z position
 				<returns>return if successfully pushed
 				</returns>
 			</function>
-			<function line="1392" name="CheckCollision">
+			<function line="1437" name="SetCheckCollision">
+				<summary>function Entity:SetCheckCollision(bCheck)
+default to true. 
+				</summary>
+				<parameter name="bCheck"/>
+			</function>
+			<function line="1442" name="IsCheckCollision">
+				<summary>function Entity:IsCheckCollision()
+whether we will check collision for this entity
+				</summary>
+			</function>
+			<function line="1448" name="CheckCollision">
 				<summary>function Entity:CheckCollision(deltaTime)
 virtual function: check if the entity collide with other entity or block. if so, we will fire event and adjust position.
 				</summary>
 				<parameter name="deltaTime"/>
 			</function>
-			<function line="1436" name="CanMoveTo">
+			<function line="1495" name="CanMoveTo">
 				<summary>function Entity:CanMoveTo(x,y,z)
 whether the entity can move to the given side relative to its current location. 
 it will automatically climb over one block height unless it is a fence
@@ -2854,61 +3000,61 @@ it will automatically climb over one block height unless it is a fence
 				<parameter name="y"/>
 				<parameter name="z"/>
 			</function>
-			<function line="1459" name="GetItemId">
+			<function line="1518" name="GetItemId">
 				<summary>function Entity:GetItemId()
 
 				</summary>
 			</function>
-			<function line="1463" name="GetItemClass">
+			<function line="1522" name="GetItemClass">
 				<summary>function Entity:GetItemClass()
 
 				</summary>
 			</function>
-			<function line="1470" name="FallDown">
+			<function line="1529" name="FallDown">
 				<summary>function Entity:FallDown(deltaTime)
 falls down immediately one block if not obstruction below. 
 				</summary>
 				<parameter name="deltaTime"/>
 			</function>
-			<function line="1495" name="GetLifeTime">
+			<function line="1554" name="GetLifeTime">
 				<summary>function Entity:GetLifeTime()
 get the number of seconds left before the entity is dead. 
 if return nil, the object has infinite life span. 
 				</summary>
 			</function>
-			<function line="1501" name="SetLifeTime">
+			<function line="1560" name="SetLifeTime">
 				<summary>function Entity:SetLifeTime(lifetime)
 set the number of seconds left before the entity is dead. 
 if return nil, the object has infinite life span. 
 				</summary>
 				<parameter name="lifetime"/>
 			</function>
-			<function line="1506" name="CreatePhysicsObject">
+			<function line="1565" name="CreatePhysicsObject">
 				<summary>function Entity:CreatePhysicsObject()
 virtual function: overwrite to customize physical object
 				</summary>
 			</function>
-			<function line="1511" name="GetPhysicsObject">
+			<function line="1570" name="GetPhysicsObject">
 				<summary>function Entity:GetPhysicsObject()
 create get physics object. 
 				</summary>
 			</function>
-			<function line="1523" name="HasSpeed">
+			<function line="1582" name="HasSpeed">
 				<summary>function Entity:HasSpeed()
 whether has speed
 				</summary>
 			</function>
-			<function line="1527" name="HasMotion">
+			<function line="1586" name="HasMotion">
 				<summary>function Entity:HasMotion()
 
 				</summary>
 			</function>
-			<function line="1531" name="IsOnGround">
+			<function line="1590" name="IsOnGround">
 				<summary>function Entity:IsOnGround()
 
 				</summary>
 			</function>
-			<function line="1543" name="IsTick">
+			<function line="1602" name="IsTick">
 				<summary>function Entity:IsTick(func_name, deltaTime, intervalSeconds)
 check to see if we should tick. For example, some function may be called with deltaTime in 30fps, 
 however, we only want to process at 20FPS, such as physics, we can use this function is easily limit function calling rate.
@@ -2923,7 +3069,7 @@ however, we only want to process at 20FPS, such as physics, we can use this func
 				<parameter name="intervalSeconds">default to 1/20
 				</parameter>
 			</function>
-			<function line="1553" name="AddVelocity">
+			<function line="1612" name="AddVelocity">
 				<summary>function Entity:AddVelocity(x,y,z)
 Adds to the current velocity of the entity.
    @param x,y,z: velocity in x,y,z direction. 
@@ -2933,7 +3079,7 @@ Adds to the current velocity of the entity.
 				<parameter name="y"/>
 				<parameter name="z"/>
 			</function>
-			<function line="1563" name="SetVelocity">
+			<function line="1622" name="SetVelocity">
 				<summary>function Entity:SetVelocity(x,y,z)
 Set current velocity of the entity.
    @param x,y,z: velocity in x,y,z direction. all may be nil to retain last speed. 
@@ -2943,7 +3089,7 @@ Set current velocity of the entity.
 				<parameter name="y"/>
 				<parameter name="z"/>
 			</function>
-			<function line="1582" name="AddMotion">
+			<function line="1641" name="AddMotion">
 				<summary>function Entity:AddMotion(dx,dy,dz)
 Adds to the current motion of the entity.
    @param x,y,z: velocity in x,y,z direction. 
@@ -2952,12 +3098,12 @@ Adds to the current motion of the entity.
 				<parameter name="dy"/>
 				<parameter name="dz"/>
 			</function>
-			<function line="1593" name="GetVelocity">
+			<function line="1652" name="GetVelocity">
 				<summary>function Entity:GetVelocity()
 return x,y,z
 				</summary>
 			</function>
-			<function line="1603" name="MoveEntity">
+			<function line="1662" name="MoveEntity">
 				<summary>function Entity:MoveEntity(deltaTime, bTryMove)
 derived class can call this function to move the entity using its current speed.
    @param bTryMove: if true, we will always try move the entity even it does not have speed. 
@@ -2966,51 +3112,51 @@ derived class can call this function to move the entity using its current speed.
 				<parameter name="bTryMove">if true, we will always try move the entity even it does not have speed. 
 				</parameter>
 			</function>
-			<function line="1618" name="SetFrameMoveInterval">
+			<function line="1677" name="SetFrameMoveInterval">
 				<summary>function Entity:SetFrameMoveInterval(framemove_interval)
 set frame move interval
 				</summary>
 				<parameter name="framemove_interval"/>
 			</function>
-			<function line="1628" name="IsBlockEntity">
+			<function line="1687" name="IsBlockEntity">
 				<summary>function Entity:IsBlockEntity()
 
 				</summary>
 			</function>
-			<function line="1633" name="GetDescriptionPacket">
+			<function line="1692" name="GetDescriptionPacket">
 				<summary>function Entity:GetDescriptionPacket()
 Overriden in a sign to provide the text.
 				</summary>
 			</function>
-			<function line="1637" name="OnUpdateFromPacket">
+			<function line="1696" name="OnUpdateFromPacket">
 				<summary>function Entity:OnUpdateFromPacket(packet_UpdateEntitySign)
 
 				</summary>
 				<parameter name="packet_UpdateEntitySign"/>
 			</function>
-			<function line="1641" name="SetTickRate">
+			<function line="1700" name="SetTickRate">
 				<summary>function Entity:SetTickRate(tickRate)
 how many framemove per seconds
 				</summary>
 				<parameter name="tickRate"/>
 			</function>
-			<function line="1647" name="SetAlwaysSentient">
+			<function line="1706" name="SetAlwaysSentient">
 				<summary>function Entity:SetAlwaysSentient(bSentient)
 this will cause this entity to become always sentent. 
 				</summary>
 				<parameter name="bSentient"/>
 			</function>
-			<function line="1658" name="IsAlwaysSentient">
+			<function line="1717" name="IsAlwaysSentient">
 				<summary>function Entity:IsAlwaysSentient()
 
 				</summary>
 			</function>
-			<function line="1663" name="GetTickRateInterval">
+			<function line="1722" name="GetTickRateInterval">
 				<summary>function Entity:GetTickRateInterval()
 1/tickRate
 				</summary>
 			</function>
-			<function line="1672" name="CheckFrameMove">
+			<function line="1731" name="CheckFrameMove">
 				<summary>function Entity:CheckFrameMove(deltaTime, curTime, bForceFrameMove)
 return true if EntityMob.framemove_interval is not nil and ready to frame move.
    @param deltaTime in seconds
@@ -3027,13 +3173,13 @@ true to run the framemove and increase the local time.
 				<returns>return or deltaTimeReal in seconds.
 				</returns>
 			</function>
-			<function line="1709" name="GetTimeEvent">
+			<function line="1768" name="GetTimeEvent">
 				<summary>function Entity:GetTimeEvent()
 continue;
 time event list
 				</summary>
 			</function>
-			<function line="1718" name="AddTimeEvent">
+			<function line="1777" name="AddTimeEvent">
 				<summary>function Entity:AddTimeEvent(scheduledTime, name, callbackFunc)
 add a timed event to this entity
    @param callbackFunc: function(entity, timedEvent)
@@ -3043,7 +3189,7 @@ add a timed event to this entity
 				<parameter name="callbackFunc">function(entity, timedEvent)
 				</parameter>
 			</function>
-			<function line="1751" name="GetSentientRadius">
+			<function line="1810" name="GetSentientRadius">
 				<summary>function Entity:GetSentientRadius()
 radius (in blocks) that this entity will awake nearby entities. 
 please note, it will only awake other entity if the distance between the two entities is the smaller 
@@ -3053,7 +3199,7 @@ than the smallest value of either entity's GetSentientChunkRadius().
 				<returns>return value is 128
 				</returns>
 			</function>
-			<function line="1758" name="AdvanceTime">
+			<function line="1817" name="AdvanceTime">
 				<summary>function Entity:AdvanceTime(delta_time)
 advance time and fire all timed event that is smaller than current time. 
 return true if there is still time event left.
@@ -3062,90 +3208,90 @@ return true if there is still time event left.
 				<parameter name="delta_time">if nil we will advance to next time event. In seconds
 				</parameter>
 			</function>
-			<function line="1794" name="IsInputDisabled">
+			<function line="1853" name="IsInputDisabled">
 				<summary>function Entity:IsInputDisabled()
 whether the entity can receive activation or user input. 
 				</summary>
 			</function>
-			<function line="1800" name="DisableInput">
+			<function line="1859" name="DisableInput">
 				<summary>function Entity:DisableInput(bDisabled)
 make the entity dummy, it will not respond to any activate command or user input, 
 unless it is set to not dummy by command line. /disableinput false
 				</summary>
 				<parameter name="bDisabled"/>
 			</function>
-			<function line="1805" name="Pause">
+			<function line="1864" name="Pause">
 				<summary>function Entity:Pause()
 pause any scheduled time event 
 				</summary>
 			</function>
-			<function line="1809" name="IsPaused">
+			<function line="1868" name="IsPaused">
 				<summary>function Entity:IsPaused()
 
 				</summary>
 			</function>
-			<function line="1813" name="Resume">
+			<function line="1872" name="Resume">
 				<summary>function Entity:Resume()
 
 				</summary>
 			</function>
-			<function line="1819" name="ClearTimeEvent">
+			<function line="1878" name="ClearTimeEvent">
 				<summary>function Entity:ClearTimeEvent()
 clear all time events in this entity
 				</summary>
 			</function>
-			<function line="1829" name="SetTime">
+			<function line="1888" name="SetTime">
 				<summary>function Entity:SetTime(time)
 set local time of this entity. this is only used in animated entity or entity with timed event. 
 in seconds. 
 				</summary>
 				<parameter name="time"/>
 			</function>
-			<function line="1834" name="GetTime">
+			<function line="1893" name="GetTime">
 				<summary>function Entity:GetTime()
 get local time of this entity. in seconds 
 				</summary>
 			</function>
-			<function line="1839" name="SetTimeToNextEvent">
+			<function line="1898" name="SetTimeToNextEvent">
 				<summary>function Entity:SetTimeToNextEvent()
 set local time of this entity to the next time event in the queue.
 				</summary>
 			</function>
-			<function line="1855" name="SetCharacterSlot">
+			<function line="1914" name="SetCharacterSlot">
 				<summary>function Entity:SetCharacterSlot(slot_id, item_id)
 set the character slot
 				</summary>
 				<parameter name="slot_id"/>
 				<parameter name="item_id"/>
 			</function>
-			<function line="1863" name="IsControlledExternally">
+			<function line="1922" name="IsControlledExternally">
 				<summary>function Entity:IsControlledExternally()
 
 				</summary>
 			</function>
-			<function line="1870" name="SetControlledExternally">
+			<function line="1929" name="SetControlledExternally">
 				<summary>function Entity:SetControlledExternally(bEnable)
 
 				</summary>
 				<parameter name="bEnable"/>
 			</function>
-			<function line="1877" name="GetMainAssetPath">
+			<function line="1936" name="GetMainAssetPath">
 				<summary>function Entity:GetMainAssetPath()
 
 				</summary>
 			</function>
-			<function line="1891" name="SetMainAssetPath">
+			<function line="1950" name="SetMainAssetPath">
 				<summary>function Entity:SetMainAssetPath(name)
 set main model
 				</summary>
 				<parameter name="name"/>
 			</function>
-			<function line="1898" name="GetBoundRadius">
+			<function line="1957" name="GetBoundRadius">
 				<summary>function Entity:GetBoundRadius()
 
 				</summary>
 			</function>
-			<function line="1908" name="SetSurfaceDecay">
+			<function line="1967" name="SetSurfaceDecay">
 				<summary>function Entity:SetSurfaceDecay(surface_decay)
 set speed decay. percentage of motion lost per tick.
    @param surface_decay:  [0,1]. 0 means no speed lost, 1 will lost all speed.  default to 0.5
@@ -3153,30 +3299,30 @@ set speed decay. percentage of motion lost per tick.
 				<parameter name="surface_decay">[0,1]. 0 means no speed lost, 1 will lost all speed.  default to 0.5
 				</parameter>
 			</function>
-			<function line="1912" name="GetSurfaceDecay">
+			<function line="1971" name="GetSurfaceDecay">
 				<summary>function Entity:GetSurfaceDecay()
 
 				</summary>
 			</function>
-			<function line="1918" name="BeginEdit">
+			<function line="1977" name="BeginEdit">
 				<summary>function Entity:BeginEdit()
 called when ever an editor like EditEntityPage is opened for this entity
 if one wants to provide some basic undo/redo function, this is the place to go.
 				</summary>
 			</function>
-			<function line="1926" name="EndEdit">
+			<function line="1985" name="EndEdit">
 				<summary>function Entity:EndEdit()
 called when ever an editor like EditEntityPage is closed for this entity
 if one wants to provide some basic undo/redo function, this is the place to go.
 one may also refresh the entity if any changes take place that is not updated automatically. 
 				</summary>
 			</function>
-			<function line="1933" name="MarkForUpdate">
+			<function line="1992" name="MarkForUpdate">
 				<summary>function Entity:MarkForUpdate()
 mark for update so that local changes are sent to client or server
 				</summary>
 			</function>
-			<function line="1941" name="PickItem">
+			<function line="2000" name="PickItem">
 				<summary>function Entity:PickItem(itemStack, fromBlockX, fromBlockY, fromBlockZ)
 pick the given item.
    @param fromBlockX, fromBlockY, fromBlockZ: block position from the item come from. can all be nil. 
@@ -3187,7 +3333,7 @@ pick the given item.
 				<parameter name="fromBlockY"/>
 				<parameter name="fromBlockZ"/>
 			</function>
-			<function line="1961" name="SetRuleBagSize">
+			<function line="2020" name="SetRuleBagSize">
 				<summary>function Entity:SetRuleBagSize(size)
 create the rule bag if not exist.
    @param size: if nil or 0, it will destory the rule bag. otherwise it will resize the rule bag
@@ -3195,24 +3341,24 @@ create the rule bag if not exist.
 				<parameter name="size">if nil or 0, it will destory the rule bag. otherwise it will resize the rule bag
 				</parameter>
 			</function>
-			<function line="1973" name="FrameMoveRules">
+			<function line="2032" name="FrameMoveRules">
 				<summary>function Entity:FrameMoveRules(deltaTime)
 virtual function: load rules and framemove rule items. 
 				</summary>
 				<parameter name="deltaTime"/>
 			</function>
-			<function line="1985" name="FrameMove">
+			<function line="2044" name="FrameMove">
 				<summary>function Entity:FrameMove(deltaTime)
 virtual function: called every frame
 				</summary>
 				<parameter name="deltaTime"/>
 			</function>
-			<function line="1999" name="NotifyBlockCollisions">
+			<function line="2058" name="NotifyBlockCollisions">
 				<summary>function Entity:NotifyBlockCollisions()
 
 				</summary>
 			</function>
-			<function line="2032" name="OnFallDown">
+			<function line="2091" name="OnFallDown">
 				<summary>function Entity:OnFallDown(distFallen)
 virtual: Called when the entity has just fallen to ground. Calculates and applies fall damage.
    @param distFallen: distance fallen. 
@@ -3220,17 +3366,17 @@ virtual: Called when the entity has just fallen to ground. Calculates and applie
 				<parameter name="distFallen">distance fallen. 
 				</parameter>
 			</function>
-			<function line="2039" name="IsEntityInvulnerable">
+			<function line="2098" name="IsEntityInvulnerable">
 				<summary>function Entity:IsEntityInvulnerable()
 Return whether this entity is invulnerable to damage.
 				</summary>
 			</function>
-			<function line="2044" name="SetBeenAttacked">
+			<function line="2103" name="SetBeenAttacked">
 				<summary>function Entity:SetBeenAttacked()
 Sets that this entity has been attacked.
 				</summary>
 			</function>
-			<function line="2051" name="AttackEntityFrom">
+			<function line="2110" name="AttackEntityFrom">
 				<summary>function Entity:AttackEntityFrom(damageSource, amount)
 Called when the entity is attacked.
    @param damageSource: what kind of damage. such as DamageSource.inFire, DamageSource.fall, etc.
@@ -3241,7 +3387,7 @@ Called when the entity is attacked.
 				<parameter name="amount">such as 1. 
 				</parameter>
 			</function>
-			<function line="2062" name="EntityDropItem">
+			<function line="2121" name="EntityDropItem">
 				<summary>function Entity:EntityDropItem(itemStack, fOffsetY)
 Drops an item at the position of the entity.
    @return the EntityItem
@@ -3251,7 +3397,7 @@ Drops an item at the position of the entity.
 				<returns>return EntityItem
 				</returns>
 			</function>
-			<function line="2077" name="UpdateFallState">
+			<function line="2136" name="UpdateFallState">
 				<summary>function Entity:UpdateFallState(distanceFallenThisTick, bIsOnGround)
 Drops an item at the position of the entity.
    @return the EntityItem
@@ -3269,18 +3415,18 @@ Takes in the distance the entity has fallen this tick and whether its on the gro
 and deal fall damage if landing on the ground.  Args: distanceFallenThisTick, onGround
 				</returns>
 			</function>
-			<function line="2088" name="IsSneaking">
+			<function line="2147" name="IsSneaking">
 				<summary>function Entity:IsSneaking()
 
 				</summary>
 			</function>
-			<function line="2092" name="SetSneaking">
+			<function line="2151" name="SetSneaking">
 				<summary>function Entity:SetSneaking(bSneaking)
 
 				</summary>
 				<parameter name="bSneaking"/>
 			</function>
-			<function line="2100" name="MoveEntityByDisplacement">
+			<function line="2159" name="MoveEntityByDisplacement">
 				<summary>function Entity:MoveEntityByDisplacement(dx,dy,dz)
 Tries to moves the entity by the passed in displacement. 
 this function is usually used by entities which need to process physics all by itself 
@@ -3292,29 +3438,29 @@ this function is usually used by entities which need to process physics all by i
 				<parameter name="dy"/>
 				<parameter name="dz"/>
 			</function>
-			<function line="2249" name="GetMountedYOffset">
+			<function line="2308" name="GetMountedYOffset">
 				<summary>function Entity:GetMountedYOffset()
 
 				</summary>
 			</function>
-			<function line="2255" name="FrameMoveRidding">
+			<function line="2314" name="FrameMoveRidding">
 				<summary>function Entity:FrameMoveRidding(deltaTime)
 framemove this entity when it is riding (mounted) on another entity. 
 we will update according to mounted entity's position. 
 				</summary>
 				<parameter name="deltaTime"/>
 			</function>
-			<function line="2302" name="GetRidingOffsetY">
+			<function line="2361" name="GetRidingOffsetY">
 				<summary>function Entity:GetRidingOffsetY()
 
 				</summary>
 			</function>
-			<function line="2306" name="UpdateRiderPosition">
+			<function line="2365" name="UpdateRiderPosition">
 				<summary>function Entity:UpdateRiderPosition()
 
 				</summary>
 			</function>
-			<function line="2315" name="MountEntity">
+			<function line="2374" name="MountEntity">
 				<summary>function Entity:MountEntity(targetEntity)
 mount current entity to the target entity.
    @param targetEntity: nil to unmount
@@ -3322,39 +3468,39 @@ mount current entity to the target entity.
 				<parameter name="targetEntity">nil to unmount
 				</parameter>
 			</function>
-			<function line="2337" name="HasChanges">
+			<function line="2396" name="HasChanges">
 				<summary>function Entity:HasChanges()
 whether any trackable data is modified 
 				</summary>
 			</function>
-			<function line="2342" name="SetChanged">
+			<function line="2401" name="SetChanged">
 				<summary>function Entity:SetChanged(bChanged)
 set changes
 				</summary>
 				<parameter name="bChanged"/>
 			</function>
-			<function line="2346" name="GetRotationYaw">
+			<function line="2405" name="GetRotationYaw">
 				<summary>function Entity:GetRotationYaw()
 
 				</summary>
 			</function>
-			<function line="2350" name="GetRotationPitch">
+			<function line="2409" name="GetRotationPitch">
 				<summary>function Entity:GetRotationPitch()
 
 				</summary>
 			</function>
-			<function line="2355" name="GetRotationYawHead">
+			<function line="2414" name="GetRotationYawHead">
 				<summary>function Entity:GetRotationYawHead()
 
 				</summary>
 			</function>
-			<function line="2360" name="SetRotationYawHead">
+			<function line="2419" name="SetRotationYawHead">
 				<summary>function Entity:SetRotationYawHead(value)
 Sets the head's yaw rotation of the entity.
 				</summary>
 				<parameter name="value"/>
 			</function>
-			<function line="2367" name="GetDataWatcher">
+			<function line="2426" name="GetDataWatcher">
 				<summary>function Entity:GetDataWatcher(bCreateIfNotExist)
 data in watcher are auto synced among clients by the server, without server validation. 
 data in data watcher can be freely modified by both client and server, such as animation, skin, etc.
@@ -3362,12 +3508,12 @@ data in data watcher can be freely modified by both client and server, such as a
 				</summary>
 				<parameter name="bCreateIfNotExist"/>
 			</function>
-			<function line="2377" name="IsRiding">
+			<function line="2436" name="IsRiding">
 				<summary>function Entity:IsRiding()
 Returns true if the entity is riding another entity
 				</summary>
 			</function>
-			<function line="2394" name="BeginTouchMove">
+			<function line="2453" name="BeginTouchMove">
 				<summary>function Entity:BeginTouchMove()
 examples: 
 local EntityManager = commonlib.gettable("MyCompany.Aries.Game.EntityManager");
@@ -3382,7 +3528,7 @@ mytimer:Change(1000, nil)
 begin touch move towards a given position. 
 				</summary>
 			</function>
-			<function line="2403" name="TouchMove">
+			<function line="2462" name="TouchMove">
 				<summary>function Entity:TouchMove(screen_facing)
 move according to a facing angle in screen space relative to current camera view. 
 call this function between BeginTouchMove() and EndTouchMove(). 
@@ -3392,12 +3538,12 @@ Please note, it will walk forever until EndTouchMove() is called.
 				<parameter name="screen_facing">[0,2pi], where 0 is running away from camera, pi is running towards camera, etc. 
 				</parameter>
 			</function>
-			<function line="2414" name="EndTouchMove">
+			<function line="2473" name="EndTouchMove">
 				<summary>function Entity:EndTouchMove()
 end touch move towards a given position. 
 				</summary>
 			</function>
-			<function line="2427" name="GetNewItemsList">
+			<function line="2486" name="GetNewItemsList">
 				<summary>function Entity:GetNewItemsList()
 virtual function: get array of item stacks that will be displayed to the user when user try to create a new item.
    @return nil or array of item stack.
@@ -3405,7 +3551,7 @@ virtual function: get array of item stacks that will be displayed to the user wh
 				<returns>return or array of item stack.
 				</returns>
 			</function>
-			<function line="2433" name="CreateItemOnSlot">
+			<function line="2492" name="CreateItemOnSlot">
 				<summary>function Entity:CreateItemOnSlot(slot)
 
    @param slot: type of ItemSlot in Container View, such as self.rulebagView
@@ -3413,7 +3559,7 @@ virtual function: get array of item stacks that will be displayed to the user wh
 				<parameter name="slot">type of ItemSlot in Container View, such as self.rulebagView
 				</parameter>
 			</function>
-			<function line="2453" name="OnClickEmptySlot">
+			<function line="2512" name="OnClickEmptySlot">
 				<summary>function Entity:OnClickEmptySlot(slot)
 called when user click to create a new item in the slot
    @param slot: type of ItemSlot in Container View, such as self.rulebagView
@@ -3421,52 +3567,69 @@ called when user click to create a new item in the slot
 				<parameter name="slot">type of ItemSlot in Container View, such as self.rulebagView
 				</parameter>
 			</function>
-			<function line="2464" name="EnablePhysics">
+			<function line="2524" name="EnablePhysics">
 				<summary>function Entity:EnablePhysics(bEnable, bForceLoadPhysics)
 This function is almost always used to enable polygon level collision for static entities only.  
 Please be very careful NOT to enable physics for moving entities. Physics are automatically unloaded 
 when geometry or position changed, thus a moving entity may frequently load and unload physics causing performance issues.
    @param bForceLoadPhysics: default to nil. by default it is lazy loading when main player collide with it, one can also explicitly load physics
+make sure to call this function after model is loaded (Due to async loading, the model is not loaded until visible by a camera and loading is done in a separate loading thread)
 				</summary>
 				<parameter name="bEnable"/>
 				<parameter name="bForceLoadPhysics">default to nil. by default it is lazy loading when main player collide with it, one can also explicitly load physics
+make sure to call this function after model is loaded (Due to async loading, the model is not loaded until visible by a camera and loading is done in a separate loading thread)
 				</parameter>
+			</function>
+			<function line="2538" name="FrameMoveMemoryContext">
+				<summary>function Entity:FrameMoveMemoryContext(deltaTime)
+only call this function when the entity may has active memory context 
+i.e. it has autonomous behaviors on its own.  EntityPlayer can move on its own.
+   @return true if the entity is controlled by memory context
+				</summary>
+				<parameter name="deltaTime"/>
+				<returns>return if the entity is controlled by memory context
+				</returns>
+			</function>
+			<function line="2545" name="GetMemoryContext">
+				<summary>function Entity:GetMemoryContext()
+the memory context
+				</summary>
 			</function>
 		</table>
 		<table name="ItemClient" src="script/apps/Aries/Creator/Game/Items/ItemClient.lua">
-			<function line="38" name="PreloadItemClass">
+			<function line="40" name="PreloadItemClass">
 				<summary>function ItemClient.PreloadItemClass()
 add new preloaded item class here. 
 				</summary>
 			</function>
-			<function line="76" name="OnInit">
+			<function line="78" name="OnInit">
 				<summary>function ItemClient.OnInit()
 
 				</summary>
 			</function>
-			<function line="91" name="RegisterItemClass">
+			<function line="93" name="RegisterItemClass">
 				<summary>function ItemClient.RegisterItemClass(name, class)
 register a new class
 				</summary>
 				<parameter name="name"/>
 				<parameter name="class"/>
 			</function>
-			<function line="96" name="LoadFromCurrentWorld">
+			<function line="98" name="LoadFromCurrentWorld">
 				<summary>function ItemClient.LoadFromCurrentWorld()
 load both official block list as well as custom user defined block list. 
 				</summary>
 			</function>
-			<function line="102" name="LoadGlobalBlockList">
+			<function line="104" name="LoadGlobalBlockList">
 				<summary>function ItemClient.LoadGlobalBlockList()
 private: only load once the official block list. 
 				</summary>
 			</function>
-			<function line="171" name="SaveToCurrentWorld">
+			<function line="173" name="SaveToCurrentWorld">
 				<summary>function ItemClient.SaveToCurrentWorld()
 
 				</summary>
 			</function>
-			<function line="178" name="AddBlock">
+			<function line="180" name="AddBlock">
 				<summary>function ItemClient.AddBlock(block_id, index, category_name)
 add a block at the given index.
    @param index: if nil, it will be added to last block.
@@ -3478,7 +3641,7 @@ add a block at the given index.
 				<parameter name="category_name">default to "static"
 				</parameter>
 			</function>
-			<function line="192" name="SearchBlocks">
+			<function line="194" name="SearchBlocks">
 				<summary>function ItemClient.SearchBlocks(block_id_or_name, category_name, ds)
 search a given block
    @return a table containing all matching blocks
@@ -3489,19 +3652,19 @@ search a given block
 				<returns>return table containing all matching blocks
 				</returns>
 			</function>
-			<function line="237" name="GetBlockDS">
+			<function line="239" name="GetBlockDS">
 				<summary>function ItemClient.GetBlockDS(category_name)
 get data source by category name
 				</summary>
 				<parameter name="category_name"/>
 			</function>
-			<function line="250" name="GetItemCount">
+			<function line="252" name="GetItemCount">
 				<summary>function ItemClient.GetItemCount(block_id)
 
 				</summary>
 				<parameter name="block_id"/>
 			</function>
-			<function line="254" name="SetItemCount">
+			<function line="256" name="SetItemCount">
 				<summary>function ItemClient.SetItemCount(block_id, count, diff_count)
 
 				</summary>
@@ -3509,72 +3672,72 @@ get data source by category name
 				<parameter name="count"/>
 				<parameter name="diff_count"/>
 			</function>
-			<function line="264" name="AddItem">
+			<function line="266" name="AddItem">
 				<summary>function ItemClient.AddItem(block_id, item)
 add item
 				</summary>
 				<parameter name="block_id"/>
 				<parameter name="item"/>
 			</function>
-			<function line="285" name="GetItem">
+			<function line="287" name="GetItem">
 				<summary>function ItemClient.GetItem(block_id)
 get item by id
 				</summary>
 				<parameter name="block_id"/>
 			</function>
-			<function line="289" name="GetItemByName">
+			<function line="291" name="GetItemByName">
 				<summary>function ItemClient.GetItemByName(name)
 
 				</summary>
 				<parameter name="name"/>
 			</function>
-			<function line="299" name="CreateGetByBlockID">
+			<function line="301" name="CreateGetByBlockID">
 				<summary>function ItemClient.CreateGetByBlockID(block_id, item_class)
 create get an item by block id. 
 				</summary>
 				<parameter name="block_id"/>
 				<parameter name="item_class"/>
 			</function>
-			<function line="308" name="CreateByBlockID">
+			<function line="310" name="CreateByBlockID">
 				<summary>function ItemClient.CreateByBlockID(block_id, item_class)
 create and overwrite 
 				</summary>
 				<parameter name="block_id"/>
 				<parameter name="item_class"/>
 			</function>
-			<function line="327" name="OnLeaveWorld">
+			<function line="329" name="OnLeaveWorld">
 				<summary>function ItemClient.OnLeaveWorld()
 
 				</summary>
 			</function>
-			<function line="353" name="LoadCustomBlocks">
+			<function line="355" name="LoadCustomBlocks">
 				<summary>function ItemClient.LoadCustomBlocks()
 custom block is used defined blocks in the current world directory. 
 				</summary>
 			</function>
-			<function line="380" name="SaveCustomBlocks">
+			<function line="382" name="SaveCustomBlocks">
 				<summary>function ItemClient.SaveCustomBlocks()
-custom block is used defined blocks in the current world directory. 
+custom block is user defined blocks in the current world directory. 
 				</summary>
 			</function>
-			<function line="399" name="GetNextCustomBlockId">
+			<function line="404" name="GetNextCustomBlockId">
 				<summary>function ItemClient.GetNextCustomBlockId()
 next custom block id
 				</summary>
 			</function>
-			<function line="410" name="GetCustomBlockByTexture">
+			<function line="415" name="GetCustomBlockByTexture">
 				<summary>function ItemClient.GetCustomBlockByTexture(filename)
 return item or nil by texture filename. 
 				</summary>
 				<parameter name="filename"/>
 			</function>
-			<function line="418" name="UnRegisterCustomItem">
+			<function line="423" name="UnRegisterCustomItem">
 				<summary>function ItemClient.UnRegisterCustomItem(block_id)
 
 				</summary>
 				<parameter name="block_id"/>
 			</function>
-			<function line="424" name="RegisterCustomItem">
+			<function line="429" name="RegisterCustomItem">
 				<summary>function ItemClient.RegisterCustomItem(params)
 
    @param params: a table of {base_block_id, texture, [id], [icon], alphaTestTexture=false, blendedTexture=false, transparent=false}
@@ -4163,10 +4326,11 @@ called when entity receives a custom event via one of its rule bag items.
 				<parameter name="sData"/>
 			</function>
 			<function line="251" name="SaveToXMLNode">
-				<summary>function ItemStack:SaveToXMLNode(node)
+				<summary>function ItemStack:SaveToXMLNode(node, bSort)
 
 				</summary>
 				<parameter name="node"/>
+				<parameter name="bSort"/>
 			</function>
 			<function line="273" name="SplitStack">
 				<summary>function ItemStack:SplitStack(count)
@@ -4331,7 +4495,7 @@ Called whenever this item is equipped and the right mouse button is pressed.
 			</function>
 		</table>
 		<table name="block_types" src="script/apps/Aries/Creator/Game/blocks/block_types.lua">
-			<function line="95" name="PreloadBlockClass">
+			<function line="93" name="PreloadBlockClass">
 				<summary>function block_types.PreloadBlockClass()
 load known block type
 				</summary>
@@ -4514,13 +4678,18 @@ for breaking into pieces animation.
 			</function>
 		</table>
 		<table name="block" src="script/apps/Aries/Creator/Game/blocks/block.lua">
-			<function line="86" name="ctor">
+			<function line="88" name="ctor">
 				<summary>function block:ctor()
 
    @param id: uint16 type. need to be larger than 1024 if not system type. 
 				</summary>
 			</function>
-			<function line="131" name="LoadSound">
+			<function line="133" name="isBlockNormalCube">
+				<summary>function block:isBlockNormalCube()
+Indicate if a material is a normal solid opaque cube. Normal cube block also provide weak power when activated by a wire. 
+				</summary>
+			</function>
+			<function line="138" name="LoadSound">
 				<summary>function block:LoadSound(name, max_count, volume, pitch)
 not used. allowing to specify "glass4", and "glass[1-4]" is used. 
 				</summary>
@@ -4529,17 +4698,17 @@ not used. allowing to specify "glass4", and "glass[1-4]" is used.
 				<parameter name="volume"/>
 				<parameter name="pitch"/>
 			</function>
-			<function line="159" name="Init">
+			<function line="166" name="Init">
 				<summary>function block:Init()
 
 				</summary>
 			</function>
-			<function line="163" name="get_id">
+			<function line="170" name="get_id">
 				<summary>function block:get_id()
 
 				</summary>
 			</function>
-			<function line="168" name="SetTexture">
+			<function line="175" name="SetTexture">
 				<summary>function block:SetTexture(filename, texture_index)
 
    @param texture_index: nil to default to 1
@@ -4548,7 +4717,7 @@ not used. allowing to specify "glass4", and "glass[1-4]" is used.
 				<parameter name="texture_index">nil to default to 1
 				</parameter>
 			</function>
-			<function line="178" name="GetTexture">
+			<function line="185" name="GetTexture">
 				<summary>function block:GetTexture(texture_index)
 
    @param texture_index: nil to default to 1
@@ -4556,7 +4725,12 @@ not used. allowing to specify "glass4", and "glass[1-4]" is used.
 				<parameter name="texture_index">nil to default to 1
 				</parameter>
 			</function>
-			<function line="188" name="GetTextureObj">
+			<function line="194" name="GetCurrentTexture">
+				<summary>function block:GetCurrentTexture()
+get the current texture
+				</summary>
+			</function>
+			<function line="201" name="GetTextureObj">
 				<summary>function block:GetTextureObj(texture_index)
 
    @param texture_index: nil to default to 1
@@ -4567,40 +4741,54 @@ not used. allowing to specify "glass4", and "glass[1-4]" is used.
 				<returns>return , false or the texture asset object. 
 				</returns>
 			</function>
-			<function line="229" name="ReplaceTexture">
-				<summary>function block:ReplaceTexture(filename, texture_index)
+			<function line="241" name="SetTileFromFilename">
+				<summary>function block:SetTileFromFilename(filename)
+
+				</summary>
+				<parameter name="filename"/>
+			</function>
+			<function line="250" name="GetTileSize">
+				<summary>function block:GetTileSize()
+default to 1
+				</summary>
+			</function>
+			<function line="256" name="ReplaceTexture">
+				<summary>function block:ReplaceTexture(filename, texture_index, bNoRestore)
 
    @param texture_index: nil to default to 1
+   @param bNoRestore: if true, we will not save the new texture to self.new_texture for automatic restore. 
 				</summary>
 				<parameter name="filename"/>
 				<parameter name="texture_index">nil to default to 1
 				</parameter>
+				<parameter name="bNoRestore">if true, we will not save the new texture to self.new_texture for automatic restore. 
+				</parameter>
 			</function>
-			<function line="277" name="RestoreTexture">
+			<function line="313" name="RestoreTexture">
 				<summary>function block:RestoreTexture()
 
 				</summary>
 			</function>
-			<function line="305" name="GetIcon">
+			<function line="343" name="GetIcon">
 				<summary>function block:GetIcon()
 
 				</summary>
 			</function>
-			<function line="323" name="SetAttribute">
+			<function line="361" name="SetAttribute">
 				<summary>function block:SetAttribute(name, value)
 set per template attribute
 				</summary>
 				<parameter name="name"/>
 				<parameter name="value"/>
 			</function>
-			<function line="337" name="UpdateAttribute">
+			<function line="375" name="UpdateAttribute">
 				<summary>function block:UpdateAttribute(name, value)
 update attribute. 
 				</summary>
 				<parameter name="name"/>
 				<parameter name="value"/>
 			</function>
-			<function line="347" name="SetSpeedReduction">
+			<function line="385" name="SetSpeedReduction">
 				<summary>function block:SetSpeedReduction(value)
 set speed reduction percentage of current block type.
    @param value : [0,1]. by default water and web has 0.4, and 0.33 reduction. 
@@ -4608,28 +4796,43 @@ set speed reduction percentage of current block type.
 				<parameter name="value">[0,1]. by default water and web has 0.4, and 0.33 reduction. 
 				</parameter>
 			</function>
-			<function line="351" name="GetSpeedReduction">
+			<function line="391" name="SetVisible">
+				<summary>function block:SetVisible(bVisible)
+make all blocks of this type visible or invisible. Please note, invisible block will maintain all of its functions. 
+one may like to hide blocks like movie blocks in game mode. 
+				</summary>
+				<parameter name="bVisible"/>
+			</function>
+			<function line="396" name="SetLightValue">
+				<summary>function block:SetLightValue(nValue)
+
+   @param nValue: [0-15] a value of 0 means no light. 
+				</summary>
+				<parameter name="nValue">[0-15] a value of 0 means no light. 
+				</parameter>
+			</function>
+			<function line="401" name="GetSpeedReduction">
 				<summary>function block:GetSpeedReduction()
 
 				</summary>
 			</function>
-			<function line="355" name="RecomputeAttribute">
+			<function line="405" name="RecomputeAttribute">
 				<summary>function block:RecomputeAttribute()
 
 				</summary>
 			</function>
-			<function line="375" name="GetAttribute">
+			<function line="425" name="GetAttribute">
 				<summary>function block:GetAttribute(name)
 
 				</summary>
 				<parameter name="name"/>
 			</function>
-			<function line="381" name="Highlight">
+			<function line="431" name="Highlight">
 				<summary>function block:Highlight()
 
 				</summary>
 			</function>
-			<function line="386" name="Register">
+			<function line="436" name="Register">
 				<summary>function block:Register(blockWorld)
 register this block template
    @param blockWorld: the ParaBlockWorld object. if nil, the default client block world is used. 
@@ -4637,23 +4840,23 @@ register this block template
 				<parameter name="blockWorld">the ParaBlockWorld object. if nil, the default client block world is used. 
 				</parameter>
 			</function>
-			<function line="403" name="getMobilityFlag">
+			<function line="453" name="getMobilityFlag">
 				<summary>function block:getMobilityFlag()
 Returns the mobility information of the block, 0 = free, 1 = can't push but can move over, 2 = total immobility and stop pistons
 				</summary>
 			</function>
-			<function line="408" name="setHardness">
+			<function line="458" name="setHardness">
 				<summary>function block:setHardness(value)
 Sets how many hits it takes to break a block.
 				</summary>
 				<parameter name="value"/>
 			</function>
-			<function line="416" name="setBlockUnbreakable">
+			<function line="466" name="setBlockUnbreakable">
 				<summary>function block:setBlockUnbreakable()
 This method will make the hardness of the block equals to -1, and the block is indestructible.
 				</summary>
 			</function>
-			<function line="421" name="getBlockHardness">
+			<function line="471" name="getBlockHardness">
 				<summary>function block:getBlockHardness(x,y,z)
 Returns the block hardness at a location. Args: world, x, y, z
 				</summary>
@@ -4661,7 +4864,7 @@ Returns the block hardness at a location. Args: world, x, y, z
 				<parameter name="y"/>
 				<parameter name="z"/>
 			</function>
-			<function line="429" name="GetMetaDataFromEnv">
+			<function line="479" name="GetMetaDataFromEnv">
 				<summary>function block:GetMetaDataFromEnv(blockX, blockY, blockZ, side, side_region, camx,camy,camz, lookat_x,lookat_y,lookat_z)
 get sub meta data according to current player or camera position.
    @param side: user clicked which side. this is *opposite* of the internal side.
@@ -4684,7 +4887,7 @@ get sub meta data according to current player or camera position.
 				<returns>return , force_condition:  metadata is nil, if no block meta data can be derived. some will only return force_condition table
 				</returns>
 			</function>
-			<function line="449" name="OnBlockPlacedBy">
+			<function line="499" name="OnBlockPlacedBy">
 				<summary>function block:OnBlockPlacedBy(x,y,z, entity)
 Called when the block is placed in the world.
 				</summary>
@@ -4693,7 +4896,7 @@ Called when the block is placed in the world.
 				<parameter name="z"/>
 				<parameter name="entity"/>
 			</function>
-			<function line="464" name="Create">
+			<function line="514" name="Create">
 				<summary>function block:Create(x, y, z, bCheckCanCreate, data, side, condition, serverdata)
 virtual function: create a new block at the given position. 
 TODO: move to game logic, and spawn other blocks if required
@@ -4724,7 +4927,7 @@ TODO: move to game logic, and spawn other blocks if required
 				</parameter>
 				<parameter name="serverdata"/>
 			</function>
-			<function line="479" name="NearTerrainHole">
+			<function line="529" name="NearTerrainHole">
 				<summary>function block.NearTerrainHole(x, z)
 whether the given real world point is near a terrain hole.
    @param cx,cz: center of the block in real coordinates
@@ -4732,17 +4935,17 @@ whether the given real world point is near a terrain hole.
 				<parameter name="x"/>
 				<parameter name="z"/>
 			</function>
-			<function line="486" name="GetTooltip">
+			<function line="536" name="GetTooltip">
 				<summary>function block:GetTooltip()
 
 				</summary>
 			</function>
-			<function line="496" name="GetDisplayName">
+			<function line="546" name="GetDisplayName">
 				<summary>function block:GetDisplayName()
 
 				</summary>
 			</function>
-			<function line="502" name="AutoFillUndergroundColumn">
+			<function line="552" name="AutoFillUndergroundColumn">
 				<summary>function block.AutoFillUndergroundColumn(blockX, blockY, blockZ, bIgnoreThisBlock)
 automatically generate blocks in column x,z. where the block at x,y,z must be a valid block either empty or solid.
    @return true, number_blocks_modifed. the first params is true if the current block is not destructible
@@ -4754,13 +4957,13 @@ automatically generate blocks in column x,z. where the block at x,y,z must be a 
 				<returns>return , number_blocks_modifed. the first params is true if the current block is not destructible
 				</returns>
 			</function>
-			<function line="601" name="GetModelByBlockData">
+			<function line="651" name="GetModelByBlockData">
 				<summary>function block:GetModelByBlockData(blockData)
 
 				</summary>
 				<parameter name="blockData"/>
 			</function>
-			<function line="609" name="GetBestModel">
+			<function line="659" name="GetBestModel">
 				<summary>function block:GetBestModel(blockX, blockY, blockZ, blockData, side, force_condition)
 get the best model object according to nearby blocks.
    @param side: usually a hint for on which block side this block is created on. 
@@ -4773,12 +4976,12 @@ get the best model object according to nearby blocks.
 				</parameter>
 				<parameter name="force_condition"/>
 			</function>
-			<function line="748" name="PreloadAsset">
+			<function line="798" name="PreloadAsset">
 				<summary>function block:PreloadAsset()
 preload asset model. 
 				</summary>
 			</function>
-			<function line="780" name="OnBlockAdded">
+			<function line="830" name="OnBlockAdded">
 				<summary>function block:OnBlockAdded(blockX, blockY, blockZ, block_data, serverdata)
 virtual function
 				</summary>
@@ -4788,7 +4991,7 @@ virtual function
 				<parameter name="block_data"/>
 				<parameter name="serverdata"/>
 			</function>
-			<function line="785" name="OnBlockEvent">
+			<function line="835" name="OnBlockEvent">
 				<summary>function block:OnBlockEvent(x,y,z, event_id, event_param)
 when ever an event is received. 
 				</summary>
@@ -4798,7 +5001,7 @@ when ever an event is received.
 				<parameter name="event_id"/>
 				<parameter name="event_param"/>
 			</function>
-			<function line="790" name="GetDroppedItemStack">
+			<function line="840" name="GetDroppedItemStack">
 				<summary>function block:GetDroppedItemStack(x,y,z, bForceDrop)
 get the item stack when this block is broken &amp; dropped. 
 				</summary>
@@ -4807,7 +5010,7 @@ get the item stack when this block is broken &amp; dropped.
 				<parameter name="z"/>
 				<parameter name="bForceDrop"/>
 			</function>
-			<function line="797" name="OnUserBreakItem">
+			<function line="847" name="OnUserBreakItem">
 				<summary>function block:OnUserBreakItem(x,y,z, entityPlayer)
 only called when user clicks to break an item 
 				</summary>
@@ -4816,7 +5019,7 @@ only called when user clicks to break an item
 				<parameter name="z"/>
 				<parameter name="entityPlayer"/>
 			</function>
-			<function line="806" name="DropBlockAsItem">
+			<function line="856" name="DropBlockAsItem">
 				<summary>function block:DropBlockAsItem(x,y,z, bForceDrop)
 when ever this block is about to be destroyed and one may call this function to drop as an item first.
    @Note: this function should always be called before item is removed.
@@ -4828,7 +5031,7 @@ when ever this block is about to be destroyed and one may call this function to 
 				<parameter name="bForceDrop">if true, we will drop regardless of game mode
 				</parameter>
 			</function>
-			<function line="820" name="OnNeighborChanged">
+			<function line="870" name="OnNeighborChanged">
 				<summary>function block:OnNeighborChanged(x,y,z,neighbor_block_id)
 virtual function: Lets the block know when one of its neighbor changes. Doesn't know which neighbor changed (coordinates passed are their own) 
 called when neighbour has changed. be careful of recursive calls.
@@ -4842,7 +5045,7 @@ called when neighbour has changed. be careful of recursive calls.
 				<parameter name="neighbor_block_id">
 				</parameter>
 			</function>
-			<function line="830" name="updateTick">
+			<function line="880" name="updateTick">
 				<summary>function block:updateTick(x,y,z)
 called on framemove.
 				</summary>
@@ -4850,13 +5053,13 @@ called on framemove.
 				<parameter name="y"/>
 				<parameter name="z"/>
 			</function>
-			<function line="835" name="IsAssociatedBlockID">
+			<function line="885" name="IsAssociatedBlockID">
 				<summary>function block:IsAssociatedBlockID(block_id)
 return true if the block_id is associated block, such as an open door and closed door. 
 				</summary>
 				<parameter name="block_id"/>
 			</function>
-			<function line="840" name="CanDestroyBlockAt">
+			<function line="890" name="CanDestroyBlockAt">
 				<summary>function block:CanDestroyBlockAt(x,y,z)
 default to return true, unless there is an can destroy rule. 
 				</summary>
@@ -4864,7 +5067,7 @@ default to return true, unless there is an can destroy rule.
 				<parameter name="y"/>
 				<parameter name="z"/>
 			</function>
-			<function line="852" name="SetRule_CanDestroy">
+			<function line="902" name="SetRule_CanDestroy">
 				<summary>function block:SetRule_CanDestroy(rule)
 set whether a given block can be placed onto another block.
    @param rule: rule or nil. nil to remove the rule. 
@@ -4872,7 +5075,7 @@ set whether a given block can be placed onto another block.
 				<parameter name="rule">rule or nil. nil to remove the rule. 
 				</parameter>
 			</function>
-			<function line="858" name="canPlaceBlockAt">
+			<function line="908" name="canPlaceBlockAt">
 				<summary>function block:canPlaceBlockAt(x,y,z)
 virtual: Checks to see if its valid to put this block at the specified coordinates. Args: world, x, y, z
 				</summary>
@@ -4880,7 +5083,7 @@ virtual: Checks to see if its valid to put this block at the specified coordinat
 				<parameter name="y"/>
 				<parameter name="z"/>
 			</function>
-			<function line="872" name="SetRule_CanPlace">
+			<function line="922" name="SetRule_CanPlace">
 				<summary>function block:SetRule_CanPlace(rule)
 set whether a given block can be placed onto another block.
    @param rule: rule or nil. nil to remove the rule. 
@@ -4888,7 +5091,7 @@ set whether a given block can be placed onto another block.
 				<parameter name="rule">rule or nil. nil to remove the rule. 
 				</parameter>
 			</function>
-			<function line="879" name="canPlaceBlockOnSide">
+			<function line="929" name="canPlaceBlockOnSide">
 				<summary>function block:canPlaceBlockOnSide(x,y,z,side)
 checks to see if you can place this block can be placed on that side of a block: BlockLever overrides
    @param x,y,z: this is the position where the block should be placed
@@ -4901,7 +5104,7 @@ checks to see if you can place this block can be placed on that side of a block:
 				<parameter name="side">this is the OPPOSITE of the side of contact.
 				</parameter>
 			</function>
-			<function line="887" name="GetBlockEntity">
+			<function line="937" name="GetBlockEntity">
 				<summary>function block:GetBlockEntity(x,y,z)
 get the block entity at the given block position that matches the block's entity class
 				</summary>
@@ -4909,7 +5112,7 @@ get the block entity at the given block position that matches the block's entity
 				<parameter name="y"/>
 				<parameter name="z"/>
 			</function>
-			<function line="897" name="UpdateModel">
+			<function line="947" name="UpdateModel">
 				<summary>function block:UpdateModel(blockX, blockY, blockZ, blockData)
 update a block's custom model according to user data. this function is called whenever the block data changes or on load. 
 				</summary>
@@ -4918,10 +5121,10 @@ update a block's custom model according to user data. this function is called wh
 				<parameter name="blockZ"/>
 				<parameter name="blockData"/>
 			</function>
-			<function line="943" name="isProvidingWeakPower">
+			<function line="993" name="isProvidingWeakPower">
 				<summary>function block:isProvidingWeakPower(x, y, z, direction)
-Returns true if the block is emitting indirect/weak redstone power on the specified side. If isBlockNormalCube
-returns true, standard redstone propagation rules will apply instead and this will not be called.
+Returns true if the block is emitting indirect/weak power on the specified side. If isBlockNormalCube
+returns true, standard electric power propagation rules will apply instead and this will not be called.
    @param direction: Note that the side is reversed.  eg 4 (up) when checking the bottom of the block.
 				</summary>
 				<parameter name="x"/>
@@ -4930,9 +5133,9 @@ returns true, standard redstone propagation rules will apply instead and this wi
 				<parameter name="direction">Note that the side is reversed.  eg 4 (up) when checking the bottom of the block.
 				</parameter>
 			</function>
-			<function line="949" name="isProvidingStrongPower">
+			<function line="999" name="isProvidingStrongPower">
 				<summary>function block:isProvidingStrongPower(x, y, z, direction)
-Returns true if the block is emitting direct/strong redstone power on the specified side.
+Returns true if the block is emitting direct/strong power on the specified side.
    @param direction: Note that the side is reversed.  eg 4 (up) when checking the bottom of the block.
 				</summary>
 				<parameter name="x"/>
@@ -4941,12 +5144,12 @@ Returns true if the block is emitting direct/strong redstone power on the specif
 				<parameter name="direction">Note that the side is reversed.  eg 4 (up) when checking the bottom of the block.
 				</parameter>
 			</function>
-			<function line="954" name="canProvidePower">
+			<function line="1004" name="canProvidePower">
 				<summary>function block:canProvidePower()
 Can this block provide power. 
 				</summary>
 			</function>
-			<function line="960" name="OnBlockLoaded">
+			<function line="1010" name="OnBlockLoaded">
 				<summary>function block:OnBlockLoaded(x,y,z, block_data)
 called when block is first loaded from disk file to memory
 only customModel has this function called. 
@@ -4956,12 +5159,12 @@ only customModel has this function called.
 				<parameter name="z"/>
 				<parameter name="block_data"/>
 			</function>
-			<function line="967" name="GetEntityClass">
+			<function line="1017" name="GetEntityClass">
 				<summary>function block:GetEntityClass()
 get entity class if any. 
 				</summary>
 			</function>
-			<function line="976" name="DeleteModel">
+			<function line="1026" name="DeleteModel">
 				<summary>function block:DeleteModel(blockX, blockY, blockZ)
 
 				</summary>
@@ -4969,7 +5172,7 @@ get entity class if any.
 				<parameter name="blockY"/>
 				<parameter name="blockZ"/>
 			</function>
-			<function line="988" name="OnBlockRemoved">
+			<function line="1038" name="OnBlockRemoved">
 				<summary>function block:OnBlockRemoved(blockX, blockY, blockZ, last_id, last_data)
 on block removed
 				</summary>
@@ -4979,14 +5182,14 @@ on block removed
 				<parameter name="last_id"/>
 				<parameter name="last_data"/>
 			</function>
-			<function line="995" name="GetSlipperiness">
+			<function line="1045" name="GetSlipperiness">
 				<summary>function block:GetSlipperiness()
 this decides the acceleration distance when entity is moving on the block. 
 0 means no acceleration distance and player stops immediately when it stops moving. 
 bigger value means that the player will slide this certain distance before comming to a complete stop. 
 				</summary>
 			</function>
-			<function line="1002" name="Remove">
+			<function line="1052" name="Remove">
 				<summary>function block:Remove(blockX, blockY, blockZ)
 virtual function: remove a block at the given position. 
 it will automatically generate terrain blocks if necessary
@@ -4996,7 +5199,7 @@ it will automatically generate terrain blocks if necessary
 				<parameter name="blockY"/>
 				<parameter name="blockZ"/>
 			</function>
-			<function line="1048" name="FillTerrainBlock">
+			<function line="1098" name="FillTerrainBlock">
 				<summary>function block.FillTerrainBlock(blockX, blockY, blockZ, block_id)
 static function: Fill blocks according to current terrain height and its surroundings.
    @param block_id: if nil it defaults to block_types.names.underground_shell
@@ -5007,7 +5210,7 @@ static function: Fill blocks according to current terrain height and its surroun
 				<parameter name="block_id">if nil it defaults to block_types.names.underground_shell
 				</parameter>
 			</function>
-			<function line="1091" name="RemoveTerrainBlock">
+			<function line="1141" name="RemoveTerrainBlock">
 				<summary>function block.RemoveTerrainBlock(blockX, blockY, blockZ)
 static function: remove the terrain block, we will set holes
 				</summary>
@@ -5015,7 +5218,7 @@ static function: remove the terrain block, we will set holes
 				<parameter name="blockY"/>
 				<parameter name="blockZ"/>
 			</function>
-			<function line="1152" name="GenerateUndergroundBlock">
+			<function line="1202" name="GenerateUndergroundBlock">
 				<summary>function block.GenerateUndergroundBlock(blockX, blockY, blockZ, block_id)
 static function:
 auto fill a random underground terrain block at given position.
@@ -5027,7 +5230,7 @@ auto fill a random underground terrain block at given position.
 				<parameter name="block_id">if nil it is a random block. 
 				</parameter>
 			</function>
-			<function line="1158" name="play_break_sound">
+			<function line="1208" name="play_break_sound">
 				<summary>function block:play_break_sound(x,y,z)
 
 				</summary>
@@ -5035,7 +5238,7 @@ auto fill a random underground terrain block at given position.
 				<parameter name="y"/>
 				<parameter name="z"/>
 			</function>
-			<function line="1165" name="play_create_sound">
+			<function line="1215" name="play_create_sound">
 				<summary>function block:play_create_sound(x,y,z)
 
 				</summary>
@@ -5043,13 +5246,13 @@ auto fill a random underground terrain block at given position.
 				<parameter name="y"/>
 				<parameter name="z"/>
 			</function>
-			<function line="1171" name="play_step_sound">
+			<function line="1221" name="play_step_sound">
 				<summary>function block:play_step_sound(volume)
 
 				</summary>
 				<parameter name="volume"/>
 			</function>
-			<function line="1177" name="play_click_sound">
+			<function line="1227" name="play_click_sound">
 				<summary>function block:play_click_sound(x,y,z)
 
 				</summary>
@@ -5057,7 +5260,7 @@ auto fill a random underground terrain block at given position.
 				<parameter name="y"/>
 				<parameter name="z"/>
 			</function>
-			<function line="1183" name="play_toggle_sound">
+			<function line="1233" name="play_toggle_sound">
 				<summary>function block:play_toggle_sound(x,y,z)
 
 				</summary>
@@ -5065,7 +5268,7 @@ auto fill a random underground terrain block at given position.
 				<parameter name="y"/>
 				<parameter name="z"/>
 			</function>
-			<function line="1191" name="CreateBlockPieces">
+			<function line="1241" name="CreateBlockPieces">
 				<summary>function block:CreateBlockPieces(blockX, blockY, blockZ, granularity, texture_filename, cx, cy, cz)
 
    @param granularity: (0-1), 1 will generate 27 pieces, 0 will generate 0 pieces, default to 1.
@@ -5082,7 +5285,7 @@ auto fill a random underground terrain block at given position.
 				<parameter name="cy"/>
 				<parameter name="cz"/>
 			</function>
-			<function line="1245" name="GetCustomModel">
+			<function line="1295" name="GetCustomModel">
 				<summary>function block:GetCustomModel(blockX, blockY, blockZ)
 get the custom model at the given position.
    @return the paraobject or nil. 
@@ -5093,7 +5296,7 @@ get the custom model at the given position.
 				<returns>return paraobject or nil. 
 				</returns>
 			</function>
-			<function line="1259" name="AddToSelection">
+			<function line="1309" name="AddToSelection">
 				<summary>function block:AddToSelection(blockX, blockY, blockZ, index)
 add the custom model to selection.
    @param index: the selection group id, default to 2.
@@ -5107,10 +5310,10 @@ add the custom model to selection.
 				<returns>return if selected
 				</returns>
 			</function>
-			<function line="1270" name="GetInternalStateNumber">
+			<function line="1320" name="GetInternalStateNumber">
 				<summary>function block:GetInternalStateNumber(x,y,z)
 some block like command blocks, may has an internal state number(like its last output result)
-and some block may use its nearby blocks' state number to generate redstone output or other behaviors.
+and some block may use its nearby blocks' state number to generate electric output or other behaviors.
    @return nil or a number between [0-15]
 				</summary>
 				<parameter name="x"/>
@@ -5119,7 +5322,7 @@ and some block may use its nearby blocks' state number to generate redstone outp
 				<returns>return or a number between [0-15]
 				</returns>
 			</function>
-			<function line="1277" name="OnClick">
+			<function line="1327" name="OnClick">
 				<summary>function block:OnClick(bx, by, bz, mouse_button, entity, side)
 called when the user clicks on the block
    @param side: on which side the block is clicked.
@@ -5135,7 +5338,7 @@ called when the user clicks on the block
 				<returns>return return true if it is an action block and processed . 
 				</returns>
 			</function>
-			<function line="1289" name="OnEntityCollided">
+			<function line="1339" name="OnEntityCollided">
 				<summary>function block:OnEntityCollided(x,y,z, entity, deltaTime)
 Triggered whenever an entity collides with this block (enters into the block). Args: world, x, y, z, entity
 				</summary>
@@ -5145,7 +5348,7 @@ Triggered whenever an entity collides with this block (enters into the block). A
 				<parameter name="entity"/>
 				<parameter name="deltaTime"/>
 			</function>
-			<function line="1294" name="OnMouseDown">
+			<function line="1344" name="OnMouseDown">
 				<summary>function block:OnMouseDown(x,y,z, mouse_button)
 call when use press mouse down button over the block
 				</summary>
@@ -5154,7 +5357,7 @@ call when use press mouse down button over the block
 				<parameter name="z"/>
 				<parameter name="mouse_button"/>
 			</function>
-			<function line="1303" name="OnActivated">
+			<function line="1353" name="OnActivated">
 				<summary>function block:OnActivated(bx, by, bz, entity)
 virtual function: some signal is received, such as user click
 the default behavior is to activate the neuron block.
@@ -5164,7 +5367,7 @@ the default behavior is to activate the neuron block.
 				<parameter name="bz"/>
 				<parameter name="entity"/>
 			</function>
-			<function line="1314" name="OnToggle">
+			<function line="1364" name="OnToggle">
 				<summary>function block:OnToggle(bx, by, bz)
 some blocks can be toggled to another block. and may event have a toggle function. 
 				</summary>
@@ -5172,7 +5375,7 @@ some blocks can be toggled to another block. and may event have a toggle functio
 				<parameter name="by"/>
 				<parameter name="bz"/>
 			</function>
-			<function line="1325" name="OnStep">
+			<function line="1375" name="OnStep">
 				<summary>function block:OnStep(bx, by, bz, entity)
 when the player steps on the top surface of the block
 some block may have an on step function. 
@@ -5182,42 +5385,42 @@ some block may have an on step function.
 				<parameter name="bz"/>
 				<parameter name="entity"/>
 			</function>
-			<function line="1330" name="tickRate">
+			<function line="1380" name="tickRate">
 				<summary>function block:tickRate()
 How many simulation steps 
 				</summary>
 			</function>
-			<function line="1335" name="isNormalCube">
+			<function line="1385" name="isNormalCube">
 				<summary>function block:isNormalCube()
 whether block is normal solid cube model that can not provide power. 
 				</summary>
 			</function>
-			<function line="1359" name="GetItemModel">
+			<function line="1409" name="GetItemModel">
 				<summary>function block:GetItemModel()
 get model file for item display
 				</summary>
 			</function>
-			<function line="1391" name="GetOffsetY">
+			<function line="1441" name="GetOffsetY">
 				<summary>function block:GetOffsetY()
 
 				</summary>
 			</function>
-			<function line="1402" name="GetItemModelScaling">
+			<function line="1452" name="GetItemModelScaling">
 				<summary>function block:GetItemModelScaling()
 model scaling for GetItemModel() as handheld item. 
 				</summary>
 			</function>
-			<function line="1407" name="OnWorldLoaded">
+			<function line="1457" name="OnWorldLoaded">
 				<summary>function block:OnWorldLoaded()
 called when world is loaded
 				</summary>
 			</function>
-			<function line="1412" name="UpdateBlockBounds">
+			<function line="1462" name="UpdateBlockBounds">
 				<summary>function block:UpdateBlockBounds()
 set the block bounds and collision AABB. 
 				</summary>
 			</function>
-			<function line="1417" name="SetBlockBounds">
+			<function line="1467" name="SetBlockBounds">
 				<summary>function block:SetBlockBounds(minX, minY, minZ, maxX, maxY, maxZ)
 input is in local block pos which is scaled by block_size internally. 
 				</summary>
@@ -5228,7 +5431,7 @@ input is in local block pos which is scaled by block_size internally.
 				<parameter name="maxY"/>
 				<parameter name="maxZ"/>
 			</function>
-			<function line="1424" name="GetCollisionBoundingBoxFromPool">
+			<function line="1474" name="GetCollisionBoundingBoxFromPool">
 				<summary>function block:GetCollisionBoundingBoxFromPool(x,y,z)
 Returns a bounding box from the pool of bounding boxes.
 this box can change after the pool has been cleared to be reused
@@ -5237,7 +5440,7 @@ this box can change after the pool has been cleared to be reused
 				<parameter name="y"/>
 				<parameter name="z"/>
 			</function>
-			<function line="1432" name="AddCollisionBoxesToList">
+			<function line="1482" name="AddCollisionBoxesToList">
 				<summary>function block:AddCollisionBoxesToList(x,y,z, aabb, list, entity)
 Adds all intersecting collision boxes representing this block to a list.
    @param list: in|out array list to hold the output
@@ -5254,7 +5457,7 @@ Adds all intersecting collision boxes representing this block to a list.
 				<parameter name="entity">
 				</parameter>
 			</function>
-			<function line="1447" name="RotateBlockData">
+			<function line="1497" name="RotateBlockData">
 				<summary>function block:RotateBlockData(blockData, angle, axis)
 rotate the block data by the given angle and axis. This is mosted reimplemented in blocks with orientations stored in block data, such as stairs, bones, etc.
    @param blockData: current block data
@@ -5271,7 +5474,7 @@ rotate the block data by the given angle and axis. This is mosted reimplemented 
 				<returns>return rotated block data. 
 				</returns>
 			</function>
-			<function line="1455" name="RotateBlockDataUsingModelFacing">
+			<function line="1505" name="RotateBlockDataUsingModelFacing">
 				<summary>function block:RotateBlockDataUsingModelFacing(blockData, angle, axis)
 helper function: can be used by RotateBlockData() to automatically calculate rotated block facing. 
 please note, it will cache last search result to accelerate subsequent calls.
@@ -5280,7 +5483,7 @@ please note, it will cache last search result to accelerate subsequent calls.
 				<parameter name="angle"/>
 				<parameter name="axis"/>
 			</function>
-			<function line="1494" name="MirrorBlockData">
+			<function line="1544" name="MirrorBlockData">
 				<summary>function block:MirrorBlockData(blockData, axis)
 mirror the block data along the given axis. This is mosted reimplemented in blocks with orientations stored in block data, such as stairs, bones, etc.
    @param blockData: current block data
@@ -5294,13 +5497,19 @@ mirror the block data along the given axis. This is mosted reimplemented in bloc
 				<returns>return mirrored block data. 
 				</returns>
 			</function>
-			<function line="1499" name="GetBlockColor">
+			<function line="1549" name="GetBlockColor">
 				<summary>function block:GetBlockColor(x,y,z)
 return color in RGB, without alpha
 				</summary>
 				<parameter name="x"/>
 				<parameter name="y"/>
 				<parameter name="z"/>
+			</function>
+			<function line="1561" name="GetBlockColorByData">
+				<summary>function block:GetBlockColorByData(blockData)
+return color in RGB, without alpha
+				</summary>
+				<parameter name="blockData"/>
 			</function>
 		</table>
 		<table name="Files" src="script/apps/Aries/Creator/Game/Common/Files.lua">
@@ -5788,38 +5997,38 @@ this function is called before we apply new chunk data over existing chunks
 			</function>
 		</table>
 		<table name="SelectionManager" src="script/apps/Aries/Creator/Game/SceneContext/SelectionManager.lua">
-			<function line="34" name="ctor">
+			<function line="37" name="ctor">
 				<summary>function SelectionManager:ctor()
 
 				</summary>
 			</function>
-			<function line="42" name="GetPickingResult">
+			<function line="45" name="GetPickingResult">
 				<summary>function SelectionManager:GetPickingResult()
 get the current mouse picking result. 
 				</summary>
 			</function>
-			<function line="46" name="SetPickingDist">
+			<function line="49" name="SetPickingDist">
 				<summary>function SelectionManager:SetPickingDist(dist)
 
 				</summary>
 				<parameter name="dist"/>
 			</function>
-			<function line="50" name="GetPickingDist">
+			<function line="53" name="GetPickingDist">
 				<summary>function SelectionManager:GetPickingDist()
 
 				</summary>
 			</function>
-			<function line="54" name="Clear">
+			<function line="57" name="Clear">
 				<summary>function SelectionManager:Clear()
 
 				</summary>
 			</function>
-			<function line="59" name="ClearPickingResult">
+			<function line="62" name="ClearPickingResult">
 				<summary>function SelectionManager:ClearPickingResult()
 
 				</summary>
 			</function>
-			<function line="65" name="MousePickBlock">
+			<function line="68" name="MousePickBlock">
 				<summary>function SelectionManager:MousePickBlock(bPickBlocks, bPickPoint, bPickObjects, picking_dist)
 
    @param bPickBlocks, bPickPoint, bPickObjects: default to true
@@ -5832,7 +6041,7 @@ return result;
 				<parameter name="bPickObjects"/>
 				<parameter name="picking_dist"/>
 			</function>
-			<function line="157" name="GetSelectedBlocks">
+			<function line="160" name="GetSelectedBlocks">
 				<summary>function SelectionManager:GetSelectedBlocks()
 
    @return nil of a table of selected blocks.
@@ -5840,17 +6049,17 @@ return result;
 				<returns>return of a table of selected blocks.
 				</returns>
 			</function>
-			<function line="169" name="GetSelectedActor">
+			<function line="172" name="GetSelectedActor">
 				<summary>function SelectionManager:GetSelectedActor()
 get selected movie actor
 				</summary>
 			</function>
-			<function line="174" name="GetLastSelectedActor">
+			<function line="177" name="GetLastSelectedActor">
 				<summary>function SelectionManager:GetLastSelectedActor()
 get the previously selected actor. 
 				</summary>
 			</function>
-			<function line="178" name="SetSelectedActor">
+			<function line="181" name="SetSelectedActor">
 				<summary>function SelectionManager:SetSelectedActor(actor)
 
 				</summary>
@@ -5863,24 +6072,24 @@ get the previously selected actor.
 
 				</summary>
 			</function>
-			<function line="78" name="OnSelect">
+			<function line="81" name="OnSelect">
 				<summary>function BaseContext:OnSelect()
 
 				</summary>
 			</function>
-			<function line="85" name="OnUnselect">
+			<function line="88" name="OnUnselect">
 				<summary>function BaseContext:OnUnselect()
 virtual function: 
 return true if we are not in the middle of any operation and fire unselected signal. 
 or false, if we can not unselect the scene tool context at the moment. 
 				</summary>
 			</function>
-			<function line="94" name="GetClickData">
+			<function line="97" name="GetClickData">
 				<summary>function BaseContext:GetClickData()
 
 				</summary>
 			</function>
-			<function line="100" name="handleDropFile">
+			<function line="103" name="handleDropFile">
 				<summary>function BaseContext:handleDropFile(filename, fileType)
 user has drag and dropped an existing file to the context
    @param fileType: "model", "blocktemplate"
@@ -5889,32 +6098,32 @@ user has drag and dropped an existing file to the context
 				<parameter name="fileType">"model", "blocktemplate"
 				</parameter>
 			</function>
-			<function line="111" name="EnableMouseDownTimer">
+			<function line="114" name="EnableMouseDownTimer">
 				<summary>function BaseContext:EnableMouseDownTimer(bEnable)
 enable mouse down timer to repeatedly receive OnMouseDownTimer callback. 
 mouse down timer is automatically stopped when there is no mouse event. so one only need to enable it in mouse press event. 
 				</summary>
 				<parameter name="bEnable"/>
 			</function>
-			<function line="124" name="EnableMousePickTimer">
+			<function line="127" name="EnableMousePickTimer">
 				<summary>function BaseContext:EnableMousePickTimer(bEnable)
 
 				</summary>
 				<parameter name="bEnable"/>
 			</function>
-			<function line="139" name="OnMouseDownTimer">
+			<function line="142" name="OnMouseDownTimer">
 				<summary>function BaseContext:OnMouseDownTimer(timer)
 virtual function: called repeatedly whenever mouse button is down. 
 				</summary>
 				<parameter name="timer"/>
 			</function>
-			<function line="153" name="handleHookedMouseEvent">
+			<function line="156" name="handleHookedMouseEvent">
 				<summary>function BaseContext:handleHookedMouseEvent(event)
 return true if handled
 				</summary>
 				<parameter name="event"/>
 			</function>
-			<function line="167" name="handleItemMouseEvent">
+			<function line="170" name="handleItemMouseEvent">
 				<summary>function BaseContext:handleItemMouseEvent(event)
 if item accept mousePressEvent, it will also handle mouseMove and mouseRelease on its own. 
 if item does not accept mousePressEvent, it will not receive any mouseMove or mouseRelease event, and the default handler is used. 
@@ -5922,7 +6131,7 @@ return true if handled
 				</summary>
 				<parameter name="event"/>
 			</function>
-			<function line="200" name="CheckMousePick">
+			<function line="203" name="CheckMousePick">
 				<summary>function BaseContext:CheckMousePick()
 this function is called repeatedly if MousePickTimer is enabled. 
 it can also be called independently.
@@ -5931,29 +6140,29 @@ it can also be called independently.
 				<returns>return picking result table
 				</returns>
 			</function>
-			<function line="235" name="HighlightPickBlock">
+			<function line="238" name="HighlightPickBlock">
 				<summary>function BaseContext:HighlightPickBlock(result)
 
 				</summary>
 				<parameter name="result"/>
 			</function>
-			<function line="272" name="HighlightPickEntity">
+			<function line="275" name="HighlightPickEntity">
 				<summary>function BaseContext:HighlightPickEntity(result)
 
 				</summary>
 				<parameter name="result"/>
 			</function>
-			<function line="283" name="ClearBlockPickDisplay">
+			<function line="286" name="ClearBlockPickDisplay">
 				<summary>function BaseContext:ClearBlockPickDisplay()
 
 				</summary>
 			</function>
-			<function line="288" name="ClearPickDisplay">
+			<function line="291" name="ClearPickDisplay">
 				<summary>function BaseContext:ClearPickDisplay()
 
 				</summary>
 			</function>
-			<function line="298" name="OnLeftMouseHold">
+			<function line="301" name="OnLeftMouseHold">
 				<summary>function BaseContext:OnLeftMouseHold(fDelta)
 called every 30 milliseconds, when user is holding the left button without releasing it.
    @param fDelta: 
@@ -5961,31 +6170,31 @@ called every 30 milliseconds, when user is holding the left button without relea
 				<parameter name="fDelta">
 				</parameter>
 			</function>
-			<function line="331" name="OnLeftLongHoldBreakBlock">
+			<function line="334" name="OnLeftLongHoldBreakBlock">
 				<summary>function BaseContext:OnLeftLongHoldBreakBlock()
 virtual function: when user is holding the left button for long enough. 
 				</summary>
 			</function>
-			<function line="334" name="OnRightMouseHold">
+			<function line="337" name="OnRightMouseHold">
 				<summary>function BaseContext:OnRightMouseHold(fDelta)
 
 				</summary>
 				<parameter name="fDelta"/>
 			</function>
-			<function line="338" name="UpdateClickStrength">
+			<function line="341" name="UpdateClickStrength">
 				<summary>function BaseContext:UpdateClickStrength(fDelta, result)
 
 				</summary>
 				<parameter name="fDelta"/>
 				<parameter name="result"/>
 			</function>
-			<function line="418" name="BeginMouseClickCheck">
+			<function line="421" name="BeginMouseClickCheck">
 				<summary>function BaseContext:BeginMouseClickCheck()
 call this function in mouse down event and then call EndMouseClickCheck() in mouse up event. 
 if the latter return true, it is a mouse click, otherwise the camera has moved during begin/end pair. 
 				</summary>
 			</function>
-			<function line="427" name="EndMouseClickCheck">
+			<function line="430" name="EndMouseClickCheck">
 				<summary>function BaseContext:EndMouseClickCheck(event)
 
    @param event: mouse release event
@@ -5995,60 +6204,60 @@ return true if it is a mouse click
 return true if it is a mouse click
 				</parameter>
 			</function>
-			<function line="456" name="mousePressEvent">
+			<function line="459" name="mousePressEvent">
 				<summary>function BaseContext:mousePressEvent(event)
 virtual: 
 				</summary>
 				<parameter name="event"/>
 			</function>
-			<function line="473" name="mouseMoveEvent">
+			<function line="476" name="mouseMoveEvent">
 				<summary>function BaseContext:mouseMoveEvent(event)
 virtual: 
 				</summary>
 				<parameter name="event"/>
 			</function>
-			<function line="480" name="mouseReleaseEvent">
+			<function line="483" name="mouseReleaseEvent">
 				<summary>function BaseContext:mouseReleaseEvent(event)
 virtual: 
 				</summary>
 				<parameter name="event"/>
 			</function>
-			<function line="494" name="handleCameraWheelEvent">
+			<function line="497" name="handleCameraWheelEvent">
 				<summary>function BaseContext:handleCameraWheelEvent(event)
 
 				</summary>
 				<parameter name="event"/>
 			</function>
-			<function line="502" name="mouseWheelEvent">
+			<function line="505" name="mouseWheelEvent">
 				<summary>function BaseContext:mouseWheelEvent(event)
 virtual: 
 				</summary>
 				<parameter name="event"/>
 			</function>
-			<function line="518" name="handleHookedKeyEvent">
+			<function line="521" name="handleHookedKeyEvent">
 				<summary>function BaseContext:handleHookedKeyEvent(event)
 virtual: return true if handled
 				</summary>
 				<parameter name="event"/>
 			</function>
-			<function line="533" name="handleItemKeyEvent">
+			<function line="536" name="handleItemKeyEvent">
 				<summary>function BaseContext:handleItemKeyEvent(event)
 
 				</summary>
 				<parameter name="event"/>
 			</function>
-			<function line="541" name="keyPressEvent">
+			<function line="544" name="keyPressEvent">
 				<summary>function BaseContext:keyPressEvent(event)
 virtual: actually means key stroke. 
 				</summary>
 				<parameter name="event"/>
 			</function>
-			<function line="551" name="HandleEscapeKey">
+			<function line="554" name="HandleEscapeKey">
 				<summary>function BaseContext:HandleEscapeKey()
 virtual function handle escape key
 				</summary>
 			</function>
-			<function line="579" name="TryDestroyBlock">
+			<function line="582" name="TryDestroyBlock">
 				<summary>function BaseContext:TryDestroyBlock(result, is_allow_delete_terrain)
 try to destroy the block at picking result
 if the terrain block is hit, click_data.strength must be larger than max_break_time
@@ -6058,7 +6267,7 @@ if the terrain block is hit, click_data.strength must be larger than max_break_t
 				<parameter name="is_allow_delete_terrain">true 
 				</parameter>
 			</function>
-			<function line="610" name="OnCreateSingleBlock">
+			<function line="613" name="OnCreateSingleBlock">
 				<summary>function BaseContext:OnCreateSingleBlock(x,y,z, block_id, result)
 
 				</summary>
@@ -6068,59 +6277,59 @@ if the terrain block is hit, click_data.strength must be larger than max_break_t
 				<parameter name="block_id"/>
 				<parameter name="result"/>
 			</function>
-			<function line="633" name="OnCreateBlock">
+			<function line="636" name="OnCreateBlock">
 				<summary>function BaseContext:OnCreateBlock(result)
 
 				</summary>
 				<parameter name="result"/>
 			</function>
-			<function line="687" name="HandleQuickSelectKey">
+			<function line="693" name="HandleQuickSelectKey">
 				<summary>function BaseContext:HandleQuickSelectKey(event)
 for Numeric key 1-9
 				</summary>
 				<parameter name="event"/>
 			</function>
-			<function line="690" name="handleLeftClickScene">
+			<function line="696" name="handleLeftClickScene">
 				<summary>function BaseContext:handleLeftClickScene(event, result)
 
 				</summary>
 				<parameter name="event"/>
 				<parameter name="result"/>
 			</function>
-			<function line="693" name="handleMiddleClickScene">
+			<function line="699" name="handleMiddleClickScene">
 				<summary>function BaseContext:handleMiddleClickScene(event, result)
 
 				</summary>
 				<parameter name="event"/>
 				<parameter name="result"/>
 			</function>
-			<function line="713" name="handleRightClickScene">
+			<function line="719" name="handleRightClickScene">
 				<summary>function BaseContext:handleRightClickScene(event, result)
 
 				</summary>
 				<parameter name="event"/>
 				<parameter name="result"/>
 			</function>
-			<function line="752" name="handleHistoryKeyEvent">
+			<function line="758" name="handleHistoryKeyEvent">
 				<summary>function BaseContext:handleHistoryKeyEvent(event)
 virtual: undo/redo related key events, such as ctrl+Z/Y
 return true if processed
 				</summary>
 				<parameter name="event"/>
 			</function>
-			<function line="757" name="handlePlayerKeyEvent">
+			<function line="763" name="handlePlayerKeyEvent">
 				<summary>function BaseContext:handlePlayerKeyEvent(event)
 virtual function: handle player controller key event
 return true if processed
 				</summary>
 				<parameter name="event"/>
 			</function>
-			<function line="804" name="close">
+			<function line="810" name="close">
 				<summary>function BaseContext:close()
 deactivate this context and switch back to default scene context with the current game mode. 
 				</summary>
 			</function>
-			<function line="810" name="HandleGlobalKey">
+			<function line="816" name="HandleGlobalKey">
 				<summary>function BaseContext:HandleGlobalKey(event)
 handle all global key events that should always be available to the user regardless of whatever scene context. 
 return true if key is handled. 
