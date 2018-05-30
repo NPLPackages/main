@@ -919,6 +919,7 @@ function PageElement:CreateStyle(baseStyle, base_baseStyle)
 	--
 	-- apply instance if any
 	--
+
 	if(self.attr and self.attr.style) then
 		local style_code = self:GetAttributeWithCode("style", nil, true);
 		style:Merge(style_code);

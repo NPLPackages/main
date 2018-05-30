@@ -68,6 +68,8 @@ local inheritable_fields = {
 	["shadow-color"] = true,
 	["text-shadow-offset-x"] = true,
 	["text-shadow-offset-y"] = true,
+	["text-align"] = true,
+	["line-height"] = true,
 };
 
 -- only merge inheritable style like font, color, etc. 
