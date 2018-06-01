@@ -181,6 +181,10 @@ function MultiLineEditbox:SetEmptyText(text)
 	self.viewport:SetEmptyText(text)
 end
 
+function MultiLineEditbox:SetLanguage(language)
+	self.viewport:SetLanguage(language)
+end
+
 function MultiLineEditbox:setEchoMode(mode)
 	if(self.m_echoMode == mode) then
 		return;

@@ -11,6 +11,8 @@ local TextControl = commonlib.gettable("System.Windows.Controls.TextControl");
 ]]
 NPL.load("(gl)script/ide/System/Windows/UIElement.lua");
 NPL.load("(gl)script/ide/System/Core/UniString.lua");
+NPL.load("(gl)script/ide/System/Util/SyntaxAnalysis.lua");
+local SyntaxAnalysis = commonlib.gettable("System.Util.SyntaxAnalysis");
 local Rect = commonlib.gettable("mathlib.Rect");
 local UniString = commonlib.gettable("System.Core.UniString");
 local Application = commonlib.gettable("System.Windows.Application");
@@ -40,6 +42,7 @@ TextControl:Property({"lineWrap", nil, "GetLineWrap", "SetLineWrap", auto=true})
 TextControl:Property({"lineHeight", 20, "GetLineHeight", "SetLineHeight", auto=true})
 TextControl:Property({"AutoTabToSpaces", true, "IsAutoTabToSpaces", "SetAutoTabToSpaces", auto=true})
 TextControl:Property({"EmptyText", nil, "GetEmptyText", "SetEmptyText", auto=true})
+TextControl:Property({"language", nil, "Language", "SetLanguage", auto=true})
 
 --TextControl:Signal("SizeChanged",function(width,height) end);
 --TextControl:Signal("PositionChanged");
@@ -81,6 +84,8 @@ function TextControl:ctor()
 
 	self.needRecomputeTextWidth = true;
 	self.needRecomputeTextHeight = true;
+
+	self.syntaxAnalyzer = nil;
 
 	self:setFocusPolicy(FocusPolicy.StrongFocus);
 	self:setAttribute("WA_InputMethodEnabled");
@@ -138,7 +143,7 @@ function TextControl:initDoc()
 	local item = {
 		text = UniString:new();
 	}
-	self.items:push_back(item);
+	self:AddItem(item);
 end
 
 function TextControl:setReadOnly(bReadOnly)
@@ -263,12 +268,7 @@ function TextControl:GetLineText(index)
 	return nil;
 end
 
-
-function TextControl:setLinePosColor(line, begin_pos, end_pos, font, color, scale)
-	if(not begin_pos or not end_pos or begin_pos == end_pos or begin_pos > end_pos) then
-		return;
-	end
-	local lineItem = self:GetLine(line)
+function TextControl:AddHighLightBlock(lineItem, begin_pos, end_pos, font, color, scale)
 	if(lineItem) then
 		lineItem.highlightBlocks = lineItem.highlightBlocks or {};
 		for i = 1,#lineItem.highlightBlocks do 
@@ -280,6 +280,14 @@ function TextControl:setLinePosColor(line, begin_pos, end_pos, font, color, scal
 		local block = {begin_pos = begin_pos, end_pos = end_pos, font = font, color = color, scale = scale};
 		lineItem.highlightBlocks[#lineItem.highlightBlocks+1] =  block;
 	end
+end
+
+function TextControl:setLinePosColor(line, begin_pos, end_pos, font, color, scale)
+	if(not begin_pos or not end_pos or begin_pos == end_pos or begin_pos > end_pos) then
+		return;
+	end
+	local lineItem = self:GetLine(line)
+	self:AddHighLightBlock(lineItem, begin_pos, end_pos, font, color, scale);
 end
 
 function TextControl:InsertItem(pos, text)
@@ -295,6 +303,8 @@ function TextControl:InsertItem(pos, text)
 	else
 		item = text;
 	end
+
+	item.changed = true;
 
 	if(pos > #self.items) then
 		self.items:push_back(item);
@@ -1127,6 +1137,13 @@ function TextControl:internalDelete(wasBackspace)
 	if(self.cursorLine == 1 and self.cursorPos == 0) then
 		return;
 	end
+
+	local lastLineIndex = #self.items;
+	local lastLineLength = self:GetLineText(lastLineIndex):length();
+	if(self.cursorLine == lastLineIndex and self.cursorPos == lastLineLength and not wasBackspace) then
+		return;
+	end
+
 	self:separate();
 	local startLine, startPos, endLine, endPos;
 	local anchorLine, anchorPos;
@@ -1173,6 +1190,7 @@ end
 function TextControl:lineInternalRemove(line, pos, count)
 	local text = line.text;
 	local width = self:GetLineWidth(line);
+	line.changed = true;
 	text:remove(pos, count);
 	
 	if(width >= self:GetRealWidth()) then
@@ -1217,6 +1235,7 @@ function TextControl:lineInternalInsert(line, pos, s)
     if (remaining > 0) then
 		s = s:left(remaining);
         lineText:insert(pos, s);
+		line.changed = true;
 
 		local width = self:GetLineWidth(line);
 		if(width > self:GetRealWidth()) then
@@ -1457,6 +1476,32 @@ function TextControl:DrawTextScaledWithPosition(painter, x, y, text, font, color
 	painter:DrawTextScaled(x, y, text, scale);
 end
 
+function TextControl:LanguageFormat(lineItem)
+	if(self.language and lineItem.changed) then
+		if(tostring(uniStr) == "") then
+			return;
+		end
+
+		self.syntaxAnalyzer = self.syntaxAnalyzer or SyntaxAnalysis.CreateAnalyzer(self.language);
+		if(not self.syntaxAnalyzer) then
+			return;
+		end
+
+		lineItem.highlightBlocks = {};
+		local uniStr = lineItem.text;
+		for token in self.syntaxAnalyzer:GetToken(uniStr) do
+			if(token.type) then
+				local font = nil;
+				if(token.bold) then
+					font = string.gsub(self:GetFont(),"(%a+;%d+;)(%a+)","%1bold")
+				end
+				self:AddHighLightBlock(lineItem, token.spos, token.epos, font, token.color, nil);
+			end
+		end
+		lineItem.changed = false;
+	end
+end
+
 function TextControl:paintEvent(painter)
 	if(self.needRecomputeTextHeight or self.needRecomputeTextWidth or self.needUpdateControlSize) then
 		self:updateGeometry();
@@ -1552,6 +1597,8 @@ function TextControl:paintEvent(painter)
 			local total_width = 0;
 			local sub_text;
 			local next_block;
+
+			self:LanguageFormat(item);
 
 			if(item.highlightBlocks and next(item.highlightBlocks)) then
 				-- this line have highlight blocks;				
