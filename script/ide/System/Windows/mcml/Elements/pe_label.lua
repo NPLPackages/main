@@ -27,7 +27,7 @@ function pe_label:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 		self:SetControl(_this);
 	end
 	_this:ApplyCss(css);
-	_this:SetText(self:GetAttributeWithCode("value", nil, true));
+	_this:SetText(tostring(self:GetAttributeWithCode("value", nil, true)));
 	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
 end
 
