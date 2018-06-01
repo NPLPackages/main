@@ -148,10 +148,10 @@ local function tokenWrapper(type, spos, epos, color, bold)
 end
 
 local LUA_TEXT_CONFIG = {
-	["comment"] = {color = "#3CB371", bold = false},
-	["string"] = {color = "#A3155A", bold = false},
+	["comment"] = {color = "#008000", bold = false},
+	["string"] = {color = "#808080", bold = false},
 	["keyword"] = {color = "#0000FF", bold = false},
-	["function"] = {color = "#800000", bold = true},
+	["function"] = {color = "#800000", bold = false},
 }
 
 local inMultiComments = false;

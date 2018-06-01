@@ -1298,6 +1298,7 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 			empty_text = mcmlNode:GetAttributeWithCode("EmptyText"),
 			container_bg = "",
 			bUseSystemControl = mcmlNode:GetBool("UseSystemControl"),
+			language = mcmlNode:GetAttributeWithCode("language", nil),
 		};
 		local onkeyup = mcmlNode:GetString("onkeyup");
 		if(onkeyup)then
