@@ -512,6 +512,8 @@ function TextControl:keyPressEvent(event)
 				self:backspace();
 			end
 		end
+	elseif(keyname == "DIK_TAB") then
+		self:ProcessTab(mark);
 	elseif(event:IsKeySequence("SelectAll")) then
 		self:selectAll();
 	elseif(event:IsKeySequence("Copy")) then
@@ -615,6 +617,27 @@ function TextControl:keyPressEvent(event)
         event:ignore();
     else
         event:accept();
+	end
+end
+
+local TAB_CHAR = "   ";
+local tab_len = string.len(TAB_CHAR);
+
+function TextControl:ProcessTab(mark)
+	if(mark) then
+		local text = self:GetLineText(self.cursorLine);
+		local nextCursorPos;
+		for i = 1,tab_len do
+			if(text and self.cursorPos - i > 0 and text[self.cursorPos - i] == " ") then
+				nextCursorPos = self.cursorPos - i;
+			end
+		end
+		if(nextCursorPos) then
+			self:separate();
+			self:RemoveTextAddToCommand(self.cursorLine, nextCursorPos, self.cursorLine, self.cursorPos, true);
+		end
+	else
+		self:InsertTextInCursorPos(TAB_CHAR)
 	end
 end
 
