@@ -1134,7 +1134,7 @@ function TextControl:backspace()
 end
 
 function TextControl:internalDelete(wasBackspace)
-	if(self.cursorLine == 1 and self.cursorPos == 0) then
+	if(self.cursorLine == 1 and self.cursorPos == 0 and wasBackspace) then
 		return;
 	end
 
