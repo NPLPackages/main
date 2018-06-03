@@ -2,6 +2,10 @@ pe:mcml, div {
     display:block;
 }
 
+span {
+    display:inline;
+}
+
 button, input[type="button"] {
     display: inline-block;
 }

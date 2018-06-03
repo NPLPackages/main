@@ -10,8 +10,10 @@ local LayoutView = commonlib.gettable("System.Windows.mcml.layout.LayoutView");
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutBlock.lua");
-NPL.load("(gl)script/ide/System/Windows/mcml/geometry/Length.lua");
-local Length = commonlib.gettable("System.Windows.mcml.geometry.Length");
+NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/Length.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutState.lua");
+local LayoutState = commonlib.gettable("System.Windows.mcml.layout.LayoutState");
+local Length = commonlib.gettable("System.Windows.mcml.platform.graphics.Length");
 local LayoutView = commonlib.inherit(commonlib.gettable("System.Windows.mcml.layout.LayoutBlock"), commonlib.gettable("System.Windows.mcml.layout.LayoutView"));
 
 function LayoutView:ctor()
@@ -20,6 +22,14 @@ function LayoutView:ctor()
 	self.frameView = nil;
 	self.pageLogicalHeight = 0;
 	self.pageLogicalHeightChanged = false;
+
+	self.layoutState = nil;
+
+	self.maximalOutlineSize = 0;
+end
+
+function LayoutView:init(node, frameView)
+	LayoutView._super.init(self, node);
 
 	-- Clear our anonymous bit, set because RenderObject assumes
     -- any renderer with document as the node is anonymous.
@@ -34,17 +44,26 @@ function LayoutView:ctor()
     self:SetPreferredLogicalWidthsDirty(true, false);
     
     self:SetPositioned(true); -- to 0,0 :)
-end
 
-function LayoutView:init(node, frameView)
-	LayoutView._super.init(self, node);
 	self.frameView = frameView;
 
 	return self;
 end
 
-function LayoutView:BeLayoutView()
+function LayoutView:IsLayoutView()
 	return true;
+end
+
+function LayoutView:IsRoot()
+	return true;
+end
+
+function LayoutView:RequiresLayer()
+	return true;
+end
+
+function LayoutView:FrameView()
+	return self.frameView;
 end
 
 function LayoutView:SetPageLayout(pageLayout)
@@ -112,14 +131,14 @@ function LayoutView:Layout()
 		end
     end
 
---    LayoutState state;
---    // FIXME: May be better to push a clip and avoid issuing offscreen repaints.
---    state.m_clipped = false;
---    state.m_pageLogicalHeight = m_pageLogicalHeight;
---    state.m_pageLogicalHeightChanged = m_pageLogicalHeightChanged;
---    state.m_isPaginated = state.m_pageLogicalHeight;
+    local state = LayoutState:new();
+    -- FIXME: May be better to push a clip and avoid issuing offscreen repaints.
+    state.clipped = false;
+    state.pageLogicalHeight = self.pageLogicalHeight;
+    state.pageLogicalHeightChanged = self.pageLogicalHeightChanged;
+    state.isPaginated = if_else(state.pageLogicalHeight ~= 0, true, false);
     self.pageLogicalHeightChanged = false;
-    --m_layoutState = &state;
+    self.layoutState = state;
 
     if (self:NeedsLayout()) then
         LayoutView._super.Layout(self);
@@ -128,6 +147,102 @@ function LayoutView:Layout()
 --		end
     end
 
+	self.layoutState = nil;
     self:SetNeedsLayout(false);
 end
 
+-- layoutDelta is used transiently during layout to store how far an object has moved from its
+-- last layout location, in order to repaint correctly.
+-- If we're doing a full repaint m_layoutState will be 0, but in that case layoutDelta doesn't matter.
+function LayoutView:LayoutDelta()
+	if(self.layoutState) then
+		return self.layoutState.layoutDelta;
+	end
+    return LayoutSize:new();
+end
+
+function LayoutView:MaximalOutlineSize()
+	return self.maximalOutlineSize;
+end
+
+--void RenderView::computeRectForRepaint(RenderBoxModelObject* repaintContainer, IntRect& rect, bool fixed) const
+function LayoutView:ComputeRectForRepaint(repaintContainer, rect, fixed)
+	-- parameter default value;
+	fixed = if_else(fixed == nil, false, fixed);
+
+    -- If a container was specified, and was not 0 or the RenderView,
+    -- then we should have found it by now.
+    --ASSERT_ARG(repaintContainer, !repaintContainer || repaintContainer == this);
+
+--    if (printing())
+--        return;
+
+    if (self:Style():IsFlippedBlocksWritingMode()) then
+        -- We have to flip by hand since the view's logical height has not been determined.  We
+        -- can use the viewport width and height.
+        if (self:Style():IsHorizontalWritingMode()) then
+            rect:SetY(self:ViewHeight() - rect:MaxY());
+        else
+            rect:SetX(self:ViewWidth() - rect:MaxX());
+		end
+    end
+
+	-- in normal conditions, fixed is "false"
+    if (fixed and self.frameView) then
+        --rect.move(m_frameView->scrollXForFixedPosition(), m_frameView->scrollYForFixedPosition());
+	end
+        
+    -- Apply our transform if we have one (because of full page zooming).
+    if (repaintContainer == nil and self.layer ~= nil and self.layer:Transform() ~= nil) then
+        --rect = m_layer->transform()->mapRect(rect);
+	end
+	return rect;
+end
+
+--bool RenderView::shouldRepaint(const IntRect& r) const
+function LayoutView:ShouldRepaint(rect)
+    if (rect:Width() == 0 or rect:Height() == 0) then
+        return false;
+	end
+
+    if (not self.frameView) then
+        return false;
+	end
+    
+    return true;
+end
+
+--void RenderView::repaintViewRectangle(const IntRect& ur, bool immediate)
+function LayoutView:RepaintViewRectangle(ur, immediate)
+	-- parameter default value;
+	immediate = if_else(immediate == nil, false, immediate);
+
+    if (not self:ShouldRepaint(ur)) then
+        return;
+	end
+
+	self.frameView:RepaintContentRectangle(ur, immediate);
+
+--    // We always just invalidate the root view, since we could be an iframe that is clipped out
+--    // or even invisible.
+--    Element* elt = document()->ownerElement();
+--    if (!elt)
+--        m_frameView->repaintContentRectangle(ur, immediate);
+--    else if (RenderBox* obj = elt->renderBox()) {
+--        IntRect vr = viewRect();
+--        IntRect r = intersection(ur, vr);
+--        
+--        // Subtract out the contentsX and contentsY offsets to get our coords within the viewing
+--        // rectangle.
+--        r.moveBy(-vr.location());
+--        
+--        // FIXME: Hardcoded offsets here are not good.
+--        r.move(obj->borderLeft() + obj->paddingLeft(),
+--               obj->borderTop() + obj->paddingTop());
+--        obj->repaintRectangle(r, immediate);
+--    }
+end
+
+function LayoutView:LayoutState()
+	return self.layoutState;
+end

@@ -16,9 +16,9 @@ pe_span:Property({"class_name", "pe:span"});
 function pe_span:ctor()
 end
 
-function pe_span:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
-	css.color = self:GetAttribute("color") or css.color;
-	css.float = true;
-	return pe_span._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
-end
+--function pe_span:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
+--	css.color = self:GetAttribute("color") or css.color;
+--	css.float = true;
+--	return pe_span._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
+--end
 

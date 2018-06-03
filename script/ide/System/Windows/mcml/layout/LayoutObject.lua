@@ -10,9 +10,19 @@ local LayoutObject = commonlib.gettable("System.Windows.mcml.layout.LayoutObject
 LayoutObject:new():init();
 ------------------------------------------------------------
 ]]
+NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutInline.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutBlock.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/IntRect.lua");
+local IntRect = commonlib.gettable("System.Windows.mcml.platform.graphics.IntRect");
+local LayoutBlock = commonlib.gettable("System.Windows.mcml.layout.LayoutBlock");
+local LayoutInline = commonlib.gettable("System.Windows.mcml.layout.LayoutInline");
+
+local LayoutRect = IntRect;
+
 local LayoutObject = commonlib.inherit(nil, commonlib.gettable("System.Windows.mcml.layout.LayoutObject"));
 
 function LayoutObject:ctor()
+	self.name = "LayoutObject";
 	self.node = nil;
 	self.style = nil;
 	--self.control = nil;
@@ -42,13 +52,15 @@ function LayoutObject:ctor()
 	
 	self.isText = false;
 	self.isBox = false;
-	self.inline = false;
+	self.inline = true;
 	self.replaced= false;
 	self.horizontalWritingMode = true;
 	self.isDragging = false;
 
+	self.hasLayer = false;
 	self.hasOverflowClip = false;
 	self.hasTransform = false;
+	self.hasReflection = false;
 
 	self.everHadLayout = false;
 
@@ -56,6 +68,15 @@ function LayoutObject:ctor()
 
 	self.marginBeforeQuirk = false;
 	self.marginAfterQuirk = false;
+	self.hasMarkupTruncation = false;
+--	enum SelectionState {
+--        SelectionNone, // The object is not selected.
+--        SelectionStart, // The object either contains the start of a selection run or is the start of a run
+--        SelectionInside, // The object is fully encompassed by a selection run
+--        SelectionEnd, // The object either contains the end of a selection run or is the end of a run
+--        SelectionBoth // The object contains an entire run or is the sole selected object in that run
+--    };
+	self.selectionState = "SelectionNone";
 	self.hasColumns = false;
 	self.inRenderFlowThread = false;
 
@@ -79,8 +100,13 @@ function LayoutObject:init(node)
 end
 
 -- 后面需要完善，暂时不调用该函数
-function LayoutObject:CreateLayoutObject(node, style)
-	local display = style:GetDisplay();
+function LayoutObject.CreateLayoutObject(node, style)
+	local display = style:Display();
+	if(display == "BLOCK" or display == "INLINE_BLOCK") then
+		return LayoutBlock:new():init(node);
+	elseif(display == "INLINE") then
+		return LayoutInline:new():init(node);
+	end
 end
 
 function LayoutObject:SetStyle(style)
@@ -91,6 +117,8 @@ function LayoutObject:SetStyle(style)
 			--self.needsLayout = true;
 		end)
 	end
+
+	self:StyleDidChange();
 end
 
 function LayoutObject:GetControl()
@@ -128,14 +156,6 @@ function LayoutObject:SetParent(parent)
 end
 
 function LayoutObject:AddChild(newChild, beforeChild)
---	if(next(self.children)) then
---		local previous = self.children[#self.children];
---		child:SetPreviousSibling(previous);
---	end
---	child.parent = self;
---	self.children[#self.children+1]=child;
---	child.index = #self.children;
-
 	local children = self:VirtualChildren();
     if (not children) then
         return;
@@ -278,12 +298,12 @@ function LayoutObject:UpdateChildrenLayout(layout, beParentRelayout, beInDirtyRe
 	end
 end
 
-function LayoutObject:beUseSpace()
-	if(self:Style():Position() == "static") then
-		return true;
-	end
-	return false;
-end
+--function LayoutObject:beUseSpace()
+--	if(self:Style():Position() == "StaticPosition") then
+--		return true;
+--	end
+--	return false;
+--end
 
 function LayoutObject:invalidate()
 	if(self.needsLayout) then
@@ -352,12 +372,12 @@ function LayoutObject:BeSubtreeRoot()
 	return self.beSubtreeRoot
 end
 
-function LayoutObject:NeedsUpdateCSS()
-	if(self.needsUpdateCss) then 
-		return true;
-	end
-	return false;
-end
+--function LayoutObject:NeedsUpdateCSS()
+--	if(self.needsUpdateCss) then 
+--		return true;
+--	end
+--	return false;
+--end
 
 function LayoutObject:UpdateCssStyle()
 	self.needsUpdateCss = false;
@@ -391,14 +411,14 @@ function LayoutObject:IsChildAllowed(child_layout_object, child_style)
 end
 
 function LayoutObject:IsAbsolutePositioned()
-	if(self:Style():Position() == "absolute") then
+	if(self:Style():Position() == "AbsolutePosition") then
 		return true;
 	end
 	return false;
 end
 
 function LayoutObject:IsRelativePositioned()
-	if(self:Style():Position() == "relative") then
+	if(self:Style():Position() == "RelativePosition") then
 		return true;
 	end
 	return false;
@@ -600,7 +620,7 @@ function LayoutObject:SetIsAnonymous(isAnonymous)
 end
 
 function LayoutObject:IsAnonymousBlock()
-	return self.isAnonymous and (self:Style():Display() == "block" or self:Style():Display() == "box") and self:Style():StyleType() == "NOPSEUDO" and self:IsLayoutBlock() and self:IsListMarker();
+	return self.isAnonymous and (self:Style():Display() == "BLOCK" or self:Style():Display() == "BOX") and self:Style():StyleType() == "NOPSEUDO" and self:IsLayoutBlock() and self:IsListMarker();
 end
 
 function LayoutObject:IsAnonymousColumnsBlock()
@@ -609,6 +629,18 @@ end
 
 function LayoutObject:IsAnonymousColumnSpanBlock()
 	return self:Style():ColumnSpan() and self:IsAnonymousBlock();
+end
+
+function LayoutObject:IsElementContinuation()
+	return self:Node() ~= nil and self:Node():Renderer() ~= self;
+end
+
+function LayoutObject:IsInlineElementContinuation()
+	return self:IsElementContinuation() and self:IsInline();
+end
+
+function LayoutObject:IsBlockElementContinuation()
+	return self:IsElementContinuation() and not self:IsInline();
 end
 
 function LayoutObject:IsRenderFlowThread()
@@ -648,6 +680,10 @@ function LayoutObject:IsHorizontalWritingMode()
 	return self.horizontalWritingMode;
 end
 
+function LayoutObject:HasLayer()
+	return self.hasLayer;
+end
+
 function LayoutObject:IsRoot()
 	--TODO: fixed this function
 	return false;
@@ -669,7 +705,14 @@ function LayoutObject:IsHTMLMarquee()
 	return self.node.name == "marquee";
 end
 
-function LayoutObject:IsBeforeContent()
+--@param obj: LayoutObject type
+--@param beSelf: check self;
+function LayoutObject:IsBeforeContent(obj, beSelf)
+	beSelf = if_else(beSelf == nil, true, beSelf);
+	if(not beSelf) then
+		return obj ~= nil and obj:IsBeforeContent();
+	end
+
 	if (self:Style():StyleType() ~= "BEFORE") then
 		return false;
 	end
@@ -680,7 +723,12 @@ function LayoutObject:IsBeforeContent()
 	return true;
 end
 
-function LayoutObject:IsAfterContent()
+--@param obj: LayoutObject type
+function LayoutObject:IsAfterContent(obj, beSelf)
+	beSelf = if_else(beSelf == nil, true, beSelf);
+	if(not beSelf) then
+		return obj ~= nil and obj:IsAfterContent();
+	end
 	if (self:Style():StyleType() ~= "AFTER") then
         return false;
 	end
@@ -691,20 +739,14 @@ function LayoutObject:IsAfterContent()
     return true;
 end
 
-function LayoutObject:IsBeforeOrAfterContent()
+--@param obj: LayoutObject type
+function LayoutObject.IsBeforeOrAfterContent(obj, beSelf)
+	beSelf = if_else(beSelf == nil, true, beSelf);
+	if(not beSelf) then
+		return obj ~= nil and obj:IsBeforeOrAfterContent();
+	end
+
 	return self:IsBeforeContent() or self:IsAfterContent();
-end
---@param obj: LayoutObject type
-function LayoutObject.IsBeforeContent(obj)
-	return obj and obj:IsBeforeContent();
-end
---@param obj: LayoutObject type
-function LayoutObject.IsAfterContent(obj)
-	return obj and obj:IsAfterContent();
-end
---@param obj: LayoutObject type
-function LayoutObject.IsBeforeOrAfterContent(obj)
-	return obj and obj:IsBeforeOrAfterContent();
 end
 
 function LayoutObject:FindBeforeContentRenderer()
@@ -714,10 +756,14 @@ end
 
 function LayoutObject:FindAfterContentRenderer()
     local renderer = self:AfterPseudoElementRenderer();
-	if(LayoutObject.IsAfterContent(renderer)) then
+	if(LayoutObject:IsAfterContent(renderer, false)) then
 		return render;
 	end
     return nil;
+end
+
+function LayoutObject:HasReflection()
+	return self.hasReflection;
 end
 
 --function LayoutObject:AnonymousContainer(RenderObject* child)
@@ -792,11 +838,25 @@ function LayoutObject:SetHasOverflowClip(value)
 	self.hasOverflowClip = value;
 end
 
+function LayoutObject:SetHasLayer(value)
+	if(value == nil) then
+		value = true;
+	end
+	self.hasLayer = value;
+end
+
 function LayoutObject:SetHasTransform(value)
 	if(value == nil) then
 		value = true;
 	end
 	self.hasTransform = value;
+end
+
+function LayoutObject:SetHasReflection(value)
+	if(value == nil) then
+		value = true;
+	end
+	self.hasReflection = value;
 end
 
 function LayoutObject:LayoutIfNeeded()
@@ -816,7 +876,12 @@ function LayoutObject:Layout()
 	end
 end
 
-function LayoutObject:Container()
+--RenderObject* RenderObject::container(RenderBoxModelObject* repaintContainer, bool* repaintContainerSkipped) const
+function LayoutObject:Container(repaintContainer, repaintContainerSkipped)
+--	if (repaintContainerSkipped)
+--        *repaintContainerSkipped = false;
+	repaintContainerSkipped = if_else(repaintContainerSkipped == nil, false, repaintContainerSkipped);
+
 	local object = self:Parent();
 
 	if(self:IsText()) then
@@ -824,16 +889,19 @@ function LayoutObject:Container()
 	end
 
 	local pos = self.style:Position();
-	if(pos == "fixed") then
+	if(pos == "FixedPosition") then
 		while (object and object:Parent() and (not (object:HasTransform() and object:IsLayoutBlock()))) do
 			object = object:Parent();
 		end
-	elseif(pos == "absolute") then
-		while (object and object:Style():Position() == "static" and (not object:IsLayoutView()) and (not (object:HasTransform() and object:IsLayoutBlock()))) do
+	elseif(pos == "AbsolutePosition") then
+		while (object and object:Style():Position() == "StaticPosition" and (not object:IsLayoutView()) and (not (object:HasTransform() and object:IsLayoutBlock()))) do
+			if (repaintContainerSkipped and object == repaintContainer) then
+                repaintContainerSkipped = true;
+			end
 			object = object:Parent();
 		end
 	end
-	return object;
+	return object, repaintContainerSkipped;
 end
 
 -- TODO: 回溯父对象，添加相应布局标志
@@ -851,7 +919,7 @@ function LayoutObject:MarkContainingBlocksForLayout(scheduleRelayout, newRoot)
 		if (not container and (not object:IsLayoutView())) then
             return;
 		end
-		if(not last:IsText() and (last:Style():Position() == "absolute" or last:Style():Position() == "fixed") ) then
+		if(not last:IsText() and (last:Style():Position() == "AbsolutePosition" or last:Style():Position() == "FixedPosition") ) then
 			local willSkipRelativelyPositionedInlines = not object:IsLayoutBlock();
 			while (object and not object:IsLayoutBlock()) do -- Skip relatively positioned inlines and get to the enclosing RenderBlock.
                 object = object:Container();
@@ -921,6 +989,11 @@ function LayoutObject:HasColumns()
 	return self.hasColumns;
 end
 
+function LayoutObject:SetHasColumns(b)
+	b = if_else(b == nil, true, b);
+	self.hasColumns = b;
+end
+
 function LayoutObject:InRenderFlowThread()
 	return self.inRenderFlowThread;
 end
@@ -933,9 +1006,7 @@ function LayoutObject:SetInRenderFlowThread(b)
 end
 
 function LayoutObject:HasClip()
-	--return self:IsPositioned() and style()->hasClip();
-	-- FIXME: complete the style function "hasClip";
-	return self:IsPositioned();
+	return self:IsPositioned() and self:Style():HasClip();
 end
 
 function LayoutObject:HasOverflowClip()
@@ -943,8 +1014,7 @@ function LayoutObject:HasOverflowClip()
 end
 
 function LayoutObject:HasMask()
-	--return style() && style()->hasMask();
-	return false;
+	return self:Style() and self:Style():HasMask();
 end
 
 function LayoutObject:ChildrenInline()
@@ -976,22 +1046,24 @@ end
 function LayoutObject:SetPreferredLogicalWidthsDirty(dirty, markParents)
 	local alreadyDirty = self.preferredLogicalWidthsDirty;
     self.preferredLogicalWidthsDirty = dirty;
-    if (dirty and not alreadyDirty and markParents and (self:IsText() or (self:Style():Position() ~= "fixed" and self:Style():Position() ~= "absolute"))) then
+    if (dirty and not alreadyDirty and markParents and (self:IsText() or (self:Style():Position() ~= "FixedPosition" and self:Style():Position() ~= "AbsolutePosition"))) then
         self:InvalidateContainerPreferredLogicalWidths();
 	end
 end
 
 function LayoutObject:InvalidateContainerPreferredLogicalWidths()
-	local object = if_else(self:IsTableCell(),self:ContainingBlock(),self:Container());
+	local _container = self:Container();
+	local object = if_else(self:IsTableCell(),self:ContainingBlock(),_container);
 	while (object and not object.preferredLogicalWidthsDirty) do
         -- Don't invalidate the outermost object of an unrooted subtree. That object will be 
         -- invalidated when the subtree is added to the document.
-        local container = if_else(object:IsTableCell(),object:ContainingBlock(),object:Container());
+		local container = object:Container();
+        container = if_else(object:IsTableCell(),object:ContainingBlock(),container);
         if (not container and not object:IsLayoutView()) then
             break;
 		end
         object.preferredLogicalWidthsDirty = true;
-        if (object:Style():Position() == "fixed" or object:Style():Position() == "absolute") then
+        if (object:Style():Position() == "FixedPosition" or object:Style():Position() == "AbsolutePosition") then
             -- A positioned object has no effect on the min/max width of its containing block ever.
             -- We can optimize this case and not go up any further.
             break;
@@ -1004,28 +1076,105 @@ function LayoutObject:NeedsLayout()
 	return self.needsLayout or self.normalChildNeedsLayout or self.posChildNeedsLayout or self.needsPositionedMovementLayout or self.needsSimplifiedNormalFlowLayout;
 end
 
-function LayoutObject:Style()
+function LayoutObject:FirstLineStyle()
+	--return document()->usesFirstLineRules() ? firstLineStyleSlowCase() : style();
 	return self.style;
 end
 
+function LayoutObject:Style(firstLine)
+	if(firstLine) then
+		return self:FirstLineStyle();
+	else
+		return self.style;
+	end
+end
+
 function LayoutObject:Node()
-	return self.node;
+	return if_else(self.isAnonymous, nil, self.node);
 end
 
 function LayoutObject:Parent()
 	return self.parent;
 end
 
+function LayoutObject:View()
+	if(self:IsLayoutView()) then
+		return self;
+	end
+	local parent = self:Parent();
+	if(parent) then
+		return parent:View();
+	end
+end
+
+function LayoutObject:CheckForRepaintDuringLayout()
+    -- FIXME: <https://bugs.webkit.org/show_bug.cgi?id=20885> It is probably safe to also require
+    -- m_everHadLayout. Currently, only RenderBlock::layoutBlock() adds this condition. See also
+    -- <https://bugs.webkit.org/show_bug.cgi?id=15129>.
+	local frameview = self:View():FrameView();
+    return not frameview:NeedsFullRepaint() and not self:HasLayer();
+end
+
+function LayoutObject:isRooted()
+    local o = self;
+    while (o:Parent()) do
+        o = o:Parent();
+	end
+    if (not o:IsLayoutView()) then
+        return false;
+	end
+    return true, o;
+end
+
+--RenderFlowThread* RenderObject::enclosingRenderFlowThread() const
+function LayoutObject:EnclosingRenderFlowThread()
+    if (not self:InRenderFlowThread()) then
+        return nil;
+	end
+	-- TODO: in normal conditions, "self.inRenderFlowThread" is false;
+end
+
+function LayoutObject:ContainerForRepaint()
+    local v = self:View();
+    if (not v) then
+        return;
+	end
+    
+    local repaintContainer = nil;
+
+--#if USE(ACCELERATED_COMPOSITING)
+--    if (v->usesCompositing()) {
+--        RenderLayer* compLayer = enclosingLayer()->enclosingCompositingLayer();
+--        if (compLayer)
+--            repaintContainer = compLayer->renderer();
+--    }
+--#endif
+
+    -- If we have a flow thread, then we need to do individual repaints within the RenderRegions instead.
+    -- Return the flow thread as a repaint container in order to create a chokepoint that allows us to change
+    -- repainting to do individual region repaints.
+    -- FIXME: Composited layers inside a flow thread will bypass this mechanism and will malfunction. It's not
+    -- clear how to address this problem for composited descendants of a RenderFlowThread.
+    if (not repaintContainer and self:InRenderFlowThread()) then
+        repaintContainer = self:EnclosingRenderFlowThread();
+	end
+    return repaintContainer;
+end
+
+function LayoutObject:ClippedOverflowRectForRepaint(repaintContainer)
+    --ASSERT_NOT_REACHED();
+    return IntRect:new();
+end
 
 function LayoutObject:ContainingBlock()
 	local o = self:Parent();
-	if (not self:IsText() and self.style:Position() == "fixed") then
+	if (not self:IsText() and self.style:Position() == "FixedPosition") then
         while (o and o:IsLayoutView() and not(o:HasTransform() and o:IsLayoutBlock())) do
             o = o:Parent();
 		end
-	elseif(not self:IsText() and self.style:Position() == "absolute") then
-		while (o and (o:Style():Position() == "static" or (o:IsInline() and not o:IsReplaced())) and not o:IsLayoutView() and not (o:HasTransform() and o:IsLayoutBlock())) do
-			if (o:Style():Position() == "relative" and o:IsInline() and not o:IsReplaced()) then
+	elseif(not self:IsText() and self.style:Position() == "AbsolutePosition") then
+		while (o and (o:Style():Position() == "StaticPosition" or (o:IsInline() and not o:IsReplaced())) and not o:IsLayoutView() and not (o:HasTransform() and o:IsLayoutBlock())) do
+			if (o:Style():Position() == "RelativePosition" and o:IsInline() and not o:IsReplaced()) then
                 return o:ContainingBlock();
 			end
 			o = o:Parent();
@@ -1079,6 +1228,14 @@ function LayoutObject:IsFloatingOrPositioned()
 	return self:IsFloating() or self:IsPositioned();
 end
 
+function LayoutObject:IsTransparent()
+	return self:Style():Opacity() < 1.0;
+end
+
+function LayoutObject:Opacity()
+	return self:Style():Opacity();
+end
+
 function LayoutObject:IsDeprecatedFlexibleBox()
 	return false;
 end
@@ -1104,3 +1261,491 @@ function LayoutObject:SetMarginAfterQuirk(b)
 	b = if_else(b == nil, true, b);
 	self.marginAfterQuirk = b;
 end
+
+function LayoutObject:RenderArena()
+	--TODO: fixed this function
+	return nil;
+end
+
+function LayoutObject:StyleDidChange(diff, oldStyle)
+	
+end
+
+function LayoutObject:PreservesNewline()
+	return self:Style():PreserveNewline();
+end
+
+function LayoutObject:IsDescendantOf(obj)
+	local r = self;
+	while(r) do
+		if(r == obj) then
+			return true;
+		end
+		r = r:Parent();
+	end
+	return false;
+end
+
+function LayoutObject:SetHasMarkupTruncation(b)
+	b = if_else(b == nil, true, b);
+	self.hasMarkupTruncation = b;
+end
+
+function LayoutObject:HasMarkupTruncation()
+	return self.hasMarkupTruncation;
+end
+
+function LayoutObject:SelectionState()
+	return self.selectionState;
+end
+
+-- Sets the selection state for an object.
+function LayoutObject:SetSelectionState(state)
+	self.selectionState = state;
+end
+
+function LayoutObject:Length()
+	return 1;
+end
+
+function LayoutObject:CheckForRepaintDuringLayout()
+    -- FIXME: <https://bugs.webkit.org/show_bug.cgi?id=20885> It is probably safe to also require
+    -- m_everHadLayout. Currently, only RenderBlock::layoutBlock() adds this condition. See also
+    -- <https://bugs.webkit.org/show_bug.cgi?id=15129>.
+    --return !document()->view()->needsFullRepaint() && !hasLayer();
+	return not self:View():FrameView():NeedsFullRepaint();
+end
+
+--RenderLayer* RenderObject::findNextLayer(RenderLayer* parentLayer, RenderObject* startPoint, bool checkParent)
+function LayoutObject:FindNextLayer(parentLayer, startPoint, checkParent)
+    -- Error check the parent layer passed in.  If it's null, we can't find anything.
+    if (not parentLayer) then
+        return nil;
+	end
+
+    -- Step 1: If our layer is a child of the desired parent, then return our layer.
+    local ourLayer = if_else(self:HasLayer(), self:Layer(), nil);
+    if (ourLayer and ourLayer:Parent() == parentLayer) then
+        return ourLayer;
+	end
+
+    -- Step 2: If we don't have a layer, or our layer is the desired parent, then descend
+    -- into our siblings trying to find the next layer whose parent is the desired parent.
+    if (ourLayer == nil or ourLayer == parentLayer) then
+		local curr;
+		if(startPoint) then
+			curr = startPoint:NextSibling();
+		else
+			curr = self:FirstChild();
+		end
+		while(curr) do
+			local nextLayer = curr:FindNextLayer(parentLayer, nil, false);
+            if (nextLayer) then
+                return nextLayer;
+			end
+			curr = curr:NextSibling();
+		end
+    end
+
+    -- Step 3: If our layer is the desired parent layer, then we're finished.  We didn't
+    -- find anything.
+    if (parentLayer == ourLayer) then
+        return nil;
+	end
+    -- Step 4: If |checkParent| is set, climb up to our parent and check its siblings that
+    -- follow us to see if we can locate a layer.
+    if (checkParent and self:Parent() ~= nil) then
+        return self:Parent():FindNextLayer(parentLayer, self, true);
+	end
+    return nil;
+end
+
+--RenderLayer* RenderObject::enclosingLayer() const
+function LayoutObject:EnclosingLayer()
+    local curr = self;
+    while (curr) do
+        --RenderLayer* layer = curr->hasLayer() ? toRenderBoxModelObject(curr)->layer() : 0;
+		local layer = if_else(curr:HasLayer(), curr:Layer(), nil);
+        if (layer) then
+            return layer;
+		end
+        curr = curr:Parent();
+    end
+    return nil;
+end
+
+--RenderBox* RenderObject::enclosingBox() const
+function LayoutObject:EnclosingBox()
+    local curr = self;
+    while (curr) do
+        if (curr:IsBox()) then
+            return curr;
+		end
+        curr = curr:Parent();
+    end
+    
+    --ASSERT_NOT_REACHED();
+    return nil;
+end
+
+--RenderBoxModelObject* RenderObject::enclosingBoxModelObject() const
+function LayoutObject:EnclosingBoxModelObject()
+    local curr = self;
+    while (curr) do
+        if (curr:IsBoxModelObject()) then
+            return curr;
+		end
+        curr = curr:Parent();
+    end
+
+    --ASSERT_NOT_REACHED();
+    return nil;
+end
+
+--void RenderObject::moveLayers(RenderLayer* oldParent, RenderLayer* newParent)
+function LayoutObject:MoveLayers(oldParent, newParent)
+    if (not newParent) then
+        return;
+	end
+    if (self:HasLayer()) then
+        local layer = self:Layer();
+        --ASSERT(oldParent == layer->parent());
+        if (oldParent) then
+            oldParent:RemoveChild(layer);
+		end
+        newParent:AddChild(layer);
+        return;
+    end
+
+	local curr = self:FirstChild()
+	while(curr) do
+		curr:MoveLayers(oldParent, newParent);
+		curr = curr:NextSibling()
+	end
+end
+
+--static void addLayers(RenderObject* obj, RenderLayer* parentLayer, RenderObject*& newObject, RenderLayer*& beforeChild)
+local function addLayers(obj, parentLayer, newObject, beforeChild)
+    if (obj:HasLayer()) then
+        if (not beforeChild and newObject) then
+            -- We need to figure out the layer that follows newObject.  We only do
+            -- this the first time we find a child layer, and then we update the
+            -- pointer values for newObject and beforeChild used by everyone else.
+            beforeChild = newObject:Parent():FindNextLayer(parentLayer, newObject);
+            newObject = nil;
+        end
+        parentLayer:AddChild(obj:Layer(), beforeChild);
+        return newObject, beforeChild;
+    end
+
+	local curr = obj:FirstChild();
+	while(curr) do
+		newObject, beforeChild = addLayers(curr, parentLayer, newObject, beforeChild);
+		curr = curr:NextSibling();
+	end
+end
+
+function LayoutObject:AddLayers(parentLayer)
+    if (not parentLayer) then
+        return;
+	end
+
+    local object = self;
+    local beforeChild = nil;
+    object, beforeChild = addLayers(self, parentLayer, object, beforeChild);
+end
+
+function LayoutObject:RemoveLayers(parentLayer)
+    if (not parentLayer) then
+        return;
+	end
+
+    if (self:HasLayer()) then
+        parentLayer:RemoveChild(self:Layer());
+        return;
+    end
+
+	local curr = obj:FirstChild();
+	while(curr) do
+		curr:RemoveLayers(parentLayer);
+		curr = curr:NextSibling();
+	end
+end
+
+--void RenderObject::computeRectForRepaint(RenderBoxModelObject* repaintContainer, IntRect& rect, bool fixed) const
+function LayoutObject:ComputeRectForRepaint(repaintContainer, rect, fixed)
+	-- parameter default value;
+	fixed = if_else(fixed == nil, false, fixed);
+
+    if (repaintContainer == self) then
+        return rect;
+	end
+	local o = self:Parent();
+    if (o) then
+        if (o:IsBlockFlow()) then
+            --RenderBlock* cb = toRenderBlock(o);
+			local cb = o;
+            if (cb:HasColumns()) then
+                --cb->adjustRectForColumns(rect);
+			end
+        end
+
+        if (o:HasOverflowClip()) then
+            -- o->height() is inaccurate if we're in the middle of a layout of |o|, so use the
+            -- layer's size instead.  Even if the layer's size is wrong, the layer itself will repaint
+            -- anyway if its size does change.
+            local boxParent = o;
+
+            local repaintRect = rect:clone_from_pool();
+            repaintRect:Move(-boxParent:Layer():ScrolledContentOffset()); -- For overflow:auto/scroll/hidden.
+
+            local boxRect = IntRect:new_from_pool(IntPoint:new_from_pool(), boxParent:Layer():Size());
+            rect = IntRect.Intersection(repaintRect, boxRect);
+            if (rect:isEmpty()) then
+                return rect;
+			end
+        end
+
+        rect = o:ComputeRectForRepaint(repaintContainer, rect, fixed);
+    end
+	return rect;
+end
+
+--void RenderObject::paint(PaintInfo& paintInfo, const LayoutPoint& paintOffset)
+function LayoutObject:Paint(paintInfo, paintOffset)
+	
+end
+
+function LayoutObject:Repaint(immediate)
+	
+	immediate = if_else(immediate == nil, false, immediate);
+    -- Don't repaint if we're unrooted (note that view() still returns the view when unrooted)
+    local isRooted, view = self:isRooted();
+    if (not isRooted) then
+        return;
+	end
+
+--    if (view->printing())
+--        return; // Don't repaint if we're printing.
+
+    local repaintContainer = self:ContainerForRepaint();
+	repaintContainer = repaintContainer or view;
+	local rect = self:ClippedOverflowRectForRepaint(repaintContainer);
+    self:RepaintUsingContainer(repaintContainer, rect, immediate);
+end
+
+--void RenderObject::repaintUsingContainer(RenderBoxModelObject* repaintContainer, const LayoutRect& r, bool immediate)
+function LayoutObject:RepaintUsingContainer(repaintContainer, rect, immediate)
+    if (not repaintContainer) then
+        self:View():RepaintViewRectangle(rect, immediate);
+        return;
+    end
+
+    if (repaintContainer:IsRenderFlowThread()) then
+        --return toRenderFlowThread(repaintContainer)->repaintRectangleInRegions(rect, immediate);
+	end
+
+--#if USE(ACCELERATED_COMPOSITING)
+--    RenderView* v = view();
+--    if (repaintContainer->isRenderView()) {
+--        ASSERT(repaintContainer == v);
+--        bool viewHasCompositedLayer = v->hasLayer() && v->layer()->isComposited();
+--        if (!viewHasCompositedLayer || v->layer()->backing()->paintingGoesToWindow()) {
+--            LayoutRect repaintRectangle = r;
+--            if (viewHasCompositedLayer &&  v->layer()->transform())
+--                repaintRectangle = v->layer()->transform()->mapRect(r);
+--            v->repaintViewRectangle(repaintRectangle, immediate);
+--            return;
+--        }
+--    }
+--    
+--    if (v->usesCompositing()) {
+--        ASSERT(repaintContainer->hasLayer() && repaintContainer->layer()->isComposited());
+--        repaintContainer->layer()->setBackingNeedsRepaintInRect(r);
+--    }
+--#else
+--    if (repaintContainer->isRenderView())
+--        toRenderView(repaintContainer)->repaintViewRectangle(r, immediate);
+--#endif
+
+	if (repaintContainer:IsLayoutView()) then
+		repaintContainer:RepaintViewRectangle(rect, immediate);
+	end
+end
+
+--virtual IntRect outlineBoundsForRepaint(RenderBoxModelObject* /*repaintContainer*/, IntPoint* /*cachedOffsetToRepaintContainer*/ = 0) const { return IntRect(); }
+function LayoutObject:OutlineBoundsForRepaint(repaintContainer, cachedOffsetToRepaintContainer)
+	return IntRect:new();
+end
+
+--static bool mustRepaintFillLayers(const RenderObject* renderer, const FillLayer* layer)
+local function mustRepaintFillLayers(renderer, layer)
+	-- TODO: fixed latter;
+	return false;
+end
+
+--void RenderObject::repaintRectangle(const LayoutRect& r, bool immediate)
+function LayoutObject:RepaintRectangle(rect, immediate)
+	
+	immediate = if_else(immediate == nil, false, immediate);
+    -- Don't repaint if we're unrooted (note that view() still returns the view when unrooted)
+	local isRoot, view = self:isRooted();
+    if (not isRoot) then
+        return;
+	end
+
+--    if (view->printing())
+--        return; // Don't repaint if we're printing.
+
+	local dirtyRect = rect:clone()
+    --LayoutRect dirtyRect(r);
+
+    -- FIXME: layoutDelta needs to be applied in parts before/after transforms and
+    -- repaint containers. https://bugs.webkit.org/show_bug.cgi?id=23308
+    dirtyRect:Move(view:LayoutDelta());
+
+    local repaintContainer = self:ContainerForRepaint();
+    self:ComputeRectForRepaint(repaintContainer, dirtyRect);
+	repaintContainer = if_else(repaintContainer, repaintContainer, view)
+    self:RepaintUsingContainer(repaintContainer, dirtyRect, immediate);
+end
+
+--int RenderObject::maximalOutlineSize(PaintPhase p) const
+function LayoutObject:MaximalOutlineSize(p)
+--    if (p != PaintPhaseOutline && p != PaintPhaseSelfOutline && p != PaintPhaseChildOutlines)
+--        return 0;
+    --return toRenderView(document()->renderer())->maximalOutlineSize();
+	return self:View():MaximalOutlineSize();
+end
+
+function LayoutObject:NeedsPositionedMovementLayoutOnly()
+	return self.needsPositionedMovementLayout and not self.needsLayout and not self.normalChildNeedsLayout and not self.posChildNeedsLayout and not self.needsSimplifiedNormalFlowLayout;
+end
+
+--function LayoutObject:MustRepaintBackgroundOrBorder()
+----    if (self:HasMask() and mustRepaintFillLayers(this, style()->maskLayers()))
+----        return true;
+--
+--    -- If we don't have a background/border/mask, then nothing to do.
+--    if (!hasBoxDecorations())
+--        return false;
+--
+--    if (mustRepaintFillLayers(this, style()->backgroundLayers()))
+--        return true;
+--     
+--    // Our fill layers are ok.  Let's check border.
+--    if (style()->hasBorder() && borderImageIsLoadedAndCanBeRendered())
+--        return true;
+--
+--    return false;
+--}
+
+----bool RenderObject::repaintAfterLayoutIfNeeded(RenderBoxModelObject* repaintContainer, const LayoutRect& oldBounds, const LayoutRect& oldOutlineBox, const LayoutRect* newBoundsPtr, const LayoutRect* newOutlineBoxRectPtr)
+--function LayoutObject:RepaintAfterLayoutIfNeeded(repaintContainer, oldBounds, oldOutlineBox, newBoundsPtr, newOutlineBoxRectPtr)
+--    local view = self:View();
+----    if (v->printing())
+----        return false; // Don't repaint if we're printing.
+--
+--    -- This ASSERT fails due to animations.  See https://bugs.webkit.org/show_bug.cgi?id=37048
+--    -- ASSERT(!newBoundsPtr || *newBoundsPtr == clippedOverflowRectForRepaint(repaintContainer));
+--    local newBounds = if_else(newBoundsPtr, newBoundsPtr, self:ClippedOverflowRectForRepaint(repaintContainer));
+--    local newOutlineBox = LayoutRect:new();
+--
+--    local fullRepaint = self:SelfNeedsLayout();
+--    -- Presumably a background or a border exists if border-fit:lines was specified.
+--    if (not fullRepaint and self:Style():BorderFit() == "BorderFitLines") then
+--        fullRepaint = true;
+--	end
+--
+--    if (not fullRepaint) then
+--        -- This ASSERT fails due to animations.  See https://bugs.webkit.org/show_bug.cgi?id=37048
+--        -- ASSERT(!newOutlineBoxRectPtr || *newOutlineBoxRectPtr == outlineBoundsForRepaint(repaintContainer));
+--        newOutlineBox = if_else(newOutlineBoxRectPtr, newOutlineBoxRectPtr, self:OutlineBoundsForRepaint(repaintContainer));
+--        if (newOutlineBox.location() != oldOutlineBox.location() || (mustRepaintBackgroundOrBorder() && (newBounds != oldBounds || newOutlineBox != oldOutlineBox)))
+--            fullRepaint = true;
+--    end
+--
+--    if (!repaintContainer)
+--        repaintContainer = v;
+--
+--    if (fullRepaint) {
+--        repaintUsingContainer(repaintContainer, oldBounds);
+--        if (newBounds != oldBounds)
+--            repaintUsingContainer(repaintContainer, newBounds);
+--        return true;
+--    }
+--
+--    if (newBounds == oldBounds && newOutlineBox == oldOutlineBox)
+--        return false;
+--
+--    LayoutUnit deltaLeft = newBounds.x() - oldBounds.x();
+--    if (deltaLeft > 0)
+--        repaintUsingContainer(repaintContainer, LayoutRect(oldBounds.x(), oldBounds.y(), deltaLeft, oldBounds.height()));
+--    else if (deltaLeft < 0)
+--        repaintUsingContainer(repaintContainer, LayoutRect(newBounds.x(), newBounds.y(), -deltaLeft, newBounds.height()));
+--
+--    LayoutUnit deltaRight = newBounds.maxX() - oldBounds.maxX();
+--    if (deltaRight > 0)
+--        repaintUsingContainer(repaintContainer, LayoutRect(oldBounds.maxX(), newBounds.y(), deltaRight, newBounds.height()));
+--    else if (deltaRight < 0)
+--        repaintUsingContainer(repaintContainer, LayoutRect(newBounds.maxX(), oldBounds.y(), -deltaRight, oldBounds.height()));
+--
+--    LayoutUnit deltaTop = newBounds.y() - oldBounds.y();
+--    if (deltaTop > 0)
+--        repaintUsingContainer(repaintContainer, LayoutRect(oldBounds.x(), oldBounds.y(), oldBounds.width(), deltaTop));
+--    else if (deltaTop < 0)
+--        repaintUsingContainer(repaintContainer, LayoutRect(newBounds.x(), newBounds.y(), newBounds.width(), -deltaTop));
+--
+--    LayoutUnit deltaBottom = newBounds.maxY() - oldBounds.maxY();
+--    if (deltaBottom > 0)
+--        repaintUsingContainer(repaintContainer, LayoutRect(newBounds.x(), oldBounds.maxY(), newBounds.width(), deltaBottom));
+--    else if (deltaBottom < 0)
+--        repaintUsingContainer(repaintContainer, LayoutRect(oldBounds.x(), newBounds.maxY(), oldBounds.width(), -deltaBottom));
+--
+--    if (newOutlineBox == oldOutlineBox)
+--        return false;
+--
+--    // We didn't move, but we did change size.  Invalidate the delta, which will consist of possibly
+--    // two rectangles (but typically only one).
+--    RenderStyle* outlineStyle = outlineStyleForRepaint();
+--    LayoutUnit ow = outlineStyle->outlineSize();
+--    LayoutUnit width = abs(newOutlineBox.width() - oldOutlineBox.width());
+--    if (width) {
+--        LayoutUnit shadowLeft;
+--        LayoutUnit shadowRight;
+--        style()->getBoxShadowHorizontalExtent(shadowLeft, shadowRight);
+--
+--        LayoutUnit borderRight = isBox() ? toRenderBox(this)->borderRight() : 0;
+--        LayoutUnit boxWidth = isBox() ? toRenderBox(this)->width() : 0;
+--        LayoutUnit borderWidth = max(-outlineStyle->outlineOffset(), max(borderRight, max(style()->borderTopRightRadius().width().calcValue(boxWidth), style()->borderBottomRightRadius().width().calcValue(boxWidth)))) + max(ow, shadowRight);
+--        LayoutRect rightRect(newOutlineBox.x() + min(newOutlineBox.width(), oldOutlineBox.width()) - borderWidth,
+--            newOutlineBox.y(),
+--            width + borderWidth,
+--            max(newOutlineBox.height(), oldOutlineBox.height()));
+--        LayoutUnit right = min(newBounds.maxX(), oldBounds.maxX());
+--        if (rightRect.x() < right) {
+--            rightRect.setWidth(min(rightRect.width(), right - rightRect.x()));
+--            repaintUsingContainer(repaintContainer, rightRect);
+--        }
+--    }
+--    LayoutUnit height = abs(newOutlineBox.height() - oldOutlineBox.height());
+--    if (height) {
+--        LayoutUnit shadowTop;
+--        LayoutUnit shadowBottom;
+--        style()->getBoxShadowVerticalExtent(shadowTop, shadowBottom);
+--
+--        LayoutUnit borderBottom = isBox() ? toRenderBox(this)->borderBottom() : 0;
+--        LayoutUnit boxHeight = isBox() ? toRenderBox(this)->height() : 0;
+--        LayoutUnit borderHeight = max(-outlineStyle->outlineOffset(), max(borderBottom, max(style()->borderBottomLeftRadius().height().calcValue(boxHeight), style()->borderBottomRightRadius().height().calcValue(boxHeight)))) + max(ow, shadowBottom);
+--        LayoutRect bottomRect(newOutlineBox.x(),
+--            min(newOutlineBox.maxY(), oldOutlineBox.maxY()) - borderHeight,
+--            max(newOutlineBox.width(), oldOutlineBox.width()),
+--            height + borderHeight);
+--        LayoutUnit bottom = min(newBounds.maxY(), oldBounds.maxY());
+--        if (bottomRect.y() < bottom) {
+--            bottomRect.setHeight(min(bottomRect.height(), bottom - bottomRect.y()));
+--            repaintUsingContainer(repaintContainer, bottomRect);
+--        }
+--    }
+--    return false;
+--}

@@ -12,8 +12,10 @@ local ComputedStyle = commonlib.gettable("System.Windows.mcml.style.ComputedStyl
 ]]
 
 NPL.load("(gl)script/ide/System/Core/ToolBase.lua");
-
+NPL.load("(gl)script/ide/math/bit.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/css/CSSStyleDeclaration.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/Length.lua");
+local Length = commonlib.gettable("System.Windows.mcml.platform.graphics.Length");
 local CSSStyleDeclaration = commonlib.gettable("System.Windows.mcml.css.CSSStyleDeclaration");
 
 local ComputedStyle = commonlib.inherit(commonlib.gettable("System.Core.ToolBase"), commonlib.gettable("System.Windows.mcml.style.ComputedStyle"));
@@ -149,7 +151,7 @@ function ComputedStyle:InheritFrom(style)
 end
 
 function ComputedStyle:IsFloating() 
-	return self:Floating() ~= nil;
+	return self:Floating() ~= "NoFloat";
 end
 
 function ComputedStyle:HasMargin()
@@ -464,7 +466,7 @@ end
 
 -- min-width
 function ComputedStyle:MinWidth()
-	return self.properties:MinWidth();
+	return self.properties:MinWidth() or 0;
 end
 
 -- max-width
@@ -479,7 +481,7 @@ end
 
 -- min-height
 function ComputedStyle:MinHeight()
-	return self.properties:MinHeight();
+	return self.properties:MinHeight() or 0;
 end
 
 -- max-height
@@ -519,7 +521,7 @@ function ComputedStyle:LogicalMinHeight()
 	if(self:IsHorizontalWritingMode()) then
 		return self:MinHeight();
 	end
-	return self:MinHeight();
+	return self:MinWidth();
 end
 
 function ComputedStyle:LogicalMaxHeight()
@@ -568,23 +570,85 @@ function ComputedStyle:LogicalBottom()
 	--return isHorizontalWritingMode() ? (isFlippedBlocksWritingMode() ? top() : bottom()) : (isFlippedBlocksWritingMode() ? left() : right());
 end
 
+--enum EPosition {
+--    StaticPosition, RelativePosition, AbsolutePosition, FixedPosition
+--};
+local position_map = {
+	["static"] = "StaticPosition",
+	["relative"] = "RelativePosition",
+	["absolute"] = "AbsolutePosition",
+	["fixed"] = "FixedPosition",
+};
+
 -- position
 function ComputedStyle:Position()
-	return self.properties:Position();
+	local position = self.properties:Position();
+	return position_map[position];
 end
+
+local display_map = {
+	["inline"] = "INLINE",
+	["block"] = "BLOCK",
+	["list-item"] = "LIST_ITEM",
+	["run-in"] = "RUN_IN",
+	["compact"] = "COMPACT",
+	["inline-block"] = "INLINE_BLOCK",
+	["table"] = "TABLE",
+	["inline-table"] = "INLINE_TABLE",
+	["table-row-group"] = "TABLE_ROW_GROUP",
+	["table-header-group"] = "TABLE_FOOTER_GROUP",
+	["table-footer-group"] = "TABLE_FOOTER_GROUP",
+	["table-row"] = "TABLE_ROW",
+	["table-column-group"] = "TABLE_COLUMN_GROUP",
+	["table-column"] = "TABLE_COLUMN",
+	["table-cell"] = "TABLE_CELL",
+	["table-caption"] = "TABLE_CAPTION",
+	["box"] = "BOX",
+	["inline-box"] = "INLINE_BOX",
+	["flexbox"] = "FLEXBOX",
+	["inline-flexbox"] = "INLINE_FLEXBOX",
+	["none"] = "NONE"
+};
 
 -- display
 function ComputedStyle:Display()
-	return self.properties:Display();
+	local display = self.properties:Display();
+	return display_map[display];
 end
 
 function ComputedStyle:OriginalDisplay()
-	return "";
+	return "INLINE";
 end
+
+function ComputedStyle:IsDisplayReplacedType()
+	local display = self:Display();
+    return display == "INLINE_BLOCK" or display == "INLINE_BOX" or display == "INLINE_TABLE";
+end
+
+function ComputedStyle:IsDisplayInlineType()
+    return self:Display() == "INLINE" or self:IsDisplayReplacedType();
+end
+
+function ComputedStyle:IsOriginalDisplayInlineType()
+	local originalDisplay = self:OriginalDisplay();
+	return originalDisplay == "INLINE" or originalDisplay == "INLINE_BLOCK"
+            or originalDisplay == "INLINE_BOX" or originalDisplay == "INLINE_TABLE";
+end
+
+--enum EFloat {
+--    NoFloat, LeftFloat, RightFloat, PositionedFloat
+--};
+
+local float_map = {
+	["none"] = "NoFloat",
+	["left"] = "LeftFloat",
+	["right"] = "RightFloat",
+};
 
 -- float
 function ComputedStyle:Floating()
-	return self.properties:Floating();
+	local float = self.properties:Floating();
+	return float_map[float];
 end
 
 -- algin
@@ -602,7 +666,19 @@ end
 ----------------	webkit/chromium	function
 
 function ComputedStyle:IsHorizontalWritingMode()
-	return true;
+	--return true;
+	local mode = self:WritingMode();
+	return mode == "TopToBottomWritingMode" or mode == "BottomToTopWritingMode";
+end
+
+function ComputedStyle:IsFlippedLinesWritingMode()
+	local mode = self:WritingMode();
+	return mode == "LeftToRightWritingMode" or mode == "BottomToTopWritingMode";
+end
+
+function ComputedStyle:IsFlippedBlocksWritingMode()
+	local mode = self:WritingMode();
+	return mode == "RightToLeftWritingMode" or mode == "BottomToTopWritingMode";
 end
 
 function ComputedStyle:WritingMode()
@@ -616,9 +692,10 @@ end
 function ComputedStyle:OverflowY()
 	return self.properties:OverflowY();
 end
-
+-- enum EVisibility { VISIBLE, HIDDEN, COLLAPSE };
 function ComputedStyle:Visibility()
-	return self.properties:Visibility();
+	--return self.properties:Visibility();
+	return "VISIBLE";
 end
 -- TextDirection, value can be "LTR", "RTL";
 function ComputedStyle:Direction() 
@@ -629,13 +706,31 @@ function ComputedStyle:IsLeftToRightDirection()
 	return self:Direction() == "LTR";
 end
 
-function ComputedStyle:AutoWrap()
-	local ws = self:WhiteSpace();
-	return ws ~= "nowrap" and ws ~= "pre";
+function ComputedStyle:AutoWrap(ws)
+	ws = ws or self:WhiteSpace();
+	return ws ~= "NOWRAP" and ws ~= "PRE";
+end
+-- return value can be:"UBNormal","Embed","Override","Isolate","Plaintext"
+function ComputedStyle:UnicodeBidi()
+	return "UBNormal";
 end
 
+function ComputedStyle:PreserveNewline(ws)
+	ws = ws or self:WhiteSpace();
+	return ws ~= "NORMAL" and ws ~= "NOWRAP";
+end
+
+local white_space_map = {
+	["normal"] = "NORMAL", 
+	["pre"] = "PRE", 
+	["pre-wrap"] = "PRE_WRAP", 
+	["pre-line"] = "PRE_LINE", 
+	["nowrap"] = "NOWRAP", 
+	["khtml-nowrap"] = "KHTML_NOWRAP"
+}
+
 function ComputedStyle:WhiteSpace()
-	return "normal";
+	return "NORMAL";
 end
 
 function ComputedStyle:BoxSizing()
@@ -699,4 +794,237 @@ end
 
 function ComputedStyle:HasAutoColumnWidth()
 	return true;
+end
+
+function ComputedStyle:IsDisplayReplacedType()
+	local display = self:Display();
+    return display == "INLINE_BLOCK" or display == "INLINE_BOX" or display == "INLINE_TABLE";
+end
+
+function ComputedStyle:IsDisplayInlineType()
+    return self:Display() == "INLINE" or self:IsDisplayReplacedType();
+end
+
+function ComputedStyle:FontSize()
+	return self.properties:FontSize();
+end
+
+function ComputedStyle:CollapseWhiteSpace(ws)
+    -- Pre and prewrap do not collapse whitespace.
+	ws = ws or self:WhiteSpace();
+    return ws ~= "PRE" and ws ~= "PRE_WRAP";
+end
+
+--bool isCollapsibleWhiteSpace(UChar c) const
+function ComputedStyle:IsCollapsibleWhiteSpace(c)
+	if(c == " " or c == "\t") then
+		return self:CollapseWhiteSpace();
+	elseif(c == "\n") then
+		return not self:PreserveNewline();
+	end
+--    switch (c) {
+--        case ' ':
+--        case '\t':
+--            return collapseWhiteSpace();
+--        case '\n':
+--            return !preserveNewline();
+--    }
+    return false;
+end
+
+-- return: "NBNORMAL", "SPACE"
+function ComputedStyle:NbspMode()
+	return "NBNORMAL";
+end
+
+function ComputedStyle:TextIndent()
+	return 0;
+end
+
+function ComputedStyle:Locale()
+	return nil;
+end
+-- return value: "NormalWordBreak", "BreakAllWordBreak", "BreakWordBreak"
+function ComputedStyle:WordBreak()
+	return "NormalWordBreak";
+end
+-- return value: "NormalWordWrap", "BreakWordWrap"
+function ComputedStyle:WordWrap()
+	return "NormalWordWrap";
+end
+
+function ComputedStyle:BreakWords()
+	return self:WordBreak() == "BreakWordBreak" or self:WordWrap() == "BreakWordWrap";
+end
+
+function ComputedStyle:Font()
+	return self.properties:GetFontSettings();
+end
+
+function ComputedStyle:WordSpacing()
+	if(not self.wordSpacing) then
+--		local font = self:Font();
+--		self.wordSpacing = _guihelper.GetTextWidth(" ", font);	
+		self.wordSpacing = 0;
+	end
+	return self.wordSpacing;
+end
+-- return value: "LBNORMAL", "AFTER_WHITE_SPACE"
+function ComputedStyle:KhtmlLineBreak()
+	return "LBNORMAL"
+end
+
+function ComputedStyle:BreakOnlyAfterWhiteSpace()
+    return self:WhiteSpace() == "PRE_WRAP" or self:KhtmlLineBreak() == "AFTER_WHITE_SPACE";
+end
+-- return value: "LogicalOrder", "VisualOrder"
+function ComputedStyle:RtlOrdering()
+	return "LogicalOrder"
+end
+
+ComputedStyle.LineBoxContainFlags = { 
+	["LineBoxContainNone"] = 0x0, 
+	["LineBoxContainBlock"] = 0x1, 
+	["LineBoxContainInline"] = 0x2, 
+	["LineBoxContainFont"] = 0x4, 
+	["LineBoxContainGlyphs"] = 0x8,
+    ["LineBoxContainReplaced"] = 0x10, 
+	["LineBoxContainInlineBox"] = 0x20 
+};
+
+function ComputedStyle:LineBoxContain()
+	local contain = mathlib.bit.bor(ComputedStyle.LineBoxContainFlags.LineBoxContainBlock, ComputedStyle.LineBoxContainFlags.LineBoxContainInline);
+	return 	mathlib.bit.bor(contain, ComputedStyle.LineBoxContainFlags.LineBoxContainReplaced);
+end
+
+function ComputedStyle:FontHeight()
+	local _, font_size = self:Font();
+	return font_size;
+end
+
+function ComputedStyle:FontAscent(baselineType)
+	baselineType = baselineType or "AlphabeticBaseline"
+	return self:FontHeight() - self:FontHeight() / 2;
+end
+
+function ComputedStyle:FontDescent(baselineType)
+	baselineType = baselineType or "AlphabeticBaseline"
+	return self:FontHeight() / 2;
+end
+
+-- if not set line-height, we use font-size * 120%;
+function ComputedStyle:LineHeight()
+--	local line_height = self.properties:LineHeight();
+--	return "";
+	return self:FontHeight() + 4;
+end
+
+function ComputedStyle:ComputedLineHeight()
+--	Length lh = lineHeight();
+--
+--    // Negative value means the line height is not set.  Use the font's built-in spacing.
+--    if (lh.isNegative())
+--        return fontMetrics().lineSpacing();
+--
+--    if (lh.isPercent())
+--        return lh.calcMinValue(fontSize());
+--
+--    return lh.value();
+	return self:LineHeight();
+end
+
+--enum EVerticalAlign {
+--    BASELINE, MIDDLE, SUB, SUPER, TEXT_TOP,
+--    TEXT_BOTTOM, TOP, BOTTOM, BASELINE_MIDDLE, LENGTH
+--};
+function ComputedStyle:VerticalAlign()
+	return "BASELINE";
+end
+
+-- enum TextEmphasisMark { TextEmphasisMarkNone, TextEmphasisMarkAuto, TextEmphasisMarkDot, TextEmphasisMarkCircle, TextEmphasisMarkDoubleCircle, TextEmphasisMarkTriangle, TextEmphasisMarkSesame, TextEmphasisMarkCustom };
+function ComputedStyle:TextEmphasisMark()
+	return "TextEmphasisMarkNone"
+end
+
+function ComputedStyle:TextCombine()
+	return "TextCombineNone"
+end
+
+function ComputedStyle:HasTextCombine()
+	return self:TextCombine() ~= "TextCombineNone";
+end
+
+function ComputedStyle:Color()
+	return self.properties:Color();
+end
+
+function ComputedStyle:Opacity()
+	return 1.0;
+end
+
+function ComputedStyle:HasAutoZIndex()
+	return true;
+end
+--enum EOverflow { OVISIBLE, OHIDDEN, OSCROLL, OAUTO, OOVERLAY, OMARQUEE };
+function ComputedStyle:OverflowX()
+	return "OVISIBLE";
+end
+
+function ComputedStyle:OverflowY()
+	return "OVISIBLE";
+end
+
+-- CSS3 Marquee Properties
+-- enum EMarqueeBehavior { MNONE, MSCROLL, MSLIDE, MALTERNATE };
+function ComputedStyle:MarqueeBehavior()
+	return "MSCROLL";
+end
+-- enum ControlPart:  have much value;
+function ComputedStyle:Appearance()
+	return "NoControlPart";
+end
+
+function ComputedStyle:HasAppearance() 
+	return self:Appearance() ~= "NoControlPart";
+end
+-- enum EBorderFit { BorderFitBorder, BorderFitLines };
+function ComputedStyle:BorderFit()
+	return "BorderFitBorder";
+end
+
+function ComputedStyle:HasMask()
+	return false;
+end
+
+function ComputedStyle:HasClip()
+	return false;
+end
+--enum EClear {
+--    CNONE = 0, CLEFT = 1, CRIGHT = 2, CBOTH = 3
+--};
+function ComputedStyle:Clear()
+	return "CNONE";
+end
+
+-- Whether or not a positioned element requires normal flow x/y to be computed
+-- to determine its position.
+function ComputedStyle:HasAutoLeftAndRight()
+	return Length.IsAuto(self:Left()) and Length.IsAuto(self:Right());
+end
+
+function ComputedStyle:HasAutoTopAndBottom()
+	return Length.IsAuto(self:Top()) and Length.IsAuto(self:Bottom());
+	--return top().isAuto() && bottom().isAuto();
+end
+
+function ComputedStyle:HasStaticInlinePosition(horizontal)
+	return if_else(horizontal, self:HasAutoLeftAndRight(), self:HasAutoTopAndBottom());
+end
+
+function ComputedStyle:HasStaticBlockPosition(horizontal)
+	return if_else(horizontal, self:HasAutoTopAndBottom(), self:HasAutoLeftAndRight());
+end
+
+function ComputedStyle:ZIndex()
+	return 0;
 end

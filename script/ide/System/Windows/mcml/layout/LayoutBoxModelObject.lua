@@ -10,9 +10,19 @@ local LayoutBoxModelObject = commonlib.gettable("System.Windows.mcml.layout.Layo
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutObject.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutLayer.lua");
+local LayoutLayer = commonlib.gettable("System.Windows.mcml.layout.LayoutLayer");
 local LayoutBoxModelObject = commonlib.inherit(commonlib.gettable("System.Windows.mcml.layout.LayoutObject"), commonlib.gettable("System.Windows.mcml.layout.LayoutBoxModelObject"));
 
+-- Used to store state between styleWillChange and styleDidChange
+local s_wasFloating = false;
+local s_hadLayer = false;
+local s_layerWasSelfPainting = false;
+
 function LayoutBoxModelObject:ctor()
+	self.name = "LayoutBoxModelObject";
+	--RenderLayer* m_layer;
+	self.layer = nil;
 --	self.border = nil;
 --	self.content = nil;
 --
@@ -33,6 +43,12 @@ function LayoutBoxModelObject:ctor()
 --	self.realWidth = 0;
 --	self.realHeight = 0;
 --
+end
+
+function LayoutBoxModelObject:init(node)
+	LayoutBoxModelObject._super.init(self, node);
+
+	return self;
 end
 
 ----param new_child: a LayoutObject
@@ -230,4 +246,95 @@ function LayoutBoxModelObject:Continuation()
 		return;
 	end
 	return continuationMap[self];
+end
+
+function LayoutBoxModelObject:SetContinuation(continuation)
+    if (continuation) then
+        if (not continuationMap) then
+            continuationMap = {};
+		end
+        continuationMap[this] = continuation;
+    else
+        if (continuationMap) then
+            continuationMap[this] = nil;
+		end
+    end
+end
+
+function LayoutBoxModelObject:StyleDidChange(diff, oldStyle)
+	LayoutBoxModelObject._super.StyleDidChange(self, diff, oldStyle);
+	self:UpdateBoxModelInfoFromStyle();
+
+	if (self:RequiresLayer()) then
+        if (not self:Layer()) then
+            if (s_wasFloating and self:IsFloating()) then
+                self:SetChildNeedsLayout(true);
+			end
+            self.layer = LayoutLayer:new():init(self);
+            self:SetHasLayer(true);
+            self.layer:InsertOnlyThisLayer();
+            if (self:Parent() and not self:NeedsLayout() and self:ContainingBlock()) then
+                self.layer:SetNeedsFullRepaint();
+                -- There is only one layer to update, it is not worth using |cachedOffset| since
+                -- we are not sure the value will be used.
+                self.layer:UpdateLayerPositions(0);
+            end
+        end
+    elseif (self:Layer() and self:Layer():Parent()) then
+        self:SetHasTransform(false); -- Either a transform wasn't specified or the object doesn't support transforms, so just null out the bit.
+        self:SetHasReflection(false);
+        self.layer:RemoveOnlyThisLayer(); -- calls destroyLayer() which clears m_layer
+        if (s_wasFloating and self:IsFloating()) then
+            self:SetChildNeedsLayout(true);
+		end
+    end
+
+    if (self:Layer()) then
+        self:Layer():StyleChanged(diff, oldStyle);
+        if (s_hadLayer and self:Layer():IsSelfPaintingLayer() ~= s_layerWasSelfPainting) then
+            self:SetChildNeedsLayout(true);
+		end
+    end
+end
+
+function LayoutBoxModelObject:UpdateBoxModelInfoFromStyle()
+	-- Set the appropriate bits for a box model object.  Since all bits are cleared in styleWillChange,
+    -- we only check for bits that could possibly be set to true.
+    --setHasBoxDecorations(hasBackground() || style()->hasBorder() || style()->hasAppearance() || style()->boxShadow());
+    self:SetInline(self:Style():IsDisplayInlineType());
+    self:SetRelPositioned(self:Style():Position() == "RelativePosition");
+    self:SetHorizontalWritingMode(self:Style():IsHorizontalWritingMode());
+end
+
+function LayoutBoxModelObject:HasInlineDirectionBordersPaddingOrMargin()
+	return self:HasInlineDirectionBordersOrPadding() or self:MarginStart() ~= 0 or self:MarginEnd() ~= 0;
+end
+
+function LayoutBoxModelObject:HasInlineDirectionBordersOrPadding()
+	return self:BorderStart() ~= 0 or self:BorderEnd() ~= 0 or self:PaddingStart() ~= 0 or self:PaddingEnd() ~= 0;
+end
+
+-- Overridden by subclasses to determine line height and baseline position.
+--virtual LayoutUnit lineHeight(bool firstLine, LineDirectionMode, LinePositionMode = PositionOnContainingLine)
+function LayoutBoxModelObject:LineHeight(firstLine, direction, linePositionMode)
+
+end
+
+--virtual LayoutUnit baselinePosition(FontBaseline, bool firstLine, LineDirectionMode, LinePositionMode = PositionOnContainingLine) const = 0;
+function LayoutBoxModelObject:BaselinePosition(baselineType, firstLine, direction, linePositionMode)
+
+end
+
+function LayoutBoxModelObject:Layer()
+	return self.layer;
+end
+
+function LayoutBoxModelObject:RequiresLayer()
+	return self:IsRoot() or self:IsPositioned() or self:IsRelPositioned() or self:IsTransparent() or self:HasOverflowClip() or self:HasTransform() or self:HasMask() or self:HasReflection() or self:Style():SpecifiesColumns();
+end
+
+--bool RenderBoxModelObject::hasSelfPaintingLayer() const
+function LayoutBoxModelObject:HasSelfPaintingLayer()
+	return false;
+    --return self.layer ~= nil and self.layer:IsSelfPaintingLayer();
 end

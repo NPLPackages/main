@@ -13,7 +13,7 @@ NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutBlock.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutView.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutObject.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutButton.lua");
-NPL.load("(gl)script/ide/System/Windows/mcml/render/LayoutInline.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutInline.lua");
 local LayoutInline = commonlib.gettable("System.Windows.mcml.layout.LayoutInline");
 local LayoutButton = commonlib.gettable("System.Windows.mcml.layout.LayoutButton");
 local LayoutObject = commonlib.gettable("System.Windows.mcml.layout.LayoutObject");
@@ -65,47 +65,38 @@ end
 
 function LayoutTreeBuilder:CreateLayoutObjectIfNeeded()
 	if(self:ShouldCreateLayoutObject()) then
-		self:CreateLayoutObject();
+		local layout_object = self:CreateLayoutObject();
+
+		local parent_layout_object = self:ParentLayoutObject();
+		if(parent_layout_object) then
+			parent_layout_object:AddChild(layout_object);
+		end
 	end
 end
 
 function LayoutTreeBuilder:CreateLayoutObjectWithDisplay()
 	local node = self.node;
 	local display = self.style:Display();
-	if(display == "block" or display == "inline-block") then
+	if(display == "BLOCK" or display == "INLINE_BLOCK") then
 		return LayoutBlock:new():init(node);
-	elseif(display == "inline") then
+	elseif(display == "INLINE") then
 		return LayoutInline:new():init(node);
 	end
 end
 
 function LayoutTreeBuilder:CreateLayoutObject()
-	echo("LayoutTreeBuilder:CreateLayoutObject");
-	echo(self.node.name);
-	echo(self.node.attr.name);
 	-- 后面切换到PageElement:CreateLayoutObject这个函数创建LayoutObject对象
 	-- self.node:CreateLayoutObject(self.style)
 	local node, style = self.node, self.style;
 
 	local layout_object = node:GetLayoutObject();
 	if(not layout_object) then
-		layout_object = self:CreateLayoutObjectWithDisplay();
+		layout_object = node:CreateLayoutObject(nil, style);
 		node:SetLayoutObject(layout_object);
 	end
 	
 
 	layout_object:SetStyle(style);
-
-	local parent_layout_object = self:ParentLayoutObject();
---	echo("LayoutTreeBuilder:CreateLayoutObject");
---	echo(node.name);
---	echo(node.attr.name);
-	if(parent_layout_object) then
---		echo(parent_layout_object.name);
-		parent_layout_object:AddChild(layout_object);
---	else
---		echo("no parent_layout_object")
-	end
 
 
 
@@ -150,4 +141,5 @@ function LayoutTreeBuilder:CreateLayoutObject()
 --#endif
 --    }
 --
+	return layout_object;
 end

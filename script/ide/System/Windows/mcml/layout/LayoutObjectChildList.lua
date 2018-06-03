@@ -66,6 +66,7 @@ function RenderFlowThreadContainer(object)
 end
 
 function LayoutObjectChildList:AppendChildNode(owner, newChild, fullAppend)
+	fullAppend = if_else(fullAppend == nil, true, fullAppend);
 --	if(newChild:Parent()) then
 --		return;
 --	end
@@ -85,23 +86,25 @@ function LayoutObjectChildList:AppendChildNode(owner, newChild, fullAppend)
 
 	self:SetLastChild(newChild);
 
-	if (fullAppend == nil or fullAppend == true) then
+	if (fullAppend) then
         -- Keep our layer hierarchy updated.  Optimize for the common case where we don't have any children
         -- and don't have a layer attached to ourselves.
---        RenderLayer* layer = 0;
---        if (newChild->firstChild() || newChild->hasLayer()) {
---            layer = owner->enclosingLayer();
---            newChild->addLayers(layer);
---        }
+        local layer = nil;
+        if (newChild:FirstChild() or newChild:HasLayer()) then
+            layer = owner:EnclosingLayer();
+            newChild:AddLayers(layer);
+        end
 
---        // if the new child is visible but this object was not, tell the layer it has some visible content
---        // that needs to be drawn and layer visibility optimization can't be used
---        if (owner->style()->visibility() != VISIBLE && newChild->style()->visibility() == VISIBLE && !newChild->hasLayer()) {
---            if (!layer)
---                layer = owner->enclosingLayer();
---            if (layer)
---                layer->setHasVisibleContent(true);
---        }
+        -- if the new child is visible but this object was not, tell the layer it has some visible content
+        -- that needs to be drawn and layer visibility optimization can't be used
+        if (owner:Style():Visibility() ~= "VISIBLE" and newChild:Style():Visibility() == "VISIBLE" and not newChild:HasLayer()) then
+            if (not layer) then
+                layer = owner:EnclosingLayer();
+			end
+            if (layer) then
+                layer:SetHasVisibleContent(true);
+			end
+        end
 
         if (newChild:IsListItem()) then
             --toRenderListItem(newChild)->updateListMarkerNumbers();
@@ -134,6 +137,7 @@ function LayoutObjectChildList:AppendChildNode(owner, newChild, fullAppend)
 end
 
 function LayoutObjectChildList:InsertChildNode(owner, child, beforeChild, fullInsert)
+	fullInsert = if_else(fullInsert == nil, true, fullInsert);
 	if (not beforeChild) then
         self:AppendChildNode(owner, child, fullInsert);
         return;

@@ -758,6 +758,7 @@ function Page:LoadComponent()
 	local layout = self.layout;
 	if(layout and self.mcmlNode) then
 		local layoutView = LayoutView:new():init(self.mcmlNode, layout);
+		layoutView:SetStyle(self.mcmlNode:StyleForLayoutObject());
 		self.mcmlNode:SetLayoutObject(layoutView);
 		--self:SetLayoutObject(LayoutView:new():init(self.mcmlNode, layout));
 
@@ -766,7 +767,6 @@ function Page:LoadComponent()
 			self.mcmlNode:LoadComponentIfNeeded(parentElem, layout, nil);
 		end
 
-		layoutView:SetStyle(self.mcmlNode:StyleForLayoutObject());
 	end
 end
 
@@ -800,7 +800,7 @@ function Page:Attach(uiElement)
 			uiElement.layout = nil;
 		end
 		self:Detach();
-		self.layout = FrameView:new();
+		self.layout = FrameView:new():init();
 		self.layout:SetPage(self, uiElement);
 		uiElement.layout = self.layout;
 	end

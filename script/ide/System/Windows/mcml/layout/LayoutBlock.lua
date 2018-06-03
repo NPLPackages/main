@@ -11,17 +11,30 @@ LayoutBlock:new():init();
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutBox.lua");
-NPL.load("(gl)script/ide/System/Windows/mcml/geometry/Length.lua");
-NPL.load("(gl)script/ide/System/Windows/mcml/geometry/IntRect.lua");
-NPL.load("(gl)script/ide/System/Windows/mcml/geometry/IntSize.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/Length.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/IntRect.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/IntSize.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutBlockLineLayout.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutObjectChildList.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutLineBoxList.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/layout/RootInlineBox.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/IntPoint.lua");
+NPL.load("(gl)script/ide/STL/ListHashSet.lua");
+NPL.load("(gl)script/ide/STL/PODIntervalTree.lua");
+local FloatingObjectInterval = commonlib.PODInterval;
+local Point = commonlib.gettable("System.Windows.mcml.platform.graphics.IntPoint");
+local RootInlineBox = commonlib.gettable("System.Windows.mcml.layout.RootInlineBox");
+local LayoutLineBoxList = commonlib.gettable("System.Windows.mcml.layout.LayoutLineBoxList");
 local LayoutObjectChildList = commonlib.gettable("System.Windows.mcml.layout.LayoutObjectChildList");
-local Size = commonlib.gettable("System.Windows.mcml.geometry.IntSize");
-local Rect = commonlib.gettable("System.Windows.mcml.geometry.IntRect");
-local Length = commonlib.gettable("System.Windows.mcml.geometry.Length");
+local Size = commonlib.gettable("System.Windows.mcml.platform.graphics.IntSize");
+local Rect = commonlib.gettable("System.Windows.mcml.platform.graphics.IntRect");
+local Length = commonlib.gettable("System.Windows.mcml.platform.graphics.Length");
 local LayoutModel = commonlib.gettable("System.Windows.mcml.layout.LayoutModel");
 local LayoutBlock = commonlib.inherit(commonlib.gettable("System.Windows.mcml.layout.LayoutBox"), commonlib.gettable("System.Windows.mcml.layout.LayoutBlock"));
+
+local LayoutRect = Rect;
+local IntRect = Rect;
+local LayoutPoint = Point;
 
 local MarginInfo = commonlib.inherit(nil,{});
 
@@ -215,15 +228,372 @@ function MarginValues:SetNegativeMarginAfter(neg)
 	self.negativeMarginAfter = neg;
 end
 
+
+local FloatWithRect = commonlib.inherit(nil, commonlib.gettable("System.Windows.mcml.layout.LayoutBlock.FloatWithRect"));
+
+function FloatWithRect:ctor()
+	self.object = nil;
+    self.rect = IntRect:new();
+    self.everHadLayout = false;
+end
+-- @param f: LayoutBox
+function FloatWithRect:init(f)
+	self.object = f;
+	self.rect:Reset(f:X() - f:MarginLeft(), f:Y() - f:MarginTop(), f:Width() + f:MarginLeft() + f:MarginRight(), f:Height() + f:MarginTop() + f:MarginBottom());
+	self.everHadLayout = f.everHadLayout;
+end
+
+local FloatingObject = commonlib.inherit(nil, commonlib.gettable("System.Windows.mcml.layout.LayoutBlock.FloatingObject"));
+
+-- enum Type { FloatLeft = 1, FloatRight = 2, FloatLeftRight = 3, FloatPositioned = 4, FloatAll = 7 };
+FloatingObject.FloatType = 
+{
+	["FloatLeft"] = 1, 
+	["FloatRight"] = 2, 
+	["FloatLeftRight"] = 3, 
+	["FloatPositioned"] = 4, 
+	["FloatAll"] = 7
+};
+
+function FloatingObject:ctor()
+	self.renderer = nil;
+	self.originatingLine = nil;
+	self.frameRect = nil;
+	self.paginationStrut = 0;
+	self.type = nil; -- Type (left/right aligned or positioned)
+	self.shouldPaint = false;
+    self.isDescendant = false;
+    self.isPlaced = nil;
+	self.isInPlacedTree = false;
+
+--	    RenderBox* m_renderer;
+--        RootInlineBox* m_originatingLine;
+--        LayoutRect m_frameRect;
+--        int m_paginationStrut;
+--        unsigned m_type : 3; // Type (left/right aligned or positioned)
+--        bool m_shouldPaint : 1;
+--        bool m_isDescendant : 1;
+--        bool m_isPlaced : 1;
+--#ifndef NDEBUG
+--        bool m_isInPlacedTree : 1;
+--#endif
+end
+
+function FloatingObject:init(type, frameRect)
+	if(not frameRect) then
+		-- enum EFloat { NoFloat, LeftFloat, RightFloat, PositionedFloat };
+		-- type is EFloat
+		if (type == "LeftFloat") then
+            self.type = FloatingObject.FloatType["FloatLeft"];
+        elseif (type == "RightFloat") then
+            self.type = FloatingObject.FloatType["FloatRight"];
+        elseif (type == "PositionedFloat") then
+            self.type = FloatingObject.FloatType["FloatPositioned"];
+		end
+		self.isPlaced = false;
+	else
+		self.type = type;
+		self.shouldPaint = (type ~= "FloatPositioned");
+		self.isPlaced = true;
+	end
+	self.frameRect = Rect:new(frameRect);
+
+	return self;
+end
+
+function FloatingObject:Type()
+	return self.type;
+end
+
+function FloatingObject:Renderer()
+	return self.renderer;
+end
+
+function FloatingObject:IsPlaced()
+	return self.isPlaced;
+end
+
+function FloatingObject:SetIsPlaced(placed)
+	placed = if_else(placed == nil, true, placed);
+	self.isPlaced = placed;
+end
+
+function FloatingObject:X()
+	return self.frameRect:X();
+end
+
+function FloatingObject:MaxX()
+	return self.frameRect:MaxX();
+end
+
+function FloatingObject:Y()
+	return self.frameRect:Y();
+end
+
+function FloatingObject:MaxY()
+	return self.frameRect:MaxY();
+end
+
+function FloatingObject:Width()
+	return self.frameRect:Width();
+end
+
+function FloatingObject:Height()
+	return self.frameRect:Height();
+end
+
+function FloatingObject:SetX(x)
+	self.frameRect:SetX(x);
+end
+
+function FloatingObject:SetY(y)
+	self.frameRect:SetY(y);
+end
+
+function FloatingObject:SetWidth(width)
+	self.frameRect:SetWidth(width);
+end
+
+function FloatingObject:SetHeight(height)
+	self.frameRect:SetHeight(height);
+end
+
+function FloatingObject:FrameRect()
+	return self.frameRect;
+end
+
+function FloatingObject:SetFrameRect(frameRect)
+	self.frameRect:init(frameRect);
+end
+
+function FloatingObject:IsInPlacedTree()
+	return self.isInPlacedTree;
+end
+
+function FloatingObject:SetIsInPlacedTree(value)
+	self.isInPlacedTree = value;
+end
+
+
+local FloatIntervalSearchAdapter = commonlib.inherit(nil, {});
+
+function FloatIntervalSearchAdapter:ctor()
+	self.renderer = nil;
+    self.value = 0;
+    self.offset = 0;
+    self.heightRemaining = 0;
+	-- FloatingObject.FloatType
+	self.floatTypeValue = nil;
+end
+
+function FloatIntervalSearchAdapter:init(renderer, value, offset, heightRemaining, floatTypeValue)
+	self.renderer = renderer;
+    self.value = value;
+    self.offset = offset;
+    self.heightRemaining = heightRemaining;
+	-- FloatingObject.FloatType
+	self.floatTypeValue = floatTypeValue;
+
+	return self;
+end
+
+--inline void RenderBlock::FloatIntervalSearchAdapter<FloatTypeValue>::collectIfNeeded(const IntervalType& interval) const
+function FloatIntervalSearchAdapter:CollectIfNeeded(interval)
+    --const FloatingObject* r = interval.data();
+	local r = interval:Data();
+    if (r:Type() == self.floatTypeValue and interval:Low() <= self.value and self.value < interval:High()) then
+        -- All the objects returned from the tree should be already placed.
+        -- ASSERT(r->isPlaced() && m_renderer->logicalTopForFloat(r) <= m_value && m_renderer->logicalBottomForFloat(r) > m_value);
+
+        if (self.floatTypeValue == FloatingObject.FloatType.FloatLeft and self.renderer:LogicalRightForFloat(r) > self.offset) then
+            self.offset = self.renderer:LogicalRightForFloat(r);
+--            if (self.heightRemaining) then
+--                *m_heightRemaining = m_renderer->logicalBottomForFloat(r) - m_value;
+			self.heightRemaining = self.renderer:LogicalBottomForFloat(r) - self.value;
+        end
+
+        if (self.floatTypeValue == FloatingObject.FloatType.FloatRight and self.renderer:LogicalLeftForFloat(r) < self.offset) then
+            self.offset = self.renderer:LogicalLeftForFloat(r);
+--            if (m_heightRemaining)
+--                *m_heightRemaining = m_renderer->logicalBottomForFloat(r) - m_value;
+			self.heightRemaining = self.renderer:LogicalBottomForFloat(r) - self.value;
+        end
+    end
+end
+
+
+local FloatingObjects = commonlib.inherit(nil, {});
+
+local FloatingObjectSetFindFunction = function(floatingObject, layoutBox)
+	if(floatingObject:Renderer() == layoutBox) then
+		return true;
+	end
+	return false;
+end
+
+function FloatingObjects:ctor()
+	--FloatingObjectSet m_set;
+	self.set = commonlib.ListHashSet:new();
+    --FloatingObjectTree m_placedFloatsTree;
+	self.placedFloatsTree = commonlib.PODIntervalTree:new();
+    self.leftObjectsCount = 0;
+    self.rightObjectsCount = 0;
+    self.positionedObjectsCount = 0;
+    self.horizontalWritingMode = true;
+end
+-- @param horizontalWritingMode: bool
+function FloatingObjects:init(horizontalWritingMode)
+	self.horizontalWritingMode = horizontalWritingMode;
+	return self;
+end
+
+function FloatingObjects:Clear()
+	self.set:clear();
+	self.leftObjectsCount = 0;
+    self.rightObjectsCount = 0;
+    self.positionedObjectsCount = 0;
+end
+
+--inline void RenderBlock::FloatingObjects::increaseObjectsCount(FloatingObject::Type type)
+function FloatingObjects:IncreaseObjectsCount(type)
+    if (type == FloatingObject.FloatType.FloatLeft) then
+        self.leftObjectsCount = self.leftObjectsCount + 1;
+    elseif (type == FloatingObject.FloatType.FloatRight) then
+		self.rightObjectsCount = self.rightObjectsCount + 1;
+    else
+		self.positionedObjectsCount = self.positionedObjectsCount + 1;
+	end
+end
+
+--inline void RenderBlock::FloatingObjects::decreaseObjectsCount(FloatingObject::Type type)
+function FloatingObjects:DecreaseObjectsCount(type)
+    if (type == FloatingObject.FloatType.FloatLeft) then
+        self.leftObjectsCount = self.leftObjectsCount - 1;
+    elseif (type == FloatingObject.FloatType.FloatRight) then
+		self.rightObjectsCount = self.rightObjectsCount - 1;
+    else
+		self.positionedObjectsCount = self.positionedObjectsCount - 1;
+	end
+end
+
+--inline void RenderBlock::FloatingObjects::add(FloatingObject* floatingObject)
+function FloatingObjects:Add(floatingObject)
+    self:IncreaseObjectsCount(floatingObject:Type());
+    self.set:add(floatingObject);
+    if (floatingObject:IsPlaced()) then
+        self:AddPlacedObject(floatingObject);
+	end
+end
+
+--void RenderBlock::FloatingObjects::addPlacedObject(FloatingObject* floatingObject)
+function FloatingObjects:AddPlacedObject(floatingObject)
+    --ASSERT(!floatingObject->isInPlacedTree());
+
+    floatingObject:SetIsPlaced(true);
+--    if (m_placedFloatsTree.isInitialized())
+--        m_placedFloatsTree.add(intervalForFloatingObject(floatingObject));
+	local interval = self:IntervalForFloatingObject(floatingObject);
+	self.placedFloatsTree:add(interval);
+
+--#ifndef NDEBUG
+    floatingObject:SetIsInPlacedTree(true);      
+--#endif
+end
+
+--inline void RenderBlock::FloatingObjects::remove(FloatingObject* floatingObject)
+function FloatingObjects:Remove(floatingObject)
+    self:DecreaseObjectsCount(floatingObject:Type());
+    self.set:remove(floatingObject);
+    --ASSERT(floatingObject->isPlaced() || !floatingObject->isInPlacedTree());
+    if (floatingObject:IsPlaced()) then
+        self:RemovePlacedObject(floatingObject);
+	end
+end
+
+--void RenderBlock::FloatingObjects::removePlacedObject(FloatingObject* floatingObject)
+function FloatingObjects:RemovePlacedObject(floatingObject)
+    --ASSERT(floatingObject->isPlaced() && floatingObject->isInPlacedTree());
+
+--    if (m_placedFloatsTree.isInitialized()) {
+--        bool removed = m_placedFloatsTree.remove(intervalForFloatingObject(floatingObject));
+	local interval = self:IntervalForFloatingObject(floatingObject);
+	self.placedFloatsTree:remove(interval);
+--        ASSERT_UNUSED(removed, removed);
+--    }
+    
+    floatingObject:SetIsPlaced(false);
+--#ifndef NDEBUG
+    floatingObject:SetIsInPlacedTree(false);
+--#endif
+end
+
+function FloatingObjects:SetHorizontalWritingMode(b)
+	b = if_else(b == nil, true, b);
+	self.horizontalWritingMode = b;
+end
+
+function FloatingObjects:HasLeftObjects()
+	return self.leftObjectsCount > 0;
+end
+
+function FloatingObjects:HasRightObjects()
+	return self.rightObjectsCount > 0;
+end
+
+function FloatingObjects:HasPositionedObjects()
+	return self.positionedObjectsCount > 0;
+end
+
+function FloatingObjects:Set()
+	return self.set;
+end
+
+function FloatingObjects:PlacedFloatsTree()
+    self:ComputePlacedFloatsTreeIfNeeded();
+    return self.placedFloatsTree; 
+end
+
+function FloatingObjects:ComputePlacedFloatsTree()
+
+end
+function FloatingObjects:ComputePlacedFloatsTreeIfNeeded()
+--    if (!m_placedFloatsTree.isInitialized())
+--        computePlacedFloatsTree();
+end
+
+--inline RenderBlock::FloatingObjectInterval RenderBlock::FloatingObjects::intervalForFloatingObject(FloatingObject* floatingObject)
+function FloatingObjects:IntervalForFloatingObject(floatingObject)
+	-- TODO: add latter;
+	if (self.horizontalWritingMode) then
+		return FloatingObjectInterval:new():init(floatingObject:Y(), floatingObject:MaxY(), floatingObject);
+        --return RenderBlock::FloatingObjectInterval(floatingObject->y(), floatingObject->maxY(), floatingObject);
+	end
+	return FloatingObjectInterval:new():init(floatingObject:X(), floatingObject:MaxX(), floatingObject);
+    --return RenderBlock::FloatingObjectInterval(floatingObject->x(), floatingObject->maxX(), floatingObject);
+end
+
+
 function LayoutBlock:ctor()
 	self.name = "LayoutBlock";
 
 	-- LayoutObjectChildList object;
 	self.children = LayoutObjectChildList:new();
 
-	--self.lineBoxes = nil;
+	self.lineBoxes = LayoutLineBoxList:new();   -- All of the line boxes created for this inline flow.  For example, <i>Hello<br>world.</i> will have two <i> line boxes.
 
+	self.lineHeight = -1;
+	self.beingDestroyed = false;
+    self.hasPositionedFloats = false;
+
+	self.floatingObjects = nil
+	self.positionedObjects = nil;
+end
+
+function LayoutBlock:init(node)
+	LayoutBlock._super.init(self, node);
 	self:SetChildrenInline(true);
+
+	return self;
 end
 
 function LayoutBlock:Children()
@@ -245,33 +615,38 @@ function LayoutBlock:IsLayoutBlock()
 	return true;
 end
 
+function LayoutBlock:IsBlockFlow()
+	return (not self:IsInline() or self:IsReplaced()) and not self:IsTable();
+end
+
 function LayoutBlock:ComputeInlinePreferredLogicalWidths()
 	--TODO: fixed this function
 end
 
 function LayoutBlock:ComputeBlockPreferredLogicalWidths()
-	local nowrap = self:Style():WhiteSpace() == "nowrap";
+	local nowrap = self:Style():WhiteSpace() == "NOWRAP";
 
     local child = self:FirstChild();
     local containingBlock = self:ContainingBlock();
-    local floatLeftWidth floatRightWidth = 0, 0;
+    local floatLeftWidth, floatRightWidth = 0, 0;
     while (child) do
         -- Positioned children don't affect the min/max width
         if (child:IsPositioned()) then
             child = child:NextSibling();
         else
 
---			if (child:IsFloating() or (child:IsBox() and child:AvoidsFloats())) then
---				local floatTotalWidth = floatLeftWidth + floatRightWidth;
---				if (child:Style()->clear() & CLEFT) {
---					m_maxPreferredLogicalWidth = max(floatTotalWidth, m_maxPreferredLogicalWidth);
---					floatLeftWidth = 0;
---				}
---				if (child->style()->clear() & CRIGHT) {
---					m_maxPreferredLogicalWidth = max(floatTotalWidth, m_maxPreferredLogicalWidth);
---					floatRightWidth = 0;
---				}
---			}
+			if (child:IsFloating() or (child:IsBox() and child:AvoidsFloats())) then
+				local floatTotalWidth = floatLeftWidth + floatRightWidth;
+				local clear = child:Style():Clear();
+				if (clear == "CLEFT" or clear == "CBOTH") then
+					self.maxPreferredLogicalWidth = math.max(floatTotalWidth, self.maxPreferredLogicalWidth);
+					floatLeftWidth = 0;
+				end
+				if (clear == "CRIGHT" or clear == "CBOTH") then
+					self.maxPreferredLogicalWidth = math.max(floatTotalWidth, self.maxPreferredLogicalWidth);
+					floatRightWidth = 0;
+				end
+			end
 
 			-- A margin basically has three types: fixed, percentage, and auto (variable).
 			-- Auto and percentage margins simply become 0 when computing min/max width.
@@ -318,7 +693,12 @@ function LayoutBlock:ComputeBlockPreferredLogicalWidths()
 					-- Determine a left and right max value based off whether or not the floats can fit in the
 					-- margins of the object.  For negative margins, we will attempt to overlap the float if the negative margin
 					-- is smaller than the float width.
-					local ltr = if_else(containingBlock, containingBlock:Style():IsLeftToRightDirection(), self:Style():IsLeftToRightDirection());
+					local ltr;
+					if(containingBlock) then
+						ltr = containingBlock:Style():IsLeftToRightDirection();
+					else
+						ltr = self:Style():IsLeftToRightDirection();
+					end
 					local marginLogicalLeft = if_else("ltr", marginStart, marginEnd);
 					local marginLogicalRight = if_else("ltr", marginEnd, marginStart);
 					local maxLeft = if_else(marginLogicalLeft > 0, math.max(floatLeftWidth, marginLogicalLeft), floatLeftWidth + marginLogicalLeft);
@@ -647,6 +1027,8 @@ function LayoutBlock:PositionedFloatsNeedRelayout()
 end
 
 function LayoutBlock:LayoutBlock(relayoutChildren, pageLogicalHeight, layoutPass)
+	pageLogicalHeight = pageLogicalHeight or 0;
+	layoutPass = layoutPass or "NormalLayoutPass";
 	if(not self:NeedsLayout()) then
 		return;
 	end
@@ -716,7 +1098,7 @@ function LayoutBlock:LayoutBlock(relayoutChildren, pageLogicalHeight, layoutPass
         self:SetChildrenInline(true);
 	end
     if (self:ChildrenInline()) then
-        self:LayoutInlineChildren(relayoutChildren, repaintLogicalTop, repaintLogicalBottom);
+        repaintLogicalTop, repaintLogicalBottom = self:LayoutInlineChildren(relayoutChildren, repaintLogicalTop, repaintLogicalBottom);
     else
         self:LayoutBlockChildren(relayoutChildren, maxFloatLogicalBottom);
 	end
@@ -772,14 +1154,15 @@ function LayoutBlock:LayoutBlock(relayoutChildren, pageLogicalHeight, layoutPass
     -- we overflow or not.
     self:UpdateScrollInfoAfterLayout();
 
---	-- FIXME: This repaint logic should be moved into a separate helper function!
---    -- Repaint with our new bounds if they are different from our old bounds.
---    bool didFullRepaint = repainter.repaintAfterLayout();
---    if (!didFullRepaint && repaintLogicalTop != repaintLogicalBottom && (style()->visibility() == VISIBLE || enclosingLayer()->hasVisibleContent())) {
---        // FIXME: We could tighten up the left and right invalidation points if we let layoutInlineChildren fill them in based off the particular lines
---        // it had to lay out.  We wouldn't need the hasOverflowClip() hack in that case either.
---        LayoutUnit repaintLogicalLeft = logicalLeftVisualOverflow();
---        LayoutUnit repaintLogicalRight = logicalRightVisualOverflow();
+	-- FIXME: This repaint logic should be moved into a separate helper function!
+    -- Repaint with our new bounds if they are different from our old bounds.
+    --bool didFullRepaint = repainter.repaintAfterLayout();
+    --if (!didFullRepaint && repaintLogicalTop != repaintLogicalBottom && (style()->visibility() == VISIBLE || enclosingLayer()->hasVisibleContent())) {
+	if(repaintLogicalTop ~= repaintLogicalBottom and self:Style():Visibility() == "VISIBLE") then
+        -- FIXME: We could tighten up the left and right invalidation points if we let layoutInlineChildren fill them in based off the particular lines
+        -- it had to lay out.  We wouldn't need the hasOverflowClip() hack in that case either.
+        local repaintLogicalLeft = self:LogicalLeftVisualOverflow();
+        local repaintLogicalRight = self:LogicalRightVisualOverflow();
 --        if (hasOverflowClip()) {
 --            // If we have clipped overflow, we should use layout overflow as well, since visual overflow from lines didn't propagate to our block's overflow.
 --            // Note the old code did this as well but even for overflow:visible.  The addition of hasOverflowClip() at least tightens up the hack a bit.
@@ -787,18 +1170,19 @@ function LayoutBlock:LayoutBlock(relayoutChildren, pageLogicalHeight, layoutPass
 --            repaintLogicalLeft = min(repaintLogicalLeft, logicalLeftLayoutOverflow());
 --            repaintLogicalRight = max(repaintLogicalRight, logicalRightLayoutOverflow());
 --        }
---        
---        LayoutRect repaintRect;
---        if (isHorizontalWritingMode())
---            repaintRect = LayoutRect(repaintLogicalLeft, repaintLogicalTop, repaintLogicalRight - repaintLogicalLeft, repaintLogicalBottom - repaintLogicalTop);
---        else
---            repaintRect = LayoutRect(repaintLogicalTop, repaintLogicalLeft, repaintLogicalBottom - repaintLogicalTop, repaintLogicalRight - repaintLogicalLeft);
---
---        // The repaint rect may be split across columns, in which case adjustRectForColumns() will return the union.
---        adjustRectForColumns(repaintRect);
---
---        repaintRect.inflate(maximalOutlineSize(PaintPhaseOutline));
---        
+        
+        local repaintRect = nil;
+        if (self:IsHorizontalWritingMode()) then
+            repaintRect = LayoutRect:new(repaintLogicalLeft, repaintLogicalTop, repaintLogicalRight - repaintLogicalLeft, repaintLogicalBottom - repaintLogicalTop);
+        else
+            repaintRect = LayoutRect:new(repaintLogicalTop, repaintLogicalLeft, repaintLogicalBottom - repaintLogicalTop, repaintLogicalRight - repaintLogicalLeft);
+		end
+
+        -- The repaint rect may be split across columns, in which case adjustRectForColumns() will return the union.
+        -- adjustRectForColumns(repaintRect);
+
+        -- repaintRect.inflate(maximalOutlineSize(PaintPhaseOutline));
+        
 --        if (hasOverflowClip()) {
 --            // Adjust repaint rect for scroll offset
 --            repaintRect.move(-layer()->scrolledContentOffset());
@@ -806,19 +1190,19 @@ function LayoutBlock:LayoutBlock(relayoutChildren, pageLogicalHeight, layoutPass
 --            // Don't allow this rect to spill out of our overflow box.
 --            repaintRect.intersect(LayoutRect(LayoutPoint(), size()));
 --        }
---
---        // Make sure the rect is still non-empty after intersecting for overflow above
---        if (!repaintRect.isEmpty()) {
---            // FIXME: Might need rounding once we switch to float, see https://bugs.webkit.org/show_bug.cgi?id=64021
---            repaintRectangle(repaintRect); // We need to do a partial repaint of our content.
+
+        -- Make sure the rect is still non-empty after intersecting for overflow above
+        if (not repaintRect:IsEmpty()) then
+            -- FIXME: Might need rounding once we switch to float, see https://bugs.webkit.org/show_bug.cgi?id=64021
+            self:RepaintRectangle(repaintRect); -- We need to do a partial repaint of our content.
 --            if (hasReflection())
 --                repaintRectangle(reflectedRect(repaintRect));
---        }
---    }
+        end
+    end
 
 	if (needAnotherLayoutPass and layoutPass == "NormalLayoutPass") then
         self:SetChildNeedsLayout(true, false);
-        self:LayoutBlock(false, pageLogicalHeight, PositionedFloatLayoutPass);
+        self:LayoutBlock(false, pageLogicalHeight, "PositionedFloatLayoutPass");
     else
         self:SetNeedsLayout(false);
 	end
@@ -1158,9 +1542,9 @@ function LayoutBlock:LayoutBlockChild(child, marginInfo, previousFloatLogicalBot
     end
 
     --if (not childHadLayout and child:CheckForRepaintDuringLayout()) {
-	if (not childHadLayout) then
-		child:OnAfterChildLayout(child);
-        --child->repaint();
+	if (not childHadLayout and child:CheckForRepaintDuringLayout()) then
+		--child:OnAfterLayout();
+        child:Repaint();
         --child->repaintOverhangingFloats(true);
     end
 
@@ -1307,8 +1691,8 @@ function LayoutBlock:CollapseMargins(child, marginInfo)
 
     -- For self-collapsing blocks, collapse our bottom margins into our top to get new posTop and negTop values.
     if (child:IsSelfCollapsingBlock()) then
-        posTop = max(posTop, childMargins:PositiveMarginAfter());
-        negTop = max(negTop, childMargins:NegativeMarginAfter());
+        posTop = math.max(posTop, childMargins:PositiveMarginAfter());
+        negTop = math.max(negTop, childMargins:NegativeMarginAfter());
     end
     
     -- See if the top margin is quirky. We only care if this child has
@@ -1420,11 +1804,6 @@ end
 
 function LayoutBlock:HandleAfterSideOfBlock(beforeEdge, afterEdge, marginInfo)
 	--TODO: fixed this function
-end
-
-function LayoutBlock:LayoutPositionedObjects(relayoutChildren)
-	--TODO: fixed this function
-	return false;
 end
 
 function LayoutBlock:ComputeOverflow(oldClientAfterEdge, recomputeFloats)
@@ -1556,7 +1935,7 @@ end
 
 -- virtual function
 function LayoutBlock:DirtyLinesFromChangedChild(child)
-	--TODO: fixed this function
+	self.lineBoxes:DirtyLinesFromChangedChild(self, child);
 end
 
 function LayoutBlock:AddChild(newChild, beforeChild)
@@ -1745,24 +2124,30 @@ function LayoutBlock:AddChildIgnoringAnonymousColumnBlocks(newChild, beforeChild
 				return;
 			end
         end
---    elseif(!childrenInline() && (newChild->isFloatingOrPositioned() || newChild->isInline())) then
---        -- If we're inserting an inline child but all of our children are blocks, then we have to make sure
---        -- it is put into an anomyous block box. We try to use an existing anonymous box if possible, otherwise
---        -- a new one is created and inserted into our list of children in the appropriate position.
---        RenderObject* afterChild = beforeChild ? beforeChild->previousSibling() : lastChild();
---
---        if (afterChild && afterChild->isAnonymousBlock()) {
---            afterChild->addChild(newChild);
---            return;
---        }
---
---        if (newChild->isInline()) {
---            -- No suitable existing anonymous box - create a new one.
---            RenderBlock* newBox = createAnonymousBlock();
---            RenderBox::addChild(newBox, beforeChild);
---            newBox->addChild(newChild);
---            return;
---        }
+    elseif(not self:ChildrenInline() and (newChild:IsFloatingOrPositioned() or newChild:IsInline())) then
+        -- If we're inserting an inline child but all of our children are blocks, then we have to make sure
+        -- it is put into an anomyous block box. We try to use an existing anonymous box if possible, otherwise
+        -- a new one is created and inserted into our list of children in the appropriate position.
+        local afterChild;
+		if(beforeChild) then
+			afterChild = beforeChild:PreviousSibling();
+		else
+			afterChild = self:LastChild()
+		end
+
+        if (afterChild and afterChild:IsAnonymousBlock()) then
+            afterChild:AddChild(newChild);
+            return;
+        end
+
+        if (newChild:IsInline()) then
+            -- No suitable existing anonymous box - create a new one.
+            local newBox = self:CreateAnonymousBlock();
+            --RenderBox::addChild(newBox, beforeChild);
+			LayoutBlock._super.AddChild(self, newBox, beforeChild);
+            newBox:AddChild(newChild);
+            return;
+        end
     end
 
     LayoutBlock._super.AddChild(self, newChild, beforeChild);
@@ -1777,10 +2162,890 @@ function LayoutBlock:RemoveLeftoverAnonymousBlock(child)
 	--TODO: fixed this function
 end
 
+function LayoutBlock:FirstRootBox()
+	return self:FirstLineBox();
+end
+
+function LayoutBlock:LastRootBox()
+	return self:LastLineBox();
+end
+
 function LayoutBlock:FirstLineBox()
-	return;
+	return self.lineBoxes:FirstLineBox();
 end
 
 function LayoutBlock:LastLineBox()
-	return;
+	return self.lineBoxes:LastLineBox();
+end
+
+function LayoutBlock:LineBoxes()
+	return self.lineBoxes;
+end
+
+function LayoutBlock:StyleDidChange(diff, oldStyle)
+	LayoutBlock._super.StyleDidChange(self, diff, oldStyle);
+end
+
+function LayoutBlock:OffsetFromLogicalTopOfFirstPage()
+	--return 0;
+	-- FIXME: This function needs to work without layout state. It's fine to use the layout state as a cache
+    -- for speed, but we need a slow implementation that will walk up the containing block chain and figure
+    -- out our offset from the top of the page.
+    local layoutState = self:View():LayoutState();
+    if (layoutState == nil or not layoutState:IsPaginated()) then
+        return 0;
+	end
+
+    -- FIXME: Sanity check that the renderer in the layout state is ours, since otherwise the computation will be off.
+    -- Right now this assert gets hit inside computeLogicalHeight for percentage margins, since they're computed using
+    -- widths which can vary in each region. Until we patch that, we can't have this assert.
+    -- ASSERT(layoutState->m_renderer == this);
+
+    local offsetDelta = layoutState.layoutOffset - layoutState.pageOffset;
+    return if_else(self:IsHorizontalWritingMode(), offsetDelta:Height(), offsetDelta:Width());
+end
+
+--RenderRegion* RenderBlock::regionAtBlockOffset(LayoutUnit blockOffset) const
+function LayoutBlock:RegionAtBlockOffset(blockOffset)
+	if (self:InRenderFlowThread()) then
+        return nil;
+	end
+	--TODO: fixed this function later;
+	return nil;
+end
+
+function LayoutBlock:LogicalLeftOffsetForContent(region, offsetFromLogicalTopOfFirstPage)
+	if(region == nil and offsetFromLogicalTopOfFirstPage == nil) then
+		local offset = self:BorderLeft() + self:PaddingLeft();
+		if(not self:IsHorizontalWritingMode()) then
+			offset = self:BorderTop() + self:PaddingTop();
+		end
+		return offset;
+	end
+
+	if(offsetFromLogicalTopOfFirstPage == nil) then
+		local blockOffset = region;
+		region = self:RegionAtBlockOffset(blockOffset);
+		offsetFromLogicalTopOfFirstPage = self:OffsetFromLogicalTopOfFirstPage();
+	end
+
+	local logicalLeftOffset;
+	if(self:IsHorizontalWritingMode()) then
+		logicalLeftOffset = self:BorderLeft() + self:PaddingLeft();
+	else
+		logicalLeftOffset = self:BorderTop() + self:PaddingTop();
+	end
+
+	if(not self:InRenderFlowThread()) then
+		return logicalLeftOffset;
+	end
+	--TODO: fixed this later
+--	LayoutRect boxRect = borderBoxRectInRegion(region, offsetFromLogicalTopOfFirstPage);
+--  return logicalLeftOffset + (isHorizontalWritingMode() ? boxRect.x() : boxRect.y());
+	return logicalLeftOffset;
+end
+
+function LayoutBlock:LogicalRightOffsetForContent(region, offsetFromLogicalTopOfFirstPage)
+	if(region == nil and offsetFromLogicalTopOfFirstPage == nil) then
+		return self:LogicalLeftOffsetForContent() + self:AvailableLogicalWidth();
+	end
+	if(offsetFromLogicalTopOfFirstPage == nil) then
+		local blockOffset = region;
+		region = self:RegionAtBlockOffset(blockOffset);
+		offsetFromLogicalTopOfFirstPage = self:OffsetFromLogicalTopOfFirstPage();
+	end
+
+	local logicalRightOffset;
+	if(self:Style():IsHorizontalWritingMode()) then
+		logicalRightOffset = self:BorderLeft() + self:PaddingLeft()
+	else
+		logicalRightOffset = self:BorderTop() + self:PaddingTop()
+	end
+    logicalRightOffset = logicalRightOffset + self:AvailableLogicalWidth();
+    if (not self:InRenderFlowThread()) then
+        return logicalRightOffset;
+	end
+	--TODO: fixed this later
+--    LayoutRect boxRect = borderBoxRectInRegion(region, offsetFromLogicalTopOfFirstPage);
+--    return logicalRightOffset - (logicalWidth() - (isHorizontalWritingMode() ? boxRect.maxX() : boxRect.maxY()));
+	return logicalRightOffset;
+end
+
+function LayoutBlock:LogicalRightOffsetForLine(position, firstLine, region, offsetFromLogicalTopOfFirstPage)
+	local logicalTop, fixedOffset, applyTextIndent, heightRemaining = position, firstLine, region, offsetFromLogicalTopOfFirstPage;
+	if(region == nil and offsetFromLogicalTopOfFirstPage == nil) then
+		logicalTop = position;
+		fixedOffset = self:LogicalRightOffsetForContent(position);
+		applyTextIndent = firstLine;
+		heightRemaining = nil;
+	elseif(type(firstLine) == "boolean") then
+		logicalTop = position;
+		fixedOffset = self:LogicalRightOffsetForContent(region, offsetFromLogicalTopOfFirstPage);
+		applyTextIndent = firstLine;
+		heightRemaining = nil;
+	end
+
+	local right = fixedOffset;
+	--TODO: fixed this when process floating;
+	if (self.floatingObjects and self.floatingObjects:HasRightObjects()) then
+        if (heightRemaining ~= nil) then
+            heightRemaining = 1;
+		end
+
+        local rightFloatOffset = fixedOffset;
+        --FloatIntervalSearchAdapter<FloatingObject::FloatRight> adapter(this, logicalTop, rightFloatOffset, heightRemaining);
+		adapter = FloatIntervalSearchAdapter:new():init(self, logicalTop, rightFloatOffset, heightRemaining, FloatingObject.FloatType.FloatRight);
+        self.floatingObjects:PlacedFloatsTree():allOverlapsWithAdapter(adapter);
+		rightFloatOffset, heightRemaining = adapter.offset, adapter.heightRemaining;
+        right = math.min(right, rightFloatOffset);
+    end
+    
+    if (applyTextIndent and not self:Style():IsLeftToRightDirection()) then
+        right = right - self:TextIndentOffset();
+	end
+    
+    --return right, heightRemaining;
+	return right;
+end
+
+function LayoutBlock:TextIndentOffset()
+	return self:Style():TextIndent();
+end
+
+function LayoutBlock:LogicalLeftOffsetForLine(position, firstLine, region, offsetFromLogicalTopOfFirstPage)
+	local logicalTop, fixedOffset, applyTextIndent, heightRemaining = position, firstLine, region, offsetFromLogicalTopOfFirstPage;
+	if(region == nil and offsetFromLogicalTopOfFirstPage == nil) then
+		logicalTop = position;
+		fixedOffset = self:LogicalLeftOffsetForContent(position);
+		applyTextIndent = firstLine;
+		heightRemaining = nil;
+	elseif(type(firstLine) == "boolean") then
+		logicalTop = position;
+		fixedOffset = self:LogicalLeftOffsetForContent(region, offsetFromLogicalTopOfFirstPage);
+		applyTextIndent = firstLine;
+		heightRemaining = nil;
+	end
+
+	local left = fixedOffset;
+    if (self.floatingObjects and self.floatingObjects:HasLeftObjects()) then
+        if (heightRemaining) then
+            heightRemaining = 1;
+		end
+
+        --FloatIntervalSearchAdapter<FloatingObject::FloatLeft> adapter(this, logicalTop, left, heightRemaining);
+		local adapter = FloatIntervalSearchAdapter:new():init(self, logicalTop, left, heightRemaining, FloatingObject.FloatType.FloatLeft)
+        self.floatingObjects:PlacedFloatsTree():allOverlapsWithAdapter(adapter);
+		left, heightRemaining = adapter.offset, adapter.heightRemaining;
+    end
+
+    if (applyTextIndent and self:Style():IsLeftToRightDirection()) then
+        left = left + self:TextIndentOffset();
+	end
+    --return left, heightRemaining;
+	return left;
+end
+
+function LayoutBlock:CreateRootInlineBox() 
+    return RootInlineBox:new():init(self);
+end
+
+function LayoutBlock:CreateAndAppendRootInlineBox()
+    local rootBox = self:CreateRootInlineBox();
+    self.lineBoxes:AppendLineBox(rootBox);
+    return rootBox;
+end
+
+function LayoutBlock:LineHeight(firstLine, direction, linePositionMode)
+	linePositionMode = linePositionMode or "PositionOnContainingLine";
+    -- Inline blocks are replaced elements. Otherwise, just pass off to
+    -- the base class.  If we're being queried as though we're the root line
+    -- box, then the fact that we're an inline-block is irrelevant, and we behave
+    -- just like a block.
+    if (self:IsReplaced() and linePositionMode == "PositionOnContainingLine") then
+        return LayoutBlock._super.LineHeight(self, firstLine, direction, linePositionMode);
+	end
+--    if (firstLine && document()->usesFirstLineRules()) {
+--        RenderStyle* s = style(firstLine);
+--        if (s != style())
+--            return s->computedLineHeight();
+--    }
+    
+    if (self.lineHeight == -1) then
+        self.lineHeight = self:Style():ComputedLineHeight();
+	end
+    return self.lineHeight;
+end
+
+function LayoutBlock:BaselinePosition(baselineType, firstLine, direction, linePositionMode)
+	linePositionMode = linePositionMode or "PositionOnContainingLine";
+    -- Inline blocks are replaced elements. Otherwise, just pass off to
+    -- the base class.  If we're being queried as though we're the root line
+    -- box, then the fact that we're an inline-block is irrelevant, and we behave
+    -- just like a block.
+    if (self:IsReplaced() and linePositionMode == "PositionOnContainingLine") then
+--        -- For "leaf" theme objects, let the theme decide what the baseline position is.
+--        -- FIXME: Might be better to have a custom CSS property instead, so that if the theme
+--        -- is turned off, checkboxes/radios will still have decent baselines.
+--        -- FIXME: Need to patch form controls to deal with vertical lines.
+--        if (style()->hasAppearance() && !theme()->isControlContainer(style()->appearance()))
+--            return theme()->baselinePosition(this);
+--            
+--        // CSS2.1 states that the baseline of an inline block is the baseline of the last line box in
+--        // the normal flow.  We make an exception for marquees, since their baselines are meaningless
+--        // (the content inside them moves).  This matches WinIE as well, which just bottom-aligns them.
+--        // We also give up on finding a baseline if we have a vertical scrollbar, or if we are scrolled
+--        // vertically (e.g., an overflow:hidden block that has had scrollTop moved) or if the baseline is outside
+--        // of our content box.
+--        bool ignoreBaseline = (layer() && (layer()->marquee() || (direction == HorizontalLine ? (layer()->verticalScrollbar() || layer()->scrollYOffset() != 0)
+--            : (layer()->horizontalScrollbar() || layer()->scrollXOffset() != 0)))) || (isWritingModeRoot() && !isRubyRun());
+--        
+--        int baselinePos = ignoreBaseline ? -1 : lastLineBoxBaseline();
+--        
+--        int bottomOfContent = direction == HorizontalLine ? borderTop() + paddingTop() + contentHeight() : borderRight() + paddingRight() + contentWidth();
+--        if (baselinePos != -1 && baselinePos <= bottomOfContent)
+--            return direction == HorizontalLine ? marginTop() + baselinePos : marginRight() + baselinePos;
+--            
+--        return RenderBox::baselinePosition(baselineType, firstLine, direction, linePositionMode);
+    end
+
+--    const FontMetrics& fontMetrics = style(firstLine)->fontMetrics();
+--    return fontMetrics.ascent(baselineType) + (lineHeight(firstLine, direction, linePositionMode) - fontMetrics.height()) / 2;
+	local fontHeight = self:Style():FontHeight();
+	local fontAscent = self:Style():FontAscent(baselineType);
+	return fontAscent + (self:LineHeight(firstLine, direction, linePositionMode) - fontHeight) / 2;
+end
+
+function LayoutBlock:AvailableLogicalWidthForContent(region, offsetFromLogicalTopOfFirstPage)
+	if(offsetFromLogicalTopOfFirstPage ~= nil) then
+		local blockOffset = region;
+		offsetFromLogicalTopOfFirstPage = self:OffsetFromLogicalTopOfFirstPage();
+		region = self:RegionAtBlockOffset(blockOffset);
+	end
+
+	local rightOffset = self:LogicalRightOffsetForContent(region, offsetFromLogicalTopOfFirstPage);
+	local leftOffset = self:LogicalLeftOffsetForContent(region, offsetFromLogicalTopOfFirstPage);
+	local width = rightOffset - leftOffset;
+
+	return math.max(0, width);
+end
+
+function LayoutBlock:NewLine(clear)
+    self:PositionNewFloats();
+    -- set y position
+    local newY = 0;
+	if(clear == "CLEFT") then
+		newY = self:LowestFloatLogicalBottom(FloatingObject.FloatType.FloatLeft);
+	elseif(clear == "CRIGHT") then
+		newY = self:LowestFloatLogicalBottom(FloatingObject.FloatType.FloatRight);
+	elseif(clear == "CBOTH") then
+		newY = self:LowestFloatLogicalBottom();
+	end
+    if (self:Height() < newY) then
+        self:SetLogicalHeight(newY);
+	end
+end
+
+function LayoutBlock:OnAfterLayout()
+	if (self:ChildrenInline()) then
+        self.lineBoxes:Paint(self, nil, Point:new());
+    else
+        local control = self:GetControl();
+		if(control) then
+			control:ApplyCss(self:Style():GetStyle());
+			control:setGeometry(self:X(), self:Y(), self:Width(), self:Height());
+		end
+	end
+end
+
+--void RenderBlock::paint(PaintInfo& paintInfo, const LayoutPoint& paintOffset)
+function LayoutBlock:Paint(paintInfo, paintOffset)
+    local adjustedPaintOffset = paintOffset + self:Location();
+    -- default implementation. Just pass paint through to the children
+--    PaintInfo childInfo(paintInfo);
+--    childInfo.updatePaintingRootForChildren(this);
+	self:PaintObject(paintInfo, adjustedPaintOffset)
+end
+
+--void RenderBlock::paintObject(PaintInfo& paintInfo, const LayoutPoint& paintOffset)
+function LayoutBlock:PaintObject(paintInfo, paintOffset)
+	-- 1. paint background, borders etc
+	self:PaintBoxDecorations(paintInfo, paintOffset);
+	-- 2. paint contents
+	self:PaintContents(paintInfo, paintOffset);
+	-- 4. paint floats.
+	self:PaintFloats(paintInfo, paintOffset)
+end
+
+--void RenderBox::paintBoxDecorations(PaintInfo& paintInfo, const LayoutPoint& paintOffset)
+function LayoutBlock:PaintBoxDecorations(paintInfo, paintOffset)
+	local control = self:GetControl();
+	if(control) then
+		control:ApplyCss(self:Style():GetStyle());
+		control:setGeometry(self:X(), self:Y(), self:Width(), self:Height());
+	end
+end
+
+--void RenderBlock::paintContents(PaintInfo& paintInfo, const LayoutPoint& paintOffset)
+function LayoutBlock:PaintContents(paintInfo, paintOffset)
+    -- Avoid painting descendants of the root element when stylesheets haven't loaded.  This eliminates FOUC.
+    -- It's ok not to draw, because later on, when all the stylesheets do load, updateStyleSelector on the Document
+    -- will do a full repaint().
+--    if (document()->didLayoutWithPendingStylesheets() && !isRenderView())
+--        return;
+
+--    if (childrenInline())
+--        m_lineBoxes.paint(this, paintInfo, paintOffset);
+--    else
+--        paintChildren(paintInfo, paintOffset);
+
+
+	if (self:ChildrenInline()) then
+        self.lineBoxes:Paint(self, paintInfo, paintOffset);
+    else
+--        local control = self:GetControl();
+--		if(control) then
+--			control:ApplyCss(self:Style():GetStyle());
+--			control:setGeometry(self:X(), self:Y(), self:Width(), self:Height());
+--		end
+		self:PaintChildren(paintInfo, paintOffset);
+	end
+end
+
+--void RenderBlock::paintChildren(PaintInfo& paintInfo, const LayoutPoint& paintOffset)
+function LayoutBlock:PaintChildren(paintInfo, paintOffset)
+	local info = paintInfo;
+	local child = self:FirstChild();
+	while(child) do
+		if(not child:IsFloating()) then
+			child:Paint(info, paintOffset);
+		end
+		child = child:NextSibling();
+	end
+end
+
+--void RenderBlock::paintFloats(PaintInfo& paintInfo, const LayoutPoint& paintOffset, bool preservePhase)
+function LayoutBlock:PaintFloats(paintInfo, paintOffset, preservePhase)
+	preservePhase = if_else(preservePhase == nil, false, preservePhase);
+	if(not self.floatingObjects) then
+		return;
+	end
+
+
+	local floatingObjectSet = self.floatingObjects:Set();
+	local it = floatingObjectSet:Begin();
+	while(it) do
+		local floatingObject = it();
+		if(floatingObject.shouldPaint and (not floatingObject.renderer:HasSelfPaintingLayer())) then
+			floatingObject.renderer:Paint(paintInfo, paintOffset);
+		end
+		it = floatingObjectSet:next(it);
+	end
+--    FloatingObjectSetIterator end = floatingObjectSet.end();
+--    for (FloatingObjectSetIterator it = floatingObjectSet.begin(); it != end; ++it) {
+--        FloatingObject* r = *it;
+--        // Only paint the object if our m_shouldPaint flag is set.
+--        if (r->m_shouldPaint && !r->m_renderer->hasSelfPaintingLayer()) {
+--            PaintInfo currentPaintInfo(paintInfo);
+--            currentPaintInfo.phase = preservePhase ? paintInfo.phase : PaintPhaseBlockBackground;
+--            LayoutPoint childPoint = flipFloatForWritingModeForChild(r, LayoutPoint(paintOffset.x() + xPositionForFloatIncludingMargin(r) - r->m_renderer->x(), paintOffset.y() + yPositionForFloatIncludingMargin(r) - r->m_renderer->y()));
+--            r->m_renderer->paint(currentPaintInfo, childPoint);
+--            if (!preservePhase) {
+--                currentPaintInfo.phase = PaintPhaseChildBlockBackgrounds;
+--                r->m_renderer->paint(currentPaintInfo, childPoint);
+--                currentPaintInfo.phase = PaintPhaseFloat;
+--                r->m_renderer->paint(currentPaintInfo, childPoint);
+--                currentPaintInfo.phase = PaintPhaseForeground;
+--                r->m_renderer->paint(currentPaintInfo, childPoint);
+--                currentPaintInfo.phase = PaintPhaseOutline;
+--                r->m_renderer->paint(currentPaintInfo, childPoint);
+--            }
+--        }
+--    }
+end
+
+--RenderInline* RenderBlock::inlineElementContinuation() const
+function LayoutBlock:InlineElementContinuation()
+    local continuation = self:Continuation();
+    return if_else(continuation ~= nil and continuation:IsInline(), continuation, nil);
+end
+
+--RenderBlock* RenderBlock::createAnonymousBlock(bool isFlexibleBox) const
+function LayoutBlock:CreateAnonymousBlock(isFlexibleBox)
+	isFlexibleBox = if_else(isFlexibleBox == nil, false, isFlexibleBox);
+--    RefPtr<RenderStyle> newStyle = RenderStyle::createAnonymousStyle(style());
+--
+--    RenderBlock* newBox = 0;
+--    if (isFlexibleBox) {
+--        newStyle->setDisplay(BOX);
+--        newBox = new (renderArena()) RenderDeprecatedFlexibleBox(document() /* anonymous box */);
+--    } else {
+--        newStyle->setDisplay(BLOCK);
+--        newBox = new (renderArena()) RenderBlock(document() /* anonymous box */);
+--    }
+--
+--    newBox->setStyle(newStyle.release());
+--    return newBox;
+end
+
+--bool RenderBlock::layoutColumns(bool hasSpecifiedPageLogicalHeight, int pageLogicalHeight, LayoutStateMaintainer& statePusher)
+function LayoutBlock:LayoutColumns(hasSpecifiedPageLogicalHeight, pageLogicalHeight, statePusher)
+    if (not self:HasColumns()) then
+        return false;
+	end
+
+	-- TODO: add latter;
+
+	return false;
+end
+
+--LayoutUnit logicalTopForFloat(const FloatingObject* child) const
+function LayoutBlock:LogicalTopForFloat(child)
+	return if_else(self:IsHorizontalWritingMode(), child:Y(), child:X());
+end
+
+--LayoutUnit logicalBottomForFloat(const FloatingObject* child) const
+function LayoutBlock:LogicalBottomForFloat(child)
+	return if_else(self:IsHorizontalWritingMode(), child:MaxY(), child:MaxX());
+end
+
+--LayoutUnit logicalLeftForFloat(const FloatingObject* child) const
+function LayoutBlock:LogicalLeftForFloat(child)
+	return if_else(self:IsHorizontalWritingMode(), child:X(), child:Y());
+end
+
+--LayoutUnit logicalRightForFloat(const FloatingObject* child) const
+function LayoutBlock:LogicalRightForFloat(child)
+	return if_else(self:IsHorizontalWritingMode(), child:MaxX(), child:MaxY());
+end
+
+--LayoutUnit logicalWidthForFloat(const FloatingObject* child) const
+function LayoutBlock:LogicalWidthForFloat(child)
+	return if_else(self:IsHorizontalWritingMode(), child:Width(), child:Height());
+end
+
+--void setLogicalTopForFloat(FloatingObject* child, LayoutUnit logicalTop)
+function LayoutBlock:SetLogicalTopForFloat(child, logicalTop)
+    if (self:IsHorizontalWritingMode()) then
+        child:SetY(logicalTop);
+    else
+        child:SetX(logicalTop);
+	end
+end
+
+--void setLogicalLeftForFloat(FloatingObject* child, LayoutUnit logicalLeft)
+function LayoutBlock:SetLogicalLeftForFloat(child, logicalLeft)
+    if (self:IsHorizontalWritingMode()) then
+        child:SetX(logicalLeft);
+    else
+        child:SetY(logicalLeft);
+	end
+end
+
+--void setLogicalHeightForFloat(FloatingObject* child, LayoutUnit logicalHeight)
+function LayoutBlock:SetLogicalHeightForFloat(child, logicalHeight)
+    if (self:IsHorizontalWritingMode()) then
+        child:SetHeight(logicalHeight);
+    else
+        child:SetWidth(logicalHeight);
+	end
+end
+
+--void setLogicalWidthForFloat(FloatingObject* child, LayoutUnit logicalWidth)
+function LayoutBlock:SetLogicalWidthForFloat(child, logicalWidth)
+    if (self:IsHorizontalWritingMode()) then
+        child:SetWidth(logicalWidth);
+    else
+        child:SetHeight(logicalWidth);
+	end
+end
+
+--LayoutUnit xPositionForFloatIncludingMargin(const FloatingObject* child) const
+function LayoutBlock:XPositionForFloatIncludingMargin(child)
+    if (self:IsHorizontalWritingMode()) then
+        return child:X() + child:Renderer():MarginLeft();
+    else
+        return child:X() + self:MarginBeforeForChild(child:Renderer());
+	end
+end
+
+--LayoutUnit yPositionForFloatIncludingMargin(const FloatingObject* child) const        
+function LayoutBlock:YPositionForFloatIncludingMargin(child)
+    if (self:IsHorizontalWritingMode()) then
+        return child:Y() + self:MarginBeforeForChild(child:Renderer());
+    else
+        return child:Y() + child:Renderer():MarginTop();
+	end
+end
+
+--RenderBlock::FloatingObject* RenderBlock::insertFloatingObject(RenderBox* o)
+function LayoutBlock:InsertFloatingObject(o)
+    --ASSERT(o->isFloating());
+
+    -- Create the list of special objects if we don't aleady have one
+    if (not self.floatingObjects) then
+        self.floatingObjects = FloatingObjects:new():init(self:IsHorizontalWritingMode());
+    else
+        -- Don't insert the object again if it's already in the list
+        local floatingObjectSet = self.floatingObjects:Set();
+
+		local it = floatingObjectSet:find(FloatingObjectSetFindFunction, o);
+		if(it) then
+			return it();
+		end
+    end
+
+    -- Create the special object entry & append it to the list
+
+    local newObj = FloatingObject:new():init(o:Style():Floating());
+    
+    -- Our location is irrelevant if we're unsplittable or no pagination is in effect.
+    -- Just go ahead and lay out the float.
+    if (not o:IsPositioned()) then
+        local isChildRenderBlock = o:IsLayoutBlock();
+        if (isChildRenderBlock and not o:NeedsLayout() and self:View():LayoutState():PageLogicalHeightChanged()) then
+            o:SetChildNeedsLayout(true, false);
+		end
+            
+        local affectedByPagination = isChildRenderBlock and self:View():LayoutState().pageLogicalHeight ~= 0;
+        if (not affectedByPagination or self:IsWritingModeRoot()) then -- We are unsplittable if we're a block flow root.
+            o:LayoutIfNeeded();
+        else
+            o:ComputeLogicalWidth();
+            o:ComputeBlockDirectionMargins(self);
+        end
+    end
+    self:SetLogicalWidthForFloat(newObj, self:LogicalWidthForChild(o) + self:MarginStartForChild(o) + self:MarginEndForChild(o));
+
+    --newObj.shouldPaint = not o:HasSelfPaintingLayer(); -- If a layer exists, the float will paint itself.  Otherwise someone else will.
+	newObj.shouldPaint = not o:HasSelfPaintingLayer();
+    newObj.isDescendant = true;
+    newObj.renderer = o;
+
+    self.floatingObjects:Add(newObj);
+    return newObj;
+end
+
+--LayoutUnit RenderBlock::adjustForUnsplittableChild(RenderBox* child, LayoutUnit logicalOffset, bool includeMargins)
+function LayoutBlock:AdjustForUnsplittableChild(child, logicalOffset, includeMargins)
+	includeMargins = if_else(includeMargins == nil, false, includeMargins);
+
+end
+
+--bool RenderBlock::positionNewFloats()
+function LayoutBlock:PositionNewFloats()
+    if (not self.floatingObjects) then
+        return false;
+	end
+
+	local floatingObjectSet = self.floatingObjects:Set();
+    if (floatingObjectSet:isEmpty()) then
+        return false;
+	end
+
+    -- If all floats have already been positioned, then we have no work to do.
+    if (floatingObjectSet:last():IsPlaced()) then
+        return false;
+	end
+
+    -- Move backwards through our floating object list until we find a float that has
+    -- already been positioned.  Then we'll be able to move forward, positioning all of
+    -- the new floats that need it.
+
+	local it = floatingObjectSet:End();
+	local begin = floatingObjectSet:Begin();
+	local lastPlacedFloatingObject = nil;
+	while(it ~= begin) do
+		it = floatingObjectSet:prev(it);
+		if(it():IsPlaced()) then
+			lastPlacedFloatingObject = it();
+            it = floatingObjectSet:next(it);
+            break;
+		end
+	end
+
+    local logicalTop = self:LogicalHeight();
+    
+    -- The float cannot start above the top position of the last positioned float.
+    if (lastPlacedFloatingObject) then
+        logicalTop = math.max(self:LogicalTopForFloat(lastPlacedFloatingObject), logicalTop);
+	end
+
+	-- Now walk through the set of unpositioned floats and place them.
+	while(it) do
+		local floatingObject = it();
+		-- The containing block is responsible for positioning floats, so if we have floats in our
+        -- list that come from somewhere else, do not attempt to position them. Also don't attempt to handle
+        -- positioned floats, since the positioning layout code handles those.
+        if (floatingObject:Renderer():ContainingBlock() ~= self or floatingObject:Renderer():IsPositioned()) then
+            -- continue;
+		else
+			local childBox = floatingObject:Renderer();
+			local childLogicalLeftMargin = if_else(self:Style():IsLeftToRightDirection(), self:MarginStartForChild(childBox), self:MarginEndForChild(childBox));
+
+			local oldRect = LayoutRect:new(childBox:X(), childBox:Y() , childBox:Width(), childBox:Height());
+
+			local clear = childBox:Style():Clear();
+
+			--if (childBox:Style()->clear() & CLEFT)
+			if (clear == "CLEFT" or clear == "CBOTH") then
+				logicalTop = math.max(self:LowestFloatLogicalBottom(FloatingObject.FloatType.FloatLeft), logicalTop);
+			end
+			if (clear == "CRIGHT" or clear == "CBOTH") then
+				logicalTop = math.max(self:LowestFloatLogicalBottom(FloatingObject.FloatType.FloatRight), logicalTop);
+			end
+
+			local floatLogicalLocation = self:ComputeLogicalLocationForFloat(floatingObject, logicalTop);
+
+			self:SetLogicalLeftForFloat(floatingObject, floatLogicalLocation:X());
+			self:SetLogicalLeftForChild(childBox, floatLogicalLocation:X() + childLogicalLeftMargin);
+			self:SetLogicalTopForChild(childBox, floatLogicalLocation:Y() + self:MarginBeforeForChild(childBox));
+
+			if (self:View():LayoutState():IsPaginated()) then
+				local childBlock = if_else(childBox:IsLayoutBlock(), childBox, nil);
+
+				if (not childBox:NeedsLayout()) then
+					childBox:MarkForPaginationRelayoutIfNeeded();
+				end
+				childBox:LayoutIfNeeded();
+
+				-- If we are unsplittable and don't fit, then we need to move down.
+				-- We include our margins as part of the unsplittable area.
+				local newLogicalTop = self:AdjustForUnsplittableChild(childBox, floatLogicalLocation:Y(), true);
+            
+				-- See if we have a pagination strut that is making us move down further.
+				-- Note that an unsplittable child can't also have a pagination strut, so this is
+				-- exclusive with the case above.
+				if (childBlock and childBlock:PaginationStrut()) then
+					newLogicalTop = newLogicalTop + childBlock:PaginationStrut();
+					childBlock:SetPaginationStrut(0);
+				end
+            
+				if (newLogicalTop ~= floatLogicalLocation:Y()) then
+					floatingObject.paginationStrut = newLogicalTop - floatLogicalLocation:Y();
+
+					floatLogicalLocation = self:ComputeLogicalLocationForFloat(floatingObject, newLogicalTop);
+					self:SetLogicalLeftForFloat(floatingObject, floatLogicalLocation:X());
+					self:SetLogicalLeftForChild(childBox, floatLogicalLocation:X() + childLogicalLeftMargin);
+					self:SetLogicalTopForChild(childBox, floatLogicalLocation:Y() + self:MarginBeforeForChild(childBox));
+        
+					if (childBlock) then
+						childBlock:SetChildNeedsLayout(true, false);
+					end
+					childBox:LayoutIfNeeded();
+				end
+			end
+
+			self:SetLogicalTopForFloat(floatingObject, floatLogicalLocation:Y());
+			self:SetLogicalHeightForFloat(floatingObject, self:LogicalHeightForChild(childBox) + self:MarginBeforeForChild(childBox) + self:MarginAfterForChild(childBox));
+
+			self.floatingObjects:AddPlacedObject(floatingObject);
+
+			-- If the child moved, we have to repaint it.
+			if (childBox:CheckForRepaintDuringLayout()) then
+				childBo:RepaintDuringLayoutIfMoved(oldRect);
+			end
+		end
+
+		it = floatingObjectSet:next(it);
+	end
+
+    
+    return true;
+end
+
+--LayoutUnit lowestFloatLogicalBottom(FloatingObject::Type)
+function LayoutBlock:LowestFloatLogicalBottom(type)
+	type = if_else(type == nil, FloatingObject.FloatType.FloatLeftRight, type);
+
+	if (not self.floatingObjects) then
+        return 0;
+	end
+    local lowestFloatBottom = 0;
+    local floatingObjectSet = self.floatingObjects:Set();
+	local it = floatingObjectSet:Begin();
+	while(it) do
+		local floatingObject = it();
+        if (floatingObject:IsPlaced() and mathlib.bit.band(floatingObject:Type(), floatType)) then
+            lowestFloatBottom = math.max(lowestFloatBottom, self:LogicalBottomForFloat(floatingObject));
+		end
+		it = floatingObjectSet:next(it);
+	end
+
+    return lowestFloatBottom;
+end
+
+--LayoutPoint RenderBlock::computeLogicalLocationForFloat(const FloatingObject* floatingObject, LayoutUnit logicalTopOffset) const
+function LayoutBlock:ComputeLogicalLocationForFloat(floatingObject, logicalTopOffset)
+	local childBox = floatingObject:Renderer();
+    local logicalRightOffset = self:LogicalRightOffsetForContent(logicalTopOffset); -- Constant part of right offset.
+    local logicalLeftOffset = self:LogicalLeftOffsetForContent(logicalTopOffset); -- Constant part of left offset.
+    local floatLogicalWidth = math.min(self:LogicalWidthForFloat(floatingObject), logicalRightOffset - logicalLeftOffset); -- The width we look for.
+
+    local floatLogicalLeft;
+
+    if (childBox:Style():Floating() == "LeftFloat") then
+        local heightRemainingLeft = 1;
+        local heightRemainingRight = 1;
+        floatLogicalLeft = self:LogicalLeftOffsetForLine(logicalTopOffset, logicalLeftOffset, false, heightRemainingLeft);
+        while (self:LogicalRightOffsetForLine(logicalTopOffset, logicalRightOffset, false, heightRemainingRight) - floatLogicalLeft < floatLogicalWidth) do
+            logicalTopOffset = logicalTopOffset + math.min(heightRemainingLeft, heightRemainingRight);
+            floatLogicalLeft = self:LogicalLeftOffsetForLine(logicalTopOffset, logicalLeftOffset, false, heightRemainingLeft);
+--            if (inRenderFlowThread()) {
+--                // Have to re-evaluate all of our offsets, since they may have changed.
+--                logicalRightOffset = logicalRightOffsetForContent(logicalTopOffset); // Constant part of right offset.
+--                logicalLeftOffset = logicalLeftOffsetForContent(logicalTopOffset); // Constant part of left offset.
+--                floatLogicalWidth = min(logicalWidthForFloat(floatingObject), logicalRightOffset - logicalLeftOffset);
+--            }
+        end
+        floatLogicalLeft = math.max(logicalLeftOffset - self:BorderAndPaddingLogicalLeft(), floatLogicalLeft);
+    else
+        local heightRemainingLeft = 1;
+        local heightRemainingRight = 1;
+        floatLogicalLeft = self:LogicalRightOffsetForLine(logicalTopOffset, logicalRightOffset, false, heightRemainingRight);
+        while (floatLogicalLeft - self:LogicalLeftOffsetForLine(logicalTopOffset, logicalLeftOffset, false, heightRemainingLeft) < floatLogicalWidth) do
+            logicalTopOffset = logicalTopOffset + math.min(heightRemainingLeft, heightRemainingRight);
+            floatLogicalLeft = self:LogicalRightOffsetForLine(logicalTopOffset, logicalRightOffset, false, heightRemainingRight);
+--            if (inRenderFlowThread()) {
+--                // Have to re-evaluate all of our offsets, since they may have changed.
+--                logicalRightOffset = logicalRightOffsetForContent(logicalTopOffset); // Constant part of right offset.
+--                logicalLeftOffset = logicalLeftOffsetForContent(logicalTopOffset); // Constant part of left offset.
+--                floatLogicalWidth = min(logicalWidthForFloat(floatingObject), logicalRightOffset - logicalLeftOffset);
+--            }
+        end
+        floatLogicalLeft = floatLogicalLeft - self:LogicalWidthForFloat(floatingObject); 
+		-- Use the original width of the float here, since the local variable |floatLogicalWidth| was capped to the available line width. See fast/block/float/clamped-right-float.html.
+    end
+    
+    return LayoutPoint:new(floatLogicalLeft, logicalTopOffset);
+end
+
+--void RenderBlock::insertPositionedObject(RenderBox* o)
+function LayoutBlock:InsertPositionedObject(o)
+    if (o:IsLayoutFlowThread()) then
+        return;
+	end
+    
+    -- Create the list of special objects if we don't aleady have one
+    if (not self.positionedObjects) then
+        self.positionedObjects = commonlib.ListHashSet:new();
+	end
+
+    self.positionedObjects:add(o);
+end
+
+--void RenderBlock::removePositionedObject(RenderBox* o)
+function LayoutBlock:RemovePositionedObject(o)
+    if (self.positionedObjects) then
+        self.positionedObjects:remove(o);
+	end
+end
+
+function LayoutBlock:LayoutPositionedObjects(relayoutChildren)
+	
+	if (not self.positionedObjects) then
+        return false;
+	end
+--	if (hasColumns())
+--        view()->layoutState()->clearPaginationInformation(); // Positioned objects are not part of the column flow, so they don't paginate with the columns.
+
+    local didFloatingBoxRelayout = false;
+
+    --RenderBox* r;
+	local box = nil;
+	local it = self.positionedObjects:Begin();
+	while(it) do
+		box = it();
+
+		-- When a non-positioned block element moves, it may have positioned children that are implicitly positioned relative to the
+        -- non-positioned block.  Rather than trying to detect all of these movement cases, we just always lay out positioned
+        -- objects that are positioned implicitly like this.  Such objects are rare, and so in typical DHTML menu usage (where everything is
+        -- positioned explicitly) this should not incur a performance penalty.
+        if (relayoutChildren or (box:Style():HasStaticBlockPosition(self:IsHorizontalWritingMode()) and box:Parent() ~= self)) then
+            box:SetChildNeedsLayout(true, false);
+		end
+            
+        -- If relayoutChildren is set and the child has percentage padding or an embedded content box, we also need to invalidate the childs pref widths.
+        if (relayoutChildren and box:NeedsPreferredWidthsRecalculation()) then
+            box:SetPreferredLogicalWidthsDirty(true, false);
+		end
+        
+        if (not box:NeedsLayout()) then
+            box:MarkForPaginationRelayoutIfNeeded();
+		end
+        
+        -- FIXME: Technically we could check the old placement and the new placement of the box and only invalidate if
+        -- the margin box of the object actually changed.
+        if (box:NeedsLayout() and box:IsFloating()) then
+            didFloatingBoxRelayout = true;
+		end
+
+        -- We don't have to do a full layout.  We just have to update our position. Try that first. If we have shrink-to-fit width
+        -- and we hit the available width constraint, the layoutIfNeeded() will catch it and do a full layout.
+        if (box:NeedsPositionedMovementLayoutOnly() and box:TryLayoutDoingPositionedMovementOnly()) then
+            box:SetNeedsLayout(false);
+		end
+            
+        -- If we are in a flow thread, go ahead and compute a vertical position for our object now.
+        -- If it's wrong we'll lay out again.
+        local oldLogicalTop = 0;
+        local checkForPaginationRelayout = box:NeedsLayout() and self:View():LayoutState():IsPaginated() and self:View():LayoutState():PageLogicalHeight(); 
+        if (checkForPaginationRelayout) then
+            if (self:IsHorizontalWritingMode() == box:IsHorizontalWritingMode()) then
+                box:ComputeLogicalHeight();
+            else
+                box:ComputeLogicalWidth();
+			end
+            oldLogicalTop = self:LogicalTopForChild(box);
+        end
+            
+        box:LayoutIfNeeded();
+        -- Layout again if our estimate was wrong.
+        if (checkForPaginationRelayout and self:LogicalTopForChild(box) ~= oldLogicalTop) then
+            box:SetChildNeedsLayout(true, false);
+            box:LayoutIfNeeded();
+        end
+		it = self.positionedObjects:next(it);
+		
+	end
+
+    
+    
+--    if (hasColumns())
+--        view()->layoutState()->m_columnInfo = columnInfo(); // FIXME: Kind of gross. We just put this back into the layout state so that pop() will work.
+        
+    return didFloatingBoxRelayout;
+end
+
+--@param o: RenderBlock;
+function LayoutBlock:RemovePositionedObjects(o)
+	--TODO: fixed this function
+end
+
+--LayoutUnit startOffsetForContent(RenderRegion* region, LayoutUnit offsetFromLogicalTopOfFirstPage) const
+--LayoutUnit startOffsetForContent(LayoutUnit blockOffset) const
+--LayoutUnit startOffsetForContent() const 
+function LayoutBlock:StartOffsetForContent(region, offsetFromLogicalTopOfFirstPage)
+	if(region == nil and offsetFromLogicalTopOfFirstPage == nil) then
+		if(self:Style():IsLeftToRightDirection()) then
+			return self:LogicalLeftOffsetForContent()
+		end
+		return self:LogicalWidth() - self:LogicalRightOffsetForContent();
+	end
+	if(offsetFromLogicalTopOfFirstPage == nil) then
+		region = self:RegionAtBlockOffset(region);
+		offsetFromLogicalTopOfFirstPage = self:OffsetFromLogicalTopOfFirstPage();
+	end
+	if(self:Style():IsLeftToRightDirection()) then
+		self:LogicalLeftOffsetForContent(region, offsetFromLogicalTopOfFirstPage)
+	end
+	return self:LogicalWidth() - self:LogicalRightOffsetForContent(region, offsetFromLogicalTopOfFirstPage);
+end
+
+--void RenderBlock::setStaticInlinePositionForChild(RenderBox* child, LayoutUnit blockOffset, LayoutUnit inlinePosition)
+function LayoutBlock:SetStaticInlinePositionForChild(child, blockOffset, inlinePosition)
+    if (self:InRenderFlowThread()) then
+        -- Shift the inline position to exclude the region offset.
+        inlinePosition = inlinePosition + self:StartOffsetForContent() - self:StartOffsetForContent(blockOffset);
+    end
+    child:Layer():SetStaticInlinePosition(inlinePosition);
 end

@@ -13,6 +13,7 @@ NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutBlock.lua");
 local LayoutButton = commonlib.inherit(commonlib.gettable("System.Windows.mcml.layout.LayoutBlock"), commonlib.gettable("System.Windows.mcml.layout.LayoutButton"));
 
 function LayoutButton:ctor()
+	self.name = "LayoutButton";
 end
 
 function LayoutButton:OnBeforeChildrenLayout(layout)

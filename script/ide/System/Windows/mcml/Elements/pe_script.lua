@@ -224,7 +224,6 @@ function pe_script.DoPageCode(code, pageCtrl)
 			return file_func();
 		else
 			LOG.std(nil, "error", "pe_script", "<Runtime Error>failed to do page code in page%s. error msg:%s", tostring(pageCtrl.url), tostring(errmsg))
-			echo(pe_script.prepare_page_env..code);
 			return nil;
 		end
 	end

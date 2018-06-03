@@ -395,7 +395,7 @@ function CSSStyleDeclaration:Position()
 end
 
 function CSSStyleDeclaration:Floating()
-	return self["float"];
+	return self["float"] or "none";
 end
 
 function CSSStyleDeclaration:Display()
@@ -419,7 +419,15 @@ function CSSStyleDeclaration:OverflowY()
 end
 
 function CSSStyleDeclaration:Visibility()
-	return self["visible"];
+	return self["visibility"];
+end
+
+function CSSStyleDeclaration:FontSize()
+	return self["font-size"] or 12;
+end
+
+function CSSStyleDeclaration:Color()
+	return self["color"] or "#000000";
 end
 
 -- the user may special many font size, however, some font size is simulated with a base font and scaling. 
@@ -432,16 +440,16 @@ function CSSStyleDeclaration:GetFontSettings()
 		local font_family = self["font-family"] or "System";
 		-- this is tricky. we convert font size to integer, and we will use scale if font size is either too big or too small. 
 		font_size = math.floor(tonumber(self["font-size"] or 12));
-		local max_font_size = tonumber(self["base-font-size"]) or 14;
-		local min_font_size = tonumber(self["base-font-size"]) or 11;
-		if(font_size>max_font_size) then
-			scale = font_size / max_font_size;
-			font_size = max_font_size;
-		end
-		if(font_size<min_font_size) then
-			scale = font_size / min_font_size;
-			font_size = min_font_size;
-		end
+--		local max_font_size = tonumber(self["base-font-size"]) or 14;
+--		local min_font_size = tonumber(self["base-font-size"]) or 11;
+--		if(font_size>max_font_size) then
+--			scale = font_size / max_font_size;
+--			font_size = max_font_size;
+--		end
+--		if(font_size<min_font_size) then
+--			scale = font_size / min_font_size;
+--			font_size = min_font_size;
+--		end
 		local font_weight = self["font-weight"] or "norm";
 		font = string.format("%s;%d;%s", font_family, font_size, font_weight);
 	else

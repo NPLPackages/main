@@ -12,6 +12,8 @@ System.Windows.mcml.Elements.pe_text:RegisterAs("text");
 NPL.load("(gl)script/ide/System/Windows/mcml/PageElement.lua");
 NPL.load("(gl)script/ide/System/Windows/UIElement.lua");
 NPL.load("(gl)script/ide/System/Windows/Controls/Label.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutText.lua");
+local LayoutText = commonlib.gettable("System.Windows.mcml.layout.LayoutText");
 local mcml = commonlib.gettable("System.Windows.mcml");
 local Label = commonlib.gettable("System.Windows.Controls.Label");
 local UIElement = commonlib.gettable("System.Windows.UIElement")
@@ -39,39 +41,50 @@ function pe_text:GetTextTrimmed()
 end
 
 function pe_text:LoadComponent(parentElem, parentLayout, style)
-	local css = self:CreateStyle(nil, style);
+	--local css = self:CreateStyle(nil, style);
 
 	local value = self:GetTextTrimmed();
 	self.value = value;
-	if(not value or value=="") then
-		return true;
-	end
+--	if(not value or value=="") then
+--		return true;
+--	end
 	self:EnableSelfPaint(parentElem);
-
-	css.float = true;
-	local font, font_size, scale = css:GetFontSettings();
-	local line_padding = 2;
-	
-	if(css["line-height"]) then
-		local line_height = css["line-height"];
-		local line_height_percent = line_height:match("(%d+)%%");
-		if(line_height_percent) then
-			line_height_percent = tonumber(line_height_percent);
-			line_padding = math.ceil((line_height_percent*font_size*0.01-font_size)*0.5);
-		else
-			line_height = line_height:match("(%d+)");
-			line_height = tonumber(line_height);
-			if(line_height) then
-				line_padding = math.ceil((line_height-font_size)*0.5);
-			end
-		end
-	end
-	self.font = font;
-	self.font_size = font_size;
-	self.scale = scale;
-	self.line_padding = line_padding;
-	self.textflow = css.textflow;
 end
+
+--function pe_text:LoadComponent(parentElem, parentLayout, style)
+--	local css = self:CreateStyle(nil, style);
+--
+--	local value = self:GetTextTrimmed();
+--	self.value = value;
+--	if(not value or value=="") then
+--		return true;
+--	end
+--	self:EnableSelfPaint(parentElem);
+--
+--	css.float = true;
+--	local font, font_size, scale = css:GetFontSettings();
+--	local line_padding = 2;
+--	
+--	if(css["line-height"]) then
+--		local line_height = css["line-height"];
+--		local line_height_percent = line_height:match("(%d+)%%");
+--		if(line_height_percent) then
+--			line_height_percent = tonumber(line_height_percent);
+--			line_padding = math.ceil((line_height_percent*font_size*0.01-font_size)*0.5);
+--		else
+--			line_height = line_height:match("(%d+)");
+--			line_height = tonumber(line_height);
+--			if(line_height) then
+--				line_padding = math.ceil((line_height-font_size)*0.5);
+--			end
+--		end
+--	end
+--	self.font = font;
+--	self.font_size = font_size;
+--	self.scale = scale;
+--	self.line_padding = line_padding;
+--	self.textflow = css.textflow;
+--end
 
 -- this function is called automatically after page component is loaded and whenever the window resize. 
 function pe_text:UpdateLayout(parentLayout)
@@ -201,13 +214,28 @@ function pe_text:SetValue(value)
 	self.value = tostring(value);
 end
 
+function pe_text:CreateAndAppendLabel(left, top, width, height, text)
+--	local label = {
+--		x = x,
+--		y = y,
+--		width = width, 
+--		height = height, 
+--		text = text
+--	};
+	self.labels = self.labels or commonlib.Array:new();
+	local _this = Label:new():init();
+	_this:SetText(text);
+	_this:setGeometry(left, top, width, height);
+	self.labels:add(_this);
+end
+
 -- virtual function: 
 function pe_text:paintEvent(painter)
 	if(self.labels) then
-		local css = self:GetStyle();
-		painter:SetFont(self.font);
-		painter:SetPen(css.color or "#000000");
-
+		local css = self:GetComputedStyle();
+		local font = css:Font();
+		painter:SetFont(font);
+		painter:SetPen(css:Color());
 		for i = 1, #self.labels do
 			local label = self.labels[i];
 			if(label) then
@@ -216,4 +244,9 @@ function pe_text:paintEvent(painter)
 			end
 		end
 	end
+end
+
+function pe_text:CreateLayoutObject(arena, style)
+	local text = self:GetTextTrimmed();
+	return LayoutText:new():init(self, text);
 end

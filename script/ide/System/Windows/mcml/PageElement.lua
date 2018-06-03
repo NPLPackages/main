@@ -255,19 +255,22 @@ end
 
 
 function PageElement:LayoutObjectIsNeeded(style)
-	style = style or self:GetStyle();
-	if(style and style["display"] == "none") then
+	if(style and style:Display() == "NONE") then
 		return false;
 	end
 	return true;
 end
 
--- 暂时不使用该函数，目前直接在LayoutTreeBuilder:createObject中创建LayoutObject对象
-function PageElement:CreateLayoutObject(computed_style)
-	return LayoutObject:createObject(self, computed_style);
+
+function PageElement:CreateLayoutObject(arena, style)
+	return LayoutObject.CreateLayoutObject(self, style);
 end
 
 function PageElement:GetLayoutObject()
+	return self.layout_object;
+end
+
+function PageElement:Renderer()
 	return self.layout_object;
 end
 

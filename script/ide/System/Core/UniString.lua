@@ -70,12 +70,15 @@ end
 
 -- measure text width in pixel using the given font 
 -- @param font: if nil, it is the default font. 
-function UniString:GetWidth(font)
-	return UniString.GetTextWidth(self.text, font);
+function UniString:GetWidth(font, from, len)
+	return UniString.GetTextWidth(self.text, font, from, len);
 end
 
 -- public static function.
-function UniString.GetTextWidth(text, font)
+function UniString.GetTextWidth(text, font, from, len)
+	if(from and len) then
+		text = string.sub(text, from, from + len);
+	end
 	local textWidth = _guihelper.GetTextWidth(text, font);
 	return textWidth;
 end
@@ -211,11 +214,29 @@ local unicode_space_chars = {
 	[SpecialCharacter.LineSeparator] = true,
 }
 
+UniString.SpecialCharacter = SpecialCharacter;
+-- param c: the char
+-- param SpecialCharacter: member of the "UniString.SpecialCharacter" table
+function UniString.IsSpecialCharacter(c, SpecialCharacter)
+	return string.byte(c, 1) == SpecialCharacter;
+end
+
 -- return true if character is a unicode space character
 -- @param position: this is cursor pos. 0 means first character. length-1 means last. 
 function UniString:atSpace(position)
     local c = self:at(position+1);
     return c and unicode_space_chars[string.byte(c, 1)];
+end
+
+function UniString:nextBreakablePosition(position)
+	local len = self:length();
+	while (position <= len) do
+		if(self:atSpace(position - 1)) then
+			break;
+		end
+        position = position + 1;
+	end
+	return position;
 end
 
 local word_separators = {
@@ -326,4 +347,19 @@ end
 
 function UniString:rightCursorPosition(oldPos)
 	return oldPos + 1;
+end
+
+function UniString.IsASCIISpace(c)
+	if(not c) then
+		return false;
+	end
+	local numC = string.byte(c);
+	return c == " " or (numC <= 0xD and numC >= 0x9);
+end
+
+function UniString.IsSpaceOrNewline(c)
+	-- Use isASCIISpace() for basic Latin-1.
+    -- This will include newlines, which aren't included in Unicode DirWS.
+    -- return c <= 0x7F ? WTF::isASCIISpace(c) : WTF::Unicode::direction(c) == WTF::Unicode::WhiteSpaceNeutral;
+	return UniString.IsASCIISpace(c);
 end
