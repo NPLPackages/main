@@ -134,7 +134,7 @@ end
 --function LayoutText:Width(unsigned from, unsigned len, const Font& f, float xPos, HashSet<const SimpleFontData*>* fallbackFonts, GlyphOverflow* glyphOverflow) const
 function LayoutText:Width(from, len, font, xPos, fallbackFonts, glyphOverflow)
 	if(type(font) == "number" and type(xPos) == "boolean") then
-		if(from >= self:TextLength()) then
+		if(from > self:TextLength()) then
 			return 0;
 		end
 

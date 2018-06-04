@@ -1308,7 +1308,7 @@ local function printLineBoxsInfo(box)
 			echo(box.topLeft);
 			echo(box.logicalWidth);
 			local font = box.renderer:Style():Font();
-			echo(UniString.GetTextWidth(tostring(box.renderer:Characters()), font, box.start, box.len));
+			echo(box.renderer:Characters():GetWidth(font, box.start, box.len));
 			echo(font);
 		else
 			echo("not any box");

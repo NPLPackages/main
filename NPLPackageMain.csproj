@@ -1072,6 +1072,7 @@
     <Content Include="script\test\IDE_Test.lua" />
     <Content Include="script\test\MCMLV2\mcml_window.html" />
     <Content Include="script\test\MCMLV2\test_layout_block.html" />
+    <Content Include="script\test\MCMLV2\test_layout_float.html" />
     <Content Include="script\test\MCMLV2\test_layout_text.html" />
     <Content Include="script\test\MCML_Sample.xml" />
     <Content Include="script\test\media\bumpMap.dds" />

@@ -113,7 +113,7 @@ function InlineTextBox:Paint(paintInfo, paintOffset, lineTop, lineBottom)
 		local textRender = self:Renderer();
 		local textNode = textRender:Node();
 		if(textNode) then
-			local text = string.sub(tostring(textRender.text), self.start, self.start + self.len - 1);
+			local text = textRender:Characters():substr(self.start, self.start + self.len - 1);
 			textNode:CreateAndAppendLabel(left, top, width ,height, text);
 		end
 	end

@@ -71,13 +71,9 @@ end
 -- measure text width in pixel using the given font 
 -- @param font: if nil, it is the default font. 
 function UniString:GetWidth(font, from, len)
-	return UniString.GetTextWidth(self.text, font, from, len);
-end
-
--- public static function.
-function UniString.GetTextWidth(text, font, from, len)
+	local text = self.text;
 	if(from and len) then
-		text = string.sub(text, from, from + len);
+		text = self:substr(from, from + len);
 	end
 	local textWidth = _guihelper.GetTextWidth(text, font);
 	return textWidth;
@@ -91,7 +87,7 @@ function UniString:cursorToX(cursor, font)
 		return 0;
 	end
 	local text = ParaMisc.UniSubString(self.text, 1, cursor)
-	return UniString.GetTextWidth(text, font);
+	return _guihelper.GetTextWidth(text, font);
 end
 
 -- Returns the cursor position of the given x pixel value in relation to the displayed text.  
@@ -228,12 +224,46 @@ function UniString:atSpace(position)
     return c and unicode_space_chars[string.byte(c, 1)];
 end
 
+local function isASCIIAlphanumeric(ch)
+	local ch_num = string.byte(ch);
+	if(ch_num > 0x7f) then
+		return false;
+	end
+	return (ch_num > 47 and ch_num < 58) or (ch_num > 64 and ch_num < 91) or (ch_num > 96 and ch_num < 123);
+end
+
+local function shouldBreakAfter(lastCh, ch, nextCh)
+	if(ch == "-" and isASCIIAlphanumeric(lastCh) and isASCIIAlphanumeric(nextCh)) then
+		return true;
+	end
+	return false;
+end
+
+local function needsLineBreakIterator(ch)
+	local ch_num = string.byte(ch);
+    return ch_num > 127;
+end
+
 function UniString:nextBreakablePosition(position)
 	local len = self:length();
+	local ch, lastCh, lastLastCh = nil, 0, 0;
+	if(position > 1) then
+		lastCh = self:at(position - 1);
+	end
+	if(position > 2) then
+		lastLastCh = self:at(position - 2);
+	end
 	while (position <= len) do
-		if(self:atSpace(position - 1)) then
+		ch = self:at(position);
+		if(self:atSpace(position - 1) or shouldBreakAfter(lastLastCh, lastCh, ch)) then
 			break;
 		end
+		if(needsLineBreakIterator(ch) or needsLineBreakIterator(lastCh)) then
+			break;
+		end
+		lastLastCh = lastCh;
+		lastCh = ch;
+
         position = position + 1;
 	end
 	return position;
