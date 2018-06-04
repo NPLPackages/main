@@ -223,6 +223,9 @@ function TextControl:SetText(text)
 	if(self:GetRow() == 0) then
 		self:initDoc();
 	end
+	if(self.cursorLine>#self.items) then
+		self.cursorLine = #self.items;
+	end
 
 	local clip = self.parent:ViewRegion();
 	self:scrollX(clip:x() - self:x());

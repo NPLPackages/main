@@ -189,6 +189,15 @@ function EventSystem:DispatchEvent(event, ...)
 	end
 end
 
+function EventSystem:GetEventHandlerCount(event_type)
+	local sinks = self.event_pools[event_type];
+	if(sinks) then
+		return #sinks;
+	else
+		return 0;
+	end
+end
+
 -- dispatch the event. 
 -- @return: the callback return value is also returned. 
 function EventSystem:DispatchEventByType(event_type, event, ...)
