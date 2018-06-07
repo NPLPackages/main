@@ -22,8 +22,8 @@ And you can run "nplc your_script" to test it in development in any folder,
 please don't use relative path of your script file here.
 ------------------------------------------------------------------------------------
 ]]
-
 NPL.load("(gl)script/ide/System/nplcmd/extension.npl")
+NPL.load("(gl)script/ide/System/nplcmd/file_watcher.npl")
 local Embeded = NPL.load("(gl)script/ide/System/nplcmd/embeded_cmd.npl")
 local binder = "%+"
 local ctx = {}
@@ -35,7 +35,9 @@ local function cmd_begin()
 end
 
 local function cmd_end()
-    if not ctx.keep_alive then ParaGlobal.Exit(file_result or 0) end
+    if not ctx.keep_alive then
+        ParaGlobal.Exit(file_result or 0)
+    end
 end
 
 -- example
@@ -55,7 +57,7 @@ local function cmd_parser(args)
                 script = arg
                 state = "params"
             end
-        elseif(state == "params") then
+        elseif (state == "params") then
             table.insert(params, arg)
         else
             error(format("invalid args %s on arg %s", args, arg))
@@ -70,7 +72,8 @@ local function show_version()
 end
 
 local function show_usage()
-    local text = [[
+    local text =
+        [[
 NPL Command Line
 
 usage: nplc [options] script [params]
@@ -112,15 +115,15 @@ local function cmd_exec(args, ctx)
         return
     end
 
-    if(not script) then
+    if (not script) then
         options["-i"] = nil -- ignore -i option
         file_result = Embeded.run("console", ctx)
     else
         if Embeded.include_cmd(script) then -- run default commands first
             file_result = Embeded.run(script, ctx)
         else
-			-- 执行用户脚本前，先加载依赖包
-			Embeded.run("loader", {path = ctx.path, arg = {}})
+            -- 执行用户脚本前，先加载依赖包
+            Embeded.run("loader", {path = ctx.path, arg = {}})
 
             local cmd = NPL.load(script)
             if type(cmd) == "function" then
@@ -141,16 +144,23 @@ local function cmd_exec(args, ctx)
     end
 end
 
-cmd_begin()
-xpcall(
+local function nplc_start()
+    cmd_begin()
+    xpcall(
+        function()
+            cmd_exec(args, ctx)
+        end,
+        function(e)
+            print(e)
+            print(debug.traceback())
+        end
+    )
+    cmd_end()
+end
+
+nplc_start()
+
+NPL.this(
     function()
-        cmd_exec(args, ctx)
-    end,
-    function(e)
-        print(e)
-        print(debug.traceback())
     end
 )
-cmd_end()
-
-NPL.this(function() end)

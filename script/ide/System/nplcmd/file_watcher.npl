@@ -1,0 +1,84 @@
+--[[
+Title: nplc file watcher
+Desc: automatically reload app code while files were changed
+-----------------------------------------------
+]]
+NPL.load("(gl)script/ide/FileSystemWatcher.lua")
+NPL.load("(gl)script/ide/Files.lua")
+
+local _M = commonlib.inherit(nil, commonlib.gettable("NPL.AppFileWatcher"))
+local lower = string.lower
+
+-- file extension
+local DEFAULT_MONITORED_FILES = {
+    ["lua"] = true,
+    ["npl"] = true
+}
+
+function _M:ctor()
+end
+
+function _M:init(monitored_files)
+    self.monitored_files = file_extentions or DEFAULT_MONITORED_FILES
+    self:init_watcher()
+    return self
+end
+
+-- parse and compile again.
+function _M:refresh(filename)
+    print(format("File Watcher will reload page: %s", filename))
+    local restart_code = [[NPL.load("(gl)script/ide/System/nplcmd/cmd.npl")]]
+    __rts__:Reset(restart_code)
+end
+
+function _M:init_watcher()
+    self.watcher = commonlib.FileSystemWatcher:new()
+    local watcher = self.watcher
+    local root = self:GetRootDirectory()
+    local rootSize = #root
+
+    watcher.filter = function(filename)
+        local ext = filename:match("%.(%w+)$")
+        if (ext) then
+            return self.monitored_files[ext]
+        end
+    end
+    -- also monitor other directories, such as in current world directory.
+    watcher:SetMonitorAll(true)
+    watcher.OnFileChanged = function(msg)
+        if (msg.type == "modified" or msg.type == "added" or msg.type == "renamed_new_name") then
+            LOG.std(nil, "info", "nplc file watcher", "File %s: %s", msg.fullname, msg.type)
+            if (rootSize > 0 and string.lower(msg.fullname:sub(1, rootSize)) ~= string.lower(root)) then
+                self:refresh(msg.fullname)
+            else
+                self:refresh(msg.fullname:sub(rootSize + 1))
+            end
+        end
+    end
+end
+
+-- @return rootdir or ""
+function _M:GetRootDirectory()
+    local dev = commonlib.Files.GetDevDirectory()
+    if (dev == "") then
+        dev = ParaIO.GetWritablePath()
+    end
+    return dev or ""
+end
+
+-- monitor file change and call refresh() automatically
+-- this function can be called many times for different or same directory path.
+function _M:monitor_directory(dir)
+    if (dir) then
+        if (dir ~= "" and not string.find(dir, "/$")) then
+            dir = dir .. "/"
+        end
+        local root = self:GetRootDirectory()
+
+        if (commonlib.Files.IsAbsolutePath(dir)) then
+            self.watcher:AddDirectory(dir)
+        else
+            self.watcher:AddDirectory(root .. dir)
+        end
+    end
+end
