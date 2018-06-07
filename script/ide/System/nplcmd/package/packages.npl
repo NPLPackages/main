@@ -95,9 +95,7 @@ function packages:get(package)
                     return x
                 end
             else
-                if not result then
-                    result = x
-                elseif result.version <= x.version < 0 then
+                if not result or result.version <= x.version  then
                     result = x
                 end
             end
