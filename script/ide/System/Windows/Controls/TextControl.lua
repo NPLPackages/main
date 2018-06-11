@@ -29,6 +29,7 @@ TextControl:Property({"CursorColor", "#000000", auto=true})
 TextControl:Property({"EmptyTextColor", "#888888", auto=true})
 TextControl:Property({"SelectedBackgroundColor", "#99c9ef", auto=true})
 TextControl:Property({"CurLineBackgroundColor", "#e5ebf1e0", auto=true})
+TextControl:Property({"AlwaysShowCurLineBackground", true, "isAlwaysShowCurLineBackground", "SetAlwaysShowCurLineBackground", auto=true})
 TextControl:Property({"m_cursor", 0, "cursorPosition", "setCursorPosition"})
 TextControl:Property({"cursorVisible", false, "isCursorVisible", "setCursorVisible"})
 TextControl:Property({"m_readOnly", false, "isReadOnly", "setReadOnly", auto=true})
@@ -623,7 +624,7 @@ function TextControl:keyPressEvent(event)
 	end
 end
 
-local TAB_CHAR = "   ";
+local TAB_CHAR = "    ";
 local tab_len = string.len(TAB_CHAR);
 
 function TextControl:ProcessTab(mark)
@@ -939,7 +940,7 @@ end
 function TextControl:paste(mode)
 	local clip = ParaMisc.GetTextFromClipboard();
 	if(clip and self:IsAutoTabToSpaces()) then
-		clip = clip:gsub("\t", "    ");
+		clip = clip:gsub("\t", TAB_CHAR);
 	end
 	if(clip or self:hasSelectedText()) then
 		--self:separate(); -- make it a separate undo/redo command
@@ -1225,7 +1226,19 @@ function TextControl:lineInternalRemove(line, pos, count)
 end
 
 function TextControl:newLine(mark)
-	self:InsertTextInCursorPos("\r\n");
+	local newLineText = "\r\n";
+
+	-- add heading spaces of the current line to the newline
+	local text = self:GetLineText(self.cursorLine);
+	if(text) then
+		text = tostring(text);
+		local headingSpaces = text:match("^([ \t]+)");
+		if(headingSpaces) then
+			newLineText = newLineText..headingSpaces;
+		end
+	end
+
+	self:InsertTextInCursorPos(newLineText);
 end
 
 function TextControl:hasAcceptableInput(str)
@@ -1517,9 +1530,9 @@ function TextControl:LanguageFormat(lineItem)
 		local uniStr = lineItem.text;
 		for token in self.syntaxAnalyzer:GetToken(uniStr) do
 			if(token.type) then
-				local font = nil;
+				local font = self:GetFont();
 				if(token.bold) then
-					font = string.gsub(self:GetFont(),"(%a+;%d+;)(%a+)","%1bold")
+					font = string.gsub(font,"(%a+;%d+;)(%a+)","%1bold")
 				end
 				self:AddHighLightBlock(lineItem, token.spos, token.epos, font, token.color, nil);
 			end
@@ -1536,8 +1549,7 @@ function TextControl:paintEvent(painter)
 	self.from_line = math.max(1, 1 + math.floor((-(self:y() - self.parent:ViewRegionOffsetY())) / self.lineHeight)); 
 	self.to_line = math.min(self.items:size(), 1 + math.ceil((-self:y() + clipRegion:height()) / self.lineHeight));
 
-
-	if(self.cursorVisible and self:hasFocus() and not self:isReadOnly()) then
+	if(not self:isReadOnly() and (self:isAlwaysShowCurLineBackground() or (self.cursorVisible and self:hasFocus() and not self:isReadOnly()))) then
 		-- the curor line backgroud
 		local curline_x, curline_y = 0, (self.cursorLine - 1) * self.lineHeight;
 		painter:SetPen(self:GetCurLineBackgroundColor());

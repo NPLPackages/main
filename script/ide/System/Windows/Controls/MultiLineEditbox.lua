@@ -40,6 +40,7 @@ MultiLineEditbox:Property({"Color", "#000000", })
 MultiLineEditbox:Property({"CursorColor", "#33333388"})
 MultiLineEditbox:Property({"SelectedBackgroundColor", "#99c9ef", auto=true})
 MultiLineEditbox:Property({"CurLineBackgroundColor", "#e5ebf1e0", auto=true})
+MultiLineEditbox:Property({"AlwaysShowCurLineBackground", true, "isAlwaysShowCurLineBackground", "SetAlwaysShowCurLineBackground"})
 MultiLineEditbox:Property({"m_cursor", nil, "cursorPosition", "setCursorPosition"})
 MultiLineEditbox:Property({"cursorVisible", false, "isCursorVisible", "setCursorVisible"})
 MultiLineEditbox:Property({"m_cursorWidth", 2,})
@@ -60,7 +61,7 @@ MultiLineEditbox:Property({"m_readOnly", false, "isReadOnly", "setReadOnly"})
 --MultiLineEditbox:Property({"m_maxLength", 65535, "getMaxLength", "setMaxLength", auto=true})
 --MultiLineEditbox:Property({"rows", nil, "GetRows", "SetRows"})
 MultiLineEditbox:Property({"lineWrap", nil, "GetLineWrap", "SetLineWrap", auto=true})
-MultiLineEditbox:Property({"ItemHeight",20, auto=true})
+MultiLineEditbox:Property({"ItemHeight",20, auto=true, "GetItemHeight", "SetItemHeight"})
 
 --MultiLineEditbox:Property({"vSliderWidth", 20, auto=true});
 --MultiLineEditbox:Property({"hSliderHeight", 20, auto=true});
@@ -140,6 +141,18 @@ end
 function MultiLineEditbox:GetCurLineBackgroundColor()
 	if(self.viewport) then
 		return self.viewport:GetCurLineBackgroundColor();
+	end
+end
+
+function MultiLineEditbox:SetAlwaysShowCurLineBackground(isShow)
+	if(self.viewport) then
+		self.viewport:SetAlwaysShowCurLineBackground(isShow);
+	end
+end
+
+function MultiLineEditbox:isAlwaysShowCurLineBackground()
+	if(self.viewport) then
+		return self.viewport:isAlwaysShowCurLineBackground();
 	end
 end
 
@@ -388,6 +401,17 @@ end
 function MultiLineEditbox:GetLineNumberAlignment()
 	-- default to right,top and no clipping.
 	return 2+256;
+end
+
+function MultiLineEditbox:SetItemHeight(value)
+	self.ItemHeight = value;
+	if(self.viewport) then
+		self.viewport:SetLineHeight(value);
+	end
+end
+
+function MultiLineEditbox:GetItemHeight()
+	return self.ItemHeight;
 end
 
 function MultiLineEditbox:paintEvent(painter)

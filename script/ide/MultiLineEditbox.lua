@@ -78,6 +78,7 @@ local MultiLineEditbox = commonlib.inherit(commonlib.gettable("CommonCtrl.TreeVi
 	HorizontalScrollBarHeight=20,
 	-- whether to use the new advanced system control. This is recommended for multiline editing experience. 
 	bUseSystemControl = false,
+	AlwaysShowCurLineBackground = true,
 }))
 
 -- NPL syntax highlighting rules
@@ -146,6 +147,10 @@ function MultiLineEditbox:Show(bShow)
 			self.ctrlEditbox:ShowLineNumber(self.ShowLineNumber == true);
 			self.ctrlEditbox:SetBackgroundColor("#00000000");
 			self.ctrlEditbox:SetItemHeight(self.DefaultNodeHeight);
+			self.ctrlEditbox:SetAlwaysShowCurLineBackground(self.AlwaysShowCurLineBackground);
+			if(self.fontsize) then
+				self.ctrlEditbox:SetFont(format("System;%d;norm", self.fontsize))
+			end
 			if(self.ReadOnly) then
 				self.ctrlEditbox:setReadOnly(true);
 			end

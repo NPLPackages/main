@@ -847,7 +847,7 @@ function pe_editor_button.create(rootName, mcmlNode, bindingContext, _parent, le
 		local tooltip_page = string.match(tooltip or "", "page://(.+)");
 		local tooltip_static_page = string.match(tooltip or "", "page_static://(.+)");
 		if(tooltip_page) then
-			CommonCtrl.TooltipHelper.BindObjTooltip(mcmlNode.uiobject_id, tooltip_page, mcmlNode:GetNumber("tooltip_offset_x"), mcmlNode:GetNumber("tooltip_offset_y"), mcmlNode:GetNumber("show_width"),mcmlNode:GetNumber("show_height"),mcmlNode:GetNumber("show_duration"), nil, nil, nil, mcmlNode:GetBool("is_lock_position"), mcmlNode:GetBool("use_mouse_offset"), mcmlNode:GetNumber("screen_padding_bottom"));
+			CommonCtrl.TooltipHelper.BindObjTooltip(mcmlNode.uiobject_id, tooltip_page, mcmlNode:GetNumber("tooltip_offset_x"), mcmlNode:GetNumber("tooltip_offset_y"), mcmlNode:GetNumber("show_width"),mcmlNode:GetNumber("show_height"),mcmlNode:GetNumber("show_duration"), nil, nil, nil, mcmlNode:GetBool("is_lock_position"), mcmlNode:GetBool("use_mouse_offset"), mcmlNode:GetNumber("screen_padding_bottom"), nil, nil, nil, mcmlNode:GetBool("offset_ctrl_width"), mcmlNode:GetBool("offset_ctrl_height"));
 		elseif(tooltip_static_page) then
 			CommonCtrl.TooltipHelper.BindObjTooltip(mcmlNode.uiobject_id, tooltip_static_page, mcmlNode:GetNumber("tooltip_offset_x"), mcmlNode:GetNumber("tooltip_offset_y"), mcmlNode:GetNumber("show_width"),mcmlNode:GetNumber("show_height"),mcmlNode:GetNumber("show_duration"),mcmlNode:GetBool("enable_tooltip_hover"),mcmlNode:GetBool("click_through"));
 		else
@@ -1230,7 +1230,7 @@ Map3DSystem.mcml_controls.pe_editor_text = pe_editor_text;
 function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left, top, width, height, style, parentLayout)
 	local name = mcmlNode:GetAttributeWithCode("name",nil,true);
 	local text =  mcmlNode:GetAttribute("text") or mcmlNode:GetAttributeWithCode("value",nil,true) or mcmlNode:GetInnerText();
-	local rows =  mcmlNode:GetNumber("rows") or 1;
+	local rows =  tonumber(mcmlNode:GetAttributeWithCode("rows", 1, true));
 	
 	local css = mcmlNode:GetStyle(mcml_controls.pe_css.default["pe:editor-text"] or mcml_controls.pe_html.css["pe:editor-text"]);
 	
@@ -1263,7 +1263,7 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 		end	
 	end
 
-	width, height = width-left-margin_left-margin_right, css.height or (lineheight or 20)*rows;
+	width, height = width-left-margin_left-margin_right, css.height or ((lineheight or 20)*rows + (css["padding-top"] or 0) + (css["padding-bottom"] or 0));
 	if(css.width and (rows==1 or css.width<width)) then
 		width = css.width
 	end
@@ -1277,7 +1277,6 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 	local instName = mcmlNode:GetAttributeWithCode("uiname", nil, true) or mcmlNode:GetInstanceName(rootName);
 	
 	if(rows>1 or mcmlNode.name=="textarea") then
-		
 		-- multiline editbox
 		NPL.load("(gl)script/ide/MultiLineEditbox.lua");
 		local ctl = CommonCtrl.MultiLineEditbox:new{
@@ -1299,6 +1298,7 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 			container_bg = "",
 			bUseSystemControl = mcmlNode:GetBool("UseSystemControl"),
 			language = mcmlNode:GetAttributeWithCode("language", nil),
+			AlwaysShowCurLineBackground = mcmlNode:GetBool("AlwaysShowCurLineBackground", true),
 		};
 		local onkeyup = mcmlNode:GetString("onkeyup");
 		if(onkeyup)then

@@ -41,7 +41,8 @@ local default_offset_x = 24;
 --@param is_lock_position(optional): is_lock_position, if true, it will lock the tooltip position on first creation. otherwise it will change with the mouse location. 
 --@param use_mouse_offset(optional): if nil or true, it will offset relative to the current mouse position, otherwise it is relative to input id. 
 --@param screen_padding_bottom(optional): specially alignment for hp_slots_lower tooltip, test against screen bottom when reposition tooltip page
-function TooltipHelper.BindObjTooltip(id,page,force_offset_x,force_offset_y,show_width,show_height,show_duration, enable_tooltip_hover, click_through, is_enabled, is_lock_position, use_mouse_offset, screen_padding_bottom, absolute_x, absolute_y, target_parent_name)
+--@param offset_ctrl_width, offset_ctrl_height: boolean whether to add control's size to x, y;
+function TooltipHelper.BindObjTooltip(id,page,force_offset_x,force_offset_y,show_width,show_height,show_duration, enable_tooltip_hover, click_through, is_enabled, is_lock_position, use_mouse_offset, screen_padding_bottom, absolute_x, absolute_y, target_parent_name, offset_ctrl_width, offset_ctrl_height)
 	local self = TooltipHelper;
 	local uiobj = ParaUI.GetUIObject(id);
 	if(not uiobj:IsValid()) then
@@ -64,6 +65,8 @@ function TooltipHelper.BindObjTooltip(id,page,force_offset_x,force_offset_y,show
 		click_through = click_through,
 		force_offset_x = tonumber(force_offset_x) or default_offset_x,
 		force_offset_y = tonumber(force_offset_y) or default_offset_y,
+		offset_ctrl_width = offset_ctrl_width,
+		offset_ctrl_height = offset_ctrl_height,
 		absolute_x = absolute_x,
 		absolute_y = absolute_y,
 		target_parent_name = target_parent_name,
@@ -176,12 +179,19 @@ function TooltipHelper.ChangeCloseTimer(show_duration)
 			local temp = ParaUI.GetUIObjectAtPoint(x, y);
 			local bIsOverSrc = (temp.id == self.last_id);
 			if( bIsOverSrc or 
-			    ( params.enable_tooltip_hover and params.position_x and params.position_x < x and params.position_y < y and x < (params.position_x+params.width) and y < (params.position_y+params.height) )) then
+			    ( params.enable_tooltip_hover and params.position_x and params.position_x <= x and params.position_y <= y and x <= (params.position_x+params.width) and y <= (params.position_y+params.height) )) then
 				if(not params.isopened) then
 					params.isopened = true;
 					params.isdestroy = false;
 					if(not params.use_mouse_offset) then
-						x, y = ParaUI.GetUIObject(self.last_id):GetAbsPosition();
+						local width, height;
+						x, y, width, height = ParaUI.GetUIObject(self.last_id):GetAbsPosition();
+						if(params.offset_ctrl_width) then
+							x = x + width; 
+						end
+						if(params.offset_ctrl_height) then
+							y = y + height; 
+						end
 					end
 					self.UpdateObjTooltip(self.last_id, x + params.force_offset_x, y + params.force_offset_y, params.show_width, params.show_height, params.screen_padding_bottom);
 				elseif(bIsOverSrc and not params.is_lock_position) then
@@ -264,15 +274,14 @@ function TooltipHelper.UpdateObjTooltip(id, position_x, position_y, width, heigh
 					local x, y = wnd:GetAbsPosition();
 					params.position_x, params.position_y = x + params.absolute_x, y + params.absolute_y;
 				end
-				container = ParaUI.CreateUIObject("container", container_name, "_lt", params.position_x, params.position_y, 1000, 1000);
+				container = ParaUI.CreateUIObject("container", container_name, "_lt", params.position_x, params.position_y, params.show_width or 1000, params.show_height or 1000);
 				container.background = "";
 				container.zorder = 50000;
 				container:AttachToRoot();
 			else
 				container:RemoveAll();
 				-- make sure that the size is big enough 
-				container.width = 1000;
-				container.height = 1000;
+				container.width, container.height = params.show_width or 1000, params.show_height or 1000;
 			end
 			container:GetAttributeObject():SetField("ClickThrough", (params.click_through == true));
 			container.enabled = (params.is_enabled == true);
@@ -289,7 +298,7 @@ function TooltipHelper.UpdateObjTooltip(id, position_x, position_y, width, heigh
 				page_tooltip:Create("_TooltipHelperMCMLPage_", container, "_fi", 0, 0, 0, 0);
 				
 				local used_width, used_height = page_tooltip:GetUsedSize();
-				params.width, params.height = used_width, used_height;
+				params.width, params.height = params.show_width or used_width, params.show_height or used_height;
 				
 				TooltipHelper.Reposition(container, params);
 			else
@@ -383,7 +392,7 @@ BubbleHelper.tooltip_timer = nil;
 BubbleHelper.timer_interval = 100;
 BubbleHelper.tooltip_page_pairs = {};
 
-function BubbleHelper.Show(id,page,force_offset_x,force_offset_y,show_width,show_height,show_duration,click_through)
+function BubbleHelper.Show(id,page,force_offset_x,force_offset_y,show_width,show_height,show_duration,click_through, offset_ctrl_width, offset_ctrl_height)
 	local self = BubbleHelper;
 	local uiobj = ParaUI.GetUIObject(id);
 	if(not uiobj:IsValid()) then
@@ -403,6 +412,8 @@ function BubbleHelper.Show(id,page,force_offset_x,force_offset_y,show_width,show
 			click_through = click_through,
 			force_offset_x = tonumber(force_offset_x) or 0,
 			force_offset_y = tonumber(force_offset_y) or 0,
+			offset_ctrl_width = offset_ctrl_width,
+			offset_ctrl_height = offset_ctrl_height,
 			show_duration = tonumber(show_duration) or 3000,
 			cur_duration = 0,
 			show_width = show_width,
