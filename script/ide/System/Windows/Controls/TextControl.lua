@@ -213,7 +213,7 @@ function TextControl:SetText(text)
 	self.items:clear();
 	self.m_history:clear();
 	self.m_undoState = 0;
-
+	self:internalDeselect();
 	local line_text, breaker_text;
 	for line_text, breaker_text in string.gfind(text or "", "([^\r\n]*)(\r?\n?)") do
 		-- DONE: the current one will not ignore empty lines. such as \r\n\r\n. Empty lines are recognised.  
