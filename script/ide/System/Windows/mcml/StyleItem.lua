@@ -70,6 +70,7 @@ local inheritable_fields = {
 	["text-shadow-offset-y"] = true,
 	["text-align"] = true,
 	["line-height"] = true,
+	["caret-color"] = true,
 };
 
 -- only merge inheritable style like font, color, etc. 
@@ -137,6 +138,7 @@ local color_fields = {
 	["border-color"] = true,
 	["background-color"] = true,
 	["shadow-color"] = true,
+	["caret-color"] = true,
 };
 
 local image_fields = 

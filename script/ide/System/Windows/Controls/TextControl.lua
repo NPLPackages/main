@@ -1541,6 +1541,13 @@ function TextControl:LanguageFormat(lineItem)
 	end
 end
 
+function TextControl:ApplyCss(css)
+	TextControl._super.ApplyCss(self, css);
+	if(css["caret-color"]) then
+		self:SetCursorColor(css["caret-color"]);
+	end
+end
+
 function TextControl:paintEvent(painter)
 	if(self.needRecomputeTextHeight or self.needRecomputeTextWidth or self.needUpdateControlSize) then
 		self:updateGeometry();
