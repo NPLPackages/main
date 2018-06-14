@@ -343,13 +343,22 @@ function UniString:wordEndPosition(oldPos)
 	return end_pos;
 end
 
+function UniString:getFirstWordPosition()
+	for i=1, self:length() do
+		if(self:at(i) ~= ' ') then
+			return i-1;
+		end
+	end
+	return 0;
+end
+
 function UniString:wordBeginPosition(oldPos)
 	local begin_pos = oldPos;
 	if(self:at(begin_pos) == ' ') then
 		begin_pos = begin_pos - 1;
 		while(self:at(begin_pos) == ' ')  do
 			begin_pos = begin_pos - 1;
-		end																																					   
+		end
 		return begin_pos;
 	end
 	begin_pos = self:previousCursorPosition(oldPos, "SkipWords")
