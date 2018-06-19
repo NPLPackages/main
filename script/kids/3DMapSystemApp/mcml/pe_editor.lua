@@ -357,9 +357,17 @@ function pe_editor.create(rootName, mcmlNode, bindingContext, _parent, left, top
 		ontouch = nil;
 	end
 
-	local tooltip = mcmlNode:GetString("tooltip");
+	local tooltip = mcmlNode:GetAttributeWithCode("tooltip",nil,true);
 	if(tooltip and tooltip~="") then
-		_parent.tooltip = tooltip;
+		local tooltip_page = string.match(tooltip or "", "page://(.+)");
+		local tooltip_static_page = string.match(tooltip or "", "page_static://(.+)");
+		if(tooltip_page) then
+			CommonCtrl.TooltipHelper.BindObjTooltip(mcmlNode.uiobject_id, tooltip_page, mcmlNode:GetNumber("tooltip_offset_x"), mcmlNode:GetNumber("tooltip_offset_y"), mcmlNode:GetNumber("show_width"),mcmlNode:GetNumber("show_height"),mcmlNode:GetNumber("show_duration"), mcmlNode:GetBool("enable_tooltip_hover"), nil, mcmlNode:GetBool("tooltip_is_interactive"), mcmlNode:GetBool("is_lock_position"), mcmlNode:GetBool("use_mouse_offset"), mcmlNode:GetNumber("screen_padding_bottom"), nil, nil, nil, mcmlNode:GetBool("offset_ctrl_width"), mcmlNode:GetBool("offset_ctrl_height"));
+		elseif(tooltip_static_page) then
+			CommonCtrl.TooltipHelper.BindObjTooltip(mcmlNode.uiobject_id, tooltip_static_page, mcmlNode:GetNumber("tooltip_offset_x"), mcmlNode:GetNumber("tooltip_offset_y"), mcmlNode:GetNumber("show_width"),mcmlNode:GetNumber("show_height"),mcmlNode:GetNumber("show_duration"),mcmlNode:GetBool("enable_tooltip_hover"),mcmlNode:GetBool("click_through"));
+		else
+			_parent.tooltip = tooltip;
+		end
 	end
 
 	local btnName = mcmlNode:GetAttributeWithCode("name")
@@ -386,6 +394,21 @@ function pe_editor.create(rootName, mcmlNode, bindingContext, _parent, left, top
 	if(onsize_callback) then
 		_parent:SetScript("onsize",  function(uiobj)
 			Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, onsize_callback, btnName, mcmlNode, uiobj)
+		end)
+	end
+
+	local candrag = mcmlNode:GetAttributeWithCode("candrag");
+	if(candrag==true or candrag == "true") then
+		_parent.candrag = true;
+
+		local onDragBegin_callback = mcmlNode:GetAttributeWithCode("ondragbegin");
+		_parent:SetScript("ondragbegin",  function(uiobj)
+			Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, onDragBegin_callback, btnName, mcmlNode, uiobj)
+		end)
+
+		local onDragEnd_callback = mcmlNode:GetAttributeWithCode("ondragend");
+		_parent:SetScript("ondragend",  function(uiobj)
+			Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, onDragEnd_callback, btnName, mcmlNode, uiobj)
 		end)
 	end
 end

@@ -317,6 +317,10 @@ function Window:UpdateGeometry_Sys()
 	end
 end
 
+function Window:GetScreenPos()
+	return self.screen_x, self.screen_y;
+end
+
 function Window:setGeometry_sys(ax, ay, aw, ah)
 	local isResize = self:width()~=aw or self:height()~=ah;
 	local isMove = self.screen_x~=ax or self.screen_y~=ay;
@@ -538,4 +542,15 @@ function Window:mouseReleaseEvent(event)
 		event:accept();
 	end
 	self.isMouseDown = nil;
+end
+
+function Window:SetEnabled(enabled)
+	self.enabled = enabled;
+	if(self.native_ui_obj) then
+		self.native_ui_obj.enabled = enabled;
+	end
+end
+
+function Window:isEnabled()
+	return self.enabled;
 end

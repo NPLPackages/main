@@ -349,7 +349,7 @@ function UniString:getFirstWordPosition()
 			return i-1;
 		end
 	end
-	return 0;
+	return self:length();
 end
 
 function UniString:wordBeginPosition(oldPos)
