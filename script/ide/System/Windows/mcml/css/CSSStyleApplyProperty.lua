@@ -207,7 +207,7 @@ function CSSStyleApplyProperty:init()
 	self:SetPropertyHandler("caret-color", ApplyPropertyDefault:new():init(ComputedStyle.CaretColor, ComputedStyle.SetCaretColor, ComputedStyle.initialColor));
 	self:SetPropertyHandler("text-align", ApplyPropertyDefault:new():init(ComputedStyle.TextAlign, ComputedStyle.SetTextAlign, ComputedStyle.initialTextAlign));
 
-	self:SetPropertyHandler("float", ApplyPropertyDefault:new():init(ComputedStyle.Float, ComputedStyle.SetFloat, ComputedStyle.initialFloat));
+	self:SetPropertyHandler("float", ApplyPropertyDefault:new():init(ComputedStyle.Floating, ComputedStyle.SetFloating, ComputedStyle.initialFloating));
 	self:SetPropertyHandler("position", ApplyPropertyDefault:new():init(ComputedStyle.Position, ComputedStyle.SetPosition, ComputedStyle.initialPosition));
 	self:SetPropertyHandler("display", ApplyPropertyDefault:new():init(ComputedStyle.Display, ComputedStyle.SetDisplay, ComputedStyle.initialDisplay));
 	self:SetPropertyHandler("visibility", ApplyPropertyDefault:new():init(ComputedStyle.Visibility, ComputedStyle.SetVisibility, ComputedStyle.initialVisibility));
