@@ -9,7 +9,13 @@ NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutObjectChildList.lua");
 local LayoutObjectChildList = commonlib.gettable("System.Windows.mcml.layout.LayoutObjectChildList");
 ------------------------------------------------------------
 ]]
+NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyleConstants.lua");
+local ComputedStyleConstants = commonlib.gettable("System.Windows.mcml.style.ComputedStyleConstants");
+
 local LayoutObjectChildList = commonlib.inherit(nil, commonlib.gettable("System.Windows.mcml.layout.LayoutObjectChildList"));
+
+local VisibilityEnum = ComputedStyleConstants.VisibilityEnum;
+local PseudoIdEnum = ComputedStyleConstants.PseudoIdEnum;
 
 function LayoutObjectChildList:ctor()
 	self.firstChild = nil;
@@ -97,7 +103,7 @@ function LayoutObjectChildList:AppendChildNode(owner, newChild, fullAppend)
 
         -- if the new child is visible but this object was not, tell the layer it has some visible content
         -- that needs to be drawn and layer visibility optimization can't be used
-        if (owner:Style():Visibility() ~= "VISIBLE" and newChild:Style():Visibility() == "VISIBLE" and not newChild:HasLayer()) then
+        if (owner:Style():Visibility() ~= VisibilityEnum.VISIBLE and newChild:Style():Visibility() == VisibilityEnum.VISIBLE and not newChild:HasLayer()) then
             if (not layer) then
                 layer = owner:EnclosingLayer();
 			end
@@ -208,13 +214,13 @@ end
 function LayoutObjectChildList:AfterPseudoElementRenderer(owner)
 	local last = owner;
 	last = last:LastChild();
-	while (last and last:IsAnonymous() and last:Style():StyleType() == "NOPSEUDO" and not last:IsListMarker()) do
+	while (last and last:IsAnonymous() and last:Style():StyleType() == PseudoIdEnum.NOPSEUDO and not last:IsListMarker()) do
 		last = last:LastChild();
 	end
 --    do {
 --        last = last->lastChild();
 --    } while (last && last->isAnonymous() && last->style()->styleType() == NOPSEUDO && !last->isListMarker());
-    if (last and last:Style():StyleType() ~= "AFTER") then
+    if (last and last:Style():StyleType() ~= PseudoIdEnum.AFTER) then
         return nil;
 	end
     return last;

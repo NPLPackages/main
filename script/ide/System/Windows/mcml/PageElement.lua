@@ -73,6 +73,8 @@ function PageElement:ctor()
 
 	self.previousSibling = nil;
 	self.nextSibling = nil;
+
+	self.inlineStyleDecl = nil;
 end
 
 -- virtual public function: create a page element (and recursively all its children) according to input xmlNode o.
@@ -255,7 +257,7 @@ end
 
 
 function PageElement:LayoutObjectIsNeeded(style)
-	if(style and style:Display() == "NONE") then
+	if(style and style:Display() == DisplayEnum.NONE) then
 		return false;
 	end
 	return true;
@@ -279,9 +281,9 @@ function PageElement:SetLayoutObject(layout_object)
 end
 
 function PageElement:attachLayoutTree()
-	local computed_style = self:StyleForLayoutObject();
+	--local computed_style = self:StyleForLayoutObject();
 	--local computed_style = if_else(self.style, self.style.computed_style, nil);
-	LayoutTreeBuilder:init(self, computed_style):CreateLayoutObjectIfNeeded();
+	LayoutTreeBuilder:init(self):CreateLayoutObjectIfNeeded();
 end
 
 function PageElement:detachLayoutTree()
@@ -1014,14 +1016,15 @@ function PageElement:GetComputedStyle()
 end
 
 function PageElement:StyleForLayoutObject()
-	local parent_style;
-	if(self.parent) then
-		local parent_computed_style = self.parent:GetComputedStyle();
-		if(parent_computed_style) then
-			parent_style = parent_computed_style:GetStyle();
-		end
-	end
-	return self:CreateStyle(nil, parent_style);
+--	local parent_style;
+--	if(self.parent) then
+--		local parent_computed_style = self.parent:GetComputedStyle();
+--		if(parent_computed_style) then
+--			parent_style = parent_computed_style:GetStyle();
+--		end
+--	end
+--	return self:CreateStyle(nil, parent_style);
+	return self:GetPageCtrl():StyleSelector():StyleForElement(self, nil, true);
 end
 
 -- @param child: it can be mcmlNode or string node. 
@@ -1885,4 +1888,25 @@ function PageElement:ClipRegion()
 		end
 		parent = parent.parent;
 	end
+end
+
+function PageElement:CreateInlineStyleDecl()
+    self.inlineStyleDecl = CSSStyleDeclaration:new():init(self);
+	self.inlineStyleDecl:AddString(self.attr.style);
+end
+
+function PageElement:GetInlineStyleDecl()
+    if (not self.inlineStyleDecl and self.attr and self.attr.style) then
+        self:CreateInlineStyleDecl();
+	end
+    return self.inlineStyleDecl;
+end
+
+--CSSMutableStyleDeclaration* inlineStyleDecl() const { return m_inlineStyleDecl.get(); }
+function PageElement:InlineStyleDecl() 
+	return self:GetInlineStyleDecl();
+end
+
+function PageElement:ParentNodeForRenderingAndStyle()
+	return LayoutTreeBuilder:init(self):ParentNodeForRenderingAndStyle();
 end

@@ -11,8 +11,16 @@ local LayoutBoxModelObject = commonlib.gettable("System.Windows.mcml.layout.Layo
 ]]
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutObject.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutLayer.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyleConstants.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/IntSize.lua");
+local IntSize = commonlib.gettable("System.Windows.mcml.platform.graphics.IntSize");
+local ComputedStyleConstants = commonlib.gettable("System.Windows.mcml.style.ComputedStyleConstants");
 local LayoutLayer = commonlib.gettable("System.Windows.mcml.layout.LayoutLayer");
 local LayoutBoxModelObject = commonlib.inherit(commonlib.gettable("System.Windows.mcml.layout.LayoutObject"), commonlib.gettable("System.Windows.mcml.layout.LayoutBoxModelObject"));
+
+local LayoutSize = IntSize;
+
+local PositionEnum = ComputedStyleConstants.PositionEnum;
 
 -- Used to store state between styleWillChange and styleDidChange
 local s_wasFloating = false;
@@ -136,52 +144,92 @@ function LayoutBoxModelObject:BorderLogicalRight()
 end
 
 function LayoutBoxModelObject:PaddingLeft()
-	return self:Style():PaddingLeft();
+	local padding = self:Style():PaddingLeft();
+	local w = 0;
+	if (padding:IsPercent()) then
+        w = self:ContainingBlock():AvailableLogicalWidth();
+	end
+	return padding:CalcMinValue(w);
 end
 
 function LayoutBoxModelObject:PaddingTop()
-	return self:Style():PaddingTop();
+	local padding = self:Style():PaddingTop();
+	local w = 0;
+	if (padding:IsPercent()) then
+        w = self:ContainingBlock():AvailableLogicalWidth();
+	end
+	return padding:CalcMinValue(w);
 end
 
 function LayoutBoxModelObject:PaddingRight()
-	return self:Style():PaddingRight();
+	local padding = self:Style():PaddingRight();
+	local w = 0;
+	if (padding:IsPercent()) then
+        w = self:ContainingBlock():AvailableLogicalWidth();
+	end
+	return padding:CalcMinValue(w);
 end
 
 function LayoutBoxModelObject:PaddingBottom()
-	return self:Style():PaddingBottom();
+	local padding = self:Style():PaddingBottom();
+	local w = 0;
+	if (padding:IsPercent()) then
+        w = self:ContainingBlock():AvailableLogicalWidth();
+	end
+	return padding:CalcMinValue(w);
 end
 
 function LayoutBoxModelObject:PaddingBefore(includeIntrinsicPadding)
-	return self:Style():PaddingBefore();
+	local padding = self:Style():PaddingBefore();
+	local w = 0;
+	if (padding:IsPercent()) then
+        w = self:ContainingBlock():AvailableLogicalWidth();
+	end
+	return padding:CalcMinValue(w);
 end
 
 function LayoutBoxModelObject:PaddingAfter(includeIntrinsicPadding)
-	return self:Style():PaddingAfter();
+	local padding = self:Style():PaddingAfter();
+	local w = 0;
+	if (padding:IsPercent()) then
+        w = self:ContainingBlock():AvailableLogicalWidth();
+	end
+	return padding:CalcMinValue(w);
 end
 
 function LayoutBoxModelObject:PaddingStart(includeIntrinsicPadding)
-	return self:Style():PaddingStart();
+	local padding = self:Style():PaddingStart();
+	local w = 0;
+	if (padding:IsPercent()) then
+        w = self:ContainingBlock():AvailableLogicalWidth();
+	end
+	return padding:CalcMinValue(w);
 end
 
 function LayoutBoxModelObject:PaddingEnd(includeIntrinsicPadding)
-	return self:Style():PaddingEnd();
+	local padding = self:Style():PaddingEnd();
+	local w = 0;
+	if (padding:IsPercent()) then
+        w = self:ContainingBlock():AvailableLogicalWidth();
+	end
+	return padding:CalcMinValue(w);
 end
 
 
 function LayoutBoxModelObject:MarginLeft()
-	--return self:Style():MarginLeft();
+	
 end
 
 function LayoutBoxModelObject:MarginTop()
-	--return self:Style():MarginTop();
+	
 end
 
 function LayoutBoxModelObject:MarginRight()
-	--return self:Style():MarginRight();
+	
 end
 
 function LayoutBoxModelObject:MarginBottom()
-	--return self:Style():MarginBottom();
+	
 end
 
 function LayoutBoxModelObject:Float()
@@ -202,29 +250,6 @@ end
 
 function LayoutBoxModelObject:Bottom()
 	return self:Style():Bottom();
-end
-
-function LayoutBoxModelObject:BeWidthAuto()
-	if(self:Style():Width() or self.pageElement:GetAttribute("width", nil)) then
-		return false;
-	end
-	return true;
-end
-
-function LayoutBoxModelObject:BeHeightAuto()
-	if(self:Style():Height() or self.pageElement:GetAttribute("height", nil)) then
-		return false;
-	end
-	return true;
-end
-
-function LayoutBoxModelObject:beFixedLayout()
-	local css = self:Style();
-	local css_width, css_height = css:Width(), css:Height();
-	if(type(css_width) == "number" and type(css_height) == "number") then
-		return true;
-	end
-	return false;
 end
 
 -- virtual function
@@ -302,7 +327,7 @@ function LayoutBoxModelObject:UpdateBoxModelInfoFromStyle()
     -- we only check for bits that could possibly be set to true.
     --setHasBoxDecorations(hasBackground() || style()->hasBorder() || style()->hasAppearance() || style()->boxShadow());
     self:SetInline(self:Style():IsDisplayInlineType());
-    self:SetRelPositioned(self:Style():Position() == "RelativePosition");
+    self:SetRelPositioned(self:Style():Position() == PositionEnum.RelativePosition);
     self:SetHorizontalWritingMode(self:Style():IsHorizontalWritingMode());
 end
 
@@ -335,6 +360,55 @@ end
 
 --bool RenderBoxModelObject::hasSelfPaintingLayer() const
 function LayoutBoxModelObject:HasSelfPaintingLayer()
-	return false;
-    --return self.layer ~= nil and self.layer:IsSelfPaintingLayer();
+	--return false;
+    return self.layer ~= nil and self.layer:IsSelfPaintingLayer();
+end
+
+--LayoutSize relativePositionOffset() const { return LayoutSize(relativePositionOffsetX(), relativePositionOffsetY()); }
+function LayoutBoxModelObject:RelativePositionOffset()
+	return LayoutSize:new(self:RelativePositionOffsetX(), self:RelativePositionOffsetY());
+end
+
+function LayoutBoxModelObject:RelativePositionOffsetX()
+	-- Objects that shrink to avoid floats normally use available line width when computing containing block width.  However
+    -- in the case of relative positioning using percentages, we can't do this.  The offset should always be resolved using the
+    -- available width of the containing block.  Therefore we don't use containingBlockLogicalWidthForContent() here, but instead explicitly
+    -- call availableWidth on our containing block.
+    if (not self:Style():Left():IsAuto()) then
+        local cb = self:ContainingBlock();
+        if (not self:Style():Right():IsAuto() and not cb:Style():IsLeftToRightDirection()) then
+            return -(self:Style():Right():CalcValue(cb:AvailableWidth()));
+		end
+        return self:Style():Left():CalcValue(cb:AvailableWidth());
+    end
+    if (not self:Style():Right():IsAuto()) then
+        local cb = self:ContainingBlock();
+        return -(self:Style():Right():CalcValue(cb:AvailableWidth()));
+    end
+    return 0;
+end
+
+function LayoutBoxModelObject:RelativePositionOffsetY()
+	local containingBlock = self:ContainingBlock();
+
+    -- If the containing block of a relatively positioned element does not
+    -- specify a height, a percentage top or bottom offset should be resolved as
+    -- auto. An exception to this is if the containing block has the WinIE quirk
+    -- where <html> and <body> assume the size of the viewport. In this case,
+    -- calculate the percent offset based on this height.
+    -- See <https://bugs.webkit.org/show_bug.cgi?id=26396>.
+    if (not self:Style():Top():IsAuto()
+        and (not containingBlock:Style():Height():IsAuto()
+            or not self:Style():Top():IsPercent()
+            or containingBlock:StretchesToViewport())) then
+        return self:Style():Top():CalcValue(containingBlock:AvailableHeight());
+	end
+
+    if (not self:Style():Bottom():IsAuto()
+        and (not containingBlock:Style():Height():IsAuto()
+            or not self:Style():Bottom():IsPercent()
+            or containingBlock:StretchesToViewport())) then
+        return -(self:Style():Bottom():CalcValue(containingBlock:AvailableHeight()));
+	end
+    return 0;
 end

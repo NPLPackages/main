@@ -14,12 +14,20 @@ NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/IntRect.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/IntSize.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/IntPoint.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/PaintInfo.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyleConstants.lua");
+local ComputedStyleConstants = commonlib.gettable("System.Windows.mcml.style.ComputedStyleConstants");
 local PaintInfo = commonlib.gettable("System.Windows.mcml.layout.PaintInfo");
 local LayoutPoint = commonlib.gettable("System.Windows.mcml.platform.graphics.IntPoint");
 local LayoutSize = commonlib.gettable("System.Windows.mcml.platform.graphics.IntSize");
 local LayoutRect = commonlib.gettable("System.Windows.mcml.platform.graphics.IntRect");
 
 local LayoutLayer = commonlib.inherit(commonlib.gettable("System.Windows.mcml.platform.ScrollableArea"), commonlib.gettable("System.Windows.mcml.layout.LayoutLayer"));
+
+
+local VisibilityEnum = ComputedStyleConstants.VisibilityEnum;
+local PositionEnum = ComputedStyleConstants.PositionEnum;
+local OverflowEnum = ComputedStyleConstants.OverflowEnum;
+local MarqueeBehaviorEnum = ComputedStyleConstants.MarqueeBehaviorEnum;
 
 local ClipRect = commonlib.gettable("System.Windows.mcml.layout.ClipRect");
 local ClipRects = commonlib.gettable("System.Windows.mcml.layout.ClipRects");
@@ -269,10 +277,6 @@ function LayoutLayer:ctor()
 
 	self.cachedOverlayScrollbarOffset = nil;
 
-	-- Cached normal flow values for absolute positioned elements with static left/top values.
-    self.staticInlinePosition = nil;
-    self.staticBlockPosition = nil;
-
 	self.transform = nil;
 
 	self.blockSelectionGapsBounds = 0;
@@ -485,14 +489,14 @@ function LayoutLayer:UpdateVisibilityStatus()
     end
 
     if (self.visibleContentStatusDirty) then
-        if (self:Renderer():Style():Visibility() == "VISIBLE") then
+        if (self:Renderer():Style():Visibility() == VisibilityEnum.VISIBLE) then
             self.hasVisibleContent = true;
         else
             -- layer may be hidden but still have some visible content, check for this
             self.hasVisibleContent = false;
             r = self:Renderer():FirstChild();
             while (r) do
-                if (r:Style():Visibility() == "VISIBLE" and not r:HasLayer()) then
+                if (r:Style():Visibility() == VisibilityEnum.VISIBLE and not r:HasLayer()) then
                     self.hasVisibleContent = true;
                     break;
                 end
@@ -554,6 +558,7 @@ function LayoutLayer:AddChild(child, beforeChild)
 	else
 		prevSibling = self:LastChild();
 	end
+
     if (prevSibling) then
         child:SetPreviousSibling(prevSibling);
         prevSibling:SetNextSibling(child);
@@ -588,6 +593,8 @@ function LayoutLayer:AddChild(child, beforeChild)
         self:ChildVisibilityChanged(true);
 	end
     
+
+
 --#if USE(ACCELERATED_COMPOSITING)
 --    compositor()->layerWasAdded(this, child);
 --#endif
@@ -648,7 +655,7 @@ function LayoutLayer:init(renderer)
 
     if (not renderer:FirstChild() and renderer:Style()) then
         self.visibleContentStatusDirty = false;
-        self.hasVisibleContent = renderer:Style():Visibility() == "VISIBLE";
+        self.hasVisibleContent = renderer:Style():Visibility() == VisibilityEnum.VISIBLE;
     end
 
 	return self;
@@ -667,6 +674,7 @@ function LayoutLayer:InsertOnlyThisLayer()
         -- We need to connect ourselves when our renderer() has a parent.
         -- Find our enclosingLayer and add ourselves.
         local parentLayer = self:Renderer():Parent():EnclosingLayer();
+
         --ASSERT(parentLayer);
         local beforeChild = if_else(parentLayer:ReflectionLayer() ~= self, self:Renderer():Parent():FindNextLayer(parentLayer, self:Renderer()), nil);
         parentLayer:AddChild(self, beforeChild);
@@ -815,7 +823,7 @@ function LayoutLayer:StyleChanged(diff, oldStyle)
         self:DirtyStackingContextZOrderLists();
     end
 
-    if (self:Renderer():Style():OverflowX() == "OMARQUEE" and self:Renderer():Style():MarqueeBehavior() ~= "MNONE" and self:Renderer():IsBox()) then
+    if (self:Renderer():Style():OverflowX() == OverflowEnum.OMARQUEE and self:Renderer():Style():MarqueeBehavior() ~= MarqueeBehaviorEnum.MNONE and self:Renderer():IsBox()) then
 --        if (!m_marquee)
 --            m_marquee = new RenderMarquee(this);
 --        m_marquee->updateMarqueeStyle();
@@ -985,7 +993,7 @@ function LayoutLayer:UpdateNormalFlowList()
             self.normalFlowList:append(child);
 		end
 
-		child = self:NextSibling();
+		child = child:NextSibling();
 	end
     
     self.normalFlowListDirty = false;
@@ -1003,21 +1011,21 @@ function LayoutLayer:UpdateVisibilityStatus()
                 break;
             end
 
-			child = self:NextSibling();
+			child = child:NextSibling();
 		end
 
         self.visibleDescendantStatusDirty = false;
     end
 
     if (self.visibleContentStatusDirty) then
-        if (self:Renderer():Style():Visibility() == "VISIBLE") then
+        if (self:Renderer():Style():Visibility() == VisibilityEnum.VISIBLE) then
             self.hasVisibleContent = true;
         else
             -- layer may be hidden but still have some visible content, check for this
             self.hasVisibleContent = false;
             local r = self:Renderer():FirstChild();
             while (r) do
-                if (r:Style():Visibility() == "VISIBLE" and not r:HasLayer()) then
+                if (r:Style():Visibility() == VisibilityEnum.VISIBLE and not r:HasLayer()) then
                     self.hasVisibleContent = true;
                     break;
                 end
@@ -1090,7 +1098,7 @@ function LayoutLayer:CollectLayers(posBuffer, negBuffer)
                 child:CollectLayers(posBuffer, negBuffer);
 			end
 
-			child = self:NextSibling();
+			child = child:NextSibling();
 		end
 	end
 	return posBuffer, negBuffer;
@@ -1107,7 +1115,7 @@ function LayoutLayer:UpdateZOrderLists()
             self.posZOrderList, self.negZOrderList = child:CollectLayers(self.posZOrderList, self.negZOrderList);
 		end
 
-		child = self:NextSibling();
+		child = child:NextSibling();
 	end
 
 --    // Sort the two lists.
@@ -1361,7 +1369,7 @@ function LayoutLayer:BackgroundClipRect(rootLayer, region, temporaryClipRects, r
     if (self:Parent()) then
         local parentRects = ClipRects:new();
         parentRects = self:ParentClipRects(rootLayer, region, parentRects, temporaryClipRects, relevancy);
-        backgroundRect = if_else(self:Renderer():Style():Position() == "FixedPosition", parentRects:FixedClipRect(),
+        backgroundRect = if_else(self:Renderer():Style():Position() == PositionEnum.FixedPosition, parentRects:FixedClipRect(),
 							if_else(self:Renderer():IsPositioned(), parentRects:PosClipRect(), parentRects:OverflowClipRect()));
         local view = self:Renderer():View();
         --ASSERT(view);
@@ -1390,7 +1398,7 @@ end
 
 function LayoutLayer:ConvertToLayerCoordsForRect(ancestorLayer, rect)
 	local location = LayoutPoint:new();
-	self:ConvertToLayerCoords(ancestorLayer, location);
+	location = self:ConvertToLayerCoords(ancestorLayer, location);
 	rect:Move(-location:X(), -location:Y());
 end
 
@@ -1398,16 +1406,16 @@ end
 function LayoutLayer:ConvertToLayerCoords(ancestorLayer, location)
 	if(location:IsRect()) then
 		self:ConvertToLayerCoordsForRect(ancestorLayer, location);
-		return;
+		return location;
 	end
 
 
     if (ancestorLayer == self) then
-        return;
+        return location;
 	end
 
     local position = self:Renderer():Style():Position();
-    if (position == "FixedPosition" and (ancestorLayer == nil or ancestorLayer == self:Renderer():View():Layer())) then
+    if (position == PositionEnum.FixedPosition and (ancestorLayer == nil or ancestorLayer == self:Renderer():View():Layer())) then
 --        // If the fixed layer's container is the root, just add in the offset of the view. We can obtain this by calling
 --        // localToAbsolute() on the RenderView.
 --        FloatPoint absPos = renderer()->localToAbsolute(FloatPoint(), true);
@@ -1415,7 +1423,7 @@ function LayoutLayer:ConvertToLayerCoords(ancestorLayer, location)
 --        return;
     end
  
-    if (position == "FixedPosition") then
+    if (position == PositionEnum.FixedPosition) then
 --        // For a fixed layers, we need to walk up to the root to see if there's a fixed position container
 --        // (e.g. a transformed layer). It's an error to call convertToLayerCoords() across a layer with a transform,
 --        // so we should always find the ancestor at or before we find the fixed position container.
@@ -1447,7 +1455,7 @@ function LayoutLayer:ConvertToLayerCoords(ancestorLayer, location)
     end
     
     local parentLayer = nil;
-    if (position == "AbsolutePosition" or position == "FixedPosition") then
+    if (position == PositionEnum.AbsolutePosition or position == PositionEnum.FixedPosition) then
         -- Do what enclosingPositionedAncestor() does, but check for ancestorLayer along the way.
         parentLayer = self:Parent();
         local foundAncestorFirst = false;
@@ -1475,18 +1483,19 @@ function LayoutLayer:ConvertToLayerCoords(ancestorLayer, location)
             ancestorLayer:ConvertToLayerCoords(positionedAncestor, ancestorCoords);
 
             location = location + (thisCoords - ancestorCoords);
-            return;
+            return location;
         end
     else
         parentLayer = self:Parent();
 	end
     
     if (not parentLayer) then
-        return;
+        return location;
 	end
 
     parentLayer:ConvertToLayerCoords(ancestorLayer, location);
     location = location + self.topLeft:ToSize();
+	return location;
 end
 
 --void RenderLayer::calculateRects(const RenderLayer* rootLayer, RenderRegion* region, const LayoutRect& paintDirtyRect, LayoutRect& layerBounds,
@@ -1507,7 +1516,7 @@ function LayoutLayer:CalculateRects(rootLayer, region, paintDirtyRect, layerBoun
     outlineRect = backgroundRect:clone();
     
     local offset = LayoutPoint:new();
-    self:ConvertToLayerCoords(rootLayer, offset);
+    offset = self:ConvertToLayerCoords(rootLayer, offset);
     layerBounds = LayoutRect:new(offset, self:Size());
 
     -- Update the clip rects that will be passed to child layers.
@@ -1572,7 +1581,7 @@ function LayoutLayer:ComputeOffsetFromRoot(hasLayerOffset)
     --ASSERT(rootLayer == root());
 
     local offset = LayoutPoint:new();
-    self:Parent():ConvertToLayerCoords(rootLayer, offset);
+    offset = self:Parent():ConvertToLayerCoords(rootLayer, offset);
     return offset, hasLayerOffset;
 end
 
@@ -1586,33 +1595,33 @@ function LayoutLayer:UpdateLayerPosition()
 --        inlineBoundingBoxOffset = toSize(lineBox.location());
 --        localPoint += inlineBoundingBoxOffset;
     else
-		local box = self:RenderBox()
-		if (box) then
-			self:SetSize(box:Size());
-			localPoint = localPoint + box:TopLeftLocationOffset();
-		end
+--		local box = self:RenderBox()
+--		if (box) then
+--			self:SetSize(box:Size());
+--			localPoint = localPoint + box:TopLeftLocationOffset();
+--		end
     end
 
     -- Clear our cached clip rect information.
     self:ClearClipRects();
  
-    if (not self:Renderer():IsPositioned() and self:Renderer():Parent()) then
-        -- We must adjust our position by walking up the render tree looking for the
-        -- nearest enclosing object with a layer.
-        local curr = self:Renderer():Parent();
-        while (curr and not curr:HasLayer()) do
-            if (curr:IsBox() and not curr:IsTableRow()) then
-                -- Rows and cells share the same coordinate space (that of the section).
-                -- Omit them when computing our xpos/ypos.
-                localPoint = localPoint + curr:TopLeftLocationOffset();
-            end
-            curr = curr:Parent();
-        end
-        if (curr:IsBox() and curr:IsTableRow()) then
-            -- Put ourselves into the row coordinate space.
-            localPoint = localPoint - curr:TopLeftLocationOffset();
-        end
-    end
+--    if (not self:Renderer():IsPositioned() and self:Renderer():Parent()) then
+--        -- We must adjust our position by walking up the render tree looking for the
+--        -- nearest enclosing object with a layer.
+--        local curr = self:Renderer():Parent();
+--        while (curr and not curr:HasLayer()) do
+--            if (curr:IsBox() and not curr:IsTableRow()) then
+--                -- Rows and cells share the same coordinate space (that of the section).
+--                -- Omit them when computing our xpos/ypos.
+--                localPoint = localPoint + curr:TopLeftLocationOffset();
+--            end
+--            curr = curr:Parent();
+--        end
+--        if (curr:IsBox() and curr:IsTableRow()) then
+--            -- Put ourselves into the row coordinate space.
+--            localPoint = localPoint - curr:TopLeftLocationOffset();
+--        end
+--    end
     
     -- Subtract our parent's scroll offset.
     if (self:Renderer():IsPositioned() and self:EnclosingPositionedAncestor()) then
@@ -1627,7 +1636,7 @@ function LayoutLayer:UpdateLayerPosition()
 --            localPoint += offset;
         end
     elseif (self:Parent()) then
-        if (isComposited()) then
+        if (self:IsComposited()) then
 --            // FIXME: Composited layers ignore pagination, so about the best we can do is make sure they're offset into the appropriate column.
 --            // They won't split across columns properly.
 --            LayoutSize columnOffset;
@@ -1640,8 +1649,8 @@ function LayoutLayer:UpdateLayerPosition()
     end
         
     if (self:Renderer():IsRelPositioned()) then
---        m_relativeOffset = renderer()->relativePositionOffset();
---        localPoint.move(m_relativeOffset);
+        self.relativeOffset = self:Renderer():RelativePositionOffset();
+        localPoint:Move(self.relativeOffset);
     else
         self.relativeOffset = LayoutSize:new();
     end
@@ -1650,3 +1659,5 @@ function LayoutLayer:UpdateLayerPosition()
     localPoint = localPoint - inlineBoundingBoxOffset;
     self:SetLocation(localPoint:X(), localPoint:Y());
 end
+
+function LayoutLayer:IsComposited() return false; end

@@ -232,10 +232,11 @@ end
 -- virtual function: 
 function pe_text:paintEvent(painter)
 	if(self.labels) then
-		local css = self:GetComputedStyle();
-		local font = css:Font();
-		painter:SetFont(font);
-		painter:SetPen(css:Color());
+		local css = self:Renderer():Style();
+		painter:SetFont(css:Font():ToTable());
+		painter:SetPen(css:Color():ToDWORD());
+--		echo(css:Font():ToTable());
+--		echo(css:Color():ToDWORD());
 		for i = 1, #self.labels do
 			local label = self.labels[i];
 			if(label) then

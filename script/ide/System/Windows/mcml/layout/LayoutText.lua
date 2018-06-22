@@ -144,7 +144,7 @@ function LayoutText:Width(from, len, font, xPos, fallbackFonts, glyphOverflow)
 
 		local firstLine = xPos;
 		xPos = font;
-		font = self:Style(firstLine):Font();
+		font = self:Style(firstLine):Font():ToString();
 	end
 	if (self:Characters():empty()) then
         return 0;

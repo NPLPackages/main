@@ -71,6 +71,8 @@ end
 function Page:ctor()
 	-- this will prevent recursive calls to self:Refresh(), which makes self:Refresh(0) pretty safe. 
 	self.refresh_depth = 0;
+
+	self.styleSelector = nil;
 end
 
 -- Init control with a MCML treenode or page url. If a local version is found, it will be used regardless of whether it is expired or not. 
@@ -784,6 +786,13 @@ function Page:GetStyle()
 		self.style = CSSStyleSelector:new();
 	end
 	return self.style;
+end
+
+function Page:StyleSelector()
+	if(not self.styleSelector) then
+		self.styleSelector = CSSStyleSelector:new();
+	end
+	return self.styleSelector;
 end
 
 -- create (instance) the page UI. It will create UI immediately after the page is downloaded. If page is local, it immediately load.

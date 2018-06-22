@@ -12,9 +12,13 @@ local RootInlineBox = commonlib.gettable("System.Windows.mcml.layout.RootInlineB
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/InlineFlowBox.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyle.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/platform/text/BidiResolver.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyleConstants.lua");
+local ComputedStyleConstants = commonlib.gettable("System.Windows.mcml.style.ComputedStyleConstants");
 local BidiStatus = commonlib.gettable("System.Windows.mcml.platform.text.BidiStatus");
 local ComputedStyle = commonlib.gettable("System.Windows.mcml.style.ComputedStyle");
 local RootInlineBox = commonlib.inherit(commonlib.gettable("System.Windows.mcml.layout.InlineFlowBox"), commonlib.gettable("System.Windows.mcml.layout.RootInlineBox"));
+
+local LineBoxContainEnum = ComputedStyleConstants.LineBoxContainEnum;
 
 function RootInlineBox:ctor()
 	-- This folds into the padding at the end of InlineFlowBox on 64-bit.
@@ -364,9 +368,9 @@ function RootInlineBox:IncludeLeadingForBox(box)
 	end
 
     local lineBoxContain = self:Renderer():Style():LineBoxContain();
-	local containInline = mathlib.bit.band(lineBoxContain, ComputedStyle.LineBoxContainFlags.LineBoxContainInline);
-	local containBlock = mathlib.bit.band(lineBoxContain, ComputedStyle.LineBoxContainFlags.LineBoxContainBlock);
-    return containInline or (box == self and containBlock);
+	local containInline = mathlib.bit.band(lineBoxContain, LineBoxContainEnum.LineBoxContainInline);
+	local containBlock = mathlib.bit.band(lineBoxContain, LineBoxContainEnum.LineBoxContainBlock);
+    return containInline ~= 0 or (box == self and containBlock ~= 0);
 end
 
 --bool RootInlineBox::includeFontForBox(InlineBox* box) const
@@ -381,9 +385,9 @@ function RootInlineBox:IncludeFontForBox(box)
 
     -- For now map "glyphs" to "font" in vertical text mode until the bounds returned by glyphs aren't garbage.
     local lineBoxContain = self:Renderer():Style():LineBoxContain();
-	local containFont = mathlib.bit.band(lineBoxContain, ComputedStyle.LineBoxContainFlags.LineBoxContainFont);
-	local containGlyphs = mathlib.bit.band(lineBoxContain, ComputedStyle.LineBoxContainFlags.LineBoxContainGlyphs);
-    return containFont or (not self:IsHorizontal() and containGlyphs);
+	local containFont = mathlib.bit.band(lineBoxContain, LineBoxContainEnum.LineBoxContainFont);
+	local containGlyphs = mathlib.bit.band(lineBoxContain, LineBoxContainEnum.LineBoxContainGlyphs);
+    return containFont ~= 0 or (not self:IsHorizontal() and containGlyphs ~= 0);
 end
 
 function RootInlineBox:IncludeGlyphsForBox(box)
@@ -397,8 +401,8 @@ function RootInlineBox:IncludeGlyphsForBox(box)
 
     -- FIXME: We can't fit to glyphs yet for vertical text, since the bounds returned are garbage.
     local lineBoxContain = self:Renderer():Style():LineBoxContain();
-	local containGlyphs = mathlib.bit.band(lineBoxContain, ComputedStyle.LineBoxContainFlags.LineBoxContainGlyphs);
-    return self:IsHorizontal() and containGlyphs;
+	local containGlyphs = mathlib.bit.band(lineBoxContain, LineBoxContainEnum.LineBoxContainGlyphs);
+    return self:IsHorizontal() and containGlyphs ~= 0;
 end
 
 function RootInlineBox:IncludeMarginForBox(box)
@@ -407,8 +411,8 @@ function RootInlineBox:IncludeMarginForBox(box)
 	end
 
     local lineBoxContain = self:Renderer():Style():LineBoxContain();
-	local containInlineBox = mathlib.bit.band(lineBoxContain, ComputedStyle.LineBoxContainFlags.LineBoxContainInlineBox);
-    return containInlineBox;
+	local containInlineBox = mathlib.bit.band(lineBoxContain, LineBoxContainEnum.LineBoxContainInlineBox);
+    return containInlineBox ~= 0;
 end
 
 function RootInlineBox:BaselinePosition(baselineType)

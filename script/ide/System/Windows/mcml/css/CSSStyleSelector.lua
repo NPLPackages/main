@@ -16,12 +16,29 @@ NPL.load("(gl)script/ide/System/Windows/mcml/css/StyleSheetManager.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/css/RuleSet.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/css/CSSStyleDefault.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/css/SelectorChecker.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyle.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/css/CSSStyleApplyProperty.lua");
+local CSSStyleApplyProperty = commonlib.gettable("System.Windows.mcml.css.CSSStyleApplyProperty");
+local ComputedStyle = commonlib.gettable("System.Windows.mcml.style.ComputedStyle");
 local SelectorChecker = commonlib.gettable("System.Windows.mcml.css.SelectorChecker");
 local CSSStyleDefault = commonlib.gettable("System.Windows.mcml.css.CSSStyleDefault");
 local RuleSet = commonlib.gettable("System.Windows.mcml.css.RuleSet");
 local StyleSheetManager = commonlib.gettable("System.Windows.mcml.css.StyleSheetManager");
 local CSSStyleSheet = commonlib.gettable("System.Windows.mcml.css.CSSStyleSheet");
 local CSSStyleDeclaration = commonlib.gettable("System.Windows.mcml.css.CSSStyleDeclaration");
+
+
+local MatchedStyleDeclaration = {};
+MatchedStyleDeclaration.__index = MatchedStyleDeclaration;
+
+function MatchedStyleDeclaration:new(decl, type)
+	local o = {};
+	o.styleDeclaration = decl;
+	o.linkMatchType = type;
+	setmetatable(o, self);
+	return o;
+end
+
 
 local CSSStyleSelector = commonlib.inherit(nil, commonlib.gettable("System.Windows.mcml.css.CSSStyleSelector"));
 
@@ -51,8 +68,26 @@ function CSSStyleSelector:ctor()
 	self.stylesheets = {};
 
 
-	-- 应该是存储匹配结果，暂时没用到
-	self.matchedDels = nil;
+	-- store the MatchedStyleDeclaration object;
+	self.matchedDecls = commonlib.vector:new();
+
+	self.style = nil;
+	self.parentStyle = nil;
+
+	self.element = nil;
+
+	self.parentNode = nil;
+
+	self.applyProperty = CSSStyleApplyProperty:SharedCSSStyleApplyProperty();
+end
+
+function CSSStyleSelector:Style()
+	return self.style;
+end
+
+--RenderStyle* parentStyle() const { return m_parentStyle; }
+function CSSStyleSelector:ParentStyle()
+	return self.parentStyle;
 end
 
 function CSSStyleSelector:AddStyleSheetFromFile(filename)
@@ -113,50 +148,60 @@ function CSSStyleSelector:MapStyleSheetToRuleSet(stylesheet)
 	self.authorStyle:AddRulesFromSheet(stylesheet);
 end
 
-function CSSStyleSelector:ApplyToStyleDeclaration(style_decl, pageElement)
-	if(style_decl and pageElement) then
-		self:MatchUARules(style_decl, pageElement);
-		self:MatchAuthorRules(style_decl, pageElement);
+--void CSSStyleSelector::matchAllRules(MatchResult& result)
+function CSSStyleSelector:MatchAllRules(result)
+	self:MatchUARules(result);
+	self:MatchAuthorRules(result);
+
+	local inlineDecl = self.element:InlineStyleDecl();
+	if(inlineDecl) then
+		self:AddMatchedDeclaration(inlineDecl);
 	end
 end
 
 -- user agent rule: here is default style
-function CSSStyleSelector:MatchUARules(style_decl, pageElement)
-	self:MatchRules(style_decl, pageElement, defaultStyle);
+function CSSStyleSelector:MatchUARules()
+	self:MatchRules(defaultStyle);
 end
 
-function CSSStyleSelector:MatchAuthorRules(style_decl, pageElement)
-	self:MatchRules(style_decl, pageElement, self.authorStyle);
+function CSSStyleSelector:MatchAuthorRules()
+	self:MatchRules(self.authorStyle);
 end
 
-function CSSStyleSelector:MatchRules(style_decl, pageElement, rule_set)
+function CSSStyleSelector:MatchRules(rule_set)
 	if(not rule_set) then
 		return;
 	end
-	local id = pageElement:GetAttributeWithCode("id",nil,true);
+	local id = self.element:GetAttributeWithCode("id",nil,true);
 	if(id) then
-		self:MatchRulesForList(style_decl, pageElement,rule_set:idRules()[id]);
+		self:MatchRulesForList(rule_set:idRules()[id]);
 	end
 
-	local classNames = pageElement:GetClassNames();
+	local classNames = self.element:GetClassNames();
 	if(classNames) then
 		for class, _ in pairs(classNames) do
 			--local class = classNames[i];
-			self:MatchRulesForList(style_decl, pageElement,rule_set:classRules()[class]);
+			self:MatchRulesForList(rule_set:classRules()[class]);
 		end
 	end
 
-	local tag = pageElement.name;
-	self:MatchRulesForList(style_decl, pageElement,rule_set:tagRules()[tag]);
-	self:MatchRulesForList(style_decl, pageElement,rule_set:universalRules());
+	local tag = self.element.name;
+	self:MatchRulesForList(rule_set:tagRules()[tag]);
+	self:MatchRulesForList(rule_set:universalRules());
 end
 
-function CSSStyleSelector:MatchRulesForList(style_decl, pageElement, rule_list)
+--void CSSStyleSelector::addMatchedDeclaration(CSSMutableStyleDeclaration* decl, unsigned linkMatchType)
+function CSSStyleSelector:AddMatchedDeclaration(decl, linkMatchType)
+    self.matchedDecls:append(MatchedStyleDeclaration:new(decl, linkMatchType));
+end
+
+function CSSStyleSelector:MatchRulesForList(rule_list)
 	if(rule_list) then
 		for i = 1,#rule_list do
 			local rule_data = rule_list[i];
-			if(self:checkSelector(rule_data, pageElement)) then
-				style_decl:Merge(rule_data:Rule():GetProperties());
+			if(self:checkSelector(rule_data, self.element)) then
+				self:AddMatchedDeclaration(rule_data:Rule():GetProperties());
+				--style_decl:Merge(rule_data:Rule():GetProperties());
 			end
 		end
 	end
@@ -170,4 +215,123 @@ function CSSStyleSelector:checkSelector(rule_data, pageElement)
 		return SelectorChecker:checkSelector(rule_data:Selector(), pageElement);
 	end
 	return false;
+end
+
+--void CSSStyleSelector::initElement(Element* e)
+function CSSStyleSelector:InitElement(e)
+	if(e ~= self.element) then
+		self.element = e;
+	end
+end
+
+--inline void CSSStyleSelector::initForStyleResolve(Element* e, RenderStyle* parentStyle, PseudoId pseudoID)
+function CSSStyleSelector:InitForStyleResolve(e, parentStyle, pseudoID)
+    --m_checker.setPseudoStyle(pseudoID);
+
+	if(e) then
+		self.parentNode = e:ParentNodeForRenderingAndStyle();
+	end
+    
+
+    if (parentStyle) then
+        self.parentStyle = parentStyle;
+    elseif(self.parentNode) then
+        self.parentStyle = self.parentNode:GetComputedStyle();
+	end
+
+--    Node* docElement = e ? e->document()->documentElement() : 0;
+--    RenderStyle* docStyle = m_checker.document()->renderStyle();
+--    m_rootElementStyle = docElement && e != docElement ? docElement->renderStyle() : docStyle;
+
+    self.style = nil;
+
+    self.matchedDecls:clear();
+
+--    m_pendingImageProperties.clear();
+--
+--    m_ruleList = 0;
+--
+--    m_fontDirty = false;
+end
+
+--PassRefPtr<RenderStyle> CSSStyleSelector::styleForElement(Element* element, RenderStyle* defaultParent, bool allowSharing, bool resolveForRootDefault)
+function CSSStyleSelector:StyleForElement(element, defaultParent, allowSharing, resolveForRootDefault)
+	allowSharing = if_else(allowSharing == nil, true, allowSharing);
+	resolveForRootDefault = if_else(resolveForRootDefault == nil, false, resolveForRootDefault);
+
+	self:InitElement(element);
+	self:InitForStyleResolve(element, defaultParent);
+
+--	if (allowSharing) {
+--        RenderStyle* sharedStyle = locateSharedStyle();
+--        if (sharedStyle)
+--            return sharedStyle;
+--    }
+	self.style = ComputedStyle:new();
+
+	if (self.parentStyle) then
+        self.style:InheritFrom(self.parentStyle);
+--    else
+--        m_parentStyle = style();
+--        // Make sure our fonts are initialized if we don't inherit them from our parent style.
+--        m_style->font().update(0);
+	end
+	
+	local matchResult;
+
+	self:MatchAllRules(matchResult);
+
+	self:ApplyMatchedDeclarations(matchResult);
+	-- Clean up our style object's display and text decorations (among other fixups).
+    self:AdjustRenderStyle(self:Style(), self.parentStyle, element);
+	self:InitElement();	-- Clear out for the next resolve.
+	return self.style;
+end
+
+--void CSSStyleSelector::applyMatchedDeclarations(const MatchResult& matchResult)
+function CSSStyleSelector:ApplyMatchedDeclarations(matchResult)
+	local matchedDecls = self.matchedDecls;
+	local size = matchedDecls:size();
+	for i = 1, size do
+		self:ApplyDeclaration(matchedDecls:get(i).styleDeclaration);
+	end
+end
+
+--void CSSStyleSelector::adjustRenderStyle(RenderStyle* style, RenderStyle* parentStyle, Element *e)
+function CSSStyleSelector:AdjustRenderStyle(style, parentStyle, e)
+	-- TODO: add latter;
+end
+
+
+function CSSStyleSelector:ApplyDeclaration(styleDeclaration)
+	for property in styleDeclaration:Next() do
+		self:ApplyProperty(property:Name(), property:CreateValueFromCssString());
+	end
+end
+
+local inheritable_fields = {
+	["color"] = true,
+	["font-family"] = true,
+	["font-size"] = true,
+	["font-weight"] = true,
+	["text-shadow"] = true,
+--	["shadow-color"] = true,
+--	["text-shadow-offset-x"] = true,
+--	["text-shadow-offset-y"] = true,
+	["text-align"] = true,
+	["line-height"] = true,
+	["caret-color"] = true,
+};
+
+function CSSStyleSelector:ApplyProperty(name, value)
+	local isInherit = inheritable_fields[name];
+
+	local handler = self.applyProperty:PropertyHandler(name);
+	if(handler) then
+		if(isInherit) then
+			handler:ApplyInheritValue(self);
+		else
+			handler:ApplyValue(self, value);
+		end
+	end
 end

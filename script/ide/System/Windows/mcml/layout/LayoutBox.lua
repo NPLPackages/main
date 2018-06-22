@@ -62,12 +62,14 @@ NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutBoxModelObject.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutModel.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/IntRect.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/IntSize.lua");
-NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/Length.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/platform/Length.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/InlineBox.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/IntPoint.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyleConstants.lua");
+local ComputedStyleConstants = commonlib.gettable("System.Windows.mcml.style.ComputedStyleConstants");
 local Point = commonlib.gettable("System.Windows.mcml.platform.graphics.IntPoint");
 local InlineBox = commonlib.gettable("System.Windows.mcml.layout.InlineBox");
-local Length = commonlib.gettable("System.Windows.mcml.platform.graphics.Length");
+local Length = commonlib.gettable("System.Windows.mcml.platform.Length");
 local Size = commonlib.gettable("System.Windows.mcml.platform.graphics.IntSize");
 local Rect = commonlib.gettable("System.Windows.mcml.platform.graphics.IntRect");
 local LayoutModel = commonlib.gettable("System.Windows.mcml.layout.LayoutModel");
@@ -75,7 +77,19 @@ local LayoutBox = commonlib.inherit(commonlib.gettable("System.Windows.mcml.layo
 
 local LayoutRect = Rect;
 local LayoutSize, IntSize = Size, Size;
-local IntPoint = Point;
+local LayoutPoint, IntPoint = Point, Point;
+
+local FloatEnum = ComputedStyleConstants.FloatEnum;
+local WritingModeEnum = ComputedStyleConstants.WritingModeEnum;
+local VisibilityEnum = ComputedStyleConstants.VisibilityEnum;
+local PositionEnum = ComputedStyleConstants.PositionEnum;
+local OverflowEnum = ComputedStyleConstants.OverflowEnum;
+local BoxSizingEnum = ComputedStyleConstants.BoxSizingEnum;
+local BoxOrientEnum = ComputedStyleConstants.BoxOrientEnum;
+local BoxAlignmentEnum = ComputedStyleConstants.BoxAlignmentEnum;
+local TextAlignEnum = ComputedStyleConstants.TextAlignEnum;
+local LengthTypeEnum = Length.LengthTypeEnum;
+local TextDirectionEnum = ComputedStyleConstants.TextDirectionEnum;
 
 function LayoutBox:ctor()
 	self.name = "LayoutBox";
@@ -226,13 +240,13 @@ end
 
 function LayoutBox:MarginBefore()
 	local write_mode = self:Style():WritingMode();
-	if(write_mode ==  "TopToBottomWritingMode") then
+	if(write_mode ==  WritingModeEnum.TopToBottomWritingMode) then
 		return self.marginTop;
-	elseif(write_mode ==  "BottomToTopWritingMode") then
+	elseif(write_mode ==  WritingModeEnum.BottomToTopWritingMode) then
 		return self.marginBottom;
-	elseif(write_mode ==  "LeftToRightWritingMode") then
+	elseif(write_mode ==  WritingModeEnum.LeftToRightWritingMode) then
 		return self.marginLeft;
-	elseif(write_mode ==  "RightToLeftWritingMode") then
+	elseif(write_mode ==  WritingModeEnum.RightToLeftWritingMode) then
 		return self.marginRight;
 	end
 	return self.marginTop;
@@ -240,13 +254,13 @@ end
 
 function LayoutBox:MarginAfter()
 	local write_mode = self:Style():WritingMode();
-	if(write_mode ==  "TopToBottomWritingMode") then
+	if(write_mode ==  WritingModeEnum.TopToBottomWritingMode) then
 		return self.marginBottom;
-	elseif(write_mode ==  "BottomToTopWritingMode") then
+	elseif(write_mode ==  WritingModeEnum.BottomToTopWritingMode) then
 		return self.marginTop;
-	elseif(write_mode ==  "LeftToRightWritingMode") then
+	elseif(write_mode ==  WritingModeEnum.LeftToRightWritingMode) then
 		return self.marginRight;
-	elseif(write_mode ==  "RightToLeftWritingMode") then
+	elseif(write_mode ==  WritingModeEnum.RightToLeftWritingMode) then
 		return self.marginLeft;
 	end
 	return self.marginBottom;
@@ -306,13 +320,13 @@ end
 
 function LayoutBox:SetMarginBefore(margin)
 	local write_mode = self:Style():WritingMode();
-	if(write_mode ==  "TopToBottomWritingMode") then
+	if(write_mode ==  WritingModeEnum.TopToBottomWritingMode) then
 		self.marginTop = margin;
-	elseif(write_mode ==  "BottomToTopWritingMode") then
+	elseif(write_mode ==  WritingModeEnum.BottomToTopWritingMode) then
 		self.marginBottom = margin;
-	elseif(write_mode ==  "LeftToRightWritingMode") then
+	elseif(write_mode ==  WritingModeEnum.LeftToRightWritingMode) then
 		self.marginLeft = margin;
-	elseif(write_mode ==  "RightToLeftWritingMode") then
+	elseif(write_mode ==  WritingModeEnum.RightToLeftWritingMode) then
 		self.marginRight = margin;
 	end
 end
@@ -331,19 +345,19 @@ function LayoutBox:ComputeBlockDirectionMargins(containingBlock)
     local cw = self:ContainingBlockLogicalWidthForContent();
 
     local containingBlockStyle = containingBlock:Style();
-    containingBlock:SetMarginBeforeForChild(self, self:Style():MarginBeforeUsing(containingBlockStyle));
-    containingBlock:SetMarginAfterForChild(self, self:Style():MarginAfterUsing(containingBlockStyle));
+    containingBlock:SetMarginBeforeForChild(self, self:Style():MarginBeforeUsing(containingBlockStyle):CalcMinValue(cw));
+    containingBlock:SetMarginAfterForChild(self, self:Style():MarginAfterUsing(containingBlockStyle):CalcMinValue(cw));
 end
 
 function LayoutBox:SetMarginAfter(margin)
 	local write_mode = self:Style():WritingMode();
-	if(write_mode ==  "TopToBottomWritingMode") then
+	if(write_mode ==  WritingModeEnum.TopToBottomWritingMode) then
 		self.marginBottom = margin;
-	elseif(write_mode ==  "BottomToTopWritingMode") then
+	elseif(write_mode ==  WritingModeEnum.BottomToTopWritingMode) then
 		self.marginTop = margin;
-	elseif(write_mode ==  "LeftToRightWritingMode") then
+	elseif(write_mode ==  WritingModeEnum.LeftToRightWritingMode) then
 		self.marginRight = margin;
-	elseif(write_mode ==  "RightToLeftWritingMode") then
+	elseif(write_mode ==  WritingModeEnum.RightToLeftWritingMode) then
 		self.marginLeft = margin;
 	end
 end
@@ -530,7 +544,7 @@ end
 
 function LayoutBox:ComputeBorderBoxLogicalWidth(width)
 	local bordersPlusPadding = self:BorderAndPaddingLogicalWidth();
-	if (self:Style():BoxSizing() == "CONTENT_BOX") then
+	if (self:Style():BoxSizing() == BoxSizingEnum.CONTENT_BOX) then
         return width + bordersPlusPadding;
 	end
     return math.max(width, bordersPlusPadding);
@@ -538,32 +552,32 @@ end
 
 function LayoutBox:ComputeBorderBoxLogicalHeight(height)
 	local bordersPlusPadding = self:BorderAndPaddingLogicalHeight();
-	if (self:Style():BoxSizing() == "CONTENT_BOX") then
+	if (self:Style():BoxSizing() == BoxSizingEnum.CONTENT_BOX) then
         return height + bordersPlusPadding;
 	end
     return math.max(height, bordersPlusPadding);
 end
 
 function LayoutBox:ComputeContentBoxLogicalWidth(width)
-	if (self:Style():BoxSizing() == "CONTENT_BOX") then
+	if (self:Style():BoxSizing() == BoxSizingEnum.CONTENT_BOX) then
         width = width - self:BorderAndPaddingLogicalWidth();
 	end
     return math.max(0, width);
 end
 
 function LayoutBox:ComputeContentBoxLogicalHeight(height)
-	if (self:Style():BoxSizing() == "CONTENT_BOX") then
+	if (self:Style():BoxSizing() == BoxSizingEnum.CONTENT_BOX) then
         height = height - self:BorderAndPaddingLogicalHeight();
 	end
     return math.max(0, height);
 end
 
 function LayoutBox:HasAutoVerticalScrollbar()
-	return self:HasOverflowClip() and (self:Style():OverflowY() == "auto" or self:Style():OverflowY() == "overlay");
+	return self:HasOverflowClip() and (self:Style():OverflowY() == OverflowEnum.OAUTO or self:Style():OverflowY() == OverflowEnum.OOVERLAY);
 end
 
 function LayoutBox:HasAutoHorizontalScrollbar()
-	return self:HasOverflowClip() and (self:Style():OverflowX() == "auto" or self:Style():OverflowX() == "overlay");
+	return self:HasOverflowClip() and (self:Style():OverflowX() == OverflowEnum.OAUTO or self:Style():OverflowX() == OverflowEnum.OOVERLAY);
 end
 
 function LayoutBox:ScrollsOverflow()
@@ -571,24 +585,12 @@ function LayoutBox:ScrollsOverflow()
 end
 
 function LayoutBox:ScrollsOverflowX()
-	return self:HasOverflowClip() and (self:Style():OverflowX() == "scroll" or self:HasAutoHorizontalScrollbar());
+	return self:HasOverflowClip() and (self:Style():OverflowX() == OverflowEnum.OSCROLL or self:HasAutoHorizontalScrollbar());
 end
 
 function LayoutBox:ScrollsOverflowY()
-	return self:HasOverflowClip() and (self:Style():OverflowY() == "scroll" or self:HasAutoVerticalScrollbar());
+	return self:HasOverflowClip() and (self:Style():OverflowY() == OverflowEnum.OSCROLL or self:HasAutoVerticalScrollbar());
 end
-
---function LayoutBox:OnAfterLayout()
---	if (self:ChildrenInline()) then
---        
---    else
---        local control = self:GetControl();
---		if(control) then
---			control:ApplyCss(self:Style():GetStyle());
---			control:setGeometry(self:X(), self:Y(), self:Width(), self:Height());
---		end
---	end
---end
 
 -----------------------------------------------------------------------------------------------------
 ----------------	webkit/chromium	function
@@ -598,7 +600,7 @@ function LayoutBox:ComputePreferredLogicalWidths()
 end
 
 function LayoutBox:NeedsPreferredWidthsRecalculation()
-    return Length.IsPercent(self:Style():PaddingStart()) or Length.IsPercent(self:Style():PaddingEnd());
+    return self:Style():PaddingStart():IsPercent() or self:Style():PaddingEnd():IsPercent();
 end
 
 function LayoutBox:MinPreferredLogicalWidth()
@@ -658,7 +660,6 @@ end
 
 -- @param widthType: can be "LogicalWidth","MinLogicalWidth","MaxLogicalWidth";
 function LayoutBox:ComputeLogicalWidthUsing(widthType, availableLogicalWidth)
-	
     local logicalWidthResult = self:LogicalWidth();
     local logicalWidth;
     if (widthType == "LogicalWidth") then
@@ -669,9 +670,9 @@ function LayoutBox:ComputeLogicalWidthUsing(widthType, availableLogicalWidth)
         logicalWidth = self:Style():LogicalMaxWidth();
 	end
     --if (logicalWidth.isIntrinsicOrAuto()) then
-	if (Length.IsIntrinsicOrAuto(logicalWidth)) then
-        local marginStart = self:Style():MarginStart();
-        local marginEnd = self:Style():MarginEnd();
+	if (logicalWidth:IsIntrinsicOrAuto()) then
+        local marginStart = self:Style():MarginStart():CalcMinValue(availableLogicalWidth);
+        local marginEnd = self:Style():MarginEnd():CalcMinValue(availableLogicalWidth);
         if (availableLogicalWidth) then
             logicalWidthResult = availableLogicalWidth - marginStart - marginEnd;
 		end
@@ -680,7 +681,7 @@ function LayoutBox:ComputeLogicalWidthUsing(widthType, availableLogicalWidth)
             logicalWidthResult = math.min(logicalWidthResult, self:MaxPreferredLogicalWidth());
         end
     else -- FIXME: If the containing block flow is perpendicular to our direction we need to use the available logical height instead.
-        logicalWidthResult = self:ComputeBorderBoxLogicalWidth(logicalWidth); 
+        logicalWidthResult = self:ComputeBorderBoxLogicalWidth(logicalWidth:CalcValue(availableLogicalWidth)); 
 	end
     return logicalWidthResult;
 end
@@ -715,8 +716,8 @@ function LayoutBox:ComputeLogicalWidthInRegion(region, offsetFromLogicalTopOfFir
 
 	if (self:IsInline() and not self:IsInlineBlockOrInlineTable()) then
         -- just calculate margins
-        self:SetMarginStart(self:Style():MarginStart());
-        self:SetMarginEnd(self:Style():MarginEnd());
+        self:SetMarginStart(self:Style():MarginStart():CalcMinValue(containerLogicalWidth));
+        self:SetMarginEnd(self:Style():MarginEnd():CalcMinValue(containerLogicalWidth));
         if (treatAsReplaced) then
             --self:SetLogicalWidth(math.max(self:LogicalWidthLength.calcFloatValue(0) + borderAndPaddingLogicalWidth(), minPreferredLogicalWidth()));
 		end
@@ -725,10 +726,11 @@ function LayoutBox:ComputeLogicalWidthInRegion(region, offsetFromLogicalTopOfFir
 	if(treatAsReplaced) then
 		-- FIXME: add the code latter
 	else
+
 		self:SetLogicalWidth(self:ComputeLogicalWidthUsing("LogicalWidth", containerWidthInInlineDirection));
 
         -- Calculate MaxLogicalWidth
-        if (self:Style():LogicalMaxWidth() ~= nil) then
+        if (not self:Style():LogicalMaxWidth():IsUndefined()) then
             local maxLogicalWidth = self:ComputeLogicalWidthUsing("MaxLogicalWidth", containerWidthInInlineDirection);
             if (self:LogicalWidth() > maxLogicalWidth) then
                 self:SetLogicalWidth(maxLogicalWidth);
@@ -737,12 +739,10 @@ function LayoutBox:ComputeLogicalWidthInRegion(region, offsetFromLogicalTopOfFir
         end
 
         -- Calculate MinLogicalWidth
-		if (self:Style():LogicalMinWidth() ~= nil) then
-			local minLogicalWidth = self:ComputeLogicalWidthUsing("MinLogicalWidth", containerWidthInInlineDirection);
-			if (self:LogicalWidth() < minLogicalWidth) then
-				self:SetLogicalWidth(minLogicalWidth);
-				logicalWidthLength = self:Style():LogicalMinWidth();
-			end
+		local minLogicalWidth = self:ComputeLogicalWidthUsing("MinLogicalWidth", containerWidthInInlineDirection);
+		if (self:LogicalWidth() < minLogicalWidth) then
+			self:SetLogicalWidth(minLogicalWidth);
+			logicalWidthLength = self:Style():LogicalMinWidth();
 		end
 	end
 
@@ -750,13 +750,13 @@ function LayoutBox:ComputeLogicalWidthInRegion(region, offsetFromLogicalTopOfFir
     if (self:StretchesToMinIntrinsicLogicalWidth()) then
         self:SetLogicalWidth(math.max(self:LogicalWidth(), self:MinPreferredLogicalWidth()));
         --logicalWidthLength = Length(logicalWidth(), Fixed);
-		logicalWidthLength = self:LogicalWidth();
+		logicalWidthLength = Length:new(self:LogicalWidth(), LengthTypeEnum.Fixed);
     end
 
     -- Margin calculations.
-    if (Length.IsAuto(logicalWidthLength) or hasPerpendicularContainingBlock) then
-        self:SetMarginStart(self:Style():MarginStart());
-        self:SetMarginEnd(self:Style():MarginEnd());
+    if (logicalWidthLength:IsAuto() or hasPerpendicularContainingBlock) then
+        self:SetMarginStart(self:Style():MarginStart():CalcMinValue(containerLogicalWidth));
+        self:SetMarginEnd(self:Style():MarginEnd():CalcMinValue(containerLogicalWidth));
     else
         self:ComputeInlineDirectionMargins(cb, containerLogicalWidth, self:LogicalWidth());
 	end
@@ -778,39 +778,39 @@ function LayoutBox:ComputeInlineDirectionMargins(containingBlock, containerWidth
 
     if (self:IsFloating() or self:IsInline()) then
         -- Inline blocks/tables and floats don't have their margins increased.
-        containingBlock:SetMarginStartForChild(self, marginStartLength);
-        containingBlock:SetMarginEndForChild(self, marginEndLength);
+        containingBlock:SetMarginStartForChild(self, marginStartLength:CalcMinValue(containerWidth));
+        containingBlock:SetMarginEndForChild(self, marginEndLength:CalcMinValue(containerWidth));
         return;
     end
 
     -- Case One: The object is being centered in the containing block's available logical width.
-    if ((Length.IsAuto(marginStartLength) and Length.IsAuto(marginEndLength) and childWidth < containerWidth)
-        or (not Length.IsAuto(marginStartLength) and not Length.IsAuto(marginEndLength) and containingBlock:Style():TextAlign() == "WEBKIT_CENTER")) then
+    if ((marginStartLength:IsAuto() and marginEndLength:IsAuto() and childWidth < containerWidth)
+        or (not marginStartLength:IsAuto() and not marginEndLength:IsAuto() and containingBlock:Style():TextAlign() == TextAlignEnum.WEBKIT_CENTER)) then
         containingBlock:SetMarginStartForChild(self, math.max(0, (containerWidth - childWidth) / 2));
         containingBlock:SetMarginEndForChild(self, containerWidth - childWidth - containingBlock:MarginStartForChild(self));
         return;
     end
     
     -- Case Two: The object is being pushed to the start of the containing block's available logical width.
-    if (Length.IsAuto(marginEndLength) and childWidth < containerWidth) then
-        containingBlock:SetMarginStartForChild(self, marginStartLength);
+    if (marginEndLength:IsAuto() and childWidth < containerWidth) then
+        containingBlock:SetMarginStartForChild(self, marginStartLength:CalcValue(containerWidth));
         containingBlock:SetMarginEndForChild(self, containerWidth - childWidth - containingBlock:MarginStartForChild(self));
         return;
     end
     
     -- Case Three: The object is being pushed to the end of the containing block's available logical width.
-    local pushToEndFromTextAlign = not Length.IsAuto(marginEndLength) and ((not containingBlockStyle:IsLeftToRightDirection() and containingBlockStyle:TextAlign() == "WEBKIT_LEFT")
-        or (containingBlockStyle:IsLeftToRightDirection() and containingBlockStyle:TextAlign() == "WEBKIT_RIGHT"));
-    if ((Length.IsAuto(marginStartLength) and childWidth < containerWidth) or pushToEndFromTextAlign) then
-        containingBlock:SetMarginEndForChild(self, marginEndLength);
+    local pushToEndFromTextAlign = not marginEndLength:IsAuto() and ((not containingBlockStyle:IsLeftToRightDirection() and containingBlockStyle:TextAlign() == TextAlignEnum.WEBKIT_LEFT)
+        or (containingBlockStyle:IsLeftToRightDirection() and containingBlockStyle:TextAlign() == TextAlignEnum.WEBKIT_RIGHT));
+    if ((marginStartLength:IsAuto() and childWidth < containerWidth) or pushToEndFromTextAlign) then
+        containingBlock:SetMarginEndForChild(self, marginEndLength:CalcValue(containerWidth));
         containingBlock:SetMarginStartForChild(self, containerWidth - childWidth - containingBlock:MarginEndForChild(self));
         return;
     end
     
     -- Case Four: Either no auto margins, or our width is >= the container width (css2.1, 10.3.3).  In that case
     -- auto margins will just turn into 0.
-    containingBlock:SetMarginStartForChild(self, marginStartLength);
-    containingBlock:SetMarginEndForChild(self, marginEndLength);
+    containingBlock:SetMarginStartForChild(self, marginStartLength:CalcMinValue(containerWidth));
+    containingBlock:SetMarginEndForChild(self, marginEndLength:CalcMinValue(containerWidth));
 end
 
 function LayoutBox:StretchesToMinIntrinsicLogicalWidth()
@@ -867,10 +867,27 @@ end
 
 --static void computeInlineStaticDistance(Length& logicalLeft, Length& logicalRight, const RenderBox* child, const RenderBoxModelObject* containerBlock, LayoutUnit containerLogicalWidth, RenderRegion* region)
 local function computeInlineStaticDistance(logicalLeft, logicalRight, child, containerBlock, containerLogicalWidth, region)
-    if (not Length.IsAuto(logicalLeft) or not Length.IsAuto(logicalRight)) then
+    if (not logicalLeft:IsAuto() or not logicalRight:IsAuto()) then
         return;
 	end
 	--TODO: fixed latter.
+end
+
+function LayoutBox:SetMarginLogicalLeftRight(left, right)
+	local isHorizontal = self:IsHorizontalWritingMode();
+	if(isHorizontal) then
+		self.marginLeft, self.marginRight = left, right;
+		return;
+	end
+	self.marginTop, self.marginBottom = left, right;
+end
+
+function LayoutBox:GetMarginLogicalLeftRight()
+	local isHorizontal = self:IsHorizontalWritingMode();
+	if(isHorizontal) then
+		return self.marginLeft, self.marginRight;
+	end
+	return self.marginTop, self.marginBottom;
 end
 
 function LayoutBox:ComputePositionedLogicalWidth(region, offsetFromLogicalTopOfFirstPage)
@@ -892,12 +909,7 @@ function LayoutBox:ComputePositionedLogicalWidth(region, offsetFromLogicalTopOfF
     local bordersPlusPadding = self:BorderAndPaddingLogicalWidth();
     local marginLogicalLeft = if_else(isHorizontal, self:Style():MarginLeft(), self:Style():MarginTop());
     local marginLogicalRight = if_else(isHorizontal, self:Style():MarginRight(), self:Style():MarginBottom());
-	local marginLogicalLeftAlias, marginLogicalRightAlias;
-	if(isHorizontal) then
-		marginLogicalLeftAlias, marginLogicalRightAlias = self.marginLeft, self.marginRight;
-	else
-		marginLogicalLeftAlias, marginLogicalRightAlias = self.marginTop, self.marginBottom;
-	end
+	local marginLogicalLeftAlias, marginLogicalRightAlias = self:GetMarginLogicalLeftRight();
 --    LayoutUnit& marginLogicalLeftAlias = isHorizontal ? m_marginLeft : m_marginTop;
 --    LayoutUnit& marginLogicalRightAlias = isHorizontal ? m_marginRight : m_marginBottom;
 
@@ -932,10 +944,92 @@ function LayoutBox:ComputePositionedLogicalWidth(region, offsetFromLogicalTopOfF
 
 	-- see FIXME 1
     -- Calculate the static distance if needed.
-    self:ComputeInlineStaticDistance(logicalLeftLength, logicalRightLength, self, containerBlock, containerLogicalWidth, region);
+    computeInlineStaticDistance(logicalLeftLength, logicalRightLength, self, containerBlock, containerLogicalWidth, region);
 
 	-- Calculate constraint equation values for 'width' case.
     local logicalWidthResult, logicalLeftResult;
+
+	logicalWidthResult, marginLogicalLeftAlias, marginLogicalRightAlias, logicalLeftResult = 
+		self:ComputePositionedLogicalWidthUsing(self:Style():LogicalWidth(), containerBlock, containerDirection,
+			containerLogicalWidth, bordersPlusPadding,
+			logicalLeftLength, logicalRightLength, marginLogicalLeft, marginLogicalRight,
+			logicalWidthResult, marginLogicalLeftAlias, marginLogicalRightAlias, logicalLeftResult);
+
+	self:SetMarginLogicalLeftRight(marginLogicalLeftAlias, marginLogicalRightAlias);
+
+	self:SetLogicalWidth(logicalWidthResult);
+    self:SetLogicalLeft(logicalLeftResult);
+
+
+	-- Calculate constraint equation values for 'max-width' case.
+    if (not self:Style():LogicalMaxWidth():IsUndefined()) then
+        local maxLogicalWidth, maxMarginLogicalLeft, maxMarginLogicalRight, maxLogicalLeftPos;
+
+        maxLogicalWidth, maxMarginLogicalLeft, maxMarginLogicalRight, maxLogicalLeftPos = 
+			self:ComputePositionedLogicalWidthUsing(self:Style():LogicalMaxWidth(), containerBlock, containerDirection,
+                containerLogicalWidth, bordersPlusPadding,
+                logicalLeftLength, logicalRightLength, marginLogicalLeft, marginLogicalRight,
+                maxLogicalWidth, maxMarginLogicalLeft, maxMarginLogicalRight, maxLogicalLeftPos);
+		
+		
+
+        if (self:LogicalWidth() > maxLogicalWidth) then
+            self:SetLogicalWidth(maxLogicalWidth);
+            marginLogicalLeftAlias = maxMarginLogicalLeft;
+            marginLogicalRightAlias = maxMarginLogicalRight;
+			self:SetMarginLogicalLeftRight(marginLogicalLeftAlias, marginLogicalRightAlias);
+            self:SetLogicalLeft(maxLogicalLeftPos);
+        end
+    end
+
+	-- Calculate constraint equation values for 'min-width' case.
+    if (not self:Style():LogicalMinWidth():IsZero()) then
+        local minLogicalWidth, minMarginLogicalLeft, minMarginLogicalRight, minLogicalLeftPos;
+
+        minLogicalWidth, minMarginLogicalLeft, minMarginLogicalRight, minLogicalLeftPos = 
+			self:ComputePositionedLogicalWidthUsing(self:Style():LogicalMinWidth(), containerBlock, containerDirection,
+                    containerLogicalWidth, bordersPlusPadding,
+                    logicalLeftLength, logicalRightLength, marginLogicalLeft, marginLogicalRight,
+                    minLogicalWidth, minMarginLogicalLeft, minMarginLogicalRight, minLogicalLeftPos);
+
+        if (self:LogicalWidth() < minLogicalWidth) then
+            self:SetLogicalWidth(minLogicalWidth);
+            marginLogicalLeftAlias = minMarginLogicalLeft;
+            marginLogicalRightAlias = minMarginLogicalRight;
+			self:SetMarginLogicalLeftRight(marginLogicalLeftAlias, marginLogicalRightAlias);
+            self:SetLogicalLeft(minLogicalLeftPos);
+        end
+    end
+
+
+	if (self:StretchesToMinIntrinsicLogicalWidth() and self:LogicalWidth() < self:MinPreferredLogicalWidth() - bordersPlusPadding) then
+        logicalWidthResult, marginLogicalLeftAlias, marginLogicalRightAlias, logicalLeftResult = 
+			self:ComputePositionedLogicalWidthUsing(Length:new(self:MinPreferredLogicalWidth() - bordersPlusPadding, LengthTypeEnum.Fixed), containerBlock, containerDirection,
+                    containerLogicalWidth, bordersPlusPadding,
+                    logicalLeftLength, logicalRightLength, marginLogicalLeft, marginLogicalRight,
+                    logicalWidthResult, marginLogicalLeftAlias, marginLogicalRightAlias, logicalLeftResult);
+
+		self:SetMarginLogicalLeftRight(marginLogicalLeftAlias, marginLogicalRightAlias);
+        self:SetLogicalWidth(logicalWidthResult);
+        self:SetLogicalLeft(logicalLeftResult);
+    end
+
+	-- Put logicalWidth() into correct form.
+    self:SetLogicalWidth(self:LogicalWidth() + bordersPlusPadding);
+
+--	// Adjust logicalLeft if we need to for the flipped version of our writing mode in regions.
+--    if (inRenderFlowThread() && !region && isWritingModeRoot() && isHorizontalWritingMode() == containerBlock->isHorizontalWritingMode()) {
+--        LayoutUnit logicalLeftPos = logicalLeft();
+--        const RenderBlock* cb = toRenderBlock(containerBlock);
+--        LayoutUnit cbPageOffset = offsetFromLogicalTopOfFirstPage - logicalTop();
+--        RenderRegion* cbRegion = cb->regionAtBlockOffset(cbPageOffset);
+--        cbRegion = cb->clampToStartAndEndRegions(cbRegion);
+--        RenderBoxRegionInfo* boxInfo = cb->renderBoxRegionInfo(cbRegion, cbPageOffset);
+--        if (boxInfo) {
+--            logicalLeftPos += boxInfo->logicalLeft();
+--            setLogicalLeft(logicalLeftPos);
+--        }
+--    }
 end
 
 function LayoutBox:ShouldComputeSizeAsReplaced()
@@ -951,11 +1045,177 @@ function LayoutBox:ComputePositionedLogicalHeightReplaced()
 	--TODO: fixed this function latter.
 end
 
+function LayoutBox:SetMarginBeforeAfter(before, after)
+	local isHorizontal = self:IsHorizontalWritingMode();
+	local isFlipped = self:Style():IsFlippedBlocksWritingMode();
+	if(isHorizontal) then
+		if(isFlipped) then
+			self.marginBottom, self.marginTop = before, after;
+			return;
+		end
+		self.marginTop, self.marginBottom = before, after;
+		return;
+	end
+
+	if(isFlipped) then
+		self.marginRight, self.marginLeft = before, after;
+		return;
+	end
+	self.marginLeft, self.marginRight = before, after;
+end
+
+function LayoutBox:GetMarginBeforeAfter()
+	local isHorizontal = self:IsHorizontalWritingMode();
+	local isFlipped = self:Style():IsFlippedBlocksWritingMode();
+	if(isHorizontal) then
+		if(isFlipped) then
+			return self.marginBottom, self.marginTop;
+		end
+		return self.marginTop, self.marginBottom;
+	end
+
+	if(isFlipped) then
+		return self.marginRight, self.marginLeft;
+	end
+	return self.marginLeft, self.marginRight;
+end
+
+-- static void computeBlockStaticDistance(Length& logicalTop, Length& logicalBottom, const RenderBox* child, const RenderBoxModelObject* containerBlock)
+local function computeBlockStaticDistance(logicalTop, logicalBottom, child, containerBlock)
+    if (not logicalTop:IsAuto() or not logicalBottom:IsAuto()) then
+        return;
+	end
+    
+    -- FIXME: The static distance computation has not been patched for mixed writing modes.
+    local staticLogicalTop = child:Layer():StaticBlockPosition() - containerBlock:BorderBefore();
+
+	local curr = child:Parent();
+	while(curr and curr ~= containerBlock) do
+		if (curr:IsBox() and not curr:IsTableRow()) then
+            staticLogicalTop = staticLogicalTop + curr:LogicalTop();
+		end
+		curr = curr:Container();
+	end
+    logicalTop:SetValue(LengthTypeEnum.Fixed, staticLogicalTop);
+end
+
 function LayoutBox:ComputePositionedLogicalHeight()
 	if (self:IsReplaced()) then
         self:ComputePositionedLogicalHeightReplaced();
         return;
     end
+
+	-- The following is based off of the W3C Working Draft from April 11, 2006 of
+    -- CSS 2.1: Section 10.6.4 "Absolutely positioned, non-replaced elements"
+    -- <http://www.w3.org/TR/2005/WD-CSS21-20050613/visudet.html#abs-non-replaced-height>
+    -- (block-style-comments in this function and in computePositionedLogicalHeightUsing()
+    -- correspond to text from the spec)
+
+
+    -- We don't use containingBlock(), since we may be positioned by an enclosing relpositioned inline.
+    local containerBlock = self:Container();
+
+    local containerLogicalHeight = self:ContainingBlockLogicalHeightForPositioned(containerBlock);
+
+    local bordersPlusPadding = self:BorderAndPaddingLogicalHeight();
+    local marginBefore = self:Style():MarginBefore();
+    local marginAfter = self:Style():MarginAfter();
+	local marginBeforeAlias, marginAfterAlias = self:GetMarginBeforeAfter();
+    -- LayoutUnit& marginBeforeAlias = isHorizontal ? (isFlipped ? m_marginBottom : m_marginTop) : (isFlipped ? m_marginRight: m_marginLeft);
+    -- LayoutUnit& marginAfterAlias = isHorizontal ? (isFlipped ? m_marginTop : m_marginBottom) : (isFlipped ? m_marginLeft: m_marginRight);
+
+    local logicalTopLength = self:Style():LogicalTop();
+    local logicalBottomLength = self:Style():LogicalBottom();
+        
+	--[[
+    /*---------------------------------------------------------------------------*\
+     * For the purposes of this section and the next, the term "static position"
+     * (of an element) refers, roughly, to the position an element would have had
+     * in the normal flow. More precisely, the static position for 'top' is the
+     * distance from the top edge of the containing block to the top margin edge
+     * of a hypothetical box that would have been the first box of the element if
+     * its 'position' property had been 'static' and 'float' had been 'none'. The
+     * value is negative if the hypothetical box is above the containing block.
+     *
+     * But rather than actually calculating the dimensions of that hypothetical
+     * box, user agents are free to make a guess at its probable position.
+     *
+     * For the purposes of calculating the static position, the containing block
+     * of fixed positioned elements is the initial containing block instead of
+     * the viewport.
+    \*---------------------------------------------------------------------------*/
+	]]
+	
+    -- see FIXME 1
+    -- Calculate the static distance if needed.
+    computeBlockStaticDistance(logicalTopLength, logicalBottomLength, this, containerBlock);
+
+    local logicalHeightResult; -- Needed to compute overflow.
+    local logicalTopPos;
+
+    -- Calculate constraint equation values for 'height' case.
+    logicalHeightResult, marginBeforeAlias, marginAfterAlias, logicalTopPos = 
+		self:ComputePositionedLogicalHeightUsing(self:Style():LogicalHeight(), containerBlock, containerLogicalHeight, bordersPlusPadding,
+			logicalTopLength, logicalBottomLength, marginBefore, marginAfter,
+			logicalHeightResult, marginBeforeAlias, marginAfterAlias, logicalTopPos);
+	self:SetMarginBeforeAfter(marginBeforeAlias, marginAfterAlias);
+    self:SetLogicalTop(logicalTopPos);
+
+    -- Avoid doing any work in the common case (where the values of min-height and max-height are their defaults).
+    -- see FIXME 2
+
+    -- Calculate constraint equation values for 'max-height' case.
+    if (not self:Style():LogicalMaxHeight():IsUndefined()) then
+        local maxLogicalHeight, maxMarginBefore, maxMarginAfter, maxLogicalTopPos;
+
+        maxLogicalHeight, maxMarginBefore, maxMarginAfter, maxLogicalTopPos = 
+			self:ComputePositionedLogicalHeightUsing(self:Style():LogicalMaxHeight(), containerBlock, containerLogicalHeight, bordersPlusPadding,
+                logicalTopLength, logicalBottomLength, marginBefore, marginAfter,
+                maxLogicalHeight, maxMarginBefore, maxMarginAfter, maxLogicalTopPos);
+
+        if (logicalHeightResult > maxLogicalHeight) then
+            logicalHeightResult = maxLogicalHeight;
+            marginBeforeAlias = maxMarginBefore;
+            marginAfterAlias = maxMarginAfter;
+			self:SetMarginBeforeAfter(marginBeforeAlias, marginAfterAlias);
+            self:SetLogicalTop(maxLogicalTopPos);
+        end
+    end
+
+    -- Calculate constraint equation values for 'min-height' case.
+    if (not self:Style():LogicalMinHeight():IsZero()) then
+        local minLogicalHeight, minMarginBefore, minMarginAfter, minLogicalTopPos;
+
+        minLogicalHeight, minMarginBefore, minMarginAfter, minLogicalTopPos = 
+			self:ComputePositionedLogicalHeightUsing(self:Style():LogicalMinHeight(), containerBlock, containerLogicalHeight, bordersPlusPadding,
+                logicalTopLength, logicalBottomLength, marginBefore, marginAfter,
+                minLogicalHeight, minMarginBefore, minMarginAfter, minLogicalTopPos);
+
+        if (logicalHeightResult < minLogicalHeight) then
+            logicalHeightResult = minLogicalHeight;
+            marginBeforeAlias = minMarginBefore;
+            marginAfterAlias = minMarginAfter;
+			self:SetMarginBeforeAfter(marginBeforeAlias, marginAfterAlias);
+            self:SetLogicalTop(minLogicalTopPos);
+        end
+    end
+
+    -- Set final height value.
+    self:SetLogicalHeight(logicalHeightResult + bordersPlusPadding);
+    
+--    -- Adjust logicalTop if we need to for perpendicular writing modes in regions.
+--    if (inRenderFlowThread() && self:IsHorizontalWritingMode() ~= containerBlock:IsHorizontalWritingMode()) then
+--        LayoutUnit logicalTopPos = logicalTop();
+--        const RenderBlock* cb = toRenderBlock(containerBlock);
+--        LayoutUnit cbPageOffset = cb->offsetFromLogicalTopOfFirstPage() - logicalLeft();
+--        RenderRegion* cbRegion = cb->regionAtBlockOffset(cbPageOffset);
+--        cbRegion = cb->clampToStartAndEndRegions(cbRegion);
+--        RenderBoxRegionInfo* boxInfo = cb->renderBoxRegionInfo(cbRegion, cbPageOffset);
+--        if (boxInfo) then
+--            logicalTopPos += boxInfo:LogicalLeft();
+--            self:SetLogicalTop(logicalTopPos);
+--        end
+--    end
 end
 
 function LayoutBox:ComputeReplacedLogicalHeight()
@@ -1048,7 +1308,7 @@ end
 
 function LayoutBox:ComputeBorderBoxLogicalHeight(height)
 	local bordersPlusPadding = self:BorderAndPaddingLogicalHeight();
-    if (self:Style():BoxSizing() == "CONTENT_BOX") then
+    if (self:Style():BoxSizing() == BoxSizingEnum.CONTENT_BOX) then
         return height + bordersPlusPadding;
 	end
     return math.max(height, bordersPlusPadding);
@@ -1056,10 +1316,10 @@ end
 
 function LayoutBox:ComputeLogicalHeightUsing(h)
     local logicalHeight = -1;
-    if (not Length.IsAuto(h)) then
-        if (Length.IsFixed(h)) then
-            logicalHeight = h;
-        elseif (Length.IsPercent(h)) then
+    if (not h:IsAuto()) then
+        if (h:IsFixed()) then
+            logicalHeight = h:Value();
+        elseif (h:IsPercent()) then
             logicalHeight = self:ComputePercentageLogicalHeight(h);
 		end
         -- FIXME: Use < 0 or roughlyEquals when we move to float, see https://bugs.webkit.org/show_bug.cgi?id=66148
@@ -1095,8 +1355,8 @@ function LayoutBox:ComputeLogicalHeight()
 
         -- FIXME: Account for block-flow in flexible boxes.
         -- https://bugs.webkit.org/show_bug.cgi?id=46418
-        local inHorizontalBox = self:Parent():IsDeprecatedFlexibleBox() and self:Parent():Style():BoxOrient() == "HORIZONTAL";
-        local stretching = self:Parent():Style():BoxAlign() == "BSTRETCH";
+        local inHorizontalBox = self:Parent():IsDeprecatedFlexibleBox() and self:Parent():Style():BoxOrient() == BoxOrientEnum.HORIZONTAL;
+        local stretching = self:Parent():Style():BoxAlign() == BoxAlignmentEnum.BSTRETCH;
         local treatAsReplaced = self:ShouldComputeSizeAsReplaced() and (not inHorizontalBox or not stretching);
         local checkMinMaxHeight = false;
 
@@ -1107,7 +1367,7 @@ function LayoutBox:ComputeLogicalHeight()
         if (self:HasOverrideHeight() and self:Parent():IsFlexibleBoxIncludingDeprecated()) then
             --h = Length(overrideHeight() - borderAndPaddingLogicalHeight(), Fixed);
         elseif (treatAsReplaced) then
-            h = self:ComputeReplacedLogicalHeight();
+            h = Length:new(self:ComputeReplacedLogicalHeight(), Length.LengthTypeEnum.Fixed);
         else
             h = self:Style():LogicalHeight();
             checkMinMaxHeight = true;
@@ -1116,9 +1376,9 @@ function LayoutBox:ComputeLogicalHeight()
         -- Block children of horizontal flexible boxes fill the height of the box.
         -- FIXME: Account for block-flow in flexible boxes.
         -- https://bugs.webkit.org/show_bug.cgi?id=46418
-        if (Length.IsAuto(h) and self:Parent():IsDeprecatedFlexibleBox() and self:Parent():Style():BoxOrient() == "HORIZONTAL" and self:Parent():IsStretchingChildren()) then
---            h = Length(parentBox()->contentLogicalHeight() - marginBefore() - marginAfter() - borderAndPaddingLogicalHeight(), Fixed);
---            checkMinMaxHeight = false;
+        if (h:IsAuto() and self:Parent():IsDeprecatedFlexibleBox() and self:Parent():Style():BoxOrient() == BoxOrientEnum.HORIZONTAL and self:Parent():IsStretchingChildren()) then
+            h = Length:new(self:ParentBox():ContentLogicalHeight() - self:MarginBefore() - self:MarginAfter() - self:BorderAndPaddingLogicalHeight(), Length.LengthTypeEnum.Fixed);
+            checkMinMaxHeight = false;
         end
 
         local heightResult;
@@ -1129,7 +1389,7 @@ function LayoutBox:ComputeLogicalHeight()
                 heightResult = self:LogicalHeight();
 			end
             local minH = self:ComputeLogicalHeightUsing(self:Style():LogicalMinHeight()); -- Leave as -1 if unset.
-            local maxH = if_else(Length.IsUndefined(self:Style():LogicalMaxHeight()), heightResult, self:ComputeLogicalHeightUsing(self:Style():LogicalMaxHeight()));
+            local maxH = if_else(self:Style():LogicalMaxHeight():IsUndefined(), heightResult, self:ComputeLogicalHeightUsing(self:Style():LogicalMaxHeight()));
             if (maxH == -1) then
                 maxH = heightResult;
 			end
@@ -1139,7 +1399,7 @@ function LayoutBox:ComputeLogicalHeight()
             -- The only times we don't check min/max height are when a fixed length has
             -- been given as an override.  Just use that.  The value has already been adjusted
             -- for box-sizing.
-            heightResult = h + self:BorderAndPaddingLogicalHeight();
+            heightResult = h:Value() + self:BorderAndPaddingLogicalHeight();
         end
 
         self:SetLogicalHeight(heightResult);
@@ -1217,8 +1477,8 @@ function LayoutBox:UpdateBoxModelInfoFromStyle()
 --	// The root and the RenderView always paint their backgrounds/borders.
 --    if (isRootObject || isViewObject)
 --        setHasBoxDecorations(true);
-	self:SetPositioned(self:Style():Position() == "AbsolutePosition" or self:Style():Position() == "FixedPosition");
-    self:SetFloating(self:Style():IsFloating() and (not self:IsPositioned() or self:Style():Floating() == "PositionedFloat"));
+	self:SetPositioned(self:Style():Position() == PositionEnum.AbsolutePosition or self:Style():Position() == PositionEnum.FixedPosition);
+    self:SetFloating(self:Style():IsFloating() and (not self:IsPositioned() or self:Style():Floating() == FloatEnum.PositionedFloat));
 
 
 
@@ -1367,7 +1627,7 @@ function LayoutBox:LogicalRightVisualOverflow()
 end
 
 function LayoutBox:ClippedOverflowRectForRepaint(repaintContainer)
-    if (self:Style():Visibility() ~= "VISIBLE" and not self:EnclosingLayer():HasVisibleContent()) then
+    if (self:Style():Visibility() ~= VisibilityEnum.VISIBLE and not self:EnclosingLayer():HasVisibleContent()) then
         return LayoutRect:new();
 	end
 
@@ -1418,7 +1678,7 @@ function LayoutBox:ComputeRectForRepaint(repaintContainer, rect, fixed)
 
 	local position = self:Style():Position();
 
-	fixed = position == "FixedPosition";
+	fixed = position == PositionEnum.FixedPosition;
 
 	-- TODO: layer transform latter add
 
@@ -1500,13 +1760,40 @@ function LayoutBox:ContainingBlockLogicalHeightForPositioned(containingBlock, ch
     if (checkForPerpendicularWritingMode and containingBlock:IsHorizontalWritingMode() ~= self:IsHorizontalWritingMode()) then
         return self:ContainingBlockLogicalWidthForPositioned(containingBlock, 0, 0, false);
 	end
-	-- TODO: add latter;
+	
+	if (containingBlock:IsBox()) then
+        local cb = containingBlock;
+        local result = cb:ClientLogicalHeight();
+--        if (inRenderFlowThread() && containingBlock->isRenderFlowThread() && enclosingRenderFlowThread()->isHorizontalWritingMode() == containingBlock->isHorizontalWritingMode())
+--            return toRenderFlowThread(containingBlock)->contentLogicalHeightOfFirstRegion();
+        return result;
+    end
+        
+    --ASSERT(containingBlock->isRenderInline() && containingBlock->isRelPositioned());
+
+    local flow = containingBlock;
+    local first = flow:FirstLineBox();
+    local last = flow:LastLineBox();
+
+    -- If the containing block is empty, return a height of 0.
+    if (not first or not last) then
+        return 0;
+	end
+    local heightResult;
+    local boundingBox = flow:LinesBoundingBox();
+    if (containingBlock:IsHorizontalWritingMode()) then
+        heightResult = boundingBox:Height();
+    else
+        heightResult = boundingBox:Width();
+	end
+    heightResult = heightResult - (containingBlock:BorderBefore() + containingBlock:BorderAfter());
+    return heightResult;
 end
 
 --int RenderBox::containingBlockLogicalWidthForPositioned(const RenderBoxModelObject* containingBlock, RenderRegion* region,
 --    LayoutUnit offsetFromLogicalTopOfFirstPage, bool checkForPerpendicularWritingMode) const
 function LayoutBox:ContainingBlockLogicalWidthForPositioned(containingBlock, region, offsetFromLogicalTopOfFirstPage, checkForPerpendicularWritingMode)
-	offsetFromLogicalTopOfFirstPage = if_eles(offsetFromLogicalTopOfFirstPage == nil, 0, offsetFromLogicalTopOfFirstPage);
+	offsetFromLogicalTopOfFirstPage = if_else(offsetFromLogicalTopOfFirstPage == nil, 0, offsetFromLogicalTopOfFirstPage);
 	checkForPerpendicularWritingMode = if_else(checkForPerpendicularWritingMode == nil, true, checkForPerpendicularWritingMode);
     if (checkForPerpendicularWritingMode and containingBlock:IsHorizontalWritingMode() ~= self:IsHorizontalWritingMode()) then
         return self:ContainingBlockLogicalHeightForPositioned(containingBlock, false);
@@ -1560,6 +1847,19 @@ function LayoutBox:ContainingBlockLogicalWidthForPositioned(containingBlock, reg
 	return 0;
 end
 
+--static void computeLogicalLeftPositionedOffset(LayoutUnit& logicalLeftPos, const RenderBox* child, LayoutUnit logicalWidthValue, const RenderBoxModelObject* containerBlock, LayoutUnit containerLogicalWidth)
+local function computeLogicalLeftPositionedOffset(logicalLeftPos, child, logicalWidthValue, containerBlock, containerLogicalWidth)
+    -- Deal with differing writing modes here.  Our offset needs to be in the containing block's coordinate space. If the containing block is flipped
+    -- along this axis, then we need to flip the coordinate.  This can only happen if the containing block is both a flipped mode and perpendicular to us.
+    if (containerBlock:IsHorizontalWritingMode() ~= child:IsHorizontalWritingMode() and containerBlock:Style():IsFlippedBlocksWritingMode()) then
+        logicalLeftPos = containerLogicalWidth - logicalWidthValue - logicalLeftPos;
+        logicalLeftPos = logicalLeftPos + if_else(child:IsHorizontalWritingMode(), containerBlock:BorderRight(), containerBlock:BorderBottom());
+    else
+        logicalLeftPos = logicalLeftPos + if_else(child:IsHorizontalWritingMode(), containerBlock:BorderLeft(), containerBlock:BorderTop());
+	end
+	return logicalLeftPos;
+end
+
 --void RenderBox::computePositionedLogicalWidthUsing(Length logicalWidth, const RenderBoxModelObject* containerBlock, TextDirection containerDirection,
 --                                                   LayoutUnit containerLogicalWidth, LayoutUnit bordersPlusPadding,
 --                                                   Length logicalLeft, Length logicalRight, Length marginLogicalLeft, Length marginLogicalRight,
@@ -1573,12 +1873,69 @@ function LayoutBox:ComputePositionedLogicalWidthUsing(logicalWidth, containerBlo
 
     local logicalLeftValue = 0;
 
-    local logicalWidthIsAuto = Length.IsIntrinsicOrAuto(logicalWidth);
-    local logicalLeftIsAuto = Length.IsAuto(logicalLeft);
-    local logicalRightIsAuto = Length.IsAuto(logicalRight);
+    local logicalWidthIsAuto = logicalWidth:IsIntrinsicOrAuto();
+    local logicalLeftIsAuto = logicalLeft:IsAuto();
+    local logicalRightIsAuto = logicalRight:IsAuto();
 
 	if (not logicalLeftIsAuto and not logicalWidthIsAuto and not logicalRightIsAuto) then
-		-- add latter;
+		--[[
+		/*-----------------------------------------------------------------------*\
+         * If none of the three is 'auto': If both 'margin-left' and 'margin-
+         * right' are 'auto', solve the equation under the extra constraint that
+         * the two margins get equal values, unless this would make them negative,
+         * in which case when direction of the containing block is 'ltr' ('rtl'),
+         * set 'margin-left' ('margin-right') to zero and solve for 'margin-right'
+         * ('margin-left'). If one of 'margin-left' or 'margin-right' is 'auto',
+         * solve the equation for that value. If the values are over-constrained,
+         * ignore the value for 'left' (in case the 'direction' property of the
+         * containing block is 'rtl') or 'right' (in case 'direction' is 'ltr')
+         * and solve for that value.
+        \*-----------------------------------------------------------------------*/
+		]]
+        -- NOTE:  It is not necessary to solve for 'right' in the over constrained
+        -- case because the value is not used for any further calculations.
+
+        logicalLeftValue = logicalLeft:CalcValue(containerLogicalWidth);
+        logicalWidthValue = self:ComputeContentBoxLogicalWidth(logicalWidth:CalcValue(containerLogicalWidth));
+
+        local availableSpace = containerLogicalWidth - (logicalLeftValue + logicalWidthValue + logicalRight:CalcValue(containerLogicalWidth) + bordersPlusPadding);
+
+        -- Margins are now the only unknown
+        if (marginLogicalLeft:IsAuto() and marginLogicalRight:IsAuto()) then
+            -- Both margins auto, solve for equality
+            if (availableSpace >= 0) then
+                marginLogicalLeftValue = availableSpace / 2; -- split the difference
+                marginLogicalRightValue = availableSpace - marginLogicalLeftValue; -- account for odd valued differences
+            else
+                -- Use the containing block's direction rather than the parent block's
+                -- per CSS 2.1 reference test abspos-non-replaced-width-margin-000.
+                if (containerDirection == TextDirectionEnum.LTR) then
+                    marginLogicalLeftValue = 0;
+                    marginLogicalRightValue = availableSpace; -- will be negative
+                else
+                    marginLogicalLeftValue = availableSpace; -- will be negative
+                    marginLogicalRightValue = 0;
+                end
+            end
+        elseif (marginLogicalLeft:IsAuto()) then
+            -- Solve for left margin
+            marginLogicalRightValue = marginLogicalRight:CalcValue(containerLogicalWidth);
+            marginLogicalLeftValue = availableSpace - marginLogicalRightValue;
+        elseif (marginLogicalRight:IsAuto()) then
+            -- Solve for right margin
+            marginLogicalLeftValue = marginLogicalLeft:CalcValue(containerLogicalWidth);
+            marginLogicalRightValue = availableSpace - marginLogicalLeftValue;
+        else
+            -- Over-constrained, solve for left if direction is RTL
+            marginLogicalLeftValue = marginLogicalLeft:CalcValue(containerLogicalWidth);
+            marginLogicalRightValue = marginLogicalRight:CalcValue(containerLogicalWidth);
+
+            -- Use the containing block's direction rather than the parent block's
+            -- per CSS 2.1 reference test abspos-non-replaced-width-margin-000.
+            if (containerDirection == TextDirectionEnum.RTL) then
+                logicalLeftValue = (availableSpace + logicalLeftValue) - marginLogicalLeftValue - marginLogicalRightValue;
+			end
+        end
 	else
 		--[[
 		/*--------------------------------------------------------------------*\
@@ -1624,25 +1981,259 @@ function LayoutBox:ComputePositionedLogicalWidthUsing(logicalWidth, containerBlo
         -- because the value is not used for any further calculations.
 
         -- Calculate margins, 'auto' margins are ignored.
-        marginLogicalLeftValue = Length.CalcMinValue(marginLogicalLeft,containerLogicalWidth);
-        marginLogicalRightValue = Length.CalcMinValue(marginLogicalRight,containerLogicalWidth);
+        marginLogicalLeftValue = marginLogicalLeft:CalcMinValue(containerLogicalWidth);
+        marginLogicalRightValue = marginLogicalRight:CalcMinValue(containerLogicalWidth);
 
 		local availableSpace = containerLogicalWidth - (marginLogicalLeftValue + marginLogicalRightValue + bordersPlusPadding);
 
 		-- FIXME: Is there a faster way to find the correct case?
         -- Use rule/case that applies.
         if (logicalLeftIsAuto and logicalWidthIsAuto and not logicalRightIsAuto) then
+			-- RULE 1: (use shrink-to-fit for width, and solve of left)
+            local logicalRightValue = logicalRight:CalcValue(containerLogicalWidth);
 
+            -- FIXME: would it be better to have shrink-to-fit in one step?
+            local preferredWidth = self:MaxPreferredLogicalWidth() - bordersPlusPadding;
+            local preferredMinWidth = self:MinPreferredLogicalWidth() - bordersPlusPadding;
+            local availableWidth = availableSpace - logicalRightValue;
+            logicalWidthValue = math.min(math.max(preferredMinWidth, availableWidth), preferredWidth);
+            logicalLeftValue = availableSpace - (logicalWidthValue + logicalRightValue);
 		elseif (not logicalLeftIsAuto and logicalWidthIsAuto and logicalRightIsAuto) then
-			
+			-- RULE 3: (use shrink-to-fit for width, and no need solve of right)
+            logicalLeftValue = logicalLeft:CalcValue(containerLogicalWidth);
+
+            -- FIXME: would it be better to have shrink-to-fit in one step?
+            local preferredWidth = self:MaxPreferredLogicalWidth() - bordersPlusPadding;
+            local preferredMinWidth = self:MinPreferredLogicalWidth() - bordersPlusPadding;
+            local availableWidth = availableSpace - logicalLeftValue;
+            logicalWidthValue = math.min(math.max(preferredMinWidth, availableWidth), preferredWidth);
 		elseif (logicalLeftIsAuto and not logicalWidthIsAuto and not logicalRightIsAuto) then
-
+			-- RULE 4: (solve for left)
+            logicalWidthValue = self:ComputeContentBoxLogicalWidth(logicalWidth:CalcValue(containerLogicalWidth));
+            logicalLeftValue = availableSpace - (logicalWidthValue + logicalRight:CalcValue(containerLogicalWidth));
 		elseif (not logicalLeftIsAuto and logicalWidthIsAuto and not logicalRightIsAuto) then
-
+			-- RULE 5: (solve for width)
+            logicalLeftValue = logicalLeft:CalcValue(containerLogicalWidth);
+            logicalWidthValue = availableSpace - (logicalLeftValue + logicalRight:CalcValue(containerLogicalWidth));
 		elseif (not logicalLeftIsAuto and not logicalWidthIsAuto and logicalRightIsAuto) then
 			-- RULE 6: (no need solve for right)
---            logicalLeftValue = logicalLeft.calcValue(containerLogicalWidth);
---            logicalWidthValue = computeContentBoxLogicalWidth(logicalWidth.calcValue(containerLogicalWidth));
+            logicalLeftValue = logicalLeft:CalcValue(containerLogicalWidth);
+            logicalWidthValue = self:ComputeContentBoxLogicalWidth(logicalWidth:CalcValue(containerLogicalWidth));
 		end
 	end
+
+
+	-- Use computed values to calculate the horizontal position.
+
+	-- FIXME: This hack is needed to calculate the  logical left position for a 'rtl' relatively
+	-- positioned, inline because right now, it is using the logical left position
+	-- of the first line box when really it should use the last line box.  When
+	-- this is fixed elsewhere, this block should be removed.
+	if (containerBlock:IsLayoutInline() and not containerBlock:Style():IsLeftToRightDirection()) then
+		local flow = containerBlock;
+		local firstLine = flow:FirstLineBox();
+		local lastLine = flow:LastLineBox();
+		if (firstLine and lastLine and firstLine ~= lastLine) then
+			logicalLeftPos = logicalLeftValue + marginLogicalLeftValue + lastLine:BorderLogicalLeft() + (lastLine:LogicalLeft() - firstLine:LogicalLeft());
+			return logicalWidthValue, marginLogicalLeftValue, marginLogicalRightValue, logicalLeftPos;
+		end
+	end
+
+	logicalLeftPos = logicalLeftValue + marginLogicalLeftValue;
+	logicalLeftPos = computeLogicalLeftPositionedOffset(logicalLeftPos, self, logicalWidthValue, containerBlock, containerLogicalWidth);
+
+	return logicalWidthValue, marginLogicalLeftValue, marginLogicalRightValue, logicalLeftPos;
+end
+
+function LayoutBox:ParentBox()
+	return self:Parent();
+end
+
+--static void computeLogicalTopPositionedOffset(LayoutUnit& logicalTopPos, const RenderBox* child, LayoutUnit logicalHeightValue, const RenderBoxModelObject* containerBlock, LayoutUnit containerLogicalHeight)
+local function computeLogicalTopPositionedOffset(logicalTopPos, child, logicalHeightValue, containerBlock, containerLogicalHeight)
+    -- Deal with differing writing modes here.  Our offset needs to be in the containing block's coordinate space. If the containing block is flipped
+    -- along this axis, then we need to flip the coordinate.  This can only happen if the containing block is both a flipped mode and perpendicular to us.
+    if ((child:Style():IsFlippedBlocksWritingMode() and child:IsHorizontalWritingMode() ~= containerBlock:IsHorizontalWritingMode())
+        or (child:Style():IsFlippedBlocksWritingMode() ~= containerBlock:Style():IsFlippedBlocksWritingMode() and child:IsHorizontalWritingMode() == containerBlock:IsHorizontalWritingMode())) then
+        logicalTopPos = containerLogicalHeight - logicalHeightValue - logicalTopPos;
+	end
+
+    -- Our offset is from the logical bottom edge in a flipped environment, e.g., right for vertical-rl and bottom for horizontal-bt.
+    if (containerBlock:Style():IsFlippedBlocksWritingMode() and child:IsHorizontalWritingMode() == containerBlock:IsHorizontalWritingMode()) then
+        if (child:IsHorizontalWritingMode()) then
+            logicalTopPos = logicalTopPos + containerBlock:BorderBottom();
+        else
+            logicalTopPos = logicalTopPos + containerBlock:BorderRight();
+		end
+    else
+        if (child:IsHorizontalWritingMode()) then
+            logicalTopPos = logicalTopPos + containerBlock:BorderTop();
+        else
+            logicalTopPos = logicalTopPos + containerBlock:BorderLeft();
+		end
+    end
+	return logicalTopPos;
+end
+
+--void RenderBox::computePositionedLogicalHeightUsing(Length logicalHeightLength, const RenderBoxModelObject* containerBlock,
+--                                                    LayoutUnit containerLogicalHeight, LayoutUnit bordersPlusPadding,
+--                                                    Length logicalTop, Length logicalBottom, Length marginBefore, Length marginAfter,
+--                                                    LayoutUnit& logicalHeightValue, LayoutUnit& marginBeforeValue, LayoutUnit& marginAfterValue, LayoutUnit& logicalTopPos)
+function LayoutBox:ComputePositionedLogicalHeightUsing(logicalHeightLength, containerBlock,
+													containerLogicalHeight, bordersPlusPadding,
+                                                    logicalTop, logicalBottom, marginBefore, marginAfter,
+                                                    logicalHeightValue, marginBeforeValue, marginAfterValue, logicalTopPos)
+    -- 'top' and 'bottom' cannot both be 'auto' because 'top would of been
+    -- converted to the static position in computePositionedLogicalHeight()
+    -- ASSERT(!(logicalTop.isAuto() && logicalBottom.isAuto()));
+
+    local contentLogicalHeight = self:LogicalHeight() - bordersPlusPadding;
+
+    local logicalTopValue = 0;
+
+    local logicalHeightIsAuto = logicalHeightLength:IsAuto();
+    local logicalTopIsAuto = logicalTop:IsAuto();
+    local logicalBottomIsAuto = logicalBottom:IsAuto();
+
+    -- Height is never unsolved for tables.
+    if (self:IsTable()) then
+        logicalHeightLength:SetValue(LengthTypeEnum.Fixed, contentLogicalHeight);
+        logicalHeightIsAuto = false;
+    end
+
+    if (not logicalTopIsAuto and not logicalHeightIsAuto and not logicalBottomIsAuto) then
+		--[[
+        /*-----------------------------------------------------------------------*\
+         * If none of the three are 'auto': If both 'margin-top' and 'margin-
+         * bottom' are 'auto', solve the equation under the extra constraint that
+         * the two margins get equal values. If one of 'margin-top' or 'margin-
+         * bottom' is 'auto', solve the equation for that value. If the values
+         * are over-constrained, ignore the value for 'bottom' and solve for that
+         * value.
+        \*-----------------------------------------------------------------------*/
+		]]
+        -- NOTE:  It is not necessary to solve for 'bottom' in the over constrained
+        -- case because the value is not used for any further calculations.
+
+        logicalHeightValue = self:ComputeContentBoxLogicalHeight(logicalHeightLength:CalcValue(containerLogicalHeight));
+        logicalTopValue = logicalTop:CalcValue(containerLogicalHeight);
+
+        local availableSpace = containerLogicalHeight - (logicalTopValue + logicalHeightValue + logicalBottom:CalcValue(containerLogicalHeight) + bordersPlusPadding);
+
+        -- Margins are now the only unknown
+        if (marginBefore:IsAuto() and marginAfter:IsAuto()) then
+            -- Both margins auto, solve for equality
+            -- NOTE: This may result in negative values.
+            marginBeforeValue = availableSpace / 2; -- split the difference
+            marginAfterValue = availableSpace - marginBeforeValue; -- account for odd valued differences
+        elseif (marginBefore:IsAuto()) then
+            -- Solve for top margin
+            marginAfterValue = marginAfter:CalcValue(containerLogicalHeight);
+            marginBeforeValue = availableSpace - marginAfterValue;
+        elseif (marginAfter:IsAuto()) then
+            -- Solve for bottom margin
+            marginBeforeValue = marginBefore:CalcValue(containerLogicalHeight);
+            marginAfterValue = availableSpace - marginBeforeValue;
+        else
+            -- Over-constrained, (no need solve for bottom)
+            marginBeforeValue = marginBefore:CalcValue(containerLogicalHeight);
+            marginAfterValue = marginAfter:CalcValue(containerLogicalHeight);
+        end
+    else
+		--[[
+        /*--------------------------------------------------------------------*\
+         * Otherwise, set 'auto' values for 'margin-top' and 'margin-bottom'
+         * to 0, and pick the one of the following six rules that applies.
+         *
+         * 1. 'top' and 'height' are 'auto' and 'bottom' is not 'auto', then
+         *    the height is based on the content, and solve for 'top'.
+         *
+         *              OMIT RULE 2 AS IT SHOULD NEVER BE HIT
+         * ------------------------------------------------------------------
+         * 2. 'top' and 'bottom' are 'auto' and 'height' is not 'auto', then
+         *    set 'top' to the static position, and solve for 'bottom'.
+         * ------------------------------------------------------------------
+         *
+         * 3. 'height' and 'bottom' are 'auto' and 'top' is not 'auto', then
+         *    the height is based on the content, and solve for 'bottom'.
+         * 4. 'top' is 'auto', 'height' and 'bottom' are not 'auto', and
+         *    solve for 'top'.
+         * 5. 'height' is 'auto', 'top' and 'bottom' are not 'auto', and
+         *    solve for 'height'.
+         * 6. 'bottom' is 'auto', 'top' and 'height' are not 'auto', and
+         *    solve for 'bottom'.
+        \*--------------------------------------------------------------------*/
+		]]
+        -- NOTE: For rules 3 and 6 it is not necessary to solve for 'bottom'
+        -- because the value is not used for any further calculations.
+
+        -- Calculate margins, 'auto' margins are ignored.
+        marginBeforeValue = marginBefore:CalcMinValue(containerLogicalHeight);
+        marginAfterValue = marginAfter:CalcMinValue(containerLogicalHeight);
+
+        local availableSpace = containerLogicalHeight - (marginBeforeValue + marginAfterValue + bordersPlusPadding);
+
+        -- Use rule/case that applies.
+        if (logicalTopIsAuto and logicalHeightIsAuto and not logicalBottomIsAuto) then
+            -- RULE 1: (height is content based, solve of top)
+            logicalHeightValue = contentLogicalHeight;
+            logicalTopValue = availableSpace - (logicalHeightValue + logicalBottom:CalcValue(containerLogicalHeight));
+        elseif (not logicalTopIsAuto and logicalHeightIsAuto and logicalBottomIsAuto) then
+            -- RULE 3: (height is content based, no need solve of bottom)
+            logicalTopValue = logicalTop:CalcValue(containerLogicalHeight);
+            logicalHeightValue = contentLogicalHeight;
+        elseif (logicalTopIsAuto and not logicalHeightIsAuto and not logicalBottomIsAuto) then
+            -- RULE 4: (solve of top)
+            logicalHeightValue = self:ComputeContentBoxLogicalHeight(logicalHeightLength:CalcValue(containerLogicalHeight));
+            logicalTopValue = availableSpace - (logicalHeightValue + logicalBottom:CalcValue(containerLogicalHeight));
+        elseif (not logicalTopIsAuto and logicalHeightIsAuto and not logicalBottomIsAuto) then
+            -- RULE 5: (solve of height)
+            logicalTopValue = logicalTop:CalcValue(containerLogicalHeight);
+            logicalHeightValue = math.max(0, availableSpace - (logicalTopValue + logicalBottom:CalcValue(containerLogicalHeight)));
+        elseif (not logicalTopIsAuto and not logicalHeightIsAuto and logicalBottomIsAuto) then
+            -- RULE 6: (no need solve of bottom)
+            logicalHeightValue = self:ComputeContentBoxLogicalHeight(logicalHeightLength:CalcValue(containerLogicalHeight));
+            logicalTopValue = logicalTop:CalcValue(containerLogicalHeight);
+        end
+    end
+
+    -- Use computed values to calculate the vertical position.
+    logicalTopPos = logicalTopValue + marginBeforeValue;
+    logicalTopPos = computeLogicalTopPositionedOffset(logicalTopPos, self, logicalHeightValue, containerBlock, containerLogicalHeight);
+	return logicalHeightValue, marginBeforeValue, marginAfterValue, logicalTopPos;
+end
+
+function LayoutBox:StretchesToViewport()
+    --return document()->inQuirksMode() && style()->logicalHeight().isAuto() && !isFloatingOrPositioned() && (isRoot() || isBody());
+	return self:Style():LogicalHeight():IsAuto() and not self:IsFloatingOrPositioned() and (self:IsRoot() or self:IsBody());
+end
+
+-- There are a few cases where we need to refer specifically to the available physical width and available physical height.
+-- Relative positioning is one of those cases, since left/top offsets are physical.
+function LayoutBox:AvailableWidth() 
+	if(self:Style():IsHorizontalWritingMode()) then
+		return self:AvailableLogicalWidth()
+	end
+	return  self:AvailableLogicalHeight();
+end
+
+function LayoutBox:AvailableHeight() 
+	if(self:Style():IsHorizontalWritingMode()) then
+		return self:AvailableLogicalHeight()
+	end
+	return  self:AvailableLogicalWidth();
+end
+
+--LayoutPoint RenderBox::flipForWritingModeForChild(const RenderBox* child, const LayoutPoint& point) const
+function LayoutBox:FlipForWritingModeForChild(child, point)
+    if (not self:Style():IsFlippedBlocksWritingMode()) then
+        return point;
+	end
+    
+    -- The child is going to add in its x() and y(), so we have to make sure it ends up in
+    -- the right place.
+    if (self:IsHorizontalWritingMode()) then
+        return LayoutPoint:new(point:X(), point:Y() + self:Height() - child:Height() - (2 * child:Y()));
+	end
+    return LayoutPoint:new(point:X() + self:Width() - child:Width() - (2 * child:X()), point:Y());
 end

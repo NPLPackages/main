@@ -13,12 +13,17 @@ NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutBoxModelObject.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutObjectChildList.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutLineBoxList.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/InLineFlowBox.lua");
-NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/Length.lua");
-local Length = commonlib.gettable("System.Windows.mcml.platform.graphics.Length");
+NPL.load("(gl)script/ide/System/Windows/mcml/platform/Length.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyleConstants.lua");
+local ComputedStyleConstants = commonlib.gettable("System.Windows.mcml.style.ComputedStyleConstants");
+local Length = commonlib.gettable("System.Windows.mcml.platform.Length");
 local InLineFlowBox = commonlib.gettable("System.Windows.mcml.layout.InLineFlowBox");
 local LayoutLineBoxList = commonlib.gettable("System.Windows.mcml.layout.LayoutLineBoxList");
 local LayoutObjectChildList = commonlib.gettable("System.Windows.mcml.layout.LayoutObjectChildList");
 local LayoutInline = commonlib.inherit(commonlib.gettable("System.Windows.mcml.layout.LayoutBoxModelObject"), commonlib.gettable("System.Windows.mcml.layout.LayoutInline"));
+
+local VerticalAlignEnum = ComputedStyleConstants.VerticalAlignEnum;
+local TextEmphasisMarkEnum = ComputedStyleConstants.TextEmphasisMarkEnum;
 
 function LayoutInline:ctor()
 	self.name = "LayoutInline";
@@ -57,9 +62,9 @@ function LayoutInline:UpdateAlwaysCreateLineBoxes(fullLayout)
     --bool checkFonts = document()->inNoQuirksMode();
 	local checkFonts = false;
     local alwaysCreateLineBoxes = (parentRenderInline ~= nil and parentRenderInline:AlwaysCreateLineBoxes())
-        or (parentRenderInline ~= nil and parentStyle:VerticalAlign() ~= "BASELINE")
-        or self:Style():VerticalAlign() ~= "BASELINE"
-        or self:Style():TextEmphasisMark() ~= "TextEmphasisMarkNone"
+        or (parentRenderInline ~= nil and parentStyle:VerticalAlign() ~= VerticalAlignEnum.BASELINE)
+        or self:Style():VerticalAlign() ~= VerticalAlignEnum.BASELINE
+        or self:Style():TextEmphasisMark() ~= TextEmphasisMarkEnum.TextEmphasisMarkNone
         -- or (checkFonts and (not parentStyle->font().fontMetrics().hasIdenticalAscentDescentAndLineGap(style()->font().fontMetrics())
 		or (checkFonts and parentStyle:LineHeight() ~= self:Style():LineHeight());
 	-- document()->usesFirstLineRules() default value is false;
@@ -163,14 +168,14 @@ end
 
 --static LayoutUnit computeMargin(const RenderInline* renderer, const Length& margin)
 local function computeMargin(renderer, margin)
-    if (Length.IsAuto(margin)) then
+    if (margin:IsAuto()) then
         return 0;
 	end
-    if (Length.IsFixed(margin)) then
-        return margin;
+    if (margin:IsFixed()) then
+        return margin:Value();
 	end
-    if (Length.IsPercent(margin)) then
-        return Length.CalcMinValue(margin, math.max(0, renderer:ContainingBlock():AvailableLogicalWidth()));
+    if (margin:IsPercent()) then
+        return margin:CalcMinValue(math.max(0, renderer:ContainingBlock():AvailableLogicalWidth():Value()));
 	end
     return 0;
 end

@@ -10,10 +10,8 @@ local LayoutView = commonlib.gettable("System.Windows.mcml.layout.LayoutView");
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutBlock.lua");
-NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/Length.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutState.lua");
 local LayoutState = commonlib.gettable("System.Windows.mcml.layout.LayoutState");
-local Length = commonlib.gettable("System.Windows.mcml.platform.graphics.Length");
 local LayoutView = commonlib.inherit(commonlib.gettable("System.Windows.mcml.layout.LayoutBlock"), commonlib.gettable("System.Windows.mcml.layout.LayoutView"));
 
 function LayoutView:ctor()
@@ -37,7 +35,6 @@ function LayoutView:init(node, frameView)
 
     -- init RenderObject attributes
     self:SetInline(false);
-    
     self.minPreferredLogicalWidth = 0;
     self.maxPreferredLogicalWidth = 0;
 
@@ -124,7 +121,8 @@ function LayoutView:Layout()
         self:SetChildNeedsLayout(true, false);
 		local child = self:FirstChild();
 		while(child) do
-			if (Length.IsPercent(child:Style():LogicalHeight()) or Length.IsPercent(child:Style():LogicalMinHeight()) or Length.IsPercent(child:Style():LogicalMaxHeight())) then
+			--if (Length.IsPercent(child:Style():LogicalHeight()) or Length.IsPercent(child:Style():LogicalMinHeight()) or Length.IsPercent(child:Style():LogicalMaxHeight())) then
+			if (child:Style():LogicalHeight():IsPercent() or child:Style():LogicalMinHeight():IsPercent() or child:Style():LogicalMaxHeight():IsPercent()) then
                 child:SetChildNeedsLayout(true, false);
 			end
 			child = child:NextSibling();

@@ -12,7 +12,7 @@ LayoutBlock:new():init();
 ]]
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutBlock.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/InLineIterator.lua");
-NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/Length.lua");
+--NPL.load("(gl)script/ide/System/Windows/mcml/platform/Length.lua");
 NPL.load("(gl)script/ide/STL.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyle.lua");
 NPL.load("(gl)script/ide/System/Core/UniString.lua");
@@ -21,6 +21,8 @@ NPL.load("(gl)script/ide/System/Windows/mcml/platform/text/BidiResolver.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/platform/text/TextBreakIterator.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/BreakLines.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/BidiRun.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyleConstants.lua");
+local ComputedStyleConstants = commonlib.gettable("System.Windows.mcml.style.ComputedStyleConstants");
 local BidiRun = commonlib.gettable("System.Windows.mcml.layout.BidiRun");
 local InlineBidiResolver = commonlib.gettable("System.Windows.mcml.layout.InlineBidiResolver");
 local BreakLines = commonlib.gettable("System.Windows.mcml.layout.BreakLines");
@@ -30,10 +32,19 @@ local BidiStatus = commonlib.inherit(nil, commonlib.gettable("System.Windows.mcm
 local BidiResolver = commonlib.gettable("System.Windows.mcml.platform.text.BidiResolver");
 local UniString = commonlib.gettable("System.Core.UniString");
 local ComputedStyle = commonlib.gettable("System.Windows.mcml.style.ComputedStyle");
-local Length = commonlib.gettable("System.Windows.mcml.platform.graphics.Length");
+--local Length = commonlib.gettable("System.Windows.mcml.platform.Length");
 local InlineWalker = commonlib.gettable("System.Windows.mcml.layout.InlineWalker");
 local LayoutBlock = commonlib.gettable("System.Windows.mcml.layout.LayoutBlock");
 local FloatingObject = commonlib.gettable("System.Windows.mcml.layout.LayoutBlock.FloatingObject");
+
+local WhiteSpaceEnum = ComputedStyleConstants.WhiteSpaceEnum;
+local ClearEnum = ComputedStyleConstants.ClearEnum;
+local NBSPModeEnum = ComputedStyleConstants.NBSPModeEnum;
+local WordBreakEnum = ComputedStyleConstants.WordBreakEnum;
+local UnicodeBidiEnum = ComputedStyleConstants.UnicodeBidiEnum;
+local TextAlignEnum = ComputedStyleConstants.TextAlignEnum;
+local OrderEnum = ComputedStyleConstants.OrderEnum;
+local TextDirectionEnum = ComputedStyleConstants.TextDirectionEnum;
 
 local LineWidth = commonlib.inherit(nil, {});
 local LineBreaker = commonlib.inherit(nil, {});
@@ -56,7 +67,7 @@ end
 function LineBreaker:Reset()
 	--self.positionedObjects.clear();
     self.hyphenated = false;
-    self.clear = "CNONE";
+    self.clear = ClearEnum.CNONE;
 end
 
 local cMaxLineDepth = 200;
@@ -254,7 +265,7 @@ function LineBreaker:NextLineBreak(resolver, lineInfo, lineBreakIteratorInfo, la
 			--            if (style->hasTextCombine() && current.m_obj->isCombineText())
 			--              toRenderCombineText(current.m_obj)->combineText();
 
-			local f = style:Font();
+			local f = style:Font():ToString();
 			--bool canHyphenate = style->hyphens() == HyphensAuto && WebCore::canHyphenate(style->locale());
 			local canHyphenate = false;
 
@@ -268,10 +279,10 @@ function LineBreaker:NextLineBreak(resolver, lineInfo, lineBreakIteratorInfo, la
 			local wordTrailingSpaceWidth = 0;
 			
 			local wrapW = width:UncommittedWidth() + inlineLogicalWidth(current.obj, not appliedStartWidth, true);
-			local breakNBSP = autoWrap and current.obj:Style():NbspMode() == "SPACE";
-			local breakWords = current.obj:Style():BreakWords() and ((autoWrap and width:CommittedWidth() == 0) or currWS == "PRE");
+			local breakNBSP = autoWrap and current.obj:Style():NbspMode() == NBSPModeEnum.SPACE;
+			local breakWords = current.obj:Style():BreakWords() and ((autoWrap and width:CommittedWidth() == 0) or currWS == WhiteSpaceEnum.PRE);
 			local midWordBreak = false;
-			local breakAll = current.obj:Style():WordBreak() == "BreakAllWordBreak" and autoWrap;
+			local breakAll = current.obj:Style():WordBreak() == WordBreakEnum.BreakAllWordBreak and autoWrap;
 			--float hyphenWidth = 0;
 
 			if (t:IsWordBreak()) then
@@ -300,7 +311,6 @@ function LineBreaker:NextLineBreak(resolver, lineInfo, lineBreakIteratorInfo, la
 				local applyWordSpacing = false;
 
                 currentCharacterIsWS = currentCharacterIsSpace or (breakNBSP and UniString.IsSpecialCharacter(UniString.SpecialCharacter.Nbsp));
-
 				if (lineBreakIteratorInfo.first ~= t) then
                     lineBreakIteratorInfo.first = t;
                     lineBreakIteratorInfo.second:Reset(t:Characters(), t:TextLength(), style:Locale());
@@ -310,8 +320,7 @@ function LineBreaker:NextLineBreak(resolver, lineInfo, lineBreakIteratorInfo, la
 --                    and (self:Style:Hyphens() ~= "HyphensNone" or (current:PreviousInSameNode() ~= "softHyphen")));
 				local isBreakable;
 				isBreakable, current.nextBreakablePosition = BreakLines.IsBreakable(lineBreakIteratorInfo.second, current.pos, current.nextBreakablePosition, breakNBSP);
-				local betweenWords = c_str == "\n" or (currWS ~= "PRE" and not atStart and isBreakable);
-
+				local betweenWords = c_str == "\n" or (currWS ~= WhiteSpaceEnum.PRE and not atStart and isBreakable);
 				if((betweenWords or midWordBreak) and (ignoringSpaces and currentCharacterIsSpace)) then
 					-- Just keep ignoring these spaces.
 					--continue;
@@ -465,7 +474,6 @@ function LineBreaker:NextLineBreak(resolver, lineInfo, lineBreakIteratorInfo, la
 
 					atStart = false;
 				end
-
 				current:FastIncrementInTextNode();
 			end
 			if(go_to_end) then
@@ -492,7 +500,7 @@ function LineBreaker:NextLineBreak(resolver, lineInfo, lineBreakIteratorInfo, la
 		end
 
 		local checkForBreak = autoWrap;
-        if (width:CommittedWidth() ~= 0 and not width:FitsOnLine() and lBreak.obj and currWS == "NOWRAP") then
+        if (width:CommittedWidth() ~= 0 and not width:FitsOnLine() and lBreak.obj and currWS == WhiteSpaceEnum.NOWRAP) then
             checkForBreak = true;
         elseif (next and current.obj:IsText() and next:IsText() and not next:IsBR() and (autoWrap or (next:Style():AutoWrap()))) then
             if (currentCharacterIsSpace) then
@@ -561,14 +569,14 @@ function LineBreaker:NextLineBreak(resolver, lineInfo, lineBreakIteratorInfo, la
 	end
 
 	if(not go_to_end) then
-		if (width:FitsOnLine() or lastWS == "NOWRAP") then
+		if (width:FitsOnLine() or lastWS == WhiteSpaceEnum.NOWRAP) then
 			lBreak:Clear();
 		end
 	end
 
 	if (lBreak:Equal(resolver:Position()) and (not lBreak.obj or not lBreak.obj:IsBR())) then
         -- we just add as much as possible
-        if (self.block:Style():WhiteSpace() == "PRE") then
+        if (self.block:Style():WhiteSpace() == WhiteSpaceEnum.PRE) then
             -- FIXME: Don't really understand this case.
             if (current.pos) then
                 -- FIXME: This should call moveTo which would clear m_nextBreakablePosition
@@ -639,7 +647,7 @@ local function shouldCollapseWhiteSpace(style, lineInfo, whitespacePosition)
     -- If a space (U+0020) at the end of a line has 'white-space' set to 'normal', 'nowrap', or 'pre-line', it is also removed.
     -- If spaces (U+0020) or tabs (U+0009) at the end of a line have 'white-space' set to 'pre-wrap', UAs may visually collapse them.
     return style:CollapseWhiteSpace()
-        or (whitespacePosition == "TrailingWhitespace" and style:WhiteSpace() == "PRE_WRAP" and (not lineInfo:IsEmpty() or not lineInfo:PreviousLineBrokeCleanly()));
+        or (whitespacePosition == "TrailingWhitespace" and style:WhiteSpace() == WhiteSpaceEnum.PRE_WRAP and (not lineInfo:IsEmpty() or not lineInfo:PreviousLineBrokeCleanly()));
 end
 
 local noBreakSpace = UniString.SpecialCharacter.Nbsp;
@@ -647,7 +655,7 @@ local noBreakSpace = UniString.SpecialCharacter.Nbsp;
 -- @param it:InlineIterator
 local function skipNonBreakingSpace(it, lineInfo)
 	-- if (it.m_obj->style()->nbspMode() != SPACE || it.current() != noBreakSpace)
-    if (it.obj:Style():NbspMode() ~= "SPACE" or string.byte(it:Current(),1) ~= noBreakSpace) then
+    if (it.obj:Style():NbspMode() ~= NBSPModeEnum.SPACE or string.byte(it:Current(),1) ~= noBreakSpace) then
         return false;
 	end
     -- FIXME: This is bad.  It makes nbsp inconsistent with space and won't work correctly
@@ -711,7 +719,7 @@ function LineBreaker:SkipLeadingWhitespace(resolver, lineInfo, lastFloatFromPrev
         if (object:IsFloating()) then
             self.block:PositionNewFloatOnLine(self.block:InsertFloatingObject(object), lastFloatFromPreviousLine, lineInfo, width);
         elseif (object:IsPositioned()) then
-            --setStaticPositions(m_block, toRenderBox(object));
+            -- setStaticPositions(self.block, object);
 		end
         resolver:Increment();
     end
@@ -1096,7 +1104,7 @@ function LayoutBlock:LayoutInlineChildren(relayoutChildren, repaintLogicalTop, r
 				--RenderBox* box = toRenderBox(o);
 				local box = o;
 
-                if (relayoutChildren or Length.IsPercent(o:Style():Width()) or Length.IsPercent(o:Style():Height())) then
+                if (relayoutChildren or o:Style():Width():IsPercent() or o:Style():Height():IsPercent()) then
                     o:SetChildNeedsLayout(true, false);
 				end
 
@@ -1276,11 +1284,11 @@ function LayoutBlock:DetermineStartPosition(layoutState, resolver)
         resolver:SetStatus(last:LineBreakBidiStatus());
     else
         local direction = self:Style():Direction();
-        if (self:Style():UnicodeBidi() == "Plaintext") then
+        if (self:Style():UnicodeBidi() == UnicodeBidiEnum.Plaintext) then
             -- FIXME: Why does "unicode-bidi: plaintext" bidiFirstIncludingEmptyInlines when all other line layout code uses bidiFirstSkippingEmptyInlines?
             --determineParagraphDirection(direction, InlineIterator(this, bidiFirstIncludingEmptyInlines(this), 0));
         end
-        resolver:SetStatus(BidiStatus:new():init(direction, self:Style():UnicodeBidi() == "Override"));
+        resolver:SetStatus(BidiStatus:new():init(direction, self:Style():UnicodeBidi() == UnicodeBidiEnum.Override));
 		resolver:SetPosition(InlineIterator:new():init(self, InlineWalker.BidiFirstSkippingEmptyInlines(self, resolver), 1));
     end
     return curr;
@@ -1307,7 +1315,7 @@ local function printLineBoxsInfo(box)
 			echo(box.len);
 			echo(box.topLeft);
 			echo(box.logicalWidth);
-			local font = box.renderer:Style():Font();
+			local font = box.renderer:Style():Font():ToString();
 			echo(box.renderer:Characters():GetWidth(font, box.start, box.len));
 			echo(font);
 		else
@@ -1464,8 +1472,8 @@ end
 
 function LayoutBlock:TextAlignmentForLine(endsWithSoftBreak)
     local alignment = self:Style():TextAlign();
-    if (not endsWithSoftBreak and alignment == "JUSTIFY") then
-        alignment = "TAAUTO";
+    if (not endsWithSoftBreak and alignment == TextAlignEnum.JUSTIFY) then
+        alignment = TextAlignEnum.TAAUTO;
 	end
     return alignment;
 end
@@ -1571,7 +1579,7 @@ function LayoutBlock:ComputeInlineDirectionPositionsForLine(lineBox, lineInfo, f
 		else
 			if (r.object:IsText()) then
 				local rt = r.object;
-				if (textAlign == "JUSTIFY" and r ~= trailingSpaceRun) then
+				if (textAlign == TextAlignEnum.JUSTIFY and r ~= trailingSpaceRun) then
 					if (not isAfterExpansion) then
 						r.box:SetCanHaveLeadingExpansion(true);
 					end
@@ -1798,7 +1806,7 @@ function LayoutBlock:ConstructLine(bidiRuns, lineInfo)
 				parentBox:AddToLine(box);
 			end
 
-			local visuallyOrdered = r.object:Style():RtlOrdering() == "VisualOrder";
+			local visuallyOrdered = r.object:Style():RtlOrdering() == OrderEnum.VisualOrder;
 			--box->setBidiLevel(r->level());
 
 			if (box:IsInlineTextBox()) then
@@ -1893,6 +1901,7 @@ function LayoutBlock:CreateLineBoxesFromBidiRuns(bidiRuns, _end, lineInfo, verti
 --    if (style()->highlight() != nullAtom)
 --        lineBox->addHighlightOverflow();
 --#endif
+	
     return lineBox;
 end
 
@@ -1942,7 +1951,7 @@ function LayoutBlock:LayoutRunsAndFloatsInRange(layoutState, resolver, cleanLine
                 self:LastRootBox():SetLineBreakInfo(_end.obj, _end.pos, resolver:Status());
 			end
         else
-            local override = if_else(self:Style():RtlOrdering() == "VisualOrder", if_else(self:Style():Direction() == "LTR", "VisualLeftToRightOverride", "VisualRightToLeftOverride"), "NoVisualOverride");
+            local override = if_else(self:Style():RtlOrdering() == OrderEnum.VisualOrder, if_else(self:Style():Direction() == TextDirectionEnum.LTR, "VisualLeftToRightOverride", "VisualRightToLeftOverride"), "NoVisualOverride");
 			--local override = nil;
 
 --            if (isNewUBAParagraph and self:Style():UnicodeBidi() == "Plaintext" and !resolver.context()->parent()) then
@@ -1973,7 +1982,6 @@ function LayoutBlock:LayoutRunsAndFloatsInRange(layoutState, resolver, cleanLine
 
             local oldLogicalHeight = self:LogicalHeight();
             local lineBox = self:CreateLineBoxesFromBidiRuns(bidiRuns, _end, layoutState:LineInfo(), verticalPositionCache, trailingSpaceRun);
-
             bidiRuns:DeleteRuns();
             resolver:MarkCurrentRunEmpty(); -- FIXME: This can probably be replaced by an ASSERT (or just removed).
 

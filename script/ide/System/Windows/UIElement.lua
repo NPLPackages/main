@@ -125,15 +125,8 @@ end
 
 -- virtual: apply css style
 function UIElement:ApplyCss(css)
-	if(css["background-color"]) then
-		self:SetBackgroundColor(css["background-color"]);
---		if(not css.background) then
---			self:SetBackground("Texture/whitedot.png");
---		end
-	end	
-	if(css.background) then
-		self:SetBackground(css.background);
-	end
+	self:SetBackgroundColor(css:BackgroundColor():ToDWORD());
+	self:SetBackground(css:BackgroundImage());
 end
 
 -- Returns true if this object is a parent, (or grandparent and so on

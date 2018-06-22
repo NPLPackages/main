@@ -96,6 +96,7 @@ function mcml:LoadAllElements()
 	Elements.pe_text:RegisterAs("text", "pe:text");
 	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_div.lua");
 	Elements.pe_div:RegisterAs("div", "pe:div", "NodeTemplate", "form");
+	Elements.pe_div:RegisterAs("p");
 	Elements.pe_mcml:RegisterAs("pe:mcml");
 		NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_font.lua");
 		Elements.pe_font:RegisterAs("font");

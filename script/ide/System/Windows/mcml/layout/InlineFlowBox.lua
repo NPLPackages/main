@@ -11,10 +11,16 @@ local InlineFlowBox = commonlib.gettable("System.Windows.mcml.layout.InlineFlowB
 ]]
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/InlineBox.lua");
 NPL.load("(gl)script/ide/System/Core/UniString.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyleConstants.lua");
+local ComputedStyleConstants = commonlib.gettable("System.Windows.mcml.style.ComputedStyleConstants");
 local UniString = commonlib.gettable("System.Core.UniString");
 local Rect = commonlib.gettable("System.Windows.mcml.platform.graphics.IntRect");
 
 local InlineFlowBox = commonlib.inherit(commonlib.gettable("System.Windows.mcml.layout.InlineBox"), commonlib.gettable("System.Windows.mcml.layout.InlineFlowBox"));
+
+local DisplayEnum = ComputedStyleConstants.DisplayEnum;
+local VerticalAlignEnum = ComputedStyleConstants.VerticalAlignEnum;
+local TextEmphasisMarkEnum = ComputedStyleConstants.TextEmphasisMarkEnum;
 
 function InlineFlowBox:ctor()
 	self.overflow = nil;
@@ -50,7 +56,7 @@ end
 
 function InlineFlowBox:init(obj)
 	InlineFlowBox._super.init(self, obj);
-	self.hasTextChildren = obj:Style():Display() == "LIST_ITEM";
+	self.hasTextChildren = obj:Style():Display() == DisplayEnum.LIST_ITEM;
     self.hasTextDescendants = self.hasTextChildren;
 
 	return self;
@@ -154,7 +160,7 @@ function InlineFlowBox:AddToLine(child)
 --                    || (parentStyle->verticalAlign() != BASELINE && !isRootInlineBox()) || childStyle->verticalAlign() != BASELINE)
 --                    shouldClearDescendantsHaveSameLineHeightAndBaseline = true;
             end
-            if (childStyle:HasTextCombine() or childStyle:TextEmphasisMark() ~= "TextEmphasisMarkNone") then
+            if (childStyle:HasTextCombine() or childStyle:TextEmphasisMark() ~= TextEmphasisMarkEnum.TextEmphasisMarkNone) then
                 shouldClearDescendantsHaveSameLineHeightAndBaseline = true;
 			end
         else
@@ -174,7 +180,6 @@ function InlineFlowBox:AddToLine(child)
 --                    shouldClearDescendantsHaveSameLineHeightAndBaseline = true;
 --            }
         end
-
         if (shouldClearDescendantsHaveSameLineHeightAndBaseline) then
             self:ClearDescendantsHaveSameLineHeightAndBaseline();
 		end
@@ -610,11 +615,11 @@ function InlineFlowBox:ComputeLogicalBoxHeights(rootBox, maxPositionTop, maxPosi
 			ascent, descent, affectsAscent, affectsDescent = rootBox:AscentAndDescentForBox(curr, textBoxDataMap, ascent, descent, affectsAscent, affectsDescent);
 
 			local boxHeight = ascent + descent;
-			if (curr:VerticalAlign() == "TOP") then
+			if (curr:VerticalAlign() == VerticalAlignEnum.TOP) then
 				if (maxPositionTop < boxHeight) then
 					maxPositionTop = boxHeight;
 				end
-			elseif (curr:VerticalAlign() == "BOTTOM") then
+			elseif (curr:VerticalAlign() == VerticalAlignEnum.BOTTOM) then
 				if (maxPositionBottom < boxHeight) then
 					maxPositionBottom = boxHeight;
 				end
@@ -708,9 +713,9 @@ function InlineFlowBox:PlaceBoxesInBlockDirection(top, maxHeight, maxAscent, str
         else
 			local inlineFlowBox = if_else(curr:IsInlineFlowBox(), curr, nil);
 			local childAffectsTopBottomPos = true;
-			if (curr:VerticalAlign() == "TOP") then
+			if (curr:VerticalAlign() == VerticalAlignEnum.TOP) then
 				curr:SetLogicalTop(top);
-			elseif (curr:VerticalAlign() == "BOTTOM") then
+			elseif (curr:VerticalAlign() == VerticalAlignEnum.BOTTOM) then
 				curr:SetLogicalTop(top + maxHeight - curr:LineHeight());
 			else
 				if (not strictMode and inlineFlowBox ~= nil and not inlineFlowBox:HasTextChildren() and not curr:BoxModelObject():HasInlineDirectionBordersOrPadding()

@@ -11,7 +11,7 @@ LayoutBlock:new():init();
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutBox.lua");
-NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/Length.lua");
+--NPL.load("(gl)script/ide/System/Windows/mcml/platform/Length.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/IntRect.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/IntSize.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutBlockLineLayout.lua");
@@ -21,6 +21,8 @@ NPL.load("(gl)script/ide/System/Windows/mcml/layout/RootInlineBox.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/IntPoint.lua");
 NPL.load("(gl)script/ide/STL/ListHashSet.lua");
 NPL.load("(gl)script/ide/STL/PODIntervalTree.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyleConstants.lua");
+local ComputedStyleConstants = commonlib.gettable("System.Windows.mcml.style.ComputedStyleConstants");
 local FloatingObjectInterval = commonlib.PODInterval;
 local Point = commonlib.gettable("System.Windows.mcml.platform.graphics.IntPoint");
 local RootInlineBox = commonlib.gettable("System.Windows.mcml.layout.RootInlineBox");
@@ -28,13 +30,22 @@ local LayoutLineBoxList = commonlib.gettable("System.Windows.mcml.layout.LayoutL
 local LayoutObjectChildList = commonlib.gettable("System.Windows.mcml.layout.LayoutObjectChildList");
 local Size = commonlib.gettable("System.Windows.mcml.platform.graphics.IntSize");
 local Rect = commonlib.gettable("System.Windows.mcml.platform.graphics.IntRect");
-local Length = commonlib.gettable("System.Windows.mcml.platform.graphics.Length");
+--local Length = commonlib.gettable("System.Windows.mcml.platform.Length");
 local LayoutModel = commonlib.gettable("System.Windows.mcml.layout.LayoutModel");
 local LayoutBlock = commonlib.inherit(commonlib.gettable("System.Windows.mcml.layout.LayoutBox"), commonlib.gettable("System.Windows.mcml.layout.LayoutBlock"));
 
 local LayoutRect = Rect;
 local IntRect = Rect;
 local LayoutPoint = Point;
+
+local MarginCollapseEnum = ComputedStyleConstants.MarginCollapseEnum;
+local FloatEnum = ComputedStyleConstants.FloatEnum;
+local WhiteSpaceEnum = ComputedStyleConstants.WhiteSpaceEnum;
+local ClearEnum = ComputedStyleConstants.ClearEnum;
+local WritingModeEnum = ComputedStyleConstants.WritingModeEnum;
+local VisibilityEnum = ComputedStyleConstants.VisibilityEnum;
+local OverflowEnum = ComputedStyleConstants.OverflowEnum;
+
 
 local MarginInfo = commonlib.inherit(nil,{});
 
@@ -64,16 +75,16 @@ function MarginInfo:init(block, beforeBorderPadding, afterBorderPadding)
         and not block:IsWritingModeRoot() and block:Style():HasAutoColumnCount() and block:Style():HasAutoColumnWidth()
         and not block:Style():ColumnSpan();
 
-    self.canCollapseMarginBeforeWithChildren = self.canCollapseWithChildren and (beforeBorderPadding == 0) and block:Style():MarginBeforeCollapse() ~= "MSEPARATE";
+    self.canCollapseMarginBeforeWithChildren = self.canCollapseWithChildren and (beforeBorderPadding == 0) and block:Style():MarginBeforeCollapse() ~= MarginCollapseEnum.MSEPARATE;
 
     -- If any height other than auto is specified in CSS, then we don't collapse our bottom
     -- margins with our children's margins.  To do otherwise would be to risk odd visual
     -- effects when the children overflow out of the parent block and yet still collapse
     -- with it.  We also don't collapse if we have any bottom border/padding.
     self.canCollapseMarginAfterWithChildren = self.canCollapseWithChildren and (afterBorderPadding == 0) and
-        (Length.IsAuto(block:Style():LogicalHeight()) and block:Style():LogicalHeight() == 0) and block:Style():MarginAfterCollapse() ~= "MSEPARATE";
+        (block:Style():LogicalHeight():IsAuto() and block:Style():LogicalHeight():Value() == 0) and block:Style():MarginAfterCollapse() ~= MarginCollapseEnum.MSEPARATE;
     
-    self.quirkContainer = block:IsTableCell() or block:IsBody() or block:Style():MarginBeforeCollapse() == "MDISCARD" or block:Style():MarginAfterCollapse() == "MDISCARD";
+    self.quirkContainer = block:IsTableCell() or block:IsBody() or block:Style():MarginBeforeCollapse() == MarginCollapseEnum.MDISCARD or block:Style():MarginAfterCollapse() == MarginCollapseEnum.MDISCARD;
 
     self.positiveMargin = if_else(self.canCollapseMarginBeforeWithChildren, block:MaxPositiveMarginBefore(), 0);
     self.negativeMargin = if_else(self.canCollapseMarginBeforeWithChildren, block:MaxNegativeMarginBefore(), 0);
@@ -229,6 +240,39 @@ function MarginValues:SetNegativeMarginAfter(neg)
 end
 
 
+local RenderBlockRareData = commonlib.inherit(nil,{});
+
+function RenderBlockRareData:ctor()
+	self.m_margins = nil;
+    self.m_paginationStrut = 0;
+    self.m_pageLogicalOffset = 0;
+end
+
+function RenderBlockRareData:init(block)
+	local beforePos, beforeNeg, afterPos, afterNeg = RenderBlockRareData.PositiveMarginBeforeDefault(block), RenderBlockRareData.NegativeMarginBeforeDefault(block), 
+													RenderBlockRareData.PositiveMarginAfterDefault(block), RenderBlockRareData.NegativeMarginAfterDefault(block);
+	self.m_margins = MarginValues:new():init(beforePos, beforeNeg, afterPos, afterNeg);
+
+	return self;
+end
+
+function RenderBlockRareData.PositiveMarginBeforeDefault(block)
+	return math.max(block:MarginBefore(), 0);
+end
+
+function RenderBlockRareData.NegativeMarginBeforeDefault(block)
+	return math.max(-block:MarginBefore(), 0);
+end
+
+function RenderBlockRareData.PositiveMarginAfterDefault(block)
+	return math.max(block:MarginAfter(), 0);
+end
+
+function RenderBlockRareData.NegativeMarginAfterDefault(block)
+	return math.max(-block:MarginAfter(), 0);
+end
+
+
 local FloatWithRect = commonlib.inherit(nil, commonlib.gettable("System.Windows.mcml.layout.LayoutBlock.FloatWithRect"));
 
 function FloatWithRect:ctor()
@@ -283,17 +327,17 @@ function FloatingObject:init(type, frameRect)
 	if(not frameRect) then
 		-- enum EFloat { NoFloat, LeftFloat, RightFloat, PositionedFloat };
 		-- type is EFloat
-		if (type == "LeftFloat") then
+		if (type == FloatEnum.LeftFloat) then
             self.type = FloatingObject.FloatType["FloatLeft"];
-        elseif (type == "RightFloat") then
+        elseif (type == FloatEnum.RightFloat) then
             self.type = FloatingObject.FloatType["FloatRight"];
-        elseif (type == "PositionedFloat") then
+        elseif (type == FloatEnum.PositionedFloat) then
             self.type = FloatingObject.FloatType["FloatPositioned"];
 		end
 		self.isPlaced = false;
 	else
 		self.type = type;
-		self.shouldPaint = (type ~= "FloatPositioned");
+		self.shouldPaint = (type ~= FloatingObject.FloatType["FloatPositioned"]);
 		self.isPlaced = true;
 	end
 	self.frameRect = Rect:new(frameRect);
@@ -587,6 +631,8 @@ function LayoutBlock:ctor()
 
 	self.floatingObjects = nil
 	self.positionedObjects = nil;
+
+	self.m_rareData = nil;
 end
 
 function LayoutBlock:init(node)
@@ -624,7 +670,7 @@ function LayoutBlock:ComputeInlinePreferredLogicalWidths()
 end
 
 function LayoutBlock:ComputeBlockPreferredLogicalWidths()
-	local nowrap = self:Style():WhiteSpace() == "NOWRAP";
+	local nowrap = self:Style():WhiteSpace() == WhiteSpaceEnum.NOWRAP;
 
     local child = self:FirstChild();
     local containingBlock = self:ContainingBlock();
@@ -638,11 +684,11 @@ function LayoutBlock:ComputeBlockPreferredLogicalWidths()
 			if (child:IsFloating() or (child:IsBox() and child:AvoidsFloats())) then
 				local floatTotalWidth = floatLeftWidth + floatRightWidth;
 				local clear = child:Style():Clear();
-				if (clear == "CLEFT" or clear == "CBOTH") then
+				if (clear == ClearEnum.CLEFT or clear == ClearEnum.CBOTH) then
 					self.maxPreferredLogicalWidth = math.max(floatTotalWidth, self.maxPreferredLogicalWidth);
 					floatLeftWidth = 0;
 				end
-				if (clear == "CRIGHT" or clear == "CBOTH") then
+				if (clear == ClearEnum.CRIGHT or clear == ClearEnum.CBOTH) then
 					self.maxPreferredLogicalWidth = math.max(floatTotalWidth, self.maxPreferredLogicalWidth);
 					floatRightWidth = 0;
 				end
@@ -656,11 +702,11 @@ function LayoutBlock:ComputeBlockPreferredLogicalWidths()
 			local margin = 0;
 			local marginStart = 0;
 			local marginEnd = 0;
-			if (Length.isFixed(startMarginLength)) then
-				marginStart = marginStart + startMarginLength;
+			if (startMarginLength:IsFixed()) then
+				marginStart = marginStart + startMarginLength:Value();
 			end
-			if (Length.isFixed(endMarginLength)) then
-				marginEnd = marginEnd + endMarginLength;
+			if (endMarginLength:IsFixed()) then
+				marginEnd = marginEnd + endMarginLength:Value();
 			end
 			margin = marginStart + marginEnd;
 
@@ -699,8 +745,8 @@ function LayoutBlock:ComputeBlockPreferredLogicalWidths()
 					else
 						ltr = self:Style():IsLeftToRightDirection();
 					end
-					local marginLogicalLeft = if_else("ltr", marginStart, marginEnd);
-					local marginLogicalRight = if_else("ltr", marginEnd, marginStart);
+					local marginLogicalLeft = if_else(ltr, marginStart, marginEnd);
+					local marginLogicalRight = if_else(ltr, marginEnd, marginStart);
 					local maxLeft = if_else(marginLogicalLeft > 0, math.max(floatLeftWidth, marginLogicalLeft), floatLeftWidth + marginLogicalLeft);
 					local maxRight = if_else(marginLogicalRight > 0, math.max(floatRightWidth, marginLogicalRight), floatRightWidth + marginLogicalRight);
 					w = childMaxPreferredLogicalWidth + maxLeft + maxRight;
@@ -712,7 +758,7 @@ function LayoutBlock:ComputeBlockPreferredLogicalWidths()
 			end
         
 			if (child:IsFloating()) then
-				if (self:Style():Floating() == "left") then
+				if (self:Style():Floating() == FloatEnum.LeftFloat) then
 					floatLeftWidth = floatLeftWidth + w;
 				else
 					floatRightWidth = floatRightWidth + w;
@@ -758,8 +804,8 @@ end
 function LayoutBlock:ComputePreferredLogicalWidths()
 	self:UpdateFirstLetter();
 
-	if (not self:IsTableCell() and self:Style():LogicalWidth() ~= nil and self:Style():LogicalWidth() > 0) then
-        self.minPreferredLogicalWidth = self:ComputeContentBoxLogicalWidth(self:Style():LogicalWidth());
+	if (not self:IsTableCell() and self:Style():LogicalWidth():IsFixed() and self:Style():LogicalWidth():Value() > 0) then
+        self.minPreferredLogicalWidth = self:ComputeContentBoxLogicalWidth(self:Style():LogicalWidth():Value());
 		self.maxPreferredLogicalWidth = self.minPreferredLogicalWidth;
 	else
         self.minPreferredLogicalWidth = 0;
@@ -781,7 +827,7 @@ function LayoutBlock:ComputePreferredLogicalWidths()
         end
 
         local scrollbarWidth = 0;
-        if (self:HasOverflowClip() and self:Style():OverflowY() == "scroll") then
+        if (self:HasOverflowClip() and self:Style():OverflowY() == OverflowEnum.OSCROLL) then
             --layer()->setHasVerticalScrollbar(true);
             scrollbarWidth = self:VerticalScrollbarWidth();
             self.maxPreferredLogicalWidth = self.maxPreferredLogicalWidth + scrollbarWidth;
@@ -798,12 +844,12 @@ function LayoutBlock:ComputePreferredLogicalWidths()
         self.minPreferredLogicalWidth = self.minPreferredLogicalWidth + scrollbarWidth;
     end
     
-    if (Length.IsFixed(self:Style():LogicalMinWidth()) and self:Style():LogicalMinWidth() > 0) then
-        self.maxPreferredLogicalWidth = math.max(self.maxPreferredLogicalWidth, self:ComputeContentBoxLogicalWidth(self:Style():LogicalMinWidth()));
-        self.minPreferredLogicalWidth = math.max(self.minPreferredLogicalWidth, self:ComputeContentBoxLogicalWidth(self:Style():LogicalMinWidth()));
+    if (self:Style():LogicalMinWidth():IsFixed() and self:Style():LogicalMinWidth():Value() > 0) then
+        self.maxPreferredLogicalWidth = math.max(self.maxPreferredLogicalWidth, self:ComputeContentBoxLogicalWidth(self:Style():LogicalMinWidth():Value()));
+        self.minPreferredLogicalWidth = math.max(self.minPreferredLogicalWidth, self:ComputeContentBoxLogicalWidth(self:Style():LogicalMinWidth():Value()));
     end
     
-    if (Length.IsFixed(self:Style():LogicalMaxWidth())) then
+    if (self:Style():LogicalMaxWidth():IsFixed()) then
         self.maxPreferredLogicalWidth = math.min(self.maxPreferredLogicalWidth, self:ComputeContentBoxLogicalWidth(self:Style():LogicalMaxWidth()));
         self.minPreferredLogicalWidth = math.min(self.minPreferredLogicalWidth, self:ComputeContentBoxLogicalWidth(self:Style():LogicalMaxWidth()));
     end
@@ -857,13 +903,13 @@ end
 
 function LayoutBlock:MarginBeforeForChild(child)
 	local write_mode = self:Style():WritingMode();
-	if(write_mode ==  "TopToBottomWritingMode") then
+	if(write_mode ==  WritingModeEnum.TopToBottomWritingMode) then
 		return child:MarginTop();
-	elseif(write_mode ==  "BottomToTopWritingMode") then
+	elseif(write_mode ==  WritingModeEnum.BottomToTopWritingMode) then
 		return child:MarginBottom();
-	elseif(write_mode ==  "LeftToRightWritingMode") then
+	elseif(write_mode ==  WritingModeEnum.LeftToRightWritingMode) then
 		return child:MarginLeft();
-	elseif(write_mode ==  "RightToLeftWritingMode") then
+	elseif(write_mode ==  WritingModeEnum.RightToLeftWritingMode) then
 		return child:MarginRight();
 	end
 	return child:MarginTop();
@@ -871,13 +917,13 @@ end
 
 function LayoutBlock:MarginAfterForChild(child)
 	local write_mode = self:Style():WritingMode();
-	if(write_mode ==  "TopToBottomWritingMode") then
+	if(write_mode ==  WritingModeEnum.TopToBottomWritingMode) then
 		return child:MarginBottom();
-	elseif(write_mode ==  "BottomToTopWritingMode") then
+	elseif(write_mode ==  WritingModeEnum.BottomToTopWritingMode) then
 		return child:MarginTop();
-	elseif(write_mode ==  "LeftToRightWritingMode") then
+	elseif(write_mode ==  WritingModeEnum.LeftToRightWritingMode) then
 		return child:MarginRight();
-	elseif(write_mode ==  "RightToLeftWritingMode") then
+	elseif(write_mode ==  WritingModeEnum.RightToLeftWritingMode) then
 		return child:MarginLeft();
 	end
 	return child:MarginBottom();
@@ -949,26 +995,26 @@ end
 
 function LayoutBlock:SetMarginBeforeForChild(child, margin)
 	local write_mode = self:Style():WritingMode();
-	if(write_mode ==  "TopToBottomWritingMode") then
+	if(write_mode ==  WritingModeEnum.TopToBottomWritingMode) then
 		child:SetMarginTop(margin);
-	elseif(write_mode ==  "BottomToTopWritingMode") then
+	elseif(write_mode ==  WritingModeEnum.BottomToTopWritingMode) then
 		child:SetMarginBottom(margin);
-	elseif(write_mode ==  "LeftToRightWritingMode") then
+	elseif(write_mode ==  WritingModeEnum.LeftToRightWritingMode) then
 		child:SetMarginLeft(margin);
-	elseif(write_mode ==  "RightToLeftWritingMode") then
+	elseif(write_mode ==  WritingModeEnum.RightToLeftWritingMode) then
 		child:SetMarginRight(margin);
 	end
 end
 
 function LayoutBlock:SetMarginAfterForChild(child, margin)
 	local write_mode = self:Style():WritingMode();
-	if(write_mode ==  "TopToBottomWritingMode") then
+	if(write_mode ==  WritingModeEnum.TopToBottomWritingMode) then
 		child:SetMarginBottom(margin);
-	elseif(write_mode ==  "BottomToTopWritingMode") then
+	elseif(write_mode ==  WritingModeEnum.BottomToTopWritingMode) then
 		child:SetMarginTop(margin);
-	elseif(write_mode ==  "LeftToRightWritingMode") then
+	elseif(write_mode ==  WritingModeEnum.LeftToRightWritingMode) then
 		child:SetMarginRight(margin);
-	elseif(write_mode ==  "RightToLeftWritingMode") then
+	elseif(write_mode ==  WritingModeEnum.RightToLeftWritingMode) then
 		child:SetMarginLeft(margin);
 	end
 end
@@ -1032,11 +1078,9 @@ function LayoutBlock:LayoutBlock(relayoutChildren, pageLogicalHeight, layoutPass
 	if(not self:NeedsLayout()) then
 		return;
 	end
-
 	if(self:IsInline() and not self:IsInlineBlockOrInlineTable()) then
 		return;
 	end
-
 	if (not relayoutChildren and self:SimplifiedLayout()) then
         return;
 	end
@@ -1048,6 +1092,7 @@ function LayoutBlock:LayoutBlock(relayoutChildren, pageLogicalHeight, layoutPass
 	if(oldWidth ~= self:LogicalWidth()) then
 		relayoutChildren = true;
 	end
+
 
 	local floatsLayoutPass = layoutPass;
     if (floatsLayoutPass == "NormalLayoutPass" and not relayoutChildren and not self:PositionedFloatsNeedRelayout()) then
@@ -1080,6 +1125,34 @@ function LayoutBlock:LayoutBlock(relayoutChildren, pageLogicalHeight, layoutPass
 --        if (!hasSpecifiedPageLogicalHeight && !pageLogicalHeight)
 --            colInfo->clearForcedBreaks();
 --    }
+
+	-- We use four values, maxTopPos, maxTopNeg, maxBottomPos, and maxBottomNeg, to track
+    -- our current maximal positive and negative margins.  These values are used when we
+    -- are collapsed with adjacent blocks, so for example, if you have block A and B
+    -- collapsing together, then you'd take the maximal positive margin from both A and B
+    -- and subtract it from the maximal negative margin from both A and B to get the
+    -- true collapsed margin.  This algorithm is recursive, so when we finish layout()
+    -- our block knows its current maximal positive/negative values.
+    --
+    -- Start out by setting our margin values to our current margins.  Table cells have
+    -- no margins, so we don't fill in the values for table cells.
+    local isCell = self:IsTableCell();
+    if (not isCell) then
+        self:InitMaxMarginValues();
+        
+        self:SetMarginBeforeQuirk(self:Style():MarginBefore():Quirk());
+        self:SetMarginAfterQuirk(self:Style():MarginAfter():Quirk());
+
+        local n = self:Node();
+--        if (n && n->hasTagName(formTag) && static_cast<HTMLFormElement*>(n)->isMalformed()) {
+--            // See if this form is malformed (i.e., unclosed). If so, don't give the form
+--            // a bottom margin.
+--            setMaxMarginAfterValues(0, 0);
+--        }
+        
+        self:SetPaginationStrut(0);
+    end
+
 
 	-- For overflow:scroll blocks, ensure we have both scrollbars in place always.
 --    if (self:ScrollsOverflow()) then
@@ -1158,7 +1231,7 @@ function LayoutBlock:LayoutBlock(relayoutChildren, pageLogicalHeight, layoutPass
     -- Repaint with our new bounds if they are different from our old bounds.
     --bool didFullRepaint = repainter.repaintAfterLayout();
     --if (!didFullRepaint && repaintLogicalTop != repaintLogicalBottom && (style()->visibility() == VISIBLE || enclosingLayer()->hasVisibleContent())) {
-	if(repaintLogicalTop ~= repaintLogicalBottom and self:Style():Visibility() == "VISIBLE") then
+	if(repaintLogicalTop ~= repaintLogicalBottom and self:Style():Visibility() == VisibilityEnum.VISIBLE) then
         -- FIXME: We could tighten up the left and right invalidation points if we let layoutInlineChildren fill them in based off the particular lines
         -- it had to lay out.  We wouldn't need the hasOverflowClip() hack in that case either.
         local repaintLogicalLeft = self:LogicalLeftVisualOverflow();
@@ -1270,7 +1343,7 @@ function LayoutBlock:LayoutBlockChildren(relayoutChildren, maxFloatLogicalBottom
         -- Make sure we layout children if they need it.
         -- FIXME: Technically percentage height objects only need a relayout if their percentage isn't going to be turned into
         -- an auto value.  Add a method to determine this, so that we can avoid the relayout.
-        if (relayoutChildren or ((Length.IsPercent(child:Style():LogicalHeight()) or Length.IsPercent(child:Style():LogicalMinHeight()) or Length.IsPercent(child:Style():LogicalMaxHeight())) and not self:IsLayoutView())) then
+        if (relayoutChildren or ((child:Style():LogicalHeight():IsPercent() or child:Style():LogicalMinHeight():IsPercent() or child:Style():LogicalMaxHeight():IsPercent()) and not self:IsLayoutView())) then
             child:SetChildNeedsLayout(true, false);
 		end
         -- If relayoutChildren is set and the child has percentage padding or an embedded content box, we also need to invalidate the childs pref widths.
@@ -1293,30 +1366,130 @@ end
 
 function LayoutBlock:HandleSpecialChild(child, marginInfo)
 	-- Handle in the given order
---    return handlePositionedChild(child, marginInfo)
---        || handleFloatingChild(child, marginInfo)
---        || handleRunInChild(child);
-	return false;
+    return self:HandlePositionedChild(child, marginInfo)
+        or self:HandleFloatingChild(child, marginInfo)
+        or self:HandleRunInChild(child);
+	--return false;
+end
+
+--bool RenderBlock::handlePositionedChild(RenderBox* child, const MarginInfo& marginInfo)
+function LayoutBlock:HandlePositionedChild(child, marginInfo)
+    if (child:IsPositioned()) then
+        child:ContainingBlock():InsertPositionedObject(child);
+        self:AdjustPositionedBlock(child, marginInfo);
+        return true;
+    end
+    return false;
+end
+
+--bool RenderBlock::handleFloatingChild(RenderBox* child, const MarginInfo& marginInfo)
+function LayoutBlock:HandleFloatingChild(child, marginInfo)
+    if (child:IsFloating()) then
+        self:InsertFloatingObject(child);
+        self:AdjustFloatingBlock(marginInfo);
+        return true;
+    end
+    return false;
+end
+
+--bool RenderBlock::handleRunInChild(RenderBox* child)
+function LayoutBlock:HandleRunInChild(child)
+    -- See if we have a run-in element with inline children.  If the
+    -- children aren't inline, then just treat the run-in as a normal
+    -- block.
+    if (not child:IsRunIn() or not child:ChildrenInline()) then
+        return false;
+	end
+    -- FIXME: We don't handle non-block elements with run-in for now.
+    if (not child:IsLayoutBlock()) then
+        return false;
+	end
+
+	-- TODO: add latter;
+	return true;
+end
+
+--void RenderBlock::adjustFloatingBlock(const MarginInfo& marginInfo)
+function LayoutBlock:AdjustFloatingBlock(marginInfo)
+    -- The float should be positioned taking into account the bottom margin
+    -- of the previous flow.  We add that margin into the height, get the
+    -- float positioned properly, and then subtract the margin out of the
+    -- height again.  In the case of self-collapsing blocks, we always just
+    -- use the top margins, since the self-collapsing block collapsed its
+    -- own bottom margin into its top margin.
+    --
+    -- Note also that the previous flow may collapse its margin into the top of
+    -- our block.  If this is the case, then we do not add the margin in to our
+    -- height when computing the position of the float.   This condition can be tested
+    -- for by simply calling canCollapseWithMarginBefore.  See
+    -- http://www.hixie.ch/tests/adhoc/css/box/block/margin-collapse/046.html for
+    -- an example of this scenario.
+    local marginOffset = if_else(marginInfo:CanCollapseWithMarginBefore(), 0, marginInfo:Margin());
+    self:SetLogicalHeight(self:LogicalHeight() + marginOffset);
+    self:PositionNewFloats();
+    self:SetLogicalHeight(self:LogicalHeight() - marginOffset);
+end
+
+--void RenderBlock::adjustPositionedBlock(RenderBox* child, const MarginInfo& marginInfo)
+function LayoutBlock:AdjustPositionedBlock(child, marginInfo)
+    local isHorizontal = self:IsHorizontalWritingMode();
+    local hasStaticBlockPosition = child:Style():HasStaticBlockPosition(isHorizontal);
+    
+    local logicalTop = self:LogicalHeight();
+    self:SetStaticInlinePositionForChild(child, logicalTop, self:StartOffsetForContent(logicalTop));
+
+    if (not marginInfo:CanCollapseWithMarginBefore()) then
+        child:ComputeBlockDirectionMargins(self);
+        local marginBefore = self:MarginBeforeForChild(child);
+        local collapsedBeforePos = marginInfo:PositiveMargin();
+        local collapsedBeforeNeg = marginInfo:NegativeMargin();
+        if (marginBefore > 0) then
+            if (marginBefore > collapsedBeforePos) then
+                collapsedBeforePos = marginBefore;
+			end
+        else
+            if (-marginBefore > collapsedBeforeNeg) then
+                collapsedBeforeNeg = -marginBefore;
+			end
+        end
+        logicalTop = logicalTop + (collapsedBeforePos - collapsedBeforeNeg) - marginBefore;
+    end
+    
+    local childLayer = child:Layer();
+    if (childLayer:StaticBlockPosition() ~= logicalTop) then
+        childLayer:SetStaticBlockPosition(logicalTop);
+        if (hasStaticBlockPosition) then
+            child:SetChildNeedsLayout(true, false);
+		end
+    end
 end
 
 function LayoutBlock:MaxPositiveMarginBefore()
-	--return m_rareData ? m_rareData->m_margins.positiveMarginBefore() : RenderBlockRareData::positiveMarginBeforeDefault(this); 
-	return math.max(self:MarginBefore(), 0);
+	if(self.m_rareData) then
+		return self.m_rareData.m_margins:PositiveMarginBefore();
+	end
+	return RenderBlockRareData.PositiveMarginBeforeDefault(self);
 end
 
 function LayoutBlock:MaxNegativeMarginBefore()
-	--return m_rareData ? m_rareData->m_margins.negativeMarginBefore() : RenderBlockRareData::negativeMarginBeforeDefault(this);
-	return math.max(-self:MarginBefore(), 0);
+	if(self.m_rareData) then
+		return self.m_rareData.m_margins:NegativeMarginBefore();
+	end
+	return RenderBlockRareData.NegativeMarginBeforeDefault(self);
 end
 
 function LayoutBlock:MaxPositiveMarginAfter()
-	--return m_rareData ? m_rareData->m_margins.positiveMarginAfter() : RenderBlockRareData::positiveMarginAfterDefault(this);
-	return math.max(self:MarginAfter(), 0);
+	if(self.m_rareData) then
+		return self.m_rareData.m_margins:PositiveMarginAfter();
+	end
+	return RenderBlockRareData.PositiveMarginAfterDefault(self);
 end
 
 function LayoutBlock:MaxNegativeMarginAfter()
-	--return m_rareData ? m_rareData->m_margins.negativeMarginAfter() : RenderBlockRareData::negativeMarginAfterDefault(this);
-	return math.max(-self:MarginAfter(), 0);
+	if(self.m_rareData) then
+		return self.m_rareData.m_margins:NegativeMarginAfter();
+	end
+	return RenderBlockRareData.NegativeMarginAfterDefault(self);
 end
 
 function LayoutBlock:CollapsedMarginBefore()
@@ -1416,7 +1589,7 @@ function LayoutBlock:LayoutBlockChild(child, marginInfo, previousFloatLogicalBot
     child:ComputeBlockDirectionMargins(self);
 
 	-- Do not allow a collapse if the margin-before-collapse style is set to SEPARATE.
-    if (child:Style():MarginBeforeCollapse() == "MSEPARATE") then
+    if (child:Style():MarginBeforeCollapse() == MarginCollapseEnum.MSEPARATE) then
         marginInfo:SetAtBeforeSideOfBlock(false);
         marginInfo:ClearMargin();
     end
@@ -1519,7 +1692,7 @@ function LayoutBlock:LayoutBlockChild(child, marginInfo, previousFloatLogicalBot
 
     -- Update our height now that the child has been placed in the correct position.
     self:SetLogicalHeight(self:LogicalHeight() + self:LogicalHeightForChild(child));
-    if (child:Style():MarginAfterCollapse() == "MSEPARATE") then
+    if (child:Style():MarginAfterCollapse() == MarginCollapseEnum.MSEPARATE) then
         self:SetLogicalHeight(self:LogicalHeight() + self:MarginAfterForChild(child));
         marginInfo:ClearMargin();
     end
@@ -1543,7 +1716,6 @@ function LayoutBlock:LayoutBlockChild(child, marginInfo, previousFloatLogicalBot
 
     --if (not childHadLayout and child:CheckForRepaintDuringLayout()) {
 	if (not childHadLayout and child:CheckForRepaintDuringLayout()) then
-		--child:OnAfterLayout();
         child:Repaint();
         --child->repaintOverhangingFloats(true);
     end
@@ -1629,19 +1801,19 @@ function LayoutBlock:IsSelfCollapsingBlock()
     -- (e) have specified that one of our margins can't collapse using a CSS extension
     if (self:LogicalHeight() > 0
         or self:IsTable() or self:BorderAndPaddingLogicalHeight() ~= 0
-        or Length.IsPositive(self:Style():LogicalMinHeight())
-        or self:Style():MarginBeforeCollapse() == "MSEPARATE" or self:Style():MarginAfterCollapse() == "MSEPARATE") then
+        or self:Style():LogicalMinHeight():IsPositive()
+        or self:Style():MarginBeforeCollapse() == MarginCollapseEnum.MSEPARATE or self:Style():MarginAfterCollapse() == MarginCollapseEnum.MSEPARATE) then
 			return false;
 	end
 
     local logicalHeightLength = self:Style():LogicalHeight();
-    local hasAutoHeight = Length.IsAuto(logicalHeightLength);
+    local hasAutoHeight = logicalHeightLength:IsAuto();
 	--if (logicalHeightLength.isPercent() && !document()->inQuirksMode()) {
-    if (Length.IsPercent(logicalHeightLength)) then
+    if (logicalHeightLength:IsPercent()) then
         hasAutoHeight = true;
 		local cb = self:ContainingBlock();
 		while(not cb:IsLayoutView()) do
-			if (Length.IsFixed(cb:Style():LogicalHeight()) or cb:IsTableCell()) then
+			if (cb:Style():LogicalHeight():IsFixed() or cb:IsTableCell()) then
                 hasAutoHeight = false;
 			end
 			cb = cb:ContainingBlock();
@@ -1650,7 +1822,7 @@ function LayoutBlock:IsSelfCollapsingBlock()
 
     -- If the height is 0 or auto, then whether or not we are a self-collapsing block depends
     -- on whether we have content that is all self-collapsing or not.
-    if (hasAutoHeight or ((Length.IsFixed(logicalHeightLength) or Length.IsPercent(logicalHeightLength)) and Length.IsZero(logicalHeightLength))) then
+    if (hasAutoHeight or ((logicalHeightLength:IsFixed() or logicalHeightLength:IsPercent()) and logicalHeightLength:IsZero())) then
         -- If the block has inline children, see if we generated any line boxes.  If we have any
         -- line boxes, then we can't be self-collapsing, since we have content.
         if (self:ChildrenInline()) then
@@ -1673,12 +1845,27 @@ function LayoutBlock:IsSelfCollapsingBlock()
     return false;
 end
 
+--void RenderBlock::setMaxMarginBeforeValues(LayoutUnit pos, LayoutUnit neg)
 function LayoutBlock:SetMaxMarginBeforeValues(pos, neg)
-
+	if (not self.m_rareData) then
+        if (pos == RenderBlockRareData.PositiveMarginBeforeDefault(self) and neg == RenderBlockRareData.NegativeMarginBeforeDefault(self)) then
+            return;
+		end
+        self.m_rareData = RenderBlockRareData:new():init(self);
+    end
+    self.m_rareData.m_margins:SetPositiveMarginBefore(pos);
+    self.m_rareData.m_margins:SetNegativeMarginBefore(neg);
 end
 
 function LayoutBlock:SetMaxMarginAfterValues(pos, neg)
-
+    if (not self.m_rareData) then
+        if (pos == RenderBlockRareData.PositiveMarginAfterDefault(self) and neg == RenderBlockRareData.NegativeMarginAfterDefault(self)) then
+            return;
+		end
+        self.m_rareData = RenderBlockRareData:new():init(self);
+    end
+    self.m_rareData.m_margins:SetPositiveMarginAfter(pos);
+    self.m_rareData.m_margins:SetNegativeMarginAfter(neg);
 end
 
 function LayoutBlock:CollapseMargins(child, marginInfo)
@@ -1697,7 +1884,7 @@ function LayoutBlock:CollapseMargins(child, marginInfo)
     
     -- See if the top margin is quirky. We only care if this child has
     -- margins that will collapse with us.
-    local topQuirk = child:IsMarginBeforeQuirk() or self:Style():MarginBeforeCollapse() == "MDISCARD";
+    local topQuirk = child:IsMarginBeforeQuirk() or self:Style():MarginBeforeCollapse() == MarginCollapseEnum.MDISCARD;
 
 	if (marginInfo:CanCollapseWithMarginBefore()) then
         -- This child is collapsing with the top of the block.  If it has larger margin values, then we need to update
@@ -1753,7 +1940,7 @@ function LayoutBlock:CollapseMargins(child, marginInfo)
             logicalTop = self:LogicalHeight() + collapsedBeforePos - collapsedBeforeNeg;
 		end
     else
-        if (child:Style():MarginBeforeCollapse() == "MSEPARATE") then
+        if (child:Style():MarginBeforeCollapse() == MarginCollapseEnum.MSEPARATE) then
             self:SetLogicalHeight(self:LogicalHeight() + marginInfo:Margin() + self:MarginBeforeForChild(child));
             logicalTop = self:LogicalHeight();
         elseif (not marginInfo:AtBeforeSideOfBlock() or
@@ -1769,7 +1956,7 @@ function LayoutBlock:CollapseMargins(child, marginInfo)
         marginInfo:SetNegativeMargin(childMargins:NegativeMarginAfter());
 
         if (marginInfo:Margin()) then
-            marginInfo:SetMarginAfterQuirk(child:IsMarginAfterQuirk() or self:Style():MarginAfterCollapse() == "MDISCARD");
+            marginInfo:SetMarginAfterQuirk(child:IsMarginAfterQuirk() or self:Style():MarginAfterCollapse() == MarginCollapseEnum.MDISCARD);
 		end
     end
 
@@ -1798,12 +1985,49 @@ function LayoutBlock:DetermineLogicalLeftPositionForChild(child)
 --    if (child:AvoidsFloats() and self:ContainsFloats() and not self:InRenderFlowThread()) then
 --        newPosition += computeStartPositionDeltaForChildAvoidingFloats(child, marginStartForChild(child), logicalWidthForChild(child));
 --	end
-
     self:SetLogicalLeftForChild(child, if_else(self:Style():IsLeftToRightDirection(), newPosition, totalAvailableLogicalWidth - newPosition - self:LogicalWidthForChild(child), "ApplyLayoutDelta"));
 end
 
-function LayoutBlock:HandleAfterSideOfBlock(beforeEdge, afterEdge, marginInfo)
-	--TODO: fixed this function
+--void RenderBlock::handleAfterSideOfBlock(LayoutUnit beforeSide, LayoutUnit afterSide, MarginInfo& marginInfo)
+function LayoutBlock:HandleAfterSideOfBlock(beforeSide, afterSide, marginInfo)
+	marginInfo:SetAtAfterSideOfBlock(true);
+
+    -- If we can't collapse with children then go ahead and add in the bottom margin.
+    if (not marginInfo:CanCollapseWithMarginAfter() and not marginInfo:CanCollapseWithMarginBefore()
+        and (not marginInfo:QuirkContainer() or not marginInfo:MarginAfterQuirk())) then
+        self:SetLogicalHeight(self:LogicalHeight() + marginInfo:Margin());
+	end
+        
+    -- Now add in our bottom border/padding.
+    self:SetLogicalHeight(self:LogicalHeight() + afterSide);
+
+    -- Negative margins can cause our height to shrink below our minimal height (border/padding).
+    -- If this happens, ensure that the computed height is increased to the minimal height.
+    self:SetLogicalHeight(math.max(self:LogicalHeight(), beforeSide + afterSide));
+
+    -- Update our bottom collapsed margin info.
+    self:SetCollapsedBottomMargin(marginInfo);
+
+end
+
+--void RenderBlock::setCollapsedBottomMargin(const MarginInfo& marginInfo)
+function LayoutBlock:SetCollapsedBottomMargin(marginInfo)
+    if (marginInfo:CanCollapseWithMarginAfter() and not marginInfo:CanCollapseWithMarginBefore()) then
+        -- Update our max pos/neg bottom margins, since we collapsed our bottom margins
+        -- with our children.
+        self:SetMaxMarginAfterValues(math.max(self:MaxPositiveMarginAfter(), marginInfo:PositiveMargin()), math.max(self:MaxNegativeMarginAfter(), marginInfo:NegativeMargin()));
+
+        if (not marginInfo:MarginAfterQuirk()) then
+            self:SetMarginAfterQuirk(false);
+		end
+
+        if (marginInfo:MarginAfterQuirk() and self:MarginAfter() == 0) then
+            -- We have no bottom margin and our last child has a quirky margin.
+            -- We will pick up this quirky margin and pass it through.
+            -- This deals with the <td><div><p> case.
+            self:SetMarginAfterQuirk(true);
+		end
+    end
 end
 
 function LayoutBlock:ComputeOverflow(oldClientAfterEdge, recomputeFloats)
@@ -2309,7 +2533,11 @@ function LayoutBlock:LogicalRightOffsetForLine(position, firstLine, region, offs
 end
 
 function LayoutBlock:TextIndentOffset()
-	return self:Style():TextIndent();
+	local cw = 0;
+    if (self:Style():TextIndent():IsPercent()) then
+        cw = self:ContainingBlock():AvailableLogicalWidth();
+	end
+    return self:Style():TextIndent():CalcMinValue(cw);
 end
 
 function LayoutBlock:LogicalLeftOffsetForLine(position, firstLine, region, offsetFromLogicalTopOfFirstPage)
@@ -2410,7 +2638,7 @@ function LayoutBlock:BaselinePosition(baselineType, firstLine, direction, linePo
 
 --    const FontMetrics& fontMetrics = style(firstLine)->fontMetrics();
 --    return fontMetrics.ascent(baselineType) + (lineHeight(firstLine, direction, linePositionMode) - fontMetrics.height()) / 2;
-	local fontHeight = self:Style():FontHeight();
+	local fontHeight = self:Style():FontSize();
 	local fontAscent = self:Style():FontAscent(baselineType);
 	return fontAscent + (self:LineHeight(firstLine, direction, linePositionMode) - fontHeight) / 2;
 end
@@ -2433,27 +2661,15 @@ function LayoutBlock:NewLine(clear)
     self:PositionNewFloats();
     -- set y position
     local newY = 0;
-	if(clear == "CLEFT") then
+	if(clear == ClearEnum.CLEFT) then
 		newY = self:LowestFloatLogicalBottom(FloatingObject.FloatType.FloatLeft);
-	elseif(clear == "CRIGHT") then
+	elseif(clear == ClearEnum.CRIGHT) then
 		newY = self:LowestFloatLogicalBottom(FloatingObject.FloatType.FloatRight);
-	elseif(clear == "CBOTH") then
+	elseif(clear == ClearEnum.CBOTH) then
 		newY = self:LowestFloatLogicalBottom();
 	end
     if (self:Height() < newY) then
         self:SetLogicalHeight(newY);
-	end
-end
-
-function LayoutBlock:OnAfterLayout()
-	if (self:ChildrenInline()) then
-        self.lineBoxes:Paint(self, nil, Point:new());
-    else
-        local control = self:GetControl();
-		if(control) then
-			control:ApplyCss(self:Style():GetStyle());
-			control:setGeometry(self:X(), self:Y(), self:Width(), self:Height());
-		end
 	end
 end
 
@@ -2480,8 +2696,12 @@ end
 function LayoutBlock:PaintBoxDecorations(paintInfo, paintOffset)
 	local control = self:GetControl();
 	if(control) then
-		control:ApplyCss(self:Style():GetStyle());
-		control:setGeometry(self:X(), self:Y(), self:Width(), self:Height());
+		local x, y, w, h = self:X(), self:Y(), self:Width(), self:Height();
+		if(self:HasSelfPaintingLayer()) then
+			x, y = x + paintOffset:X(), y + paintOffset:Y();
+		end
+		control:ApplyCss(self:Style());
+		control:setGeometry(x, y, w, h);
 	end
 end
 
@@ -2516,9 +2736,15 @@ function LayoutBlock:PaintChildren(paintInfo, paintOffset)
 	local info = paintInfo;
 	local child = self:FirstChild();
 	while(child) do
-		if(not child:IsFloating()) then
-			child:Paint(info, paintOffset);
+--		if(not child:IsFloating()) then
+--			child:Paint(info, paintOffset);
+--		end
+
+		local childPoint = self:FlipForWritingModeForChild(child, paintOffset);
+        if (not child:HasSelfPaintingLayer() and not child:IsFloating()) then
+            child:Paint(info, childPoint);
 		end
+
 		child = child:NextSibling();
 	end
 end
@@ -2787,10 +3013,10 @@ function LayoutBlock:PositionNewFloats()
 			local clear = childBox:Style():Clear();
 
 			--if (childBox:Style()->clear() & CLEFT)
-			if (clear == "CLEFT" or clear == "CBOTH") then
+			if (clear == ClearEnum.CLEFT or clear == ClearEnum.CBOTH) then
 				logicalTop = math.max(self:LowestFloatLogicalBottom(FloatingObject.FloatType.FloatLeft), logicalTop);
 			end
-			if (clear == "CRIGHT" or clear == "CBOTH") then
+			if (clear == ClearEnum.CRIGHT or clear == ClearEnum.CBOTH) then
 				logicalTop = math.max(self:LowestFloatLogicalBottom(FloatingObject.FloatType.FloatRight), logicalTop);
 			end
 
@@ -2883,7 +3109,7 @@ function LayoutBlock:ComputeLogicalLocationForFloat(floatingObject, logicalTopOf
 
     local floatLogicalLeft;
 
-    if (childBox:Style():Floating() == "LeftFloat") then
+    if (childBox:Style():Floating() == FloatEnum.LeftFloat) then
         local heightRemainingLeft = 1;
         local heightRemainingRight = 1;
         floatLogicalLeft = self:LogicalLeftOffsetForLine(logicalTopOffset, logicalLeftOffset, false, heightRemainingLeft);
@@ -3048,4 +3274,48 @@ function LayoutBlock:SetStaticInlinePositionForChild(child, blockOffset, inlineP
         inlinePosition = inlinePosition + self:StartOffsetForContent() - self:StartOffsetForContent(blockOffset);
     end
     child:Layer():SetStaticInlinePosition(inlinePosition);
+end
+
+function LayoutBlock:InitMaxMarginValues()
+    if (self.m_rareData) then
+        self.m_rareData.m_margins = MarginValues:new():init(RenderBlockRareData.PositiveMarginBeforeDefault(self) , RenderBlockRareData.NegativeMarginBeforeDefault(self),
+                                                RenderBlockRareData.PositiveMarginAfterDefault(self), RenderBlockRareData.NegativeMarginAfterDefault(self));
+        self.m_rareData.m_paginationStrut = 0;
+    end
+end
+
+function LayoutBlock:PaginationStrut() 
+	if(self.m_rareData) then
+		return self.m_rareData.m_paginationStrut;
+	end
+	return 0;
+end
+
+function LayoutBlock:SetPaginationStrut(strut)
+	if (not self.m_rareData) then
+        if (strut == 0) then
+            return;
+		end
+        self.m_rareData = RenderBlockRareData:new():init(self);
+    end
+    self.m_rareData.m_paginationStrut = strut;
+end
+    
+-- The page logical offset is the object's offset from the top of the page in the page progression
+-- direction (so an x-offset in vertical text and a y-offset for horizontal text).
+function LayoutBlock:PageLogicalOffset() 
+	if(self.m_rareData) then
+		return self.m_rareData.m_pageLogicalOffset;
+	end
+	return 0;
+end
+
+function LayoutBlock:SetPageLogicalOffset(logicalOffset)
+	if (not self.m_rareData) then
+        if (logicalOffset == 0) then
+            return;
+		end
+        self.m_rareData = RenderBlockRareData:new():init(self);
+    end
+    self.m_rareData.m_pageLogicalOffset = logicalOffset;
 end

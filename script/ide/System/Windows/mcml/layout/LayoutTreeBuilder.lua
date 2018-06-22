@@ -27,15 +27,22 @@ function LayoutTreeBuilder:ctor()
 	self.style = nil;
 
 	self.layout_object_parent = nil;
+
+	self.parentNodeForRenderingAndStyle = nil;
 end
 
 -- @param node:	PageElement
 -- @param style: ComputedStyle
-function LayoutTreeBuilder:init(node, style)
+function LayoutTreeBuilder:init(node)
 	self.node = node;
-	self.style = style;
 	self:initParentLayoutObject();
+
+	self.parentNodeForRenderingAndStyle = self.node.parent;
 	return self;
+end
+
+function LayoutTreeBuilder:ParentNodeForRenderingAndStyle()
+	return self.parentNodeForRenderingAndStyle;
 end
 
 function LayoutTreeBuilder:ParentLayoutObject()
@@ -65,6 +72,8 @@ end
 
 function LayoutTreeBuilder:CreateLayoutObjectIfNeeded()
 	if(self:ShouldCreateLayoutObject()) then
+		self.style = self.node:StyleForLayoutObject();
+
 		local layout_object = self:CreateLayoutObject();
 
 		local parent_layout_object = self:ParentLayoutObject();
@@ -74,21 +83,10 @@ function LayoutTreeBuilder:CreateLayoutObjectIfNeeded()
 	end
 end
 
-function LayoutTreeBuilder:CreateLayoutObjectWithDisplay()
-	local node = self.node;
-	local display = self.style:Display();
-	if(display == "BLOCK" or display == "INLINE_BLOCK") then
-		return LayoutBlock:new():init(node);
-	elseif(display == "INLINE") then
-		return LayoutInline:new():init(node);
-	end
-end
-
 function LayoutTreeBuilder:CreateLayoutObject()
 	-- 后面切换到PageElement:CreateLayoutObject这个函数创建LayoutObject对象
 	-- self.node:CreateLayoutObject(self.style)
 	local node, style = self.node, self.style;
-
 	local layout_object = node:GetLayoutObject();
 	if(not layout_object) then
 		layout_object = node:CreateLayoutObject(nil, style);

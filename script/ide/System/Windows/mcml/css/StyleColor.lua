@@ -228,3 +228,7 @@ function StyleColor.ConvertTo16(color)
 	end
 	return temp_color or "#ffffffff";
 end
+
+function StyleColor:IsTransparent(color)
+    return color and color ~= "" and string.match(color,"#%w%w%w%w%w%w00") ~= nil;
+end

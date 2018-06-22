@@ -225,10 +225,10 @@ end
 -- virtual: apply css style
 function ButtonBase:ApplyCss(css)
 	ButtonBase._super.ApplyCss(self, css);
-	local font, font_size, font_scaling = css:GetFontSettings();
-	self:SetFont(font);
-	self:SetFontSize(font_size);
-	self:SetFontScaling(font_scaling);
+	
+	self:SetFont(css:Font():ToTable());
+	
+
 	self:SetAlignment(css:GetTextAlignment());
 	self:SetPaddings(css:paddings());
 	if(css.color) then

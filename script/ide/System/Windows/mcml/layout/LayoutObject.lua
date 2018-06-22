@@ -13,6 +13,8 @@ LayoutObject:new():init();
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutInline.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutBlock.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/IntRect.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyleConstants.lua");
+local ComputedStyleConstants = commonlib.gettable("System.Windows.mcml.style.ComputedStyleConstants");
 local IntRect = commonlib.gettable("System.Windows.mcml.platform.graphics.IntRect");
 local LayoutBlock = commonlib.gettable("System.Windows.mcml.layout.LayoutBlock");
 local LayoutInline = commonlib.gettable("System.Windows.mcml.layout.LayoutInline");
@@ -20,6 +22,11 @@ local LayoutInline = commonlib.gettable("System.Windows.mcml.layout.LayoutInline
 local LayoutRect = IntRect;
 
 local LayoutObject = commonlib.inherit(nil, commonlib.gettable("System.Windows.mcml.layout.LayoutObject"));
+
+
+local PositionEnum = ComputedStyleConstants.PositionEnum;
+local DisplayEnum = ComputedStyleConstants.DisplayEnum;
+local PseudoIdEnum = ComputedStyleConstants.PseudoIdEnum;
 
 function LayoutObject:ctor()
 	self.name = "LayoutObject";
@@ -102,21 +109,21 @@ end
 -- 后面需要完善，暂时不调用该函数
 function LayoutObject.CreateLayoutObject(node, style)
 	local display = style:Display();
-	if(display == "BLOCK" or display == "INLINE_BLOCK") then
+	if(display == DisplayEnum.BLOCK or display == DisplayEnum.INLINE_BLOCK) then
 		return LayoutBlock:new():init(node);
-	elseif(display == "INLINE") then
+	elseif(display == DisplayEnum.INLINE) then
 		return LayoutInline:new():init(node);
 	end
 end
 
 function LayoutObject:SetStyle(style)
 	self.style = style;
-	if(self.style) then
-		self.style:Connect("Changed", function()
-			self:invalidate();
-			--self.needsLayout = true;
-		end)
-	end
+--	if(self.style) then
+--		self.style:Connect("Changed", function()
+--			self:invalidate();
+--			--self.needsLayout = true;
+--		end)
+--	end
 
 	self:StyleDidChange();
 end
@@ -173,9 +180,9 @@ function LayoutObject:AddChild(newChild, beforeChild)
 
     local needsTable = false;
 
-    if (newChild:IsTableCol() and newChild:Style():Display() == "TABLE_COLUMN_GROUP") then
+    if (newChild:IsTableCol() and newChild:Style():Display() == DisplayEnum.TABLE_COLUMN_GROUP) then
         needsTable = not self:IsTable();
-    elseif (newChild:IsLayoutBlock() and newChild:Style():Display() == "TABLE_CAPTION") then
+    elseif (newChild:IsLayoutBlock() and newChild:Style():Display() == DisplayEnum.TABLE_CAPTION) then
         needsTable = not self:IsTable();
     elseif (newChild:IsTableSection()) then
         needsTable = not self:IsTable();
@@ -299,7 +306,7 @@ function LayoutObject:UpdateChildrenLayout(layout, beParentRelayout, beInDirtyRe
 end
 
 --function LayoutObject:beUseSpace()
---	if(self:Style():Position() == "StaticPosition") then
+--	if(self:Style():Position() == PositionEnum.StaticPosition) then
 --		return true;
 --	end
 --	return false;
@@ -411,14 +418,14 @@ function LayoutObject:IsChildAllowed(child_layout_object, child_style)
 end
 
 function LayoutObject:IsAbsolutePositioned()
-	if(self:Style():Position() == "AbsolutePosition") then
+	if(self:Style():Position() == PositionEnum.AbsolutePosition) then
 		return true;
 	end
 	return false;
 end
 
 function LayoutObject:IsRelativePositioned()
-	if(self:Style():Position() == "RelativePosition") then
+	if(self:Style():Position() == PositionEnum.RelativePosition) then
 		return true;
 	end
 	return false;
@@ -620,7 +627,7 @@ function LayoutObject:SetIsAnonymous(isAnonymous)
 end
 
 function LayoutObject:IsAnonymousBlock()
-	return self.isAnonymous and (self:Style():Display() == "BLOCK" or self:Style():Display() == "BOX") and self:Style():StyleType() == "NOPSEUDO" and self:IsLayoutBlock() and self:IsListMarker();
+	return self.isAnonymous and (self:Style():Display() == DisplayEnum.BLOCK or self:Style():Display() == DisplayEnum.BOX) and self:Style():StyleType() == PseudoIdEnum.NOPSEUDO and self:IsLayoutBlock() and self:IsListMarker();
 end
 
 function LayoutObject:IsAnonymousColumnsBlock()
@@ -657,6 +664,10 @@ end
 
 function LayoutObject:IsInline()
 	return self.inline;
+end
+
+function LayoutObject:IsRunIn() 
+	return self:Style():Display() == DisplayEnum.RUN_IN;
 end
 
 function LayoutObject:IsFloating()
@@ -713,7 +724,7 @@ function LayoutObject:IsBeforeContent(obj, beSelf)
 		return obj ~= nil and obj:IsBeforeContent();
 	end
 
-	if (self:Style():StyleType() ~= "BEFORE") then
+	if (self:Style():StyleType() ~= PseudoIdEnum.BEFORE) then
 		return false;
 	end
 	-- Text nodes don't have their own styles, so ignore the style on a text node.
@@ -729,7 +740,7 @@ function LayoutObject:IsAfterContent(obj, beSelf)
 	if(not beSelf) then
 		return obj ~= nil and obj:IsAfterContent();
 	end
-	if (self:Style():StyleType() ~= "AFTER") then
+	if (self:Style():StyleType() ~= PseudoIdEnum.AFTER) then
         return false;
 	end
     -- Text nodes don't have their own styles, so ignore the style on a text node.
@@ -889,12 +900,12 @@ function LayoutObject:Container(repaintContainer, repaintContainerSkipped)
 	end
 
 	local pos = self.style:Position();
-	if(pos == "FixedPosition") then
+	if(pos == PositionEnum.FixedPosition) then
 		while (object and object:Parent() and (not (object:HasTransform() and object:IsLayoutBlock()))) do
 			object = object:Parent();
 		end
-	elseif(pos == "AbsolutePosition") then
-		while (object and object:Style():Position() == "StaticPosition" and (not object:IsLayoutView()) and (not (object:HasTransform() and object:IsLayoutBlock()))) do
+	elseif(pos == PositionEnum.AbsolutePosition) then
+		while (object and object:Style():Position() == PositionEnum.StaticPosition and (not object:IsLayoutView()) and (not (object:HasTransform() and object:IsLayoutBlock()))) do
 			if (repaintContainerSkipped and object == repaintContainer) then
                 repaintContainerSkipped = true;
 			end
@@ -919,7 +930,7 @@ function LayoutObject:MarkContainingBlocksForLayout(scheduleRelayout, newRoot)
 		if (not container and (not object:IsLayoutView())) then
             return;
 		end
-		if(not last:IsText() and (last:Style():Position() == "AbsolutePosition" or last:Style():Position() == "FixedPosition") ) then
+		if(not last:IsText() and (last:Style():Position() == PositionEnum.AbsolutePosition or last:Style():Position() == PositionEnum.FixedPosition) ) then
 			local willSkipRelativelyPositionedInlines = not object:IsLayoutBlock();
 			while (object and not object:IsLayoutBlock()) do -- Skip relatively positioned inlines and get to the enclosing RenderBlock.
                 object = object:Container();
@@ -1046,7 +1057,7 @@ end
 function LayoutObject:SetPreferredLogicalWidthsDirty(dirty, markParents)
 	local alreadyDirty = self.preferredLogicalWidthsDirty;
     self.preferredLogicalWidthsDirty = dirty;
-    if (dirty and not alreadyDirty and markParents and (self:IsText() or (self:Style():Position() ~= "FixedPosition" and self:Style():Position() ~= "AbsolutePosition"))) then
+    if (dirty and not alreadyDirty and markParents and (self:IsText() or (self:Style():Position() ~= PositionEnum.FixedPosition and self:Style():Position() ~= PositionEnum.AbsolutePosition))) then
         self:InvalidateContainerPreferredLogicalWidths();
 	end
 end
@@ -1063,7 +1074,7 @@ function LayoutObject:InvalidateContainerPreferredLogicalWidths()
             break;
 		end
         object.preferredLogicalWidthsDirty = true;
-        if (object:Style():Position() == "FixedPosition" or object:Style():Position() == "AbsolutePosition") then
+        if (object:Style():Position() == PositionEnum.FixedPosition or object:Style():Position() == PositionEnum.AbsolutePosition) then
             -- A positioned object has no effect on the min/max width of its containing block ever.
             -- We can optimize this case and not go up any further.
             break;
@@ -1168,13 +1179,13 @@ end
 
 function LayoutObject:ContainingBlock()
 	local o = self:Parent();
-	if (not self:IsText() and self.style:Position() == "FixedPosition") then
+	if (not self:IsText() and self.style:Position() == PositionEnum.FixedPosition) then
         while (o and o:IsLayoutView() and not(o:HasTransform() and o:IsLayoutBlock())) do
             o = o:Parent();
 		end
-	elseif(not self:IsText() and self.style:Position() == "AbsolutePosition") then
-		while (o and (o:Style():Position() == "StaticPosition" or (o:IsInline() and not o:IsReplaced())) and not o:IsLayoutView() and not (o:HasTransform() and o:IsLayoutBlock())) do
-			if (o:Style():Position() == "RelativePosition" and o:IsInline() and not o:IsReplaced()) then
+	elseif(not self:IsText() and self.style:Position() == PositionEnum.AbsolutePosition) then
+		while (o and (o:Style():Position() == PositionEnum.StaticPosition or (o:IsInline() and not o:IsReplaced())) and not o:IsLayoutView() and not (o:HasTransform() and o:IsLayoutBlock())) do
+			if (o:Style():Position() == PositionEnum.RelativePosition and o:IsInline() and not o:IsReplaced()) then
                 return o:ContainingBlock();
 			end
 			o = o:Parent();

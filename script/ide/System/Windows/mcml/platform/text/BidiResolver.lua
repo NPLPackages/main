@@ -14,6 +14,8 @@ NPL.load("(gl)script/ide/System/Windows/mcml/layout/InLineIterator.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/platform/text/BidiRunList.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/BidiRun.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/platform/text/BidiContext.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyleConstants.lua");
+local ComputedStyleConstants = commonlib.gettable("System.Windows.mcml.style.ComputedStyleConstants");
 local BidiContext = commonlib.gettable("System.Windows.mcml.platform.text.BidiContext");
 local BidiRun = commonlib.gettable("System.Windows.mcml.layout.BidiRun");
 local BidiRunList = commonlib.gettable("System.Windows.mcml.platform.text.BidiRunList");
@@ -26,6 +28,8 @@ local MidpointState = commonlib.inherit(nil, commonlib.gettable("System.Windows.
 local BidiStatus = commonlib.inherit(nil, commonlib.gettable("System.Windows.mcml.platform.text.BidiStatus"));
 
 local BidiCharacterRun = commonlib.inherit(nil, commonlib.gettable("System.Windows.mcml.platform.text.BidiCharacterRun"));
+
+local TextDirectionEnum = ComputedStyleConstants.TextDirectionEnum;
 
 function MidpointState:ctor()
 	-- self.midpoints is a array of "InlineIterator";
@@ -63,9 +67,9 @@ function BidiStatus:init(eorDir, lastStrongDir, lastDir, bidiContext)
 		self.context = bidiContext;
 	elseif(eorDir ~= nil and lastStrongDir ~= nil) then
 		local textDirection, isOverride = eorDir, lastStrongDir;
-		local direction = if_else(textDirection == "LTR", "LeftToRight", "RightToLeft");
+		local direction = if_else(textDirection == TextDirectionEnum.LTR, "LeftToRight", "RightToLeft");
 		self.eor, self.lastStrong, self.last = direction, direction, direction;
-		local level = if_else(textDirection == "LTR", 0, 1);
+		local level = if_else(textDirection == TextDirectionEnum.LTR, 0, 1);
 		self.context = BidiContext.Create(level, direction, isOverride);
 	else
 		self.context = BidiContext:new();
@@ -326,7 +330,6 @@ function BidiResolver:CreateBidiRunsForLine(_end, override, hardLineBreak)
         if (self:InIsolate() ~= 0) then
             dirCurrent = "OtherNeutral";
 		end
-
 --      ASSERT(m_status.eor != OtherNeutral || m_eor.atEnd());
 		if(dirCurrent == "LeftToRight") then
 			
@@ -335,7 +338,6 @@ function BidiResolver:CreateBidiRunsForLine(_end, override, hardLineBreak)
             self.status.lastStrong = "LeftToRight";
             self.direction = "LeftToRight";
 		end
-
 		if (pastEnd and self.eor:Equal(self.current)) then
             if (not self.reachedEndOfLine) then
                 self.eor:Copy(self.endOfLine);

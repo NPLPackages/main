@@ -19,11 +19,15 @@ local InlineBidiResolver = commonlib.gettable("System.Windows.mcml.layout.Inline
 NPL.load("(gl)script/ide/System/Windows/mcml/platform/text/BidiResolver.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/BidiRun.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutBlockLineLayout.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyleConstants.lua");
+local ComputedStyleConstants = commonlib.gettable("System.Windows.mcml.style.ComputedStyleConstants");
 local LayoutBlock = commonlib.gettable("System.Windows.mcml.layout.LayoutBlock");
 local BidiRun = commonlib.gettable("System.Windows.mcml.layout.BidiRun");
 
 local InlineIterator = commonlib.inherit(nil, commonlib.gettable("System.Windows.mcml.layout.InlineIterator"));
 local InlineWalker = commonlib.inherit(nil, commonlib.gettable("System.Windows.mcml.layout.InlineWalker"));
+
+local UnicodeBidiEnum = ComputedStyleConstants.UnicodeBidiEnum;
 
 function InlineIterator:ctor()
 	self.root = nil;
@@ -150,7 +154,7 @@ local function NotifyObserverEnteredObject(observer, object)
 
     local style = object:Style();
     local unicodeBidi = style:UnicodeBidi(); -- default style:UnicodeBidi() value is "UBNormal";
-    if (unicodeBidi == "UBNormal") then
+    if (unicodeBidi == UnicodeBidiEnum.UBNormal) then
         -- http://dev.w3.org/csswg/css3-writing-modes/#unicode-bidi
         -- "The element does not open an additional level of embedding with respect to the bidirectional algorithm."
         -- Thus we ignore any possible dir= attribute on the span.
@@ -345,7 +349,7 @@ end
 
 local function isIsolatedInline(object)
     --ASSERT(object);
-    return object:IsLayoutInline() and object:Style():UnicodeBidi() == "Isolate";
+    return object:IsLayoutInline() and object:Style():UnicodeBidi() == UnicodeBidiEnum.Isolate;
 end
 
 local function containingIsolate(object, root)

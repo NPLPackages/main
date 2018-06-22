@@ -13,11 +13,15 @@ NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutObject.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/IntPoint.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/IntRect.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/IntSize.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyleConstants.lua");
+local ComputedStyleConstants = commonlib.gettable("System.Windows.mcml.style.ComputedStyleConstants");
 local IntSize = commonlib.gettable("System.Windows.mcml.platform.graphics.IntSize");
 local IntRect = commonlib.gettable("System.Windows.mcml.platform.graphics.IntRect");
 local Point = commonlib.gettable("System.Windows.mcml.platform.graphics.IntPoint");
 
 local InlineBox = commonlib.inherit(nil, commonlib.gettable("System.Windows.mcml.layout.InlineBox"));
+
+local TextDirectionEnum = ComputedStyleConstants.TextDirectionEnum;
 
 function InlineBox:ctor()
 	self.next = nil; -- The next element on the same line as us.
@@ -488,11 +492,11 @@ function InlineBox:SetBidiLevel(level)
 end
 
 function InlineBox:Direction()
-	return if_else(self.bidiEmbeddingLevel % 2, "RTL", "LTR");
+	return if_else(self.bidiEmbeddingLevel % 2, TextDirectionEnum.RTL, TextDirectionEnum.LTR);
 end
 
 function InlineBox:IsLeftToRightDirection()
-	return self:Direction() == "LTR";
+	return self:Direction() == TextDirectionEnum.LTR;
 end
 
 --void paint(PaintInfo&, const LayoutPoint&, LayoutUnit lineTop, LayoutUnit lineBottom)

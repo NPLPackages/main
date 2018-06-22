@@ -11,6 +11,8 @@ local style = CSSStyleDeclaration:new();
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/System/Windows/mcml/css/StyleColor.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/css/CSSProperty.lua");
+local CSSProperty = commonlib.gettable("System.Windows.mcml.css.CSSProperty");
 local StyleColor = commonlib.gettable("System.Windows.mcml.css.StyleColor");
 
 local type = type;
@@ -24,11 +26,16 @@ local CSSStyleDeclaration = commonlib.inherit(nil, commonlib.gettable("System.Wi
 
 function CSSStyleDeclaration:ctor()
 	self.pageElement = nil;
+	self.properties = commonlib.Array:new();
 end
 
 function CSSStyleDeclaration:init(pageElement)
 	self.pageElement = pageElement;
 	return self;
+end
+
+function CSSStyleDeclaration:SetNode(node)
+	self.pageElement = node;
 end
 
 local property_fields = 
@@ -235,199 +242,68 @@ function CSSStyleDeclaration:AddItem(name,value)
 	end
 	name = string_lower(name);
 	value = string_gsub(value, "%s*$", "");
-	if(number_fields[name] or string_find(name,"^margin") or string_find(name,"^padding")) then
-		local _, _, selfvalue = string_find(value, "([%+%-]?%d+[%%]?)");
-		if(selfvalue~=nil) then
-			value = tonumber(selfvalue);
-		else
-			value = nil;
-		end
-	elseif(color_fields[name]) then
-		value = StyleColor.ConvertTo16(value);
-	elseif(string_match(name, "^background[2]?$") or name == "background-image") then
+--	if(number_fields[name] or string_find(name,"^margin") or string_find(name,"^padding")) then
+--		local _, _, selfvalue = string_find(value, "([%+%-]?%d+[%%]?)");
+--		if(selfvalue~=nil) then
+--			value = tonumber(selfvalue);
+--		else
+--			value = nil;
+--		end
+--	elseif(color_fields[name]) then
+--		value = StyleColor.ConvertTo16(value);
+--	elseif(string_match(name, "^background[2]?$") or name == "background-image") then
+	if(string_match(name, "^background[2]?$") or name == "background-image") then
 		value = string_gsub(value, "url%((.*)%)", "%1");
 		value = string_gsub(value, "#", ";");
 	end
-	self[name] = value;
+	--self.properties[name] = CSSProperty:new(name, value);
+	self:SetPropertyInternal(CSSProperty:new(name, value))
 end
 
-function CSSStyleDeclaration:padding_left()
-	return (self["padding-left"] or self["padding"] or 0);
+function CSSStyleDeclaration:SetPropertyInternal(property)
+	local pos = self:FindPropertyPositionWithName(property:Name());
+	if(pos) then
+		self.properties[pos] = property;
+		return;
+	end
+	self.properties:append(property);
 end
 
-function CSSStyleDeclaration:padding_right()
-	return (self["padding-right"] or self["padding"] or 0);
+function CSSStyleDeclaration:FindPropertyPositionWithName(name)
+	local properties = self.properties;
+	local size = properties:size();
+	for i = 1, size do
+		if(properties:get(i):Name() == name) then
+			return i;
+		end
+	end
+	return nil;
 end
 
-function CSSStyleDeclaration:padding_top()
-	return (self["padding-top"] or self["padding"] or 0);
+function CSSStyleDeclaration:FindPropertyWithName(name)
+	local pos = self:FindPropertyPositionWithName(name);
+	if(pos) then
+		return self.properties.get(pos);
+	end
+	return nil;
 end
 
-function CSSStyleDeclaration:padding_bottom()
-	return (self["padding-bottom"] or self["padding"] or 0);
+function CSSStyleDeclaration:first()
+	return self.properties:first();
 end
 
--- return left, top, right, bottom
-function CSSStyleDeclaration:paddings()
-	return self:padding_left(), self:padding_top(), self:padding_right(), self:padding_bottom();
-end
-
-function CSSStyleDeclaration:margin_left()
-	return (self["margin-left"] or self["margin"] or 0);
-end
-
-function CSSStyleDeclaration:margin_right()
-	return (self["margin-right"] or self["margin"] or 0);
-end
-
-function CSSStyleDeclaration:margin_top()
-	return (self["margin-top"] or self["margin"] or 0);
-end
-
-function CSSStyleDeclaration:margin_bottom()
-	return (self["margin-bottom"] or self["margin"] or 0);
-end
-
--- return left, top, right, bottom
-function CSSStyleDeclaration:margins()
-	return self:margin_left(), self:margin_top(), self:margin_right(), self:margin_bottom();
-end
-
-function CSSStyleDeclaration:border_left_width()
-	return (self["border-left-width"] or self["border-left"] or self["border"] or 0);
-end
-
-function CSSStyleDeclaration:border_right_width()
-	return (self["border-right-width"] or self["border-right"] or self["border"] or 0);
-end
-
-function CSSStyleDeclaration:border_top_width()
-	return (self["border-top-width"] or self["border-top"] or self["border"] or 0);
-end
-
-function CSSStyleDeclaration:border_bottom_width()
-	return (self["border-bottom-width"] or self["border-bottom"] or self["border"] or 0);
-end
-
-function CSSStyleDeclaration:border_left_color()
-	return (self["border-left-color"] or self["border-left"] or self["border"] or "");
-end
-
-function CSSStyleDeclaration:border_right_color()
-	return (self["border-right-color"] or self["border-right"] or self["border"] or "");
-end
-
-function CSSStyleDeclaration:border_top_color()
-	return (self["border-top-color"] or self["border-top"] or self["border"] or "");
-end
-
-function CSSStyleDeclaration:border_bottom_color()
-	return (self["border-bottom-color"] or self["border-bottom"] or self["border"] or "");
-end
-
-function CSSStyleDeclaration:border_left_style()
-	return (self["border-left-style"] or self["border-left"] or self["border"] or "");
-end
-
-function CSSStyleDeclaration:border_right_style()
-	return (self["border-right-style"] or self["border-right"] or self["border"] or "");
-end
-
-function CSSStyleDeclaration:border_top_style()
-	return (self["border-top-style"] or self["border-top"] or self["border"] or "");
-end
-
-function CSSStyleDeclaration:border_bottom_style()
-	return (self["border-bottom-style"] or self["border-bottom"] or self["border"] or "");
-end
-
--- return left, top, right, bottom
-function CSSStyleDeclaration:borders()
-	return self:border_left(), self:border_top(), self:border_right(), self:border_bottom();
-end
--- text show direction, value can be "LTR", "RTL";
-function CSSStyleDeclaration:TextDirection()
-	return self["direction"] or "LTR";
-end
-
-function CSSStyleDeclaration:Width()
-	return self["width"];
-end
-
-function CSSStyleDeclaration:MinWidth()
-	return self["min-width"];
-end
-
-function CSSStyleDeclaration:MaxWidth()
-	return self["max-width"];
-end
-
-function CSSStyleDeclaration:Height()
-	return self["height"];
-end
-
-function CSSStyleDeclaration:MinHeight()
-	return self["min-height"];
-end
-
-function CSSStyleDeclaration:MaxHeight()
-	return self["max-height"];
-end
-
-function CSSStyleDeclaration:Left()
-	return self["left"] or 0;
-end
-
-function CSSStyleDeclaration:Top()
-	return self["top"] or 0;
-end
-
-function CSSStyleDeclaration:Right()
-	return self["right"] or 0;
-end
-
-function CSSStyleDeclaration:Bottom()
-	return self["bottom"] or 0;
-end
-
-function CSSStyleDeclaration:Position()
-	return self["position"] or "static";
-end
-
-function CSSStyleDeclaration:Floating()
-	return self["float"] or "none";
-end
-
-function CSSStyleDeclaration:Display()
-	return self["display"];
-end
-
-function CSSStyleDeclaration:Align()
-	return self["align"];
-end
-
-function CSSStyleDeclaration:Valign()
-	return self["valign"];
-end
-
-function CSSStyleDeclaration:OverflowX()
-	return self["overflow-x"];
-end
-
-function CSSStyleDeclaration:OverflowY()
-	return self["overflow-y"];
-end
-
-function CSSStyleDeclaration:Visibility()
-	return self["visibility"];
-end
-
-function CSSStyleDeclaration:FontSize()
-	return self["font-size"] or 12;
-end
-
-function CSSStyleDeclaration:Color()
-	return self["color"] or "#000000";
+function CSSStyleDeclaration:Next()
+	local properties = self.properties;
+	local nSize = properties:size();
+	local i = 1;
+	return function ()
+		local property;
+		while i <= nSize do
+			property = properties[i];
+			i = i+1;
+			return property;
+		end
+	end	
 end
 
 -- the user may special many font size, however, some font size is simulated with a base font and scaling. 
