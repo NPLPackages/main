@@ -561,7 +561,9 @@ function PageElement:GetAttributeWithCode(attrName,defaultValue, bNoOverwrite)
 			local code = string_match(value, "^[<%%]%%(=.*)%%[%%>]$")
 			if(code) then
 				value = Elements.pe_script.DoPageCode(code, self:GetPageCtrl());
-				value = processEscapeCharacters(value);
+				if(type(value) == "string") then
+					value = processEscapeCharacters(value);
+				end
 				if(not bNoOverwrite) then
 					self.attr[attrName] = value;
 				end	
