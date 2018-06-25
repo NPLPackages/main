@@ -180,6 +180,9 @@ local enum_fields = {
 
 function CSSProperty:CreateValueFromCssString()
 	local name, value = self.name, self.value;
+	if(value == "inherit") then
+		return value;
+	end
 	if(length_fields[name]) then
 		return Length.CreateFromCssLength(value);
 	elseif(color_fields[name]) then

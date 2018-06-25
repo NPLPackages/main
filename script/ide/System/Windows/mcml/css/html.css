@@ -2,6 +2,12 @@ pe:mcml, div, p {
     display:block;
 }
 
+p {
+    display:block;
+    margin-top:12px;
+    margin-bottom:12px;
+}
+
 span {
     display:inline;
 }

@@ -278,13 +278,13 @@ function CSSStyleSelector:StyleForElement(element, defaultParent, allowSharing, 
 	end
 	
 	local matchResult;
-
 	self:MatchAllRules(matchResult);
 
 	self:ApplyMatchedDeclarations(matchResult);
 	-- Clean up our style object's display and text decorations (among other fixups).
     self:AdjustRenderStyle(self:Style(), self.parentStyle, element);
 	self:InitElement();	-- Clear out for the next resolve.
+
 	return self.style;
 end
 
@@ -309,22 +309,8 @@ function CSSStyleSelector:ApplyDeclaration(styleDeclaration)
 	end
 end
 
-local inheritable_fields = {
-	["color"] = true,
-	["font-family"] = true,
-	["font-size"] = true,
-	["font-weight"] = true,
-	["text-shadow"] = true,
---	["shadow-color"] = true,
---	["text-shadow-offset-x"] = true,
---	["text-shadow-offset-y"] = true,
-	["text-align"] = true,
-	["line-height"] = true,
-	["caret-color"] = true,
-};
-
 function CSSStyleSelector:ApplyProperty(name, value)
-	local isInherit = inheritable_fields[name];
+	local isInherit = (value == "isInherit");
 
 	local handler = self.applyProperty:PropertyHandler(name);
 	if(handler) then
