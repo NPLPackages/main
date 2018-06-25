@@ -532,6 +532,22 @@ function PageElement:GetAttribute(attrName,defaultValue)
 	return defaultValue;
 end
 
+local EscapeCharacters = {
+	["&#10;"] = "\n",
+	["&#13;"] = "\r",
+	["&#32;"] = " ",
+	["&#33;"] = "!",
+	["&#34;"] = '"',
+	["&quot;"] = '"',
+}
+
+local function processEscapeCharacters(str)
+	for escapeChar, realChar in pairs(EscapeCharacters) do
+		str = string.gsub(str, escapeChar, realChar);
+	end
+	return str;
+end
+
 -- get the value of an attribute of this node (usually string)
 -- this differs from GetAttribute() in that the attribute string may contain embedded code block which may evaluates to a different string, table or even function. 
 -- please note that only the first call of this method will evaluate embedded code block, subsequent calls simply return the previous evaluated result. 
@@ -545,6 +561,7 @@ function PageElement:GetAttributeWithCode(attrName,defaultValue, bNoOverwrite)
 			local code = string_match(value, "^[<%%]%%(=.*)%%[%%>]$")
 			if(code) then
 				value = Elements.pe_script.DoPageCode(code, self:GetPageCtrl());
+				value = processEscapeCharacters(value);
 				if(not bNoOverwrite) then
 					self.attr[attrName] = value;
 				end	
