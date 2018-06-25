@@ -76,6 +76,21 @@ local std_seq_map = {
 	["DIK_DELETE"] = "Delete",
 }
 
+local function_key_map = {
+	["DIK_F1"] = true,
+	["DIK_F2"] = true,
+	["DIK_F3"] = true,
+	["DIK_F4"] = true,
+	["DIK_F5"] = true,
+	["DIK_F6"] = true,
+	["DIK_F7"] = true,
+	["DIK_F8"] = true,
+	["DIK_F9"] = true,
+	["DIK_F10"] = true,
+	["DIK_F11"] = true,
+	["DIK_F12"] = true,
+}
+
 -- win32 sequence map
 function KeyEvent:GetKeySequence()
 	if(self.ctrl_pressed and self.shift_pressed) then
@@ -92,6 +107,10 @@ end
 -- @param keySequence: "Undo", "Redo", "SelectAll", "Copy", "Paste"
 function KeyEvent:IsKeySequence(keySequence)
 	return self.key_sequence == keySequence;
+end
+
+function KeyEvent:IsFunctionKey()
+	return function_key_map[self.keyname];
 end
 
 

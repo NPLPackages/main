@@ -28,6 +28,8 @@ NPL.load("(gl)script/ide/System/Windows/Mouse.lua");
 NPL.load("(gl)script/ide/System/Core/Event.lua");
 NPL.load("(gl)script/ide/math/Point.lua");
 NPL.load("(gl)script/ide/gui_helper.lua");
+NPL.load("(gl)script/ide/System/Core/SceneContextManager.lua");
+local SceneContextManager = commonlib.gettable("System.Core.SceneContextManager");
 local Point = commonlib.gettable("mathlib.Point");
 local Event = commonlib.gettable("System.Core.Event");
 local SizeEvent = commonlib.gettable("System.Windows.SizeEvent");
@@ -233,7 +235,12 @@ function Window:create_sys(native_window, initializeWindow, destroyOldWindow)
 		self:handleMouseEnterLeaveEvent(MouseEvent:init("mouseEnterEvent", self));
 	end);
 	_this:SetScript("onkeydown", function()
-		Application:sendEvent(self:focusWidget(), KeyEvent:init("keyPressEvent"));
+		local event = KeyEvent:init("keyPressEvent")
+		Application:sendEvent(self:focusWidget(), event);
+		if(not event:isAccepted()) then
+			local context = SceneContextManager:GetCurrentContext();
+			context:handleKeyEvent(event);
+		end
 	end);
 	_this:SetScript("onkeyup", function()
 		Application:sendEvent(self:focusWidget(), KeyEvent:init("keyReleaseEvent"));

@@ -74,7 +74,9 @@ function Event:accept()
 end
 
 function Event:ignore()
-	self.accepted = false;
+	if(self.accepted == nil) then
+		self.accepted = false;
+	end
 end
 
 function Event:setAccepted(accepted) 

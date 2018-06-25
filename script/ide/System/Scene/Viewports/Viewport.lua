@@ -116,8 +116,8 @@ function Viewport:SetLeft(nValue)
 	end
 end
 
-function Viewport:GetLeft(nValue)
-	return self.margin_left;
+function Viewport:GetLeft()
+	return self.margin_left or 0;
 end
 
 
@@ -130,8 +130,8 @@ function Viewport:SetTop(nValue)
 	end
 end
 
-function Viewport:GetTop(nValue)
-	return self.margin_top;
+function Viewport:GetTop()
+	return self.margin_top or 0;
 end
 
 -- assume "_fi" fill alignment
