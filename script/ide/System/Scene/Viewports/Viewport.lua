@@ -18,6 +18,9 @@ local Screen = commonlib.gettable("System.Windows.Screen");
 NPL.load("(gl)script/ide/System/Scene/Viewports/Viewport.lua");
 local Viewport = commonlib.inherit(commonlib.gettable("System.Core.ToolBase"), commonlib.gettable("System.Scene.Viewports.Viewport"));
 
+Viewport:Property({"MarginRightHandler", nil, auto=true});
+Viewport:Property({"MarginBottomHandler", nil, auto=true});
+
 Viewport:Signal("sizeChanged");
 
 function Viewport:ctor()
