@@ -532,7 +532,7 @@ function TextControl:keyPressEvent(event)
 	elseif(event:IsKeySequence("Cut")) then
 		if (not self:isReadOnly()) then
 			self:copy();
-			self:del();
+			self:del(true);
 		end
 	elseif(keyname == "DIK_HOME") then
 		if(event.ctrl_pressed) then
@@ -992,11 +992,21 @@ function TextControl:cursorForward(mark, steps)
 	self:moveCursor(line,pos,mark,true);
 end
 
-function TextControl:del()
+function TextControl:del(mark)
 	--local priorState = self.m_undoState;
     if (self:hasSelectedText()) then
 		self:separate();
         self:removeSelectedText();
+	elseif(mark) then
+		self:separate();
+
+		local lineStart, posStart, lineEnd, posEnd = self.cursorLine, 0, self.cursorLine + 1, 0;
+		if(#self.items == self.cursorLine) then
+			lineEnd = self.cursorLine;
+			posEnd = self:GetLineText(lineEnd):length();
+		end
+
+		self:RemoveTextAddToCommand(lineStart, posStart, lineEnd, posEnd, true);
     else
 		if(self:IsAutoTabToSpaces()) then
 			local text = self:GetLineText(self.cursorLine);
@@ -1158,6 +1168,14 @@ end
 
 function TextControl:copy()
 	local t = self:selectedText()
+	if(not t) then
+		local lineStart, posStart, lineEnd, posEnd = self.cursorLine, 0, self.cursorLine + 1, 0;
+		if(#self.items == self.cursorLine) then
+			lineEnd = self.cursorLine;
+			posEnd = self:GetLineText(lineEnd):length();
+		end
+		t = self:scopeText(lineStart, posStart, lineEnd, posEnd);
+	end
 	if(t) then
 		ParaMisc.CopyTextToClipboard(t);
 	end
