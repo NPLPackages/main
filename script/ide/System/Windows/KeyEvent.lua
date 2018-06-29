@@ -41,6 +41,7 @@ local ctrl_seq_map = {
 	["DIK_A"] = "SelectAll",
 	["DIK_C"] = "Copy",
 	["DIK_V"] = "Paste",
+	["DIK_X"] = "Cut",
 	["DIK_HOME"] = "MoveToStartOfWord",
 	["DIK_END"] = "MoveToEndOfWord",
 	["DIK_UP"] = "ScrollToPreviousLine",
