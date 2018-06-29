@@ -600,7 +600,7 @@ function BonesManip:ShowForObject(obj)
 	if(animInstance and animInstance:IsValid()) then
 		self.animInstance = animInstance;
 		local bone_count = animInstance:GetChildCount(1);
-		for i = 0, bone_count do
+		for i = 0, bone_count-1 do
 			bones[#bones+1] = BoneProxy:new():init(animInstance:GetChildAt(i, 1), bones);
 		end
 	end
