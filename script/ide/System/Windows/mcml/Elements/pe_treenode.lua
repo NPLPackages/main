@@ -53,6 +53,8 @@ function pe_treenode:LoadComponent(parentElem, parentLayout, styleItem)
 	if(not _this) then
 		_this = TreeNode:new():init(parentElem);
 		self:SetControl(_this);
+	else
+		_this:SetParent(parentElem);
 	end
 	self.buttonName = self:GetAttributeWithCode("name",nil,true);
 	_this:Connect("clicked", self, self.OnClick, "UniqueConnection");

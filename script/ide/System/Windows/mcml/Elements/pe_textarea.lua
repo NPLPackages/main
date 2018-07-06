@@ -36,6 +36,8 @@ function pe_textarea:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	if(not _this) then
 		_this = MultiLineEditbox:new():init(parentElem);
 		self:SetControl(_this);
+	else
+		_this:SetParent(parentElem);
 	end
 
 	_this:ShowLineNumber(self:GetBool("ShowLineNumber",false));

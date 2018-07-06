@@ -24,6 +24,8 @@ function pe_container:LoadComponent(parentElem, parentLayout, style)
 	if(not _this) then
 		_this = Canvas:new():init(parentElem);
 		self:SetControl(_this);
+	else
+		_this:SetParent(parentElem);
 	end
 
 	pe_container._super.LoadComponent(self, _this, parentLayout, style);

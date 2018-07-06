@@ -960,13 +960,45 @@ function PageElement:AddChild(child, index)
 	self:resetLayout();
 end
 
+-- Clear all child nodes
+function PageElement:ClearAllChildren()
+	self:DetachControls();
+	commonlib.resize(self, 0);
+end
+
+function PageElement:DetachControls()
+	if(self.control) then
+		self.control:SetParent(nil);
+	end
+	for i=1, #self do
+		local child = self[i];
+		if(type(child) == "table") then
+			child:DetachControls();
+		end
+	end
+end
+
+function PageElement:DeleteControls()
+	if(self.control) then
+		self.control:SetParent(nil);
+		self.control = nil;
+	end
+	for i=1, #self do
+		local child = self[i];
+		if(type(child) == "table") then
+			child:DeleteControls();
+		end
+	end
+end
+
 -- detach this node from its parent node. 
 function PageElement:Detach()
+	self:DetachControls();
+
 	local parentNode = self.parent
 	if(parentNode == nil) then
 		return
 	end
-	
 	local nSize = #(parentNode);
 	local i, node;
 	
@@ -1106,14 +1138,6 @@ end
 -- Get child count
 function PageElement:GetChildCount()
 	return #(self);
-end
-
--- Clear all child nodes
-function PageElement:ClearAllChildren()
-	if(self.control) then
-		self.control:deleteChildren();
-	end
-	commonlib.resize(self, 0);
 end
 
 -- remove all child nodes and move them to an internal template node

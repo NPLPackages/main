@@ -25,6 +25,8 @@ function pe_sliderbar:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	if(not _this) then
 		_this = SliderBar:new():init(parentElem);
 		self:SetControl(_this);
+	else
+		_this:SetParent(parentElem);
 	end
 	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
 	_this:SetMin(self:GetAttributeWithCode("min", 1, true));

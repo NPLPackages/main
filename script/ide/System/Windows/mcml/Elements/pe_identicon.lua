@@ -21,6 +21,8 @@ function pe_identicon:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	if(not _this) then
 		_this = Identicon:new():init(parentElem);
 		self:SetControl(_this);
+	else
+		_this:SetParent(parentElem);
 	end
 	_this:ApplyCss(css);
 	_this:SetText(self:GetAttributeWithCode("value", nil, true));

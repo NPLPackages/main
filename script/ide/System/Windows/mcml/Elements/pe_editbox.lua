@@ -22,6 +22,8 @@ function pe_editbox:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	if(not _this) then
 		_this = EditBox:new():init(parentElem);
 		self:SetControl(_this);
+	else
+		_this:SetParent(parentElem);
 	end
 
 	_this:SetText(self:GetAttributeWithCode("value", nil, true));

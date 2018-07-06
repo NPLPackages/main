@@ -31,6 +31,8 @@ function pe_gridview:LoadComponent(parentElem, parentLayout, styleItem)
 	if(not _this) then
 		_this = GridView:new():init(parentElem);
 		self:SetControl(_this);
+	else
+		_this:SetParent(parentElem);
 	end
 	PageElement.LoadComponent(self, _this, parentLayout, styleItem)
 end

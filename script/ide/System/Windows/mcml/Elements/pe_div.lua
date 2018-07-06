@@ -55,6 +55,8 @@ function pe_div:LoadComponent(parentElem, parentLayout, style)
 		end
 
 		self:SetControl(_this);
+	else
+		_this:SetParent(parentElem);
 	end
 
 	pe_div._super.LoadComponent(self, _this, parentLayout, style);

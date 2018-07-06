@@ -52,6 +52,8 @@ function pe_treeview:LoadComponent(parentElem, parentLayout, styleItem)
 		_this:setHorizontalScrollBarPolicy("AlwaysOff");
 --		_this:setVerticalScrollBarPolicy("AlwaysOff");
 		self:SetControl(_this);
+	else
+		_this:SetParent(parentElem);
 	end
 	PageElement.LoadComponent(self, _this.viewport, parentLayout, styleItem)
 end

@@ -35,6 +35,8 @@ function pe_select:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 			_this = ListBox:new():init(parentElem);
 		end
 		self:SetControl(_this);
+	else
+		_this:SetParent(parentElem);
 	end
 	_this:ApplyCss(css);
 	--_this:SetText(self:GetAttributeWithCode("value", nil, true));

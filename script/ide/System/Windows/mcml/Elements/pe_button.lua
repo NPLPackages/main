@@ -26,6 +26,8 @@ function pe_button:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 		_this:SetPolygonStyle(polygonStyle);
 		_this:SetDirection(direction);
 		self:SetControl(_this);
+	else
+		_this:SetParent(parentElem);
 	end
 	_this:ApplyCss(css);
 	_this:SetText(self:GetAttributeWithCode("value", nil, true));

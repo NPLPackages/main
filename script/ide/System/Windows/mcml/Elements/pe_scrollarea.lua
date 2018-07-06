@@ -25,6 +25,8 @@ function pe_scrollarea:LoadComponent(parentElem, parentLayout, style)
 	if(not _this) then
 		_this = ScrollArea:new():init(parentElem);
 		self:SetControl(_this);
+	else
+		_this:SetParent(parentElem);
 	end
 	PageElement.LoadComponent(self, _this.viewport, parentLayout, style);
 	_this:ApplyCss(self:GetStyle());
