@@ -74,6 +74,10 @@ function ScrollAreaBase:initScrollBar()
 	self:verticalScrollBarHide();
 end
 
+function ScrollAreaBase:scrollToEnd()
+	self.vbar:SetValue(self.vbar:GetMax(), true);
+end
+
 function ScrollAreaBase:scrollToPos(hbarValue, vbarValue)
 	hbarValue = hbarValue or self.hscroll;
 	vbarValue = vbarValue or self.vscroll;

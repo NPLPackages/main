@@ -322,7 +322,9 @@ function pe_treeview:AllowWheel(canWheel)
 end
 
 function pe_treeview:ScrollToEnd()
-	self:scrollToChild(#self);
+	if(self.control) then
+		self.control:scrollToEnd();
+	end	
 end
 
 function pe_treeview:scrollToChild(index)
