@@ -361,8 +361,6 @@ function pe_gridview:DataBind(pageInstName)
 	local pagesize = tonumber(self:GetAttributeWithCode("pagesize", nil, true));
 	--local AllowPaging = self:GetBool("AllowPaging");
 	local ItemsPerLine = self:GetNumber("ItemsPerLine") or 1;
-
-	local ScrollToEnd = self:GetBool("ScrollToEnd");
 	
 	local columnsNode = self:GetChild("Columns");
 	if(columnsNode) then
@@ -579,6 +577,10 @@ function pe_gridview:OnAfterChildLayout(layout, left, top, right, bottom)
 		end	
 		local height = self.pagesize * self.pagecount * nodeHeight;
 		self.treeview:setRealSize(nil, height);
+	end
+	local ScrollToEnd = self:GetBool("ScrollToEnd");
+	if(ScrollToEnd) then
+		self.treeview:ScrollToEnd();
 	end
 end
 

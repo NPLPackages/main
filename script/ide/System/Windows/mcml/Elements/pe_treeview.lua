@@ -321,6 +321,10 @@ function pe_treeview:AllowWheel(canWheel)
 	end
 end
 
+function pe_treeview:ScrollToEnd()
+	self:scrollToChild(#self);
+end
+
 function pe_treeview:scrollToChild(index)
 	local node = self[index];
 	local style = node:GetStyle();
