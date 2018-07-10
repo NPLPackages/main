@@ -206,6 +206,25 @@ function Color.convert16_32(rgb)
     return bor(bor(a, r), bor(g,b));
 end
 
+-- convert 32bits color to 8bits
+function Color.convert32_8(rgb)
+    local a = rshift(band(rgb, 0xC0000000), 24);
+    local r = rshift(band(rgb, 0x00C00000), 18);
+    local g = rshift(band(rgb, 0x0000C000), 12);
+    local b = rshift(band(rgb, 0x000000C0),  6);
+    return bor(bor(a, r), bor(g,b));
+end
+
+-- convert 8bits color to 32bits(default)
+function Color.convert8_32(rgb)
+    local a = lshift(band(rgb, 0xC0), 24);
+    local r = lshift(band(rgb, 0x30), 18);
+    local g = lshift(band(rgb, 0xC ), 12);
+    local b = lshift(band(rgb, 0x3 ),  6);
+    return bor(bor(a, r), bor(g,b));
+end
+
+
 -- @param color: either 0xffffff, or string like "#ff0000"
 function Color.ToValue(color)
 	if(type(color) == "string") then
