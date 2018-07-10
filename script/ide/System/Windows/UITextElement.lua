@@ -87,7 +87,7 @@ function UITextElement:ApplyCss(css)
 	self:SetFont(font);
 	self:SetFontSize(font_size);
 	self:SetFontScaling(font_scaling);
-	self:SetAlignment(css:GetTextAlignment());
+	--self:SetAlignment(css:GetTextAlignment());
 	if(css.color) then
 		self:SetColor(css.color);
 	end

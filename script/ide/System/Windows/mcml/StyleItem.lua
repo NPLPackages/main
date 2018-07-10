@@ -313,8 +313,8 @@ function StyleItem:GetTextShadow()
 	return self:TextShadow(), self:TextShadowOffsetX(), self:TextShadowOffsetY(), self:TextShadowColor();
 end
 
-function StyleItem:GetTextAlignment()
-	local alignment = 1;	-- center align
+function StyleItem:GetTextAlignment(defaultAlignment)
+	local alignment = defaultAlignment or 1;	-- center align
 	if(self["text-align"]) then
 		if(self["text-align"] == "right") then
 			alignment = 2;

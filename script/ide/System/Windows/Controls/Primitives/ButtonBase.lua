@@ -225,5 +225,6 @@ end
 -- virtual: apply css style
 function ButtonBase:ApplyCss(css)
 	ButtonBase._super.ApplyCss(self, css);
+	self:SetAlignment(css:GetTextAlignment());
 	self:SetPaddings(css:paddings());
 end
