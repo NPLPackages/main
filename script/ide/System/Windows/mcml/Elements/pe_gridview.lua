@@ -235,6 +235,7 @@ function pe_gridview:CreateTreeViewNode()
 			cellPadding = string.match(cellPadding, "%d+");
 		end	
 		local attr={};
+		attr.style = "";
 		if(self.fitHeight) then
 			attr.style = format("max-height:%dpx;",self.fitHeight);
 		end
