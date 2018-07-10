@@ -358,6 +358,8 @@ if(ParaUI and ParaUI.ParaUIObject) then
 		["onmouseenter"] = true,
 		["onmouseleave"] = true,
 		["onselect"] = true,
+		["onfocusin"] = true,
+		["onfocusout"] = true,
 		["onmodify"] = true,
 		["onsize"] = true,
 		["ondestroy"] = true,

@@ -28,6 +28,8 @@ NPL.load("(gl)script/ide/System/Windows/Mouse.lua");
 NPL.load("(gl)script/ide/System/Core/Event.lua");
 NPL.load("(gl)script/ide/math/Point.lua");
 NPL.load("(gl)script/ide/gui_helper.lua");
+NPL.load("(gl)script/ide/System/Core/SceneContextManager.lua");
+local SceneContextManager = commonlib.gettable("System.Core.SceneContextManager");
 local Point = commonlib.gettable("mathlib.Point");
 local Event = commonlib.gettable("System.Core.Event");
 local SizeEvent = commonlib.gettable("System.Windows.SizeEvent");
@@ -233,7 +235,12 @@ function Window:create_sys(native_window, initializeWindow, destroyOldWindow)
 		self:handleMouseEnterLeaveEvent(MouseEvent:init("mouseEnterEvent", self));
 	end);
 	_this:SetScript("onkeydown", function()
-		Application:sendEvent(self:focusWidget(), KeyEvent:init("keyPressEvent"));
+		local event = KeyEvent:init("keyPressEvent")
+		Application:sendEvent(self:focusWidget(), event);
+		if(not event:isAccepted()) then
+			local context = SceneContextManager:GetCurrentContext();
+			context:handleKeyEvent(event);
+		end
 	end);
 	_this:SetScript("onkeyup", function()
 		Application:sendEvent(self:focusWidget(), KeyEvent:init("keyReleaseEvent"));
@@ -315,6 +322,10 @@ function Window:UpdateGeometry_Sys()
 	if(self:width() ~= width or self:height() ~= height) then
 		self:setGeometry(self.screen_x, self.screen_y, width, height);
 	end
+end
+
+function Window:GetScreenPos()
+	return self.screen_x, self.screen_y;
 end
 
 function Window:setGeometry_sys(ax, ay, aw, ah)
@@ -538,4 +549,15 @@ function Window:mouseReleaseEvent(event)
 		event:accept();
 	end
 	self.isMouseDown = nil;
+end
+
+function Window:SetEnabled(enabled)
+	self.enabled = enabled;
+	if(self.native_ui_obj) then
+		self.native_ui_obj.enabled = enabled;
+	end
+end
+
+function Window:isEnabled()
+	return self.enabled;
 end

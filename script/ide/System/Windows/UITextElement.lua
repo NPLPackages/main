@@ -19,7 +19,7 @@ UITextElement:Property("Name", "UITextElement");
 
 UITextElement:Property({"text", nil, "GetText", "SetText", auto=true});
 UITextElement:Property({"Color", "#000000", auto=true});
-UITextElement:Property({"Font", "SimHei;50;Black", auto=true});
+UITextElement:Property({"Font", nil, auto=true});
 UITextElement:Property({"FontSize", nil, auto=true});
 UITextElement:Property({"FontScaling", nil, auto=true});
 -- default to centered and no clipping. 

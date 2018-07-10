@@ -848,6 +848,12 @@ function EditBox:setCursorBlinkPeriod(msec)
     self.m_blinkPeriod = msec;
 end
 
+function EditBox:ApplyCss(css)
+	EditBox._super.ApplyCss(self, css);
+	if(css["caret-color"]) then
+		self:SetCursorColor(css["caret-color"]);
+	end
+end
 
 function EditBox:keyPressEvent(event)
 	if(self:isReadOnly()) then

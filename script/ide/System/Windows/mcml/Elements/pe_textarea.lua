@@ -36,10 +36,13 @@ function pe_textarea:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	if(not _this) then
 		_this = MultiLineEditbox:new():init(parentElem);
 		self:SetControl(_this);
+	else
+		_this:SetParent(parentElem);
 	end
 
 	_this:ShowLineNumber(self:GetBool("ShowLineNumber",false));
 	_this:SetEmptyText(self:GetAttributeWithCode("EmptyText", nil, true));
+	_this:SetLanguage(self:GetAttributeWithCode("language", nil, true));
 
 	_this:ApplyCss(css);
 	_this:setReadOnly(self:GetBool("ReadOnly",false));

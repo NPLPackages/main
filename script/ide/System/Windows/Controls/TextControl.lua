@@ -11,6 +11,8 @@ local TextControl = commonlib.gettable("System.Windows.Controls.TextControl");
 ]]
 NPL.load("(gl)script/ide/System/Windows/UIElement.lua");
 NPL.load("(gl)script/ide/System/Core/UniString.lua");
+NPL.load("(gl)script/ide/System/Util/SyntaxAnalysis.lua");
+local SyntaxAnalysis = commonlib.gettable("System.Util.SyntaxAnalysis");
 local Rect = commonlib.gettable("mathlib.Rect");
 local UniString = commonlib.gettable("System.Core.UniString");
 local Application = commonlib.gettable("System.Windows.Application");
@@ -27,6 +29,7 @@ TextControl:Property({"CursorColor", "#000000", auto=true})
 TextControl:Property({"EmptyTextColor", "#888888", auto=true})
 TextControl:Property({"SelectedBackgroundColor", "#99c9ef", auto=true})
 TextControl:Property({"CurLineBackgroundColor", "#e5ebf1e0", auto=true})
+TextControl:Property({"AlwaysShowCurLineBackground", true, "isAlwaysShowCurLineBackground", "SetAlwaysShowCurLineBackground", auto=true})
 TextControl:Property({"m_cursor", 0, "cursorPosition", "setCursorPosition"})
 TextControl:Property({"cursorVisible", false, "isCursorVisible", "setCursorVisible"})
 TextControl:Property({"m_readOnly", false, "isReadOnly", "setReadOnly", auto=true})
@@ -40,9 +43,13 @@ TextControl:Property({"lineWrap", nil, "GetLineWrap", "SetLineWrap", auto=true})
 TextControl:Property({"lineHeight", 20, "GetLineHeight", "SetLineHeight", auto=true})
 TextControl:Property({"AutoTabToSpaces", true, "IsAutoTabToSpaces", "SetAutoTabToSpaces", auto=true})
 TextControl:Property({"EmptyText", nil, "GetEmptyText", "SetEmptyText", auto=true})
+TextControl:Property({"language", nil, "Language", "SetLanguage", auto=true})
 
 --TextControl:Signal("SizeChanged",function(width,height) end);
 --TextControl:Signal("PositionChanged");
+
+local TAB_CHAR = "    ";
+local tab_len = string.len(TAB_CHAR);
 
 -- undo/redo handling
 local Command = commonlib.inherit(nil, {});
@@ -81,6 +88,8 @@ function TextControl:ctor()
 
 	self.needRecomputeTextWidth = true;
 	self.needRecomputeTextHeight = true;
+
+	self.syntaxAnalyzer = nil;
 
 	self:setFocusPolicy(FocusPolicy.StrongFocus);
 	self:setAttribute("WA_InputMethodEnabled");
@@ -138,7 +147,7 @@ function TextControl:initDoc()
 	local item = {
 		text = UniString:new();
 	}
-	self.items:push_back(item);
+	self:AddItem(item);
 end
 
 function TextControl:setReadOnly(bReadOnly)
@@ -207,7 +216,7 @@ function TextControl:SetText(text)
 	self.items:clear();
 	self.m_history:clear();
 	self.m_undoState = 0;
-
+	self:internalDeselect();
 	local line_text, breaker_text;
 	for line_text, breaker_text in string.gfind(text or "", "([^\r\n]*)(\r?\n?)") do
 		-- DONE: the current one will not ignore empty lines. such as \r\n\r\n. Empty lines are recognised.  
@@ -217,6 +226,9 @@ function TextControl:SetText(text)
 	end
 	if(self:GetRow() == 0) then
 		self:initDoc();
+	end
+	if(self.cursorLine>#self.items) then
+		self.cursorLine = #self.items;
 	end
 
 	local clip = self.parent:ViewRegion();
@@ -263,12 +275,7 @@ function TextControl:GetLineText(index)
 	return nil;
 end
 
-
-function TextControl:setLinePosColor(line, begin_pos, end_pos, font, color, scale)
-	if(not begin_pos or not end_pos or begin_pos == end_pos or begin_pos > end_pos) then
-		return;
-	end
-	local lineItem = self:GetLine(line)
+function TextControl:AddHighLightBlock(lineItem, begin_pos, end_pos, font, color, scale)
 	if(lineItem) then
 		lineItem.highlightBlocks = lineItem.highlightBlocks or {};
 		for i = 1,#lineItem.highlightBlocks do 
@@ -280,6 +287,14 @@ function TextControl:setLinePosColor(line, begin_pos, end_pos, font, color, scal
 		local block = {begin_pos = begin_pos, end_pos = end_pos, font = font, color = color, scale = scale};
 		lineItem.highlightBlocks[#lineItem.highlightBlocks+1] =  block;
 	end
+end
+
+function TextControl:setLinePosColor(line, begin_pos, end_pos, font, color, scale)
+	if(not begin_pos or not end_pos or begin_pos == end_pos or begin_pos > end_pos) then
+		return;
+	end
+	local lineItem = self:GetLine(line)
+	self:AddHighLightBlock(lineItem, begin_pos, end_pos, font, color, scale);
 end
 
 function TextControl:InsertItem(pos, text)
@@ -295,6 +310,8 @@ function TextControl:InsertItem(pos, text)
 	else
 		item = text;
 	end
+
+	item.changed = true;
 
 	if(pos > #self.items) then
 		self.items:push_back(item);
@@ -502,6 +519,8 @@ function TextControl:keyPressEvent(event)
 				self:backspace();
 			end
 		end
+	elseif(keyname == "DIK_TAB") then
+		self:ProcessTab(mark);
 	elseif(event:IsKeySequence("SelectAll")) then
 		self:selectAll();
 	elseif(event:IsKeySequence("Copy")) then
@@ -513,7 +532,7 @@ function TextControl:keyPressEvent(event)
 	elseif(event:IsKeySequence("Cut")) then
 		if (not self:isReadOnly()) then
 			self:copy();
-			self:del();
+			self:del(true);
 		end
 	elseif(keyname == "DIK_HOME") then
 		if(event.ctrl_pressed) then
@@ -598,13 +617,66 @@ function TextControl:keyPressEvent(event)
 			self:redo();
 		end
 	else
-		unknown = true;
+		if(event:IsFunctionKey() or event.ctrl_pressed) then
+			unknown = true;
+		end
 	end
 
 	if (unknown) then
         event:ignore();
     else
         event:accept();
+	end
+end
+
+function TextControl:ProcessTab(mark)
+	if(mark) then
+		if (self:hasSelectedText() and self.m_selLineStart ~= self.m_selLineEnd) then
+			-- if multiple lines are selected, we will add tab in front of all selected lines
+			self:separate();
+			for i=self.m_selLineStart, self.m_selLineEnd do 
+				local text = self:GetLineText(i);
+				if(text) then
+					local pos = math.min(tab_len, text:getFirstWordPosition());
+					self:RemoveTextAddToCommand(i, 0, i, pos, true);
+				end
+			end
+			return
+		end
+
+		local text = self:GetLineText(self.cursorLine);
+		local nextCursorPos;
+		for i = 1,tab_len do
+			if(text and self.cursorPos - i > 0 and text[self.cursorPos - i] == " ") then
+				nextCursorPos = self.cursorPos - i;
+			end
+		end
+		if(nextCursorPos) then
+			self:separate();
+			self:RemoveTextAddToCommand(self.cursorLine, nextCursorPos, self.cursorLine, self.cursorPos, true);
+		end
+	else
+		if (self:hasSelectedText() and self.m_selLineStart ~= self.m_selLineEnd) then
+			-- if multiple lines are selected, we will add tab in front of all selected lines
+			self:separate();
+			for i=self.m_selLineStart, self.m_selLineEnd do 
+				self:InsertTextAddToCommand(TAB_CHAR, i, 0, true);
+			end
+			return
+		end
+
+		if(self:IsAutoTabToSpaces()) then
+			local text = self:GetLineText(self.cursorLine);
+			local firstWordPos = text:getFirstWordPosition();
+			if(text and self.cursorPos>0 and self.cursorPos<=firstWordPos)then
+				local nSpaceCount = tab_len - firstWordPos%tab_len;
+				if(nSpaceCount ~= tab_len) then
+					self:InsertTextInCursorPos(TAB_CHAR:sub(1,nSpaceCount));
+					return;
+				end
+			end
+		end
+		self:InsertTextInCursorPos(TAB_CHAR)
 	end
 end
 
@@ -762,7 +834,6 @@ end
 
 -- @param mark: bool, if mark for selection. 
 function TextControl:cursorLineBackward(mark)
-	
 	local pos = self.cursorPos;
 	local line = self.cursorLine;
 	if(line < #self.items) then
@@ -773,8 +844,23 @@ function TextControl:cursorLineBackward(mark)
 	self:moveCursor(line,pos,mark,true);	
 end
 
-function TextControl:LineHome(mark) 
-	self:moveCursor(self.cursorLine, 0, mark,true);
+function TextControl:LineHome(mark)
+	local text = self:GetLineText(self.cursorLine);
+	if(not text) then
+		return
+	end
+	if(self.cursorPos == 0) then
+		if(text:atSpace(0)) then
+			self:cursorWordForward(mark);
+		end
+	else
+		local firstWordPos = text:getFirstWordPosition();
+		if(firstWordPos < self.cursorPos) then
+			self:moveCursor(self.cursorLine, firstWordPos, mark,true);
+		else
+			self:moveCursor(self.cursorLine, 0, mark,true);
+		end
+	end
 end
 
 function TextControl:DocHome(mark) 
@@ -862,7 +948,24 @@ end
 function TextControl:cursorForward(mark, steps)
 	local pos = self.cursorPos;
 	local line = self.cursorLine;
+	if(not self:GetCurrentLine()) then
+		return
+	end
 	local len = self:GetCurrentLine().text:length();
+
+	if(self:IsAutoTabToSpaces()) then
+		local text = self:GetCurrentLine().text;
+		local nFirstWordPos = text:getFirstWordPosition();
+		if(steps == 1 and self.cursorPos<nFirstWordPos)then
+			steps = tab_len - (self.cursorPos%tab_len);
+			if(self.cursorPos+steps > nFirstWordPos) then
+				steps = nFirstWordPos - self.cursorPos;
+			end
+		elseif(steps == -1 and self.cursorPos>1 and self.cursorPos<=nFirstWordPos)then
+			steps = self.cursorPos%tab_len;
+			steps = (steps==0) and -tab_len or -steps;
+		end
+	end
 
 	pos = pos + steps;
     if (steps > 0) then
@@ -889,12 +992,35 @@ function TextControl:cursorForward(mark, steps)
 	self:moveCursor(line,pos,mark,true);
 end
 
-function TextControl:del()
+function TextControl:del(mark)
 	--local priorState = self.m_undoState;
     if (self:hasSelectedText()) then
 		self:separate();
         self:removeSelectedText();
+	elseif(mark) then
+		self:separate();
+
+		local lineStart, posStart, lineEnd, posEnd = self.cursorLine, 0, self.cursorLine + 1, 0;
+		if(#self.items == self.cursorLine) then
+			lineEnd = self.cursorLine;
+			posEnd = self:GetLineText(lineEnd):length();
+		end
+
+		self:RemoveTextAddToCommand(lineStart, posStart, lineEnd, posEnd, true);
     else
+		if(self:IsAutoTabToSpaces()) then
+			local text = self:GetLineText(self.cursorLine);
+			local firstWordPos = text:getFirstWordPosition();
+			if(text and self.cursorPos>=0 and (self.cursorPos%tab_len)==0 and self.cursorPos<firstWordPos)then
+				local count = firstWordPos%tab_len;
+				count = (count == 0) and 4 or count;
+				if(count>0) then
+					self:moveCursor(self.cursorLine, self.cursorPos+count, true,true);
+					self:del();
+				end
+				return;
+			end
+		end
         self:internalDelete();
     end
     --self:finishChange(priorState);
@@ -903,7 +1029,7 @@ end
 function TextControl:paste(mode)
 	local clip = ParaMisc.GetTextFromClipboard();
 	if(clip and self:IsAutoTabToSpaces()) then
-		clip = clip:gsub("\t", "    ");
+		clip = clip:gsub("\t", TAB_CHAR);
 	end
 	if(clip or self:hasSelectedText()) then
 		--self:separate(); -- make it a separate undo/redo command
@@ -1042,6 +1168,14 @@ end
 
 function TextControl:copy()
 	local t = self:selectedText()
+	if(not t) then
+		local lineStart, posStart, lineEnd, posEnd = self.cursorLine, 0, self.cursorLine + 1, 0;
+		if(#self.items == self.cursorLine) then
+			lineEnd = self.cursorLine;
+			posEnd = self:GetLineText(lineEnd):length();
+		end
+		t = self:scopeText(lineStart, posStart, lineEnd, posEnd);
+	end
 	if(t) then
 		ParaMisc.CopyTextToClipboard(t);
 	end
@@ -1118,15 +1252,32 @@ function TextControl:backspace()
 		self:separate();
         self:removeSelectedText();
     else
+		if(self:IsAutoTabToSpaces()) then
+			local text = self:GetLineText(self.cursorLine);
+			if(text and self.cursorPos>0 and self.cursorPos<=text:getFirstWordPosition())then
+				local newCursorPos = math.max(0, self.cursorPos-tab_len);
+				newCursorPos = math.ceil(newCursorPos/tab_len)*tab_len;
+				self:moveCursor(self.cursorLine, newCursorPos, true,true);
+				self:del();
+				return;
+			end
+		end
 		self:internalDelete(true);
     end
     --self:finishChange(priorState);
 end
 
 function TextControl:internalDelete(wasBackspace)
-	if(self.cursorLine == 1 and self.cursorPos == 0) then
+	if(self.cursorLine == 1 and self.cursorPos == 0 and wasBackspace) then
 		return;
 	end
+
+	local lastLineIndex = #self.items;
+	local lastLineLength = self:GetLineText(lastLineIndex):length();
+	if(self.cursorLine == lastLineIndex and self.cursorPos == lastLineLength and not wasBackspace) then
+		return;
+	end
+
 	self:separate();
 	local startLine, startPos, endLine, endPos;
 	local anchorLine, anchorPos;
@@ -1173,6 +1324,7 @@ end
 function TextControl:lineInternalRemove(line, pos, count)
 	local text = line.text;
 	local width = self:GetLineWidth(line);
+	line.changed = true;
 	text:remove(pos, count);
 	
 	if(width >= self:GetRealWidth()) then
@@ -1181,7 +1333,19 @@ function TextControl:lineInternalRemove(line, pos, count)
 end
 
 function TextControl:newLine(mark)
-	self:InsertTextInCursorPos("\r\n");
+	local newLineText = "\r\n";
+
+	-- add heading spaces of the current line to the newline
+	local text = self:GetLineText(self.cursorLine);
+	if(text) then
+		text = tostring(text);
+		local headingSpaces = text:match("^([ \t]+)");
+		if(headingSpaces) then
+			newLineText = newLineText..headingSpaces;
+		end
+	end
+
+	self:InsertTextInCursorPos(newLineText);
 end
 
 function TextControl:hasAcceptableInput(str)
@@ -1217,6 +1381,7 @@ function TextControl:lineInternalInsert(line, pos, s)
     if (remaining > 0) then
 		s = s:left(remaining);
         lineText:insert(pos, s);
+		line.changed = true;
 
 		local width = self:GetLineWidth(line);
 		if(width > self:GetRealWidth()) then
@@ -1457,6 +1622,39 @@ function TextControl:DrawTextScaledWithPosition(painter, x, y, text, font, color
 	painter:DrawTextScaled(x, y, text, scale);
 end
 
+function TextControl:LanguageFormat(lineItem)
+	if(self.language and lineItem.changed) then
+		if(tostring(uniStr) == "") then
+			return;
+		end
+
+		self.syntaxAnalyzer = self.syntaxAnalyzer or SyntaxAnalysis.CreateAnalyzer(self.language);
+		if(not self.syntaxAnalyzer) then
+			return;
+		end
+
+		lineItem.highlightBlocks = {};
+		local uniStr = lineItem.text;
+		for token in self.syntaxAnalyzer:GetToken(uniStr) do
+			if(token.type) then
+				local font = self:GetFont();
+				if(token.bold) then
+					font = string.gsub(font,"(%a+;%d+;)(%a+)","%1bold")
+				end
+				self:AddHighLightBlock(lineItem, token.spos, token.epos, font, token.color, nil);
+			end
+		end
+		lineItem.changed = false;
+	end
+end
+
+function TextControl:ApplyCss(css)
+	TextControl._super.ApplyCss(self, css);
+	if(css["caret-color"]) then
+		self:SetCursorColor(css["caret-color"]);
+	end
+end
+
 function TextControl:paintEvent(painter)
 	if(self.needRecomputeTextHeight or self.needRecomputeTextWidth or self.needUpdateControlSize) then
 		self:updateGeometry();
@@ -1465,8 +1663,7 @@ function TextControl:paintEvent(painter)
 	self.from_line = math.max(1, 1 + math.floor((-(self:y() - self.parent:ViewRegionOffsetY())) / self.lineHeight)); 
 	self.to_line = math.min(self.items:size(), 1 + math.ceil((-self:y() + clipRegion:height()) / self.lineHeight));
 
-
-	if(self.cursorVisible and self:hasFocus() and not self:isReadOnly()) then
+	if(not self:isReadOnly() and (self:isAlwaysShowCurLineBackground() or (self.cursorVisible and self:hasFocus() and not self:isReadOnly()))) then
 		-- the curor line backgroud
 		local curline_x, curline_y = 0, (self.cursorLine - 1) * self.lineHeight;
 		painter:SetPen(self:GetCurLineBackgroundColor());
@@ -1552,6 +1749,8 @@ function TextControl:paintEvent(painter)
 			local total_width = 0;
 			local sub_text;
 			local next_block;
+
+			self:LanguageFormat(item);
 
 			if(item.highlightBlocks and next(item.highlightBlocks)) then
 				-- this line have highlight blocks;				

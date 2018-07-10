@@ -25,9 +25,11 @@ function pe_label:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	if(not _this) then
 		_this = Label:new():init(parentElem);
 		self:SetControl(_this);
+	else
+		_this:SetParent(parentElem);
 	end
 	_this:ApplyCss(css);
-	_this:SetText(self:GetAttributeWithCode("value", nil, true));
+	_this:SetText(tostring(self:GetAttributeWithCode("value", nil, true)));
 	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
 end
 

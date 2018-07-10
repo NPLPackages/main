@@ -75,6 +75,12 @@ function SliderBar:SetSliderBackground(bg)
 	end
 end
 
+function SliderBar:SetGrooveBackground(bg)
+	if(bg and bg ~= "") then
+		self.grooveBackground = bg;
+	end
+end
+
 function SliderBar:hitSlider(pos)
 	--local rect = Rect:new_from_pool(0, 0, self.backgroundRect:width(), self:height());
     return self:Slider():contains(pos) == true;
@@ -186,16 +192,20 @@ function SliderBar:paintEvent(painter)
 	local groove = self:Groove();
 	local groovBackground = self.grooveBackground;
 	if(groovBackground and groovBackground~="") then
+		painter:SetPen("#ffffff");
+	else
 		painter:SetPen("#ff0000");
-		painter:DrawRectTexture(self:x() + groove:x(), self:y() + groove:y(), groove:width(), groove:height(), groovBackground);
 	end
+	painter:DrawRectTexture(self:x() + groove:x(), self:y() + groove:y(), groove:width(), groove:height(), groovBackground);
 
 	local slider = self:Slider();
 	local sliderBackground = self.sliderBackground;
 	if(sliderBackground and sliderBackground~="") then
 		painter:SetPen("#ffffff");
-		painter:DrawRectTexture(self:x() + slider:x(), self:y() + slider:y(), slider:width(), slider:height(), sliderBackground);
+	else
+		painter:SetPen("#00ff00");
 	end
+	painter:DrawRectTexture(self:x() + slider:x(), self:y() + slider:y(), slider:width(), slider:height(), sliderBackground);
 end
 
 

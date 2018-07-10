@@ -25,6 +25,8 @@ function pe_sliderbar:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	if(not _this) then
 		_this = SliderBar:new():init(parentElem);
 		self:SetControl(_this);
+	else
+		_this:SetParent(parentElem);
 	end
 	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
 	_this:SetMin(self:GetAttributeWithCode("min", 1, true));
@@ -36,7 +38,9 @@ function pe_sliderbar:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	_this:SetSliderBackground(self:GetAttributeWithCode("button_bg", nil, true));
 	_this:SetSliderWidth(self:GetNumber("button_width", nil));
 	_this:SetSliderHeight(self:GetNumber("button_height", nil));
-
+	_this:SetGrooveBackground(self:GetAttributeWithCode("background", nil, true) or css["background"]);
+	_this:SetGrooveWidth(self:GetNumber("background_width", nil));
+	_this:SetGrooveHeight(self:GetNumber("background_height", nil));
 
 	--local buttonName = self:GetAttributeWithCode("name"); -- touch name
 

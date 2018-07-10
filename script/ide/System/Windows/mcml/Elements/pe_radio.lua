@@ -35,6 +35,8 @@ function pe_radio:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 		_this = Button:new():init(parentElem);
 		_this:SetPolygonStyle(polygonStyle or "radio");
 		self:SetControl(_this);
+	else
+		_this:SetParent(parentElem);
 	end
 	
 	_this:setCheckable(true);

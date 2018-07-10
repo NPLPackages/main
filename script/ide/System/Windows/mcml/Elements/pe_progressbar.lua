@@ -28,6 +28,8 @@ function pe_progressbar:OnLoadComponentBeforeChild(parentElem, parentLayout, css
 	if(not _this) then
 		_this = ProgressBar:new():init(parentElem);
 		self:SetControl(_this);
+	else
+		_this:SetParent(parentElem);
 	end
 	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
 	_this:SetMin(self.min);

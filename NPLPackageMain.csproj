@@ -1070,6 +1070,7 @@
     <Content Include="script\test\gridviewtest.lua" />
     <Content Include="script\test\IDE_Test.lua" />
     <Content Include="script\test\MCMLV2\mcml_window.html" />
+	<Content Include="script\test\MCMLV2\test_pe_textarea.html" />
     <Content Include="script\test\MCML_Sample.xml" />
     <Content Include="script\test\media\bumpMap.dds" />
     <Content Include="script\test\media\cloud.dds" />
@@ -1138,6 +1139,7 @@
     <None Include="README.md" />
     <None Include="script\ide\math\vector2d.lua" />
     <None Include="script\ide\System\Scene\Assets\ParaXModelAttr.lua" />
+	<None Include="script\ide\System\Util\SyntaxAnalysis.lua" />
     <None Include="script\ide\System\Windows\Controls\Button_p.lua" />
     <None Include="script\ide\System\Windows\Controls\Custom.lua" />
     <None Include="script\ide\System\Windows\Controls\DropdownListbox.lua" />

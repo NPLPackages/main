@@ -191,6 +191,7 @@ function Map3DSystem.App.Debug.DebugWnd.Show(bShow, _parent, parentWindow)
 			parent = _parent,
 			ShowLineNumber = true,
 			syntax_map = CommonCtrl.MultiLineEditbox.syntax_map_NPL,
+			language = "npl",
 			bUseSystemControl = true,
 		};
 		ctl:Show();

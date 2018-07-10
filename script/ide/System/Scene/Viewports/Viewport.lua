@@ -18,6 +18,9 @@ local Screen = commonlib.gettable("System.Windows.Screen");
 NPL.load("(gl)script/ide/System/Scene/Viewports/Viewport.lua");
 local Viewport = commonlib.inherit(commonlib.gettable("System.Core.ToolBase"), commonlib.gettable("System.Scene.Viewports.Viewport"));
 
+Viewport:Property({"MarginRightHandler", nil, auto=true});
+Viewport:Property({"MarginBottomHandler", nil, auto=true});
+
 Viewport:Signal("sizeChanged");
 
 function Viewport:ctor()
@@ -116,8 +119,8 @@ function Viewport:SetLeft(nValue)
 	end
 end
 
-function Viewport:GetLeft(nValue)
-	return self.margin_left;
+function Viewport:GetLeft()
+	return self.margin_left or 0;
 end
 
 
@@ -130,8 +133,8 @@ function Viewport:SetTop(nValue)
 	end
 end
 
-function Viewport:GetTop(nValue)
-	return self.margin_top;
+function Viewport:GetTop()
+	return self.margin_top or 0;
 end
 
 -- assume "_fi" fill alignment

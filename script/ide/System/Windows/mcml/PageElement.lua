@@ -532,6 +532,22 @@ function PageElement:GetAttribute(attrName,defaultValue)
 	return defaultValue;
 end
 
+local EscapeCharacters = {
+	["&#10;"] = "\n",
+	["&#13;"] = "\r",
+	["&#32;"] = " ",
+	["&#33;"] = "!",
+	["&#34;"] = '"',
+	["&quot;"] = '"',
+}
+
+local function processEscapeCharacters(str)
+	for escapeChar, realChar in pairs(EscapeCharacters) do
+		str = string.gsub(str, escapeChar, realChar);
+	end
+	return str;
+end
+
 -- get the value of an attribute of this node (usually string)
 -- this differs from GetAttribute() in that the attribute string may contain embedded code block which may evaluates to a different string, table or even function. 
 -- please note that only the first call of this method will evaluate embedded code block, subsequent calls simply return the previous evaluated result. 
@@ -545,6 +561,9 @@ function PageElement:GetAttributeWithCode(attrName,defaultValue, bNoOverwrite)
 			local code = string_match(value, "^[<%%]%%(=.*)%%[%%>]$")
 			if(code) then
 				value = Elements.pe_script.DoPageCode(code, self:GetPageCtrl());
+				if(type(value) == "string") then
+					value = processEscapeCharacters(value);
+				end
 				if(not bNoOverwrite) then
 					self.attr[attrName] = value;
 				end	
@@ -919,6 +938,7 @@ function PageElement:CreateStyle(baseStyle, base_baseStyle)
 	--
 	-- apply instance if any
 	--
+
 	if(self.attr and self.attr.style) then
 		local style_code = self:GetAttributeWithCode("style", nil, true);
 		style:Merge(style_code);
@@ -940,13 +960,45 @@ function PageElement:AddChild(child, index)
 	self:resetLayout();
 end
 
+-- Clear all child nodes
+function PageElement:ClearAllChildren()
+	self:DetachControls();
+	commonlib.resize(self, 0);
+end
+
+function PageElement:DetachControls()
+	if(self.control) then
+		self.control:SetParent(nil);
+	end
+	for i=1, #self do
+		local child = self[i];
+		if(type(child) == "table") then
+			child:DetachControls();
+		end
+	end
+end
+
+function PageElement:DeleteControls()
+	if(self.control) then
+		self.control:SetParent(nil);
+		self.control = nil;
+	end
+	for i=1, #self do
+		local child = self[i];
+		if(type(child) == "table") then
+			child:DeleteControls();
+		end
+	end
+end
+
 -- detach this node from its parent node. 
 function PageElement:Detach()
+	self:DetachControls();
+
 	local parentNode = self.parent
 	if(parentNode == nil) then
 		return
 	end
-	
 	local nSize = #(parentNode);
 	local i, node;
 	
@@ -1086,14 +1138,6 @@ end
 -- Get child count
 function PageElement:GetChildCount()
 	return #(self);
-end
-
--- Clear all child nodes
-function PageElement:ClearAllChildren()
-	if(self.control) then
-		self.control:deleteChildren();
-	end
-	commonlib.resize(self, 0);
 end
 
 -- remove all child nodes and move them to an internal template node
