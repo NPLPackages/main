@@ -328,8 +328,6 @@ function pe_treeview:ScrollToEnd()
 end
 
 function pe_treeview:scrollToChild(index)
-	local node = self[index];
-	local style = node:GetStyle();
 	if(self.control) then
 		self.control:scrollToPos(nil, self.DefaultNodeHeight * (index - 1));
 	end	

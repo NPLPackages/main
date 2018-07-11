@@ -19,8 +19,6 @@ function Canvas:ctor()
 end
 
 function Canvas:paintEvent(painter)
-	local background = self:GetBackground();
-	local x, y = self:x(), self:y();
 	painter:SetPen(self:GetBackgroundColor());
-	painter:DrawRectTexture(x, y, self:width(), self:height(), self:GetBackground());
+	painter:DrawRectTexture(self:x(), self:y(), self:width(), self:height(), self:GetBackground());
 end
