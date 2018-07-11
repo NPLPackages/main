@@ -194,16 +194,20 @@ function Color.convert32_16(rgb)
     local r = rshift(band(rgb, 0x00F00000), 12);
     local g = rshift(band(rgb, 0x0000F000),  8);
     local b = rshift(band(rgb, 0x000000F0),  4);
-    return bor(bor(a, r), bor(g,b));
+    return a+r+g+b;
 end
 
 -- convert 16bits color to 32bits(default)
 function Color.convert16_32(rgb)
     local a = lshift(band(rgb, 0xF000), 16);
+	a = a + rshift(a, 4);
     local r = lshift(band(rgb, 0x0F00), 12);
+	r = r + rshift(r, 4);
     local g = lshift(band(rgb, 0x00F0),  8);
+	g = g + rshift(g, 4);
     local b = lshift(band(rgb, 0x000F),  4);
-    return bor(bor(a, r), bor(g,b));
+	b = b + rshift(b, 4);
+    return a+r+g+b;
 end
 
 -- convert 32bits color to 8bits
@@ -212,16 +216,20 @@ function Color.convert32_8(rgb)
     local r = rshift(band(rgb, 0x00C00000), 18);
     local g = rshift(band(rgb, 0x0000C000), 12);
     local b = rshift(band(rgb, 0x000000C0),  6);
-    return bor(bor(a, r), bor(g,b));
+    return a+r+g+b;
 end
 
 -- convert 8bits color to 32bits(default)
 function Color.convert8_32(rgb)
-    local a = lshift(band(rgb, 0xC0), 24);
+	local a = lshift(band(rgb, 0xC0), 24);
+	a = a + rshift(a, 2)+rshift(a, 4) + rshift(a, 6);
     local r = lshift(band(rgb, 0x30), 18);
+	r = r + rshift(r, 2)+rshift(r, 4) + rshift(r, 6);
     local g = lshift(band(rgb, 0xC ), 12);
+	g = g + rshift(g, 2)+rshift(g, 4) + rshift(g, 6);
     local b = lshift(band(rgb, 0x3 ),  6);
-    return bor(bor(a, r), bor(g,b));
+	b = b + rshift(b, 2)+rshift(b, 4) + rshift(b, 6);
+    return a+r+g+b;
 end
 
 

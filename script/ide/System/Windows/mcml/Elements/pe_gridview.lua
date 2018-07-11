@@ -471,21 +471,24 @@ function pe_gridview:DataBind(pageInstName)
 					-- set row index and all other column data in the row 
 					-- so that in rowNode it can reference them via page scope Eval(), such as <%=Eval("index")%>
 					local envCode = format("index=%d", i);
-					local n, v;
 					for n,v in pairs(self.eval_names_) do
-						self.eval_names_[n] = false;
+						if(n~="__index") then
+							self.eval_names_[n] = false;
+						end
 					end
 					for n,v in pairs(row) do
-						self.eval_names_[n] = true;
-						local typeV = type(v)
-						if(typeV == "number") then
-							envCode = format("%s\n%s=%s", envCode, n, tostring(v));
-						elseif(typeV == "string") then
-							envCode = format("%s\n%s=\"%s\"", envCode, n, v);
-						elseif(typeV == "boolean" or typeV == "nil") then
-							envCode = format("%s\n%s=%s", envCode, n, tostring(v));
-						elseif(typeV == "table") then
-							envCode = format("%s\n%s=%s", envCode, n, commonlib.serialize_compact(v));
+						if(n~="__index") then
+							self.eval_names_[n] = true;
+							local typeV = type(v)
+							if(typeV == "number") then
+								envCode = format("%s\n%s=%s", envCode, n, tostring(v));
+							elseif(typeV == "string") then
+								envCode = format("%s\n%s=\"%s\"", envCode, n, v);
+							elseif(typeV == "boolean" or typeV == "nil") then
+								envCode = format("%s\n%s=%s", envCode, n, tostring(v));
+							elseif(typeV == "table") then
+								envCode = format("%s\n%s=%s", envCode, n, commonlib.serialize_compact(v));
+							end
 						end
 					end
 					for n,v in pairs(self.eval_names_) do
