@@ -1262,10 +1262,7 @@ function PageElement:SearchChildByAttribute(name, value)
 	for i=1, nSize do
 		node = self[i];
 		if(type(node)=="table") then
-			-- 此处如果不做多个判断,会出现当node的name是非固定值时候,无法正确获取到该node
-			-- 此处的buttonName是多种node的存储name非固定值时候的临时处理机制,感觉并不通用(因为未必所有node都会定义这个变量)
-			-- 后续希望有更好的优化方案
-			if(value == node:GetAttribute(name) or value == node:GetAttributeWithCode(name, nil, true) or (node.buttonName and node.buttonName == value)) then
+			if(value == node:GetAttributeWithCode(name, nil, true) or (node.buttonName and node.buttonName == value)) then
 				return node;
 			else
 				node = node:SearchChildByAttribute(name, value);
