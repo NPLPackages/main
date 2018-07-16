@@ -7,7 +7,7 @@ use the lib:
 ------------------------------------------------------------
 NPL.load("(gl)script/ide/System/Scene/Cameras/Camera.lua");
 local Cameras = commonlib.gettable("System.Scene.Cameras");
-echo(Cameras.Current:GetViewMatrix());
+echo(Cameras:GetCurrent():GetViewMatrix());
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/System/Scene/Cameras/Cameras.lua");
@@ -30,6 +30,7 @@ function Camera:ctor()
 	self.viewprojMatrix = Matrix4:new();
 	self.viewMatrix = Matrix4:new();
 	self.projMatrix = Matrix4:new();
+	self.fieldOfView = 60/180*3.1415926;
 end
 
 function Camera:activate()
@@ -46,6 +47,18 @@ end
 
 function Camera:GetProjMatrix()
 	return self.projMatrix;
+end
+
+function Camera:GetEyePosition()
+	return {0,0,0};
+end
+
+function Camera:GetRenderOrigin()
+	return {0,0,0};
+end
+
+function Camera:GetFieldOfView()
+	return self.fieldOfView;
 end
 
 -- pretty slow, get it and cache it. return mouse ray in current scene viewport

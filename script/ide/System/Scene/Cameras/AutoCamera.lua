@@ -18,6 +18,8 @@ local AutoCamera = commonlib.inherit(commonlib.gettable("System.Scene.Cameras.Ca
 AutoCamera:Property({"Name", "AutoCamera"});
 
 function AutoCamera:ctor()
+	self.eye_pos = {0,0,0};
+	self.renderOrigin = {0,0,0};
 end
 
 function AutoCamera:GetViewProjMatrix()
@@ -31,5 +33,19 @@ end
 function AutoCamera:GetProjMatrix()
 	return ParaCamera.GetAttributeObject():GetField("ProjMatrix", self.projMatrix);
 end
+
+
+function AutoCamera:GetEyePosition()
+	return ParaCamera.GetAttributeObject():GetField("Eye position", self.eye_pos);
+end
+
+function AutoCamera:GetRenderOrigin()
+	return ParaCamera.GetAttributeObject():GetField("RenderOrigin", self.renderOrigin);
+end
+
+function AutoCamera:GetFieldOfView()
+	return ParaCamera.GetAttributeObject():GetField("FieldOfView", self.fieldOfView);
+end
+
 
 AutoCamera:InitSingleton();

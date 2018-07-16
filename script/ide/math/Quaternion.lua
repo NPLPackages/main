@@ -371,5 +371,9 @@ function Quaternion:ToRotationMatrix(kRot)
 	return kRot;
 end 
    
+function Quaternion:Inverse()
+    self[1], self[2], self[3], self[4] = -self[1],-self[2],-self[3], self[4];
+end
+
 -- const static identity matrix. 
 Quaternion.IDENTITY = Quaternion:new({0, 0, 0, 1});
