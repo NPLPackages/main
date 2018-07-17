@@ -318,7 +318,7 @@ end
 
 -- @param paintFuncName: should be "paintEvent", "paintPickingEvent", "paintZPassEvent", etc.
 function Overlay:DoPaintRecursive(painter, paintFuncName)
-	self:PushLocalTransform(painter);
+	self:BeginPaint(painter);
 	self[paintFuncName](self, painter);
 	if(self.children) then
 		local children = self.children;
@@ -329,6 +329,16 @@ function Overlay:DoPaintRecursive(painter, paintFuncName)
 			child = children:next(child);
 		end
 	end
+	self:EndPaint(painter)
+end
+
+-- virtual function: setup transform for this and child overlays
+function Overlay:BeginPaint(painter)
+	self:PushLocalTransform(painter);
+end
+
+-- virtual function: setup transform for this and child overlays
+function Overlay:EndPaint(painter)
 	self:PopLocalTransform(painter);
 end
 

@@ -47,5 +47,16 @@ function AutoCamera:GetFieldOfView()
 	return ParaCamera.GetAttributeObject():GetField("FieldOfView", self.fieldOfView);
 end
 
+function AutoCamera:GetNearPlane()
+	return ParaCamera.GetAttributeObject():GetField("NearPlane", 1);
+end
+
+function AutoCamera:GetFarPlane()
+	return ParaCamera.GetAttributeObject():GetField("FarPlane", 100);
+end
+
+function AutoCamera:GetAspectRatio()
+	return ParaCamera.GetAttributeObject():GetField("AspectRatio", 1);
+end
 
 AutoCamera:InitSingleton();
