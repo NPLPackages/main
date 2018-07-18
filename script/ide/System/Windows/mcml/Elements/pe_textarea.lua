@@ -68,3 +68,15 @@ function pe_textarea:SetUIValue(pageInstName, value)
 		return self.control:SetText(value);
 	end
 end
+
+function pe_textarea:GetValue()
+	if(self.control) then
+		return self.control:GetText();
+	end
+end
+
+function pe_textarea:SetValue(value)
+	if(self.control) then
+		return self.control:SetText(value);
+	end
+end

@@ -72,6 +72,7 @@ function pe_editbox:OnAfterChildLayout(layout, left, top, right, bottom)
 	end
 end
 
+-- this is a deprecated function. please use "GetValue" to replace it;
 -- get UI value: get the value on the UI object with current node
 -- @param instName: the page instance name. 
 function pe_editbox:GetUIValue()
@@ -80,8 +81,22 @@ function pe_editbox:GetUIValue()
 	end
 end
 
+-- this is a deprecated function. please use "SetValue" to replace it;
 -- set UI value: set the value on the UI object with current node
 function pe_editbox:SetUIValue(value)
+	if(self.control) then
+		return self.control:SetText(value);
+	end
+end
+
+
+function pe_editbox:GetValue()
+	if(self.control) then
+		return self.control:GetText();
+	end
+end
+
+function pe_editbox:SetValue(value)
 	if(self.control) then
 		return self.control:SetText(value);
 	end

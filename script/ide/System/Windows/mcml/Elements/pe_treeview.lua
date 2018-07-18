@@ -43,6 +43,7 @@ local pe_treeview = commonlib.inherit(commonlib.gettable("System.Windows.mcml.El
 pe_treeview:Property({"class_name", "pe:treeview"});
 
 function pe_treeview:ctor()
+	self.myLayout = nil;
 end
 
 function pe_treeview:LoadComponent(parentElem, parentLayout, styleItem)
@@ -178,7 +179,16 @@ function pe_treeview:Rebuild(parentElem)
 	if(not parentElem and self.control) then
 		parentElem = self.control.viewport;
 	end
-	pe_treeview._super.Rebuild(self, parentElem);
+	--pe_treeview._super.Rebuild(self, parentElem);
+
+	local layout = self.myLayout:clone();
+	local css = self:GetStyle();
+
+	self:OnLoadChildrenComponent(parentElem, layout, css);
+
+	self:OnLoadComponentAfterChild(parentElem, layout, css);
+
+	self:UpdateChildLayout(layout);
 end
 
 function pe_treeview:SetDataSource(dataSource)
@@ -334,6 +344,9 @@ function pe_treeview:scrollToChild(index)
 end
 
 function pe_treeview:UpdateChildLayout(layout)
+	if(not self.myLayout) then
+		self.myLayout = layout:clone();
+	end
 	pe_treeview._super.UpdateChildLayout(self, layout);
 	
 	local width, height = layout:GetUsedSize()

@@ -71,6 +71,7 @@ local inheritable_fields = {
 	["text-align"] = true,
 	["line-height"] = true,
 	["caret-color"] = true,
+	["text-singleline"] = true,
 };
 
 -- only merge inheritable style like font, color, etc. 

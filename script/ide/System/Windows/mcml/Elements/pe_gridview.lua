@@ -297,6 +297,11 @@ function pe_gridview:CreateTreeViewNode()
 	end
 end
 
+function pe_gridview:refreshDataSource()
+	local ds = self:GetAttributeWithCode("DataSource",nil,true);
+	self:resetDataSource(ds);
+end
+
 function pe_gridview:resetDataSource(dataSource)
 	self:SetAttribute("pageindex", 1);
 	if(self.treeview) then
@@ -493,6 +498,7 @@ function pe_gridview:DataBind(pageInstName)
 							if(typeV == "number") then
 								envCode = format("%s\n%s=%s", envCode, n, tostring(v));
 							elseif(typeV == "string") then
+								---v = string.gsub(v, "\r\n", "\\r\\n");
 								envCode = format("%s\n%s=\"%s\"", envCode, n, v);
 							elseif(typeV == "boolean" or typeV == "nil") then
 								envCode = format("%s\n%s=%s", envCode, n, tostring(v));
