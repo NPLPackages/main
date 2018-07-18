@@ -63,6 +63,7 @@ local Overlay = commonlib.inherit(commonlib.gettable("System.Core.ToolBase"), co
 
 Overlay:Property("Name", "Overlay");
 Overlay:Property({"enabled", true, "isEnabled", auto=true});
+Overlay:Property({"visible", true, "IsVisible", "SetVisible"});
 Overlay:Property({"EnableZPass", true});
 Overlay:Property({"ZPassOpacity", 0.2, "GetZPassOpacity", "SetZPassOpacity", auto=true});
 Overlay:Property({"EnablePicking", true});
@@ -230,6 +231,19 @@ function Overlay:Destroy()
 	Overlay._super.Destroy(self);
 end
 
+function Overlay:SetVisible(bVisible)
+	if(self.visible ~= bVisible) then
+		self.visible = bVisible;
+		if(self.native_scene_obj) then
+			self.native_scene_obj:SetVisible(bVisible==true);
+		end
+	end
+end
+
+function Overlay:IsVisible()
+	return self.visible;
+end
+
 -- called whenever an event comes. Subclass can overwrite this function. 
 -- @param handlerName: "paintEvent", "mouseDownEvent", "mouseUpEvent", etc. 
 -- @param event: the event object. 
@@ -318,6 +332,9 @@ end
 
 -- @param paintFuncName: should be "paintEvent", "paintPickingEvent", "paintZPassEvent", etc.
 function Overlay:DoPaintRecursive(painter, paintFuncName)
+	if(not self:IsVisible()) then
+		return
+	end
 	self:BeginPaint(painter);
 	self[paintFuncName](self, painter);
 	if(self.children) then
