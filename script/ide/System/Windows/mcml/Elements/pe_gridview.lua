@@ -107,6 +107,11 @@ function pe_gridview:OnLoadComponentAfterChild(parentElem, parentLayout, css)
 end
 
 function pe_gridview:CountHeight()
+	local css = self:GetStyle();
+	local css_height = css["height"];
+	if(not self.AllowPaging and css_height) then
+		return css_height;
+	end
 	local height = nil;
 	local pagesize = tonumber(self:GetAttributeWithCode("pagesize", nil, true));
 	if(pagesize) then
@@ -120,6 +125,8 @@ function pe_gridview:CountHeight()
 			end
 		end	
 		height = pagesize * nodeHeight;
+	else
+		height = css_height;
 	end
 	return height;
 end
@@ -292,6 +299,9 @@ end
 
 function pe_gridview:resetDataSource(dataSource)
 	self:SetAttribute("pageindex", 1);
+	if(self.treeview) then
+		self.treeview:ClearAllChildren();
+	end
 	self:SetDataSource(dataSource);
 	if(self.treeview) then
 		self.treeview:Rebuild();
@@ -569,19 +579,6 @@ end
 
 function pe_gridview:OnAfterChildLayout(layout, left, top, right, bottom)
 	pe_gridview._super.OnAfterChildLayout(self, layout, left, top, right, bottom);
-	if(self.AllowPaging and self.treeview) then
-		local nodeHeight = self.DefaultNodeHeight;
-		local cellPadding = self:GetAttribute("CellPadding");
-		if(cellPadding) then
-			cellPadding = tonumber(string.match(cellPadding, "%d+"));
-			if(cellPadding) then
-				--nodeHeight = nodeHeight + cellPadding * 2;
-				nodeHeight = nodeHeight + cellPadding;
-			end
-		end	
-		local height = self.pagesize * self.pagecount * nodeHeight;
-		self.treeview:setRealSize(nil, height);
-	end
 	local ScrollToEnd = self:GetBool("ScrollToEnd");
 	if(ScrollToEnd) then
 		self.treeview:ScrollToEnd();
