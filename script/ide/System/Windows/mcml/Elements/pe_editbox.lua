@@ -32,6 +32,9 @@ function pe_editbox:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	_this:SetEmptyText(self:GetAttributeWithCode("EmptyText", nil, true));
 	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
 
+	local type = self:GetAttributeWithCode("type", nil, true);
+	_this:setEncryptd(type == "password");
+
 	_this:Connect("textChanged", self, self.OnTextChanged)
 end
 
