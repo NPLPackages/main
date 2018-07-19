@@ -36,7 +36,7 @@ EditBox:Property({"m_cursorWidth", 2,})
 EditBox:Property({"m_maxLength", 65535, "getMaxLength", "setMaxLength", auto=true})
 EditBox:Property({"m_readOnly", false, "isReadOnly", "setReadOnly"})
 EditBox:Property({"m_blinkPeriod", 0, "getCursorBlinkPeriod", "setCursorBlinkPeriod"})
-EditBox:Property({"m_encryptd", false, "isEncryptd", "setEncryptd", auto=true})
+EditBox:Property({"m_encrypted", false, "isEncrypted", "setEncrypted", auto=true})
 EditBox:Property({"Font", "System;14;norm", auto=true})
 EditBox:Property({"Scale", nil, "GetScale", "SetScale", auto=true})
 EditBox:Property({"horizontalMargin", 0});
@@ -113,7 +113,7 @@ function EditBox:internalSetText(txt, pos, edited)
 	self:resetInputContext();
 	local oldText = self.m_text;
 	self.m_text:SetText(UniString.left(txt, self.m_maxLength));
-	self:UpdateEncrypteText();
+	self:UpdateEncryptedText();
 
 	self.m_history:clear();
 	self.m_modifiedState = 0;
@@ -253,7 +253,7 @@ function EditBox:removeSelectedText()
 			end
         end
 		self.m_text:remove(self.m_selstart+1, self.m_selend - self.m_selstart);
-		self:UpdateEncrypteText();
+		self:UpdateEncryptedText();
         
         if (self.m_cursor > self.m_selstart) then
             self.m_cursor = self.m_cursor - (math.min(self.m_cursor, self.m_selend) - self.m_selstart);
@@ -284,7 +284,7 @@ function EditBox:internalInsert(s)
     if (remaining > 0) then
 		s = s:left(remaining);
         self.m_text:insert(self.m_cursor, s);
-		self:UpdateEncrypteText();
+		self:UpdateEncryptedText();
         for i = 1, s:length() do
             self:addCommand(Command:new():init("Insert", self.m_cursor, s[i], -1, -1));
 			self.m_cursor = self.m_cursor + 1;
@@ -303,7 +303,7 @@ function EditBox:internalDelete(wasBackspace)
         self:addCommand(Command:new():init(if_else(wasBackspace, "Remove", "Delete"),
                    self.m_cursor, self.m_text[self.m_cursor+1], -1, -1));
 		self.m_text:remove(self.m_cursor+1, 1);
-		self:UpdateEncrypteText();
+		self:UpdateEncryptedText();
         self.m_textDirty = true;
     end
 end
@@ -421,7 +421,7 @@ function EditBox:focusOutEvent(event)
 end
 
 function EditBox:GetPasswordText()
-	if(self:isEncryptd()) then	
+	if(self:isEncrypted()) then	
 		return self.m_encryptedText:GetText();
 	end
 	return self:GetText();
@@ -481,7 +481,7 @@ function EditBox:paintEvent(painter)
 	if (self:hasSelectedText()) then
 		-- render selection
 		local sel_from_x = 0;
-		local uniText = if_else(self:isEncryptd(), self.m_encryptedText, self.m_text);
+		local uniText = if_else(self:isEncrypted(), self.m_encryptedText, self.m_text);
 		local beforeSelectText = uniText:sub(1, self.m_selstart);
 		if(not beforeSelectText:empty()) then
 			local textWidth = beforeSelectText:GetWidth(self:GetFont());
@@ -529,8 +529,8 @@ function EditBox:paintEvent(painter)
 	end
 end
 
-function EditBox:UpdateEncrypteText()
-	if(self:isEncryptd()) then
+function EditBox:UpdateEncryptedText()
+	if(self:isEncrypted()) then
 		local text = string.rep("*",string.len(self:GetText()))
 		self.m_encryptedText:SetText(text);
 	end
@@ -548,14 +548,14 @@ function EditBox:adjustedContentsRect()
 end
 
 function EditBox:cursorToX()
-	local uniText = if_else(self:isEncryptd(), self.m_encryptedText, self.m_text);
+	local uniText = if_else(self:isEncrypted(), self.m_encryptedText, self.m_text);
 	return uniText:cursorToX(self.m_cursor, self:GetFont());
 end
 
 function EditBox:xToPos(x, betweenOrOn)
     local cr = self:adjustedContentsRect();
     x = x - cr:x() - self.hscroll + self.horizontalMargin;
-	local uniText = if_else(self:isEncryptd(), self.m_encryptedText, self.m_text);
+	local uniText = if_else(self:isEncrypted(), self.m_encryptedText, self.m_text);
     return uniText:xToCursor(x, betweenOrOn, self:GetFont());
 end
 
@@ -671,7 +671,7 @@ function EditBox:internalUndo(untilPos)
 
 		if(cmd.type == "Insert") then
             self.m_text:remove(cmd.pos+1, 1);
-			self:UpdateEncrypteText();
+			self:UpdateEncryptedText();
             self.m_cursor = cmd.pos;
 		elseif(cmd.type == "SetSelection") then
             self.m_selstart = cmd.selStart;
@@ -679,11 +679,11 @@ function EditBox:internalUndo(untilPos)
             self.m_cursor = cmd.pos;
 		elseif(cmd.type == "Remove" or cmd.type == "RemoveSelection") then
             self.m_text:insert(cmd.pos+1, cmd.uc);
-			self:UpdateEncrypteText();
+			self:UpdateEncryptedText();
             self.m_cursor = cmd.pos + 1;
 		elseif(cmd.type == "Delete" or cmd.type == "DeleteSelection") then
             self.m_text:insert(cmd.pos+1, cmd.uc);
-			self:UpdateEncrypteText();
+			self:UpdateEncryptedText();
             self.m_cursor = cmd.pos;
 		end
 		if(cmd.type ~= "Separator") then
@@ -711,7 +711,7 @@ function EditBox:internalRedo()
 		self.m_undoState = self.m_undoState + 1;
         if(cmd.type == "Insert") then
             self.m_text:insert(cmd.pos+1, cmd.uc);
-			self:UpdateEncrypteText();
+			self:UpdateEncryptedText();
             self.m_cursor = cmd.pos + 1;
 		elseif(cmd.type == "SetSelection") then
             self.m_selstart = cmd.selStart;
@@ -719,7 +719,7 @@ function EditBox:internalRedo()
             self.m_cursor = cmd.pos;
 		elseif(cmd.type == "Remove" or cmd.type == "Delete" or cmd.type == "RemoveSelection" or cmd.type == "DeleteSelection") then
             self.m_text:remove(cmd.pos+1, 1);
-			self:UpdateEncrypteText();
+			self:UpdateEncryptedText();
             self.m_selstart = cmd.selStart;
             self.m_selend = cmd.selEnd;
             self.m_cursor = cmd.pos;
