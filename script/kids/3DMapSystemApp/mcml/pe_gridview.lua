@@ -442,7 +442,7 @@ function pe_gridview.DataBind(mcmlNode, pageInstName, bDoNotRefreshUI)
 	end	
 	local pagesize = tonumber(mcmlNode:GetAttributeWithCode("pagesize"));
 	local AllowPaging = mcmlNode:GetBool("AllowPaging");
-	local ItemsPerLine = tonumber(mcmlNode:GetAttributeWithCode("ItemsPerLine") or 1);
+	local ItemsPerLine = tonumber(mcmlNode:GetAttributeWithCode("ItemsPerLine", 1, true));
 
 	local ScrollToEnd = mcmlNode:GetBool("ScrollToEnd");
 	

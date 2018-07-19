@@ -153,7 +153,6 @@ function SceneContext:FetchPickingResult()
 	if(self.manipulators) then
 		for i, manip in pairs(self.manipulators) do
 			if(manip.EnablePicking) then
-				-- TODO: only set dirty when camera has moved. 
 				OverlayPicking:SetResultDirty(true);
 				OverlayPicking:Pick(nil, nil, self.pickingPointSize, self.pickingPointSize)
 				self:SetPickingName(OverlayPicking:GetActivePickingName());
