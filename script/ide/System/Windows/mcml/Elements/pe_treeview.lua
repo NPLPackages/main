@@ -343,6 +343,18 @@ function pe_treeview:scrollToChild(index)
 	end	
 end
 
+function pe_treeview:OnBeforeChildLayout(layout)
+	if(#self == 0) then
+		local myLayout = layout:new();
+		local css = self:GetStyle();
+		local width, height = layout:GetPreferredSize();
+		local padding_left, padding_top = css:padding_left(),css:padding_top();
+		myLayout:reset(padding_left,padding_top,width+padding_left, height+padding_top);
+		self.myLayout = myLayout;
+	end
+	return pe_treeview._super.OnBeforeChildLayout(self, layout);
+end
+
 function pe_treeview:UpdateChildLayout(layout)
 	if(not self.myLayout) then
 		self.myLayout = layout:clone();
