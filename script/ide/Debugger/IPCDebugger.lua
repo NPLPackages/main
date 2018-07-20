@@ -1185,7 +1185,7 @@ local function debugger_loop(ev, vars, file, line, idx_watch, stack_info)
 			setfenv(func, eval_env)
 			local res = {pcall(func)}
 			if res[1] then
-				if res[2] then
+				if res[2]~=nil then
 					table.remove(res,1)
 					for _,v in ipairs(res) do
 						-- max view variable length
