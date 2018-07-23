@@ -50,6 +50,8 @@ function pe_select:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	end
 	
 	_this:Connect("onselect", self, self.OnSelect, "UniqueConnection")
+
+	pe_select._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
 end
 
 function pe_select:DataBind()

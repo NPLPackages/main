@@ -15,6 +15,10 @@ local MultiLineEditbox = commonlib.gettable("System.Windows.Controls.MultiLineEd
 local pe_textarea = commonlib.inherit(commonlib.gettable("System.Windows.mcml.PageElement"), commonlib.gettable("System.Windows.mcml.Elements.pe_textarea"));
 pe_textarea:Property({"class_name", "pe:textarea"});
 
+function pe_textarea:ctor()
+	self:SetTabIndex(0);
+end
+
 function pe_textarea:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	css.float = css.float or true;
 
@@ -46,6 +50,8 @@ function pe_textarea:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 
 	_this:ApplyCss(css);
 	_this:setReadOnly(self:GetBool("ReadOnly",false));
+
+	pe_textarea._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
 end
 
 function pe_textarea:OnAfterChildLayout(layout, left, top, right, bottom)
@@ -79,4 +85,22 @@ function pe_textarea:SetValue(value)
 	if(self.control) then
 		return self.control:SetText(value);
 	end
+end
+
+function pe_textarea:SetFocus()
+	if(self.control and self.control.viewport) then
+		self.control.viewport:setFocus("TabFocusReason");
+	end
+end
+
+function pe_textarea:TabLostFocus()
+	local value = self:GetAttributeWithCode("TabLostFocus", true, true);
+	if(type(value) == "string") then
+		if(value == "true") then
+			value = true;
+		elseif(value == "false") then
+			value = false;
+		end
+	end
+	return value;
 end

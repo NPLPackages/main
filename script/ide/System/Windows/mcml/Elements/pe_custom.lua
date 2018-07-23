@@ -44,6 +44,8 @@ function pe_custom:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 			_this:ApplyCss(self:GetStyle());
 		end
 	end
+
+	pe_custom._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
 end
 
 function pe_custom:OnLoadComponentAfterChild(parentElem, parentLayout, css)

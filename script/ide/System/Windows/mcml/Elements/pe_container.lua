@@ -35,6 +35,7 @@ function pe_container:LoadComponent(parentElem, parentLayout, style)
 end
 
 function pe_container:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
+	pe_container._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
 end
 
 function pe_container:OnLoadComponentAfterChild(parentElem, parentLayout, css)

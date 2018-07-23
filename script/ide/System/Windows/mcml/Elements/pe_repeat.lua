@@ -81,4 +81,5 @@ function pe_repeat:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 			self:AddChild(child);
 		end
 	end
+	pe_repeat._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
 end

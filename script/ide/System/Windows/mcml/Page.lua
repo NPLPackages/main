@@ -67,6 +67,9 @@ end
 function Page:ctor()
 	-- this will prevent recursive calls to self:Refresh(), which makes self:Refresh(0) pretty safe. 
 	self.refresh_depth = 0;
+	self.hotkeyNodes = {};
+	self.tabIndexNodes = {};
+	self.currentTabNode = nil;
 end
 
 -- Init control with a MCML treenode or page url. If a local version is found, it will be used regardless of whether it is expired or not. 
@@ -799,4 +802,98 @@ function Page:Detach()
 		end
 		self.layout = nil;
 	end
+end
+
+
+function Page:AddHotkeyNode(node, hotkey, func)
+	if(not func) then
+		func = node.OnClick;
+	end
+	self.hotkeyNodes[hotkey] = {node = node, func = func};
+end
+
+function Page:RemoveHotkeyNode(node, hotkey)
+	local hotkeyNode = self.hotkeyNodes[hotkey];
+	if(hotkeyNode and hotkeyNode.node == node) then
+		self.hotkeyNodes[hotkey] = nil;
+	end
+end
+
+function Page:HandlHotkeyEvent(hotkey)
+	local hotkeyNode = self.hotkeyNodes[hotkey];
+	if(hotkeyNode and hotkeyNode.func) then
+		hotkeyNode.func(hotkeyNode.node);
+		return true;
+	end
+	return false;
+end
+
+function Page:AddTabIndexNode(index, node)
+	local insert_pos;
+	for pos, node in ipairs(self.tabIndexNodes) do
+		local node_index = node:TabIndex();
+		if(index < node_index) then
+			insert_pos = pos;
+		end
+	end
+	if(insert_pos) then
+		table.insert(self.tabIndexNodes, insert_pos, node);
+	else
+		table.insert(self.tabIndexNodes, node);
+	end
+end
+
+function Page:FocusNode()
+	return self.currentTabNode;
+end
+
+function Page:SetFocusNode(node)
+	self.currentTabNode = node;
+end
+
+function Page:NextTabNode()
+	if(not self.currentTabNode and #self.tabIndexNodes ~= 0) then
+		return self.tabIndexNodes[1];
+	end
+
+	if(not self.currentTabNode) then
+		return self.mcmlNode:NextTabNode();
+	end
+
+	local size = #self.tabIndexNodes;
+	if(self.currentTabNode:TabIndex() ~= 0) then
+		-- self.currentTabNode isn't the last node in self.tabIndexNodes;
+		for i = 1, size do
+			local node = self.tabIndexNodes[i];
+			if(self.currentTabNode == node) then
+				if(i < size) then
+					return self.tabIndexNodes[i + 1];
+				else
+					return self.mcmlNode:NextTabNode();
+				end
+			end
+		end
+	end
+
+	return self.currentTabNode:NextTabNode()
+end
+
+function Page:HandlKeyPressEvent(key)
+	if(self:HandlHotkeyEvent(key)) then
+		return true;
+	end
+
+	if(key == "DIK_TAB") then
+		if(self.currentTabNode and not self.currentTabNode:TabLostFocus()) then
+			return false;
+		end
+		self.currentTabNode = self:NextTabNode();
+		if(not self.currentTabNode) then
+			self.currentTabNode = self:NextTabNode();
+		end
+		self.currentTabNode:SetFocus();
+		return true;
+	end
+
+	return false;
 end

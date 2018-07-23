@@ -18,6 +18,7 @@ pe_radio:Property({"class_name", "pe:radio"});
 
 function pe_radio:ctor()
 	self.groupName = nil;
+	self:SetTabIndex(0);
 end
 
 function pe_radio:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
@@ -53,6 +54,8 @@ function pe_radio:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	self.groupName = self:GetAttribute("name") or "_defaultRadioGroup";
 	self.buttonName = self:GetAttributeWithCode("name",nil,true);
 	_this:Connect("clicked", self, self.OnClick, "UniqueConnection");
+
+	pe_radio._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
 end
 
 function pe_radio:OnClick()

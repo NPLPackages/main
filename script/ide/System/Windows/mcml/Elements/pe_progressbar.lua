@@ -44,6 +44,8 @@ function pe_progressbar:OnLoadComponentBeforeChild(parentElem, parentLayout, css
 	--local buttonName = self:GetAttributeWithCode("name"); -- touch name
 
 	_this:Connect("valueChanged", self, self.OnStep, "UniqueConnection")
+
+	pe_progressbar._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
 end
 
 function pe_progressbar:OnAfterChildLayout(layout, left, top, right, bottom)

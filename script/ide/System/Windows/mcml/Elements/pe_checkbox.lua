@@ -17,6 +17,7 @@ local pe_checkbox = commonlib.inherit(commonlib.gettable("System.Windows.mcml.Pa
 pe_checkbox:Property({"class_name", "pe:checkbox"});
 
 function pe_checkbox:ctor()
+	self:SetTabIndex(0);
 end
 
 function pe_checkbox:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
@@ -49,6 +50,8 @@ function pe_checkbox:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	end
 	self.buttonName = self:GetAttributeWithCode("name",nil,true);
 	_this:Connect("clicked", self, self.OnClick, "UniqueConnection");
+
+	pe_checkbox._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
 end
 
 function pe_checkbox:setChecked(checked)

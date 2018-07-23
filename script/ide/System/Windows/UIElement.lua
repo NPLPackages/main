@@ -565,7 +565,7 @@ function UIElement:drawWidget(painterContext, offset)
 	if (not self:updatesEnabled() or self:isHidden()) then
 		return;
 	end
-	if(self._page_element and self._page_element:isHidden()) then
+	if(self:PageElement() and self:PageElement():isHidden()) then
 		return;
 	end
 	-- update the "in paint event" flag
@@ -645,10 +645,16 @@ end
 
 -- virtual: 
 function UIElement:focusInEvent(event)
+	if(self:PageElement()) then
+		self:PageElement():FocusInEvent();
+	end
 end
 
 -- virtual: 
 function UIElement:focusOutEvent(event)
+	if(self:PageElement()) then
+		self:PageElement():FocusOutEvent();
+	end
 end
 
 -- @param p: 
@@ -1052,6 +1058,10 @@ function UIElement:toolTipEvent(event)
 	end
 end
 
+function UIElement:PageElement()
+	return self._page_element;
+end
+
 function UIElement:setPageElement(page_elem)
 	self._page_element = page_elem;
 end
@@ -1112,7 +1122,7 @@ function UIElement:ClipRegion()
 end
 
 function UIElement:PageElementClipRegion()
-	if(self._page_element and self._page_element:IsClip()) then
-		return self._page_element:ClipRegion();
+	if(self:PageElement() and self:PageElement():IsClip()) then
+		return self:PageElement():ClipRegion();
 	end
 end

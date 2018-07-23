@@ -131,6 +131,8 @@ function pe_treenode:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 --			end
 --		end
 --	end
+
+	pe_treenode._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
 end
 
 function pe_treenode:OnLoadComponentAfterChild(parentElem, parentLayout, css)

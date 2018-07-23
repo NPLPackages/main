@@ -15,6 +15,10 @@ local EditBox = commonlib.gettable("System.Windows.Controls.EditBox");
 local pe_editbox = commonlib.inherit(commonlib.gettable("System.Windows.mcml.PageElement"), commonlib.gettable("System.Windows.mcml.Elements.pe_editbox"));
 pe_editbox:Property({"class_name", "pe:editbox"});
 
+function pe_editbox:ctor()
+	self:SetTabIndex(0);
+end
+
 function pe_editbox:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	css.float = css.float or true;
 
@@ -36,6 +40,8 @@ function pe_editbox:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	_this:setEncrypted(type == "password");
 
 	_this:Connect("textChanged", self, self.OnTextChanged)
+
+	pe_editbox._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
 end
 
 

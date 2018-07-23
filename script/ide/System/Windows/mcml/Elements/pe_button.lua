@@ -15,11 +15,22 @@ local Button = commonlib.gettable("System.Windows.Controls.Button");
 local pe_button = commonlib.inherit(commonlib.gettable("System.Windows.mcml.PageElement"), commonlib.gettable("System.Windows.mcml.Elements.pe_button"));
 pe_button:Property({"class_name", "pe:button"});
 
+function pe_button:ctor()
+	self:SetTabIndex(0);
+end
+
 function pe_button:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	css.float = css.float or true;
 
 	local polygonStyle = self:GetAttributeWithCode("polygonStyle", nil, true);
 	local direction = self:GetAttributeWithCode("direction", nil, true);
+
+	local hotkey = self:GetAttributeWithCode("hotkey", nil, true);
+	if(hotkey) then
+		local page = self:GetPageCtrl();
+		page:AddHotkeyNode(self, hotkey);
+	end
+
 	local _this = self.control;
 	if(not _this) then
 		_this = Button:new():init(parentElem);
@@ -36,6 +47,8 @@ function pe_button:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	self.buttonName = self:GetAttributeWithCode("name",nil,true); -- touch name
 
 	_this:Connect("clicked", self, self.OnClick, "UniqueConnection")
+
+	pe_button._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
 end
 
 function pe_button:OnBeforeChildLayout(layout)

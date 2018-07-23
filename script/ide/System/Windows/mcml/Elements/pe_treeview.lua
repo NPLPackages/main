@@ -118,6 +118,8 @@ function pe_treeview:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 		-- instantiate child nodes from data source 
 		self:DataBind(false);
 	end
+
+	pe_treeview._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
 end
 
 function pe_treeview:OnLoadComponentAfterChild(parentElem, parentLayout, css)

@@ -45,6 +45,8 @@ function pe_sliderbar:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	--local buttonName = self:GetAttributeWithCode("name"); -- touch name
 
 	_this:Connect("valueChanged", self, self.OnChange, "UniqueConnection")
+
+	pe_sliderbar._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
 end
 
 function pe_sliderbar:OnAfterChildLayout(layout, left, top, right, bottom)

@@ -31,6 +31,8 @@ function pe_label:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	_this:ApplyCss(css);
 	_this:SetText(tostring(self:GetAttributeWithCode("value", nil, true)));
 	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
+
+	pe_label._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
 end
 
 -- get value: it is usually one of the editor tag, such as <input>

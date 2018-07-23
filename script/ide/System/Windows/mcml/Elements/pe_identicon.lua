@@ -26,6 +26,8 @@ function pe_identicon:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	end
 	_this:ApplyCss(css);
 	_this:SetText(self:GetAttributeWithCode("value", nil, true));
+
+	pe_identicon._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
 end
 
 function pe_identicon:OnAfterChildLayout(layout, left, top, right, bottom)

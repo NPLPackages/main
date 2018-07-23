@@ -411,6 +411,7 @@ function EditBox:focusInEvent(event)
 	-- Application:inputMethod():show();
 	self:setCursorVisible(true);
 	self:setCursorBlinkPeriod(Application:cursorFlashTime());
+	EditBox._super.focusInEvent(self, event)
 end
 
 -- virtual: 
@@ -418,6 +419,8 @@ function EditBox:focusOutEvent(event)
 	-- Application:inputMethod():hide();
 	self:setCursorVisible(false);
 	self:setCursorBlinkPeriod(0);
+
+	EditBox._super.focusOutEvent(self, event)
 end
 
 function EditBox:GetPasswordText()

@@ -96,6 +96,8 @@ function pe_gridview:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	end
 
 	self:CreatePagerNode();
+
+	pe_gridview._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
 end
 
 function pe_gridview:OnLoadComponentAfterChild(parentElem, parentLayout, css)

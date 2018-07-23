@@ -159,11 +159,17 @@ function TextControl:setReadOnly(bReadOnly)
 	end
 end
 
+function TextControl:PageElement()
+	return self.parent:PageElement();
+end
+
 -- virtual: 
 function TextControl:focusInEvent(event)
 	-- Application:inputMethod():show();
 	self:setCursorVisible(true);
 	self:setCursorBlinkPeriod(Application:cursorFlashTime());
+
+	TextControl._super.focusInEvent(self, event)
 end
 
 -- virtual: 
@@ -171,6 +177,8 @@ function TextControl:focusOutEvent(event)
 	-- Application:inputMethod():hide();
 	self:setCursorVisible(false);
 	self:setCursorBlinkPeriod(0);
+
+	TextControl._super.focusOutEvent(self, event)
 end
 
 function TextControl:setCursorVisible(visible)

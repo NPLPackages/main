@@ -160,6 +160,8 @@ function pe_div:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 --			_this:SetBackgroundColor();
 --		end
 --	end
+
+	pe_div._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)	
 end
 
 function pe_div:OnBeforeChildLayout(layout)

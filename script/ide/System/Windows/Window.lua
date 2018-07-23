@@ -39,6 +39,7 @@ local Application = commonlib.gettable("System.Windows.Application");
 local UIElement = commonlib.gettable("System.Windows.UIElement");
 local KeyEvent = commonlib.gettable("System.Windows.KeyEvent");
 local MouseEvent = commonlib.gettable("System.Windows.MouseEvent");
+local FocusPolicy = commonlib.gettable("System.Core.Namespace.FocusPolicy");
 local Window = commonlib.inherit(commonlib.gettable("System.Windows.UIElement"), commonlib.gettable("System.Windows.Window"));
 
 Window:Property("Name", "Window");
@@ -50,6 +51,7 @@ Window:Signal("urlChanged", function(url) end)
 function Window:ctor()
 	self.window = self;
 	self:setAttribute("WA_AlwaysShowToolTips", true);
+	self:setFocusPolicy(FocusPolicy.TabFocus);
 end
 
 -- show and bind to a new ParaUI control object to receive events from. 
@@ -236,7 +238,13 @@ function Window:create_sys(native_window, initializeWindow, destroyOldWindow)
 	end);
 	_this:SetScript("onkeydown", function()
 		local event = KeyEvent:init("keyPressEvent")
-		Application:sendEvent(self:focusWidget(), event);
+		
+		self:HandlePagePressKeyEvent(event);
+
+		if(not event:isAccepted()) then
+			Application:sendEvent(self:focusWidget(), event);
+		end
+
 		if(not event:isAccepted()) then
 			local context = SceneContextManager:GetCurrentContext();
 			context:handleKeyEvent(event);
@@ -560,4 +568,19 @@ end
 
 function Window:isEnabled()
 	return self.enabled;
+end
+
+function Window:Page()
+	if(self.layout) then
+		return self.layout:GetPage();
+	end
+end
+
+function Window:HandlePagePressKeyEvent(event)
+	local page = self:Page();
+	if(page) then
+		if(page:HandlKeyPressEvent(event:KeyName())) then
+			event:accept();
+		end
+	end
 end

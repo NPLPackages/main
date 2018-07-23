@@ -114,5 +114,9 @@ function KeyEvent:IsFunctionKey()
 	return function_key_map[self.keyname];
 end
 
+function KeyEvent:KeyName()
+	return self.keyname;
+end
+
 
 
