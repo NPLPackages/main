@@ -94,13 +94,22 @@ function pe_textarea:SetFocus()
 end
 
 function pe_textarea:TabLostFocus()
-	local value = self:GetAttributeWithCode("TabLostFocus", true, true);
-	if(type(value) == "string") then
-		if(value == "true") then
-			value = true;
-		elseif(value == "false") then
-			value = false;
+	local tabLostFocus = nil;
+	local showLineNumber = self:GetBool("ShowLineNumber",false);
+	local language = self:GetAttributeWithCode("language", nil, true);
+	if(showLineNumber or language) then
+		tabLostFocus = false;
+	end
+
+	if(tabLostFocus == nil) then
+		tabLostFocus = self:GetAttributeWithCode("TabLostFocus", true, true);
+	end
+	if(type(tabLostFocus) == "string") then
+		if(tabLostFocus == "true") then
+			tabLostFocus = true;
+		elseif(tabLostFocus == "false") then
+			tabLostFocus = false;
 		end
 	end
-	return value;
+	return tabLostFocus;
 end
