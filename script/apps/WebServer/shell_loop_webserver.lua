@@ -37,7 +37,7 @@ local function activate()
 		
 		LOG.std(nil, "system", "WebServer", "Web Server started")
 
-		InitUIConsole();
+		--InitUIConsole();
 
 		-- start the server
 		local config_file = ParaEngine.GetAppCommandLineByParam("config", "");
