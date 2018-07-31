@@ -83,6 +83,7 @@ UIElement:Property({"mouseTracking", nil, "hasMouseTracking", "setMouseTracking"
 UIElement:Property({"render_priority", 0, auto=true});
 
 UIElement:Property({"clip", false, "IsClip", "SetClip", auto=true});
+UIElement:Property({"InputMethodEnabled", true, "IsInputMethodEnabled", "SetInputMethodEnabled", auto=true});
 
 -- number of posted events
 UIElement.postedEvents = 0;
@@ -127,17 +128,8 @@ end
 function UIElement:ApplyCss(css)
 	if(css["background-color"]) then
 		self:SetBackgroundColor(css["background-color"]);
---		if(not css.background) then
---			self:SetBackground("Texture/whitedot.png");
---		end
 	end	
 	if(css.background) then
-		local bkcolor = self:GetBackgroundColor();
-		if(bkcolor and string.match(bkcolor,"#%x%x%x%x%x%x00")) then
-			-- if background color alpha is 0(0 - 1),then set background color white("#ffffff")
-			-- 如果背景色为全透明，那么设置背景色为白色（#ffffff）
-			self:SetBackgroundColor("#ffffff");
-		end
 		self:SetBackground(css.background);
 	end
 end
@@ -1126,3 +1118,16 @@ function UIElement:PageElementClipRegion()
 		return self:PageElement():ClipRegion();
 	end
 end
+
+function UIElement:IsInputMethodEnabled()
+	return self.InputMethodEnabled;
+end
+
+function UIElement:SetInputMethodEnabled(enabled)
+	self.InputMethodEnabled = enabled;
+	local window = self:GetWindow()
+	if(window and window~=self) then
+		window:SetInputMethodEnabled(enabled)
+	end
+end
+

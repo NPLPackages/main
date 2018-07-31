@@ -46,6 +46,8 @@ Window:Property("Name", "Window");
 Window:Property({"AutoClearBackground", true, nil, "SetAutoClearBackground"});
 Window:Property({"CanDrag", false, auto=true});
 Window:Property({"Alignment", "_lt", auto=true});
+Window:Property({"InputMethodEnabled", true, "IsInputMethodEnabled", "SetInputMethodEnabled", auto=true});
+
 Window:Signal("urlChanged", function(url) end)
 
 function Window:ctor()
@@ -421,9 +423,16 @@ function Window:SetFocus_sys()
 			-- enable key focus only once
 			self.CanHaveFocus = true;
 			self.native_ui_obj:SetField("CanHaveFocus", self.CanHaveFocus); 
-			self.native_ui_obj:SetField("InputMethodEnabled", self.CanHaveFocus); 
+			self.native_ui_obj:SetField("InputMethodEnabled", self.CanHaveFocus and self:IsInputMethodEnabled()); 
 		end
 		self.native_ui_obj:Focus();
+	end
+end
+
+function Window:SetInputMethodEnabled(bEnabled)
+	self.InputMethodEnabled = bEnabled;
+	if(self.native_ui_obj) then
+		self.native_ui_obj:SetField("InputMethodEnabled", bEnabled==true); 
 	end
 end
 

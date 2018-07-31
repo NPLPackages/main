@@ -84,6 +84,7 @@ if it is "_mcmlblank", it will be opened in a new popup mcml window.
 | css.lineheight | line height for multiline text. |
 | spacing	| for text or button control.  |
 | UseSystemControl | true to use advanced multiple line edit box in new system control |
+| InputMethodEnabled | only valid when UseSystemControl is true. default to true |
 use the lib:
 -------------------------------------------------------
 NPL.load("(gl)script/kids/3DMapSystemApp/mcml/pe_editor.lua");
@@ -1322,6 +1323,7 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 			bUseSystemControl = mcmlNode:GetBool("UseSystemControl"),
 			language = mcmlNode:GetAttributeWithCode("language", nil),
 			AlwaysShowCurLineBackground = mcmlNode:GetBool("AlwaysShowCurLineBackground", true),
+			InputMethodEnabled = mcmlNode:GetBool("InputMethodEnabled", true),
 		};
 		local onkeyup = mcmlNode:GetString("onkeyup");
 		if(onkeyup)then

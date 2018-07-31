@@ -79,6 +79,7 @@ local MultiLineEditbox = commonlib.inherit(commonlib.gettable("CommonCtrl.TreeVi
 	-- whether to use the new advanced system control. This is recommended for multiline editing experience. 
 	bUseSystemControl = false,
 	AlwaysShowCurLineBackground = true,
+	InputMethodEnabled = true,
 }))
 
 -- NPL syntax highlighting rules
@@ -153,6 +154,9 @@ function MultiLineEditbox:Show(bShow)
 			end
 			if(self.ReadOnly) then
 				self.ctrlEditbox:setReadOnly(true);
+			end
+			if(not self.InputMethodEnabled) then
+				self.ctrlEditbox:SetInputMethodEnabled(false);
 			end
 			self.window:Connect("SizeChanged", nil, function()
 				self.ctrlEditbox:setGeometry(0, 0, self.window:width(), self.window:height());	

@@ -45,6 +45,7 @@ TextControl:Property({"AutoTabToSpaces", true, "IsAutoTabToSpaces", "SetAutoTabT
 TextControl:Property({"EmptyText", nil, "GetEmptyText", "SetEmptyText", auto=true})
 TextControl:Property({"language", nil, "Language", "SetLanguage", auto=true})
 
+
 --TextControl:Signal("SizeChanged",function(width,height) end);
 --TextControl:Signal("PositionChanged");
 
@@ -1816,4 +1817,3 @@ function TextControl:paintEvent(painter)
 		end
 	end
 end
-
