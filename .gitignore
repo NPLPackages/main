@@ -8,6 +8,7 @@
 !/LICENSE
 !/script/
 /script/*
+!/script/config.lua
 !/script/ide
 !/script/test
 script/ide/ObjectOriented/
