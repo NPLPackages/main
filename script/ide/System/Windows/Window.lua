@@ -262,6 +262,12 @@ function Window:create_sys(native_window, initializeWindow, destroyOldWindow)
 		local isActive = (param1 and param1>0);
 		self:handleActivateEvent(isActive);
 	end);
+	_this:SetScript("onfocusin", function()
+		self:handleActivateEvent(true);
+	end);
+	_this:SetScript("onfocusout", function()
+		self:handleActivateEvent(false);
+	end);
 	_this:SetScript("ondestroy", function()
 		self:handleDestroy_sys();
 	end);

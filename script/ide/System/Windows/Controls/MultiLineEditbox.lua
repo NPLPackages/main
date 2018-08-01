@@ -19,6 +19,8 @@ NPL.load("(gl)script/ide/System/Windows/Controls/Primitives/ScrollAreaBase.lua")
 NPL.load("(gl)script/ide/System/Windows/Controls/ScrollBar.lua");
 NPL.load("(gl)script/ide/math/Point.lua");
 NPL.load("(gl)script/ide/System/Windows/Controls/TextControl.lua");
+NPL.load("(gl)script/ide/System/Windows/Controls/Button.lua");
+local Button = commonlib.gettable("System.Windows.Controls.Button");
 local TextControl = commonlib.gettable("System.Windows.Controls.TextControl");
 local Point = commonlib.gettable("mathlib.Point");
 local Rect = commonlib.gettable("mathlib.Rect");
@@ -62,6 +64,8 @@ MultiLineEditbox:Property({"m_readOnly", false, "isReadOnly", "setReadOnly"})
 --MultiLineEditbox:Property({"rows", nil, "GetRows", "SetRows"})
 MultiLineEditbox:Property({"lineWrap", nil, "GetLineWrap", "SetLineWrap", auto=true})
 MultiLineEditbox:Property({"ItemHeight",20, auto=true, "GetItemHeight", "SetItemHeight"})
+-- if nil, its value depends on whether self.InputMethodEnabled is true.
+MultiLineEditbox:Property({"isAlwaysShowIMEButton", nil})
 
 --MultiLineEditbox:Property({"vSliderWidth", 20, auto=true});
 --MultiLineEditbox:Property({"hSliderHeight", 20, auto=true});
@@ -83,6 +87,51 @@ function MultiLineEditbox:ctor()
 --	self:setAttribute("WA_InputMethodEnabled");
 --	self:setMouseTracking(true);
 	self.clip = self.showLineNumber;
+end
+
+function MultiLineEditbox:init(parent)
+	MultiLineEditbox._super.init(self, parent);
+	return self;
+end
+
+function MultiLineEditbox:ShowIMEButton(bShow)
+	if(bShow) then
+		if(not self.imeButton) then
+			self.imeButton = Button:new():init(self);
+			self.imeButton:setRect(self.leftTextMargin,self.topTextMargin,16,16);
+			self.imeButton:SetBackground("Texture/whitedot.png");
+			self.imeButton:SetTooltip(L"切换是否使用输入法");
+			self.imeButton:Connect("clicked", self, self.OnClickToggleIME);
+			self:UpdateIMEButton();
+		end
+		if(self.isAlwaysShowIMEButton == nil) then
+			self.isAlwaysShowIMEButton = true;
+		end
+		self.imeButton:show();
+	else
+		if(self.imeButton) then
+			self.imeButton:hide();
+		end
+	end
+end
+
+function MultiLineEditbox:OnClickToggleIME()
+	self:SetInputMethodEnabled(not self:IsInputMethodEnabled());
+	self:UpdateIMEButton();
+end
+
+function MultiLineEditbox:UpdateIMEButton()
+	if(self.imeButton) then
+		if(self:IsInputMethodEnabled()) then
+			self.imeButton:SetText(L"On");
+			self.imeButton:SetBackgroundColor("#33333360");
+			self.imeButton:SetColor("#ffffff60");
+		else
+			self.imeButton:SetText(L"En");
+			self.imeButton:SetBackgroundColor("#3333ff60");
+			self.imeButton:SetColor("#ffffff60");
+		end
+	end
 end
 
 function MultiLineEditbox:initViewport()
@@ -424,11 +473,21 @@ function MultiLineEditbox:paintEvent(painter)
 		painter:DrawRectTexture(self:x(), self:y() + self.topTextMargin, self:LineNumberWidth(), self:height()- self.topTextMargin - self.bottomTextMargin, self:GetLineNumberBackground());
 
 		local lineHeight = self.viewport:GetLineHeight();
+
+		local bShowIME;
 		if(self.viewport and self.viewport.cursorVisible and self.viewport:hasFocus() and not self.viewport:isReadOnly()) then
 			-- draw the cursor line bg
 			painter:SetPen(self.viewport:GetCurLineBackgroundColor());
 			painter:DrawRect(self:x(), self:y() + self.topTextMargin + lineHeight * (self.viewport.cursorLine-self.viewport.from_line), self:LineNumberWidth(), lineHeight);
+
+			-- draw input method tip
+			if(self:GetWindow() and not self:GetWindow():IsInputMethodEnabled()) then
+				bShowIME = true;
+			else
+				bShowIME = self.isAlwaysShowIMEButton;
+			end
 		end
+		self:ShowIMEButton(bShowIME);
 
 		painter:SetPen(self:GetLineNumberColor());
 		painter:SetFont(self:GetFont());

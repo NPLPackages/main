@@ -1323,7 +1323,7 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 			bUseSystemControl = mcmlNode:GetBool("UseSystemControl"),
 			language = mcmlNode:GetAttributeWithCode("language", nil),
 			AlwaysShowCurLineBackground = mcmlNode:GetBool("AlwaysShowCurLineBackground", true),
-			InputMethodEnabled = mcmlNode:GetBool("InputMethodEnabled", true),
+			InputMethodEnabled = mcmlNode:GetBool("enable_ime", true),
 		};
 		local onkeyup = mcmlNode:GetString("onkeyup");
 		if(onkeyup)then
