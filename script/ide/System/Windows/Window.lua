@@ -266,7 +266,9 @@ function Window:create_sys(native_window, initializeWindow, destroyOldWindow)
 		self:handleActivateEvent(true);
 	end);
 	_this:SetScript("onfocusout", function()
-		self:handleActivateEvent(false);
+		if(self:focusWidget() and self:focusWidget():hasFocus()) then
+			self:handleActivateEvent(false);
+		end
 	end);
 	_this:SetScript("ondestroy", function()
 		self:handleDestroy_sys();
