@@ -100,7 +100,7 @@ function MultiLineEditbox:ShowIMEButton(bShow)
 			self.imeButton = Button:new():init(self);
 			self.imeButton:setRect(self.leftTextMargin,self.topTextMargin,16,16);
 			self.imeButton:SetBackground("Texture/whitedot.png");
-			self.imeButton:SetTooltip(L"切换是否使用输入法");
+			self.imeButton:SetTooltip("If English Only");
 			self.imeButton:Connect("clicked", self, self.OnClickToggleIME);
 			self:UpdateIMEButton();
 		end
