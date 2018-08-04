@@ -208,6 +208,7 @@ function AssetPreloader:Start()
 		for _,asset in pairs(loader.assets) do
 			if(not asset:IsLoaded()) then
 				if(asset:IsValid()) then
+					asset:LoadAsset();
 					assets[#assets + 1] = asset;
 				else
 					LOG.std(nil, "error", "AssetPreloader", "asset %s is invalid. Either download failed or asset itself is corrupted", asset:GetKeyName());
