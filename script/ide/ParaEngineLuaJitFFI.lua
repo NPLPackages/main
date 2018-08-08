@@ -50,7 +50,7 @@ end
 
 local use_ffi = jit and jit.version 
 	-- skipping PARA_PLATFORM_IOS == 1, since iOS does not allow it right now.
-	and ParaEngine.GetAttributeObject():GetField("Platform", 0)~=1;
+	-- and ParaEngine.GetAttributeObject():GetField("Platform", 0)~=1;
 	-- ffi is slow when jit is not enabled, so disable it for now. 
 	-- not ParaEngine.GetAttributeObject():GetField("IsMobilePlatform", false);
 
