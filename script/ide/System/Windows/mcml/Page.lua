@@ -515,7 +515,7 @@ end
 function Page:SetUIValue(name, value)
 	local node = self:GetNode(name);
 	if(node) then
-		node:SetUIValue(self.name, value);
+		node:SetUIValue(value);
 	else
 		-- log("warning: mcml page item "..tostring(name).."not found in SetUIValue \n")	
 	end	
