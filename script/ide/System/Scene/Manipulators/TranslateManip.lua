@@ -32,6 +32,9 @@ TranslateManip:Property({"radius", 1});
 TranslateManip:Property({"showArrowHead", true});
 TranslateManip:Property({"showGrid", false, "IsShowGrid", "SetShowGrid", auto=true});
 TranslateManip:Property({"snapToGrid", false, "IsSnapToGrid", "SetSnapToGrid", auto=true});
+TranslateManip:Property({"showXPlane", false, "IsShowXPlane", "SetShowXPlane", auto=true});
+TranslateManip:Property({"showYPlane", false, "IsShowYPlane", "SetShowYPlane", auto=true});
+TranslateManip:Property({"showZPlane", false, "IsShowZPlane", "SetShowZPlane", auto=true});
 TranslateManip:Property({"gridSize", 0.1, "GetGridSize", "SetGridSize", auto=true});
 TranslateManip:Property({"gridOffset", {0,0,0}, "GetGridOffset", "SetGridOffset", auto=true});
 -- whether to update values during dragging
@@ -232,6 +235,8 @@ function TranslateManip:paintEvent(painter)
 
 	local isDrawingPickable = self:IsPickingPass();
 
+	self:paintPlanes(painter);
+
 	if(self.drag_offset) then
 		if(self:IsFixOrigin()) then
 			painter:TranslateMatrix(unpack(self:GetOrigin()));
@@ -338,4 +343,17 @@ function TranslateManip:paintEvent(painter)
 		self.names.z = z_name;
 	end
 end
+
+function TranslateManip:paintPlanes(painter)
+	if(self:IsPickingPass()) then
+		return
+	end
+	if(self:IsShowXPlane()) then
+	end
+	if(self:IsShowYPlane()) then
+	end
+	if(self:IsShowZPlane()) then
+	end
+end
+
 
