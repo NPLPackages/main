@@ -35,6 +35,8 @@ TranslateManip:Property({"snapToGrid", false, "IsSnapToGrid", "SetSnapToGrid", a
 TranslateManip:Property({"showXPlane", false, "IsShowXPlane", "SetShowXPlane", auto=true});
 TranslateManip:Property({"showYPlane", false, "IsShowYPlane", "SetShowYPlane", auto=true});
 TranslateManip:Property({"showZPlane", false, "IsShowZPlane", "SetShowZPlane", auto=true});
+TranslateManip:Property({"planeSize", 10, "GetPlaneSize", "SetPlaneSize", auto=true});
+
 TranslateManip:Property({"gridSize", 0.1, "GetGridSize", "SetGridSize", auto=true});
 TranslateManip:Property({"gridOffset", {0,0,0}, "GetGridOffset", "SetGridOffset", auto=true});
 -- whether to update values during dragging
@@ -235,7 +237,6 @@ function TranslateManip:paintEvent(painter)
 
 	local isDrawingPickable = self:IsPickingPass();
 
-	self:paintPlanes(painter);
 
 	if(self.drag_offset) then
 		if(self:IsFixOrigin()) then
@@ -287,6 +288,8 @@ function TranslateManip:paintEvent(painter)
 			end
 		end
 	end
+
+	self:paintPlanes(painter);
 
 	local x_name, y_name, z_name;
 	if(isDrawingPickable) then
@@ -344,15 +347,41 @@ function TranslateManip:paintEvent(painter)
 	end
 end
 
+
 function TranslateManip:paintPlanes(painter)
 	if(self:IsPickingPass()) then
 		return
 	end
-	if(self:IsShowXPlane()) then
-	end
-	if(self:IsShowYPlane()) then
-	end
-	if(self:IsShowZPlane()) then
+	if(self:IsShowXPlane() or self:IsShowYPlane() or self:IsShowZPlane()) then
+		local size = math.floor(self:GetPlaneSize() / 2);
+		painter:SetBrush(0x20ffffff);
+
+		if(self:IsShowXPlane()) then
+			ShapesDrawer.DrawAABB(painter, 0, -size, -size, 0, size, size, true);
+		end
+		if(self:IsShowYPlane()) then
+			ShapesDrawer.DrawAABB(painter, -size, 0, -size, size, 0, size, true);
+		end
+		if(self:IsShowZPlane()) then
+			ShapesDrawer.DrawAABB(painter, -size, -size, 0, size, size, 0, true);
+		end
+		
+		painter:SetBrush(0x20000000);
+
+		for i=-size, size do
+			if(self:IsShowXPlane()) then
+				ShapesDrawer.DrawLine(painter, 0, i, -size, 0, i, size)
+				ShapesDrawer.DrawLine(painter, 0, -size, i, 0, size, i)
+			end
+			if(self:IsShowYPlane()) then
+				ShapesDrawer.DrawLine(painter, i, 0, -size, i, 0, size)
+				ShapesDrawer.DrawLine(painter, -size, 0, i, size, 0, i)
+			end
+			if(self:IsShowZPlane()) then
+				ShapesDrawer.DrawLine(painter, i, -size, 0, i, size, 0)
+				ShapesDrawer.DrawLine(painter, -size, i, 0, size, i, 0)
+			end
+		end
 	end
 end
 
