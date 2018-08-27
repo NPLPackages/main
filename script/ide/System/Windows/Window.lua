@@ -249,7 +249,9 @@ function Window:create_sys(native_window, initializeWindow, destroyOldWindow)
 
 		if(not event:isAccepted()) then
 			local context = SceneContextManager:GetCurrentContext();
-			context:handleKeyEvent(event);
+			if(context) then
+				context:handleKeyEvent(event);
+			end
 		end
 	end);
 	_this:SetScript("onkeyup", function()
