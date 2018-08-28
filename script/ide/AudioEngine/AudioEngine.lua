@@ -3,27 +3,27 @@ Title: Audio Engine Extension
 Author(s): LiXizhi
 Date: 2010/6/28
 Desc: it wraps the low level Audio Engine API and provide an easy to use Audio architecture and XML based data persistency layer
-The audio engine uses a simple garbage collection routine to unload out of range and stopped audio sources. 
+The audio engine uses a simple garbage collection routine to unload out of range and stopped audio sources.
 
 ---++ Sound Bank File
-Sound bank file is an xml file that specify the default play back property of a given sound resource. 
+Sound bank file is an xml file that specify the default play back property of a given sound resource.
 For example, whether the sound is streamed, whether it will remain in memory after stopped, etc.
-They also gives shortcut name to sound resources and organize them in categories. 
+They also gives shortcut name to sound resources and organize them in categories.
 
-See SampleSoundBank.xml for example. 
+See SampleSoundBank.xml for example.
 
 ---++ Sound Instance File
 We can instantiate a large number of (2d, 3d) sound from a sound instance file. They usually represent all the sounds in the entire(or part of) the game world.
-One must call instance:Update() in order to simulate them properly. Inside the update function, 
-it will load and unload sound automatically from memory according to the listener position and sounce resource definitions in the sound bank file. 
+One must call instance:Update() in order to simulate them properly. Inside the update function,
+it will load and unload sound automatically from memory according to the listener position and sounce resource definitions in the sound bank file.
 
-See SampleSoundInstance.xml for example. 
+See SampleSoundInstance.xml for example.
 
 ---++ using low level API
-The low level API exposed by ParaAudio table does not automatically stop and unload audio sources for you. 
-If you keeps playing many 3d sounds without unloading them, it may consume lots of CPU time.  
-For dynamic sound that is generate by game events (such as casting of a magic in 3d, or clicking on a button), it is good to use the sound bank API to play audio files. 
-In that case, you can control which audio resource will be unloaded from memory after finished, and which will remain in memory. 
+The low level API exposed by ParaAudio table does not automatically stop and unload audio sources for you.
+If you keeps playing many 3d sounds without unloading them, it may consume lots of CPU time.
+For dynamic sound that is generate by game events (such as casting of a magic in 3d, or clicking on a button), it is good to use the sound bank API to play audio files.
+In that case, you can control which audio resource will be unloaded from memory after finished, and which will remain in memory.
 
 Use Lib:
 -------------------------------------------------------
@@ -49,7 +49,7 @@ audio_src:play3d(x,y,z, true)
 -- or programmatically create code driven audio resource
 local audio_src = AudioEngine.CreateGet("CodeDriven1")
 audio_src.file = "Audio/Example.wav"
-audio_src:play(); -- then play with default. 
+audio_src:play(); -- then play with default.
 -------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/XPath.lua");
@@ -65,7 +65,7 @@ local enable_log = true;
 -- audio engine
 ------------------------------
 
--- mapping from audio source name to audio source. 
+-- mapping from audio source name to audio source.
 local instance_map = {};
 
 -- active 2d or 3d sound sources are in this play list for garbage collection
@@ -75,14 +75,14 @@ local active_playcount = 0;
 -- we will perform garbage collection immediately if there are those many active sounds.
 local garbagecollect_threshold = 10;
 
--- last time that garbage collection is performed. 
+-- last time that garbage collection is performed.
 AudioEngine.lastGarbageCollectTick = 0;
 -- only force garbage collection every 10 seconds
 AudioEngine.garbagecollect_interval = 10000;
 AudioEngine.framemove_timer_interval = 200;
 
--- this function should be called when application start. It is OK 
--- internally it will start a timer to garbage collect unused active resources. 
+-- this function should be called when application start. It is OK
+-- internally it will start a timer to garbage collect unused active resources.
 function AudioEngine.Init()
 	AudioEngine.gc_timer = AudioEngine.gc_timer or commonlib.Timer:new({callbackFunc = function()
 		AudioEngine.GarbageCollect(false);
@@ -90,10 +90,10 @@ function AudioEngine.Init()
 	AudioEngine.gc_timer:Change(AudioEngine.garbagecollect_interval, AudioEngine.garbagecollect_interval);
 end
 
--- add to play list, and perform a garbage collection immediately afterwards. 
+-- add to play list, and perform a garbage collection immediately afterwards.
 -- @param source: an AudioSource table object
 function AudioEngine.AddToPlayList(source)
-	-- first do a auto garbage collect. 
+	-- first do a auto garbage collect.
 	AudioEngine.GarbageCollect();
 	source.last_play_tick = commonlib.TimerManager.GetCurrentTime();
 
@@ -124,14 +124,14 @@ function AudioEngine.StopAllSounds()
 	if(enable_log) then
 		LOG.std("", "debug", "audio", "remove all sounds");
 	end
-	
+
 	local name, audio_src
 	for name, audio_src in pairs(active_playlist) do
 		audio_src:stop();
 	end
 end
 
--- NOT USED: called at fixed interval such as 1 second. 
+-- NOT USED: called at fixed interval such as 1 second.
 function AudioEngine.OnTimer(timer)
 	if((timer.lastTick - AudioEngine.lastGarbageCollectTick) > AudioEngine.garbagecollect_interval) then
 		AudioEngine.lastGarbageCollectTick = timer.lastTick;
@@ -139,19 +139,19 @@ function AudioEngine.OnTimer(timer)
 	end
 end
 
--- when there are those many active sound, we will always performances garbage collection when higher than this. 
--- @param nThreshold: we will force garbage collection when a new music is added. 
+-- when there are those many active sound, we will always performances garbage collection when higher than this.
+-- @param nThreshold: we will force garbage collection when a new music is added.
 function AudioEngine.SetGarbageCollectThreshold(nThreshold)
 	garbagecollect_threshold = nThreshold;
 end
 
--- compare age for garbage collection. 
+-- compare age for garbage collection.
 local function AudioSourceAgeCompareFunc(a1, a2)
 	return a1.last_play_tick < a2.last_play_tick;
 end
 
--- check if there is any audio resources that should be unloaded from memory. 
--- @param bForceImmediate: if true, it will force get all active resources. Otherwise it will only do it if some threshold value is reached. 
+-- check if there is any audio resources that should be unloaded from memory.
+-- @param bForceImmediate: if true, it will force get all active resources. Otherwise it will only do it if some threshold value is reached.
 function AudioEngine.GarbageCollect(bForceImmediate)
 	if(bForceImmediate or active_playcount>garbagecollect_threshold) then
 		local remove_list;
@@ -184,10 +184,10 @@ function AudioEngine.GarbageCollect(bForceImmediate)
 	end
 end
 
--- Load a wave bank 
--- @param filename: the xml sound bank file. 
--- @param xpath: the xpath 
--- @return: S_OK if loaded. E_PENDING if we are downloading. E_FAIL if cannot load. 
+-- Load a wave bank
+-- @param filename: the xml sound bank file.
+-- @param xpath: the xpath
+-- @return: S_OK if loaded. E_PENDING if we are downloading. E_FAIL if cannot load.
 function AudioEngine.LoadSoundWaveBank(filename)
 	local xmlDocIP = ParaXML.LuaXML_ParseFile(filename);
 	local xpath = "/pe_mcml/SoundBank"
@@ -222,10 +222,16 @@ function AudioEngine.LoadSoundWaveBank(filename)
 	end
 end
 
--- get the sound source by name. One can inspect its attribute and change its locations, etc. afterwards. 
--- @return NPL AudioSource table. 
+-- get the sound source by name. One can inspect its attribute and change its locations, etc. afterwards.
+-- @return NPL AudioSource table.
 function AudioEngine.Get(sound_name)
 	return instance_map[sound_name];
+end
+
+-- get all sound source.
+-- @return NPL All AudioSource table.
+function AudioEngine.GetAll()
+	return instance_map;
 end
 
 -- whether we are playing a given sound
@@ -262,8 +268,8 @@ function AudioEngine.SetVolume(sound_name, volume)
 	end
 end
 
--- create one if no audio source with the name exist. 
--- use CreateGet() instead of Get(), so that we can all audio source functions without validations. 
+-- create one if no audio source with the name exist.
+-- use CreateGet() instead of Get(), so that we can all audio source functions without validations.
 -- such as AudioEngine.CreateGet("bg_theme_alien"):play();
 function AudioEngine.CreateGet(sound_name)
 	local audio_src = instance_map[sound_name];
@@ -274,7 +280,7 @@ function AudioEngine.CreateGet(sound_name)
 	return audio_src;
 end
 
--- play a sound by a given name from loaded wave banks using the default parameter.  
+-- play a sound by a given name from loaded wave banks using the default parameter.
 function AudioEngine.PlayUISound(sound_name)
 	local audio_src = AudioEngine.Get(sound_name)
 	if(audio_src) then
@@ -287,7 +293,7 @@ if(ParaAudio) then
 	ParaAudio.PlayUISound = AudioEngine.PlayUISound; -- for backward compatible
 end
 
--- play a 3d sound. 
+-- play a 3d sound.
 function AudioEngine.Play3DSound(sound_name, x,y,z, bLoop)
 	local audio_src = AudioEngine.Get(sound_name)
 	if(audio_src) then
