@@ -104,6 +104,9 @@ function PluginManager:AddMod(name, mod)
 	if(not self.mods_name_map[name]) then
 		LOG.std(nil, "info", "PluginManager", "mod: %s (%s) is added", name, mod:GetName() or "");
 		self.mods_name_map[name] = mod;
+		if(name ~= mod:GetName()) then
+			self.mods_name_map[mod:GetName()] = mod;
+		end
 	else
 		LOG.std(nil, "info", "PluginManager", "overriding mod with same name: %s", name);
 	end
