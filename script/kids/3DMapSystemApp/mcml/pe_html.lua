@@ -904,7 +904,7 @@ function pe_iframe.create(rootName,mcmlNode, bindingContext, _parent, left, top,
 	end
 	local click_through = mcmlNode:GetBool("ClickThrough");
 	if(click_through) then
-		_this:GetAttributeObject():SetField("ClickThrough", click_through);
+		_iframe:SetField("ClickThrough", click_through);
 	end
 
 	_iframe.background = "";
