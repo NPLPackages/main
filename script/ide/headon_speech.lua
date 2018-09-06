@@ -271,7 +271,6 @@ function headon_speech.Speak(charName, text, nLifeTime, bAbove3D, bHideBG, bNone
 		_this.text = text;
 		_this.font=headon_speech.default_font;
 		_this:GetFont("text").color = headon_speech.text_color;
-		echo{"headon speak text color", headon_speech.text_color};
 		_this.background = "";
 		_guihelper.SetUIFontFormat(_this, 21) -- centered and with word break
 		_parent:AddChild(_this);
