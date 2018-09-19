@@ -1718,7 +1718,6 @@ function WindowFrame:Reposition(align, x, y, width, height)
 	local _window = ParaUI.GetUIObject(self.wnd.app.name.."_"..self.wnd.name.."_window");
 	if(_window:IsValid()) then
 		_window:Reposition(align or self.align, x or self.x, y or self.y, width or self.width, height or self.height);
-		commonlib.echo({align or self.align, x or self.x, y or self.y, width or self.width, height or self.height})
 		if(self.width~=width or self.height~=height) then
 			-- send WM_SIZE message to the os.window object
 			NPL.load("(gl)script/ide/os.lua");
