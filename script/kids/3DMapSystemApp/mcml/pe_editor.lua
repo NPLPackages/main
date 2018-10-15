@@ -801,6 +801,7 @@ function pe_editor_button.create(rootName, mcmlNode, bindingContext, _parent, le
 	if(ontouch == "")then
 		ontouch = nil;
 	end
+	local btnName
 	if(href) then
 		if(href ~= "#") then
 			href = mcmlNode:GetAbsoluteURL(href);
@@ -820,9 +821,8 @@ function pe_editor_button.create(rootName, mcmlNode, bindingContext, _parent, le
 			log("warning: mcml <input type=\"button\"> can not find any iframe in its ancestor node to which the target url can be loaded\n");
 		end
 	elseif(onclick or onclick_for or ontouch) then
-		local btnName = mcmlNode:GetAttributeWithCode("name",nil,true)
+		btnName = mcmlNode:GetAttributeWithCode("name",nil,true)
 		-- tricky: we will just prefetch any params with code that may be used in the callback 
-		local i;
 		for i=1,5 do
 			if(not mcmlNode:GetAttributeWithCode("param"..i)) then
 				break;
@@ -848,10 +848,12 @@ function pe_editor_button.create(rootName, mcmlNode, bindingContext, _parent, le
 	end
 	local onmouseenter = mcmlNode:GetString("onmouseenter");
 	if(onmouseenter and onmouseenter ~= "")then
+		btnName = btnName or mcmlNode:GetAttributeWithCode("name",nil,true)
 		_this:SetScript("onmouseenter", pe_editor_button.onmouseenter, mcmlNode, instName, bindingContext, btnName);
 	end
 	local onmouseleave = mcmlNode:GetString("onmouseleave");
 	if(onmouseleave and onmouseleave ~= "")then
+		btnName = btnName or mcmlNode:GetAttributeWithCode("name",nil,true)
 		_this:SetScript("onmouseleave", pe_editor_button.onmouseleave, mcmlNode, instName, bindingContext, btnName);
 	end
 

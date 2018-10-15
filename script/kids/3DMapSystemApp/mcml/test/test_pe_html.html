@@ -9,6 +9,12 @@ end
 function OnShortCutKey(key)
     _guihelper.MessageBox(key);
 end
+function OnMouseEnter(name, mcmlNode)
+    _guihelper.MessageBox(name.."enter");
+end
+function OnMouseLeave(name, mcmlNode)
+    echo({"111111111", name})    
+end
 ]]></script>
 <pe:tabs name="testTabs">
     <pe:tab-item name="0" text="input" style="padding:10px;"  selected="true" >
@@ -63,6 +69,7 @@ end
         <textarea name="multilineedit" style="width:150px;" rows="3"/>
         shortcut key X<pe:hotkey name="2" hotkey="DIK_X" onclick="OnShortCutKey"/>
         <input type="button" name="btn" value="Hotkey Y" hotkey="DIK_Y" onclick="OnShortCutKey"/>
+        <input type="button" name="btnMouseEnter" value="mouseOverMe" onmouseenter="OnMouseEnter" onmouseleave="OnMouseLeave"/>
     </pe:tab-item>
     <pe:tab-item name="2" text="div" style="padding:10px" >
         <div style="line-height:20px;font-size:12px;width:200px;" >
