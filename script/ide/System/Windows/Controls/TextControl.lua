@@ -1491,7 +1491,14 @@ function TextControl:xToPos(text, x, betweenOrOn)
 end
 
 function TextControl:cursorToX(text)
-	local text = text or self:GetCurrentLine().text;
+	if(text == nil) then
+		if(self:GetCurrentLine()) then
+			text = self:GetCurrentLine().text;
+		else
+			text = Unistring:new();
+		end
+	end
+	--local text = text or self:GetCurrentLine().text;
 	local x = text:cursorToX(self.cursorPos, self:GetFont());
 	return math.floor(x + 0.5);
 end
