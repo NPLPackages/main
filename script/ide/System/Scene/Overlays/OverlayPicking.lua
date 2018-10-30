@@ -31,6 +31,7 @@ function OverlayPicking:CreatePickingBuffer_sys()
 end
 
 function OverlayPicking:ResetPickingName()
+	self.pickingFrameNumber = (self.pickingFrameNumber or 0) + 1;
 	self.next_picking_id = first_picking_name;
 end
 
@@ -38,6 +39,13 @@ function OverlayPicking:GetPickingCount()
 	-- reset picking name, when we are fetching the result.
 	self:ResetPickingName();
 	return OverlayPicking._super.GetPickingCount(self);
+end
+
+
+-- this number is increased by 1 everytime picking buffer is redrawn, 
+-- this is useful to decide if a pickingName is valid or associated with the current picking frame number
+function OverlayPicking:GetPickingFrameNumber()
+	return self.pickingFrameNumber;
 end
 
 -- x, z direction vectors: east, south, west, north

@@ -447,6 +447,12 @@ function Overlay:GetActivePickingName()
 	return OverlayPicking:GetActivePickingName();
 end
 
+-- this number is increased by 1 everytime picking buffer is redrawn, 
+-- this is useful to decide if a pickingName is valid or associated with the current picking frame number
+function Overlay:GetPickingFrameNumber()
+	return OverlayPicking:GetPickingFrameNumber();
+end
+
 -- set position using the current camera position in the scene. 
 -- this is useful when you want the overlay to be always visible. 
 function Overlay:UpdateToCameraPosition()
