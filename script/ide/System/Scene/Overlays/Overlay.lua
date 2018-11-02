@@ -195,6 +195,26 @@ function Overlay:handleKeyEvent(event)
 	end
 end
 
+-- we prefer to use handleKeyEvent (key down event) for processing key strokes.
+function Overlay:handleKeyReleaseEvent(event)
+	if(self.children) then
+		local children = self.children;
+		local child = children:first();
+		while (child) do
+			if(child.handleKeyReleaseEvent) then
+				child:handleKeyReleaseEvent(event);
+			end
+			if(event:isAccepted()) then
+				break;
+			end
+			child = children:next(child);
+		end
+	end
+	if(not event:isAccepted()) then
+		self:event(event);
+	end
+end
+
 -- private: handle system ondraw message.
 function Overlay:handleRender()
 	local renderState = ParaScene.GetSceneState():GetField("RenderState", 0);

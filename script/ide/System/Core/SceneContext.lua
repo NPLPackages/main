@@ -248,6 +248,22 @@ function SceneContext:handleKeyEvent(event)
 	end
 end
 
+-- we prefer to use handleKeyEvent (key down event) for processing key strokes.
+function SceneContext:handleKeyReleaseEvent(event)
+	-- it just send events to all manipulators. 
+	if(self.manipulators) then
+		for i, manip in pairs(self.manipulators) do
+			manip:handleKeyReleaseEvent(event);
+			if(event:isAccepted()) then
+				break;
+			end
+		end
+	end
+	if(not event:isAccepted()) then
+		self:event(event);
+	end
+end
+
 function SceneContext:notify(receiver, event)
 	local type = event:GetType();
 	local w = receiver;
@@ -312,7 +328,7 @@ end
 function SceneContext:keyPressEvent(key_event)
 end
 
--- virtual: currently NOT implemented. use keyPressEvent event instead. 
+-- virtual: prefer to use keyPressEvent event instead. 
 function SceneContext:keyReleaseEvent(key_event)
 end
 

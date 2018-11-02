@@ -20,7 +20,7 @@ function KeyEvent:ctor()
 end
 
 -- return current mouse event object. 
--- @param event_type: "keyDownEvent", "keyPressedEvent"
+-- @param event_type: "keyDownEvent", "keyPressedEvent", "keyReleaseEvent"
 function KeyEvent:init(event_type, vKey)
 	KeyEvent._super.init(self, event_type);
 	-- global position. 
