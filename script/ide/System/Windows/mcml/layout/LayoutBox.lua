@@ -90,6 +90,17 @@ local BoxAlignmentEnum = ComputedStyleConstants.BoxAlignmentEnum;
 local TextAlignEnum = ComputedStyleConstants.TextAlignEnum;
 local LengthTypeEnum = Length.LengthTypeEnum;
 local TextDirectionEnum = ComputedStyleConstants.TextDirectionEnum;
+local StyleDifferenceEnum = ComputedStyleConstants.StyleDifferenceEnum;
+
+
+-- Used by flexible boxes when flexing this element and by table cells.
+--typedef WTF::HashMap<const RenderBox*, LayoutUnit> OverrideSizeMap;
+--static OverrideSizeMap* gOverrideHeightMap = 0;
+--static OverrideSizeMap* gOverrideWidthMap = 0;
+local gOverrideHeightMap = nil;
+local gOverrideWidthMap = nil;
+--  Used to store state between styleWillChange and styleDidChange.
+local s_hadOverflowClip = false;
 
 function LayoutBox:ctor()
 	self.name = "LayoutBox";
@@ -108,6 +119,8 @@ function LayoutBox:ctor()
 	self.minPreferredLogicalWidth = -1;
 	self.maxPreferredLogicalWidth = -1;
 
+	-- For inline replaced elements, the inline box that owns us.
+    --InlineBox* m_inlineBoxWrapper;
 	self.inlineBoxWrapper = nil;
 
 	
@@ -617,10 +630,63 @@ function LayoutBox:MaxPreferredLogicalWidth()
     return self.maxPreferredLogicalWidth;
 end
 
+function LayoutBox:HasOverrideHeight()
+    return gOverrideHeightMap and gOverrideHeightMap[self];
+end
+
+function LayoutBox:HasOverrideWidth()
+    return gOverrideWidthMap and gOverrideWidthMap[self];
+end
+
+function LayoutBox:SetOverrideHeight(height)
+    if (not gOverrideHeightMap) then
+        gOverrideHeightMap = {};
+	end
+    gOverrideHeightMap[self] = height;
+end
+
+function LayoutBox:SetOverrideWidth(width)
+    if (not gOverrideWidthMap) then
+        gOverrideWidthMap = {};
+	end
+    gOverrideWidthMap[self] = width;
+end
+
+function LayoutBox:ClearOverrideSize()
+    if (self:HasOverrideHeight()) then
+        gOverrideHeightMap[self] = nil;
+	end
+    if (self:HasOverrideWidth()) then
+        gOverrideWidthMap[self] = nil;
+	end
+end
+
+function LayoutBox:OverrideWidth()
+	if(self:HasOverrideWidth()) then
+		return gOverrideWidthMap[self];
+	end
+    return self:Width();
+end
+
+function LayoutBox:OverrideHeight()
+	if(self:HasOverrideHeight()) then
+		return gOverrideHeightMap[self];
+	end
+    return self:Height();
+end
+
 function LayoutBox:ClearLayoutOverflow()
 	if(not self.overflow) then
 		return;
 	end
+end
+
+function LayoutBox:FirstLineBoxBaseline() 
+	return -1;
+end
+
+function LayoutBox:LastLineBoxBaseline()
+	return -1;
 end
 
 function LayoutBox:HasControlClip()
@@ -647,7 +713,6 @@ function LayoutBox:Layout()
 end
 
 function LayoutBox:ComputeLogicalWidth()
-	--TODO: fixed this function
 	self:ComputeLogicalWidthInRegion();
 end
 
@@ -669,7 +734,6 @@ function LayoutBox:ComputeLogicalWidthUsing(widthType, availableLogicalWidth)
     else
         logicalWidth = self:Style():LogicalMaxWidth();
 	end
-    --if (logicalWidth.isIntrinsicOrAuto()) then
 	if (logicalWidth:IsIntrinsicOrAuto()) then
         local marginStart = self:Style():MarginStart():CalcMinValue(availableLogicalWidth);
         local marginEnd = self:Style():MarginEnd():CalcMinValue(availableLogicalWidth);
@@ -688,7 +752,49 @@ end
 
 -- Whether or not the element shrinks to its intrinsic width (rather than filling the width
 -- of a containing block).  HTML4 buttons, <select>s, <input>s, legends, and floating/compact elements do this.
-function LayoutBox:SizesToIntrinsicLogicalWidth(value)
+function LayoutBox:SizesToIntrinsicLogicalWidth(widthType)
+	-- Marquees in WinIE are like a mixture of blocks and inline-blocks.  They size as though they're blocks,
+    -- but they allow text to sit on the same line as the marquee.
+	if (self:IsFloating() or (self:IsInlineBlockOrInlineTable() and not self:IsHTMLMarquee())) then
+        return true;
+	end
+
+	-- This code may look a bit strange.  Basically width:intrinsic should clamp the size when testing both
+    -- min-width and width.  max-width is only clamped if it is also intrinsic.
+	local logicalWidth = if_else(widthType == "MaxLogicalWidth", self:Style():LogicalMaxWidth(), self:Style():LogicalWidth());
+    if (logicalWidth:Type() == LengthTypeEnum.Intrinsic) then
+        return true;
+	end
+
+	-- Flexible horizontal boxes lay out children at their intrinsic widths.  Also vertical boxes
+    -- that don't stretch their kids lay out their children at their intrinsic widths.
+    -- FIXME: Think about block-flow here.
+    -- https://bugs.webkit.org/show_bug.cgi?id=46473
+	if (self:Parent():IsDeprecatedFlexibleBox()
+            and (self:Parent():Style():BoxOrient() == BoxOrientEnum.HORIZONTAL or self:Parent():Style():BoxAlign() ~= BoxAlignmentEnum.BSTRETCH)) then
+        return true;
+	end
+
+	-- Button, input, select, textarea, and legend treat
+    -- width value of 'auto' as 'intrinsic' unless it's in a
+    -- stretching vertical flexbox.
+    -- FIXME: Think about block-flow here.
+    -- https://bugs.webkit.org/show_bug.cgi?id=46473
+    if (logicalWidth:Type() == LengthTypeEnum.Auto and not (self:Parent():IsDeprecatedFlexibleBox() 
+			and self:Parent():Style():BoxOrient() == BoxOrientEnum.VERTICAL 
+			and self:Parent():Style():BoxAlign() == BoxAlignmentEnum.BSTRETCH) 
+			and self:Node() and (self:Node():HasTagName("input") or 
+			self:Node():HasTagName("select") or 
+			self:Node():HasTagName("button") or 
+			self:Node():HasTagName("textarea"))) then
+			--self:Node():HasTagName("legendTag))) then
+        return true;
+	end
+
+    if (self:IsHorizontalWritingMode() ~= self:ContainingBlock():IsHorizontalWritingMode()) then
+        return true;
+	end
+
 	return false;
 end
 
@@ -702,9 +808,15 @@ function LayoutBox:ComputeLogicalWidthInRegion(region, offsetFromLogicalTopOfFir
 		return;
 	end
 
-	local treatAsReplaced = false;
-
-	local logicalWidthLength = self:Style():LogicalWidth();
+	local inVerticalBox = self:Parent():IsDeprecatedFlexibleBox() and self:Parent():Style():BoxOrient() == BoxOrientEnum.VERTICAL;
+    local stretching = self:Parent():Style():BoxAlign() == BoxAlignmentEnum.BSTRETCH;
+    local treatAsReplaced = self:ShouldComputeSizeAsReplaced() and (not inVerticalBox or not stretching);
+	local logicalWidthLength;
+	if(treatAsReplaced) then
+		logicalWidthLength = Length:new(self:ComputeReplacedLogicalWidth(), LengthTypeEnum.Fixed);
+	else
+		logicalWidthLength = self:Style():LogicalWidth();
+	end
 
 	local cb = self:ContainingBlock();
 	local containerLogicalWidth = math.max(0, self:ContainingBlockLogicalWidthForContentInRegion(region, offsetFromLogicalTopOfFirstPage));
@@ -719,12 +831,12 @@ function LayoutBox:ComputeLogicalWidthInRegion(region, offsetFromLogicalTopOfFir
         self:SetMarginStart(self:Style():MarginStart():CalcMinValue(containerLogicalWidth));
         self:SetMarginEnd(self:Style():MarginEnd():CalcMinValue(containerLogicalWidth));
         if (treatAsReplaced) then
-            --self:SetLogicalWidth(math.max(self:LogicalWidthLength.calcFloatValue(0) + borderAndPaddingLogicalWidth(), minPreferredLogicalWidth()));
+            self:SetLogicalWidth(math.max(LogicalWidthLength:CalcFloatValue(0) + self:BorderAndPaddingLogicalWidth(), self:MinPreferredLogicalWidth()));
 		end
         return;
     end
 	if(treatAsReplaced) then
-		-- FIXME: add the code latter
+		self:SetLogicalWidth(logicalWidthLength:Value() + self:BorderAndPaddingLogicalWidth());
 	else
 
 		self:SetLogicalWidth(self:ComputeLogicalWidthUsing("LogicalWidth", containerWidthInInlineDirection));
@@ -760,15 +872,10 @@ function LayoutBox:ComputeLogicalWidthInRegion(region, offsetFromLogicalTopOfFir
     else
         self:ComputeInlineDirectionMargins(cb, containerLogicalWidth, self:LogicalWidth());
 	end
-    if (not hasPerpendicularContainingBlock and containerLogicalWidth and containerLogicalWidth ~= (self:LogicalWidth() + self:MarginStart() + self:MarginEnd())
-            and not self:IsFloating() and self:IsInline() and not cb:IsFlexibleBoxIncludingDeprecated()) then
+    if (not hasPerpendicularContainingBlock and containerLogicalWidth ~= 0 and containerLogicalWidth ~= (self:LogicalWidth() + self:MarginStart() + self:MarginEnd())
+            and not self:IsFloating() and not self:IsInline() and not cb:IsFlexibleBoxIncludingDeprecated()) then
         cb:SetMarginEndForChild(self, containerLogicalWidth - self:LogicalWidth() - cb:MarginStartForChild(self));
 	end
-end
-
-function LayoutBox:IsFlexibleBoxIncludingDeprecated()
-	--TODO: fixed this function
-	return false;
 end
 
 function LayoutBox:ComputeInlineDirectionMargins(containingBlock, containerWidth, childWidth)
@@ -827,7 +934,7 @@ function LayoutBox:IsWritingModeRoot()
 end
 
 function LayoutBox:IsDeprecatedFlexItem()
-	return false;
+	return not self:IsInline() and not self:IsFloatingOrPositioned() and self:Parent() and self:Parent():IsDeprecatedFlexibleBox();
 end
 
 function LayoutBox:AvoidsFloats()
@@ -841,8 +948,8 @@ function LayoutBox:ShrinkToAvoidFloats()
         return false;
 	end
     -- All auto-width objects that avoid floats should always use lineWidth.
-	return self:Style():Width() == nil;
-    --return self:Style():Width().isAuto(); 
+	--return self:Style():Width() == nil;
+    return self:Style():Width():IsAuto(); 
 end
 
 function LayoutBox:ContainingBlockLogicalWidthForContent()
@@ -862,7 +969,181 @@ function LayoutBox:ContainingBlockLogicalWidthForContentInRegion(region, offsetF
 end
 
 function LayoutBox:ComputePositionedLogicalWidthReplaced()
-	--TODO: fixed this function latter.
+	-- The following is based off of the W3C Working Draft from April 11, 2006 of
+    -- CSS 2.1: Section 10.3.8 "Absolutely positioned, replaced elements"
+    -- <http://www.w3.org/TR/2005/WD-CSS21-20050613/visudet.html#abs-replaced-width>
+    -- (block-style-comments in this function correspond to text from the spec and
+    -- the numbers correspond to numbers in spec)
+
+    -- We don't use containingBlock(), since we may be positioned by an enclosing
+    -- relative positioned inline.
+    local containerBlock = self:Container();
+
+    local containerLogicalWidth = self:ContainingBlockLogicalWidthForPositioned(containerBlock);
+
+    -- To match WinIE, in quirks mode use the parent's 'direction' property
+    -- instead of the the container block's.
+    local containerDirection = containerBlock:Style():Direction();
+
+    -- Variables to solve.
+    local isHorizontal = self:IsHorizontalWritingMode();
+    local logicalLeft = self:Style():LogicalLeft();
+    local logicalRight = self:Style():LogicalRight();
+    local marginLogicalLeft = if_else(isHorizontal, self:Style():MarginLeft(), self:Style():MarginTop());
+    local marginLogicalRight = if_else(isHorizontal, self:Style():MarginRight(), self:Style():MarginBottom());
+	local marginLogicalLeftAlias, marginLogicalRightAlias = self:GetMarginLogicalLeftRight();
+    --LayoutUnit& marginLogicalLeftAlias = isHorizontal ? m_marginLeft : m_marginTop;
+    --LayoutUnit& marginLogicalRightAlias = isHorizontal ? m_marginRight : m_marginBottom;
+
+	
+    --[[
+     * 1. The used value of 'width' is determined as for inline replaced
+     *    elements.
+    ]]
+	
+    -- NOTE: This value of width is FINAL in that the min/max width calculations
+    -- are dealt with in computeReplacedWidth().  This means that the steps to produce
+    -- correct max/min in the non-replaced version, are not necessary.
+    self:SetLogicalWidth(self:ComputeReplacedLogicalWidth() + self:BorderAndPaddingLogicalWidth());
+
+    local availableSpace = containerLogicalWidth - self:LogicalWidth();
+
+	
+    --[[
+     * 2. If both 'left' and 'right' have the value 'auto', then if 'direction'
+     *    of the containing block is 'ltr', set 'left' to the static position;
+     *    else if 'direction' is 'rtl', set 'right' to the static position.
+    ]]
+	
+    -- see FIXME 1
+    computeInlineStaticDistance(logicalLeft, logicalRight, this, containerBlock, containerLogicalWidth, 0); -- FIXME: Pass the region.
+
+    --[[
+     * 3. If 'left' or 'right' are 'auto', replace any 'auto' on 'margin-left'
+     *    or 'margin-right' with '0'.
+    ]]
+    if (logicalLeft:IsAuto() or logicalRight:IsAuto()) then
+        if (marginLogicalLeft:IsAuto()) then
+            marginLogicalLeft:SetValue(LengthTypeEnum.Fixed, 0);
+		end
+        if (marginLogicalRight:IsAuto()) then
+            marginLogicalRight:SetValue(LengthTypeEnum.Fixed, 0);
+		end
+    end
+
+    --[[
+     * 4. If at this point both 'margin-left' and 'margin-right' are still
+     *    'auto', solve the equation under the extra constraint that the two
+     *    margins must get equal values, unless this would make them negative,
+     *    in which case when the direction of the containing block is 'ltr'
+     *    ('rtl'), set 'margin-left' ('margin-right') to zero and solve for
+     *    'margin-right' ('margin-left').
+    ]]
+    local logicalLeftValue = 0;
+    local logicalRightValue = 0;
+
+    if (marginLogicalLeft:IsAuto() and marginLogicalRight:IsAuto()) then
+        -- 'left' and 'right' cannot be 'auto' due to step 3
+        --ASSERT(!(logicalLeft.isAuto() and logicalRight.isAuto()));
+
+        logicalLeftValue = logicalLeft:CalcValue(containerLogicalWidth);
+        logicalRightValue = logicalRight:CalcValue(containerLogicalWidth);
+
+        local difference = availableSpace - (logicalLeftValue + logicalRightValue);
+        if (difference > 0) then
+            marginLogicalLeftAlias = difference / 2; -- split the difference
+            marginLogicalRightAlias = difference - marginLogicalLeftAlias; -- account for odd valued differences
+        else
+            -- Use the containing block's direction rather than the parent block's
+            -- per CSS 2.1 reference test abspos-replaced-width-margin-000.
+            if (containerDirection == TextDirectionEnum.LTR) then
+                marginLogicalLeftAlias = 0;
+                marginLogicalRightAlias = difference; -- will be negative
+            else
+                marginLogicalLeftAlias = difference; -- will be negative
+                marginLogicalRightAlias = 0;
+            end
+        end
+	
+    --[[
+     * 5. If at this point there is an 'auto' left, solve the equation for
+     *    that value.
+    ]]
+	
+    elseif (logicalLeft:IsAuto()) then
+        marginLogicalLeftAlias = marginLogicalLeft:CalcValue(containerLogicalWidth);
+        marginLogicalRightAlias = marginLogicalRight:CalcValue(containerLogicalWidth);
+        logicalRightValue = logicalRight:CalcValue(containerLogicalWidth);
+
+        -- Solve for 'left'
+        logicalLeftValue = availableSpace - (logicalRightValue + marginLogicalLeftAlias + marginLogicalRightAlias);
+    elseif (logicalRight:IsAuto()) then
+        marginLogicalLeftAlias = marginLogicalLeft:CalcValue(containerLogicalWidth);
+        marginLogicalRightAlias = marginLogicalRight:CalcValue(containerLogicalWidth);
+        logicalLeftValue = logicalLeft:CalcValue(containerLogicalWidth);
+
+        -- Solve for 'right'
+        logicalRightValue = availableSpace - (logicalLeftValue + marginLogicalLeftAlias + marginLogicalRightAlias);
+    elseif (marginLogicalLeft:IsAuto()) then
+        marginLogicalRightAlias = marginLogicalRight:CalcValue(containerLogicalWidth);
+        logicalLeftValue = logicalLeft:CalcValue(containerLogicalWidth);
+        logicalRightValue = logicalRight:CalcValue(containerLogicalWidth);
+
+        -- Solve for 'margin-left'
+        marginLogicalLeftAlias = availableSpace - (logicalLeftValue + logicalRightValue + marginLogicalRightAlias);
+    elseif (marginLogicalRight:IsAuto()) then
+        marginLogicalLeftAlias = marginLogicalLeft:CalcValue(containerLogicalWidth);
+        logicalLeftValue = logicalLeft:CalcValue(containerLogicalWidth);
+        logicalRightValue = logicalRight:CalcValue(containerLogicalWidth);
+
+        -- Solve for 'margin-right'
+        marginLogicalRightAlias = availableSpace - (logicalLeftValue + logicalRightValue + marginLogicalLeftAlias);
+    else
+        -- Nothing is 'auto', just calculate the values.
+        marginLogicalLeftAlias = marginLogicalLeft:CalcValue(containerLogicalWidth);
+        marginLogicalRightAlias = marginLogicalRight:CalcValue(containerLogicalWidth);
+        logicalRightValue = logicalRight:CalcValue(containerLogicalWidth);
+        logicalLeftValue = logicalLeft:CalcValue(containerLogicalWidth);
+        -- If the containing block is right-to-left, then push the left position as far to the right as possible
+        if (containerDirection == TextDirectionEnum.RTL) then
+            local totalLogicalWidth = self:LogicalWidth() + logicalLeftValue + logicalRightValue +  marginLogicalLeftAlias + marginLogicalRightAlias;
+            logicalLeftValue = containerLogicalWidth - (totalLogicalWidth - logicalLeftValue);
+        end
+    end
+
+    --[[
+     * 6. If at this point the values are over-constrained, ignore the value
+     *    for either 'left' (in case the 'direction' property of the
+     *    containing block is 'rtl') or 'right' (in case 'direction' is
+     *    'ltr') and solve for that value.
+    ]]
+    -- NOTE: Constraints imposed by the width of the containing block and its content have already been accounted for above.
+
+    -- FIXME: Deal with differing writing modes here.  Our offset needs to be in the containing block's coordinate space, so that
+    -- can make the result here rather complicated to compute.
+
+    -- Use computed values to calculate the horizontal position.
+
+    -- FIXME: This hack is needed to calculate the logical left position for a 'rtl' relatively
+    -- positioned, inline containing block because right now, it is using the logical left position
+    -- of the first line box when really it should use the last line box.  When
+    -- this is fixed elsewhere, this block should be removed.
+    if (containerBlock:IsLayoutInline() and not containerBlock:Style():IsLeftToRightDirection()) then
+        local flow = containerBlock;
+        local firstLine = flow:FirstLineBox();
+        local lastLine = flow:LastLineBox();
+        if (firstLine and lastLine and firstLine ~= lastLine) then
+            self:SetLogicalLeft(logicalLeftValue + marginLogicalLeftAlias + lastLine:BorderLogicalLeft() + (lastLine:LogicalLeft() - firstLine:LogicalLeft()));
+            return;
+        end
+    end
+
+    local logicalLeftPos = logicalLeftValue + marginLogicalLeftAlias;
+
+	self:SetMarginLogicalLeftRight(marginLogicalLeftAlias, marginLogicalRightAlias);
+
+    logicalLeftPos = computeLogicalLeftPositionedOffset(logicalLeftPos, self, self:LogicalWidth(), containerBlock, containerLogicalWidth);
+    self:SetLogicalLeft(logicalLeftPos);
 end
 
 --static void computeInlineStaticDistance(Length& logicalLeft, Length& logicalRight, const RenderBox* child, const RenderBoxModelObject* containerBlock, LayoutUnit containerLogicalWidth, RenderRegion* region)
@@ -1041,10 +1322,6 @@ function LayoutBox:HasOverrideHeight()
 	--return gOverrideHeightMap && gOverrideHeightMap->contains(this);
 end
 
-function LayoutBox:ComputePositionedLogicalHeightReplaced()
-	--TODO: fixed this function latter.
-end
-
 function LayoutBox:SetMarginBeforeAfter(before, after)
 	local isHorizontal = self:IsHorizontalWritingMode();
 	local isFlipped = self:Style():IsFlippedBlocksWritingMode();
@@ -1148,7 +1425,7 @@ function LayoutBox:ComputePositionedLogicalHeight()
 	
     -- see FIXME 1
     -- Calculate the static distance if needed.
-    computeBlockStaticDistance(logicalTopLength, logicalBottomLength, this, containerBlock);
+    computeBlockStaticDistance(logicalTopLength, logicalBottomLength, self, containerBlock);
 
     local logicalHeightResult; -- Needed to compute overflow.
     local logicalTopPos;
@@ -1218,8 +1495,119 @@ function LayoutBox:ComputePositionedLogicalHeight()
 --    end
 end
 
+function LayoutBox:ComputeReplacedLogicalHeightRespectingMinMaxHeight(logicalHeight)
+    local minLogicalHeight = self:ComputeReplacedLogicalHeightUsing(self:Style():LogicalMinHeight());
+    local maxLogicalHeight = logicalHeight;
+	if(not self:Style():LogicalMaxHeight():IsUndefined()) then
+		maxLogicalHeight = self:ComputeReplacedLogicalHeightUsing(self:Style():LogicalMaxHeight())
+	end
+    return math.max(minLogicalHeight, math.min(logicalHeight, maxLogicalHeight));
+end
+
+function LayoutBox:AvailableLogicalHeight()
+    return self:AvailableLogicalHeightUsing(self:Style():LogicalHeight());
+end
+
 function LayoutBox:ComputeReplacedLogicalHeight()
-	--TODO: fixed this function
+	return self:ComputeReplacedLogicalHeightRespectingMinMaxHeight(self:ComputeReplacedLogicalHeightUsing(self:Style():LogicalHeight()));
+end
+
+function LayoutBox:VailableLogicalHeightUsing(h)
+	if (h:IsFixed()) then
+        return self:ComputeContentBoxLogicalHeight(h:Value());
+	end
+    if (self:IsLayoutView()) then
+		if(self:IsHorizontalWritingMode()) then
+			return self:ToRenderView():FrameView():VisibleHeight()
+		end
+        return self:ToRenderView():FrameView():VisibleWidth();
+	end
+    -- We need to stop here, since we don't want to increase the height of the table
+    -- artificially.  We're going to rely on this cell getting expanded to some new
+    -- height, and then when we lay out again we'll use the calculation below.
+    if (self:IsTableCell() and (h:IsAuto() or h:IsPercent())) then
+        --return self:OverrideHeight() - self:BorderAndPaddingLogicalWidth();
+	end
+
+    if (h:IsPercent()) then
+        local availableHeight;
+        -- https://bugs.webkit.org/show_bug.cgi?id=64046
+        -- For absolutely positioned elements whose containing block is based on a block-level element,
+        -- the percentage is calculated with respect to the height of the padding box of that element
+        if (self:IsPositioned()) then
+            availableHeight = self:ContainingBlockLogicalHeightForPositioned(self:ContainingBlock());
+        else
+            availableHeight = self:ContainingBlock():AvailableLogicalHeight();
+		end
+        return self:ComputeContentBoxLogicalHeight(h:CalcValue(availableHeight));
+    end
+
+    -- FIXME: We can't just check top/bottom here.
+    -- https://bugs.webkit.org/show_bug.cgi?id=46500
+    if (self:IsLayoutBlock() and self:IsPositioned() and self:Style():Height():IsAuto() and not (self:Style():Top():IsAuto() or self:Style():Bottom():IsAuto())) then
+        local block = self:ToRenderBlock();
+        local oldHeight = block:LogicalHeight();
+        block:ComputeLogicalHeight();
+        local newHeight = block:ComputeContentBoxLogicalHeight(block:ContentLogicalHeight());
+        block:SetLogicalHeight(oldHeight);
+        return self:ComputeContentBoxLogicalHeight(newHeight);
+    end
+
+    return self:ContainingBlock():AvailableLogicalHeight();
+end
+
+--LayoutUnit RenderBox::computeReplacedLogicalHeightUsing(Length logicalHeight) const
+function LayoutBox:ComputeReplacedLogicalHeightUsing(logicalHeight)
+	if(logicalHeight:Type() == LengthTypeEnum.Fixed) then
+        return self:ComputeContentBoxLogicalHeight(logicalHeight:Value());
+    elseif(logicalHeight:Type() == LengthTypeEnum.Percent) then
+        local cb = self:Container();
+		if(not self:IsPositioned()) then
+			cb = self:ContainingBlock();
+		end
+        while (cb:IsAnonymous()) do
+            cb = cb:ContainingBlock();
+            cb:ToRenderBlock():AddPercentHeightDescendant(self:ToRenderBox());
+        end
+
+        -- FIXME: This calculation is not patched for block-flow yet.
+        -- https://bugs.webkit.org/show_bug.cgi?id=46500
+        if (cb:IsPositioned() and cb:Style():Height():IsAuto() and not (cb:Style():Top():IsAuto() or cb:Style():Bottom():IsAuto())) then
+            --ASSERT(cb->isRenderBlock());
+            local block = cb:ToRenderBlock();
+            local oldHeight = block:Height();
+            block:ComputeLogicalHeight();
+            local newHeight = block:ComputeContentBoxLogicalHeight(block:ContentHeight());
+            block:SetHeight(oldHeight);
+            return self:ComputeContentBoxLogicalHeight(logicalHeight:CalcValue(newHeight));
+        end
+            
+        -- FIXME: availableLogicalHeight() is wrong if the replaced element's block-flow is perpendicular to the
+        -- containing block's block-flow.
+        -- https://bugs.webkit.org/show_bug.cgi?id=46496
+        local availableHeight;
+        if (self:IsPositioned()) then
+            availableHeight = self:ContainingBlockLogicalHeightForPositioned(cb:ToRenderBoxModelObject());
+        else
+            availableHeight =  cb:ToRenderBox():AvailableLogicalHeight();
+            -- It is necessary to use the border-box to match WinIE's broken
+            -- box model.  This is essential for sizing inside
+            -- table cells using percentage heights.
+            -- FIXME: This needs to be made block-flow-aware.  If the cell and image are perpendicular block-flows, this isn't right.
+            -- https://bugs.webkit.org/show_bug.cgi?id=46997
+            while (cb and not cb:IsLayoutView() and (cb:Style():LogicalHeight():IsAuto() or cb:Style():LogicalHeight():IsPercent())) do
+                if (cb:IsTableCell()) then
+                    -- Don't let table cells squeeze percent-height replaced elements
+                    -- <http://bugs.webkit.org/show_bug.cgi?id=15359>
+                    availableHeight = math.max(availableHeight, self:IntrinsicLogicalHeight());
+                    return logicalHeight:CalcValue(availableHeight - self:BorderAndPaddingLogicalHeight());
+                end
+                cb = cb:ContainingBlock();
+            end
+        end
+        return self:ComputeContentBoxLogicalHeight(logicalHeight:CalcValue(availableHeight));
+    end
+	return self:IntrinsicLogicalHeight();
 end
 
 function LayoutBox:ComputePercentageLogicalHeight(h)
@@ -1332,7 +1720,7 @@ function LayoutBox:ComputeLogicalHeightUsing(h)
 end
 
 function LayoutBox:ComputeLogicalHeight()
-	if (self:IsTableCell() or (self:IsInline() or self:IsReplaced())) then
+	if (self:IsTableCell() or (self:IsInline() and not self:IsReplaced())) then
         return;
 	end
 	local h;
@@ -1341,7 +1729,6 @@ function LayoutBox:ComputeLogicalHeight()
     else
         local cb = self:ContainingBlock();
         local hasPerpendicularContainingBlock = cb:IsHorizontalWritingMode() ~= self:IsHorizontalWritingMode();
-    
         if (not hasPerpendicularContainingBlock) then
             self:ComputeBlockDirectionMargins(cb);
 		end
@@ -1367,7 +1754,7 @@ function LayoutBox:ComputeLogicalHeight()
         if (self:HasOverrideHeight() and self:Parent():IsFlexibleBoxIncludingDeprecated()) then
             --h = Length(overrideHeight() - borderAndPaddingLogicalHeight(), Fixed);
         elseif (treatAsReplaced) then
-            h = Length:new(self:ComputeReplacedLogicalHeight(), Length.LengthTypeEnum.Fixed);
+            h = Length:new(self:ComputeReplacedLogicalHeight(), LengthTypeEnum.Fixed);
         else
             h = self:Style():LogicalHeight();
             checkMinMaxHeight = true;
@@ -1377,7 +1764,7 @@ function LayoutBox:ComputeLogicalHeight()
         -- FIXME: Account for block-flow in flexible boxes.
         -- https://bugs.webkit.org/show_bug.cgi?id=46418
         if (h:IsAuto() and self:Parent():IsDeprecatedFlexibleBox() and self:Parent():Style():BoxOrient() == BoxOrientEnum.HORIZONTAL and self:Parent():IsStretchingChildren()) then
-            h = Length:new(self:ParentBox():ContentLogicalHeight() - self:MarginBefore() - self:MarginAfter() - self:BorderAndPaddingLogicalHeight(), Length.LengthTypeEnum.Fixed);
+            h = Length:new(self:ParentBox():ContentLogicalHeight() - self:MarginBefore() - self:MarginAfter() - self:BorderAndPaddingLogicalHeight(), LengthTypeEnum.Fixed);
             checkMinMaxHeight = false;
         end
 
@@ -1460,11 +1847,142 @@ function LayoutBox:IsSelfCollapsingBlock()
 end
 
 function LayoutBox:DirtyLineBoxes(fullLayout)
-	--TODO: fixed this function
+	if (self.inlineBoxWrapper) then
+        if (fullLayout) then
+            self.inlineBoxWrapper:Destroy(self:RenderArena());
+            self.inlineBoxWrapper = nil;
+        else
+            self.inlineBoxWrapper:DirtyLineBoxes();
+		end
+    end
+end
+
+function LayoutBox:WillBeDestroyed()
+    self:ClearOverrideSize();
+
+    if (self:Style() and (self:Style():LogicalHeight():IsPercent() or self:Style():LogicalMinHeight():IsPercent() or self:Style():LogicalMaxHeight():IsPercent())) then
+		--RenderBlock::removePercentHeightDescendant(this);
+	end
+
+    -- If this renderer is owning renderer for the frameview's custom scrollbars,
+    -- we need to clear it from the scrollbar. See webkit bug 64737.
+--    if (self:Style() and self:Style():HasPseudoStyle(SCROLLBAR) and self:Frame() and self:Frame():View()) then
+--        --self:Frame():View():ClearOwningRendererForCustomScrollbars(self);
+--	end
+
+    -- If the following -- ASSERTion fails, logicalHeight()/logicalMinHeight()/
+    -- logicalMaxHeight() values are changed from a percent value to a non-percent
+    -- value during laying out. It causes a use-after-free bug.
+    -- ASSERT(not RenderBlock::hasPercentHeightDescendant(this));
+
+    LayoutBox._super.WillBeDestroyed(self);
+end
+
+function LayoutBox:RemoveFloatingOrPositionedChildFromBlockLists()
+    -- ASSERT(isFloatingOrPositioned());
+
+    if (self:DocumentBeingDestroyed()) then
+        return;
+	end
+
+    if (self:IsFloating()) then
+        local parentBlock = nil;
+		local curr = self:Parent();
+		while(curr and not curr:IsLayoutView()) do
+			if (curr:IsLayoutBlock()) then
+                local currBlock = curr:ToRenderBlock();
+                if (not parentBlock or currBlock:ContainsFloat(self)) then
+                    parentBlock = currBlock;
+				end
+            end
+			
+			curr = curr:Parent();
+		end
+		
+        if (parentBlock) then
+            local parent = parentBlock:Parent();
+            if (parent and parent:IsDeprecatedFlexibleBox()) then
+                parentBlock = parent:ToRenderBlock();
+			end
+
+            parentBlock:MarkAllDescendantsWithFloatsForLayout(self, false);
+        end
+    end
+
+    if (self:IsPositioned()) then
+		local curr = self:Parent();
+		while(curr) do
+			if (curr:IsLayoutBlock()) then
+                curr:ToRenderBlock():RemovePositionedObject(self);
+			end
+		
+			curr = curr:Parent();
+		end
+    end
+end
+
+function LayoutBox:StyleWillChange(diff, newStyle)
+    s_hadOverflowClip = self:HasOverflowClip();
+
+    if (self:Style()) then
+        -- The background of the root element or the body element could propagate up to
+        -- the canvas.  Just dirty the entire canvas when our style changes substantially.
+        if (diff >= StyleDifferenceEnum.StyleDifferenceRepaint and self:Node() and
+                (self:Node():HasTagName("html") or self:Node():HasTagName("body"))) then
+            self:View():Repaint();
+		end
+        
+        -- When a layout hint happens and an object's position style changes, we have to do a layout
+        -- to dirty the render tree using the old position value now.
+        if (diff == StyleDifferenceEnum.StyleDifferenceLayout and self:Parent() and self:Style():Position() ~= newStyle:Position()) then
+            self:MarkContainingBlocksForLayout();
+            if (self:Style():Position() == PositionEnum.StaticPosition) then
+                self:Repaint();
+            elseif (newStyle:Position() == PositionEnum.AbsolutePosition or newStyle:Position() == PositionEnum.FixedPosition) then
+                self:Parent():SetChildNeedsLayout(true);
+			end
+            if (self:IsFloating() and not self:IsPositioned() and (newStyle:Position() == PositionEnum.AbsolutePosition or newStyle:Position() == PositionEnum.FixedPosition)) then
+                self:RemoveFloatingOrPositionedChildFromBlockLists();
+			end
+        end
+    elseif (newStyle and self:IsBody()) then
+        self:View():Repaint();
+	end
+
+	
+    if (self:View()) then
+		local frameView = self:View():FrameView();
+		if(frameView) then
+			local newStyleIsFixed = newStyle and newStyle:Position() == PositionEnum.FixedPosition;
+			local oldStyleIsFixed = self:Style() and self:Style():Position() == PositionEnum.FixedPosition;
+			if (newStyleIsFixed ~= oldStyleIsFixed) then
+	--            if (newStyleIsFixed) then
+	--                frameView:AddFixedObject();
+	--            else
+	--                frameView:RemoveFixedObject();
+	--			end
+			end
+		end
+    end
+
+    LayoutBox._super.StyleWillChange(self, diff, newStyle);
 end
 
 function LayoutBox:StyleDidChange(diff, oldStyle)
 	LayoutBox._super.StyleDidChange(self, diff, oldStyle);
+
+	if (self:NeedsLayout() and oldStyle) then
+--        if (oldStyle && (oldStyle->logicalHeight().isPercent() || oldStyle->logicalMinHeight().isPercent() || oldStyle->logicalMaxHeight().isPercent()))
+--            RenderBlock::removePercentHeightDescendant(this);
+
+        -- Normally we can do optimized positioning layout for absolute/fixed positioned objects. There is one special case, however, which is
+        -- when the positioned object's margin-before is changed. In this case the parent has to get a layout in order to run margin collapsing
+        -- to determine the new static position.
+        if (self:IsPositioned() and self:Style():HasStaticBlockPosition(self:IsHorizontalWritingMode()) and oldStyle:MarginBefore() ~= self:Style():MarginBefore()
+            and self:Parent() and not self:Parent():NormalChildNeedsLayout()) then
+            self:Parent():SetChildNeedsLayout(true);
+		end
+    end
 end
 
 function LayoutBox:UpdateBoxModelInfoFromStyle()
@@ -1506,11 +2024,12 @@ end
 function LayoutBox:BaselinePosition(baselineType, firstLine, direction, linePositionMode)
 	linePositionMode = linePositionMode or "PositionOnContainingLine";
 	if (self:IsReplaced()) then
-        local result = if_else(direction == "HorizontalLine", self.marginTop + self:Height() + self.marginBottom, self.marginRight + self:Width() + self.marginLeft);
+        --local result = if_else(direction == "HorizontalLine", self.marginTop + self:Height() + self.marginBottom, self.marginRight + self:Width() + self.marginLeft);
+		local result = if_else(direction == "HorizontalLine", self.marginTop + self.marginBottom, self.marginRight + self.marginLeft);
         if (baselineType == "AlphabeticBaseline") then
             return result;
 		end
-        return result - result / 2;
+        return math.floor(result-result/2+0.5);
     end
     return 0;
 end
@@ -1519,33 +2038,37 @@ end
 function LayoutBox:PositionLineBox(box)
     if (self:IsPositioned()) then
         -- Cache the x position only if we were an INLINE type originally.
---        bool wasInline = style()->isOriginalDisplayInlineType();
---        if (wasInline) {
---            // The value is cached in the xPos of the box.  We only need this value if
---            // our object was inline originally, since otherwise it would have ended up underneath
---            // the inlines.
---            RootInlineBox* root = box->root();
---            root->block()->setStaticInlinePositionForChild(this, root->lineTopWithLeading(), lroundf(box->logicalLeft()));
---            if (style()->hasStaticInlinePosition(box->isHorizontal()))
---                setChildNeedsLayout(true, false); // Just go ahead and mark the positioned object as needing layout, so it will update its position properly.
---        } else {
---            // Our object was a block originally, so we make our normal flow position be
---            // just below the line box (as though all the inlines that came before us got
---            // wrapped in an anonymous block, which is what would have happened had we been
---            // in flow).  This value was cached in the y() of the box.
---            layer()->setStaticBlockPosition(box->logicalTop());
---            if (style()->hasStaticBlockPosition(box->isHorizontal()))
---                setChildNeedsLayout(true, false); // Just go ahead and mark the positioned object as needing layout, so it will update its position properly.
---        }
---
---        // Nuke the box.
---        box->remove();
---        box->destroy(renderArena());
+        local wasInline = self:Style():IsOriginalDisplayInlineType();
+        if (wasInline) then
+            -- The value is cached in the xPos of the box.  We only need this value if
+            -- our object was inline originally, since otherwise it would have ended up underneath
+            -- the inlines.
+            local root = box:Root();
+            root:Block():SetStaticInlinePositionForChild(self, root:LineTopWithLeading(), box:LogicalLeft());
+            if (self:Style():HasStaticInlinePosition(box:IsHorizontal())) then
+                self:SetChildNeedsLayout(true, false); -- Just go ahead and mark the positioned object as needing layout, so it will update its position properly.
+			end
+        else
+            -- Our object was a block originally, so we make our normal flow position be
+            -- just below the line box (as though all the inlines that came before us got
+            -- wrapped in an anonymous block, which is what would have happened had we been
+            -- in flow).  This value was cached in the y() of the box.
+            self:Layer():SetStaticBlockPosition(box:LogicalTop());
+            if (self:Style():HasStaticBlockPosition(box:IsHorizontal())) then
+                self:SetChildNeedsLayout(true, false); -- Just go ahead and mark the positioned object as needing layout, so it will update its position properly.
+			end
+        end
+
+        -- Nuke the box.
+        box:Remove();
+        box:Destroy(self:RenderArena());
     elseif (self:IsReplaced()) then
---        setLocation(roundedLayoutPoint(FloatPoint(box->x(), box->y())));
---        if (m_inlineBoxWrapper)
---            deleteLineBoxWrapper();
---        m_inlineBoxWrapper = box;
+        --self:SetLocation(roundedLayoutPoint(LayoutPoint:new(box->x(), box->y())));
+		self:SetLocation(LayoutPoint:new(box:X(), box:Y()));
+        if (self.inlineBoxWrapper) then
+            self:DeleteLineBoxWrapper();
+		end
+        self.inlineBoxWrapper = box;
     end
 end
 
@@ -1722,6 +2245,7 @@ function LayoutBox:FlipForWritingMode(position)
 		else
 			rect:SetX(self:Width() - rect:MaxX());
 		end
+		return rect;
 	elseif(position:IsSize()) then
 		local offset = position;
 		if (self:IsHorizontalWritingMode()) then
@@ -1739,7 +2263,142 @@ end
 
 --void RenderBox::repaintDuringLayoutIfMoved(const LayoutRect& rect)
 function LayoutBox:RepaintDuringLayoutIfMoved(rect)
-	-- TODO: add latter;
+	local newX = self:X();
+    local newY = self:Y();
+    local newWidth = self:Width();
+    local newHeight = self:Height();
+    if (rect:X() ~= newX or rect:Y() ~= newY) then
+        -- The child moved.  Invalidate the object's old and new positions.  We have to do this
+        -- since the object may not have gotten a layout.
+        self.frameRect = rect;
+        self:Repaint();
+        self:RepaintOverhangingFloats(true);
+        self.frameRect = LayoutRect:new(newX, newY, newWidth, newHeight);
+        self:Repaint();
+        self:RepaintOverhangingFloats(true);
+    end
+end
+
+--RenderLayer* RenderBox::enclosingFloatPaintingLayer() const
+function LayoutBox:EnclosingFloatPaintingLayer()
+    local curr = self;
+    while (curr) do
+        local layer = nil;
+		if(curr:HasLayer() and curr:IsBox()) then
+			layer = curr:ToRenderBoxModelObject():Layer();
+		end
+        if (layer and layer:IsSelfPaintingLayer()) then
+            return layer;
+		end
+        curr = curr:Parent();
+    end
+    return nil;
+end
+
+--LayoutRect RenderBox::layoutOverflowRectForPropagation(RenderStyle* parentStyle) const
+function LayoutBox:LayoutOverflowRectForPropagation(parentStyle)
+	-- Only propagate interior layout overflow if we don't clip it.
+	local rect = self:BorderBoxRect();
+	if (not self:HasOverflowClip()) then
+		rect:Unite(self:LayoutOverflowRect());
+	end
+
+	local hasTransform = self:HasLayer() and self:Layer():Transform();
+	if (self:IsRelPositioned() or hasTransform) then
+		-- If we are relatively positioned or if we have a transform, then we have to convert
+		-- this rectangle into physical coordinates, apply relative positioning and transforms
+		-- to it, and then convert it back.
+		self:FlipForWritingMode(rect);
+	
+		if (hasTransform) then
+			-- rect = layer()->currentTransform().mapRect(rect);
+		end
+
+		if (self:IsRelPositioned()) then
+			rect:Move(self:RelativePositionOffsetX(), self:RelativePositionOffsetY());
+		end
+	
+		-- Now we need to flip back.
+		self:FlipForWritingMode(rect);
+	end
+
+	-- If the writing modes of the child and parent match, then we don't have to 
+	-- do anything fancy. Just return the result.
+	if (parentStyle:WritingMode() == self:Style():WritingMode()) then
+		return rect;
+	end
+
+	-- We are putting ourselves into our parent's coordinate space.  If there is a flipped block mismatch
+	-- in a particular axis, then we have to flip the rect along that axis.
+	if (self:Style():WritingMode() == WritingModeEnum.RightToLeftWritingMode or parentStyle:WritingMode() == WritingModeEnum.RightToLeftWritingMode) then
+		rect:SetX(self:Width() - rect:MaxX());
+	elseif (self:Style():WritingMode() == WritingModeEnum.BottomToTopWritingMode or parentStyle:WritingMode() == WritingModeEnum.BottomToTopWritingMode) then
+		rect:SetY(self:Height() - rect:MaxY());
+	end
+
+	return rect;
+end
+
+--LayoutRect RenderBox::visualOverflowRectForPropagation(RenderStyle* parentStyle) const
+function LayoutBox:VisualOverflowRectForPropagation(parentStyle)
+    -- If the writing modes of the child and parent match, then we don't have to 
+    -- do anything fancy. Just return the result.
+    local rect = self:VisualOverflowRect();
+    if (parentStyle:WritingMode() == self:Style():WritingMode()) then
+        return rect;
+	end
+    
+    -- We are putting ourselves into our parent's coordinate space.  If there is a flipped block mismatch
+    -- in a particular axis, then we have to flip the rect along that axis.
+    if (self:Style():WritingMode() == WritingModeEnum.RightToLeftWritingMode or parentStyle:WritingMode() == WritingModeEnum.RightToLeftWritingMode) then
+        rect:SetX(self:Width() - rect:MaxX());
+    elseif (self:Style():WritingMode() == WritingModeEnum.BottomToTopWritingMode or parentStyle:WritingMode() == WritingModeEnum.BottomToTopWritingMode) then
+        rect:SetY(self:Height() - rect:MaxY());
+	end
+
+    return rect;
+end
+
+--void RenderBox::addVisualOverflow(const LayoutRect& rect)
+function LayoutBox:AddVisualOverflow(rect)
+	local borderBox = self:BorderBoxRect();
+    if (borderBox:Contains(rect) or rect:IsEmpty()) then
+        return;
+    end
+	-- TODO: add later.
+--    if (!m_overflow)
+--        m_overflow = adoptPtr(new RenderOverflow(clientBoxRect(), borderBox));
+--    
+--    m_overflow->addVisualOverflow(rect);
+end
+
+--void addOverflowFromChild(RenderBox* child, const LayoutSize& delta);
+function LayoutBox:AddOverflowFromChild(child, delta)
+	if(delta == nil) then
+		return self:AddOverflowFromChild(child, child:LocationOffset());
+	end
+	local childLayoutOverflowRect = child:LayoutOverflowRectForPropagation(self:Style());
+    childLayoutOverflowRect:Move(delta);
+    self:AddLayoutOverflow(childLayoutOverflowRect);
+            
+    -- Add in visual overflow from the child.  Even if the child clips its overflow, it may still
+    -- have visual overflow of its own set from box shadows or reflections.  It is unnecessary to propagate this
+    -- overflow if we are clipping our own overflow.
+    if (child:HasSelfPaintingLayer() or self:HasOverflowClip()) then
+        return;
+	end
+    local childVisualOverflowRect = child:VisualOverflowRectForPropagation(self:Style());
+    childVisualOverflowRect:Move(delta);
+    self:AddVisualOverflow(childVisualOverflowRect);
+end
+
+--void RenderBox::addLayoutOverflow(const LayoutRect& rect)
+function LayoutBox:AddLayoutOverflow(rect)
+    local clientBox = self:ClientBoxRect();
+    if (clientBox:Contains(rect) or rect:IsEmpty()) then
+        return;
+	end
+	--TODO:add later.
 end
 
 --LayoutSize RenderBox::topLeftLocationOffset() const
@@ -1750,7 +2409,7 @@ function LayoutBox:TopLeftLocationOffset()
 	end
     
     local rect = self:FrameRect():clone_from_pool();
-    containerBlock:FlipForWritingMode(rect); -- FIXME: This is wrong if we are an absolutely positioned object enclosed by a relative-positioned inline.
+    rect = containerBlock:FlipForWritingMode(rect); -- FIXME: This is wrong if we are an absolutely positioned object enclosed by a relative-positioned inline.
     return LayoutSize:new(rect:X(), rect:Y());
 end
 
@@ -2236,4 +2895,275 @@ function LayoutBox:FlipForWritingModeForChild(child, point)
         return LayoutPoint:new(point:X(), point:Y() + self:Height() - child:Height() - (2 * child:Y()));
 	end
     return LayoutPoint:new(point:X() + self:Width() - child:Width() - (2 * child:X()), point:Y());
+end
+
+function LayoutBox:DeleteLineBoxWrapper()
+    if (self.inlineBoxWrapper) then
+        if (not self:DocumentBeingDestroyed()) then
+            self.inlineBoxWrapper:Remove();
+		end
+        self.inlineBoxWrapper:Destroy(self:RenderArena());
+        self.inlineBoxWrapper = nil;
+    end
+end
+
+function LayoutBox:HasRenderOverflow() 
+	return self.overflow;
+end
+
+--LayoutUnit RenderBox::computeReplacedLogicalWidthUsing(Length logicalWidth) const
+function LayoutBox:ComputeReplacedLogicalWidthUsing(logicalWidth)
+    if(logicalWidth:Type() == LengthTypeEnum.Fixed) then
+        return self:ComputeContentBoxLogicalWidth(logicalWidth:Value());
+    elseif(logicalWidth:Type() == LengthTypeEnum.Percent) then
+        -- FIXME: containingBlockLogicalWidthForContent() is wrong if the replaced element's block-flow is perpendicular to the
+        -- containing block's block-flow.
+        -- https://bugs.webkit.org/show_bug.cgi?id=46496
+        local cw = if_else(self:IsPositioned(), self:ContainingBlockLogicalWidthForPositioned(self:Container()). self:ContainingBlockLogicalWidthForContent());
+        if (cw > 0) then
+            return self:computeContentBoxLogicalWidth(logicalWidth:CalcMinValue(cw));
+		end
+    else
+    -- fall through
+        return self:IntrinsicLogicalWidth();
+     end
+end
+
+function LayoutBox:IntrinsicSize() return LayoutSize:new(); end
+function LayoutBox:IntrinsicLogicalWidth() 
+	return if_else(self:Style():IsHorizontalWritingMode(), self:IntrinsicSize():Width(), self:IntrinsicSize():Height());
+end
+function LayoutBox:IntrinsicLogicalHeight()
+	return if_else(self:Style():IsHorizontalWritingMode(), self:IntrinsicSize():Height(), self:IntrinsicSize():Width());
+end
+
+--LayoutUnit RenderBox::computeReplacedLogicalWidth(bool includeMaxWidth) const
+function LayoutBox:ComputeReplacedLogicalWidth(includeMaxWidth)
+    return self:ComputeReplacedLogicalWidthRespectingMinMaxWidth(self:ComputeReplacedLogicalWidthUsing(self:Style():LogicalWidth()), includeMaxWidth);
+end
+
+--LayoutUnit RenderBox::computeReplacedLogicalWidthRespectingMinMaxWidth(LayoutUnit logicalWidth, bool includeMaxWidth) const
+function LayoutBox:ComputeReplacedLogicalWidthRespectingMinMaxWidth(logicalWidth, includeMaxWidth)
+    local minLogicalWidth = self:ComputeReplacedLogicalWidthUsing(self:Style():LogicalMinWidth());
+    local maxLogicalWidth = if_else(not includeMaxWidth or self:Style():LogicalMaxWidth():IsUndefined(), logicalWidth, self:ComputeReplacedLogicalWidthUsing(self:Style():LogicalMaxWidth()));
+    return math.max(minLogicalWidth, math.min(logicalWidth, maxLogicalWidth));
+end
+
+function LayoutBox:ShouldComputeSizeAsReplaced() 
+	return self:IsReplaced() and not self:IsInlineBlockOrInlineTable();
+end
+
+function LayoutBox:PaintBackground(paintInfo, rect)
+	self:PaintFillLayers(paintInfo, rect);
+end
+
+function LayoutBox:PaintFillLayers(paintInfo, rect)
+	self:PaintFillLayer(paintInfo, rect)
+end
+
+function LayoutBox:PaintFillLayer(paintInfo, rect)
+	self:PaintFillLayerExtended(paintInfo, rect)
+end
+
+function LayoutBox:ComputePositionedLogicalHeightReplaced()
+	-- The following is based off of the W3C Working Draft from April 11, 2006 of
+    -- CSS 2.1: Section 10.6.5 "Absolutely positioned, replaced elements"
+    -- <http://www.w3.org/TR/2005/WD-CSS21-20050613/visudet.html#abs-replaced-height>
+    -- (block-style-comments in this function correspond to text from the spec and
+    -- the numbers correspond to numbers in spec)
+
+    -- We don't use containingBlock(), since we may be positioned by an enclosing relpositioned inline.
+    local containerBlock = self:Container():ToRenderBoxModelObject();
+
+    local containerLogicalHeight = self:ContainingBlockLogicalHeightForPositioned(containerBlock);
+
+    -- Variables to solve.
+    local isHorizontal = self:IsHorizontalWritingMode();
+    local isFlipped = self:Style():IsFlippedBlocksWritingMode();
+    local marginBefore = self:Style():MarginBefore();
+    local marginAfter = self:Style():MarginAfter();
+	local marginBeforeAlias, marginAfterAlias = self:GetMarginBeforeAfter();
+    --LayoutUnit& marginBeforeAlias = isHorizontal ? (isFlipped ? m_marginBottom : m_marginTop) : (isFlipped ? m_marginRight: m_marginLeft);
+    --LayoutUnit& marginAfterAlias = isHorizontal ? (isFlipped ? m_marginTop : m_marginBottom) : (isFlipped ? m_marginLeft: m_marginRight);
+
+    local logicalTop = self:Style():LogicalTop();
+    local logicalBottom = self:Style():LogicalBottom();
+
+    --[[
+     * 1. The used value of 'height' is determined as for inline replaced
+     *    elements.
+    ]]
+    -- NOTE: This value of height is FINAL in that the min/max height calculations
+    -- are dealt with in computeReplacedHeight().  This means that the steps to produce
+    -- correct max/min in the non-replaced version, are not necessary.
+    self:SetLogicalHeight(self:ComputeReplacedLogicalHeight() + self:BorderAndPaddingLogicalHeight());
+    local availableSpace = containerLogicalHeight - self:LogicalHeight();
+
+    --[[
+     * 2. If both 'top' and 'bottom' have the value 'auto', replace 'top'
+     *    with the element's static position.
+    ]]
+    -- see FIXME 1
+    computeBlockStaticDistance(logicalTop, logicalBottom, self, containerBlock);
+
+    --[[
+     * 3. If 'bottom' is 'auto', replace any 'auto' on 'margin-top' or
+     *    'margin-bottom' with '0'.
+    ]]
+    -- FIXME: The spec. says that this step should only be taken when bottom is
+    -- auto, but if only top is auto, this makes step 4 impossible.
+    if (logicalTop:IsAuto() or logicalBottom:IsAuto()) then
+        if (marginBefore:IsAuto()) then
+            marginBefore:SetValue(LengthTypeEnum.Fixed, 0);
+		end
+        if (marginAfter:IsAuto()) then
+            marginAfter:SetValue(LengthTypeEnum.Fixed, 0);
+		end
+    end
+
+    --[[
+     * 4. If at this point both 'margin-top' and 'margin-bottom' are still
+     *    'auto', solve the equation under the extra constraint that the two
+     *    margins must get equal values.
+    ]]
+    local logicalTopValue = 0;
+    local logicalBottomValue = 0;
+
+    if (marginBefore:IsAuto() and marginAfter:IsAuto()) then
+        -- 'top' and 'bottom' cannot be 'auto' due to step 2 and 3 combined.
+        -- ASSERT(!(logicalTop.isAuto() or logicalBottom.isAuto()));
+
+        logicalTopValue = logicalTop:CalcValue(containerLogicalHeight);
+        logicalBottomValue = logicalBottom:CalcValue(containerLogicalHeight);
+
+        local difference = availableSpace - (logicalTopValue + logicalBottomValue);
+        -- NOTE: This may result in negative values.
+        marginBeforeAlias =  difference / 2; -- split the difference
+        marginAfterAlias = difference - marginBeforeAlias; -- account for odd valued differences
+
+    --[[
+     * 5. If at this point there is only one 'auto' left, solve the equation
+     *    for that value.
+    ]]
+    elseif (logicalTop:IsAuto()) then
+        marginBeforeAlias = marginBefore:CalcValue(containerLogicalHeight);
+        marginAfterAlias = marginAfter:CalcValue(containerLogicalHeight);
+        logicalBottomValue = logicalBottom:CalcValue(containerLogicalHeight);
+
+        -- Solve for 'top'
+        logicalTopValue = availableSpace - (logicalBottomValue + marginBeforeAlias + marginAfterAlias);
+    elseif (logicalBottom:IsAuto()) then
+        marginBeforeAlias = marginBefore:CalcValue(containerLogicalHeight);
+        marginAfterAlias = marginAfter:CalcValue(containerLogicalHeight);
+        logicalTopValue = logicalTop:CalcValue(containerLogicalHeight);
+
+        -- Solve for 'bottom'
+        -- NOTE: It is not necessary to solve for 'bottom' because we don't ever
+        -- use the value.
+    elseif (marginBefore:IsAuto()) then
+        marginAfterAlias = marginAfter:CalcValue(containerLogicalHeight);
+        logicalTopValue = logicalTop:CalcValue(containerLogicalHeight);
+        logicalBottomValue = logicalBottom:CalcValue(containerLogicalHeight);
+
+        -- Solve for 'margin-top'
+        marginBeforeAlias = availableSpace - (logicalTopValue + logicalBottomValue + marginAfterAlias);
+    elseif (marginAfter:IsAuto()) then
+        marginBeforeAlias = marginBefore:CalcValue(containerLogicalHeight);
+        logicalTopValue = logicalTop:CalcValue(containerLogicalHeight);
+        logicalBottomValue = logicalBottom:CalcValue(containerLogicalHeight);
+
+        -- Solve for 'margin-bottom'
+        marginAfterAlias = availableSpace - (logicalTopValue + logicalBottomValue + marginBeforeAlias);
+    else
+        -- Nothing is 'auto', just calculate the values.
+        marginBeforeAlias = marginBefore:CalcValue(containerLogicalHeight);
+        marginAfterAlias = marginAfter:CalcValue(containerLogicalHeight);
+        logicalTopValue = logicalTop:CalcValue(containerLogicalHeight);
+        -- NOTE: It is not necessary to solve for 'bottom' because we don't ever
+        -- use the value.
+     end
+
+	 self:SetMarginBeforeAfter(marginBeforeAlias, marginAfterAlias);
+
+    --[[
+     * 6. If at this point the values are over-constrained, ignore the value
+     *    for 'bottom' and solve for that value.
+    ]]
+    -- NOTE: It is not necessary to do this step because we don't end up using
+    -- the value of 'bottom' regardless of whether the values are over-constrained
+    -- or not.
+
+    -- Use computed values to calculate the vertical position.
+    local logicalTopPos = logicalTopValue + marginBeforeAlias;
+    computeLogicalTopPositionedOffset(logicalTopPos, self, self:LogicalHeight(), containerBlock, containerLogicalHeight);
+    self:SetLogicalTop(logicalTopPos);
+end
+
+--LayoutRect RenderBox::clippedOverflowRectForRepaint(RenderBoxModelObject* repaintContainer) const
+function LayoutBox:ClippedOverflowRectForRepaint(repaintContainer)
+    if (self:Style():Visibility() ~= VisibilityEnum.VISIBLE and not self:EnclosingLayer():HasVisibleContent()) then
+        return LayoutRect:new();
+	end
+
+    local r = self:VisualOverflowRect();
+
+    local v = self:View();
+    if (v) then
+        -- FIXME: layoutDelta needs to be applied in parts before/after transforms and
+        -- repaint containers. https://bugs.webkit.org/show_bug.cgi?id=23308
+        r:Move(v:LayoutDelta());
+    end
+    
+    if (self:Style()) then
+        if (self:Style():HasAppearance()) then
+            -- The theme may wish to inflate the rect used when repainting.
+            --theme()->adjustRepaintRect(this, r);
+		end
+
+        -- We have to use maximalOutlineSize() because a child might have an outline
+        -- that projects outside of our overflowRect.
+        if (v) then
+            --ASSERT(style()->outlineSize() <= v->maximalOutlineSize());
+            r:Inflate(v:MaximalOutlineSize());
+        end
+    end
+    
+    self:ComputeRectForRepaint(repaintContainer, r);
+    return r;
+end
+
+--LayoutRect RenderBox::outlineBoundsForRepaint(RenderBoxModelObject* repaintContainer, LayoutPoint* cachedOffsetToRepaintContainer) const
+function LayoutBox:OutlineBoundsForRepaint(repaintContainer, cachedOffsetToRepaintContainer)
+    local box = self:BorderBoundingBox();
+    self:AdjustRectForOutlineAndShadow(box);
+
+--    FloatQuad containerRelativeQuad = FloatRect(box);
+--    if (cachedOffsetToRepaintContainer)
+--        containerRelativeQuad.move(cachedOffsetToRepaintContainer->x(), cachedOffsetToRepaintContainer->y());
+--    else
+--        containerRelativeQuad = localToContainerQuad(containerRelativeQuad, repaintContainer);
+
+	if(cachedOffsetToRepaintContainer) then
+		box:Move(cachedOffsetToRepaintContainer:X(), cachedOffsetToRepaintContainer:Y());
+	else
+		local v = self:View();
+		if(v ~= nil and v:LayoutStateEnabled() ~= nil and repaintContainer == nil) then
+			local layoutState = v:LayoutState();
+            local offset = layoutState.paintOffset;
+            offset:Expand(self:X(), self:Y());
+            if (self:Style():Position() == PositionEnum.RelativePosition and self:Layer() ~= nil) then
+                offset = offset + self:Layer():RelativePositionOffset();
+			end
+            --transformState.move(offset);
+			box:Move(offset);
+		end
+	end
+
+    --box = containerRelativeQuad.enclosingBoundingBox();
+
+    -- FIXME: layoutDelta needs to be applied in parts before/after transforms and
+    -- repaint containers. https://bugs.webkit.org/show_bug.cgi?id=23308
+    box:Move(self:View():LayoutDelta());
+
+    return box;
 end

@@ -48,7 +48,7 @@ function StyleBoxData:clone()
 								self.m_minHeight:clone(), self.m_maxHeight:clone(), self.m_zIndex, self.m_hasAutoZIndex, self.m_boxSizing);
 end
 
-function StyleBoxData._eq(a, b)
+function StyleBoxData.__eq(a, b)
 	    return a.m_width == b.m_width
            and a.m_height == b.m_height
            and a.m_minWidth == b.m_minWidth

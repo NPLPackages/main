@@ -12,6 +12,8 @@ local style = CSSStyleDeclaration:new();
 ]]
 NPL.load("(gl)script/ide/System/Windows/mcml/css/StyleColor.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/css/CSSProperty.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/PageElement.lua");
+local PageElement = commonlib.gettable("System.Windows.mcml.PageElement");
 local CSSProperty = commonlib.gettable("System.Windows.mcml.css.CSSProperty");
 local StyleColor = commonlib.gettable("System.Windows.mcml.css.StyleColor");
 
@@ -21,6 +23,8 @@ local string_gsub = string.gsub;
 local string_lower = string.lower
 local string_match = string.match;
 local string_find = string.find;
+
+local StyleChangeTypeEnum = PageElement.StyleChangeTypeEnum;
 
 local CSSStyleDeclaration = commonlib.inherit(nil, commonlib.gettable("System.Windows.mcml.css.CSSStyleDeclaration"));
 
@@ -135,7 +139,6 @@ local inheritable_fields = {
 function CSSStyleDeclaration:MergeInheritable(style)
 	if(style) then
 		for key, _ in pairs(inheritable_fields) do
---			echo(key.." "..(style[key] or "nil"));
 			self[key] = style[key];
 		end
 	end
@@ -213,6 +216,11 @@ function CSSStyleDeclaration:Diff(changes)
 	return "change_update";
 end
 
+function CSSStyleDeclaration:ParseDeclaration(styleDeclaration)
+	self.properties:clear();
+	self:AddString(styleDeclaration);
+end
+
 -- @param style_code: mcml style attribute string like "background:url();margin:10px;"
 function CSSStyleDeclaration:AddString(style_code)
 	local name, value;
@@ -258,6 +266,31 @@ function CSSStyleDeclaration:AddItem(name,value)
 	end
 	--self.properties[name] = CSSProperty:new(name, value);
 	self:SetPropertyInternal(CSSProperty:new(name, value))
+end
+
+function CSSStyleDeclaration:RemoveProperty(name, notifyChanged)
+	local pos = self:FindPropertyPositionWithName(name);
+	if(pos) then
+		self.properties:remove(pos);
+		
+		if(notifyChanged) then
+			self:SetNeedsStyleRecalc();
+		end
+	end
+end
+
+function CSSStyleDeclaration:SetProperty(name, value, notifyChanged)
+	notifyChanged = if_else(notifyChanged == nil, true, notifyChanged);
+
+	if(not value or value == "") then
+		self:RemoveProperty(name, notifyChanged);
+		return;
+	end
+
+	self:AddItem(name, value);
+	if(notifyChanged) then
+		self:SetNeedsStyleRecalc();
+	end
 end
 
 function CSSStyleDeclaration:SetPropertyInternal(property)
@@ -382,4 +415,28 @@ function CSSStyleDeclaration:CreateProxy(pageElement)
 	proxy[index] = style_decl;
 	setmetatable(proxy, mt);
 	return proxy;
+end
+
+function CSSStyleDeclaration:IsInlineStyleDeclaration()
+	if(self.pageElement and self.pageElement:InlineStyleDecl() == self) then
+		return true;
+	end
+	return false;
+end
+
+function CSSStyleDeclaration:SetNeedsStyleRecalc()
+    if (self.pageElement) then
+        if (self:IsInlineStyleDeclaration()) then
+            self.pageElement:SetNeedsStyleRecalc(StyleChangeTypeEnum.InlineStyleChange);
+            --static_cast<StyledElement*>(m_node)->invalidateStyleAttribute();
+--            if (m_node->document())
+--                InspectorInstrumentation::didInvalidateStyleAttr(m_node->document(), m_node);
+        else
+            self.pageElement:SetNeedsStyleRecalc(StyleChangeTypeEnum.FullStyleChange);
+		end
+    end
+end
+
+function CSSStyleDeclaration:CssText()
+	-- TODO: add latter. transform CSSStyleDeclaration to style string.
 end

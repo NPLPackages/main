@@ -12,15 +12,19 @@ local LayoutInline = commonlib.gettable("System.Windows.mcml.layout.LayoutInline
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutBoxModelObject.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutObjectChildList.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutLineBoxList.lua");
-NPL.load("(gl)script/ide/System/Windows/mcml/layout/InLineFlowBox.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/layout/InlineFlowBox.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/platform/Length.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyleConstants.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/IntRect.lua");
+local Rect = commonlib.gettable("System.Windows.mcml.platform.graphics.IntRect");
 local ComputedStyleConstants = commonlib.gettable("System.Windows.mcml.style.ComputedStyleConstants");
 local Length = commonlib.gettable("System.Windows.mcml.platform.Length");
-local InLineFlowBox = commonlib.gettable("System.Windows.mcml.layout.InLineFlowBox");
+local InlineFlowBox = commonlib.gettable("System.Windows.mcml.layout.InlineFlowBox");
 local LayoutLineBoxList = commonlib.gettable("System.Windows.mcml.layout.LayoutLineBoxList");
 local LayoutObjectChildList = commonlib.gettable("System.Windows.mcml.layout.LayoutObjectChildList");
 local LayoutInline = commonlib.inherit(commonlib.gettable("System.Windows.mcml.layout.LayoutBoxModelObject"), commonlib.gettable("System.Windows.mcml.layout.LayoutInline"));
+
+local LayoutRect = Rect;
 
 local VerticalAlignEnum = ComputedStyleConstants.VerticalAlignEnum;
 local TextEmphasisMarkEnum = ComputedStyleConstants.TextEmphasisMarkEnum;
@@ -40,12 +44,16 @@ function LayoutInline:init(node)
 	return self;
 end
 
+function LayoutInline:GetName()
+	return "LayoutInline";
+end
+
 function LayoutInline:IsLayoutInline()
 	return true;
 end
 
 function LayoutInline:DirtyLinesFromChangedChild(child)
-	--TODO: fixed this function
+	self.lineBoxes:DirtyLinesFromChangedChild(self, child);
 end
 
 function LayoutInline:UpdateAlwaysCreateLineBoxes(fullLayout)
@@ -59,23 +67,23 @@ function LayoutInline:UpdateAlwaysCreateLineBoxes(fullLayout)
 
     local parentStyle = self:Parent():Style();
     local parentRenderInline = if_else(self:Parent():IsLayoutInline(), self:Parent(), nil);
-    --bool checkFonts = document()->inNoQuirksMode();
-	local checkFonts = false;
+    local checkFonts = self:Document():InNoQuirksMode();
+	--local checkFonts = false;
     local alwaysCreateLineBoxes = (parentRenderInline ~= nil and parentRenderInline:AlwaysCreateLineBoxes())
         or (parentRenderInline ~= nil and parentStyle:VerticalAlign() ~= VerticalAlignEnum.BASELINE)
         or self:Style():VerticalAlign() ~= VerticalAlignEnum.BASELINE
         or self:Style():TextEmphasisMark() ~= TextEmphasisMarkEnum.TextEmphasisMarkNone
-        -- or (checkFonts and (not parentStyle->font().fontMetrics().hasIdenticalAscentDescentAndLineGap(style()->font().fontMetrics())
+        or (checkFonts and (not parentStyle:Font():FontMetrics():hasIdenticalAscentDescentAndLineGap(self:Style():Font():FontMetrics())))
 		or (checkFonts and parentStyle:LineHeight() ~= self:Style():LineHeight());
 	-- document()->usesFirstLineRules() default value is false;
---    if (!alwaysCreateLineBoxes && checkFonts && document()->usesFirstLineRules()) {
---        // Have to check the first line style as well.
---        parentStyle = parent()->style(true);
---        RenderStyle* childStyle = style(true);
---        alwaysCreateLineBoxes = !parentStyle->font().fontMetrics().hasIdenticalAscentDescentAndLineGap(childStyle->font().fontMetrics())
---        || childStyle->verticalAlign() != BASELINE
---        || parentStyle->lineHeight() != childStyle->lineHeight();
---    }
+    if (not alwaysCreateLineBoxes and checkFonts and self:Document():UsesFirstLineRules()) then
+        -- Have to check the first line style as well.
+        parentStyle = self:Parent():Style(true);
+        local childStyle = self:Style(true);
+        alwaysCreateLineBoxes = not parentStyle:Font():FontMetrics():hasIdenticalAscentDescentAndLineGap(childStyle:Font():FontMetrics())
+        or childStyle:VerticalAlign() ~= VerticalAlignEnum.BASELINE
+        or parentStyle:LineHeight() ~= childStyle:LineHeight();
+    end
 
     if (alwaysCreateLineBoxes) then
         if (not fullLayout) then
@@ -129,8 +137,99 @@ function LayoutInline:LastLineBox()
 	return self.lineBoxes:LastLineBox();
 end
 
+function LayoutInline:WillBeDestroyed()
+--#ifndef NDEBUG
+    -- Make sure we do not retain "this" in the continuation outline table map of our containing blocks.
+    if (self:Parent() and self:Style():Visibility() == VISIBLE and self:HasOutline()) then
+--        bool containingBlockPaintsContinuationOutline = continuation() || isInlineElementContinuation();
+--        if (containingBlockPaintsContinuationOutline) {
+--            if (RenderBlock* cb = containingBlock()) {
+--                if (RenderBlock* cbCb = cb->containingBlock())
+--                    ASSERT(!cbCb->paintsContinuationOutline(this));
+--            }
+--        }
+    end
+--#endif
+
+    -- Make sure to destroy anonymous children first while they are still connected to the rest of the tree, so that they will
+    -- properly dirty line boxes that they are removed from.  Effects that do :before/:after only on hover could crash otherwise.
+    self:Children():DestroyLeftoverChildren();
+
+    -- Destroy our continuation before anything other than anonymous children.
+    -- The reason we don't destroy it before anonymous children is that they may
+    -- have continuations of their own that are anonymous children of our continuation.
+--    RenderBoxModelObject* continuation = this->continuation();
+--    if (continuation) {
+--        continuation->destroy();
+--        setContinuation(0);
+--    }
+    
+    if (not self:DocumentBeingDestroyed()) then
+        if (self:FirstLineBox()) then
+            -- We can't wait for RenderBoxModelObject::destroy to clear the selection,
+            -- because by then we will have nuked the line boxes.
+            -- FIXME: The FrameSelection should be responsible for this when it
+            -- is notified of DOM mutations.
+--            if (isSelectionBorder())
+--                view()->clearSelection();
+
+            -- If line boxes are contained inside a root, that means we're an inline.
+            -- In that case, we need to remove all the line boxes so that the parent
+            -- lines aren't pointing to deleted children. If the first line box does
+            -- not have a parent that means they are either already disconnected or
+            -- root lines that can just be destroyed without disconnecting.
+            if (self:FirstLineBox():Parent()) then
+				local box = self:FirstLineBox();
+				while(box) do
+					box:Remove();
+					box = box:NextLineBox();
+				end
+            end
+        elseif (self:Parent()) then
+            self:Parent():DirtyLinesFromChangedChild(self);
+		end
+    end
+
+    self.lineBoxes:DeleteLineBoxes(self:RenderArena());
+
+    LayoutInline._super.WillBeDestroyed(self);
+end
+
 function LayoutInline:StyleDidChange(diff, oldStyle)
 	LayoutInline._super.StyleDidChange(self, diff, oldStyle);
+
+	self.lineHeight = -1;
+
+	if (not self.alwaysCreateLineBoxes) then
+		--local alwaysCreateLineBoxes = self:HasSelfPaintingLayer() or self:HasBoxDecorations() or self:Style():HasPadding() or self:Style():HasMargin() or self:Style():HasOutline();
+        local alwaysCreateLineBoxes = self:HasSelfPaintingLayer() or self:HasBoxDecorations() or self:Style():HasPadding() or self:Style():HasMargin();
+        if (oldStyle and alwaysCreateLineBoxes) then
+            self:DirtyLineBoxes(false);
+            self:SetNeedsLayout(true);
+        end
+        self.alwaysCreateLineBoxes = alwaysCreateLineBoxes;
+    end
+end
+
+--LayoutUnit RenderInline::lineHeight(bool firstLine, LineDirectionMode /*direction*/, LinePositionMode /*linePositionMode*/) const
+function LayoutInline:LineHeight(firstLine, LineDirectionMode, LinePositionMode)
+	if (firstLine and self:Document():UsesFirstLineRules()) then
+        local s = self:Style(firstLine);
+        if (s ~= self:Style()) then
+            return s:ComputedLineHeight();
+		end
+    end
+    
+    if (self.lineHeight == -1) then
+        self.lineHeight = self:Style():ComputedLineHeight();
+	end
+    return self.lineHeight;
+end
+
+--LayoutUnit RenderInline::baselinePosition(FontBaseline baselineType, bool firstLine, LineDirectionMode direction, LinePositionMode linePositionMode) const
+function LayoutInline:BaselinePosition(baselineType, firstLine, direction, linePositionMode)
+	local fontMetrics = self:Style(firstLine):FontMetrics();
+	return fontMetrics:ascent(baselineType) + math.floor((self:LineHeight(firstLine, direction, linePositionMode) - fontMetrics:height()) / 2 + 0.5);
 end
 
 function LayoutInline:UpdateBoxModelInfoFromStyle()
@@ -339,8 +438,16 @@ function LayoutInline:VirtualChildren()
 	return self:Children();
 end
 
+function LayoutInline:Paint(paintInfo, paintOffset)
+	self.lineBoxes:Paint(self, paintInfo, paintOffset);
+end
+
 function LayoutInline:Children()
 	return self.children;
+end
+
+function LayoutInline:VirtualContinuation()
+	return self:Continuation();
 end
 
 --LayoutRect RenderInline::linesBoundingBox() const
@@ -377,4 +484,189 @@ function LayoutInline:LinesBoundingBox()
 --    }
 --
 --    return result;
+end
+
+function LayoutInline:CulledInlineFirstLineBox()
+	local curr = self:FirstChild();
+	while(curr) do
+		if (curr:IsFloatingOrPositioned()) then
+            --continue;
+		else
+			-- We want to get the margin box in the inline direction, and then use our font ascent/descent in the block
+			-- direction (aligned to the root box's baseline).
+			if (curr:IsBox()) then
+				return curr:ToRenderBox():InlineBoxWrapper();
+			end
+			if (curr:IsLayoutInline()) then
+				local currInline = curr:ToRenderInline();
+				local result = currInline:FirstLineBoxIncludingCulling();
+				if (result) then
+					return result;
+				end
+			elseif (curr:IsText()) then
+				local currText = curr:ToRenderText();
+				if (currText:FirstTextBox()) then
+					return currText:FirstTextBox();
+				end
+			end
+		end
+	
+		curr = curr:NextSibling();
+	end
+    return;
+end
+
+function LayoutInline:CulledInlineLastLineBox()
+	local curr = self:LastChild();
+	while(curr) do
+		if (curr:IsFloatingOrPositioned()) then
+            --continue;
+        else
+			-- We want to get the margin box in the inline direction, and then use our font ascent/descent in the block
+			-- direction (aligned to the root box's baseline).
+			if (curr:IsBox()) then
+				return curr:ToRenderBox():InlineBoxWrapper();
+			end
+			if (curr:IsLayoutInline()) then
+				local currInline = curr:ToRenderInline();
+				local result = currInline:LastLineBoxIncludingCulling();
+				if (result) then
+					return result;
+				end
+			elseif (curr:IsText()) then
+				local currText = curr:ToRenderText();
+				if (currText:LastTextBox()) then
+					return currText:LastTextBox();
+				end
+			end
+		end
+	
+		curr = curr:PreviousSibling();
+	end
+    return;
+end
+
+function LayoutInline:FirstLineBoxIncludingCulling()
+	if(self:AlwaysCreateLineBoxes()) then
+		return self:FirstLineBox();
+	end
+	return self:CulledInlineFirstLineBox();
+end
+
+function LayoutInline:LastLineBoxIncludingCulling()
+	if(self:AlwaysCreateLineBoxes()) then
+		return self:LastLineBox();
+	end
+	return self:CulledInlineLastLineBox();
+end
+
+--LayoutRect RenderInline::clippedOverflowRectForRepaint(RenderBoxModelObject* repaintContainer) const
+function LayoutInline:ClippedOverflowRectForRepaint(repaintContainer)
+    -- Only run-ins are allowed in here during layout.
+    -- ASSERT(!view() or not view()->layoutStateEnabled() or isRunIn());
+
+    if (not self:FirstLineBoxIncludingCulling() and not self:Continuation()) then
+        return LayoutRect:new();
+	end
+
+--    -- Find our leftmost position.
+--    local boundingBox = self:LinesVisualOverflowBoundingBox():clone();
+--    local left = boundingBox:X();
+--    local top = boundingBox:Y();
+--
+--    -- Now invalidate a rectangle.
+--	local ow = 0;
+--	if(self:Style()) then
+--		ow = self:Style():OutlineSize();
+--	end
+--    
+--    -- We need to add in the relative position offsets of any inlines (including us) up to our
+--    -- containing block.
+--    local cb = self:ContainingBlock();
+--	local inlineFlow = self;
+--	while(inlineFlow and inlineFlow:IsLayoutInline() and inlineFlow ~= cb) do
+--		if (inlineFlow:Style():Position() == RelativePosition and inlineFlow:HasLayer()) then
+--            inlineFlow:ToRenderInline():Layer():RelativePositionOffset(left, top);
+--		end
+--		
+--		inlineFlow = inlineFlow:Parent();
+--	end
+--	
+--	local r = LayoutRect:new(-ow + left, -ow + top, boundingBox.width() + ow * 2, boundingBox.height() + ow * 2);
+--
+--    if (cb:HasColumns()) then
+--        --cb->adjustRectForColumns(r);
+--	end
+--
+--    if (cb:HasOverflowClip()) then
+--        -- cb->height() is inaccurate if we're in the middle of a layout of |cb|, so use the
+--        -- layer's size instead.  Even if the layer's size is wrong, the layer itself will repaint
+--        -- anyway if its size does change.
+--        local repaintRect = r:clone();
+--        repaintRect:Move(-cb:Layer():ScrolledContentOffset()); -- For overflow:auto/scroll/hidden.
+--
+--        local boxRect = LayoutRect:new(LayoutPoint:new(), cb:Layer():Size());
+--        r = LayoutRect.Intersection(repaintRect, boxRect);
+--    end
+--    
+--    -- FIXME: need to ensure that we compute the correct repaint rect when the repaint container
+--    -- is an inline.
+--    if (repaintContainer ~= self) then
+--        cb:ComputeRectForRepaint(repaintContainer, r);
+--	end
+--
+--    if (ow) then
+--		local curr = self:FirstChild();
+--		while(curr) do
+--			if (not curr:IsText()) then
+--                local childRect = curr:RectWithOutlineForRepaint(repaintContainer, ow):clone();
+--                r:Unite(childRect);
+--            end
+--		
+--			curr = curr:NextSibling();
+--		end
+--
+--        if (self:Continuation() and not self:Continuation():IsInline()) then
+--            --LayoutRect contRect = continuation()->rectWithOutlineForRepaint(repaintContainer, ow);
+--            r:Unite(contRect);
+--        end
+--    end
+--
+--    return r;
+end
+
+--LayoutRect RenderInline::linesVisualOverflowBoundingBox() const
+function LayoutInline:LinesVisualOverflowBoundingBox()
+--    if (not self:AlwaysCreateLineBoxes()) then
+--        return culledInlineVisualOverflowBoundingBox();
+--	end
+--
+--    if (!firstLineBox() || !lastLineBox())
+--        return LayoutRect();
+--
+--    // Return the width of the minimal left side and the maximal right side.
+--    LayoutUnit logicalLeftSide = numeric_limits<LayoutUnit>::max();
+--    LayoutUnit logicalRightSide = numeric_limits<LayoutUnit>::min();
+--    for (InlineFlowBox* curr = firstLineBox(); curr; curr = curr->nextLineBox()) {
+--        logicalLeftSide = min(logicalLeftSide, curr->logicalLeftVisualOverflow());
+--        logicalRightSide = max(logicalRightSide, curr->logicalRightVisualOverflow());
+--    }
+--
+--    RootInlineBox* firstRootBox = firstLineBox()->root();
+--    RootInlineBox* lastRootBox = lastLineBox()->root();
+--    
+--    LayoutUnit logicalTop = firstLineBox()->logicalTopVisualOverflow(firstRootBox->lineTop());
+--    LayoutUnit logicalWidth = logicalRightSide - logicalLeftSide;
+--    LayoutUnit logicalHeight = lastLineBox()->logicalBottomVisualOverflow(lastRootBox->lineBottom()) - logicalTop;
+--    
+--    LayoutRect rect(logicalLeftSide, logicalTop, logicalWidth, logicalHeight);
+--    if (!style()->isHorizontalWritingMode())
+--        rect = rect.transposedRect();
+--    return rect;
+end
+
+--virtual LayoutRect borderBoundingBox() const
+function LayoutInline:BorderBoundingBox()
+    local boundingBox = self:LinesBoundingBox();
+    return LayoutRect:new(0, 0, boundingBox:Width(), boundingBox:Height());
 end

@@ -56,6 +56,9 @@ function BidiStatus:ctor()
     self.lastStrong = "OtherNeutral"; -- WTF::Unicode::Direction
     self.last = "OtherNeutral"; -- WTF::Unicode::Direction
     self.context = nil;
+
+	local mt = getmetatable(self);
+	mt.__eq = BidiStatus.Equal;
 end
 
 function BidiStatus:init(eorDir, lastStrongDir, lastDir, bidiContext)
@@ -76,6 +79,10 @@ function BidiStatus:init(eorDir, lastStrongDir, lastDir, bidiContext)
 	end
 
 	return self;
+end
+
+function BidiStatus:Equal(other)
+	return self.eor == other.eor and self.last == other.last and self.lastStrong == other.lastStrong and self.context == other.context;
 end
 
 
@@ -346,7 +353,6 @@ function BidiResolver:CreateBidiRunsForLine(_end, override, hardLineBreak)
 				elseif(self.status.eor == "EuropeanNumber") then
 					self.direction = if_else(self.status.lastStrong == "LeftToRight", "LeftToRight", "EuropeanNumber");
 				end
-
                 self:AppendRun();
             end
             self.current:Copy(_end);
@@ -385,6 +391,7 @@ function BidiResolver:CreateBidiRunsForLine(_end, override, hardLineBreak)
 --                break;
 --            }
 --        }
+
         if (not pastEnd and (self.current:Equal(_end) or self.current:AtEnd())) then
             if (self.emptyRun) then
                 break;

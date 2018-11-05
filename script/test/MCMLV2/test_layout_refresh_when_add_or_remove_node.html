@@ -1,0 +1,120 @@
+<!-- "script/test/MCMLV2/test_layout_refresh_when_add_or_remove_node.html" -->
+<html>
+<pe:mcml>
+<script type="text/npl" refresh="false">
+    <![CDATA[
+
+    NPL.load("(gl)script/ide/System/Windows/mcml/mcml.lua");
+    local mcml = commonlib.gettable("System.Windows.mcml");
+
+    function InsertInlineNewNode()
+        echo("InsertNewNode");
+        local nodes = Page:jquery("div#div5");
+        echo("nodes");
+        echo(#nodes)
+        local node = nodes[1];
+        echo(node.name);
+        echo(node.attr.name);
+        --local divNode = mcml:createFromXmlNode({name="div"});
+        --divNode:GetInlineStyleDecl():SetProperty("background-color","red");
+        --node:InsertChild(divNode);
+        --divNode:InsertChild("11111");
+        local node1 = node:AppendChild({"111111",name="span",attr={style="background-color:red",name="span10"}});
+        if(node1 == nil) then
+            echo("node1 is nil");
+        end
+        --node:AppendChild({"333333",name="span",attr={style="background-color:green"}});
+        node:InsertBefore({"333333",name="span",attr={style="background-color:green",name="span30"}}, node1);
+    end
+    function RemoveInlineNode()
+        echo("RemoveNode");
+        local nodes = Page:jquery("div#div6");
+        local node = nodes[1];
+        nodes = Page:jquery("span#span1");
+        local node1 = nodes[1];
+        --local node1 = node:AppendChild({"111111",name="span",attr={style="background-color:red",name="span1"}});
+        --node:AppendChild({"333333",name="span",attr={style="background-color:green"}});
+        node:RemoveChild(node1);
+    end
+
+    function InsertBlockNewNode()
+        echo("InsertNewNode");
+        local nodes = Page:jquery("div#div1");
+        echo("nodes");
+        echo(#nodes)
+        local node = nodes[1];
+        echo(node.name);
+        echo(node.attr.name);
+        --local divNode = mcml:createFromXmlNode({name="div"});
+        --divNode:GetInlineStyleDecl():SetProperty("background-color","red");
+        --node:InsertChild(divNode);
+        --divNode:InsertChild("11111");
+        local node1 = node:AppendChild({"111111",name="div",attr={style="background-color:red",name="div10"}});
+        if(node1 == nil) then
+            echo("node1 is nil");
+        end
+        --node:AppendChild({"333333",name="div",attr={style="background-color:green"}});
+        node:InsertBefore({"333333",name="div",attr={style="background-color:green",name="div30"}}, node1);
+    end
+    function RemoveBlockNode()
+        echo("RemoveNode");
+        local nodes = Page:jquery("div#div2");
+        local node = nodes[1];
+        nodes = Page:jquery("div#div21");
+        local node1 = nodes[1];
+        --local node1 = node:AppendChild({"111111",name="span",attr={style="background-color:red",name="span1"}});
+        --node:AppendChild({"333333",name="span",attr={style="background-color:green"}});
+        node:RemoveChild(node1);
+    end
+    ]]>
+</script>
+<style>
+    .green {
+        background-color:green;
+        margin:30px;
+        padding:20px;
+    }
+
+    .burlywood {
+        background-color:burlywood;
+        padding:10px;
+    }
+    .fontBold {
+        font-weight:bold;
+    }
+</style>
+<div name="div5" id="div5" style="margin:20px;background-color:aquamarine;font-size:14px;">
+    <span style="background-color:antiquewhite">222222</span>
+</div>
+<div name="div6" id="div6" style="margin:20px;background-color:aquamarine;font-size:14px;">
+    <span style="background-color:antiquewhite">222222</span>
+    <span name="span1">111111</span>
+    <span name="span3" style="background-color:red">33333</span>
+</div>
+<div style="" class="burlywood">
+    <input name="button" type="button" value="插入inline节点" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="InsertInlineNewNode()" />
+    <input name="button" type="button" value="删除inline节点" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="RemoveInlineNode()" />
+</div>
+<div name="div1" id="div1" style="margin:20px;background-color:aquamarine;font-size:14px;">
+    <div style="background-color:antiquewhite">222222</div>
+</div>
+<div name="div2" id="div2" style="margin:20px;background-color:aquamarine;font-size:14px;">
+    <div style="background-color:antiquewhite">222222</div>
+    <div name="div21">111111</div>
+    <div name="div22" style="background-color:red">33333</div>
+</div>
+<div style="" class="burlywood">
+    <input name="button" type="button" value="插入block节点" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="InsertBlockNewNode()" />
+    <input name="button" type="button" value="删除block节点" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="RemoveBlockNode()" />
+</div>
+
+
+
+<!--<div name="div4" id="div4" style="margin:20px;width:100px;height:300px;background-color:aquamarine;font-size:14px;">
+    <div name="floatRight" id="floatRight" style="width:20px;height:20px;background-color:red;" ></div>
+    测试float属性变化时的动态刷新
+    <div name="floatLeft" id="floatLeft" style="width:20px;height:60px;background-color:green;float:left;" />
+</div>-->
+
+</pe:mcml>
+</html>

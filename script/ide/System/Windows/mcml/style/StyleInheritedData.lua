@@ -42,7 +42,7 @@ function StyleInheritedData:clone()
 									self.line_height:clone(), self.font:clone(), self.color:clone(), self.visitedLinkColor:clone());
 end
 
-function StyleInheritedData._eq(a, b)
+function StyleInheritedData.__eq(a, b)
 	    return a.horizontal_border_spacing == b.horizontal_border_spacing 
 			and a.vertical_border_spacing == b.vertical_border_spacing
 			and a.line_height == b.line_height

@@ -17,42 +17,46 @@ function pe_style:ctor()
 	self.sheet = nil;
 end
 
+-- skip child node parsing.
+function pe_style:createFromXmlNode(o)
+	return self:new(o);
+end
+
 function pe_style:attachLayoutTree()
 	
 end
 
 function pe_style:LoadComponent(parentElem, parentLayout, style)
-	--echo("pe_style:LoadComponent");
 	if(self.isLoaded) then
 		return
 	end
+
+	local styleSelector = self:GetPageCtrl():StyleSelector();
+	if(not styleSelector) then
+		return;
+	end
+
 	self.isLoaded = true;
 
 	-- nil or "text/mcss"
-	local scriptType = self:GetString("type");
+	local scriptType = self:GetString("type") or "text/css";
 	local type = string.match(scriptType,"[^/]+/([^/]+)");
 	-- Defines a URL to a file that contains the script (instead of inserting the script into your HTML document, you can refer to a file that contains the script)
 	local src = self:GetString("src") or self:GetString("href");
 	if(src and src ~= "") then
-		local pageStyle = self:GetPageStyle();
-		if(pageStyle) then
-			src = string.gsub(src, "^(%(.*%)).*$", "");
-			src = self:GetAbsoluteURL(src);
-			pageStyle:AddStyleSheetFromFile(src);
-		end
+		src = string.gsub(src, "^(%(.*%)).*$", "");
+		src = self:GetAbsoluteURL(src);
+		styleSelector:AddStyleSheetFromFile(src);
 	end
 
 	local code = self:GetPureText();
 	if(code~=nil and code~="") then
-		local pageStyle = self:GetPageStyle();
-		if(pageStyle) then
-			if(type == "css") then
-				pageStyle:AddStyleSheetFromString(code);
-			elseif(type == "mcss") then
-				local t = commonlib.LoadTableFromString(code);
-				if(t and type(t) == "table") then
-					pageStyle:AddStyleSheetFromTable(code);
-				end
+		if(type == "css") then
+			styleSelector:AddStyleSheetFromString(code);
+		elseif(type == "mcss") then
+			local t = commonlib.LoadTableFromString(code);
+			if(t and type(t) == "table") then
+				styleSelector:AddStyleSheetFromTable(code);
 			end
 		end
 	end
@@ -71,4 +75,26 @@ function pe_style:LoadStyleFile(src)
 			end
 		end
 	end
+end
+
+function pe_style:NeedsLoadComponent()
+	return true;
+end
+
+-- get all pure text of only text child node
+-- because skip child node parsing, we need traverse it by index
+function pe_style:GetPureText()
+	local nSize = #(self);
+	local text = "";
+	for i=1, nSize do
+		node = self[i];
+		if(node) then
+			if(type(node) == "string") then
+				text = text..node;
+			elseif(node.name== "text" and type(node.value) == "string") then
+				text = text..node.value;
+			end
+		end
+	end
+	return text;
 end

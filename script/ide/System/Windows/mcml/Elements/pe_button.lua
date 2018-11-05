@@ -10,33 +10,51 @@ Elements.pe_button:RegisterAs("button");
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/System/Windows/Controls/Button.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutButton.lua");
+local LayoutButton = commonlib.gettable("System.Windows.mcml.layout.LayoutButton");
 local Button = commonlib.gettable("System.Windows.Controls.Button");
 
 local pe_button = commonlib.inherit(commonlib.gettable("System.Windows.mcml.PageElement"), commonlib.gettable("System.Windows.mcml.Elements.pe_button"));
 pe_button:Property({"class_name", "pe:button"});
 
-function pe_button:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
-	css.float = css.float or true;
+function pe_button:CreateControl()
+	local parentElem = self:GetParentControl();
+	local _this = Button:new():init(parentElem);
+	self:SetControl(_this);
 
 	local polygonStyle = self:GetAttributeWithCode("polygonStyle", nil, true);
 	local direction = self:GetAttributeWithCode("direction", nil, true);
-	local _this = self.control;
-	if(not _this) then
-		_this = Button:new():init(parentElem);
-		_this:SetPolygonStyle(polygonStyle);
-		_this:SetDirection(direction);
-		self:SetControl(_this);
-	end
-	_this:ApplyCss(css);
-	_this:SetText(self:GetAttributeWithCode("value", nil, true));
-	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
-
 	local buttonName = self:GetAttributeWithCode("name",nil,true); -- touch name
-
+	_this:SetPolygonStyle(polygonStyle);
+	_this:SetDirection(direction);
+	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
 	_this:Connect("clicked", function()
 		self:OnClick(buttonName);
 	end)
 end
+
+--function pe_button:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
+--	--css.float = css.float or true;
+--
+--	local polygonStyle = self:GetAttributeWithCode("polygonStyle", nil, true);
+--	local direction = self:GetAttributeWithCode("direction", nil, true);
+--	local _this = self.control;
+--	if(not _this) then
+--		_this = Button:new():init(parentElem);
+--		_this:SetPolygonStyle(polygonStyle);
+--		_this:SetDirection(direction);
+--		self:SetControl(_this);
+--	end
+--	--_this:ApplyCss(css);
+--	--_this:SetText(self:GetAttributeWithCode("value", nil, true));
+--	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
+--
+--	local buttonName = self:GetAttributeWithCode("name",nil,true); -- touch name
+--
+--	_this:Connect("clicked", function()
+--		self:OnClick(buttonName);
+--	end)
+--end
 
 function pe_button:OnBeforeChildLayout(layout)
 	if(self.control) then
@@ -118,3 +136,27 @@ function pe_button:OnClick(buttonName)
 	return result;
 end
 
+function pe_button:ValueWithDefault()
+	return self:GetValue()
+end
+
+function pe_button:CreateLayoutObject(arena, style)
+	return LayoutButton:new():init(self);
+end
+
+function pe_button:attachLayoutTree()
+	pe_button._super.attachLayoutTree(self);
+	if (self:Renderer()) then
+        self:Renderer():UpdateFromElement();
+	end
+end
+
+--function pe_button:LoadComponentIfNeeded(parentElem, parentLayout, style_decl)
+--	pe_button._super.LoadComponentIfNeeded(self, parentElem, parentLayout, style_decl);
+--	if (self:Renderer()) then
+--		echo("has render");
+--        self:Renderer():UpdateFromElement();
+--	else
+--		echo("no render");
+--	end
+--end

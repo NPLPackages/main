@@ -55,7 +55,7 @@ function Color:Alpha()
 	return self.a;
 end
 
-function Color._eq(a, b)
+function Color.__eq(a, b)
 	return a.r == b.r and a.g == b.g and a.b == b.b and a.a == b.a and a.valid == b.valid;
 end
 
@@ -202,7 +202,37 @@ local presetColors = {
 	["white"]="#ffffff",
 	["whitesmoke"]="#f5f5f5",
 	["yellow"]="#ffff00",
-	["yellowgreen"]="#9acd32"
+	["yellowgreen"]="#9acd32",
+	-- systemColor
+	["activeborder"] = "#FFFFFFFF",
+	["activecaption"] = "#FFCCCCCC",
+	["appworkspace"] = "#FFFFFFFF",
+	["background"] = "#FF6363CE",
+	["buttonface"] = "#FFC0C0C0",
+	["buttonhighlight"] = "#FFDDDDDD",
+	["buttonshadow"] = "#FF888888",
+	["buttontext"] = "#FF000000",
+	["captiontext"] = "#FF000000",
+	["graytext"] = "#FF808080",
+	["highlight"] = "#FFB5D5FF",
+	["highlighttext"] = "#FF000000",
+	["inactiveborder"] = "#FFFFFFFF",
+	["inactivecaption"] = "#FFFFFFFF",
+	["inactivecaptiontext"] = "#FF7F7F7F",
+	["infobackground"] = "#FFFBFCC5",
+	["infotext"] = "#FF000000",
+	["menu"] = "#FF000000",
+	["menutext"] = "#FF000000",
+	["scrollbar"] = "#FFFFFFFF",
+	["text"] = "#FF000000",
+	["threeddarkshadow"] = "#FF666666",
+	["threedface"] = "#FFC0C0C0",
+	["threedhighlight"] = "#FFDDDDDD",
+	["threedlightshadow"] = "#FFC0C0C0",
+	["threedshadow"] = "#FF888888",
+	["window"] = "#FFFFFFFF",
+	["windowframe"] = "#FFCCCCCC",
+	["windowtext"] = "#FF000000",
 }
 
 local function createFromHex(color_str)

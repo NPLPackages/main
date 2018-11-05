@@ -59,6 +59,10 @@ function LayoutBoxModelObject:init(node)
 	return self;
 end
 
+function LayoutBoxModelObject:IsBoxModelObject()
+	return true;
+end
+
 ----param new_child: a LayoutObject
 --function LayoutBoxModelObject:AddChild(new_child)
 --	
@@ -286,6 +290,17 @@ function LayoutBoxModelObject:SetContinuation(continuation)
     end
 end
 
+function LayoutBoxModelObject:StyleWillChange(diff, newStyle)
+
+	s_wasFloating = self:IsFloating();
+    s_hadLayer = self:HasLayer();
+    if (s_hadLayer) then
+        s_layerWasSelfPainting = self:Layer():IsSelfPaintingLayer();
+	end
+
+	LayoutBoxModelObject._super.StyleWillChange(self, diff, newStyle);
+end
+
 function LayoutBoxModelObject:StyleDidChange(diff, oldStyle)
 	LayoutBoxModelObject._super.StyleDidChange(self, diff, oldStyle);
 	self:UpdateBoxModelInfoFromStyle();
@@ -325,8 +340,10 @@ end
 function LayoutBoxModelObject:UpdateBoxModelInfoFromStyle()
 	-- Set the appropriate bits for a box model object.  Since all bits are cleared in styleWillChange,
     -- we only check for bits that could possibly be set to true.
-    --setHasBoxDecorations(hasBackground() || style()->hasBorder() || style()->hasAppearance() || style()->boxShadow());
+    --self:SetHasBoxDecorations(self:HasBackground() or self:Style():HasBorder() or self:Style():HasAppearance() or self:Style():BoxShadow());
+	self:SetHasBoxDecorations(self:HasBackground() or self:Style():HasBorder() or self:Style():HasAppearance());
     self:SetInline(self:Style():IsDisplayInlineType());
+	self:SetPositionState(self:Style():Position());
     self:SetRelPositioned(self:Style():Position() == PositionEnum.RelativePosition);
     self:SetHorizontalWritingMode(self:Style():IsHorizontalWritingMode());
 end
@@ -356,6 +373,26 @@ end
 
 function LayoutBoxModelObject:RequiresLayer()
 	return self:IsRoot() or self:IsPositioned() or self:IsRelPositioned() or self:IsTransparent() or self:HasOverflowClip() or self:HasTransform() or self:HasMask() or self:HasReflection() or self:Style():SpecifiesColumns();
+end
+
+function LayoutBoxModelObject:DestroyLayer()
+    --ASSERT(!hasLayer()); // Callers should have already called setHasLayer(false)
+    --ASSERT(m_layer);
+    self.layer:Destroy(self:RenderArena());
+    self.layer = nil;
+end
+
+function LayoutBoxModelObject:WillBeDestroyed()
+    -- This must be done before we destroy the RenderObject.
+    if (self.layer) then
+        self.layer:ClearClipRects();
+	end
+
+    -- A continuation of this RenderObject should be destroyed at subclasses.
+    -- ASSERT(!continuation());
+
+    -- RenderObject::willBeDestroyed calls back to destroyLayer() for layer destruction
+    LayoutBoxModelObject._super.WillBeDestroyed(self);
 end
 
 --bool RenderBoxModelObject::hasSelfPaintingLayer() const
@@ -411,4 +448,16 @@ function LayoutBoxModelObject:RelativePositionOffsetY()
         return -(self:Style():Bottom():CalcValue(containingBlock:AvailableHeight()));
 	end
     return 0;
+end
+
+function LayoutBoxModelObject:PaintFillLayerExtended(paintInfo, rect)
+	local control = self:GetControl();
+	if(control) then
+		local x, y, w, h = rect:X(), rect:Y(), rect:Width(), rect:Height();
+--		if(self:HasSelfPaintingLayer()) then
+--			x, y = x + paintOffset:X(), y + paintOffset:Y();
+--		end
+		control:ApplyCss(self:Style());
+		control:setGeometry(x, y, w, h);
+	end
 end

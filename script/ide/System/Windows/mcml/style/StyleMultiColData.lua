@@ -62,7 +62,7 @@ function StyleMultiColData:clone()
 	return StyleMultiColData:new(self);
 end
 
-function StyleMultiColData._eq(a, b)
+function StyleMultiColData.__eq(a, b)
 	for k in pairs(memberAndInitialValues) do
 		if(a[k] ~= b[k]) then
 			return false;

@@ -1,0 +1,28 @@
+<!-- "script/test/MCMLV2/test_layout_inline.html" -->
+<html>
+<pe:mcml>
+<style type="text/css">
+    .red {
+        background-color:red;
+    }
+</style>
+<div name="div1" style="margin:20px;background-color:aquamarine;font-weight:bold;">
+    <span>外层block无宽度限制不用换行，span控件无背景颜色</span>background-color
+</div>
+<div name="div1" style="margin:20px;background-color:cadetblue;">
+    <span style="background-color:antiquewhite;">外层block无宽度限制不用换行，span控件有背景颜色</span>
+</div>
+<div name="div1" style="margin:20px;background-color:cadetblue;">
+    <span style="margin:10px;padding:5px;background-color:antiquewhite;">外层block无宽度限制不用换行，span控件有背景颜色，margin属性垂直方向无效，水平有效，padding都有效（margin:10px;padding:5px;）</span>
+</div>
+<div name="div1" style="margin:20px;width:150px;background-color:cadetblue;">
+    <span style="margin:10px;padding:5px;background-color:antiquewhite;">外层block有宽度限制 会分多行显示</span>
+</div>
+<div name="div1" style="margin:20px;background-color:aquamarine;">
+    <span style="font-size:55px;background-color:antiquewhite;">font-size属性会扩大行高</span>
+</div>
+<div name="div1" style="margin:20px;background-color:aquamarine;">
+    before<span style="background-color:antiquewhite;font-size:55px;">inline和文本的混合显示</span>after
+</div>
+</pe:mcml>
+</html>

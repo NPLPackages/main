@@ -31,7 +31,7 @@ function LengthSize:clone()
 	return LengthSize:new(self.width:clone(), self.height:clone());
 end
 
-function LengthSize._eq(a, b)
+function LengthSize.__eq(a, b)
 	return a.width == b.width and a.height == b.height;
 end
 

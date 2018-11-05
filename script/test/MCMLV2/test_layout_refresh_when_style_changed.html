@@ -1,0 +1,117 @@
+<!-- "script/test/MCMLV2/test_layout_refresh_when_style_changed.html" -->
+<html>
+<pe:mcml>
+<script type="text/npl" refresh="false">
+    <![CDATA[
+
+    NPL.load("(gl)script/ide/System/Windows/mcml/mcml.lua");
+    local mcml = commonlib.gettable("System.Windows.mcml");
+
+    function tvwOnClickNode(treenode)
+        echo("tvwOnClickNode");
+    end
+    function ChangeFontSize()
+        echo("ChangeFontSize");
+        local nodes = Page:jquery("div#div1");
+        echo("nodes");
+        echo(#nodes)
+        local node = nodes[1];
+        echo(node.name);
+        echo(node.attr.name);
+        node:GetInlineStyleDecl():SetProperty("font-size","26px");
+    end
+    function ChangeMargin()
+        echo("ChangeMargin");
+        local nodes = Page:jquery("div#div2");
+        echo("nodes");
+        echo(#nodes)
+        local node = nodes[1];
+        echo(node.name);
+        echo(node.attr.name);
+        node:GetInlineStyleDecl():SetProperty("padding","");
+        node:GetInlineStyleDecl():SetProperty("margin","20px");
+    end
+    function ChangeDisplay()
+        echo("ChangeDisplay");
+        local nodes = Page:jquery("div#changeDisplay");
+        echo("nodes");
+        echo(#nodes)
+        local node = nodes[1];
+        echo(node.name);
+        echo(node.attr.name);
+        node:GetInlineStyleDecl():SetProperty("display","inline");
+    end
+    function ChangeFloat()
+        echo("ChangeFloat");
+        local nodes = Page:jquery("div#floatRight");
+        echo("nodes");
+        echo(#nodes)
+        local node = nodes[1];
+        echo(node.name);
+        echo(node.attr.name);
+        node:GetInlineStyleDecl():SetProperty("float","right");
+    end
+    function ChangeClass()
+        echo("ChangeClass");
+        local nodes = Page:jquery("div#div5");
+        echo("nodes");
+        echo(#nodes)
+        local node = nodes[1];
+        echo(node.name);
+        echo(node.attr.name);
+        node:SetAttribute("class","burlywood fontBold");
+    end
+    ]]>
+</script>
+<style>
+    .green {
+        background-color:green;
+        margin:30px;
+        padding:20px;
+    }
+
+    .burlywood {
+        background-color:burlywood;
+        padding:10px;
+    }
+    .fontBold {
+        font-weight:bold;
+        font-size:18px;
+    }
+</style>
+<div name="div1" id="div1" style="margin:20px;background-color:antiquewhite;font-size:14px;">
+    测试字体变化
+</div>
+<div name="div2" id="div2" style="padding:20px;background-color:aquamarine;font-size:14px;">
+    测试padding、margin变化
+</div>
+<div name="div3" id="div3" style="margin:20px;width:100px;background-color:aquamarine;font-size:14px;">
+    1111111
+    <div name="changeDisplay" id="changeDisplay">测试display变化</div>
+    2222222
+</div>
+<div name="div4" id="div4" style="margin:20px;width:100px;height:100px;background-color:aquamarine;font-size:14px;">
+    <div name="floatRight" id="floatRight" style="width:20px;height:20px;background-color:red;"></div>
+    测试float变化动态刷新11111 1 1
+    <div name="floatLeft" id="floatLeft" style="width:20px;height:60px;background-color:green;float:left;" />
+</div>
+<div name="div5" id="div5" class="green">
+    1111111
+    <div>测试class变化</div>
+    2222222
+</div>
+
+<div name="div0" id="div0" style="background-color:aquamarine;margin:10px;" >
+    <input name="button" type="button" value="font-size变化" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="ChangeFontSize()"/>
+    <input name="button" type="button" value="margin变化" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="ChangeMargin()" />
+    <input name="button" type="button" value="display变化" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="ChangeDisplay()" />
+    <input name="button" type="button" value="float变化" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="ChangeFloat()" />
+    <input name="button" type="button" value="class变化" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="ChangeClass()" />
+</div>
+
+
+
+
+
+</pe:mcml>
+</html>

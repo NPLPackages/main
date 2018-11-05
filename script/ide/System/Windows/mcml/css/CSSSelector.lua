@@ -103,6 +103,20 @@ function CSSSelector:ctor()
 --	self.AttributeMatchType = nil;
 
 	self.tag_history = nil;
+
+	self.tag = "*";
+end
+
+function CSSSelector:Tag()
+	return self.tag;
+end
+
+function CSSSelector:SetTag(tag)
+	self.tag = tag;
+end
+
+function CSSSelector:HasTag()
+	return self.tag ~= "*";
 end
 
 function CSSSelector:Value()
@@ -134,13 +148,13 @@ function CSSSelector:SetMatch(match)
 end
 
 -- init a css selector with the params which content name, class, id, attr infomations;
-function CSSSelector:init(value, match, attribute)
+function CSSSelector:init(value, match, attribute, tag)
 	self.value = value or self.value;
 
 	self.match = match or self.match;
 	-- attribute selector 
 	self.attribute = attribute or self.attribute;
-
+	self.tag = tag;
 	return self;
 end
 

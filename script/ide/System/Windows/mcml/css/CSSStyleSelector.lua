@@ -18,6 +18,8 @@ NPL.load("(gl)script/ide/System/Windows/mcml/css/CSSStyleDefault.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/css/SelectorChecker.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyle.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/css/CSSStyleApplyProperty.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutTheme.lua");
+local LayoutTheme = commonlib.gettable("System.Windows.mcml.layout.LayoutTheme");
 local CSSStyleApplyProperty = commonlib.gettable("System.Windows.mcml.css.CSSStyleApplyProperty");
 local ComputedStyle = commonlib.gettable("System.Windows.mcml.style.ComputedStyle");
 local SelectorChecker = commonlib.gettable("System.Windows.mcml.css.SelectorChecker");
@@ -180,7 +182,6 @@ function CSSStyleSelector:MatchRules(rule_set)
 	local classNames = self.element:GetClassNames();
 	if(classNames) then
 		for class, _ in pairs(classNames) do
-			--local class = classNames[i];
 			self:MatchRulesForList(rule_set:classRules()[class]);
 		end
 	end
@@ -209,6 +210,9 @@ end
 
 function CSSStyleSelector:checkSelector(rule_data, pageElement)
 	if(rule_data) then
+		if(not SelectorChecker:TagMatches(pageElement, rule_data:Selector())) then
+			return false;
+		end
 		if(rule_data:hasFastCheckableSelector()) then
 			return SelectorChecker:fastCheckSelector(rule_data:Selector(), pageElement);
 		end
@@ -284,7 +288,6 @@ function CSSStyleSelector:StyleForElement(element, defaultParent, allowSharing, 
 	-- Clean up our style object's display and text decorations (among other fixups).
     self:AdjustRenderStyle(self:Style(), self.parentStyle, element);
 	self:InitElement();	-- Clear out for the next resolve.
-
 	return self.style;
 end
 
@@ -299,7 +302,19 @@ end
 
 --void CSSStyleSelector::adjustRenderStyle(RenderStyle* style, RenderStyle* parentStyle, Element *e)
 function CSSStyleSelector:AdjustRenderStyle(style, parentStyle, e)
+	-- Cache our original display.
+    style:SetOriginalDisplay(style:Display());
 	-- TODO: add latter;
+
+--	// Make sure our z-index value is only applied if the object is positioned.
+--    if (style->position() == StaticPosition)
+--        style->setHasAutoZIndex();
+
+	-- Let the theme also have a crack at adjusting the style.
+    if (style:HasAppearance()) then
+        --RenderTheme::defaultTheme()->adjustStyle(this, style, e, m_hasUAAppearance, m_borderData, m_backgroundData, m_backgroundColor);
+		LayoutTheme:DefaultTheme():AdjustStyle(self, style, e);
+	end
 end
 
 
@@ -310,7 +325,7 @@ function CSSStyleSelector:ApplyDeclaration(styleDeclaration)
 end
 
 function CSSStyleSelector:ApplyProperty(name, value)
-	local isInherit = (value == "isInherit");
+	local isInherit = (value == "inherit");
 
 	local handler = self.applyProperty:PropertyHandler(name);
 	if(handler) then

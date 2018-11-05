@@ -79,6 +79,11 @@ function UniString:GetWidth(font, from, len)
 	return textWidth;
 end
 
+function UniString.GetSpaceWidth(font)
+	local textWidth = _guihelper.GetTextWidth(" ", font);
+	return textWidth;
+end
+
 -- return pixel X position at the given cursor position. 
 -- @param cursor: cursor position
 -- @param font: if nil, it is the default font. 
@@ -208,6 +213,7 @@ local unicode_space_chars = {
 	[SpecialCharacter.Space] = true,
 	[SpecialCharacter.Nbsp] = true,
 	[SpecialCharacter.LineSeparator] = true,
+	[SpecialCharacter.LineFeed] = true,
 }
 
 UniString.SpecialCharacter = SpecialCharacter;
@@ -377,6 +383,19 @@ end
 
 function UniString:rightCursorPosition(oldPos)
 	return oldPos + 1;
+end
+
+function UniString:ContainsOnlyWhitespace()
+	local len = self:length();
+	for i = 1, len do
+		if (not UniString.IsASCIISpace(self:at(i))) then
+			return false;
+		end
+	end
+--	for (unsigned i = 0; i < m_length; i++)
+--        if (!isASCIISpace(m_data[i]))
+--            return false;
+    return true;
 end
 
 function UniString.IsASCIISpace(c)

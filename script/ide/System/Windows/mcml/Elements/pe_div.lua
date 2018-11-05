@@ -15,6 +15,9 @@ NPL.load("(gl)script/ide/System/Windows/Shapes/Rectangle.lua");
 NPL.load("(gl)script/ide/System/Windows/Controls/Button.lua");
 local Button = commonlib.gettable("System.Windows.Controls.Button");
 local Rectangle = commonlib.gettable("System.Windows.Shapes.Rectangle");
+local PageElement = commonlib.gettable("System.Windows.mcml.PageElement");
+
+local StyleChangeEnum = PageElement.StyleChangeEnum;
 
 local pe_div = commonlib.inherit(commonlib.gettable("System.Windows.mcml.PageElement"), commonlib.gettable("System.Windows.mcml.Elements.pe_div"));
 pe_div:Property({"class_name", "pe:div"});
@@ -23,44 +26,50 @@ function pe_div:ctor()
 	
 end
 
-function pe_div:LoadComponent(parentElem, parentLayout, style)
-	local ignore_onclick, ignore_tooltip, ignore_background;
-	local onclick, ontouch;
-	local onclick_for;
-	if(not ignore_onclick) then
-		onclick = self:GetString("onclick");
-		if(onclick == "") then
-			onclick = nil;
-		end
-		onclick_for = self:GetAttribute("for");
-		if(onclick_for == "") then
-			onclick_for = nil;
-		end
-		ontouch = self:GetString("ontouch");
-		if(ontouch == "") then
-			ontouch = nil;
-		end
-	end
-
-
-	local _this = self.control;
-	if(not _this) then
-		if(onclick_for or onclick or tooltip or ontouch) then
-			_this = Button:new():init(parentElem);
-			_this:SetPolygonStyle("none");
-			local buttonName = self:GetAttributeWithCode("name",nil,true);
-			_this:Connect("clicked", function()
-				self:OnClick(buttonName);
-			end);
-		else
-			_this = Rectangle:new():init(parentElem);
-		end
-
-		self:SetControl(_this);
-	end
-
-	pe_div._super.LoadComponent(self, _this, parentLayout, style);
+function pe_div:CreateControl()
+	local parentElem = self:GetParentControl();
+	local _this = Rectangle:new():init(parentElem);
+	self:SetControl(_this);
 end
+
+--function pe_div:LoadComponent(parentElem, parentLayout, style)
+--	local ignore_onclick, ignore_tooltip, ignore_background;
+--	local onclick, ontouch;
+--	local onclick_for;
+--	if(not ignore_onclick) then
+--		onclick = self:GetString("onclick");
+--		if(onclick == "") then
+--			onclick = nil;
+--		end
+--		onclick_for = self:GetAttribute("for");
+--		if(onclick_for == "") then
+--			onclick_for = nil;
+--		end
+--		ontouch = self:GetString("ontouch");
+--		if(ontouch == "") then
+--			ontouch = nil;
+--		end
+--	end
+--
+--
+--	local _this = self.control;
+--	if(not _this) then
+--		if(onclick_for or onclick or tooltip or ontouch) then
+--			_this = Button:new():init(parentElem);
+--			_this:SetPolygonStyle("none");
+--			local buttonName = self:GetAttributeWithCode("name",nil,true);
+--			_this:Connect("clicked", function()
+--				self:OnClick(buttonName);
+--			end);
+--		else
+--			_this = Rectangle:new():init(parentElem);
+--		end
+--
+--		self:SetControl(_this);
+--	end
+--
+--	pe_div._super.LoadComponent(self, _this, parentLayout, style);
+--end
 
 function pe_div:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 --	local ignore_onclick, ignore_tooltip, ignore_background;
@@ -102,11 +111,11 @@ function pe_div:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 --		end
 --	end
 
-	local _this = self.control;
-	if(_this) then
-		_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
-		--_this:ApplyCss(css);
-	end
+--	local _this = self.control;
+--	if(_this) then
+--		_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
+--		--_this:ApplyCss(css);
+--	end
 
 
 --	if(onclick_for or onclick or tooltip or ontouch) then
@@ -241,6 +250,91 @@ end
 local pe_mcml = commonlib.inherit(commonlib.gettable("System.Windows.mcml.Elements.pe_div"), commonlib.gettable("System.Windows.mcml.Elements.pe_mcml"));
 pe_mcml:Property({"class_name", "pe:mcml"});
 
-function pe_mcml:attachLayoutTree()
+local CompatibilityMode = 
+{
+	["QuirksMode"] = 1, 
+	["LimitedQuirksMode"] = 2, 
+	["NoQuirksMode"] = 3,
+}
 
+function pe_mcml:ctor()
+	self.m_usesFirstLineRules = false;
+	self.m_compatibilityMode = CompatibilityMode.NoQuirksMode;
+
+	self.m_inStyleRecalc = false;
+
+	self.frameView = nil;
+end
+
+function pe_mcml:SetView(frameView)
+	self.frameView = frameView;
+end
+
+function pe_mcml:View()
+	return self.frameView;
+end
+
+--function pe_mcml:attachLayoutTree()
+--
+--end
+
+function pe_mcml:UsesFirstLineRules() 
+	return self.m_usesFirstLineRules;
+end
+
+function pe_mcml:InNoQuirksMode()
+	return self.m_compatibilityMode == CompatibilityMode.NoQuirksMode; 
+end
+
+function pe_mcml:InQuirksMode()
+	return self.m_compatibilityMode == CompatibilityMode.QuirksMode;
+end
+
+function pe_mcml:RecalcStyle(change)
+	if(self.m_inStyleRecalc) then
+		return;
+	end
+
+	self.m_inStyleRecalc = true;
+
+	local frameView = self:View();
+    if (frameView) then
+        --frameView:PauseScheduledEvents();
+        frameView:BeginDeferredRepaints();
+    end
+
+	local node = self:FirstChild();
+	while(node) do
+--        if (!n->isElementNode())
+--            continue;
+        local element = node;
+        if (change >= StyleChangeEnum.Inherit or element:NeedsStyleRecalc() or element:ChildNeedsStyleRecalc()) then
+            element:RecalcStyle(change);
+		end
+
+		node = node:NextSibling();
+    end
+
+	self:ClearNeedsStyleRecalc();
+	self:ClearChildNeedsStyleRecalc();
+--    unscheduleStyleRecalc();
+
+	self.m_inStyleRecalc = false;
+
+	if (frameView) then
+        --frameView->resumeScheduledEvents();
+        frameView:EndDeferredRepaints();
+    end
+end
+
+function pe_mcml:GetParentControl()
+	if(self.frameView) then
+		return self.frameView:widget();
+	end
+	return;
+end
+
+function pe_mcml:UpdateStyleIfNeeded()
+	--recalcStyle(NoChange);
+	self:RecalcStyle(StyleChangeEnum.NoChange);
 end

@@ -120,7 +120,6 @@ function ScrollAreaBase:setScrollBarVisible(direction, policy, visible)
 	end
 
 	if(visible) then
-		--echo("show srcoll bar");
 		scrollbar:show();
 	else
 		scrollbar:hide();
@@ -199,9 +198,6 @@ end
 function ScrollAreaBase:ClipRegion()
 	local w = self:width();
 	local h = self:height();
---	echo("ScrollAreaBase:ClipRegion");
---	echo("self.hbar is Hidden:"..tostring(self.hbar:isHidden()));
---	echo("self.vbar is Hidden:"..tostring(self.vbar:isHidden()));
 	if(self.hbar and not self.hbar:isHidden()) then
 		--h = h - self.hbar:height();
 		h = h - self.SliderSize;

@@ -17,10 +17,14 @@ local LayoutText = commonlib.gettable("System.Windows.mcml.layout.LayoutText");
 local mcml = commonlib.gettable("System.Windows.mcml");
 local Label = commonlib.gettable("System.Windows.Controls.Label");
 local UIElement = commonlib.gettable("System.Windows.UIElement")
+local PageElement = commonlib.gettable("System.Windows.mcml.PageElement");
 
 local pe_text = commonlib.inherit(commonlib.gettable("System.Windows.mcml.PageElement"), commonlib.gettable("System.Windows.mcml.Elements.pe_text"));
-pe_text:Property({"class_name", "text"});
+pe_text:Property({"class_name", "pe:text"});
 pe_text.Property({"value", nil, "GetValue", "SetValue"})
+
+
+local StyleChangeEnum = PageElement.StyleChangeEnum;
 
 function pe_text:ctor()
 end
@@ -48,7 +52,26 @@ function pe_text:LoadComponent(parentElem, parentLayout, style)
 --	if(not value or value=="") then
 --		return true;
 --	end
-	self:EnableSelfPaint(parentElem);
+	--self:EnableSelfPaint(parentElem);
+end
+
+function pe_text:TranslateMe(langTable, transName)
+	self.value = langTable(self.value);
+end
+
+function pe_text:ReplaceVariables(variables)
+	local value = self.value;
+	-- REPLACE
+	local k;
+	for k=1, #variables do
+		local variable = variables[k];
+		local var_value = value:match(variable.match_exp)
+		if(var_value) then
+			value = value:gsub(variable.gsub_exp, variable.func(var_value) or var_value); 
+		end
+	end
+
+	self.value = value;
 end
 
 --function pe_text:LoadComponent(parentElem, parentLayout, style)
@@ -214,29 +237,12 @@ function pe_text:SetValue(value)
 	self.value = tostring(value);
 end
 
-function pe_text:CreateAndAppendLabel(left, top, width, height, text)
---	local label = {
---		x = x,
---		y = y,
---		width = width, 
---		height = height, 
---		text = text
---	};
-	self.labels = self.labels or commonlib.Array:new();
-	local _this = Label:new():init();
-	_this:SetText(text);
-	_this:setGeometry(left, top, width, height);
-	self.labels:add(_this);
-end
-
 -- virtual function: 
 function pe_text:paintEvent(painter)
 	if(self.labels) then
 		local css = self:Renderer():Style();
 		painter:SetFont(css:Font():ToTable());
 		painter:SetPen(css:Color():ToDWORD());
---		echo(css:Font():ToTable());
---		echo(css:Color():ToDWORD());
 		for i = 1, #self.labels do
 			local label = self.labels[i];
 			if(label) then
@@ -250,4 +256,50 @@ end
 function pe_text:CreateLayoutObject(arena, style)
 	local text = self:GetTextTrimmed();
 	return LayoutText:new():init(self, text);
+end
+
+function pe_text:RecalcTextStyle(change)
+	if(change ~= StyleChangeEnum.NoChange and self:ParentNode() and self:ParentNode():Renderer()) then
+		if (self:Renderer()) then
+			self:Renderer():SetStyle(self:ParentNode():Renderer():Style());
+		end
+	end
+
+	if(self:NeedsStyleRecalc()) then
+		if(self:ParentNode() and self:ParentNode():Renderer()) then
+			if (self:Renderer()) then
+				if (self:Renderer():IsText()) then
+					self:Renderer():ToRenderText():SetText(self:GetValue());
+				end
+			else
+				self:reattachLayoutTree();
+			end
+		end
+	end
+
+	self:ClearNeedsStyleRecalc();
+end
+
+function pe_text:IsTextNode()
+	return true;
+end
+
+function pe_text:GetAllChildWithNameIDClass(name, id, class, output)
+	return output;
+end
+
+function pe_text:GetAllChildWithName(name, output)
+	return output;
+end
+
+function pe_text:GetAllChildWithAttribute(attrName, attrValue, output)
+	return output;
+end
+
+function pe_text:GetInnerText()
+	return self.value;
+end
+
+function pe_text:print()
+	log(self.value);
 end

@@ -36,10 +36,10 @@ function Rect:new(x,y,width,height)
 	return o;
 end
 
-function Rect:init(x,y,width,height)
-	self:Reset(x_, y_, width_, height_);
-	return self;
-end
+--function Rect:init(x,y,width,height)
+--	self:Reset(x, y, width, height);
+--	return self;
+--end
 
 function Rect:Reset(x,y,width,height)
 	local x_, y_, width_, height_ = 0, 0, 0, 0;
@@ -89,11 +89,11 @@ function Rect:Size()
 end
 
 function Rect:SetLocation(location)
-	self.location = location;
+	self.location = location:clone();
 end
 
 function Rect:SetSize(size)
-	self.size = size;
+	self.size = size:clone();
 end
 
 function Rect:X()
@@ -381,4 +381,8 @@ end
 
 function Rect:Type()
 	return "Rect";
+end
+
+function Rect:TransposedRect()
+	return IntRect:new(self.location:TransposedPoint(), self.size:TransposedSize());
 end

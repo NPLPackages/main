@@ -37,7 +37,7 @@ function StyleVisualData:clone()
 	return StyleVisualData:new(self.clip:clone(), self.hasClip, self.textDecoration, self.m_zoom);
 end
 
-function StyleVisualData._eq(a, b)
+function StyleVisualData.__eq(a, b)
 	    return a.clip == b.clip 
 			and a.hasClip == b.hasClip
 			and a.textDecoration == b.textDecoration

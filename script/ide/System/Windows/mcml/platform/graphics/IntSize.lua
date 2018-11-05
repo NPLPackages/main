@@ -32,10 +32,10 @@ function Size:new(w, h)
 	return o;
 end
 
-function Size:init(w,h)
-	self:Reset(w,h);
-	return self;
-end
+--function Size:init(w,h)
+--	self:Reset(w,h);
+--	return self;
+--end
 
 function Size:Reset(w,h)
 	self[1], self[2] = w or 0, h or 0;

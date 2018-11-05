@@ -25,6 +25,7 @@ function BorderValue:new(width, style, color)
 	o.m_width = width or 3;
     o.m_style = style or ComputedStyleConstants.BorderStyleEnum.BNONE;
 	o.m_color = color or Color:new();
+	-- This is only used by OutlineValue but moved here to keep the bits packed.
 	o.m_isAuto = ComputedStyleConstants.OutlineIsAutoEnum.AUTO_OFF;
 	setmetatable(o, self);
 	return o;
@@ -35,7 +36,7 @@ function BorderValue:clone()
 	return o;
 end
 
-function BorderValue._eq(a, b)
+function BorderValue.__eq(a, b)
 	return a.m_color == b.m_color and a.m_width == b.m_width and a.m_style == b.m_style;
 end
 

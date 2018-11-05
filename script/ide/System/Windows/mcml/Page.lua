@@ -681,7 +681,6 @@ function Page.OnPageDownloaded_CallBack(xmlRoot, entry, self)
 		-- NOTE: only update if page is not ready yet. this will ignore expired remote page update. 
 		if(xmlRoot) then
 			local mcmlNode = commonlib.XPath.selectNode(xmlRoot, "//pe:mcml");
-			
 			if(mcmlNode) then
 				self:LoadFromXmlNode(mcmlNode);
 			else
@@ -762,11 +761,14 @@ function Page:LoadComponent()
 		local layoutView = LayoutView:new():init(self.mcmlNode, layout);
 		layoutView:SetStyle(self.mcmlNode:StyleForLayoutObject());
 		self.mcmlNode:SetLayoutObject(layoutView);
+		self.mcmlNode:SetView(self.layout);
 		--self:SetLayoutObject(LayoutView:new():init(self.mcmlNode, layout));
 
 		local parentElem = layout:widget();	
 		if(parentElem) then
 			self.mcmlNode:LoadComponentIfNeeded(parentElem, layout, nil);
+
+			self.mcmlNode:attachLayoutTree();
 		end
 
 	end
@@ -823,5 +825,11 @@ function Page:Detach()
 			uiElem.layout = nil; 
 		end
 		self.layout = nil;
+	end
+end
+
+function Page:PostLayoutRequestEvent()
+	if(self.layout) then
+		self.layout:PostLayoutRequestEvent();
 	end
 end

@@ -284,6 +284,13 @@ function LayoutLayer:ctor()
 	self.backing = nil;
 end
 
+function LayoutLayer:Destroy(renderArena)
+--    delete this;
+--
+--    // Recover the size left there for us by operator delete and free the memory.
+--    renderArena->free(*(size_t *)this, this);
+end
+
 function LayoutLayer:Renderer()
 	return self.renderer;
 end
@@ -347,6 +354,10 @@ end
 
 function LayoutLayer:SetLastChild(last)
 	self.last = last;
+end
+
+function LayoutLayer:RepaintRect()
+	return self.repaintRect;
 end
 
 function LayoutLayer:ShouldBeNormalFlowOnly()
@@ -954,7 +965,7 @@ function LayoutLayer:SetHasVisibleContent(b)
 --        end
     end
     if (self:Parent()) then
-        self:Parent():ChildVisibilityChanged(m_hasVisibleContent);
+        self:Parent():ChildVisibilityChanged(self.hasVisibleContent);
 	end
 end
 
@@ -1661,3 +1672,10 @@ function LayoutLayer:UpdateLayerPosition()
 end
 
 function LayoutLayer:IsComposited() return false; end
+
+function LayoutLayer:Marquee() 
+	return self.marquee;
+end
+
+function LayoutLayer:HorizontalScrollbar() return self.hBar; end
+function LayoutLayer:VerticalScrollbar() return self.vBar; end

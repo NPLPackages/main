@@ -99,7 +99,7 @@ function StyleRareInheritedData:clone()
 	return o;
 end
 
-function StyleRareInheritedData._eq(a, b)
+function StyleRareInheritedData.__eq(a, b)
 	return a.indent == b.indent 
 		and a.effectiveZoom == b.effectiveZoom 
 		and a.widows == b.widows 

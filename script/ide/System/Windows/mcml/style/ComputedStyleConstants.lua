@@ -94,7 +94,7 @@ local OutlineIsAutoEnum = EnumCreater.Transform({ "AUTO_OFF", "AUTO_ON"});
 ComputedStyleConstants.OutlineIsAutoEnum = OutlineIsAutoEnum;
 
 local PositionEnum = EnumCreater.Transform({
-    "StaticPosition", "RelativePosition", "AbsolutePosition", "FixedPosition"
+    "StaticPosition", "RelativePosition", "AbsolutePosition", "StickyPosition", {"FixedPosition", 6}
 });
 ComputedStyleConstants.PositionEnum = PositionEnum;
 
@@ -191,12 +191,14 @@ ComputedStyleConstants.BoxDirectionEnum = BoxDirectionEnum;
 
 -- CSS3 Flexbox Properties
 
-local FlexPackEnum = EnumCreater.Transform({ "PackStart", "PackEnd", "PackCenter", "PackJustify"});
-ComputedStyleConstants.FlexPackEnum = FlexPackEnum;
-local FlexAlignEnum = EnumCreater.Transform({ "AlignStart", "AlignEnd", "AlignCenter", "AlignStretch", "AlignBaseline"});
-ComputedStyleConstants.FlexAlignEnum = FlexAlignEnum;
-local FlexFlowEnum = EnumCreater.Transform({ "FlowRow", "FlowRowReverse", "FlowColumn", "FlowColumnReverse"});
-ComputedStyleConstants.FlexFlowEnum = FlexFlowEnum;
+ComputedStyleConstants.AlignContentEnum = EnumCreater.Transform({ "AlignContentFlexStart", "AlignContentFlexEnd", "AlignContentCenter", "AlignContentSpaceBetween", "AlignContentSpaceAround", "AlignContentStretch" });
+ComputedStyleConstants.FlexDirectionEnum  = EnumCreater.Transform({ "FlowRow", "FlowRowReverse", "FlowColumn", "FlowColumnReverse" });
+ComputedStyleConstants.FlexWrapEnum = EnumCreater.Transform({ "FlexNoWrap", "FlexWrap", "FlexWrapReverse" });
+ComputedStyleConstants.ItemPositionEnum = EnumCreater.Transform({ "ItemPositionAuto", "ItemPositionNormal", "ItemPositionStretch", "ItemPositionBaseline", "ItemPositionLastBaseline", "ItemPositionCenter", "ItemPositionStart", "ItemPositionEnd", "ItemPositionSelfStart", "ItemPositionSelfEnd", "ItemPositionFlexStart", "ItemPositionFlexEnd", "ItemPositionLeft", "ItemPositionRight" });
+ComputedStyleConstants.OverflowAlignmentEnum = EnumCreater.Transform({ "OverflowAlignmentDefault", "OverflowAlignmentUnsafe", "OverflowAlignmentSafe" });
+ComputedStyleConstants.ItemPositionTypeEnum = EnumCreater.Transform({ "NonLegacyPosition", "LegacyPosition" });
+ComputedStyleConstants.ContentPositionEnum = EnumCreater.Transform({ "ContentPositionNormal", "ContentPositionBaseline", "ContentPositionLastBaseline", "ContentPositionCenter", "ContentPositionStart", "ContentPositionEnd", "ContentPositionFlexStart", "ContentPositionFlexEnd", "ContentPositionLeft", "ContentPositionRight" });
+ComputedStyleConstants.ContentDistributionTypeEnum = EnumCreater.Transform({ "ContentDistributionDefault", "ContentDistributionSpaceBetween", "ContentDistributionSpaceAround", "ContentDistributionSpaceEvenly", "ContentDistributionStretch" });
 
 local TextSecurityEnum = EnumCreater.Transform({
     "TSNONE", "TSDISC", "TSCIRCLE", "TSSQUARE"
@@ -536,4 +538,22 @@ ComputedStyleConstants.UnicodeBidiEnum = EnumCreater.Transform({
     "Override",
     "Isolate",
     "Plaintext",
+});
+
+
+-- Must follow CSSValueKeywords.in order
+ComputedStyleConstants.ControlPartEnum = EnumCreater.Transform({
+    "NoControlPart", "CheckboxPart", "RadioPart", "PushButtonPart", "SquareButtonPart", "ButtonPart",
+	"ButtonBevelPart", "DefaultButtonPart", "InnerSpinButtonPart", "InputSpeechButtonPart", "ListButtonPart", "ListboxPart", "ListItemPart",
+	"MediaFullscreenButtonPart", "MediaMuteButtonPart", "MediaPlayButtonPart", "MediaSeekBackButtonPart",
+	"MediaSeekForwardButtonPart", "MediaRewindButtonPart", "MediaReturnToRealtimeButtonPart", "MediaToggleClosedCaptionsButtonPart",
+	"MediaSliderPart", "MediaSliderThumbPart", "MediaVolumeSliderContainerPart", "MediaVolumeSliderPart", "MediaVolumeSliderThumbPart",
+	"MediaVolumeSliderMuteButtonPart", "MediaControlsBackgroundPart", "MediaControlsFullscreenBackgroundPart", "MediaCurrentTimePart", "MediaTimeRemainingPart",
+	"MenulistPart", "MenulistButtonPart", "MenulistTextPart", "MenulistTextFieldPart", "MeterPart", "ProgressBarPart", "ProgressBarValuePart",
+	"SliderHorizontalPart", "SliderVerticalPart", "SliderThumbHorizontalPart",
+	"SliderThumbVerticalPart", "CaretPart", "SearchFieldPart", "SearchFieldDecorationPart",
+	"SearchFieldResultsDecorationPart", "SearchFieldResultsButtonPart",
+	"SearchFieldCancelButtonPart", "TextFieldPart",
+	"RelevancyLevelIndicatorPart", "ContinuousCapacityLevelIndicatorPart", "DiscreteCapacityLevelIndicatorPart", "RatingLevelIndicatorPart",
+	"TextAreaPart", "CapsLockIndicatorPart"
 });

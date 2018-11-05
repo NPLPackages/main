@@ -39,26 +39,120 @@ function LayoutObjectChildList:SetLastChild(child)
 end
 
 function LayoutObjectChildList:DestroyLeftoverChildren()
-	--TODO: fixed this function
-
---	while (firstChild()) {
---        if (firstChild()->isListMarker() || (firstChild()->style()->styleType() == FIRST_LETTER && !firstChild()->isText()))
---            firstChild()->remove();  // List markers are owned by their enclosing list and so don't get destroyed by this container. Similarly, first letters are destroyed by their remaining text fragment.
---        else if (firstChild()->isRunIn() && firstChild()->node()) {
---            firstChild()->node()->setRenderer(0);
---            firstChild()->node()->setNeedsStyleRecalc();
---            firstChild()->destroy();
---        } else {
---            // Destroy any anonymous children remaining in the render tree, as well as implicit (shadow) DOM elements like those used in the engine-based text fields.
---            if (firstChild()->node())
---                firstChild()->node()->setRenderer(0);
---            firstChild()->destroy();
---        }
---    }
+	while (self:FirstChild()) do
+        if (self:FirstChild():IsListMarker() or (self:FirstChild():Style():StyleType() == PseudoIdEnum.FIRST_LETTER and not self:FirstChild():IsText())) then
+            --firstChild()->remove();  // List markers are owned by their enclosing list and so don't get destroyed by this container. Similarly, first letters are destroyed by their remaining text fragment.
+        elseif (self:FirstChild():IsRunIn() and self:FirstChild():Node()) then
+            --firstChild()->node()->setRenderer(0);
+            --firstChild()->node()->setNeedsStyleRecalc();
+            --firstChild()->destroy();
+        else
+            -- Destroy any anonymous children remaining in the render tree, as well as implicit (shadow) DOM elements like those used in the engine-based text fields.
+            if (self:FirstChild():Node()) then
+                self:FirstChild():Node():SetRenderer(nil);
+			end
+            self:FirstChild():Destroy();
+        end
+    end
 end
 
 function LayoutObjectChildList:RemoveChildNode(owner, oldChild, fullRemove)
-	--TODO: fixed this function
+	fullRemove = if_else(fullRemove == nil, true, fullRemove);
+	--ASSERT(oldChild->parent() == owner);
+
+    -- So that we'll get the appropriate dirty bit set (either that a normal flow child got yanked or
+    -- that a positioned child got yanked).  We also repaint, so that the area exposed when the child
+    -- disappears gets repainted properly.
+    if (not owner:DocumentBeingDestroyed() and fullRemove and oldChild.everHadLayout) then
+        oldChild:SetNeedsLayoutAndPrefWidthsRecalc();
+        if (oldChild:IsBody()) then
+            owner:View():Repaint();
+        else
+            oldChild:Repaint();
+		end
+    end
+
+    -- If we have a line box wrapper, delete it.
+    if (oldChild:IsBox()) then
+        oldChild:DeleteLineBoxWrapper();
+	end
+
+    if (not owner:DocumentBeingDestroyed() and fullRemove) then
+        -- if we remove visible child from an invisible parent, we don't know the layer visibility any more
+        local layer = nil;
+        if (owner:Style():Visibility() ~= VisibilityEnum.VISIBLE and oldChild:Style():Visibility() == VisibilityEnum.VISIBLE and not oldChild:HasLayer()) then
+			layer = owner:EnclosingLayer();
+            if (layer) then
+                layer:DirtyVisibleContentStatus();
+			end
+        end
+
+         -- Keep our layer hierarchy updated.
+        if (oldChild:FirstChild() or oldChild:HasLayer()) then
+            if (not layer) then
+                layer = owner:EnclosingLayer();
+			end
+            oldChild:RemoveLayers(layer);
+        end
+
+        if (oldChild:IsListItem()) then
+            --toRenderListItem(oldChild)->updateListMarkerNumbers();
+		end
+
+        if (oldChild:IsPositioned() and owner:ChildrenInline()) then
+            owner:DirtyLinesFromChangedChild(oldChild);
+		end
+        if (oldChild:IsRenderRegion()) then
+            --toRenderRegion(oldChild)->detachRegion();
+		end
+
+        if (oldChild:InRenderFlowThread() and oldChild:IsBox()) then
+            --oldChild->enclosingRenderFlowThread()->removeRenderBoxRegionInfo(toRenderBox(oldChild));
+		end
+
+--        if (RenderFlowThread* containerFlowThread = renderFlowThreadContainer(owner))
+--            containerFlowThread->removeFlowChild(oldChild);
+
+--#if ENABLE(SVG)
+--        -- Update cached boundaries in SVG renderers, if a child is removed.
+--        owner->setNeedsBoundariesUpdate();
+--#endif
+    end
+    
+    -- If oldChild is the start or end of the selection, then clear the selection to
+    -- avoid problems of invalid pointers.
+    -- FIXME: The FrameSelection should be responsible for this when it
+    -- is notified of DOM mutations.
+--    if (not owner:DocumentBeingDestroyed() and oldChild:IsSelectionBorder()) then
+--        owner:View():ClearSelection();
+--	end
+
+    -- remove the child
+    if (oldChild:PreviousSibling()) then
+        oldChild:PreviousSibling():SetNextSibling(oldChild:NextSibling());
+	end
+    if (oldChild:NextSibling()) then
+        oldChild:NextSibling():SetPreviousSibling(oldChild:PreviousSibling());
+	end
+
+    if (self:FirstChild() == oldChild) then
+        self:SetFirstChild(oldChild:NextSibling());
+	end
+    if (self:LastChild() == oldChild) then
+        self:SetLastChild(oldChild:PreviousSibling());
+	end
+
+    oldChild:SetPreviousSibling();
+    oldChild:SetNextSibling();
+    oldChild:SetParent();
+
+--    RenderCounter::rendererRemovedFromTree(oldChild);
+--    RenderQuote::rendererRemovedFromTree(oldChild);
+
+--    if (AXObjectCache::accessibilityEnabled())
+--        owner->document()->axObjectCache()->childrenChanged(owner);
+
+    return oldChild;
 end
 
 function RenderFlowThreadContainer(object)
@@ -149,62 +243,71 @@ function LayoutObjectChildList:InsertChildNode(owner, child, beforeChild, fullIn
         return;
     end
 
---	ASSERT(!child->parent());
---    while (beforeChild->parent() != owner && beforeChild->parent()->isAnonymousBlock())
---        beforeChild = beforeChild->parent();
---    ASSERT(beforeChild->parent() == owner);
---
---    ASSERT(!owner->isBlockFlow() || (!child->isTableSection() && !child->isTableRow() && !child->isTableCell()));
---
---    if (beforeChild == firstChild())
---        setFirstChild(child);
---
---    RenderObject* prev = beforeChild->previousSibling();
---    child->setNextSibling(beforeChild);
---    beforeChild->setPreviousSibling(child);
---    if (prev)
---        prev->setNextSibling(child);
---    child->setPreviousSibling(prev);
---
---    child->setParent(owner);
---    
---    if (fullInsert) {
---        // Keep our layer hierarchy updated.  Optimize for the common case where we don't have any children
---        // and don't have a layer attached to ourselves.
---        RenderLayer* layer = 0;
---        if (child->firstChild() || child->hasLayer()) {
---            layer = owner->enclosingLayer();
---            child->addLayers(layer);
---        }
---
---        // if the new child is visible but this object was not, tell the layer it has some visible content
---        // that needs to be drawn and layer visibility optimization can't be used
---        if (owner->style()->visibility() != VISIBLE && child->style()->visibility() == VISIBLE && !child->hasLayer()) {
---            if (!layer)
---                layer = owner->enclosingLayer();
---            if (layer)
---                layer->setHasVisibleContent(true);
---        }
---
---        if (child->isListItem())
---            toRenderListItem(child)->updateListMarkerNumbers();
---
---        if (!child->isFloating() && owner->childrenInline())
---            owner->dirtyLinesFromChangedChild(child);
---
---        if (child->isRenderRegion())
---            toRenderRegion(child)->attachRegion();
---
+	--ASSERT(!child->parent());
+    while (beforeChild:Parent() ~= owner and beforeChild:Parent():IsAnonymousBlock()) do
+        beforeChild = beforeChild:Parent();
+	end
+    --ASSERT(beforeChild->parent() == owner);
+
+    --ASSERT(!owner->isBlockFlow() || (!child->isTableSection() && !child->isTableRow() && !child->isTableCell()));
+
+    if (beforeChild == self:FirstChild()) then
+        self:SetFirstChild(child);
+	end
+
+    local prev = beforeChild:PreviousSibling();
+    child:SetNextSibling(beforeChild);
+    beforeChild:SetPreviousSibling(child);
+    if (prev) then
+        prev:SetNextSibling(child);
+	end
+    child:SetPreviousSibling(prev);
+
+    child:SetParent(owner);
+    
+    if (fullInsert) then
+        -- Keep our layer hierarchy updated.  Optimize for the common case where we don't have any children
+        -- and don't have a layer attached to ourselves.
+        local layer = nil;
+        if (child:FirstChild() or child:HasLayer()) then
+            layer = owner:EnclosingLayer();
+            child:AddLayers(layer);
+        end
+
+        -- if the new child is visible but this object was not, tell the layer it has some visible content
+        -- that needs to be drawn and layer visibility optimization can't be used
+        if (owner:Style():Visibility() ~= VisibilityEnum.VISIBLE and child:Style():Visibility() == VisibilityEnum.VISIBLE and not child:HasLayer()) then
+            if (not layer) then
+                layer = owner:EnclosingLayer();
+			end
+            if (layer) then
+                layer:SetHasVisibleContent(true);
+			end
+        end
+
+        if (child:IsListItem()) then
+            --toRenderListItem(child)->updateListMarkerNumbers();
+		end
+
+        if (not child:IsFloating() and owner:ChildrenInline()) then
+            owner:DirtyLinesFromChangedChild(child);
+		end
+
+        if (child:IsRenderRegion()) then
+            --toRenderRegion(child)->attachRegion();
+		end
+
 --        if (RenderFlowThread* containerFlowThread = renderFlowThreadContainer(owner))
 --            containerFlowThread->addFlowChild(child, beforeChild);
---    }
---
+    end
+
 --    RenderCounter::rendererSubtreeAttached(child);
 --    RenderQuote::rendererSubtreeAttached(child);
---    child->setNeedsLayoutAndPrefWidthsRecalc();
---    if (!owner->normalChildNeedsLayout())
---        owner->setChildNeedsLayout(true); // We may supply the static position for an absolute positioned child.
---    
+    child:SetNeedsLayoutAndPrefWidthsRecalc();
+    if (not owner:NormalChildNeedsLayout()) then
+        owner:SetChildNeedsLayout(true); -- We may supply the static position for an absolute positioned child.
+	end
+    
 --    if (AXObjectCache::accessibilityEnabled())
 --        owner->document()->axObjectCache()->childrenChanged(owner);
 end

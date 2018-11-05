@@ -32,10 +32,10 @@ function Point:new(x, y)
 	return o;
 end
 
-function Point:init(x,y)
-	self:Reset(x,y);
-	return self;
-end
+--function Point:init(x,y)
+--	self:Reset(x,y);
+--	return self;
+--end
 
 function Point:Reset(x,y)
 	self[1], self[2] = x or 0, y or 0;

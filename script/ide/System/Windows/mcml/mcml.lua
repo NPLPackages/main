@@ -123,7 +123,7 @@ function mcml:LoadAllElements()
 	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_identicon.lua");
 	Elements.pe_identicon:RegisterAs("pe:identicon");
 	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_style.lua");
-	Elements.pe_style:RegisterAs("pe:style", "style");
+	Elements.pe_style:RegisterAs("pe:style", "style", "link");
 	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_header.lua");
 	Elements.pe_header:RegisterAs("h1", "h2", "h3", "h4");
 	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_radio.lua");
@@ -155,6 +155,16 @@ function mcml:LoadAllElements()
 	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_label.lua");
 	Elements.pe_label:RegisterAs("label","pe:label");
 	-- TODO: add all system defined page element here
+end
+
+function mcml:createElement(name)
+	self:StaticInit();
+	local class_type = self:GetClassByTagName(name or "div");
+	if(class_type) then
+		return class_type:createFromXmlNode(xmlNode);
+	else
+		LOG.std(nil, "warn", "mcml", "can not find tag name %s", xmlNode.name or "");
+	end
 end
 
 -- create page element from xml node by its name. 

@@ -41,12 +41,18 @@ NPL.load("(gl)script/ide/System/localserver/UrlHelper.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/css/CSSStyleDeclaration.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyle.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutTreeBuilder.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyleConstants.lua");
+local ComputedStyleConstants = commonlib.gettable("System.Windows.mcml.style.ComputedStyleConstants");
 local LayoutTreeBuilder = commonlib.gettable("System.Windows.mcml.layout.LayoutTreeBuilder");
 local LayoutObject = commonlib.gettable("System.Windows.mcml.layout.LayoutObject");
 local ComputedStyle = commonlib.gettable("System.Windows.mcml.style.ComputedStyle");
 local CSSStyleDeclaration = commonlib.gettable("System.Windows.mcml.css.CSSStyleDeclaration");
 local mcml = commonlib.gettable("System.Windows.mcml");
 local Elements = commonlib.gettable("System.Windows.mcml.Elements");
+
+
+local DisplayEnum = ComputedStyleConstants.DisplayEnum;
+
 local PageElement = commonlib.inherit(commonlib.gettable("System.Core.ToolBase"), commonlib.gettable("System.Windows.mcml.PageElement"));
 -- default style sheet
 PageElement:Property("Name", "PageElement");
@@ -66,15 +72,78 @@ local LOG = LOG;
 local NameNodeMap_ = {};
 local commonlib = commonlib.gettable("commonlib");
 
+local StyleChangeTypeEnum = 
+{
+	["NoStyleChange"] = 0, 
+    ["InlineStyleChange"] = 1,
+    ["FullStyleChange"] = 2,
+    ["SyntheticStyleChange"] = 3,
+}
+
+PageElement.StyleChangeTypeEnum = StyleChangeTypeEnum;
+
+local StyleChangeEnum = { 
+	["NoChange"] = 0,
+	["NoInherit"] = 1, 
+	["Inherit"] = 2,
+	["Detach"] = 3,
+	["Force"] = 4,
+};
+
+PageElement.StyleChangeEnum = StyleChangeEnum;
+
+local NodeFlags = commonlib.inherit(nil, commonlib.gettable("System.Windows.mcml.NodeFlags"));
+
+local DefaultFlagValues = {
+	["IsElementFlag"] = false;
+	["IsStyledElementFlag"] = false;
+	["IsActiveFlag"] = false;
+	["IsHoveredFlag"] = false;
+	["HasIDFlag"] = false;
+	["HasClassFlag"] = false;
+	["IsAttachedFlag"] = false;
+	["ChildNeedsStyleRecalcFlag"] = false;
+	["IsLinkFlag"] = false;
+    ["IsActiveFlag"] = false;
+    ["IsHoveredFlag"] = false;
+	["InDetachFlag"] = false;
+	["IsStyleAttributeValidFlag"] = false;
+	
+	["StyleChangeMask"] = StyleChangeTypeEnum.NoStyleChange;
+};
+
+function NodeFlags:ctor()
+	self:Reset();
+end
+
+function NodeFlags:Reset(mask)
+	if(mask) then
+		self[mask] = DefaultFlagValues[mask];
+	else
+		for k, v in pairs(DefaultFlagValues) do
+			self[k] = v;
+		end
+	end
+end
+
 function PageElement:ctor()
+	self.isPageElement = true;
+
 	self.layout_object = nil;
 	-- inline style, CSSStyleDeclaration from the attribute "style". According to inlineStyleDecl in webkit;
 	self.style = nil;
 
-	self.previousSibling = nil;
-	self.nextSibling = nil;
+	self.m_previous = nil;
+	self.m_next = nil;
+
+	self.m_firstChild = nil;
+	self.m_lastChild = nil;
 
 	self.inlineStyleDecl = nil;
+
+	self.m_attributes = nil;
+
+	self.m_nodeFlags = NodeFlags:new();
 end
 
 -- virtual public function: create a page element (and recursively all its children) according to input xmlNode o.
@@ -83,6 +152,7 @@ end
 -- @return the input o is returned. 
 function PageElement:createFromXmlNode(o)
 	o = self:new(o);
+--	o:ParseAllMappedAttribute();
 	o:createChildRecursive_helper();
 	return o;
 end
@@ -118,14 +188,20 @@ function PageElement:createChildRecursive_helper()
 			else
 				-- for inner text of xml
 				child = Elements.pe_text:createFromString(child);
-				self[i] = child;
+				--self[i] = child;
 			end
 			child.parent = self;
-			child.index = i;
+			--child.index = i;
 			
+			if(not self.m_firstChild) then
+				self.m_firstChild = child;
+			end
+
+			self.m_lastChild = child;
+
 			if(previous) then
-				child.previousSibling = previous;
-				previous.nextSibling = child;
+				child.m_previous = previous;
+				previous.m_next = child;
 			end
 
 			previous = child;
@@ -196,10 +272,36 @@ function PageElement:NeedsLoadComponent()
 	return true;
 end
 
+function PageElement:NeedsCreateControl()
+	if(self:GetAttribute("display") == "none" or no_parse_nodes[self.name]) then
+		return false;
+	end
+	return true;
+end
+
+function PageElement:CreateControlIfNeeded(parentElem)
+	if(self:NeedsCreateControl()) then
+		self:CreateControl(parentElem);
+	end
+end
+
+function PageElement:CreateControl()
+
+end
+
+function PageElement:DestroyControl()
+	if(self.control) then
+		self.control:Destroy();
+		self.control = nil;
+	end
+end
+
 function PageElement:LoadComponentIfNeeded(parentElem, parentLayout, style_decl)
 	--self:CreateStyle(nil, style_decl);
 	
-	self:attachLayoutTree();
+	--self:CreateControlIfNeeded();
+
+	--self:attachLayoutTree();
 
 	if(self:NeedsLoadComponent(parentElem, parentLayout, style_decl)) then
 		self:LoadComponent(parentElem, parentLayout, style_decl);
@@ -221,13 +323,13 @@ function PageElement:LoadComponent(parentElem, parentLayout, styleItem)
 	self:ProcessVariables();
 
 	--self:checkAttributes();
+	self:ParseAllMappedAttribute();
 	
 	if(self:GetAttribute("trans")) then
 		-- here we will translate all child nodes recursively, using the given lang 
 		-- unless any of the child attribute disables or specifies a different lang
 		self:TranslateMe();
 	end
-
 	--local css = self:GetStyle();
 
 	--self:attachLayoutTree();
@@ -280,14 +382,68 @@ function PageElement:SetLayoutObject(layout_object)
 	self.layout_object = layout_object;
 end
 
+function PageElement:SetRenderer(renderer)
+	self.layout_object = renderer;
+end
+
 function PageElement:attachLayoutTree()
 	--local computed_style = self:StyleForLayoutObject();
 	--local computed_style = if_else(self.style, self.style.computed_style, nil);
 	LayoutTreeBuilder:init(self):CreateLayoutObjectIfNeeded();
+
+	local child = self.m_firstChild;
+	while(child) do
+		child:attachLayoutTree();
+		child = child:NextSibling();
+	end
+--	for (Node* child = m_firstChild; child; child = child->nextSibling())
+--        child->attach();
+    --Node::attach();
+
+	self:SetAttached();
+    self:ClearNeedsStyleRecalc();
+end
+
+function PageElement:reattachLayoutTree()
+    if (self:Attached()) then
+        self:detachLayoutTree();
+--		self:DestroyControl();
+	end
+    self:attachLayoutTree();
 end
 
 function PageElement:detachLayoutTree()
-	
+	local child = self.m_firstChild;
+	while(child) do
+		child:detachLayoutTree();
+
+		child = child:NextSibling();
+	end
+
+	self:DestroyControl();
+
+    self:ClearChildNeedsStyleRecalc();
+
+
+	self:SetFlag("InDetachFlag");
+
+    if (self:Renderer()) then
+        self:Renderer():Destroy();
+	end
+    self:SetRenderer(nil);
+
+--    Document* doc = document();
+--    if (hovered())
+--        doc->hoveredNodeDetached(this);
+--    if (inActiveChain())
+--        doc->activeChainNodeDetached(this);
+
+    --clearFlag(IsActiveFlag);
+    --clearFlag(IsHoveredFlag);
+    --clearFlag(InActiveChainFlag);
+    self:ClearFlag("IsAttachedFlag");
+
+    self:ClearFlag("InDetachFlag");	
 end
 
 -- private: redirector
@@ -574,15 +730,89 @@ function PageElement:SetAttribute(attrName, value, beForceResetLayout)
 	if(self.attr[attrName] ~= value) then
 		self.attr[attrName] = value;
 
-		if(attrName == "style") then
-			-- tricky code: since we will cache style table on the node, we need to delete the cached style when it is changed. 
-			self.style = nil;
-		end
+		self:AttributeChanged(attrName, value);
 
-		if(beForceResetLayout ~= false and reset_layout_attrs[attrName]) then
-			self:resetLayout();
+--		if(attrName == "style" or attrName == "id" or attrName == "class") then
+--			-- tricky code: since we will cache style table on the node, we need to delete the cached style when it is changed. 
+--			-- self.style = nil;
+--			if(attrName == "style") then
+--				self.inlineStyleDecl = nil;
+--			end
+--
+--			if(attrName == "class") then
+--				self.classNames = nil;
+--			end
+--
+--			self:SetNeedsStyleRecalc();
+--			
+--		end
+
+--		if(beForceResetLayout ~= false and reset_layout_attrs[attrName]) then
+--			self:resetLayout();
+--		end
+	end
+end
+
+function PageElement:ParseAllMappedAttribute()
+	if(self.attr) then
+		self.m_attributes = self.m_attributes or {};
+		for name, value in pairs(self.attr) do
+			if(name == "request_url" or name == "page_ctrl") then
+				-- do nothing for pe:mcml node "request_url" and "page_ctrl" attribute.
+				-- continue; 
+			else
+				value = self:GetAttributeWithCode(name, nil, true);
+				self.m_attributes[name] = value;
+
+				self:AttributeChanged(name, value);
+			end
+			
 		end
 	end
+end
+
+function PageElement:AttributeChanged(attrName, value)
+	self:ParseMappedAttribute(attrName, value);
+end
+
+function PageElement:ParseMappedAttribute(attrName, value)
+	--if (isIdAttributeName(attr->name()))
+	if (attrName == "id") then
+        self:IdAttributeChanged(value);
+    --else if (attr->name() == classAttr)
+	elseif(attrName == "class") then
+        self:ClassAttributeChanged(value);
+    --else if (attr->name() == styleAttr) {
+	elseif(attrName == "style") then
+        self:StyleAttributeChanged(value);
+    end
+
+	self:SetNeedsStyleRecalc();
+end
+
+function PageElement:IdAttributeChanged(value)
+	local hasID = value and value ~= "";
+	self:SetHasID(hasID);
+end
+
+function PageElement:ClassAttributeChanged(value)
+	local hasClass = value and value ~= "";
+	self:SetHasClass(hasClass);
+
+	if(hasClass) then
+		self:ParseClassNames(value);
+	else
+		self:ClearClassNames();
+	end
+end
+
+function PageElement:StyleAttributeChanged(value)
+	if (value == "") then
+        self:DestroyInlineStyleDecl();
+	else
+        self:GetInlineStyleDecl():ParseDeclaration(value);
+	end
+	self:SetIsStyleAttributeValid();
 end
 
 -- set the attribute if attribute is not code. 
@@ -687,10 +917,9 @@ end
 
 -- get all pure text of only text child node
 function PageElement:GetPureText()
-	local nSize = #(self);
 	local text = "";
-	for i=1, nSize do
-		node = self[i];
+	local node = self:FirstChild();
+	while(node) do
 		if(node) then
 			if(type(node) == "string") then
 				text = text..node;
@@ -698,16 +927,17 @@ function PageElement:GetPureText()
 				text = text..node.value;
 			end
 		end
+
+		node = node:NextSibling();
 	end
 	return text;
 end
 
 -- get all inner text recursively (i.e. without tags) as string. 
 function PageElement:GetInnerText()
-	local node;
 	local text = "";
-	for i=1, #(self) do
-		node = self[i];
+	local node = self:FirstChild();
+	while(node) do
 		if(node) then
 			if(type(node) == "string") then
 				text = text..node;
@@ -717,6 +947,8 @@ function PageElement:GetInnerText()
 				text = text..tostring(node);
 			end
 		end
+
+		node = node:NextSibling();
 	end
 	return text;
 end
@@ -799,6 +1031,16 @@ function PageElement:SetControl(control)
 	end
 end
 
+function PageElement:GetParentControl()
+	if(self:Renderer()) then
+		return self:Renderer():GetParentControl();
+	end
+	if(self:ParentNode()) then
+		return self:ParentNode():GetControl();
+	end
+	return;
+end
+
 -- get the control associated with this node. 
 -- if self.uiobject_id is not nil, we will fetch it using this id, if self.control is not nil, it will be returned, otherwise we will use the unique path name to locate the control or uiobject by name. 
 -- @param instName: the page instance name. if nil, we will ignore global control search in page. 
@@ -825,6 +1067,11 @@ function PageElement:GetControl(pageName)
 			end
 		end
 	end
+
+	if(not self.control) then
+		self:CreateControl();
+	end
+	return self.control;
 end
 
 -- return font: "System;12;norm";  return nil if not available. 
@@ -890,19 +1137,37 @@ function PageElement:print()
 			commonlib.log(" %s=\"%s\"", name, value);
 		end
 	end	
-	local nChildSize = #(self);
-	if(nChildSize>0) then
+--	local nChildSize = #(self);
+--	if(nChildSize>0) then
+--		log(">");
+--		local i, node;
+--		local text = "";
+--		for i=1, nChildSize do
+--			node = self[i];
+--			if(type(node) == "table") then
+--				log("\n")
+--				node:print();
+--			elseif(type(node) == "string") then
+--				log(node)
+--			end
+--		end
+--		log("</"..self.name..">\n");
+--	else
+--		log("/>\n");
+--	end
+
+	local node = self:FirstChild();
+	if(node) then
 		log(">");
-		local i, node;
 		local text = "";
-		for i=1, nChildSize do
-			node = self[i];
+		while(node) do
 			if(type(node) == "table") then
 				log("\n")
 				node:print();
 			elseif(type(node) == "string") then
-				log(node)
+				log(node);
 			end
+			node = node:NextSibling();
 		end
 		log("</"..self.name..">\n");
 	else
@@ -1015,6 +1280,10 @@ function PageElement:GetComputedStyle()
 	return;
 end
 
+function PageElement:RenderStyle()
+	return self:GetComputedStyle();
+end
+
 function PageElement:StyleForLayoutObject()
 --	local parent_style;
 --	if(self.parent) then
@@ -1025,6 +1294,131 @@ function PageElement:StyleForLayoutObject()
 --	end
 --	return self:CreateStyle(nil, parent_style);
 	return self:GetPageCtrl():StyleSelector():StyleForElement(self, nil, true);
+end
+
+--static inline void collectNodes(Node* node, NodeVector& nodes)
+local function collectNodes(node, nodes)
+--    for (Node* child = node->firstChild(); child; child = child->nextSibling())
+--        nodes.append(child);
+	local child = node:FirstChild();
+	while(child) do
+		nodes:append(child);
+		child = child:NextSibling();
+	end
+end
+
+--static void collectTargetNodes(Node* node, NodeVector& nodes)
+local function collectTargetNodes(node, nodes)
+--    if (node->nodeType() != Node::DOCUMENT_FRAGMENT_NODE) {
+--        nodes.append(node);
+--        return;
+--    }
+    collectNodes(node, nodes);
+end
+
+function PageElement:AppendChild(child)
+	return self:InsertBefore(child);
+end
+
+--void ContainerNode::insertBeforeCommon(Node* nextChild, Node* newChild)
+function PageElement:InsertBeforeCommon(nextChild, newChild)
+	newChild.parent = self;
+	if(nextChild) then
+		local prev = nextChild:PreviousSibling();
+		nextChild:SetPreviousSibling(newChild);
+		if (prev) then
+			prev:SetNextSibling(newChild);
+		else
+			self.m_firstChild = newChild;
+		end
+		
+		newChild:SetPreviousSibling(prev);
+		newChild:SetNextSibling(nextChild);
+	else
+        if (self.m_lastChild) then
+            newChild:SetPreviousSibling(self.m_lastChild);
+            self.m_lastChild:SetNextSibling(newChild);
+        else
+            self.m_firstChild = newChild;
+		end
+
+        self.m_lastChild = newChild;
+	end
+end
+
+-- @param child: it can be mcmlNode or string node. 
+-- @param refChild: the next node for the child.
+function PageElement:InsertBefore(child, refChild)
+	if(type(child)=="string") then
+		child = Elements.pe_text:createFromString(child);
+	elseif(type(child)=="table") then
+		if(child.isPageElement == nil) then
+			child = mcml:createFromXmlNode(child);
+		end
+	end
+
+	self:InsertBeforeCommon(refChild, child);
+
+	child:LoadComponentIfNeeded();
+
+	child:LazyAttach();
+
+	self:PostLayoutRequestEvent();
+	--self:resetLayout();
+
+	return child;
+end
+
+--void ContainerNode::removeBetween(Node* previousChild, Node* nextChild, Node* oldChild)
+function PageElement:RemoveBetween(previousChild, nextChild, oldChild)
+--    ASSERT(oldChild);
+--    ASSERT(oldChild->parentNode() == this);
+
+    --forbidEventDispatch();
+
+    -- Remove from rendering tree
+    if (oldChild:Attached()) then
+        oldChild:detachLayoutTree();
+	end
+
+    if (nextChild) then
+        nextChild:SetPreviousSibling(previousChild);
+	end
+    if (previousChild) then
+        previousChild:SetNextSibling(nextChild);
+	end
+    if (self.m_firstChild == oldChild) then
+        self.m_firstChild = nextChild;
+	end
+    if (self.m_lastChild == oldChild) then
+        self.m_lastChild = previousChild;
+	end
+
+    oldChild:SetPreviousSibling();
+    oldChild:SetNextSibling();
+	oldChild.parent = nil;
+
+    --oldChild->setTreeScopeRecursively(document());
+
+    --allowEventDispatch();
+end
+
+function PageElement:RemoveChild(child)
+	if(child == nil) then
+		return;
+	end
+
+	if (child:ParentNode() ~= self) then
+		return;
+	end
+
+	local prev = child:PreviousSibling();
+    local next = child:NextSibling();
+    self:RemoveBetween(prev, next, child);
+
+	--child:LazyAttach();
+
+	self:PostLayoutRequestEvent();
 end
 
 -- @param child: it can be mcmlNode or string node. 
@@ -1038,28 +1432,45 @@ function PageElement:AddChild(child, index)
 		local nCount = #(self) or 0;
 		commonlib.insertArrayItem(self, index, child)
 	end	
-	self:resetLayout();
+	--self:resetLayout();
 end
 
-function PageElement:GetClassNames()
-	if(not self.classNames) then
-		local classes = nil;
-		local classStr = self:GetAttributeWithCode("class",nil,true);
-		if(classStr) then
-			classes = commonlib.split(classStr,"%s");
-		end
-		if(self.class_name) then
-			classes = classes or {};
-			classes[#classes+1] = self.class_name;
-		end
-		if(classes) then
-			self.classNames = {};
-			for i = 1,#classes do
-				self.classNames[classes[i]] = true;
-			end
-		end
+function PageElement:ClearClassNames()
+	self:SetClassNames(nil);
+end
+
+function PageElement:ParseClassNames(value)
+	local classes = commonlib.split(value,"%s");
+	if(self.class_name) then
+		classes = classes or {};
+		classes[#classes+1] = self.class_name;
 	end
-	return self.classNames;
+	if(classes) then
+		local classNames = {};
+		for i = 1,#classes do
+			classNames[classes[i]] = true;
+		end
+		self:SetClassNames(classNames);
+	end
+
+--	if(not self.classNames) then
+--		local classes = nil;
+--		local classStr = self:GetAttributeWithCode("class",nil,true);
+--		if(classStr) then
+--			classes = commonlib.split(classStr,"%s");
+--		end
+--		if(self.class_name) then
+--			classes = classes or {};
+--			classes[#classes+1] = self.class_name;
+--		end
+--		if(classes) then
+--			self.classNames = {};
+--			for i = 1,#classes do
+--				self.classNames[classes[i]] = true;
+--			end
+--		end
+--	end
+--	return self.classNames;
 end
 
 -- detach this node from its parent node. 
@@ -1120,6 +1531,8 @@ function PageElement:GetRoot()
 	end
 	return parent;
 end
+
+PageElement.Document = PageElement.GetRoot;
 
 -- Get the page control(PageCtrl) that loaded this mcml page. 
 function PageElement:GetPageCtrl()
@@ -1221,15 +1634,28 @@ end
 -- remove all child nodes and move them to an internal template node
 function PageElement:MoveChildrenToTemplate()
 	local templateNode;
-	if(#self == 1) then
-		templateNode = self[1];
-	else
-		-- use anonymous parent element if multiple nodes in the template 
-		templateNode = PageElement:new(); 
-		for child in self:next() do
-			templateNode:AddChild(child);
+	if(self.m_firstChild) then
+		if(self.m_firstChild == self.m_lastChild) then
+			templateNode = self.m_firstChild;
+		else
+			-- use anonymous parent element if multiple nodes in the template 
+			templateNode = PageElement:new(); 
+			for child in self:next() do
+				templateNode:AppendChild(child);
+			end
 		end
 	end
+
+--	local templateNode;
+--	if(#self == 1) then
+--		templateNode = self[1];
+--	else
+--		-- use anonymous parent element if multiple nodes in the template 
+--		templateNode = PageElement:new(); 
+--		for child in self:next() do
+--			templateNode:AddChild(child);
+--		end
+--	end
 	self.templateNode = templateNode;
 	self:ClearAllChildren();
 end
@@ -1303,42 +1729,59 @@ end
 -- get the first occurance of first level child node whose name is name
 -- @param name: if can be the name of the node, or it can be a interger index. 
 function PageElement:GetChild(name)
-	if(type(name) == "number") then
-		return self[name];
-	else
-		local nSize = #(self);
-		local node;
-		for i=1, nSize do
-			node = self[i];
-			if(type(node)=="table" and name == node.name) then
-				return node;
-			end
+	local index = 1;
+	local node = self:FirstChild();
+	while(node) do
+		if(type(name) == "number" and name == index) then
+			return node;
+		elseif(type(node)=="table" and name == node.name) then
+			return node;
 		end
-	end	
+		index = index + 1;
+		node = node:NextSibling();
+	end
+
+--	if(type(name) == "number") then
+--		return self[name];
+--	else
+--		local nSize = #(self);
+--		local node;
+--		for i=1, nSize do
+--			node = self[i];
+--			if(type(node)=="table" and name == node.name) then
+--				return node;
+--			end
+--		end
+--	end	
 end
 
 -- get the first occurance of first level child node whose name is name
 -- @param name: if can be the name of the node, or it can be a interger index. 
 -- @return nil if not found
 function PageElement:GetChildWithAttribute(name, value)
-	local nSize = #(self);
-	local i, node;
-	for i=1, nSize do
-		node = self[i];
+	for node in self:next() do
 		if(type(node)=="table") then
 			if(value == node:GetAttribute(name)) then
 				return node;
 			end	
 		end
 	end
+
+--	local nSize = #(self);
+--	local i, node;
+--	for i=1, nSize do
+--		node = self[i];
+--		if(type(node)=="table") then
+--			if(value == node:GetAttribute(name)) then
+--				return node;
+--			end	
+--		end
+--	end
 end
 
 -- get the first occurance of child node whose attribute name is value. it will search for all child nodes recursively. 
 function PageElement:SearchChildByAttribute(name, value)
-	local nSize = #(self);
-	local i, node;
-	for i=1, nSize do
-		node = self[i];
+	for node in self:next() do
 		if(type(node)=="table") then
 			if(value == node:GetAttribute(name)) then
 				return node;
@@ -1350,24 +1793,57 @@ function PageElement:SearchChildByAttribute(name, value)
 			end	
 		end
 	end
+
+--	local nSize = #(self);
+--	local i, node;
+--	for i=1, nSize do
+--		node = self[i];
+--		if(type(node)=="table") then
+--			if(value == node:GetAttribute(name)) then
+--				return node;
+--			else
+--				node = node:SearchChildByAttribute(name, value);
+--				if(node) then
+--					return node;
+--				end
+--			end	
+--		end
+--	end
 end
 
 -- return an iterator of all first level child nodes whose name is name
 -- a more advanced way to tranverse mcml tree is using ide/Xpath
 -- @param name: if name is nil, all child is returned. 
 function PageElement:next(name)
-	local nSize = #(self);
-	local i = 1;
+	local current_node = self:FirstChild();
 	return function ()
-		local node;
-		while i <= nSize do
-			node = self[i];
-			i = i+1;
+		local node = current_node;
+		while(node) do
+			--node:PrintNodeInfo();
+			
+			current_node = current_node:NextSibling();
+--			if(current_node) then
+--				current_node:PrintNodeInfo();
+--			end
 			if(not name or (type(node) == "table" and name == node.name)) then
 				return node;
 			end
+			node = current_node;
 		end
-	end	
+	end
+
+--	local nSize = #(self);
+--	local i = 1;
+--	return function ()
+--		local node;
+--		while i <= nSize do
+--			node = self[i];
+--			i = i+1;
+--			if(not name or (type(node) == "table" and name == node.name)) then
+--				return node;
+--			end
+--		end
+--	end	
 end
 
 
@@ -1487,12 +1963,7 @@ end
 -- @param output: nil or a table to receive the result. child nodes with the name is saved to this table array. if nil, a new table will be created. 
 -- @return output: the output table containing all children. It may be nil if no one is found and input "output" is also nil.
 function PageElement:GetAllChildWithNameIDClass(name, id, class, output)
-	local nSize = #(self);
-	local i = 1;
-	local node;
-	while i <= nSize do
-		node = self[i];
-		i = i+1;
+	for node in self:next() do
 		if(type(node) == "table") then
 			if( (not name or name == node.name) and
 				(not id or id == node:GetAttribute("name")) and
@@ -1504,6 +1975,24 @@ function PageElement:GetAllChildWithNameIDClass(name, id, class, output)
 			end	
 		end
 	end
+
+--	local nSize = #(self);
+--	local i = 1;
+--	local node;
+--	while i <= nSize do
+--		node = self[i];
+--		i = i+1;
+--		if(type(node) == "table") then
+--			if( (not name or name == node.name) and
+--				(not id or id == node:GetAttribute("name")) and
+--				(not class or class==node:GetAttribute("class")) ) then
+--				output = output or {};
+--				table.insert(output, node);
+--			else
+--				output = node:GetAllChildWithNameIDClass(name, id, class, output)
+--			end	
+--		end
+--	end
 	return output;
 end
 
@@ -1513,12 +2002,7 @@ end
 -- @param output: nil or a table to receive the result. child nodes with the name is saved to this table array. if nil, a new table will be created. 
 -- @return output: the output table containing all children. It may be nil if no one is found and input "output" is also nil.
 function PageElement:GetAllChildWithName(name, output)
-	local nSize = #(self);
-	local i = 1;
-	local node;
-	while i <= nSize do
-		node = self[i];
-		i = i+1;
+	for node in self:next() do
 		if(type(node) == "table") then
 			if(name == node.name) then
 				output = output or {};
@@ -1528,6 +2012,22 @@ function PageElement:GetAllChildWithName(name, output)
 			end	
 		end
 	end
+
+--	local nSize = #(self);
+--	local i = 1;
+--	local node;
+--	while i <= nSize do
+--		node = self[i];
+--		i = i+1;
+--		if(type(node) == "table") then
+--			if(name == node.name) then
+--				output = output or {};
+--				table.insert(output, node);
+--			else
+--				output = node:GetAllChildWithName(name, output)
+--			end	
+--		end
+--	end
 	return output;
 end
 
@@ -1537,12 +2037,7 @@ end
 -- @param output: nil or a table to receive the result. child nodes with the name is saved to this table array. if nil, a new table will be created. 
 -- @return output: the output table containing all children. It may be nil if no one is found and input "output" is also nil.
 function PageElement:GetAllChildWithAttribute(attrName, attrValue, output)
-	local nSize = #(self);
-	local i = 1;
-	local node;
-	while i <= nSize do
-		node = self[i];
-		i = i+1;
+	for node in self:next() do
 		if(type(node) == "table") then
 			if(node:GetAttribute(attrName) == attrValue) then
 				output = output or {};
@@ -1552,6 +2047,22 @@ function PageElement:GetAllChildWithAttribute(attrName, attrValue, output)
 			end	
 		end
 	end
+
+--	local nSize = #(self);
+--	local i = 1;
+--	local node;
+--	while i <= nSize do
+--		node = self[i];
+--		i = i+1;
+--		if(type(node) == "table") then
+--			if(node:GetAttribute(attrName) == attrValue) then
+--				output = output or {};
+--				table.insert(output, node);
+--			else
+--				output = node:GetAllChildWithAttribute(attrName, attrValue, output)
+--			end	
+--		end
+--	end
 	return output;
 end
 
@@ -1653,27 +2164,33 @@ function PageElement:TranslateMe(langTable, transName)
 				end	
 			end
 		end
-	
-		-- translate child nodes recursively. 	
-		local nSize = #(self);
-		local i = 1;
-		local node;
-		while i <= nSize do
-			node = self[i];
+
+		for node in self:next() do
 			if(type(node) == "table") then
-				node:TranslateMe(langTable, transName)
-			elseif(type(node) == "string") then
-				-- only translate if the node is not unknown and not script node.
-				if(self.name ~= "script" and self.name ~= "unknown" and self.name ~= "pe:script") then
-					-- TRANSLATE: translate inner text
-					if(langTable:HasTranslation(node)) then
-						--commonlib.echo(langTable(node))
-						self[i] = langTable(node)
-					end
-				end	
+				node:TranslateMe(langTable, transName);
 			end
-			i = i+1;
 		end
+	
+--		-- translate child nodes recursively. 	
+--		local nSize = #(self);
+--		local i = 1;
+--		local node;
+--		while i <= nSize do
+--			node = self[i];
+--			if(type(node) == "table") then
+--				node:TranslateMe(langTable, transName)
+--			elseif(type(node) == "string") then
+--				-- only translate if the node is not unknown and not script node.
+--				if(self.name ~= "script" and self.name ~= "unknown" and self.name ~= "pe:script") then
+--					-- TRANSLATE: translate inner text
+--					if(langTable:HasTranslation(node)) then
+--						--commonlib.echo(langTable(node))
+--						self[i] = langTable(node)
+--					end
+--				end	
+--			end
+--			i = i+1;
+--		end
 	end
 end
 
@@ -1767,30 +2284,36 @@ function PageElement:ReplaceVariables(variables)
 				end
 			end
 		end
-	
-		-- translate child nodes recursively. 	
-		local nSize = #(self);
-		local i = 1;
-		local node;
-		while i <= nSize do
-			node = self[i];
+
+		for node in self:next() do
 			if(type(node) == "table") then
-				node:ReplaceVariables(variables)
-			elseif(type(node) == "string") then
-				local value = node;
-				-- REPLACE
-				local k;
-				for k=1, #variables do
-					local variable = variables[k];
-					local var_value = value:match(variable.match_exp)
-					if(var_value) then
-						value = value:gsub(variable.gsub_exp, variable.func(var_value) or var_value); 
-						self[i] = value;
-					end
-				end
+				node:ReplaceVariables(variables);
 			end
-			i = i+1;
 		end
+	
+--		-- translate child nodes recursively. 	
+--		local nSize = #(self);
+--		local i = 1;
+--		local node;
+--		while i <= nSize do
+--			node = self[i];
+--			if(type(node) == "table") then
+--				node:ReplaceVariables(variables)
+--			elseif(type(node) == "string") then
+--				local value = node;
+--				-- REPLACE
+--				local k;
+--				for k=1, #variables do
+--					local variable = variables[k];
+--					local var_value = value:match(variable.match_exp)
+--					if(var_value) then
+--						value = value:gsub(variable.gsub_exp, variable.func(var_value) or var_value); 
+--						self[i] = value;
+--					end
+--				end
+--			end
+--			i = i+1;
+--		end
 	end
 end
 
@@ -1892,11 +2415,20 @@ end
 
 function PageElement:CreateInlineStyleDecl()
     self.inlineStyleDecl = CSSStyleDeclaration:new():init(self);
-	self.inlineStyleDecl:AddString(self.attr.style);
+--	if(self.attr and self.attr.style) then
+--		self.inlineStyleDecl:AddString(self.attr.style);
+--	end
+end
+
+function PageElement:DestroyInlineStyleDecl()
+	if(self.inlineStyleDecl) then
+		self.inlineStyleDecl:SetNode(nil);
+		self.inlineStyleDecl = nil;
+	end
 end
 
 function PageElement:GetInlineStyleDecl()
-    if (not self.inlineStyleDecl and self.attr and self.attr.style) then
+    if (not self.inlineStyleDecl) then
         self:CreateInlineStyleDecl();
 	end
     return self.inlineStyleDecl;
@@ -1904,9 +2436,337 @@ end
 
 --CSSMutableStyleDeclaration* inlineStyleDecl() const { return m_inlineStyleDecl.get(); }
 function PageElement:InlineStyleDecl() 
-	return self:GetInlineStyleDecl();
+	return self.inlineStyleDecl;
 end
+
+--function PageElement:Style() 
+--
+--end
 
 function PageElement:ParentNodeForRenderingAndStyle()
 	return LayoutTreeBuilder:init(self):ParentNodeForRenderingAndStyle();
+end
+
+function PageElement:TagName()
+	--return self.class_name;
+	local tagName = string.gsub(self.name,"pe:","");
+	return tagName;
+end
+
+function PageElement:HasTagName(tag_name)
+	local name = string.gsub(self.name,"pe:","");
+	return name == tag_name;
+	--return self.name == tag_name or self.class_name == tag_name or self.class_name == "pe:"..tag_name;
+end
+
+function PageElement:StyleChangeType()
+	return self.m_nodeFlags.StyleChangeMask;
+end
+
+function PageElement:NeedsStyleRecalc()
+	return self:StyleChangeType() ~= StyleChangeTypeEnum.NoStyleChange;
+end
+
+--function PageElement:SetNeedsStyleRecalc(changeType)
+--	changeType = if_else(changeType == nil, StyleChangeTypeEnum.FullStyleChange, changeType);
+--	self.m_nodeFlags.StyleChangeMask = changeType;
+--end
+
+function PageElement:ClearNeedsStyleRecalc()
+	self.m_nodeFlags.StyleChangeMask = StyleChangeTypeEnum.NoStyleChange;
+end
+
+function PageElement:ChildNeedsStyleRecalc()
+	return self.m_nodeFlags.ChildNeedsStyleRecalcFlag;
+end
+
+function PageElement:SetChildNeedsStyleRecalc()
+	self.m_nodeFlags.ChildNeedsStyleRecalcFlag = true;
+end
+
+function PageElement:ClearChildNeedsStyleRecalc()
+	self.m_nodeFlags.ChildNeedsStyleRecalcFlag = false;
+end
+
+function PageElement:IsElementNode()
+	return self.m_nodeFlags.IsElementFlag;
+end
+
+function PageElement:SetElementNode(b)
+	b = if_else(b == nil, true, b);
+	self.m_nodeFlags.IsElementFlag = b;
+end
+
+function PageElement:PreviousSibling()
+	return self.m_previous;
+end
+
+function PageElement:SetPreviousSibling(prev)
+	self.m_previous = prev;
+end
+
+function PageElement:NextSibling()
+	return self.m_next;
+end
+
+function PageElement:SetNextSibling(next)
+	self.m_next = next;
+end
+
+function PageElement:FirstChild()
+    return self.m_firstChild;
+end
+
+function PageElement:SetFirstChild(child)
+    self.m_firstChild = child;
+end
+
+function PageElement:LastChild()
+    return self.m_lastChild;
+end
+
+function PageElement:SetLastChild(child)
+    self.m_lastChild = child;
+end
+
+function PageElement:IsTextNode()
+	return false;
+end
+
+--Node::StyleChange Node::diff(const RenderStyle* s1, const RenderStyle* s2)
+function PageElement:Diff(s1, s2)
+	local ch = StyleChangeEnum.NoInherit;
+
+	local display1 = DisplayEnum.NONE;
+	if(s1) then
+		display1 = s1:Display();
+	end
+	local display2 = DisplayEnum.NONE;
+	if(s2) then
+		display2 = s2:Display();
+	end
+
+	if (display1 ~= display2) then
+		ch = StyleChangeEnum.Detach;
+	elseif(s1 == nil or s2 == nil) then
+		ch = StyleChangeEnum.Inherit;
+	elseif(s1 == s2) then
+		ch = StyleChangeEnum.NoChange;
+	elseif (s1:InheritedNotEqual(s2)) then
+        ch = StyleChangeEnum.Inherit;
+	end
+
+	return ch;
+end
+
+function PageElement:SetRenderStyle(style)
+	if (self.layout_object) then
+        self.layout_object:SetAnimatableStyle(style); 
+	end
+end
+
+function PageElement:RecalcStyle(change)
+	local hasParentStyle = false;
+	if(self:ParentNodeForRenderingAndStyle() and self:ParentNodeForRenderingAndStyle():RenderStyle()) then
+		hasParentStyle = true;
+	end
+	if(hasParentStyle and (change >= StyleChangeEnum.Inherit or self:NeedsStyleRecalc())) then
+		local currentStyle = self:RenderStyle();
+		local newStyle = self:StyleForLayoutObject();
+
+		local ch = self:Diff(currentStyle, newStyle);
+
+		if (ch == StyleChangeEnum.Detach or not currentStyle) then
+            -- FIXME: The style gets computed twice by calling attach. We could do better if we passed the style along.
+            self:reattachLayoutTree();
+            -- attach recalculates the style for all children. No need to do it twice.
+            self:ClearNeedsStyleRecalc();
+            self:ClearChildNeedsStyleRecalc();
+
+--            if (hasCustomWillOrDidRecalcStyle())
+--                didRecalcStyle(change);
+            return;
+        end
+
+		self:SetRenderStyle(newStyle);
+
+		change = ch;
+	end
+	local node = self:FirstChild();
+	while(node) do
+--        if (!n->isElementNode())
+--            continue;
+		if (node:IsTextNode()) then
+            --parentPusher.push();
+            node:RecalcTextStyle(change);
+            --continue;
+		else
+			local element = node;
+			if (change >= StyleChangeEnum.Inherit or element:NeedsStyleRecalc() or element:ChildNeedsStyleRecalc()) then
+				element:RecalcStyle(change);
+			end	
+        end
+
+		node = node:NextSibling();
+    end
+
+	self:ClearNeedsStyleRecalc();
+	self:ClearChildNeedsStyleRecalc();
+end
+
+function PageElement:Parent()
+	return self.parent;
+end
+
+function PageElement:ParentNode()
+	return self:Parent();
+end
+
+function PageElement:ParentOrHostNode()
+	return self:Parent();
+end
+-- @param mask: NodeFlags 
+function PageElement:GetFlag(mask)
+	return self.m_nodeFlags[mask];
+end
+
+function PageElement:SetFlag(mask, b)
+	b = if_else(b == nil, true, b);
+	self.m_nodeFlags[mask] = b;
+end
+
+function PageElement:ClearFlag(mask)
+	self.m_nodeFlags[mask] = DefaultFlagValues[mask];
+end
+
+function PageElement:Attached()
+	return self:GetFlag("IsAttachedFlag");
+end
+
+function PageElement:SetAttached()
+	self:SetFlag("IsAttachedFlag")
+end
+
+function PageElement:IsStyleAttributeValid() 
+	return self:GetFlag("IsStyleAttributeValidFlag");
+end
+
+function PageElement:SetIsStyleAttributeValid(f) 
+	self:SetFlag("IsStyleAttributeValidFlag", f);
+end
+
+function PageElement:ClearIsStyleAttributeValid() 
+	self:ClearFlag("IsStyleAttributeValidFlag");
+end
+
+function PageElement:HasID() 
+	return self:GetFlag("HasIDFlag");
+end
+
+function PageElement:SetHasID(f) 
+	self:SetFlag("HasIDFlag", f);
+end
+
+function PageElement:HasClass() 
+	return self:GetFlag("HasClassFlag");
+end
+
+function PageElement:SetHasClass(f) 
+	self:SetFlag("HasClassFlag", f);
+end
+
+function PageElement:InDetach() 
+	return self:GetFlag("InDetachFlag");
+end
+
+function PageElement:PostLayoutRequestEvent()
+	if(self:GetPageCtrl()) then
+		self:GetPageCtrl():PostLayoutRequestEvent();
+	end
+end
+
+function PageElement:SetNeedsStyleRecalc(changeType)
+	changeType = if_else(changeType == nil, StyleChangeTypeEnum.FullStyleChange, changeType);
+	if (not self:Attached()) then -- changed compared to what?
+        return;
+	end
+
+	self:PostLayoutRequestEvent();
+
+--	if(changeType == StyleChangeTypeEnum.InlineStyleChange) then
+--		self.inlineStyleDecl = nil;
+--	end
+
+    --StyleChangeType existingChangeType = styleChangeType();
+	local existingChangeType = self:StyleChangeType();
+    if (changeType > existingChangeType) then
+        self:SetStyleChange(changeType);
+	end
+	if (existingChangeType == StyleChangeTypeEnum.NoStyleChange) then
+		self:MarkAncestorsWithChildNeedsStyleRecalc();
+	end
+end
+
+-- inline void Node::setStyleChange(StyleChangeType changeType)
+function PageElement:SetStyleChange(changeType)
+    self.m_nodeFlags["StyleChangeMask"] = changeType;
+end
+
+
+function PageElement:MarkAncestorsWithChildNeedsStyleRecalc()
+	local parent = self:ParentOrHostNode();
+	while(parent and not parent:ChildNeedsStyleRecalc()) do
+		parent:SetChildNeedsStyleRecalc();
+		parent = parent:ParentOrHostNode();
+	end
+end
+
+function PageElement:PrintNodeInfo() 
+	echo(self.name);
+	if(self.attr and self.attr.name) then
+		echo(self.attr.name)
+	end
+end
+
+--enum ShouldSetAttached {
+--    SetAttached,
+--    DoNotSetAttached
+--};
+--void Node::lazyAttach(ShouldSetAttached shouldSetAttached)
+function PageElement:LazyAttach(shouldSetAttached)
+	ShouldSetAttached = if_else(ShouldSetAttached == nil, "SetAttached", ShouldSetAttached);
+	local n = self;
+	while(n) do
+		if (n:FirstChild()) then
+            n:SetChildNeedsStyleRecalc();
+		end
+        n:SetStyleChange(StyleChangeTypeEnum.FullStyleChange);
+        if (shouldSetAttached == "SetAttached") then
+            n:SetAttached();
+		end
+		n = n:TraverseNextNode(self);
+	end
+    self:MarkAncestorsWithChildNeedsStyleRecalc();
+end
+
+--Node* Node::traverseNextNode(const Node* stayWithin) const
+function PageElement:TraverseNextNode(stayWithin)
+    if (self:FirstChild()) then
+        return self:FirstChild();
+	end
+    if (self == stayWithin) then
+        return nil;
+	end
+    if (self:NextSibling()) then
+        return self:NextSibling();
+	end
+    --const Node *n = this;
+	local n = self;
+    while (n and n:NextSibling() == nil and (stayWithin == nil or n:ParentNode() ~= stayWithin)) do
+        n = n:ParentNode();
+	end
+    if (n) then
+        return n:NextSibling();
+	end
+    return nil;
 end

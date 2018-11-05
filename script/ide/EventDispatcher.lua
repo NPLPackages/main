@@ -92,6 +92,14 @@ end
 -----------------------------------
 local EventSystem = commonlib.inherit(nil, commonlib.gettable("commonlib.EventSystem"))
 
+function EventSystem.getInstance()
+	if not EventSystem.sInstance then
+		EventSystem.sInstance = EventSystem:new();
+	end
+	
+	return EventSystem.sInstance;
+end
+
 --constructor
 function EventSystem:ctor()
 	self.event_pools = {}
@@ -178,6 +186,15 @@ function EventSystem:DispatchEvent(event, ...)
 			return_value = handler.func(handler.funcHolder, event, ...) or return_value;
 		end
 		return return_value;
+	end
+end
+
+function EventSystem:GetEventHandlerCount(event_type)
+	local sinks = self.event_pools[event_type];
+	if(sinks) then
+		return #sinks;
+	else
+		return 0;
 	end
 end
 

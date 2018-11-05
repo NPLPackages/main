@@ -136,3 +136,17 @@ function SelectorChecker:isFastCheckableMatch(selector)
 	end
     return matchtype == matchtype == CSSSelector.MatchType.kUnknown or matchtype == CSSSelector.MatchType.kId or matchtype == CSSSelector.MatchType.kClass or matchtype == CSSSelector.MatchType.kTag;
 end
+
+--inline bool SelectorChecker::tagMatches(const Element* element, const CSSSelector* selector)
+function SelectorChecker:TagMatches(element, selector)
+    if (not selector:HasTag()) then
+        return true;
+	end	
+	local tag = string.gsub(selector:Tag(),"pe:","");
+	return tag == element:TagName();
+--    const AtomicString& localName = selector->tag().localName();
+--    if (localName != starAtom && localName != element->localName())
+--        return false;
+--    const AtomicString& namespaceURI = selector->tag().namespaceURI();
+--    return namespaceURI == starAtom || namespaceURI == element->namespaceURI();
+end

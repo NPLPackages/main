@@ -175,6 +175,10 @@ function CSSStyleApplyProperty:init()
 	self:SetPropertyHandler("font-weight", ApplyPropertyDefault:new():init(ComputedStyle.FontBold, ComputedStyle.SetFontBold));
 	self:SetPropertyHandler("font-family", ApplyPropertyDefault:new():init(ComputedStyle.FontFamily, ComputedStyle.SetFontFamily));
 
+--	setPropertyHandler("outline-style", new ApplyPropertyExpanding<ExpandValue>(new ApplyPropertyDefault<OutlineIsAuto>(&RenderStyle::outlineStyleIsAuto, &RenderStyle::setOutlineStyleIsAuto, &RenderStyle::initialOutlineStyleIsAuto), new ApplyPropertyDefault<EBorderStyle>(&RenderStyle::outlineStyle, &RenderStyle::setOutlineStyle, &RenderStyle::initialBorderStyle)));
+--    setPropertyHandler("outline-color", new ApplyPropertyColor<InheritFromParent>(&RenderStyle::outlineColor, &RenderStyle::setOutlineColor, &RenderStyle::setVisitedLinkOutlineColor, &RenderStyle::color));
+--    setPropertyHandler("outline-offset", new ApplyPropertyComputeLength<int>(&RenderStyle::outlineOffset, &RenderStyle::setOutlineOffset, &RenderStyle::initialOutlineOffset));
+
 	self:SetPropertyHandler("overflow-x", ApplyPropertyDefault:new():init(ComputedStyle.OverflowX, ComputedStyle.SetOverflowX, ComputedStyle.initialOverflowX));
 	self:SetPropertyHandler("overflow-y", ApplyPropertyDefault:new():init(ComputedStyle.OverflowY, ComputedStyle.SetOverflowY, ComputedStyle.initialOverflowY));
 	self:SetPropertyHandler("overflow", ApplyPropertyExpanding:new():init(self:PropertyHandler("overflow-x"), self:PropertyHandler("overflow-y")));
@@ -215,6 +219,8 @@ function CSSStyleApplyProperty:init()
 
 	self:SetPropertyHandler("text-shadow", ApplyPropertyDefault:new():init(ComputedStyle.TextShadow, ComputedStyle.SetTextShadow));
 	self:SetPropertyHandler("line-height", ApplyPropertyDefault:new():init(ComputedStyle.LineHeight, ComputedStyle.SetLineHeight, ComputedStyle.initialLineHeight));
+
+	self:SetPropertyHandler("appearance", ApplyPropertyDefault:new():init(ComputedStyle.Appearance, ComputedStyle.SetAppearance, ComputedStyle.initialAppearance));
 	--self:SetPropertyHandler("border", ApplyPropertyExpanding:new():init(ComputedStyle.BorderTopWidth, ComputedStyle.SetBorderTopWidth, ComputedStyle.initialBorderWidth));
 	--setPropertyHandler(CSSPropertyColor, new ApplyPropertyColor<InheritFromParent>(&RenderStyle::color, &RenderStyle::setColor,  &RenderStyle::setVisitedLinkColor, 0, RenderStyle::initialColor));
 

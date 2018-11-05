@@ -126,24 +126,24 @@ local enum_fields = {
 	["display"] = {map = {
 		["inline"] = "INLINE",
 		["block"] = "BLOCK",
-		["list_item"] = "LIST_ITEM",
-		["run_in"] = "RUN_IN",
+		["list-item"] = "LIST_ITEM",
+		["run-in"] = "RUN_IN",
 		["compact"] = "COMPACT",
-		["inline_block"] = "INLINE_BLOCK",
+		["inline-block"] = "INLINE_BLOCK",
 		["table"] = "TABLE",
-		["inline_table"] = "INLINE_TABLE",
-		["table_row_group"] = "TABLE_ROW_GROUP",
-		["table_header_group"] = "TABLE_HEADER_GROUP",
-		["table_footer_group"] = "TABLE_FOOTER_GROUP",
-		["table_row"] = "TABLE_ROW",
-		["table_column_group"] = "TABLE_COLUMN_GROUP",
-		["table_column"] = "TABLE_COLUMN",
-		["table_cell"] = "TABLE_CELL",
-		["table_caption"] = "TABLE_CAPTION",
+		["inline-table"] = "INLINE_TABLE",
+		["table-row-group"] = "TABLE_ROW_GROUP",
+		["table-header-group"] = "TABLE_HEADER_GROUP",
+		["table-footer-group"] = "TABLE_FOOTER_GROUP",
+		["table-row"] = "TABLE_ROW",
+		["table-column-group"] = "TABLE_COLUMN_GROUP",
+		["table-column"] = "TABLE_COLUMN",
+		["table-cell"] = "TABLE_CELL",
+		["table-caption"] = "TABLE_CAPTION",
 		["box"] = "BOX",
-		["inline_box"] = "INLINE_BOX",
+		["inline-box"] = "INLINE_BOX",
 		["flexbox"] = "FLEXBOX",
-		["inline_flexbox"] = "INLINE_FLEXBOX",
+		["inline-flexbox"] = "INLINE_FLEXBOX",
 		["none"] = "NONE",
 	}, enum = ComputedStyleConstants.DisplayEnum},
 	["border-style"] = {map = border_style, enum = ComputedStyleConstants.BorderStyleEnum},
@@ -176,6 +176,16 @@ local enum_fields = {
 		["hidden"] = "HIDDEN",
 		["collapse"] = "COLLAPSE",
 	}, enum = ComputedStyleConstants.VisibilityEnum},
+	["appearance"] = {map = {
+		["checkbox"] = "CheckboxPart",
+		["radio"] = "RadioPart",
+		["button"] = "ButtonPart",
+		["listbox"] = "ListboxPart",
+		["progress-bar"] = "ProgressBarPart",
+		["textfield"] = "TextFieldPart",
+		["textarea"] = "TextAreaPart",
+		["push-button"] = "PushButtonPart",
+	},enum = ComputedStyleConstants.ControlPartEnum};
 }
 
 function CSSProperty:CreateValueFromCssString()
@@ -201,11 +211,6 @@ function CSSProperty:CreateValueFromCssString()
 		return value;
 	end
 
-	if(name == "font-size") then
-		local value = string.match(value, "%d+");
-		return value;
-	end
-
 	if(name == "font-weight") then
 		if(string.match(value, "bold")) then
 			return true;
@@ -215,7 +220,7 @@ function CSSProperty:CreateValueFromCssString()
 
 	if(name == "font-size") then
 		local value = string.match(value, "%d+");
-		return value;
+		return tonumber(value);
 	end
 
 	return value;

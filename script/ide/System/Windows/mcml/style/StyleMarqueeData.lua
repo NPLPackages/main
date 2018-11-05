@@ -51,7 +51,7 @@ function StyleMarqueeData:clone()
 	return StyleMarqueeData:new(self);
 end
 
-function StyleMarqueeData._eq(a, b)
+function StyleMarqueeData.__eq(a, b)
 	for k in pairs(memberAndInitialValues) do
 		if(a[k] ~= b[k]) then
 			return false;

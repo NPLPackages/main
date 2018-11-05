@@ -39,7 +39,7 @@ function ShadowData:clone()
 	return ShadowData:new(self.x, self.y, self.blur, self.color:clone());
 end
 
-function ShadowData._eq(a, b)
+function ShadowData.__eq(a, b)
 	return a.x == b.x and a.y == b.y and a.blur == b.blur and a.color == b.color;
 end
 

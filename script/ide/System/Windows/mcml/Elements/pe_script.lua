@@ -311,6 +311,24 @@ function pe_script.EndCode(self)
 	end	
 end
 
-function pe_script:attachLayoutTree()
+function pe_script:NeedsLoadComponent()
+	return true;
+end
 
+-- get all pure text of only text child node
+-- because skip child node parsing, we need traverse it by index
+function pe_script:GetPureText()
+	local nSize = #(self);
+	local text = "";
+	for i=1, nSize do
+		node = self[i];
+		if(node) then
+			if(type(node) == "string") then
+				text = text..node;
+			elseif(node.name== "text" and type(node.value) == "string") then
+				text = text..node.value;
+			end
+		end
+	end
+	return text;
 end

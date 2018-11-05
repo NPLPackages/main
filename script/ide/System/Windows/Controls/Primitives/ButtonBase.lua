@@ -25,10 +25,10 @@ ButtonBase:Property({"checked", false, "isChecked"});
 ButtonBase:Property({"checkable", false});
 ButtonBase:Property({"text", nil, "GetText", "SetText", auto=true});
 -- text padding
-ButtonBase:Property({"padding_left", 5, });
-ButtonBase:Property({"padding_top", 5, });
-ButtonBase:Property({"padding_right", 5, });
-ButtonBase:Property({"padding_bottom", 5, });
+ButtonBase:Property({"padding_left", 0, });
+ButtonBase:Property({"padding_top", 0, });
+ButtonBase:Property({"padding_right", 0, });
+ButtonBase:Property({"padding_bottom", 0, });
 
 -- default to centered and no clipping. 
 ButtonBase:Property({"Alignment", 1+4+256, auto=true, desc="text alignment"});
@@ -226,12 +226,12 @@ end
 function ButtonBase:ApplyCss(css)
 	ButtonBase._super.ApplyCss(self, css);
 	
-	self:SetFont(css:Font():ToTable());
+	--self:SetFont(css:Font():ToTable());
 	
 
-	self:SetAlignment(css:GetTextAlignment());
-	self:SetPaddings(css:paddings());
-	if(css.color) then
-		self:SetColor(css.color);
-	end
+	--self:SetAlignment(css:GetTextAlignment());
+	--self:SetPaddings(css:paddings());
+--	if(css.color) then
+--		self:SetColor(css.color);
+--	end
 end

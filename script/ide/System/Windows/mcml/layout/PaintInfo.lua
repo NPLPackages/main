@@ -48,13 +48,13 @@ end
 
 --void updatePaintingRootForChildren(const RenderObject* renderer)
 function PaintInfo:UpdatePaintingRootForChildren(renderer)
-    if (not paintingRoot) then
+    if (not self.paintingRoot) then
         return;
 	end
 
     -- If we're the painting root, kids draw normally, and see root of 0.
-    if (paintingRoot == renderer) then
-        paintingRoot = nil; 
+    if (self.paintingRoot == renderer) then
+        self.paintingRoot = nil; 
         return;
     end
 end
@@ -69,4 +69,9 @@ local INT_MAX = 2147483647    -- maximum (signed) int value
 --static IntRect infiniteRect() { return IntRect(INT_MIN / 2, INT_MIN / 2, INT_MAX, INT_MAX); }
 function PaintInfo.InfiniteRect()
 	return IntRect:new(INT_MIN / 2, INT_MIN / 2, INT_MAX, INT_MAX);
+end
+
+--bool shouldPaintWithinRoot(const RenderObject* renderer) const
+function PaintInfo:ShouldPaintWithinRoot(renderer)
+    return not self.paintingRoot or self.paintingRoot == renderer;
 end

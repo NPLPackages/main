@@ -198,12 +198,6 @@ end
 
 function DropdownListbox:UpdateControls()
 	if(self.needUpdateControl) then
---		echo({0, 0, self:width(), self.EditHeight});
-		
-		--self.editbox:SetText(tostring(self.listbox:GetValue() or ""));
-
-		
-
 		local size = self.listbox:Size();
 		if(size > self.maxVisibleItems) then
 			size = self.maxVisibleItems;

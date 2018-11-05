@@ -52,7 +52,7 @@ function StyleDeprecatedFlexibleBoxData:clone()
 	return StyleDeprecatedFlexibleBoxData:new(self);
 end
 
-function StyleDeprecatedFlexibleBoxData._eq(a, b)
+function StyleDeprecatedFlexibleBoxData.__eq(a, b)
 	for k in pairs(memberAndInitialValues) do
 		if(a[k] ~= b[k]) then
 			return false;

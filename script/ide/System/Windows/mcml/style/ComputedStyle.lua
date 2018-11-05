@@ -22,6 +22,14 @@ NPL.load("(gl)script/ide/System/Windows/mcml/platform/Length.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/platform/LengthSize.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/style/Color.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/style/BorderValue.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/style/StyleContentAlignmentData.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/style/StyleSelfAlignmentData.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/style/OutlineValue.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/platform/LengthBox.lua");
+local LengthBox = commonlib.gettable("System.Windows.mcml.platform.LengthBox");
+local OutlineValue = commonlib.gettable("System.Windows.mcml.style.OutlineValue");
+local StyleSelfAlignmentData = commonlib.gettable("System.Windows.mcml.style.StyleSelfAlignmentData");
+local StyleContentAlignmentData = commonlib.gettable("System.Windows.mcml.style.StyleContentAlignmentData");
 local BorderValue = commonlib.gettable("System.Windows.mcml.style.BorderValue");
 local Color = commonlib.gettable("System.Windows.mcml.style.Color");
 local LengthSize = commonlib.gettable("System.Windows.mcml.platform.LengthSize");
@@ -47,6 +55,14 @@ local WordWrapEnum = ComputedStyleConstants.WordWrapEnum;
 local PageSizeTypeEnum = ComputedStyleConstants.PageSizeTypeEnum;
 local TextEmphasisMarkEnum = ComputedStyleConstants.TextEmphasisMarkEnum;
 local LineBoxContainEnum = ComputedStyleConstants.LineBoxContainEnum;
+local FlexDirectionEnum = ComputedStyleConstants.FlexDirectionEnum;
+local FlexWrapEnum = ComputedStyleConstants.FlexWrapEnum;
+local ControlPartEnum = ComputedStyleConstants.ControlPartEnum;
+local ItemPositionEnum = ComputedStyleConstants.ItemPositionEnum;
+local OverflowAlignmentEnum = ComputedStyleConstants.OverflowAlignmentEnum;
+local ContentPositionEnum = ComputedStyleConstants.ContentPositionEnum;
+local ContentDistributionTypeEnum = ComputedStyleConstants.ContentDistributionTypeEnum;
+local VisibilityEnum = ComputedStyleConstants.VisibilityEnum;
 
 -- Initial values for all the properties
 function ComputedStyle.initialBorderCollapse() return ComputedStyleConstants.BorderCollapseEnum.BSEPARATE; end
@@ -73,7 +89,7 @@ function ComputedStyle.initialPosition() return ComputedStyleConstants.PositionE
 function ComputedStyle.initialTableLayout() return ComputedStyleConstants.TableLayoutEnum.TAUTO; end
 function ComputedStyle.initialUnicodeBidi() return UnicodeBidiEnum.UBNormal; end
 function ComputedStyle.initialTextTransform() return ComputedStyleConstants.TextTransformEnum.TTNONE; end
-function ComputedStyle.initialVisibility() return ComputedStyleConstants.VisibilityEnum.VISIBLE; end
+function ComputedStyle.initialVisibility() return VisibilityEnum.VISIBLE; end
 function ComputedStyle.initialWhiteSpace() return ComputedStyleConstants.WhiteSpaceEnum.NORMAL; end
 function ComputedStyle.initialHorizontalBorderSpacing() return 0; end
 function ComputedStyle.initialVerticalBorderSpacing() return 0; end
@@ -108,14 +124,23 @@ function ComputedStyle.initialBoxFlexGroup() return 1; end
 function ComputedStyle.initialBoxOrdinalGroup() return 1; end
 function ComputedStyle.initialBoxSizing() return ComputedStyleConstants.BoxSizingEnum.CONTENT_BOX; end
 function ComputedStyle.initialBoxReflect() return nil; end
-function ComputedStyle.initialFlexboxWidthPositiveFlex() return 0; end
-function ComputedStyle.initialFlexboxWidthNegativeFlex() return 0; end
-function ComputedStyle.initialFlexboxHeightPositiveFlex() return 0; end
-function ComputedStyle.initialFlexboxHeightNegativeFlex() return 0; end
-function ComputedStyle.initialFlexOrder() return 0; end
-function ComputedStyle.initialFlexPack() return ComputedStyleConstants.FlexPackEnum.PackStart; end
-function ComputedStyle.initialFlexAlign() return ComputedStyleConstants.FlexAlignEnum.AlignStretch; end
-function ComputedStyle.initialFlexFlow() return ComputedStyleConstants.FlexFlowEnum.FlowRow; end
+
+function ComputedStyle.initialFlexGrow() return 0; end
+function ComputedStyle.initialFlexShrink() return 1; end
+function ComputedStyle.initialFlexBasis() return Length:new(LengthTypeEnum.Auto); end
+function ComputedStyle.initialOrder() return 0; end
+function ComputedStyle.initialSelfAlignment() return StyleSelfAlignmentData:new(ItemPositionEnum.ItemPositionAuto, OverflowAlignmentEnum.OverflowAlignmentDefault); end
+local function isCSSGridLayoutEnabled() return true; end
+function ComputedStyle.initialDefaultAlignment() 
+	local item_position = if_else(isCSSGridLayoutEnabled(), ItemPositionEnum.ItemPositionNormal, ItemPositionEnum.ItemPositionStretch);
+	return StyleSelfAlignmentData:new(item_position, OverflowAlignmentEnum.OverflowAlignmentDefault); 
+end
+function ComputedStyle.initialContentAlignment() 
+	return StyleContentAlignmentData:new(ContentPositionEnum.ContentPositionNormal, ContentDistributionTypeEnum.ContentDistributionDefault, OverflowAlignmentEnum.OverflowAlignmentDefault);
+end
+function ComputedStyle.initialFlexDirection() return FlexDirectionEnum.FlowRow; end
+function ComputedStyle.initialFlexWrap() return FlexWrapEnum.FlexNoWrap; end
+
 function ComputedStyle.initialMarqueeLoopCount() return -1; end
 function ComputedStyle.initialMarqueeSpeed() return 85; end
 function ComputedStyle.initialMarqueeIncrement() return Length:new(6, LengthTypeEnum.Fixed); end
@@ -142,7 +167,7 @@ function ComputedStyle.initialHyphenationLimitLines() return -1; end
 --function ComputedStyle.initialLocale() return nullAtom; end
 function ComputedStyle.initialBorderFit() return ComputedStyleConstants.BorderFitEnum.BorderFitBorder; end
 function ComputedStyle.initialResize() return ComputedStyleConstants.ResizeEnum.RESIZE_NONE; end
---function ComputedStyle.initialAppearance() return NoControlPart; end
+function ComputedStyle.initialAppearance() return ControlPartEnum.NoControlPart; end
 function ComputedStyle.initialRTLOrdering() return ComputedStyleConstants.OrderEnum.LogicalOrder; end
 function ComputedStyle.initialTextStrokeWidth() return 0; end
 function ComputedStyle.initialColumnCount() return 1; end
@@ -158,6 +183,9 @@ function ComputedStyle.initialBackfaceVisibility() return ComputedStyleConstants
 function ComputedStyle.initialTextEmphasisMark() return TextEmphasisMarkEnum.TextEmphasisMarkNone; end
 function ComputedStyle.initialLineBoxContain() return mathlib.bit.bor(mathlib.bit.bor(LineBoxContainEnum.LineBoxContainBlock, LineBoxContainEnum.LineBoxContainInline), LineBoxContainEnum.LineBoxContainReplaced); end
 
+function ComputedStyle.initialFlowThread() return ""; end
+
+function ComputedStyle.InitialBorderRadius() end;
 
 -- inherit
 local InheritedFlags = {};
@@ -193,7 +221,7 @@ function InheritedFlags:new(other)
 	return o;
 end
 
-function InheritedFlags._eq(a, b)
+function InheritedFlags.__eq(a, b)
 	return (a._empty_cells == b._empty_cells)
                 and (a._caption_side == b._caption_side)
                 and (a._list_style_type == b._list_style_type)
@@ -253,7 +281,7 @@ function NonInheritedFlags:new(other)
 	return o;
 end
 
-function NonInheritedFlags._eq(a, b)
+function NonInheritedFlags.__eq(a, b)
 	 return a._effectiveDisplay == b._effectiveDisplay
                 and a._originalDisplay == b._originalDisplay
                 and a._overflowX == b._overflowX
@@ -375,6 +403,10 @@ function ComputedStyle:InheritFrom(inheritParent)
     self.inherited_flags = inheritParent.inherited_flags:clone();
 end
 
+function ComputedStyle:InheritUnicodeBidiFrom(parent) 
+	self.noninherited_flags._unicodeBidi = parent.noninherited_flags._unicodeBidi;
+end
+
 --static bool positionedObjectMoved(const LengthBox& a, const LengthBox& b)
 local function positionedObjectMoved(a, b)
     -- If any unit types are different, then we can't guarantee
@@ -405,7 +437,7 @@ end
 function ComputedStyle:Diff(other, changedContextSensitiveProperties)
 	changedContextSensitiveProperties = ComputedStyleConstants.StyleDifferenceContextSensitivePropertyEnum.ContextSensitivePropertyNone;
 
-	if (self.m_box:Width() ~= other.m_box:width()
+	if (self.m_box:Width() ~= other.m_box:Width()
 			or self.m_box:MinWidth() ~= other.m_box:MinWidth()
 			or self.m_box:MaxWidth() ~= other.m_box:MaxWidth()
 			or self.m_box:Height() ~= other.m_box:Height()
@@ -421,13 +453,12 @@ function ComputedStyle:Diff(other, changedContextSensitiveProperties)
 	if (self.m_box:BoxSizing() ~= other.m_box:BoxSizing()) then
         return StyleDifferenceEnum.StyleDifferenceLayout;
 	end
-
-	if (self.surround.margin ~= other.surround.margin) then
-        return StyleDifferenceLayout;
+	if ((self.surround.margin) ~= (other.surround.margin)) then
+        return StyleDifferenceEnum.StyleDifferenceLayout;
 	end
 
     if (self.surround.padding ~= other.surround.padding) then
-        return StyleDifferenceLayout;
+        return StyleDifferenceEnum.StyleDifferenceLayout;
 	end
 
 --	if (self.rareNonInheritedData ~= other.rareNonInheritedData) then
@@ -607,7 +638,7 @@ function ComputedStyle:Diff(other, changedContextSensitiveProperties)
 --    if (rareNonInheritedData->m_counterIncrement ~= other->rareNonInheritedData->m_counterIncrement
 --        or rareNonInheritedData->m_counterReset ~= other->rareNonInheritedData->m_counterReset)
 --        return StyleDifferenceEnum.StyleDifferenceLayout;
-	local COLLAPSE = ComputedStyleConstants.VisibilityEnum.COLLAPSE;
+	local COLLAPSE = VisibilityEnum.COLLAPSE;
     if ((self:Visibility() == COLLAPSE) ~= (other:Visibility() == COLLAPSE)) then
         return StyleDifferenceEnum.StyleDifferenceLayout;
 	end
@@ -662,7 +693,6 @@ function ComputedStyle:Diff(other, changedContextSensitiveProperties)
 --    if (rareNonInheritedData->m_mask ~= other->rareNonInheritedData->m_mask
 --        or rareNonInheritedData->m_maskBoxImage ~= other->rareNonInheritedData->m_maskBoxImage)
 --        return StyleDifferenceEnum.StyleDifferenceRepaintLayer;
-
     if (self.inherited.color ~= other.inherited.color
         or self.inherited_flags._visibility ~= other.inherited_flags._visibility
         or self.inherited_flags._text_decorations ~= other.inherited_flags._text_decorations
@@ -737,6 +767,7 @@ function ComputedStyle:HasClip() return self.visual.hasClip; end
 function ComputedStyle:UnicodeBidi() return self.noninherited_flags._unicodeBidi; end
 function ComputedStyle:Clear() return self.noninherited_flags._clear; end
 function ComputedStyle:Font() return self.inherited.font; end
+function ComputedStyle:FontMetrics() return self.inherited.font:FontMetrics(); end
 function ComputedStyle:FontSize() return self.inherited.font.size; end
 function ComputedStyle:FontBold() return self.inherited.font.bold; end
 function ComputedStyle:FontFamily() return self.inherited.font.family; end
@@ -749,11 +780,27 @@ function ComputedStyle:IsLeftToRightDirection() return self:Direction() == TextD
 function ComputedStyle:LineHeight() return self.inherited.line_height; end
 function ComputedStyle:WhiteSpace() return self.inherited_flags._white_space; end
 function ComputedStyle:TextShadow() return self.rareInheritedData.textShadow; end
+
+function ComputedStyle:OutlineOffset()
+    if (self.m_background:Outline():Style() == ComputedStyleConstants.BorderStyleEnum.BNONE) then
+        return 0;
+	end
+    return self.m_background:Outline():Offset();
+end
+
 function ComputedStyle:Opacity() return self.rareNonInheritedData.opacity; end
 function ComputedStyle:Appearance() return self.rareNonInheritedData.m_appearance; end
 function ComputedStyle:BoxAlign() return self.rareNonInheritedData.m_deprecatedFlexibleBox.align; end
 function ComputedStyle:BoxDirection() return self.inherited_flags._box_direction; end
+function ComputedStyle:BoxFlex() return self.rareNonInheritedData.m_deprecatedFlexibleBox.flex; end
+function ComputedStyle:BoxFlexGroup() return self.rareNonInheritedData.m_deprecatedFlexibleBox.flex_group; end
+function ComputedStyle:BoxLines() return self.rareNonInheritedData.m_deprecatedFlexibleBox.lines; end
+function ComputedStyle:BoxOrdinalGroup() return self.rareNonInheritedData.m_deprecatedFlexibleBox.ordinal_group; end
 function ComputedStyle:BoxOrient() return self.rareNonInheritedData.m_deprecatedFlexibleBox.orient; end
+function ComputedStyle:BoxPack() return self.rareNonInheritedData.m_deprecatedFlexibleBox.pack; end
+
+function ComputedStyle:BoxShadow()	return self.rareNonInheritedData.m_boxShadow; end
+
 function ComputedStyle:BoxSizing() return self.m_box:BoxSizing(); end
 function ComputedStyle:UserModify() return self.rareInheritedData.userModify; end
 function ComputedStyle:UserDrag() return self.rareNonInheritedData.userDrag; end
@@ -771,6 +818,7 @@ function ComputedStyle:Hyphens() return self.rareInheritedData.hyphens; end
 function ComputedStyle:BorderFit() return self.rareNonInheritedData.m_borderFit; end
 function ComputedStyle:TextCombine() return self.rareNonInheritedData.m_textCombine; end
 function ComputedStyle:HasTextCombine() return self:TextCombine() ~= ComputedStyleConstants.TextCombineEnum.TextCombineNone; end
+function ComputedStyle:FlowThread() return self.rareNonInheritedData.m_flowThread; end
 function ComputedStyle:WritingMode() return self.inherited_flags.m_writingMode; end
 function ComputedStyle:IsHorizontalWritingMode() return self:WritingMode() == WritingModeEnum.TopToBottomWritingMode or self:WritingMode() == WritingModeEnum.BottomToTopWritingMode; end
 function ComputedStyle:IsFlippedLinesWritingMode() return self:WritingMode() == WritingModeEnum.LeftToRightWritingMode or self:WritingMode() == WritingModeEnum.BottomToTopWritingMode; end
@@ -806,8 +854,8 @@ function ComputedStyle:ComputedLineHeight()
 	local lh = self:LineHeight();
 	-- Negative value means the line height is not set.  Use the font's built-in spacing.
 	if (lh:IsNegative()) then
-		--return fontMetrics().lineSpacing();
-		return math.floor(self:FontSize() * 1.3 + 0.5);
+		return self:FontMetrics():lineSpacing();
+		--return math.floor(self:FontSize() * 1.3 + 0.5);
 	end
 
 	if (lh:IsPercent()) then
@@ -1133,6 +1181,18 @@ function ComputedStyle:BorderEndWidth()
 	end
     return if_else(self:IsLeftToRightDirection() , self:BorderBottomWidth() , self:BorderTopWidth());
 end
+
+function ComputedStyle:OutlineSize() return math.max(0, self:OutlineWidth() + self:OutlineOffset()); end
+function ComputedStyle:OutlineWidth()
+	if (self.m_background:Outline():Style() == ComputedStyleConstants.BorderStyleEnum.BNONE) then
+		return 0;
+	end
+	return self.m_background:Outline():Width();
+end
+function ComputedStyle:HasOutline() return self:OutlineWidth() > 0 and self:OutlineStyle() > ComputedStyleConstants.BorderStyleEnum.BHIDDEN; end
+function ComputedStyle:OutlineStyle() return self.m_background:Outline():Style(); end
+function ComputedStyle:OutlineStyleIsAuto() return if_else(self.m_background:Outline():IsAuto(), ComputedStyleConstants.OutlineIsAutoEnum.AUTO_ON, ComputedStyleConstants.OutlineIsAutoEnum.AUTO_OFF); end
+
 function ComputedStyle:BorderLeftColor() return self.surround.border:Left():Color(); end
 function ComputedStyle:BorderRightColor() return self.surround.border:Right():Color(); end
 function ComputedStyle:BorderTopColor() return self.surround.border:Top():Color(); end
@@ -1149,11 +1209,11 @@ function ComputedStyle:ColumnSpan() return self.rareNonInheritedData.m_multiCol.
 
 function ComputedStyle:FontAscent(baselineType)
 	baselineType = baselineType or "AlphabeticBaseline"
-	return self:FontSize() - self:FontSize() / 2;
+	return math.floor(self:FontSize() - self:FontSize() / 2 + 0.5);
 end
 function ComputedStyle:FontDescent(baselineType)
 	baselineType = baselineType or "AlphabeticBaseline"
-	return self:FontSize() / 2;
+	return math.floor(self:FontSize() / 2 + 0.5);
 end
 
 function ComputedStyle:HasMask() return false; end
@@ -1174,6 +1234,22 @@ function ComputedStyle:MarqueeBehavior() return self.rareNonInheritedData.m_marq
 function ComputedStyle:StyleType() return self.noninherited_flags._styleType; end
 function ComputedStyle:Locale() return nil; end
 function ComputedStyle:LineBoxContain() return self.rareInheritedData.m_lineBoxContain; end
+
+function ComputedStyle:Order()  return self.rareNonInheritedData.order; end
+function ComputedStyle:FlexGrow()  return self.rareNonInheritedData.flexibleBox.flexGrow; end
+function ComputedStyle:FlexShrink()  return self.rareNonInheritedData.flexibleBox.flexShrink; end
+function ComputedStyle:FlexBasis()  return self.rareNonInheritedData.flexibleBox.flexBasis; end
+function ComputedStyle:AlignContent()  return self.rareNonInheritedData.alignContent; end
+function ComputedStyle:AlignItems()  return self.rareNonInheritedData.alignItems; end
+function ComputedStyle:AlignSelf()  return self.rareNonInheritedData.alignSelf; end
+function ComputedStyle:FlexDirection()  return self.rareNonInheritedData.flexibleBox.flexDirection; end
+function ComputedStyle:IsColumnFlexDirection()  return self:FlexDirection() == FlexDirectionEnum.FlowColumn or self:FlexDirection() == FlexDirectionEnum.FlowColumnReverse; end
+function ComputedStyle:IsReverseFlexDirection()  return self:FlexDirection() == FlexDirectionEnum.FlowRowReverse or self:FlexDirection() == FlexDirectionEnum.FlowColumnReverse; end
+function ComputedStyle:FlexWrap()  return self.rareNonInheritedData.flexibleBox.flexWrap; end
+function ComputedStyle:JustifyContent()  return self.rareNonInheritedData.justifyContent; end
+function ComputedStyle:JustifyItems()  return self.rareNonInheritedData.justifyItems; end
+function ComputedStyle:JustifySelf()  return self.rareNonInheritedData.justifySelf; end
+
 -- attribute setter methods
 
 function ComputedStyle:SetDisplay(v) self.noninherited_flags._effectiveDisplay = v; end
@@ -1195,6 +1271,7 @@ function ComputedStyle:SetMinHeight(v) self.m_box.m_minHeight = v; end
 function ComputedStyle:SetMaxHeight(v) self.m_box.m_maxHeight = v; end
 
 function ComputedStyle:ResetBorder() self:ResetBorderImage(); self:ResetBorderTop(); self:ResetBorderRight(); self:ResetBorderBottom(); self:ResetBorderLeft(); self:ResetBorderRadius(); end
+function ComputedStyle:ResetBorderImage()  end
 function ComputedStyle:ResetBorderTop() self.surround.border.m_top = BorderValue:new(); end
 function ComputedStyle:ResetBorderRight() self.surround.border.m_right = BorderValue:new(); end
 function ComputedStyle:ResetBorderBottom() self.surround.border.m_bottom = BorderValue:new(); end
@@ -1204,6 +1281,8 @@ function ComputedStyle:ResetBorderTopLeftRadius() self.surround.border.m_topLeft
 function ComputedStyle:ResetBorderTopRightRadius() self.surround.border.m_topRight = self:InitialBorderRadius(); end
 function ComputedStyle:ResetBorderBottomLeftRadius() self.surround.border.m_bottomLeft = self:InitialBorderRadius(); end
 function ComputedStyle:ResetBorderBottomRightRadius() self.surround.border.m_bottomRight = self:InitialBorderRadius(); end
+
+function ComputedStyle:ResetOutline() self.m_background.m_outline = OutlineValue:new(); end
 
 function ComputedStyle:SetBackgroundColor(v) self.m_background.m_color = v; end
 function ComputedStyle:SetBackgroundImage(v) self.m_background.background = v; end
@@ -1225,6 +1304,11 @@ function ComputedStyle:SetBorderTopColor(v) self.surround.border.m_top.m_color =
 function ComputedStyle:SetBorderBottomWidth(v) self.surround.border.m_bottom.m_width = v; end
 function ComputedStyle:SetBorderBottomStyle(v) self.surround.border.m_bottom.m_style = v; end
 function ComputedStyle:SetBorderBottomColor(v) self.surround.border.m_bottom.m_color = v; end
+
+function ComputedStyle:SetOutlineWidth(v) self.m_background.m_outline.m_width = v; end
+function ComputedStyle:SetOutlineStyleIsAuto(isAuto) self.m_background.m_outline.m_isAuto = isAuto; end
+function ComputedStyle:SetOutlineStyle(v) self.m_background.m_outline.m_style = v; end
+function ComputedStyle:SetOutlineColor(v) self.m_background.m_outline.m_color = v; end
 
 function ComputedStyle:SetOverflowX(v) self.noninherited_flags._overflowX = v; end
 function ComputedStyle:SetOverflowY(v) self.noninherited_flags._overflowY = v; end
@@ -1254,7 +1338,7 @@ function ComputedStyle:SetWhiteSpace(v) self.inherited_flags._white_space = v; e
 function ComputedStyle:SetWordSpacing(v) self.inherited.font:SetWordSpacing(v); end
 function ComputedStyle:SetLetterSpacing(v) self.inherited.font:SetLetterSpacing(v); end
 
-function ComputedStyle:SetFontSize(v) self.inherited.font.size = v; end
+function ComputedStyle:SetFontSize(v) self.inherited.font:SetSize(v); end
 function ComputedStyle:SetFontBold(v) self.inherited.font.bold = v; end
 function ComputedStyle:SetFontFamily(v) self.inherited.font.family = v; end
 
@@ -1320,6 +1404,15 @@ function ComputedStyle:SetPageBreakAfter(b) self.noninherited_flags._page_break_
 function ComputedStyle:SetOpacity(f) self.rareNonInheritedData.opacity = f; end
 function ComputedStyle:SetAppearance(a) self.rareNonInheritedData.m_appearance = a; end
 
+function ComputedStyle:SetBoxAlign(a) self.rareNonInheritedData.m_deprecatedFlexibleBox.align = a; end
+function ComputedStyle:SetBoxDirection(d) self.inherited_flags._box_direction = d; end
+function ComputedStyle:SetBoxFlex(f) self.rareNonInheritedData.m_deprecatedFlexibleBox.flex = f; end
+function ComputedStyle:SetBoxFlexGroup(fg) self.rareNonInheritedData.m_deprecatedFlexibleBox.flex_group = fg; end
+function ComputedStyle:SetBoxLines(l) self.rareNonInheritedData.m_deprecatedFlexibleBox.lines = l; end
+function ComputedStyle:SetBoxOrdinalGroup(og) self.rareNonInheritedData.m_deprecatedFlexibleBox.ordinal_group = og; end
+function ComputedStyle:SetBoxOrient(o) self.rareNonInheritedData.m_deprecatedFlexibleBox.orient = o; end
+function ComputedStyle:SetBoxPack(p) self.rareNonInheritedData.m_deprecatedFlexibleBox.pack = p; end
+
 function ComputedStyle:SetUserModify(u) self.rareInheritedData.userModify = u; end
 function ComputedStyle:SetUserDrag(d) self.rareNonInheritedData.userDrag = d; end
 function ComputedStyle:SetUserSelect(s) self.rareInheritedData.userSelect = s; end
@@ -1354,6 +1447,7 @@ function ComputedStyle:SetWritingMode(v) self.inherited_flags.m_writingMode = v;
 
 function ComputedStyle:SetUnique() self.m_unique = true; end
 
+function ComputedStyle:SetOutlineOffset(v) self.m_background.m_outline.m_offset = v; end
 --void setTextShadow(PassOwnPtr<ShadowData>, bool add = false);
 function ComputedStyle:SetTextShadow(shadowData, add)
 	add = if_else(add == nil, false, add);
@@ -1410,6 +1504,23 @@ function ComputedStyle:SetHasClip(b)
 	self.visual.hasClip = b;
 end
 
+function ComputedStyle:HasAppearance() 
+	return self:Appearance() ~= ControlPartEnum.NoControlPart;
+end
+
+function ComputedStyle:HasBackgroundImage()
+	local image = self:BackgroundImage();
+	return image and image ~= "";
+end
+
+function ComputedStyle:HasBackground()
+	local color = self.m_background.m_color;
+    if (color:IsValid() and color:Alpha() > 0) then
+        return true;
+	end
+    return self:HasBackgroundImage();
+end
+
 --void RenderStyle::setClip(Length top, Length right, Length bottom, Length left)
 function ComputedStyle:SetClip(top, right, bottom, left)
     local data = self.visual;
@@ -1419,6 +1530,30 @@ function ComputedStyle:SetClip(top, right, bottom, left)
     data.clip.m_left = left;
 end
 
+function ComputedStyle:SetFlexGrow(f) self.rareNonInheritedData.flexibleBox.flexGrow = f; end
+function ComputedStyle:SetFlexShrink(f) self.rareNonInheritedData.flexibleBox.flexShrink = f; end
+function ComputedStyle:SetFlexBasis(length) self.rareNonInheritedData.flexibleBox.flexBasis = length:clone(); end
+function ComputedStyle:SetOrder(o) self.rareNonInheritedData.order = o; end
+function ComputedStyle:SetAlignContent(data) self.rareNonInheritedData.alignContent = data:clone(); end
+function ComputedStyle:SetAlignItems(data) self.rareNonInheritedData.alignItems = data:clone(); end
+function ComputedStyle:SetAlignItemsPosition(position) self.rareNonInheritedData.alignItems:SetPosition(position); end
+function ComputedStyle:SetAlignSelf(data) self.rareNonInheritedData.alignSelf = data:clone(); end
+function ComputedStyle:SetAlignSelfPosition(position) self.rareNonInheritedData.alignSelf:SetPosition(position); end
+function ComputedStyle:SetFlexDirection(direction) self.rareNonInheritedData.flexibleBox.flexDirection = direction; end
+function ComputedStyle:SetFlexWrap(w) self.rareNonInheritedData.flexibleBox.flexWrap = w; end
+function ComputedStyle:SetJustifyContent(data) self.rareNonInheritedData.justifyContent = data:clone(); end
+function ComputedStyle:SetJustifyContentPosition(position) self.rareNonInheritedData.justifyContent:SetPosition(position); end
+function ComputedStyle:SetJustifyItems(data) self.rareNonInheritedData.justifyItems = data:clone(); end
+function ComputedStyle:SetJustifySelf(data) self.rareNonInheritedData.justifySelf = data:clone(); end
+function ComputedStyle:SetJustifySelfPosition(position) self.rareNonInheritedData.justifySelf:SetPosition(position); end
 
 
-
+--PassRefPtr<RenderStyle> RenderStyle::createAnonymousStyle(const RenderStyle* parentStyle)
+function ComputedStyle.CreateAnonymousStyle(parentStyle)
+    local newStyle = ComputedStyle:new();
+    newStyle:InheritFrom(parentStyle);
+    newStyle:InheritUnicodeBidiFrom(parentStyle);
+	newStyle:SetBackgroundColor(ComputedStyle.initialBackgroundColor());
+	newStyle:SetBackgroundImage(ComputedStyle.initialBackgroundImage());
+    return newStyle;
+end

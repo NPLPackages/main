@@ -44,7 +44,7 @@ function StyleSurroundData:clone()
 	return StyleSurroundData:new(self.offset:clone(), self.margin:clone(), self.padding:clone(), self.border:clone());
 end
 
-function StyleSurroundData._eq(a, b)
+function StyleSurroundData.__eq(a, b)
 	    return a.offset == b.offset 
 			and a.margin == b.margin
 			and a.padding == b.padding

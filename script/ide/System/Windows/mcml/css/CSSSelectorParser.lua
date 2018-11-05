@@ -42,6 +42,13 @@ function CSSSelectorParser:ConsumeCompoundSelector(str)
 	for combinator,selectorStr in string.gmatch(str,"([%s+>~]?)([^%s+>~]+)") do
 		selectorInfos[#selectorInfos+1] = {["combinator"] = combinator};
 		local subselectors = selectorInfos[#selectorInfos];
+		
+		local tag = string.match(selectorStr, "^[%a%*%:]+");
+		subselectors["tag"] = tag or "*";
+		if(tag) then
+			subselectors[#subselectors + 1] = {"", tag};
+			selectorStr = string.gsub(selectorStr,tag,"");
+		end
 		for flag,value in string.gfind(selectorStr,"([.#%[]?)([^.#%[]+)") do
 			subselectors[#subselectors + 1] = {flag, value};
 		end
@@ -57,7 +64,7 @@ function CSSSelectorParser:ConsumeCompoundSelector(str)
 			local subselector = selectorInfo[j];
 			local flag = subselector[1];
 			local value = subselector[2];
-			simple_selector = self:ConsumeSimpleSelector(flag, value);
+			simple_selector = self:ConsumeSimpleSelector(flag, value, selectorInfo.tag);
 			if(j == 1) then
 				if(compound_selector) then
 					compound_selector:AppendTagHistory(simple_selector,relation);
@@ -106,7 +113,7 @@ end
 function CSSSelectorParser:GetAttribute(str)
 	str = string.gsub(str, "]", "");
 	local name,flag,value = string.match(str,"([^=|~*^$]+)([=|~*^$]*)([^^=|~*^$]*)");
-	local matchtype = CSSSelector.MatchType.kAttributeSet;
+	local matchType = CSSSelector.MatchType.kAttributeSet;
 	if(flag) then
 		if(flag == "=") then
 			matchType = CSSSelector.MatchType.kAttributeExact;
@@ -122,19 +129,19 @@ function CSSSelectorParser:GetAttribute(str)
 			matchType = CSSSelector.MatchType.kAttributeEnd;
 		end
 	end
-	return name, value, matchtype;
+	return name, value, matchType;
 end
 
 -- @param flag: the selector flag, such as: ".", "#", "[", etc.
 -- @param value:string the selector value.
-function CSSSelectorParser:ConsumeSimpleSelector(flag, value)
-	local matchtype = self:GetMatchType(flag);
+function CSSSelectorParser:ConsumeSimpleSelector(flag, value, tag)
+	local matchType = self:GetMatchType(flag);
 	local attribute;
-	if(matchtype == CSSSelector.MatchType.kAttributeSet) then
+	if(matchType == CSSSelector.MatchType.kAttributeSet) then
 		local attribute_name,attribute_value,attribute_matchtype = self:GetAttribute(value);
 		attribute = attribute_name;
 		value = attribute_value;
-		matchtype = attribute_matchtype;
+		matchType = attribute_matchtype;
 	end
-	return CSSSelector:new():init(value,matchtype,attribute);
+	return CSSSelector:new():init(value,matchType,attribute,tag);
 end

@@ -11,8 +11,12 @@ local LayoutView = commonlib.gettable("System.Windows.mcml.layout.LayoutView");
 ]]
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutBlock.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutState.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/IntSize.lua");
+local Size = commonlib.gettable("System.Windows.mcml.platform.graphics.IntSize");
 local LayoutState = commonlib.gettable("System.Windows.mcml.layout.LayoutState");
 local LayoutView = commonlib.inherit(commonlib.gettable("System.Windows.mcml.layout.LayoutBlock"), commonlib.gettable("System.Windows.mcml.layout.LayoutView"));
+
+local LayoutSize = Size;
 
 function LayoutView:ctor()
 	self.name = "LayoutView";
@@ -24,6 +28,8 @@ function LayoutView:ctor()
 	self.layoutState = nil;
 
 	self.maximalOutlineSize = 0;
+
+	self.layoutStateDisableCount = 0
 end
 
 function LayoutView:init(node, frameView)
@@ -45,6 +51,10 @@ function LayoutView:init(node, frameView)
 	self.frameView = frameView;
 
 	return self;
+end
+
+function LayoutView:GetName()
+	return "LayoutView";
 end
 
 function LayoutView:IsLayoutView()
@@ -137,7 +147,6 @@ function LayoutView:Layout()
     state.isPaginated = if_else(state.pageLogicalHeight ~= 0, true, false);
     self.pageLogicalHeightChanged = false;
     self.layoutState = state;
-
     if (self:NeedsLayout()) then
         LayoutView._super.Layout(self);
 --        if (self:HasRenderFlowThreads()) then
@@ -157,6 +166,12 @@ function LayoutView:LayoutDelta()
 		return self.layoutState.layoutDelta;
 	end
     return LayoutSize:new();
+end
+
+function LayoutView:AddLayoutDelta(delta) 
+    if (self.layoutState) then
+        self.layoutState.layoutDelta = self.layoutState.layoutDelta + delta;
+	end
 end
 
 function LayoutView:MaximalOutlineSize()
@@ -243,4 +258,12 @@ end
 
 function LayoutView:LayoutState()
 	return self.layoutState;
+end
+
+function LayoutView:DoingFullRepaint()
+	return self.frameView:NeedsFullRepaint();
+end
+
+function LayoutView:LayoutStateEnabled() 
+	return self.layoutStateDisableCount == 0 and self.layoutState ~= nil;
 end

@@ -35,6 +35,7 @@ end
 -- @param style: ComputedStyle
 function LayoutTreeBuilder:init(node)
 	self.node = node;
+	self.style = nil;
 	self:initParentLayoutObject();
 
 	self.parentNodeForRenderingAndStyle = self.node.parent;
@@ -45,10 +46,6 @@ function LayoutTreeBuilder:ParentNodeForRenderingAndStyle()
 	return self.parentNodeForRenderingAndStyle;
 end
 
-function LayoutTreeBuilder:ParentLayoutObject()
-	return self.layout_object_parent;
-end
-
 function LayoutTreeBuilder:initParentLayoutObject()
 	self.layout_object_parent = nil;
 	if(self.node.parent) then
@@ -57,30 +54,125 @@ function LayoutTreeBuilder:initParentLayoutObject()
 end
 
 function LayoutTreeBuilder:ShouldCreateLayoutObject()
-	if(self.node.name == "pe:mcml") then
-		return true;
-	end
 	if(not self.layout_object_parent) then
 		return false;
 	end
 	if(not self.layout_object_parent:CanHaveChildren()) then
 		return false;
 	end
+	self.style = self.style or self.node:StyleForLayoutObject();
+	return self.node:LayoutObjectIsNeeded(self.style);
+end
 
-	return self.node:LayoutObjectIsNeeded(style);
+function LayoutTreeBuilder:NextLayoutObject()
+    --ASSERT(self.node->renderer() or m_location ~= LocationUndetermined);
+	local renderer = self.node:Renderer();
+    if (renderer) then
+        return renderer:NextSibling();
+	end
+
+--    if (m_parentFlowRenderer)
+--        return m_parentFlowRenderer->nextRendererForNode(self.node);
+--
+--    if (m_phase == AttachContentForwarded) then
+--        if (RenderObject* found = nextRendererOf(m_includer, self.node))
+--            return found;
+--        return NodeRenderingContext(m_includer).nextRenderer();
+--    end
+
+    -- Avoid an O(n^2) problem with this function by not checking for
+    -- nextRenderer() when the parent element hasn't attached yet.
+    if (self.node:ParentOrHostNode() and not self.node:ParentOrHostNode():Attached()) then
+        return;
+	end
+	local node = self.node:NextSibling();
+	while(node) do
+		if (node:Renderer()) then
+			if(node:Renderer():Style() and not node:Renderer():Style():FlowThread() == "") then
+				--continue;
+			else
+				return node:Renderer();
+			end
+		end
+	
+		node = node:NextSibling();
+	end
+    return;
+end
+
+function LayoutTreeBuilder:PreviousLayoutObject()
+    --ASSERT(self.node->renderer() or m_location ~= LocationUndetermined);
+	local renderer = self.node:Renderer();
+    if (renderer) then
+        return renderer:PreviousSibling();
+	end
+
+--    if (m_parentFlowRenderer)
+--        return m_parentFlowRenderer->previousRendererForNode(self.node);
+--
+--    if (m_phase == AttachContentForwarded) then
+--        if (RenderObject* found = previousRendererOf(m_includer, self.node))
+--            return found;
+--        return NodeRenderingContext(m_includer).previousRenderer();
+--    end
+
+    -- FIXME: We should have the same O(N^2) avoidance as nextRenderer does
+    -- however, when I tried adding it, several tests failed.
+	
+	local node = self.node:PreviousSibling();
+	while(node) do
+		if (node:Renderer()) then
+			if(node:Renderer():Style() and not node:Renderer():Style():FlowThread() == "") then
+				--continue;
+			else
+				return node:Renderer();
+			end
+		end
+	
+		node = node:PreviousSibling()
+	end
+	
+    return;
+end
+
+function LayoutTreeBuilder:ParentLayoutObject()
+	if(self.layout_object_parent) then
+		return self.layout_object_parent;
+	end
+	local renderer = self.node:Renderer();
+    if (renderer) then
+        --ASSERT(m_location == LocationUndetermined);
+        return renderer:Parent();
+    end
+
+--    if (m_parentFlowRenderer)
+--        return m_parentFlowRenderer;
+
+    --ASSERT(m_location ~= LocationUndetermined);
+	if(self.parentNodeForRenderingAndStyle) then
+		return self.parentNodeForRenderingAndStyle:Renderer();
+	end
+    return;
 end
 
 function LayoutTreeBuilder:CreateLayoutObjectIfNeeded()
 	if(self:ShouldCreateLayoutObject()) then
-		self.style = self.node:StyleForLayoutObject();
+		self.style = self.style or self.node:StyleForLayoutObject();
+
+		local next_layout_object = self:NextLayoutObject();
 
 		local layout_object = self:CreateLayoutObject();
 
 		local parent_layout_object = self:ParentLayoutObject();
-		if(parent_layout_object) then
-			parent_layout_object:AddChild(layout_object);
+		if(parent_layout_object and layout_object) then
+			local child = parent_layout_object:FirstChild();
+			
+			parent_layout_object:AddChild(layout_object, next_layout_object);
 		end
+
+		return true;
 	end
+	return false;
 end
 
 function LayoutTreeBuilder:CreateLayoutObject()
@@ -93,8 +185,9 @@ function LayoutTreeBuilder:CreateLayoutObject()
 		node:SetLayoutObject(layout_object);
 	end
 	
-
-	layout_object:SetStyle(style);
+	if(layout_object) then
+		layout_object:SetAnimatableStyle(style);
+	end
 
 
 

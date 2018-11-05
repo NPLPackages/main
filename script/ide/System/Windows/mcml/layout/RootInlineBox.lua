@@ -7,6 +7,7 @@ use the lib:
 ------------------------------------------------------------
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/RootInlineBox.lua");
 local RootInlineBox = commonlib.gettable("System.Windows.mcml.layout.RootInlineBox");
+local TrailingFloatsRootInlineBox = commonlib.gettable("System.Windows.mcml.layout.TrailingFloatsRootInlineBox");
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/InlineFlowBox.lua");
@@ -19,6 +20,7 @@ local ComputedStyle = commonlib.gettable("System.Windows.mcml.style.ComputedStyl
 local RootInlineBox = commonlib.inherit(commonlib.gettable("System.Windows.mcml.layout.InlineFlowBox"), commonlib.gettable("System.Windows.mcml.layout.RootInlineBox"));
 
 local LineBoxContainEnum = ComputedStyleConstants.LineBoxContainEnum;
+local VerticalAlignEnum = ComputedStyleConstants.VerticalAlignEnum;
 
 function RootInlineBox:ctor()
 	-- This folds into the padding at the end of InlineFlowBox on 64-bit.
@@ -42,6 +44,8 @@ function RootInlineBox:ctor()
     -- Floats hanging off the line are pushed into this vector during layout. It is only
     -- good for as long as the line has not been marked dirty.
     --OwnPtr<Vector<RenderBox*> > self.floats;
+	--self.floats = commonlib.vector:new();
+	self.floats = nil;
 end
 
 function RootInlineBox:BoxName()
@@ -134,6 +138,12 @@ end
 function RootInlineBox:HasEllipsisBox()
 	return self.hasEllipsisBoxOrHyphen;
 end
+
+function RootInlineBox:SetHasEllipsisBox(hasEllipsisBox) 
+	self.hasEllipsisBoxOrHyphen = hasEllipsisBox;
+end
+
+
 --@param arena:RenderArena object
 function RootInlineBox:DetachEllipsisBox(arena)
     if (self:HasEllipsisBox()) then
@@ -162,7 +172,8 @@ function RootInlineBox:FitsToGlyphs()
     -- FIXME: We can't fit to glyphs yet for vertical text, since the bounds returned are garbage.
     -- LineBoxContain lineBoxContain = renderer()->style()->lineBoxContain();
     -- return isHorizontal() && (lineBoxContain & LineBoxContainGlyphs);
-	return false;
+	local lineBoxContain = self:Renderer():Style():LineBoxContain();
+	return self:IsHorizontal() and mathlib.bit.band(lineBoxContain, LineBoxContainEnum.LineBoxContainGlyphs);
 end
 
 function RootInlineBox:BeforeAnnotationsAdjustment()
@@ -195,6 +206,12 @@ function RootInlineBox:BeforeAnnotationsAdjustment()
     return result;
 end
 
+function RootInlineBox:SimplyAlignBoxesInBlockDirection(heightOfBlock, textBoxDataMap, verticalPositionCache)
+	if (self:IsSVGRootInlineBox()) then
+        return 0;
+	end
+end
+
 --LayoutUnit RootInlineBox::alignBoxesInBlockDirection(LayoutUnit heightOfBlock, GlyphOverflowAndFallbackFontsMap& textBoxDataMap, VerticalPositionCache& verticalPositionCache)
 function RootInlineBox:AlignBoxesInBlockDirection(heightOfBlock, textBoxDataMap, verticalPositionCache)
 	if (self:IsSVGRootInlineBox()) then
@@ -209,17 +226,16 @@ function RootInlineBox:AlignBoxesInBlockDirection(heightOfBlock, textBoxDataMap,
     local setMaxDescent = false;
 
 --	// Figure out if we're in no-quirks mode.
---    bool noQuirksMode = renderer()->document()->inNoQuirksMode();
-	local noQuirksMode = false;
+	local noQuirksMode = self:Renderer():Document():InNoQuirksMode();
+	--local noQuirksMode = false;
 
 	self.baselineType = if_else(self:RequiresIdeographicBaseline(textBoxDataMap), "IdeographicBaseline", "AlphabeticBaseline");
 
 	maxPositionTop, maxPositionBottom, maxAscent, maxDescent, setMaxAscent, setMaxDescent = self:ComputeLogicalBoxHeights(self, maxPositionTop, maxPositionBottom, maxAscent, maxDescent, setMaxAscent, setMaxDescent, noQuirksMode,
                              textBoxDataMap, self:BaselineType(), verticalPositionCache);
 	if (maxAscent + maxDescent < math.max(maxPositionTop, maxPositionBottom)) then
-        self:AdjustMaxAscentAndDescent(maxAscent, maxDescent, maxPositionTop, maxPositionBottom);
+        maxAscent, maxDescent = self:AdjustMaxAscentAndDescent(maxAscent, maxDescent, maxPositionTop, maxPositionBottom);
 	end
-
 	local maxHeight = maxAscent + maxDescent;
     local lineTop = heightOfBlock;
     local lineBottom = heightOfBlock;
@@ -243,7 +259,6 @@ function RootInlineBox:AlignBoxesInBlockDirection(heightOfBlock, textBoxDataMap,
         self:AdjustBlockDirectionPosition(annotationsAdjustment);
         heightOfBlock = heightOfBlock + annotationsAdjustment;
     end
-
     return heightOfBlock + maxHeight;
 end
 
@@ -271,57 +286,60 @@ function RootInlineBox:AscentAndDescentForBox(box, textBoxDataMap, ascent, desce
 
 --    -- Replaced boxes will return 0 for the line-height if line-box-contain says they are
 --    -- not to be included.
---    if (box->renderer()->isReplaced()) {
---        if (renderer()->style(m_firstLine)->lineBoxContain() & LineBoxContainReplaced) {
---            ascent = box->baselinePosition(baselineType());
---            descent = box->lineHeight() - ascent;
---            
---            // Replaced elements always affect both the ascent and descent.
---            affectsAscent = true;
---            affectsDescent = true;
---        }
---        return;
---    }
+    if (box:Renderer():IsReplaced()) then
+		local lineBoxContain = self:Renderer():Style(self.firstLine):LineBoxContain();
+        if (mathlib.bit.band(lineBoxContain, LineBoxContainEnum.LineBoxContainReplaced)) then
+			
+            ascent = box:BaselinePosition(self:BaselineType());
+            descent = box:LineHeight() - ascent;
+            
+            -- Replaced elements always affect both the ascent and descent.
+            affectsAscent = true;
+            affectsDescent = true;
+        end
+        return ascent, descent, affectsAscent, affectsDescent;
+    end
 
 --    Vector<const SimpleFontData*>* usedFonts = 0;
 --    GlyphOverflow* glyphOverflow = 0;
 	local usedFonts = nil;
     local glyphOverflow = nil;
---    if (box->isText()) {
---        GlyphOverflowAndFallbackFontsMap::iterator it = textBoxDataMap.find(toInlineTextBox(box));
---        usedFonts = it == textBoxDataMap.end() ? 0 : &it->second.first;
---        glyphOverflow = it == textBoxDataMap.end() ? 0 : &it->second.second;
---    }
+    if (box:IsText()) then
+		usedFonts = textBoxDataMap[box];
+        --GlyphOverflowAndFallbackFontsMap::iterator it = textBoxDataMap.find(toInlineTextBox(box));
+        --usedFonts = it == textBoxDataMap.end() ? 0 : &it->second.first;
+        --glyphOverflow = it == textBoxDataMap.end() ? 0 : &it->second.second;
+    end
 
 	local includeLeading = self:IncludeLeadingForBox(box);
     local includeFont = self:IncludeFontForBox(box);
-    
     local setUsedFont = false;
     local setUsedFontWithLeading = false;
-
---	if (usedFonts && !usedFonts->isEmpty() && (includeFont || (box->renderer()->style(m_firstLine)->lineHeight().isNegative() && includeLeading))) {
---        usedFonts->append(box->renderer()->style(m_firstLine)->font().primaryFont());
---        for (size_t i = 0; i < usedFonts->size(); ++i) {
---            const FontMetrics& fontMetrics = usedFonts->at(i)->fontMetrics();
---            LayoutUnit usedFontAscent = fontMetrics.ascent(baselineType());
---            LayoutUnit usedFontDescent = fontMetrics.descent(baselineType());
---            LayoutUnit halfLeading = (fontMetrics.lineSpacing() - fontMetrics.height()) / 2;
---            LayoutUnit usedFontAscentAndLeading = usedFontAscent + halfLeading;
---            LayoutUnit usedFontDescentAndLeading = fontMetrics.lineSpacing() - usedFontAscentAndLeading;
---            if (includeFont) {
---                setAscentAndDescent(ascent, descent, usedFontAscent, usedFontDescent, ascentDescentSet);
---                setUsedFont = true;
---            }
---            if (includeLeading) {
---                setAscentAndDescent(ascent, descent, usedFontAscentAndLeading, usedFontDescentAndLeading, ascentDescentSet);
---                setUsedFontWithLeading = true;
---            }
---            if (!affectsAscent)
---                affectsAscent = usedFontAscent - box->logicalTop() > 0;
---            if (!affectsDescent)
---                affectsDescent = usedFontDescent + box->logicalTop() > 0;
---        }
---    }
+	if (usedFonts ~= nil and #usedFonts > 0 and (includeFont or (box:Renderer():Style(self.firstLine):LineHeight():IsNegative() and includeLeading))) then
+        --usedFonts->append(box->renderer()->style(m_firstLine)->font().primaryFont());
+		for i = 1, #usedFonts do
+			local fontMetrics = usedFonts[i]:FontMetrics();
+            local usedFontAscent = fontMetrics:ascent(self:BaselineType());
+            local usedFontDescent = fontMetrics:descent(self:BaselineType());
+            local halfLeading = math.floor((fontMetrics:lineSpacing() - fontMetrics:height())/2+0.5);
+            local usedFontAscentAndLeading = usedFontAscent + halfLeading;
+            local usedFontDescentAndLeading = fontMetrics:lineSpacing() - usedFontAscentAndLeading;
+            if (includeFont) then
+                ascent, descent, ascentDescentSet = setAscentAndDescent(ascent, descent, usedFontAscent, usedFontDescent, ascentDescentSet);
+                setUsedFont = true;
+            end
+            if (includeLeading) then
+                ascent, descent, ascentDescentSet = setAscentAndDescent(ascent, descent, usedFontAscentAndLeading, usedFontDescentAndLeading, ascentDescentSet);
+                setUsedFontWithLeading = true;
+            end
+            if (not affectsAscent) then
+                affectsAscent = usedFontAscent - box:LogicalTop() > 0;
+			end
+            if (not affectsDescent) then
+                affectsDescent = usedFontDescent + box:LogicalTop() > 0;
+			end
+		end
+    end
 
 	-- If leading is included for the box, then we compute that box.
     if (includeLeading and not setUsedFontWithLeading) then
@@ -337,27 +355,27 @@ function RootInlineBox:AscentAndDescentForBox(box, textBoxDataMap, ascent, desce
         affectsDescent = (descentWithLeading + box:LogicalTop()) > 0; 
     end
 
---	if (includeFontForBox(box) && !setUsedFont) {
---        int fontAscent = box->renderer()->style(m_firstLine)->fontMetrics().ascent();
---        int fontDescent = box->renderer()->style(m_firstLine)->fontMetrics().descent();
---        setAscentAndDescent(ascent, descent, fontAscent, fontDescent, ascentDescentSet);
---        affectsAscent = fontAscent - box->logicalTop() > 0;
---        affectsDescent = fontDescent + box->logicalTop() > 0; 
---    }
+	if (self:IncludeFontForBox(box) and not setUsedFont) then
+        local fontAscent = box:Renderer():Style(self.firstLine):FontMetrics():ascent();
+        local fontDescent = box:Renderer():Style(self.firstLine):FontMetrics():descent();
+        ascent, descent, ascentDescentSet = setAscentAndDescent(ascent, descent, fontAscent, fontDescent, ascentDescentSet);
+        affectsAscent = fontAscent - box:LogicalTop() > 0;
+        affectsDescent = fontDescent + box:LogicalTop() > 0; 
+    end
 
---	if (includeMarginForBox(box)) {
---        int ascentWithMargin = box->renderer()->style(m_firstLine)->fontMetrics().ascent();
---        int descentWithMargin = box->renderer()->style(m_firstLine)->fontMetrics().descent();
---        if (box->parent() && !box->renderer()->isText()) {
---            ascentWithMargin += box->boxModelObject()->borderBefore() + box->boxModelObject()->paddingBefore() + box->boxModelObject()->marginBefore();
---            descentWithMargin += box->boxModelObject()->borderAfter() + box->boxModelObject()->paddingAfter() + box->boxModelObject()->marginAfter();
---        }
---        setAscentAndDescent(ascent, descent, ascentWithMargin, descentWithMargin, ascentDescentSet);
---        
---        // Treat like a replaced element, since we're using the margin box.
---        affectsAscent = true;
---        affectsDescent = true;
---    }
+	if (self:IncludeMarginForBox(box)) then
+        local ascentWithMargin = box:Renderer():Style(self.firstLine):FontMetrics():ascent();
+        local descentWithMargin = box:Renderer():Style(self.firstLine):FontMetrics():descent();
+        if (box:Parent() ~= nil and not box:Renderer():IsText()) then
+            ascentWithMargin = ascentWithMargin + box:BoxModelObject():BorderBefore() + box:BoxModelObject():PaddingBefore() + box:BoxModelObject():MarginBefore();
+            descentWithMargin = descentWithMargin + box:BoxModelObject():BorderAfter() + box:BoxModelObject():PaddingAfter() + box:BoxModelObject():MarginAfter();
+        end
+        ascent, descent, ascentDescentSet = setAscentAndDescent(ascent, descent, ascentWithMargin, descentWithMargin, ascentDescentSet);
+        
+        -- Treat like a replaced element, since we're using the margin box.
+        affectsAscent = true;
+        affectsDescent = true;
+    end
 	return ascent, descent, affectsAscent, affectsDescent;
 end
 
@@ -438,27 +456,33 @@ function RootInlineBox:VerticalPositionForBox(box, verticalPositionCache)
 	end
     -- This method determines the vertical position for inline elements.
     local firstLine = self.firstLine;
---    if (firstLine && !renderer->document()->usesFirstLineRules())
---        firstLine = false;
---
---    // Check the cache.
---    bool isRenderInline = renderer->isRenderInline();
---    if (isRenderInline && !firstLine) {
---        LayoutUnit verticalPosition = verticalPositionCache.get(renderer, baselineType());
+    --if (firstLine && !renderer->document()->usesFirstLineRules())
+	if (firstLine and not self.renderer:Document():UsesFirstLineRules()) then
+        firstLine = false;
+	end
+
+    -- Check the cache.
+    local isRenderInline = renderer:IsLayoutInline();
+    if (isRenderInline and not firstLine) then
+--        local verticalPosition = verticalPositionCache.get(renderer, baselineType());
 --        if (verticalPosition != PositionUndefined)
 --            return verticalPosition;
---    }
---
---    int verticalPosition = 0;
---    EVerticalAlign verticalAlign = renderer->style()->verticalAlign();
---    if (verticalAlign == TOP || verticalAlign == BOTTOM)
---        return 0;
---   
---    RenderObject* parent = renderer->parent();
---    if (parent->isRenderInline() && parent->style()->verticalAlign() != TOP && parent->style()->verticalAlign() != BOTTOM)
---        verticalPosition = box->parent()->logicalTop();
---    
---    if (verticalAlign != BASELINE) {
+		--log("RootInlineBox:VerticalPositionForBox return value is error\r\n");
+		--return;
+    end
+
+    local verticalPosition = 0;
+    local verticalAlign = renderer:Style():VerticalAlign();
+    if (verticalAlign == VerticalAlignEnum.TOP or verticalAlign == VerticalAlignEnum.BOTTOM) then
+        return 0;
+	end
+   
+    local parent = renderer:Parent();
+    if (parent:IsLayoutInline() and parent:Style():VerticalAlign() ~= VerticalAlignEnum.TOP and parent:Style():VerticalAlign() ~= VerticalAlignEnum.BOTTOM) then
+        verticalPosition = box:Parent():LogicalTop();
+	end
+    
+    if (verticalAlign ~= VerticalAlignEnum.BASELINE) then
 --        const Font& font = parent->style(firstLine)->font();
 --        const FontMetrics& fontMetrics = font.fontMetrics();
 --        int fontSize = font.pixelSize();
@@ -482,12 +506,13 @@ function RootInlineBox:VerticalPositionForBox(box, verticalPositionCache)
 --            verticalPosition += -renderer->lineHeight(firstLine, lineDirection) / 2 + renderer->baselinePosition(baselineType(), firstLine, lineDirection);
 --        else if (verticalAlign == LENGTH)
 --            verticalPosition -= renderer->style()->verticalAlignLength().calcValue(renderer->lineHeight(firstLine, lineDirection));
---    }
---
---    // Store the cached value.
---    if (isRenderInline && !firstLine)
---        verticalPositionCache.set(renderer, baselineType(), verticalPosition);
---
+    end
+
+    -- Store the cached value.
+    if (isRenderInline and not firstLine) then
+        --verticalPositionCache.set(renderer, baselineType(), verticalPosition);
+	end
+
     return verticalPosition;
 end
 
@@ -529,4 +554,56 @@ end
 function RootInlineBox:LineBreakBidiStatus()
     --return BidiStatus(static_cast<WTF::Unicode::Direction>(m_lineBreakBidiStatusEor), static_cast<WTF::Unicode::Direction>(m_lineBreakBidiStatusLastStrong), static_cast<WTF::Unicode::Direction>(m_lineBreakBidiStatusLast), m_lineBreakContext);
 	return BidiStatus:new():init(self.lineBreakBidiStatusEor, self.lineBreakBidiStatusLastStrong, self.lineBreakBidiStatusLast, self.lineBreakContext);
+end
+
+function RootInlineBox:IsHyphenated()
+	local box = self:FirstLeafChild();
+	while(box) do
+		if (box:IsInlineTextBox()) then
+            if (box:ToInlineTextBox():HasHyphen()) then
+                return true;
+			end
+        end
+
+		box = box:NextLeafChild();
+	end
+
+    return false;
+end
+
+function RootInlineBox:FloatsPtr() 
+	return self.floats;
+end
+
+--void appendFloat(RenderBox* floatingBox)
+function RootInlineBox:AppendFloat(floatingBox)
+    --ASSERT(!isDirty());
+    if (not self.floats) then
+        self.floats = commonlib.vector:new();
+	end
+	self.floats:append(floatingBox);
+end
+
+function RootInlineBox:ExtractLineBoxFromRenderObject()
+	self:Block():LineBoxes():ExtractLineBox(self);
+end
+
+function RootInlineBox:RemoveLineBoxFromRenderObject()
+    self:Block():LineBoxes():RemoveLineBox(self);
+end
+
+function RootInlineBox:AttachLineBoxToRenderObject()
+    self:Block():LineBoxes():AttachLineBox(self);
+end
+
+local TrailingFloatsRootInlineBox = commonlib.inherit(commonlib.gettable("System.Windows.mcml.layout.RootInlineBox"), commonlib.gettable("System.Windows.mcml.layout.TrailingFloatsRootInlineBox"));
+
+function TrailingFloatsRootInlineBox:init(obj)
+	TrailingFloatsRootInlineBox._super.init(self, obj);
+	self:SetHasVirtualLogicalHeight();
+	return self;
+end
+
+function TrailingFloatsRootInlineBox:VirtualLogicalHeight()
+	return 0;
 end

@@ -54,7 +54,7 @@ function LengthBox:clone()
 	return o;
 end
 
-function LengthBox._eq(a, b)
+function LengthBox.__eq(a, b)
 	return a.m_left == b.m_left and a.m_right == b.m_right and a.m_top == b.m_top and a.m_bottom == b.m_bottom;
 end
 

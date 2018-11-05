@@ -184,5 +184,158 @@ function LayoutLineBoxList:DirtyLinesFromChangedChild(container, child)
         return;
 	end
 
-	-- TODO: fixed latter;
+	local inlineContainer;
+	if(container:IsLayoutInline()) then
+		inlineContainer = container:ToRenderInline();
+	end
+	local firstBox;
+	if(inlineContainer) then
+		firstBox = inlineContainer:FirstLineBoxIncludingCulling();
+	else
+		firstBox = self:FirstLineBox();
+	end
+
+    -- If we have no first line box, then just bail early.
+    if (not firstBox) then
+        -- For an empty inline, go ahead and propagate the check up to our parent, unless the parent
+        -- is already dirty.
+        if (container:IsInline() and not container:Parent():SelfNeedsLayout()) then
+            container:Parent():DirtyLinesFromChangedChild(container);
+            container:SetNeedsLayout(true); -- Mark the container as needing layout to avoid dirtying the same lines again across multiple destroy() calls of the same subtree.
+        end
+        return;
+    end
+
+    -- Try to figure out which line box we belong in.  First try to find a previous
+    -- line box by examining our siblings.  If we didn't find a line box, then use our 
+    -- parent's first line box.
+    --RootInlineBox* box = 0;
+    --RenderObject* curr = 0;
+	local box, curr;
+	local curr = child:PreviousSibling();
+	while(curr) do
+		if (curr:IsFloatingOrPositioned()) then
+            --continue;
+		else
+			if (curr:IsReplaced()) then
+				local wrapper = curr:ToRenderBox():InlineBoxWrapper();
+				if (wrapper) then
+					box = wrapper:Root();
+				end
+			elseif (curr:IsText()) then
+				local textBox = curr:ToRenderText():LastTextBox();
+				if (textBox) then
+					box = textBox:Root();
+				end
+			elseif (curr:IsLayoutInline()) then
+				local lastSiblingBox = curr:ToRenderInline():LastLineBoxIncludingCulling();
+				if (lastSiblingBox) then
+					box = lastSiblingBox:Root();
+				end
+			end
+
+			if (box) then
+				break;
+			end
+		end
+	
+		curr = curr:PreviousSibling();
+	end
+	
+    if (not box) then
+        if (inlineContainer and not inlineContainer:AlwaysCreateLineBoxes()) then
+            -- https:--bugs.webkit.org/show_bug.cgi?id=60778
+            -- We may have just removed a <br> with no line box that was our first child. In this case
+            -- we won't find a previous sibling, but firstBox can be pointing to a following sibling.
+            -- This isn't good enough, since we won't locate the root line box that encloses the removed
+            -- <br>. We have to just over-invalidate a bit and go up to our parent.
+            if (not inlineContainer:Parent():SelfNeedsLayout()) then
+                inlineContainer:Parent():DirtyLinesFromChangedChild(inlineContainer);
+                inlineContainer:SetNeedsLayout(true); -- Mark the container as needing layout to avoid dirtying the same lines again across multiple destroy() calls of the same subtree.
+            end
+            return;
+        end
+        box = firstBox:Root();
+    end
+
+    -- If we found a line box, then dirty it.
+    if (box) then
+        local adjacentBox;
+        box:MarkDirty();
+
+        -- dirty the adjacent lines that might be affected
+        -- NOTE: we dirty the previous line because RootInlineBox objects cache
+        -- the address of the first object on the next line after a BR, which we may be
+        -- invalidating here.  For more info, see how RenderBlock::layoutInlineChildren
+        -- calls setLineBreakInfo with the result of findNextLineBreak.  findNextLineBreak,
+        -- despite the name, actually returns the first RenderObject after the BR.
+        -- <rdar:--problem/3849947> "Typing after pasting line does not appear until after window resize."
+        adjacentBox = box:PrevRootBox();
+        if (adjacentBox) then
+            adjacentBox:MarkDirty();
+		end
+        adjacentBox = box:NextRootBox();
+        if (adjacentBox and (adjacentBox:LineBreakObj() == child or child:IsBR() or (curr and curr:IsBR()))) then
+            adjacentBox:MarkDirty();
+		end
+    end
+end
+
+
+--void RenderLineBoxList::deleteLineBoxTree(RenderArena* arena)
+function LayoutLineBoxList:DeleteLineBoxTree(arena)
+    local line = self.firstLineBox;
+    local nextLine;
+    while (line) do
+        nextLine = line:NextLineBox();
+        line:DeleteLine(arena);
+        line = nextLine;
+    end
+    self.firstLineBox = nil;
+	self.lastLineBox = nil;
+end
+
+--void RenderLineBoxList::extractLineBox(InlineFlowBox* box)
+function LayoutLineBoxList:ExtractLineBox(box)
+    self:CheckConsistency();
+    
+    self.lastLineBox = box:PrevLineBox();
+    if (box == self.firstLineBox) then
+        self.firstLineBox = nil;
+	end
+    if (box:PrevLineBox()) then
+        box:PrevLineBox():SetNextLineBox(nil);
+	end
+    box:SetPreviousLineBox(nil);
+	local curr = box;
+	while(curr) do
+		curr:SetExtracted();
+
+		curr = curr:NextLineBox();
+	end
+    self:CheckConsistency();
+end
+
+--void RenderLineBoxList::attachLineBox(InlineFlowBox* box)
+function LayoutLineBoxList:AttachLineBox(box)
+    self:CheckConsistency();
+
+    if (self.lastLineBox) then
+        self.lastLineBox:SetNextLineBox(box);
+        box:SetPreviousLineBox(self.lastLineBox);
+    else
+        self.firstLineBox = box;
+	end
+    local last = box;
+	local curr = box;
+	while(curr) do
+		curr:SetExtracted(false);
+        last = curr;
+
+		curr = curr:NextLineBox();
+	end
+
+    self.lastLineBox = last;
+
+    self:CheckConsistency();
 end

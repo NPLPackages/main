@@ -18,6 +18,9 @@ function BidiContext:ctor()
     self.override = nil;
     self.source = nil; -- BidiEmbeddingSource
     self.parent = nil;
+
+	local mt = getmetatable(self);
+	mt.__eq = BidiContext.Equal;
 end
 
 function BidiContext:init(level, direction, override, source, parent)
@@ -83,6 +86,60 @@ function BidiContext.Create(level, direction, override, source, parent)
     return rtlOverrideContext;
 end
 
+--inline unsigned char nextGreaterOddLevel(unsigned char level)
+local function nextGreaterOddLevel(level)
+    return mathlib.bit.bor(level + 1, 1);
+end
+
+--inline unsigned char nextGreaterEvenLevel(unsigned char level)
+local function nextGreaterEvenLevel(level)
+    return mathlib.bit.band(level + 2, mathlib.bit.bnot(1));
+end
+
+--static inline PassRefPtr<BidiContext> copyContextAndRebaselineLevel(BidiContext* context, BidiContext* parent)
+local function copyContextAndRebaselineLevel(context, parent)
+    --ASSERT(context);
+	local newLevel = 0;
+	if(parent) then
+		newLevel = parent:Level();
+	end
+    if (context:Dir() == "RightToLeft") then
+        newLevel = nextGreaterOddLevel(newLevel);
+    elseif (parent) then
+        newLevel = nextGreaterEvenLevel(newLevel);
+	end
+
+    return BidiContext.Create(newLevel, context:Dir(), context:Override(), context:Source(), parent);
+end
+
 function BidiContext:CopyStackRemovingUnicodeEmbeddingContexts()
-	-- TOD: add funtion later;
+	local contexts = {};
+	local iter = self;
+	while(iter) do
+		if (iter:Source() ~= "FromUnicode") then
+            contexts[#contexts+1] = iter;
+		end
+
+		iter = iter:Parent();
+	end
+
+    --ASSERT(contexts.size());
+ 
+	local topContext = copyContextAndRebaselineLevel(contexts[#contexts], nil);
+
+	for i = #contexts, 2, -1 do
+		topContext = copyContextAndRebaselineLevel(contexts[i - 1], topContext);
+	end
+
+    return topContext;
+end
+
+function BidiContext:Equal(other)
+    if (self:Level() ~= other:Level() or self:Override() ~= other:Override() or self:Dir() ~= other:Dir() or self:Source() ~= other:Source()) then
+        return false;
+	end
+    if (self:Parent() == nil) then
+        return other:Parent() == nil;
+	end
+    return other:Parent() ~= nil and self:Parent() == other:Parent();
 end

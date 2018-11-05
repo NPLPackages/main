@@ -22,6 +22,11 @@ NPL.load("(gl)script/ide/System/Windows/mcml/platform/text/TextBreakIterator.lua
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/BreakLines.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/BidiRun.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyleConstants.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/layout/RootInlineBox.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/IntRect.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/IntSize.lua");
+local Size = commonlib.gettable("System.Windows.mcml.platform.graphics.IntSize");
+local Rect = commonlib.gettable("System.Windows.mcml.platform.graphics.IntRect");
 local ComputedStyleConstants = commonlib.gettable("System.Windows.mcml.style.ComputedStyleConstants");
 local BidiRun = commonlib.gettable("System.Windows.mcml.layout.BidiRun");
 local InlineBidiResolver = commonlib.gettable("System.Windows.mcml.layout.InlineBidiResolver");
@@ -36,6 +41,8 @@ local ComputedStyle = commonlib.gettable("System.Windows.mcml.style.ComputedStyl
 local InlineWalker = commonlib.gettable("System.Windows.mcml.layout.InlineWalker");
 local LayoutBlock = commonlib.gettable("System.Windows.mcml.layout.LayoutBlock");
 local FloatingObject = commonlib.gettable("System.Windows.mcml.layout.LayoutBlock.FloatingObject");
+local FloatWithRect = commonlib.gettable("System.Windows.mcml.layout.LayoutBlock.FloatWithRect");
+local TrailingFloatsRootInlineBox = commonlib.gettable("System.Windows.mcml.layout.TrailingFloatsRootInlineBox");
 
 local WhiteSpaceEnum = ComputedStyleConstants.WhiteSpaceEnum;
 local ClearEnum = ComputedStyleConstants.ClearEnum;
@@ -45,6 +52,10 @@ local UnicodeBidiEnum = ComputedStyleConstants.UnicodeBidiEnum;
 local TextAlignEnum = ComputedStyleConstants.TextAlignEnum;
 local OrderEnum = ComputedStyleConstants.OrderEnum;
 local TextDirectionEnum = ComputedStyleConstants.TextDirectionEnum;
+
+local IntRect, IntSize = Rect, Size;
+
+local INT_MAX = 0xffffffff;
 
 local LineWidth = commonlib.inherit(nil, {});
 local LineBreaker = commonlib.inherit(nil, {});
@@ -171,6 +182,8 @@ function LineBreaker:NextLineBreak(resolver, lineInfo, lineBreakIteratorInfo, la
     local autoWrapWasEverTrueOnLine = false;
     local floatsFitOnLine = true;
 
+	local allowImagesToBreak = not self.block:IsTableCell() or not self.block:Style():LogicalWidth():IsIntrinsicOrAuto();
+
 	local currWS = self.block:Style():WhiteSpace();
     local lastWS = currWS;
 
@@ -204,7 +217,28 @@ function LineBreaker:NextLineBreak(resolver, lineInfo, lineBreakIteratorInfo, la
         local collapseWhiteSpace = ComputedStyle:CollapseWhiteSpace(currWS);
 
 		if (current.obj:IsBR()) then
+			if (width:FitsOnLine()) then
+                lBreak:MoveToStartOf(current.obj);
+                lBreak:Increment();
 
+                -- A <br> always breaks a line, so don't let the line be collapsed
+                -- away. Also, the space at the end of a line with a <br> does not
+                -- get collapsed away.  It only does this if the previous line broke
+                -- cleanly.  Otherwise the <br> has no effect on whether the line is
+                -- empty or not.
+                if (startingNewParagraph) then
+                    lineInfo:SetEmpty(false, self.block, width);
+				end
+                --trailingObjects.clear();
+                lineInfo:SetPreviousLineBrokeCleanly(true);
+
+                if (not lineInfo:IsEmpty()) then
+                    self.clear = current.obj:Style():Clear();
+				end
+            end
+
+			go_to_end = true;
+			break;
 		end
 
 		if (current.obj:IsFloating()) then
@@ -252,14 +286,50 @@ function LineBreaker:NextLineBreak(resolver, lineInfo, lineBreakIteratorInfo, la
 
             width:AddUncommittedWidth(borderPaddingMarginStart(flowBox) + borderPaddingMarginEnd(flowBox));
 		elseif(current.obj:IsReplaced()) then
+			local replacedBox = current.obj;
 
+            -- Break on replaced elements if either has normal white-space.
+            if ((autoWrap or ComputedStyle:AutoWrap(lastWS)) and (not current.obj:IsImage() or allowImagesToBreak)) then
+                width:Commit();
+                lBreak:MoveToStartOf(current.obj);
+            end
+
+            if (ignoringSpaces) then
+                --addMidpoint(lineMidpointState, InlineIterator(0, current.obj, 0));
+			end
+
+            lineInfo:SetEmpty(false, self.block, width);
+            ignoringSpaces = false;
+            currentCharacterIsSpace = false;
+            currentCharacterIsWS = false;
+            --trailingObjects.clear();
+
+            -- Optimize for a common case. If we can't find whitespace after the list
+            -- item, then this is all moot.
+            local replacedLogicalWidth = self.block:LogicalWidthForChild(replacedBox) + self.block:MarginStartForChild(replacedBox) + self.block:MarginEndForChild(replacedBox) + inlineLogicalWidth(current.obj);
+            if (current.obj:IsListMarker()) then
+                if (self.block:Style():CollapseWhiteSpace() and shouldSkipWhitespaceAfterStartObject(self.block, current.obj, lineMidpointState)) then
+                    -- Like with inline flows, we start ignoring spaces to make sure that any
+                    -- additional spaces we see will be discarded.
+                    currentCharacterIsSpace = true;
+                    currentCharacterIsWS = true;
+                    ignoringSpaces = true;
+                end
+--                if (toRenderListMarker(current.obj)->isInside())
+--					width.addUncommittedWidth(replacedLogicalWidth);
+            else
+                width:AddUncommittedWidth(replacedLogicalWidth);
+			end
+            if (current.obj:IsRubyRun()) then
+                --width.applyOverhang(toRenderRubyRun(current.obj), last, next);
+			end
 		elseif(current.obj:IsText()) then
 			if (current.pos ~= 1) then
 				appliedStartWidth = false;
 			end
 
 			--RenderText* t = toRenderText(current.m_obj);
-			local t = current.obj;
+			local t = current.obj:ToRenderText();
 
 			local style = t:Style(lineInfo:IsFirstLine());
 			--            if (style->hasTextCombine() && current.m_obj->isCombineText())
@@ -550,20 +620,20 @@ function LineBreaker:NextLineBreak(resolver, lineInfo, lineBreakIteratorInfo, la
 			end
         end
 
---        if (not current.obj:IsFloatingOrPositioned()) then
---            last = current.obj;
---            if (last:IsReplaced() and autoWrap and (not last:IsImage() or allowImagesToBreak) && (!last->isListMarker() || toRenderListMarker(last)->isInside())) {
---                width.commit();
---                lBreak.moveToStartOf(next);
---            }
---        end
+        if (not current.obj:IsFloatingOrPositioned()) then
+            last = current.obj;
+            --if (last:IsReplaced() and autoWrap and (not last:IsImage() or allowImagesToBreak) && (!last->isListMarker() || toRenderListMarker(last)->isInside())) {
+			if (last:IsReplaced() and autoWrap and (not last:IsImage() or allowImagesToBreak)) then
+                width:Commit();
+                lBreak:MoveToStartOf(next);
+            end
+        end
 
         -- Clear out our character space bool, since inline <pre>s don't collapse whitespace
         -- with adjacent inline normal/nowrap spans.
         if (not collapseWhiteSpace) then
             currentCharacterIsSpace = false;
 		end
-
         current:MoveToStartOf(next);
         atStart = false;
 	end
@@ -687,8 +757,8 @@ local function requiresLineBox(it, lineInfo, whitespacePosition)
         return true;
 	end
     local current = it:Current();
-	local current_str = tostring(current);
-    return current_str ~= " " and current_str ~= "\t" and string.byte(current,1) ~= softHyphen and (current_str ~= "\n" or it.obj:PreservesNewline()) and not skipNonBreakingSpace(it, lineInfo);
+	local current_str = if_else(current, tostring(current), "");
+    return current_str ~= " " and current_str ~= "\t" and string.byte(current_str, 1) ~= softHyphen and (current_str ~= "\n" or it.obj:PreservesNewline()) and not skipNonBreakingSpace(it, lineInfo);
 end
 
 --static void setStaticPositions(RenderBlock* block, RenderBox* child)
@@ -731,7 +801,7 @@ function LineLayoutState:ctor()
 	self.lastFloat = nil;
 	self.endLine = nil;
 	self.lineInfo = LineInfo:new();
-    self.floatIndex = 0;
+    self.floatIndex = 1;
     self.endLineLogicalTop = 0;
     self.endLineMatched = false;
     self.checkForFloatsFromLastLine = false;
@@ -888,6 +958,10 @@ function LineWidth:init(block, isFirstLine)
 	self:UpdateAvailableWidth();
 
 	return self;
+end
+
+function LineWidth:PrintInfo()
+	echo({self.committedWidth, self.uncommittedWidth, self.availableWidth, self.left, self.right})
 end
 
 function LineWidth:FitsOnLine(extra, currentWidth)
@@ -1072,7 +1146,6 @@ function LayoutBlock:LayoutInlineChildren(relayoutChildren, repaintLogicalTop, r
     self:SetLogicalHeight(self:BorderBefore() + self:PaddingBefore());
 	local isFullLayout = not self:FirstLineBox() or self:SelfNeedsLayout() or relayoutChildren;
 	local layoutState = LineLayoutState:new():init(isFullLayout, repaintLogicalTop, repaintLogicalBottom);
-
 	if (isFullLayout) then
         self:LineBoxes():DeleteLineBoxes(self:RenderArena());
 	end
@@ -1094,7 +1167,6 @@ function LayoutBlock:LayoutInlineChildren(relayoutChildren, repaintLogicalTop, r
         local hasInlineChild = false;
 		local walker = InlineWalker:new():init(self);
 		while(not walker:AtEnd()) do
-			
 			local o = walker:Current();
             if (not hasInlineChild and o:IsInline()) then
                 hasInlineChild = true;
@@ -1116,7 +1188,7 @@ function LayoutBlock:LayoutInlineChildren(relayoutChildren, repaintLogicalTop, r
                 if (o:IsPositioned()) then
                     o:ContainingBlock():InsertPositionedObject(box);
                 elseif (o:IsFloating()) then
-                    --layoutState:Floats().append(FloatWithRect(box));
+                    layoutState:Floats():append(FloatWithRect:new():init(box));
                 elseif (layoutState:IsFullLayout() or o:NeedsLayout()) then
                     -- Replaced elements
                     o:DirtyLineBoxes(layoutState:IsFullLayout());
@@ -1131,10 +1203,8 @@ function LayoutBlock:LayoutInlineChildren(relayoutChildren, repaintLogicalTop, r
 				end
                 o:SetNeedsLayout(false);
             end
-
 			walker:Advance();
 		end
-
         self:LayoutRunsAndFloats(layoutState, hasInlineChild);
     end
 
@@ -1172,12 +1242,17 @@ function LayoutBlock:DetermineStartPosition(layoutState, resolver)
     local dirtiedByFloat = false;
 
 	if (not layoutState:IsFullLayout()) then
---        -- Paginate all of the clean lines.
---        bool paginated = view()->layoutState() && view()->layoutState()->isPaginated();
---        int paginationDelta = 0;
---        size_t floatIndex = 0;
---        for (curr = firstRootBox(); curr && !curr->isDirty(); curr = curr->nextRootBox()) {
---            if (paginated) {
+        -- Paginate all of the clean lines.
+        --bool paginated = view()->layoutState() && view()->layoutState()->isPaginated();
+		local paginated = false;
+		if(self:View():LayoutState()) then
+			paginated = self:View():LayoutState():IsPaginated();
+		end
+        local paginationDelta = 0;
+        local floatIndex = 1;
+		curr = self:FirstRootBox();
+		while(curr ~= nil and not curr:IsDirty()) do
+			if (paginated) then
 --                if (lineWidthForPaginatedLineChanged(curr)) {
 --                    curr->markDirty();
 --                    break;
@@ -1194,20 +1269,27 @@ function LayoutBlock:DetermineStartPosition(layoutState, resolver)
 --                    layoutState.updateRepaintRangeFromBox(curr, paginationDelta);
 --                    curr->adjustBlockDirectionPosition(paginationDelta);
 --                }
---            }
---
---            // If a new float has been inserted before this line or before its last known float, just do a full layout.
---            bool encounteredNewFloat = false;
---            checkFloatsInCleanLine(curr, layoutState.floats(), floatIndex, encounteredNewFloat, dirtiedByFloat);
---            if (encounteredNewFloat)
---                layoutState.markForFullLayout();
---
---            if (dirtiedByFloat || layoutState.isFullLayout())
---                break;
---        }
---        // Check if a new float has been inserted after the last known float.
---        if (!curr && floatIndex < layoutState.floats().size())
---            layoutState.markForFullLayout();
+            end
+
+            -- If a new float has been inserted before this line or before its last known float, just do a full layout.
+            local encounteredNewFloat = false;
+            floatIndex, encounteredNewFloat, dirtiedByFloat = self:CheckFloatsInCleanLine(curr, layoutState:Floats(), floatIndex, encounteredNewFloat, dirtiedByFloat);
+            if (encounteredNewFloat) then
+                layoutState:MarkForFullLayout();
+			end
+
+            if (dirtiedByFloat or layoutState:IsFullLayout()) then
+                break;
+			end
+
+			curr = curr:NextRootBox();
+		end
+
+        
+        -- Check if a new float has been inserted after the last known float.
+        if (curr == nil and floatIndex < layoutState:Floats():size()) then
+            layoutState:MarkForFullLayout();
+		end
     end
 
 	if (layoutState:IsFullLayout()) then
@@ -1217,7 +1299,7 @@ function LayoutBlock:DetermineStartPosition(layoutState, resolver)
         curr = self:FirstRootBox();
         while (curr) do
             -- Note: This uses nextRootBox() insted of nextLineBox() like deleteLineBoxTree does.
-             next = curr:NextRootBox();
+            next = curr:NextRootBox();
             curr:DeleteLine(arena);
             curr = next;
         end
@@ -1250,37 +1332,37 @@ function LayoutBlock:DetermineStartPosition(layoutState, resolver)
 		end
     end
 
-	local numCleanFloats = 0;
+	local numCleanFloats = 1;
 	if (not layoutState:Floats():empty()) then
---        int savedLogicalHeight = logicalHeight();
---        // Restore floats from clean lines.
---        RootInlineBox* line = firstRootBox();
---        while (line != curr) {
---            if (Vector<RenderBox*>* cleanLineFloats = line->floatsPtr()) {
---                Vector<RenderBox*>::iterator end = cleanLineFloats->end();
---                for (Vector<RenderBox*>::iterator f = cleanLineFloats->begin(); f != end; ++f) {
---                    FloatingObject* floatingObject = insertFloatingObject(*f);
---                    ASSERT(!floatingObject->m_originatingLine);
---                    floatingObject->m_originatingLine = line;
---                    setLogicalHeight(logicalTopForChild(*f) - marginBeforeForChild(*f));
---                    positionNewFloats();
---                    ASSERT(layoutState.floats()[numCleanFloats].object == *f);
---                    numCleanFloats++;
---                }
---            }
---            line = line->nextRootBox();
---        }
---        setLogicalHeight(savedLogicalHeight);
+        local savedLogicalHeight = self:LogicalHeight();
+        -- Restore floats from clean lines.
+        local line = self:FirstRootBox();
+        while (line ~= curr) do
+			local cleanLineFloats = line:FloatsPtr();
+            if (cleanLineFloats) then
+				for i = 1,cleanLineFloats:size() do
+					local f = cleanLineFloats:get(i);
+					local floatingObject = self:InsertFloatingObject(f);
+                    --ASSERT(!floatingObject->m_originatingLine);
+                    floatingObject.originatingLine = line;
+                    self:SetLogicalHeight(self:LogicalTopForChild(f) - self:MarginBeforeForChild(f));
+                    self:PositionNewFloats();
+                    --ASSERT(layoutState.floats()[numCleanFloats].object == *f);
+                    numCleanFloats = numCleanFloats + 1;
+				end
+            end
+            line = line:NextRootBox();
+        end
+        self:SetLogicalHeight(savedLogicalHeight);
     end
 
 	layoutState:SetFloatIndex(numCleanFloats);
     --layoutState:LineInfo():SetFirstLine(not last);
 	layoutState:LineInfo():SetFirstLine(not if_else(last, true, false));
     layoutState:LineInfo():SetPreviousLineBrokeCleanly(not if_else(last, true, false) or last:EndsWithBreak());
-
 	if (last) then
         self:SetLogicalHeight(last:LineBottomWithLeading());
-        resolver:SetPosition(InlineIterator:new(self, last:LineBreakObj(), last:LineBreakPos()));
+        resolver:SetPosition(InlineIterator:new():init(self, last:LineBreakObj(), last:LineBreakPos()));
         resolver:SetStatus(last:LineBreakBidiStatus());
     else
         local direction = self:Style():Direction();
@@ -1294,9 +1376,17 @@ function LayoutBlock:DetermineStartPosition(layoutState, resolver)
     return curr;
 end
 
+local level = 0;
+
 local function printLineBoxsInfo(box)
+	level = level + 1;
+	echo("-----------------------printLineBoxsInfo"..level.." begin-----------------------------");
 	while(box) do
+		echo("while(box) do");
 		echo(box:BoxName());
+		box.renderer:PrintNodeInfo();
+		echo(box.topLeft);
+		echo(box:Size())
 		if(box:IsRootInlineBox()) then
 			echo("RootInlineBox info");
 			echo(box.lineTop);
@@ -1323,19 +1413,33 @@ local function printLineBoxsInfo(box)
 		end
 
 		if(box:IsInlineFlowBox()) then
-			box = box:NextLineBox();
+			box = box:NextOnLine();
 		else
 			box = box:Next();
 		end
-			
 	end
+	echo("-----------------------printLineBoxsInfo"..level.." end-----------------------------");
+	level = level - 1;
+end
+
+-- static void deleteLineRange(LineLayoutState& layoutState, RenderArena* arena, RootInlineBox* startLine, RootInlineBox* stopLine = 0)
+local function deleteLineRange(layoutState, arena, startLine, stopLine)
+    local boxToDelete = startLine;
+    while (boxToDelete and boxToDelete ~= stopLine) do
+        layoutState:UpdateRepaintRangeFromBox(boxToDelete);
+        -- Note: deleteLineRange(renderArena(), firstRootBox()) is not identical to deleteLineBoxTree().
+        -- deleteLineBoxTree uses nextLineBox() instead of nextRootBox() when traversing.
+        local next = boxToDelete:NextRootBox();
+        boxToDelete:DeleteLine(arena);
+        boxToDelete = next;
+    end
 end
 
 function LayoutBlock:LayoutRunsAndFloats(layoutState, hasInlineChild)
 	-- We want to skip ahead to the first dirty line
     local resolver = InlineBidiResolver:new():init();
     local startLine = self:DetermineStartPosition(layoutState, resolver);
-
+	
 	local consecutiveHyphenatedLines = 0;
     if (startLine) then
 		line = startLine:PrevRootBox();
@@ -1344,65 +1448,69 @@ function LayoutBlock:LayoutRunsAndFloats(layoutState, hasInlineChild)
 			line = line:PrevRootBox();
 		end
     end
-
 	-- FIXME: This would make more sense outside of this function, but since
     -- determineStartPosition can change the fullLayout flag we have to do this here. Failure to call
     -- determineStartPosition first will break fast/repaint/line-flow-with-floats-9.html.
     if (layoutState:IsFullLayout() and hasInlineChild and not self:SelfNeedsLayout()) then
         self:SetNeedsLayout(true, false);  -- Mark ourselves as needing a full layout. This way we'll repaint like we're supposed to.
---        RenderView* v = view();
---        if (v && !v->doingFullRepaint() && hasLayer()) {
---            // Because we waited until we were already inside layout to discover
---            // that the block really needed a full layout, we missed our chance to repaint the layer
---            // before layout started.  Luckily the layer has cached the repaint rect for its original
---            // position and size, and so we can use that to make a repaint happen now.
---            repaintUsingContainer(containerForRepaint(), layer()->repaintRect());
---        }
+        local v = self:View();
+        if (v and not v:DoingFullRepaint() and self:HasLayer()) then
+            -- Because we waited until we were already inside layout to discover
+            -- that the block really needed a full layout, we missed our chance to repaint the layer
+            -- before layout started.  Luckily the layer has cached the repaint rect for its original
+            -- position and size, and so we can use that to make a repaint happen now.
+            self:RepaintUsingContainer(self:ContainerForRepaint(), self:Layer():RepaintRect());
+        end
     end
-
---    if (self.floatingObjects and !m_floatingObjects->set().isEmpty())
---        layoutState.setLastFloat(m_floatingObjects->set().last());
+    if (self.floatingObjects and not self.floatingObjects:Set():isEmpty()) then
+        layoutState:SetLastFloat(self.floatingObjects:Set():last());
+	end
 
 --	-- We also find the first clean line and extract these lines.  We will add them back
 --    -- if we determine that we're able to synchronize after handling all our dirty lines.
---    InlineIterator cleanLineStart;
---    BidiStatus cleanLineBidiStatus;
---    if (!layoutState.isFullLayout() && startLine)
---        determineEndPosition(layoutState, startLine, cleanLineStart, cleanLineBidiStatus);
+    local cleanLineStart = InlineIterator:new();
+    local cleanLineBidiStatus = BidiStatus:new();
+    if (not layoutState:IsFullLayout() and startLine ~= nil) then
+        cleanLineStart, cleanLineBidiStatus = self:DetermineEndPosition(layoutState, startLine, cleanLineStart, cleanLineBidiStatus);
+	end
+    if (startLine) then
+        if (not layoutState:UsesRepaintBounds()) then
+            layoutState:SetRepaintRange(self:Logicalheight());
+		end
+        deleteLineRange(layoutState, self:RenderArena(), startLine);
 
---    if (startline) {
---        if (!layoutstate.usesrepaintbounds())
---            layoutstate.setrepaintrange(logicalheight());
---        deletelinerange(layoutstate, renderarena(), startline);
---    }
+    end
 
---    if (!layoutState.isFullLayout() && lastRootBox() && lastRootBox()->endsWithBreak()) {
---        // If the last line before the start line ends with a line break that clear floats,
---        // adjust the height accordingly.
---        // A line break can be either the first or the last object on a line, depending on its direction.
---        if (InlineBox* lastLeafChild = lastRootBox()->lastLeafChild()) {
---            RenderObject* lastObject = lastLeafChild->renderer();
---            if (!lastObject->isBR())
---                lastObject = lastRootBox()->firstLeafChild()->renderer();
---            if (lastObject->isBR()) {
---                EClear clear = lastObject->style()->clear();
---                if (clear != CNONE)
---                    newLine(clear);
---            }
---        }
---    }
-
+    if (not layoutState:IsFullLayout() and self:LastRootBox() ~= nil and self:LastRootBox():EndsWithBreak()) then
+        -- If the last line before the start line ends with a line break that clear floats,
+        -- adjust the height accordingly.
+        -- A line break can be either the first or the last object on a line, depending on its direction.
+		local lastLeafChild = self:LastRootBox():LastLeafChild();
+        if (lastLeafChild) then
+            local lastObject = lastLeafChild:Renderer();
+            if (not lastObject:IsBR()) then
+                lastObject = self:LastRootBox():FirstLeafChild():Renderer();
+			end
+            if (lastObject:IsBR()) then
+                local clear = lastObject:Style():Clear();
+                if (clear ~= ClearEnum.CNONE) then
+                    self:NewLine(clear);
+				end
+            end
+        end
+    end
 	self:LayoutRunsAndFloatsInRange(layoutState, resolver, cleanLineStart, cleanLineBidiStatus, consecutiveHyphenatedLines);
 
 	local firstLineBox = self:FirstLineBox();
 	local lastLineBox = self:LastLineBox();
 
-
-	if(firstLineBox) then
-		--printLineBoxsInfo(firstLineBox);
+	local lineBox = firstLineBox;
+	while(lineBox) do
+		--printLineBoxsInfo(lineBox);
+		lineBox = lineBox:NextRootBox();
 	end
 --    linkToEndLineIfNeeded(layoutState);
---    repaintDirtyFloats(layoutState.floats());
+    self:RepaintDirtyFloats(layoutState:Floats());
 end
 
 
@@ -1505,6 +1613,11 @@ local function setLogicalWidthForTextRun(lineBox, run, renderer, xPos, lineInfo,
 --        hyphenWidth = measureHyphenWidth(renderer, font);
 --    }
     run.box:SetLogicalWidth(renderer:Width(run.start, run.stop - run.start + 1, xPos, lineInfo:IsFirstLine(), fallbackFonts, glyphOverflow) + hyphenWidth);
+	if(not textBoxDataMap[run.box:ToInlineTextBox()]) then
+		textBoxDataMap[run.box:ToInlineTextBox()] = {};
+	end
+	local size = #(textBoxDataMap[run.box:ToInlineTextBox()]);
+	textBoxDataMap[run.box:ToInlineTextBox()][size+1] = renderer:Style(lineInfo:IsFirstLine()):Font();
 
 --	if (!fallbackFonts.isEmpty()) {
 --        ASSERT(run->m_box->isText());
@@ -1633,7 +1746,6 @@ end
 --                                                        VerticalPositionCache& verticalPositionCache)
 function LayoutBlock:ComputeBlockDirectionPositionsForLine(lineBox, firstRun, textBoxDataMap, verticalPositionCache)
 	self:SetLogicalHeight(lineBox:AlignBoxesInBlockDirection(self:LogicalHeight(), textBoxDataMap, verticalPositionCache));
-
 	-- Now make sure we place replaced render objects correctly.
 	local r = firstRun;
 	while(r) do
@@ -1684,13 +1796,13 @@ function LayoutBlock:CreateLineBoxes(obj, lineInfo, childBox)
     local lineDepth = 1;
     local parentBox = nil;
     local result = nil;
-    --local hasDefaultLineBoxContain = style()->lineBoxContain() == RenderStyle::initialLineBoxContain();
-	local hasDefaultLineBoxContain = true;
+    local hasDefaultLineBoxContain = self:Style():LineBoxContain() == ComputedStyle.initialLineBoxContain();
+	--local hasDefaultLineBoxContain = true;
 
 	while(true) do
 		--ASSERT(obj->isRenderInline() || obj == this);
 
-        local inlineFlow = if_else(obj ~= self, obj, nil);
+        local inlineFlow = if_else(obj ~= self, if_else(obj:IsLayoutInline(), obj, nil), nil);
 
         -- Get the last box we made for this render object.
 		if(inlineFlow) then
@@ -1706,7 +1818,7 @@ function LayoutBlock:CreateLineBoxes(obj, lineInfo, childBox)
         -- as well.  In this situation our inline has actually been split in two on
         -- the same line (this can happen with very fancy language mixtures).
         local constructedNewBox = false;
-        local allowedToConstructNewBox = not hasDefaultLineBoxContain or not inlineFlow or inlineFlow:AlwaysCreateLineBoxes();
+        local allowedToConstructNewBox = not hasDefaultLineBoxContain or inlineFlow == nil or inlineFlow:AlwaysCreateLineBoxes();
         local canUseExistingParentBox = parentBox ~= nil and not parentIsConstructedOrHaveNext(parentBox);
 		if (allowedToConstructNewBox and not canUseExistingParentBox) then
             -- We need to make a new box for this render object.  Once
@@ -1717,9 +1829,9 @@ function LayoutBlock:CreateLineBoxes(obj, lineInfo, childBox)
 			parentBox = newBox;
             parentBox:SetFirstLineStyleBit(lineInfo:IsFirstLine());
             parentBox:SetIsHorizontal(self:IsHorizontalWritingMode());
---            if (not hasDefaultLineBoxContain) then
---                parentBox->clearDescendantsHaveSameLineHeightAndBaseline();
---			end
+            if (not hasDefaultLineBoxContain) then
+                parentBox:ClearDescendantsHaveSameLineHeightAndBaseline();
+			end
             constructedNewBox = true;
         end
 
@@ -1787,7 +1899,6 @@ function LayoutBlock:ConstructLine(bidiRuns, lineInfo)
 			local run = if_else(not self:Style():IsLeftToRightDirection(), bidiRuns:LastRun(), bidiRuns:FirstRun());
             isOnlyRun = run.object:IsListMarker();
 		end
-
         local box = createInlineBoxForRenderer(r.object, false, isOnlyRun);
         r.box = box;
 		if(box) then
@@ -1822,8 +1933,6 @@ function LayoutBlock:ConstructLine(bidiRuns, lineInfo)
 
 		r = r:Next();
 	end
-
-    
 
     -- We should have a root inline box.  It should be unconstructed and
     -- be the last continuation of our line list.
@@ -1871,7 +1980,7 @@ function LayoutBlock:CreateLineBoxesFromBidiRuns(bidiRuns, _end, lineInfo, verti
 	local isSVGRootInlineBox = lineBox:IsSVGRootInlineBox();
     
     --GlyphOverflowAndFallbackFontsMap textBoxDataMap;
-	local textBoxDataMap = nil;
+	local textBoxDataMap = {};
     
     -- Now we position all of our text runs horizontally.
     if (not isSVGRootInlineBox) then
@@ -1905,9 +2014,18 @@ function LayoutBlock:CreateLineBoxesFromBidiRuns(bidiRuns, _end, lineInfo, verti
     return lineBox;
 end
 
+function LayoutBlock:AppendFloatingObjectToLastLine(floatingObject)
+    --ASSERT(!floatingObject->m_originatingLine);
+    floatingObject.originatingLine = self:LastRootBox();
+    self:LastRootBox():AppendFloat(floatingObject:Renderer());
+end
+
 function LayoutBlock:LayoutRunsAndFloatsInRange(layoutState, resolver, cleanLineStart, cleanLineBidiStatus, consecutiveHyphenatedLines)
 	--bool paginated = view()->layoutState() && view()->layoutState()->isPaginated();
 	local paginated = false;
+	if(self:View():LayoutState()) then
+		paginated = self:View():LayoutState():IsPaginated();
+	end
     local lineMidpointState = resolver:MidpointState();
     local _end = resolver:Position():Clone();
     local checkForEndLineMatch = layoutState:EndLine();
@@ -1920,10 +2038,10 @@ function LayoutBlock:LayoutRunsAndFloatsInRange(layoutState, resolver, cleanLine
     while (not _end:AtEnd()) do
         -- FIXME: Is this check necessary before the first iteration or can it be moved to the end?
         if (checkForEndLineMatch) then
---            layoutState:SetEndLineMatched(matchedEndLine(layoutState, resolver, cleanLineStart, cleanLineBidiStatus));
---            if (layoutState.endLineMatched()) then
---                break;
---			end
+            layoutState:SetEndLineMatched(self:MatchedEndLine(layoutState, resolver, cleanLineStart, cleanLineBidiStatus));
+            if (layoutState:EndLineMatched()) then
+                break;
+			end
         end
 
         lineMidpointState:Reset();
@@ -1934,7 +2052,11 @@ function LayoutBlock:LayoutRunsAndFloatsInRange(layoutState, resolver, cleanLine
         local isNewUBAParagraph = layoutState:LineInfo():PreviousLineBrokeCleanly();
         --FloatingObject* lastFloatFromPreviousLine = (m_floatingObjects && !m_floatingObjects->set().isEmpty()) ? m_floatingObjects->set().last() : 0;
 		local lastFloatFromPreviousLine = nil;
+		if(self.floatingObjects and not self.floatingObjects:Set():isEmpty()) then
+			lastFloatFromPreviousLine = self.floatingObjects:Set():last();
+		end
         _end = lineBreaker:NextLineBreak(resolver, layoutState:LineInfo(), lineBreakIteratorInfo, lastFloatFromPreviousLine, consecutiveHyphenatedLines);
+		
         if (resolver:Position():AtEnd()) then
             -- FIXME: We shouldn't be creating any runs in findNextLineBreak to begin with!
             -- Once BidiRunList is separated from BidiResolver this will not be needed.
@@ -2025,27 +2147,33 @@ function LayoutBlock:LayoutRunsAndFloatsInRange(layoutState, resolver, cleanLine
             self:NewLine(lineBreaker:Clear());
         end
 
---        if (m_floatingObjects && lastRootBox()) {
---            const FloatingObjectSet& floatingObjectSet = m_floatingObjects->set();
---            FloatingObjectSetIterator it = floatingObjectSet.begin();
---            FloatingObjectSetIterator end = floatingObjectSet.end();
---            if (layoutState.lastFloat()) {
---                FloatingObjectSetIterator lastFloatIterator = floatingObjectSet.find(layoutState.lastFloat());
---                ASSERT(lastFloatIterator != end);
---                ++lastFloatIterator;
---                it = lastFloatIterator;
---            }
---            for (; it != end; ++it) {
---                FloatingObject* f = *it;
---                appendFloatingObjectToLastLine(f);
---                ASSERT(f->m_renderer == layoutState.floats()[layoutState.floatIndex()].object);
---                // If a float's geometry has changed, give up on syncing with clean lines.
---                if (layoutState.floats()[layoutState.floatIndex()].rect != f->frameRect())
---                    checkForEndLineMatch = false;
---                layoutState.setFloatIndex(layoutState.floatIndex() + 1);
---            }
---            layoutState.setLastFloat(!floatingObjectSet.isEmpty() ? floatingObjectSet.last() : 0);
---        }
+        if (self.floatingObjects and self:LastRootBox()) then
+			local floatingObjectSet = self.floatingObjects:Set();
+			local it = floatingObjectSet:Begin();
+			if (layoutState:LastFloat()) then
+                local lastFloatIterator = floatingObjectSet:find(layoutState:LastFloat());
+                --ASSERT(lastFloatIterator != end);
+                it = floatingObjectSet:next(lastFloatIterator);
+            end
+			while(it) do
+				local floatingObject = it();
+				self:AppendFloatingObjectToLastLine(floatingObject);
+                --ASSERT(f->m_renderer == layoutState.floats()[layoutState.floatIndex()].object);
+                -- If a float's geometry has changed, give up on syncing with clean lines.
+                if (layoutState:Floats()[layoutState:FloatIndex()]:Rect() ~= floatingObject:FrameRect()) then
+                    checkForEndLineMatch = false;
+				end
+                layoutState:SetFloatIndex(layoutState:FloatIndex() + 1);
+	
+	
+				it = floatingObjectSet:next(it);
+			end
+			local lastFloat = nil;
+			if(not floatingObjectSet:isEmpty()) then
+				lastFloat = floatingObjectSet:last();
+			end
+			layoutState:SetLastFloat(lastFloat);
+        end
 
         lineMidpointState:Reset();
         resolver:SetPosition(_end);
@@ -2059,11 +2187,13 @@ function LayoutBlock:RepaintDirtyFloats(floats)
     -- painted by now if they had moved, but if they stayed at (0, 0), they still need to be
     -- painted.
     for i = 1, floatCount do
---        if (!floats[i].everHadLayout) {
---            RenderBox* f = floats[i].object;
---            if (!f->x() && !f->y() && f->checkForRepaintDuringLayout())
---                f->repaint();
---        }
+        if (not floats[i]:EverHadLayout()) then
+            local f = floats[i]:Object();
+            --if (!f->x() && !f->y() && f->checkForRepaintDuringLayout()) then
+			if (f:X() == 0 and f:Y() == 0 and f:CheckForRepaintDuringLayout()) then
+                f:Repaint();
+			end
+        end
     end
 end
 
@@ -2077,12 +2207,10 @@ local function createRun(_start, _end, obj, resolver)
 end
 
 function LayoutBlock.AppendRunsForObject(runs, _start, _end, obj, resolver)
-
 	if (_start > _end or obj:IsFloating() or
-        (obj:IsPositioned() and not obj:Style():IsOriginalDisplayInlineType() and not obj:Container():IsRenderInline())) then
+        (obj:IsPositioned() and not obj:Style():IsOriginalDisplayInlineType() and not obj:Container():IsLayoutInline())) then
         return;
 	end
-
 	local lineMidpointState = resolver:MidpointState();
     local haveNextMidpoint = lineMidpointState.currentMidpoint < lineMidpointState.numMidpoints;
     local nextMidpoint;
@@ -2112,7 +2240,7 @@ function LayoutBlock.AppendRunsForObject(runs, _start, _end, obj, resolver)
         if (nextMidpoint.pos + 1 <= _end) then
             lineMidpointState.betweenMidpoints = true;
             lineMidpointState.currentMidpoint = lineMidpointState.currentMidpoint + 1;
-            if (nextMidpoint.pos ~= 0xffffffff) then -- UINT_MAX means stop at the object and don't include any of it.
+            if (nextMidpoint.pos ~= INT_MAX) then -- UINT_MAX means stop at the object and don't include any of it.
                 if (nextMidpoint.pos + 1 > _start) then
                     runs:AddRun(createRun(start, nextMidpoint.pos + 1, obj, resolver));
 				end
@@ -2178,4 +2306,282 @@ function LayoutBlock:PositionNewFloatOnLine(newFloat, lastFloatFromPreviousLine,
     -- no content, then we don't want to improperly grow the height of the block.
     lineInfo:SetFloatPaginationStrut(lineInfo:FloatPaginationStrut() + paginationStrut);
     return true;
+end
+
+--void RenderBlock::checkFloatsInCleanLine(RootInlineBox* line, Vector<FloatWithRect>& floats, size_t& floatIndex, bool& encounteredNewFloat, bool& dirtiedByFloat)
+function LayoutBlock:CheckFloatsInCleanLine(line, floats, floatIndex, encounteredNewFloat, dirtiedByFloat)
+    --Vector<RenderBox*>* cleanLineFloats = line->floatsPtr();
+	local cleanLineFloats = line:FloatsPtr();
+    if (cleanLineFloats == nil) then
+        return floatIndex, encounteredNewFloat, dirtiedByFloat;
+	end
+
+	local size = cleanLineFloats:size();
+	for i = 1,size do
+		floatingBox = cleanLineFloats:get(i);
+		floatingBox:LayoutIfNeeded();
+        local newSize = IntSize:new(floatingBox:Width() + floatingBox:MarginLeft() + floatingBox:MarginRight(), floatingBox:Height() + floatingBox:MarginTop() + floatingBox:MarginBottom());
+        --ASSERT(floatIndex < floats.size());
+        if (floats[floatIndex].object ~= floatingBox) then
+            encounteredNewFloat = true;
+            return floatIndex, encounteredNewFloat, dirtiedByFloat;
+        end
+
+        if (floats[floatIndex].rect:Size() ~= newSize) then
+			local floatTop, floatHeight;
+			if(self:IsHorizontalWritingMode()) then
+				floatTop = floats[floatIndex].rect:Y();
+				floatHeight = math.max(floats[floatIndex].rect:Height(), newSize:Height());
+			else
+				floatTop = floats[floatIndex].rect:X();
+				floatHeight = math.max(floats[floatIndex].rect:Width(), newSize:Width());
+			end
+			
+            floatHeight = math.min(floatHeight, INT_MAX - floatTop);
+            line:MarkDirty();
+            self:MarkLinesDirtyInBlockRange(line:LineBottomWithLeading(), floatTop + floatHeight, line);
+            floats[floatIndex].rect:SetSize(newSize);
+            dirtiedByFloat = true;
+        end
+        floatIndex = floatIndex + 1;
+	end
+	
+	return floatIndex, encounteredNewFloat, dirtiedByFloat;
+end
+
+--void RenderBlock::determineEndPosition(LineLayoutState& layoutState, RootInlineBox* startLine, InlineIterator& cleanLineStart, BidiStatus& cleanLineBidiStatus)
+function LayoutBlock:DetermineEndPosition(layoutState, startLine, cleanLineStart, cleanLineBidiStatus)
+    --ASSERT(!layoutState.endLine());
+    local floatIndex = layoutState:FloatIndex();
+	--RootInlineBox* last = 0;
+	local last = nil;
+	local curr = startLine:NextRootBox();
+	while(curr) do
+		if (not curr:IsDirty()) then
+            local encounteredNewFloat = false;
+            local dirtiedByFloat = false;
+            floatIndex, encounteredNewFloat, dirtiedByFloat = self:CheckFloatsInCleanLine(curr, layoutState:Floats(), floatIndex, encounteredNewFloat, dirtiedByFloat);
+            if (encounteredNewFloat) then
+                return cleanLineStart, cleanLineBidiStatus;
+			end
+        end
+        if (curr:IsDirty()) then
+            last = nil;
+        elseif (last == nil) then
+            last = curr;
+		end
+	
+		curr = curr:NextRootBox();
+	end
+
+    if (last == nil) then
+        return cleanLineStart, cleanLineBidiStatus;
+	end
+
+    -- At this point, |last| is the first line in a run of clean lines that ends with the last line
+    -- in the block.
+
+    local prev = last:PrevRootBox();
+    cleanLineStart = InlineIterator:new():init(self, prev:LineBreakObj(), prev:LineBreakPos());
+    cleanLineBidiStatus = prev:LineBreakBidiStatus();
+    layoutState:SetEndLineLogicalTop(prev:LineBottomWithLeading());
+
+	local line = last;
+	while(line) do
+		line:ExtractLine(); -- Disconnect all line boxes from their render objects while preserving
+                             -- their connections to one another.
+	
+		line = line:NextRootBox();
+	end
+
+    layoutState:SetEndLine(last);
+	return cleanLineStart, cleanLineBidiStatus;
+end
+
+--bool RenderBlock::checkPaginationAndFloatsAtEndLine(LineLayoutState& layoutState)
+function LayoutBlock:CheckPaginationAndFloatsAtEndLine(layoutState)
+    local lineDelta = self:LogicalHeight() - layoutState:EndLineLogicalTop();
+
+	local paginated = false;
+	if(self:View():LayoutState()) then
+		paginated = self:View():LayoutState():IsPaginated();
+	end
+    if (paginated and self:InRenderFlowThread()) then
+--        // Check all lines from here to the end, and see if the hypothetical new position for the lines will result
+--        // in a different available line width.
+--        for (RootInlineBox* lineBox = layoutState.endLine(); lineBox; lineBox = lineBox->nextRootBox()) {
+--            if (paginated) {
+--                // This isn't the real move we're going to do, so don't update the line box's pagination
+--                // strut yet.
+--                LayoutUnit oldPaginationStrut = lineBox->paginationStrut();
+--                lineDelta -= oldPaginationStrut;
+--                adjustLinePositionForPagination(lineBox, lineDelta);
+--                lineBox->setPaginationStrut(oldPaginationStrut);
+--            }
+--            if (lineWidthForPaginatedLineChanged(lineBox, lineDelta))
+--                return false;
+--        }
+    end
+    
+    if (lineDelta == 0 or self.floatingObjects == nil) then
+        return true;
+	end
+    
+    -- See if any floats end in the range along which we want to shift the lines vertically.
+    local logicalTop = math.min(self:LogicalHeight(), layoutState:EndLineLogicalTop());
+
+	
+    local lastLine = layoutState:EndLine();
+	local nextLine = lastLine:NextRootBox();
+	while(nextLine) do
+		lastLine = nextLine;
+		nextLine = lastLine:NextRootBox();
+	end
+
+    local logicalBottom = lastLine:LineBottomWithLeading() + math.abs(lineDelta);
+
+	local floatingObjectSet = self.floatingObjects:Set();
+	local it = floatingObjectSet:Begin();
+	while(it) do
+		local floatingObject = it();
+		if (self:LogicalBottomForFloat(f) >= logicalTop and self:LogicalBottomForFloat(f) < logicalBottom) then
+            return false;
+		end
+		
+		it = floatingObjectSet:next(it);
+	end
+	
+    return true;
+end
+
+--bool RenderBlock::matchedEndLine(LineLayoutState& layoutState, const InlineBidiResolver& resolver, const InlineIterator& endLineStart, const BidiStatus& endLineStatus)
+function LayoutBlock:MatchedEndLine(layoutState, resolver, endLineStart, endLineStatus)
+    if (resolver:Position() == endLineStart) then
+        if (resolver:Status() ~= endLineStatus) then
+            return false;
+		end
+        return self:CheckPaginationAndFloatsAtEndLine(layoutState);
+    end
+
+    -- The first clean line doesn't match, but we can check a handful of following lines to try
+    -- to match back up.
+	-- static int numLines = 8; -- The # of lines we're willing to match against.
+	local numLines = 8;
+    local originalEndLine = layoutState:EndLine();
+    local line = originalEndLine;
+	local i = 0;
+	while(i < numLines and line ~= nil) do
+		if (line:LineBreakObj() == resolver:Position().obj and line:LineBreakPos() == resolver:Position().pos) then
+            -- We have a match.
+            if (line:LineBreakBidiStatus() ~= resolver:Status()) then
+                return false; -- ...but the bidi state doesn't match.
+			end
+            
+            local matched = false;
+            local result = line:NextRootBox();
+            layoutState:SetEndLine(result);
+            if (result) then
+                layoutState:SetEndLineLogicalTop(line:LineBottomWithLeading());
+                matched = self:CheckPaginationAndFloatsAtEndLine(layoutState);
+            end
+
+            -- Now delete the lines that we failed to sync.
+            deleteLineRange(layoutState, self:RenderArena(), originalEndLine, result);
+            return matched;
+        end
+	
+		
+		i = i + 1;
+		line = line:NextRootBox();
+	end
+    
+    return false;
+end
+
+--void RenderBlock::linkToEndLineIfNeeded(LineLayoutState& layoutState)
+function LayoutBlock:LinkToEndLineIfNeeded(layoutState)
+    if (layoutState:EndLine()) then
+        if (layoutState:EndLineMatched()) then
+            --bool paginated = view()->layoutState() and view()->layoutState()->isPaginated();
+			local paginated = false;
+			if(self:View():LayoutState()) then
+				paginated = self:View():LayoutState():IsPaginated();
+			end
+            -- Attach all the remaining lines, and then adjust their y-positions as needed.
+            local delta = self:LogicalHeight() - layoutState:EndLineLogicalTop();
+			local line = layoutState:EndLine();
+			while(line) do
+				line:AttachLine();
+                if (paginated) then
+                    --delta -= line->paginationStrut();
+                    --adjustLinePositionForPagination(line, delta);
+                end
+                if (delta ~= 0) then
+                    layoutState:UpdateRepaintRangeFromBox(line, delta);
+                    line:AdjustBlockDirectionPosition(delta);
+                end
+				local cleanLineFloats = line:FloatsPtr();
+                if (cleanLineFloats ~= nil) then
+					for i = 1,cleanLineFloats:size() do
+						local f = cleanLineFloats:get(i);
+						local floatingObject = self:InsertFloatingObject(f);
+						--ASSERT(!floatingObject->m_originatingLine);
+						floatingObject.originatingLine = line;
+						self:SetLogicalHeight(self:LogicalTopForChild(f) - self:MarginBeforeForChild(f) + delta);
+						self:PositionNewFloats();
+					end
+                end
+			
+				line = line:NextRootBox();
+			end
+
+            self:SetLogicalHeight(self:LastRootBox():LineBottomWithLeading());
+        else
+            -- Delete all the remaining lines.
+            deleteLineRange(layoutState, self:RenderArena(), layoutState:EndLine());
+        end
+    end
+    
+    if (self.floatingObjects ~= nil and (layoutState:CheckForFloatsFromLastLine() or self:PositionNewFloats()) and self:LastRootBox() ~= nil) then
+        -- In case we have a float on the last line, it might not be positioned up to now.
+        -- This has to be done before adding in the bottom border/padding, or the float will
+        -- include the padding incorrectly. -dwh
+        if (layoutState:CheckForFloatsFromLastLine()) then
+            local bottomVisualOverflow = self:LastRootBox():LogicalBottomVisualOverflow();
+            local bottomLayoutOverflow = self:LastRootBox():LogicalBottomLayoutOverflow();
+            local trailingFloatsLineBox = TrailingFloatsRootInlineBox:new():init(self);
+            self.lineBoxes:AppendLineBox(trailingFloatsLineBox);
+            trailingFloatsLineBox:SetConstructed();
+            --GlyphOverflowAndFallbackFontsMap textBoxDataMap;
+			local textBoxDataMap = nil;
+            --VerticalPositionCache verticalPositionCache;
+			local verticalPositionCache = nil;
+            local blockLogicalHeight = self:LogicalHeight();
+            trailingFloatsLineBox:AlignBoxesInBlockDirection(blockLogicalHeight, textBoxDataMap, verticalPositionCache);
+            trailingFloatsLineBox:SetLineTopBottomPositions(blockLogicalHeight, blockLogicalHeight, blockLogicalHeight, blockLogicalHeight);
+            trailingFloatsLineBox:SetPaginatedLineWidth(self:AvailableLogicalWidthForContent(blockLogicalHeight));
+            local logicalLayoutOverflow = IntRect:new(0, blockLogicalHeight, 1, bottomLayoutOverflow - blockLogicalHeight);
+            local logicalVisualOverflow = IntRect:new(0, blockLogicalHeight, 1, bottomVisualOverflow - blockLogicalHeight);
+            trailingFloatsLineBox:SetOverflowFromLogicalRects(logicalLayoutOverflow, logicalVisualOverflow, trailingFloatsLineBox:LineTop(), trailingFloatsLineBox:LineBottom());
+        end
+
+		local floatingObjectSet = self.floatingObjects:Set();
+		local it = floatingObjectSet:Begin();
+		
+		if (layoutState:LastFloat()) then
+			local lastFloatIterator = floatingObjectSet:find(layoutState:LastFloat());
+            it = floatingObjectSet:next(lastFloatIterator);
+		end
+		
+		while(it) do
+			self:AppendFloatingObjectToLastLine(it());
+			
+			it = floatingObjectSet:next(it);
+		end
+		if(floatingObjectSet:isEmpty()) then
+			layoutState:SetLastFloat(nil);
+		else
+			layoutState:SetLastFloat(floatingObjectSet:last());
+		end
+    end
 end

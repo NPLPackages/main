@@ -29,11 +29,16 @@ local InlineWalker = commonlib.inherit(nil, commonlib.gettable("System.Windows.m
 
 local UnicodeBidiEnum = ComputedStyleConstants.UnicodeBidiEnum;
 
+local INT_MAX = 0xffffffff;
+
 function InlineIterator:ctor()
 	self.root = nil;
     self.obj = nil;
     self.pos = 1;
     self.nextBreakablePosition = -1;
+
+	local mt = getmetatable(self);
+	mt.__eq = InlineIterator.Equal;
 end
 
 function InlineIterator:init(root, obj, pos, nextBreakablePosition)
@@ -171,8 +176,11 @@ local function NotifyObserverEnteredObject(observer, object)
     -- observer:Embed(embedCharFromDirection(style->direction(), unicodeBidi), FromStyleOrDOM);
 end
 
-local function NotifyObserverWillExitObject(observer, object)
+local function notifyObserverWillExitObject(observer, object)
 	--TODO: fixed this function
+	if (not observer or not object or not object:IsLayoutInline()) then
+        return;
+	end
 end
 
 local function BidiNextShared(root, current, observer, emptyInlineBehavior, endOfInlinePtr)
@@ -197,9 +205,10 @@ local function BidiNextShared(root, current, observer, emptyInlineBehavior, endO
             end
 
             while (current and current ~= root) do
-                NotifyObserverWillExitObject(observer, current);
+                notifyObserverWillExitObject(observer, current);
 
                 next = current:NextSibling();
+
                 if (next) then
                     NotifyObserverEnteredObject(observer, next);
                     break;
@@ -431,7 +440,7 @@ function InlineBidiResolver:AppendRun()
             obj = InlineWalker.BidiNextSkippingEmptyInlines(self.sor:Root(), obj, isolateTracker);
         end
         if (obj) then
-            local pos = if_else(obj == self.eor.obj, self.eor.pos, 0xffffffff);
+            local pos = if_else(obj == self.eor.obj, self.eor.pos, INT_MAX);
             if (obj == self.endOfLine.obj and self.endOfLine.pos <= pos) then
                 self.reachedEndOfLine = true;
                 pos = self.endOfLine.pos;

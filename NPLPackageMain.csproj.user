@@ -5,10 +5,11 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
     <StartAction>Program</StartAction>
-    <StartProgram>D:\lxzsrc\ParaCraftSDKGit\redist\ParaEngineClient.exe</StartProgram>
-    <StartWorkingDirectory>
-    </StartWorkingDirectory>
-    <StartArguments>bootstrapper="script/apps/WebServer/WebServer.lua"  port="8099" servermode="true"</StartArguments>
+    <StartProgram>E:\Code\ParaCraftSDK\redist\paraengineclient.exe</StartProgram>
+    <StartWorkingDirectory>E:\Code\ParaCraftSDK\redist\</StartWorkingDirectory>
+    <StartArguments>mc="true" isDevEnv="true" dev="" bootstrapper="script/test/MCMLV2/main.lua" loadpackage="npl_packages/main_css/"</StartArguments>
+    <RemoteDebugEnabled>false</RemoteDebugEnabled>
+    <RemoteDebugMachine>ge</RemoteDebugMachine>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
     <StartArguments>bootstrapper="script/apps/WebServer/WebServer.lua"  port="8099" servermode="true"</StartArguments>

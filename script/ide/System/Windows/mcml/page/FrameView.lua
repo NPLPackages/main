@@ -14,6 +14,10 @@ NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/IntSize.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/platform/ScrollView.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/PaintInfo.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/IntPoint.lua");
+NPL.load("(gl)script/ide/System/Windows/Application.lua");
+NPL.load("(gl)script/ide/System/Core/Event.lua");
+local Event = commonlib.gettable("System.Core.Event");
+local Application = commonlib.gettable("System.Windows.Application");
 local Point = commonlib.gettable("System.Windows.mcml.platform.graphics.IntPoint");
 local PaintInfo = commonlib.gettable("System.Windows.mcml.layout.PaintInfo");
 local ScrollView = commonlib.gettable("System.Windows.mcml.platform.ScrollView");
@@ -162,6 +166,9 @@ function FrameView:Layout()
 --    // Always ensure our style info is up-to-date.  This can happen in situations where
 --    // the layout beats any sort of style recalc update that needs to occur.
 --    document->updateStyleIfNeeded();
+	if(self.page and self.page.mcmlNode) then
+		self.page.mcmlNode:UpdateStyleIfNeeded();
+	end
 
 	--bool subtree = m_layoutRoot;
 	local subtree = if_else(self.layoutRoot, true, false);
@@ -217,7 +224,6 @@ function FrameView:RepaintIfNeeded()
 	if(not self.dirty) then
         return false;
 	end
-
     --layoutIfNeeded();
 	self:Paint(nil, self.dirtyArea);
 
@@ -236,6 +242,10 @@ function FrameView:activate()
 		self.activated = true;
 		self:Layout();
 	end
+end
+
+function FrameView:PostLayoutRequestEvent()
+	Application:postEvent(self:widget(), Event:new_static("LayoutRequestEvent"));
 end
 
 -- Updates the layout for GetParent().
@@ -294,6 +304,14 @@ end
 function FrameView:GetUsedSize()
 	--TODO: fixed this function
 	return 0, 0;
+end
+
+function FrameView:VisibleWidth()
+	return self:VisibleContentRect():Width();
+end
+
+function FrameView:VisibleHeight()
+	return self:VisibleContentRect():Height();
 end
 
 function FrameView:VisibleContentRect(includeScrollbars)

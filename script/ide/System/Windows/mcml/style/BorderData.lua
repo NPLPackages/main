@@ -48,7 +48,7 @@ function BorderData:clone()
 							self.m_topLeft:clone(), self.m_topRight:clone(), self.m_bottomLeft:clone(), self.m_bottomRight:clone());
 end
 
-function BorderData._eq(a, b)
+function BorderData.__eq(a, b)
 	return a.m_left == b.m_left
         and a.m_right == b.m_right
         and a.m_top == b.m_top

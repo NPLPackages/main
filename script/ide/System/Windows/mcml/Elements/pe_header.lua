@@ -13,7 +13,7 @@ NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_div.lua");
 local mcml = commonlib.gettable("System.Windows.mcml");
 
 local pe_header = commonlib.inherit(commonlib.gettable("System.Windows.mcml.Elements.pe_div"), commonlib.gettable("System.Windows.mcml.Elements.pe_header"));
-pe_header:Property({"class_name", "header"});
+pe_header:Property({"class_name", "pe:header"});
 
 function pe_header:ctor()
 end

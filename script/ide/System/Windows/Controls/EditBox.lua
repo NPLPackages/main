@@ -318,7 +318,6 @@ function EditBox:inputMethodEvent(event)
 	end
 
 	local commitString = event:commitString();
-	-- echo({string.byte(commitString, 1), string.byte(commitString, 2)});
 
 	local char1 = string.byte(commitString, 1);
 	if(char1 <= 31) then
@@ -827,7 +826,6 @@ function EditBox:keyPressEvent(event)
 		return;
 	end
 	local keyname = event.keyname;
-	-- echo({keyname, event.key_sequence});
 	local unknown = false;
 	if(keyname == "DIK_RETURN") then
 		if(self:hasAcceptableInput()) then

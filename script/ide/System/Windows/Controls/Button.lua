@@ -109,9 +109,9 @@ end
 function Button:ApplyCss(css)
 	Button._super.ApplyCss(self, css);
 
-	self.BackgroundChecked = css.background_checked;
-	self.BackgroundDown = css.background_down;
-	self.BackgroundOver = css.background_over;
+--	self.BackgroundChecked = css.background_checked;
+--	self.BackgroundDown = css.background_down;
+--	self.BackgroundOver = css.background_over;
 end
 
 function Button:SetDirection(direction)
