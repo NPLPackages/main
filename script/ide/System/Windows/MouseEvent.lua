@@ -24,10 +24,48 @@ local MouseEvent = commonlib.inherit(commonlib.gettable("System.Core.Event"), co
 MouseEvent.event_type = "mouseEvent";
 MouseEvent.global_pos = Point:new();
 MouseEvent.local_pos = Point:new();
+MouseEvent.left_click_info= {
+	first_click_time = 0,
+	second_click_time = 0,
+}
 
 function MouseEvent:ctor()
 	self.global_pos = Point:new();
 	self.local_pos = Point:new();
+	self.isDoubleClick = false;
+	self.isTripleClick = false;
+end
+
+
+local firstPressPositionX = 0;
+local secondPressPositionX = 0;
+local thirdPressPositionX = 0;
+function MouseEvent:isDoubleAndTripleClick()
+	if(self:button() == "left" and self.event_type == "mousePressEvent") then
+		thirdPressPositionX = self.global_pos:x() 
+		self.isTripleClick = self:isTriplePress()
+		self.isDoubleClick = self:isDoublePress()		
+	end
+end			
+
+function MouseEvent:isDoublePress()
+	if(firstPressPositionX == secondPressPositionX and ParaGlobal.timeGetTime() - MouseEvent.left_click_info.first_click_time < 250) then
+		MouseEvent.left_click_info.event_type = self.event_type;
+		MouseEvent.left_click_info.second_click_time = ParaGlobal.timeGetTime();
+		return true;
+	end
+	MouseEvent.left_click_info.event_type = self.event_type;
+	MouseEvent.left_click_info.first_click_time = ParaGlobal.timeGetTime();
+	firstPressPositionX = self.global_pos:x();
+	return false;
+end
+
+function MouseEvent:isTriplePress()
+	if(thirdPressPositionX == secondPressPositionX and ParaGlobal.timeGetTime() - MouseEvent.left_click_info.second_click_time < 250) then
+		return true;
+	end
+	secondPressPositionX = self.global_pos:x();
+	return false;
 end
 
 function MouseEvent:updateModifiers()
@@ -49,12 +87,14 @@ end
 function MouseEvent:IsCtrlKeysPressed()
 	return self.shift_pressed or self.ctrl_pressed or self.alt_pressed;
 end
-
+																							   
 -- return current mouse event object. 
 -- @param event_type: "mousePressEvent", "mouseReleaseEvent", "mouseMoveEvent", "mouseWheelEvent"
 -- @param window: the window that is receiving this event. 
+
 function MouseEvent:init(event_type, window, localPos, windowPos, screenPos)
 	MouseEvent._super.init(self, event_type);
+
 	-- global pos
 	if(event_type == "mouseMoveEvent") then
 		self.x, self.y = ParaUI.GetMousePosition();
@@ -65,13 +105,17 @@ function MouseEvent:init(event_type, window, localPos, windowPos, screenPos)
 		self.x, self.y = mouse_x, mouse_y;
 	end
 	
+
+
 	if(window) then
 		-- global position. 
+
 		if(screenPos)then
 			self.global_pos = screenPos;
 		else
 			self.global_pos:set(self.x, self.y);
 		end
+
 		if(windowPos) then
 			self.window_pos = windowPos;
 		end
@@ -85,6 +129,9 @@ function MouseEvent:init(event_type, window, localPos, windowPos, screenPos)
 	self.mouse_button = mouse_button;
 	self.mouse_wheel = mouse_wheel;
 	self.accepted = nil;
+
+	self:isDoubleAndTripleClick();
+
 	return self;
 end
 

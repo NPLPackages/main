@@ -21,10 +21,12 @@ function GetDS()
 end
 isSearching = false;
 function SearchBlock()
-    isSearching = true;
+    isSearching = false;
+    Page:Refresh(0);
 end
 function OnSearchBlock()
-    isSearching = false;
+    isSearching = true;
+    Page:Refresh(0);
 end
 ]]>
 </script>
@@ -43,12 +45,12 @@ end
             <div style="float:left;background-color:#0000ff;margin-left:10px;width:20px;height:20px;">
             </div>
         </div>
-        <div valign="bottom">
+        <!--<div valign="bottom">
             <div style="float:left;background-color:#00ff00;width:60px;height:20px;">
             </div>
             <div style="float:left;background-color:#0000ff;margin-left:10px;width:20px;height:20px;">
             </div>
-        </div>
+        </div>-->
     </div>
     <!--<div>
         hello world中文<font color="#ff0000">fontColor</font>

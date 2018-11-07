@@ -1,0 +1,153 @@
+--[[
+title: NPL cmd
+author: chenqh
+date: 2017/12/29
+desc: default bootstrapper for nplc, automate parse the nplc commands and execute it
+------------------------------------------------------------------------------------
+nplc script sample:
+------------------------------------------------------------------------------------
+#!/usr/bin/env nplc
+
+local _M = {}
+
+-- Important: cmd will load the file and try to execute function "run" if it exists
+function _M.run()
+    print("hello world!")
+end
+
+return _M
+------------------------------------------------------------------------------------
+It's recommend to put the script into /usr/local/bin, same as nplc.
+And you can run "nplc your_script" to test it in development in any folder,
+please don't use relative path of your script file here.
+------------------------------------------------------------------------------------
+]]
+
+NPL.load("(gl)script/ide/System/nplcmd/extension.npl")
+local Embeded = NPL.load("(gl)script/ide/System/nplcmd/embeded_cmd.npl")
+local binder = "%+"
+local ctx = {}
+local args = ParaEngine.GetAppCommandLineByParam("nplcmd", "")
+local file_result
+
+local function cmd_begin()
+    ctx.path = ParaEngine.GetAppCommandLineByParam("cmd_path", "")
+end
+
+local function cmd_end()
+    if not ctx.keep_alive then ParaGlobal.Exit(file_result or 0) end
+end
+
+-- example
+-- in: "-i+-p+test+specs"
+-- out: {"-i", "-p"}, "test", {"spec"}
+local function cmd_parser(args)
+    local options = {}
+    local script = nil
+    local params = {}
+    local state = "option"
+
+    for arg in args:gmatch(format("[^%s]+", binder)) do
+        if state == "option" then
+            if arg:match("^%-%-?%w*$") then
+                options[arg] = true
+            else
+                script = arg
+                state = "params"
+            end
+        elseif(state == "params") then
+            table.insert(params, arg)
+        else
+            error(format("invalid args %s on arg %s", args, arg))
+        end
+    end
+
+    return options, script, params
+end
+
+local function show_version()
+    print("Version 0.0.1")
+end
+
+local function show_usage()
+    local text = [[
+NPL Command Line
+
+usage: nplc [options] script [params]
+
+Description:
+    "nplc" is a simple implementation of npl cli, with it you can write script to add some useful tools by using npl.
+    There are some embedded scripts like "console" and "install".
+
+Options:
+
+-h,      --help         show help
+-v,      --version      show version
+-i,                     end with console
+
+Embedded scripts:
+
+console - nplc console
+start   - nplc bootstrapper, will load boot.lua and pass your params to it
+
+input nplc script --help to get more info
+
+]]
+    print(text)
+end
+
+-- nplc will concat the command line args with '+'
+-- for example:
+-- command line: nplc -i  -p test specs
+-- args: "-i+-p+test+specs"
+local function cmd_exec(args, ctx)
+    local options, script, params = cmd_parser(args)
+    ctx.arg = params
+
+    if options["-h"] or options["--help"] then
+        show_usage()
+        return
+    elseif options["-v"] or options["--version"] then
+        show_version()
+        return
+    end
+
+    if(not script) then
+        options["-i"] = nil -- ignore -i option
+        file_result = Embeded.run("console", ctx)
+    else
+        if Embeded.include_cmd(script) then -- run default commands first
+            file_result = Embeded.run(script, ctx)
+        else
+            local cmd = NPL.load(script)
+            if type(cmd) == "function" then
+                cmd(ctx)
+            elseif type(cmd) == "number" then
+                file_result = tonumber(cmd)
+            elseif cmd == false then
+                print(format("Load script %s failed!", script))
+            else
+                print("Warning: no function to handle the cmd!")
+            end
+        end
+    end
+
+    if options["-i"] and script ~= "console" then
+        file_result = Embeded.run("console", ctx)
+        ctx.keep_alive = false --force to quit
+    end
+end
+
+cmd_begin()
+xpcall(
+    function()
+        cmd_exec(args, ctx)
+    end,
+    function(e)
+        print(e)
+        print(debug.traceback())
+    end
+)
+cmd_end()
+
+NPL.this(function() end)

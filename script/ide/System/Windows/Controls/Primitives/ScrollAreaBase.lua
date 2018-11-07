@@ -1,7 +1,7 @@
 --[[
 Title: ScrollAreaBase
-Author(s): LiXizhi
-Date: 2015/4/29
+Author(s): LiPeng
+Date: 2017/10/3
 Desc:
 use the lib:
 ------------------------------------------------------------
@@ -24,7 +24,7 @@ ScrollAreaBase:Property("Name", "ScrollAreaBase");
 ScrollAreaBase:Property({"SliderSize", 16, auto=true});
 ScrollAreaBase:Property({"AllowWheel", true, auto=true});
 -- the "scrollBarPolicy" values: "AlwaysOn", "AlwaysOff", "Auto"
-ScrollAreaBase:Property({"horizontalScrollBarPolicy", "Auto", "getHorizontalScrollBarPolicy", "setHorizontalScrollBarPolicy", auto=true});
+ScrollAreaBase:Property({"horizontalScrollBarPolicy", "AlwaysOff", "getHorizontalScrollBarPolicy", "setHorizontalScrollBarPolicy", auto=true});
 ScrollAreaBase:Property({"verticalScrollBarPolicy", "Auto", "getVerticalScrollBarPolicy", "setVerticalScrollBarPolicy", auto=true});
 
 function ScrollAreaBase:ctor()
@@ -72,6 +72,10 @@ function ScrollAreaBase:initScrollBar()
 	self.vbar:setRange(0,0,false);
 	--self.vbar:hide();
 	self:verticalScrollBarHide();
+end
+
+function ScrollAreaBase:scrollToEnd()
+	self.vbar:SetValue(self.vbar:GetMax(), true);
 end
 
 function ScrollAreaBase:scrollToPos(hbarValue, vbarValue)
@@ -195,7 +199,7 @@ function ScrollAreaBase:keyPressEvent(e)
 end
 
 -- clip region. 
-function ScrollAreaBase:ClipRegion()
+function ScrollAreaBase:ViewRegion()
 	local w = self:width();
 	local h = self:height();
 	if(self.hbar and not self.hbar:isHidden()) then

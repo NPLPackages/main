@@ -1,7 +1,7 @@
 --[[
 Title: SliderBar
-Author(s): LiXizhi
-Date: 2015/4/29
+Author(s): LiPeng
+Date: 2017/10/3
 Desc:
 use the lib:
 ------------------------------------------------------------
@@ -42,11 +42,11 @@ SliderBar:Property("Name", "SliderBar");
 
 SliderBar:Property({"grooveWidth", nil, nil, "SetGrooveWidth",auto=true});
 SliderBar:Property({"grooveHeight", nil, nil, "SetGrooveHeight",auto=true});
-SliderBar:Property({"grooveBackground", "Texture/Aries/Creator/Theme/GameCommonIcon_32bits.png;456 396 16 16:4 4 4 4",auto=true});
+SliderBar:Property({"grooveBackground", nil,auto=true});
 
 SliderBar:Property({"sliderWidth", nil, nil, "SetSliderWidth",auto=true});
 SliderBar:Property({"sliderHeight", nil, nil, "SetSliderHeight",auto=true});
-SliderBar:Property({"sliderBackground", "Texture/3DMapSystem/common/ThemeLightBlue/slider_button_16.png;5 5 5 5:1 1 1 1",auto=true});
+SliderBar:Property({"sliderBackground", nil,auto=true});
 
 function SliderBar:ctor()
 	self.groove = nil;
@@ -72,6 +72,12 @@ end
 function SliderBar:SetSliderBackground(bg)
 	if(bg and bg ~= "") then
 		self.sliderBackground = bg;
+	end
+end
+
+function SliderBar:SetGrooveBackground(bg)
+	if(bg and bg ~= "") then
+		self.grooveBackground = bg;
 	end
 end
 
@@ -186,16 +192,20 @@ function SliderBar:paintEvent(painter)
 	local groove = self:Groove();
 	local groovBackground = self.grooveBackground;
 	if(groovBackground and groovBackground~="") then
+		painter:SetPen("#ffffff");
+	else
 		painter:SetPen("#ff0000");
-		painter:DrawRectTexture(self:x() + groove:x(), self:y() + groove:y(), groove:width(), groove:height(), groovBackground);
 	end
+	painter:DrawRectTexture(self:x() + groove:x(), self:y() + groove:y(), groove:width(), groove:height(), groovBackground);
 
 	local slider = self:Slider();
 	local sliderBackground = self.sliderBackground;
 	if(sliderBackground and sliderBackground~="") then
 		painter:SetPen("#ffffff");
-		painter:DrawRectTexture(self:x() + slider:x(), self:y() + slider:y(), slider:width(), slider:height(), sliderBackground);
+	else
+		painter:SetPen("#00ff00");
 	end
+	painter:DrawRectTexture(self:x() + slider:x(), self:y() + slider:y(), slider:width(), slider:height(), sliderBackground);
 end
 
 

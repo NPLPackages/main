@@ -730,7 +730,7 @@ function AnimBlock:CopyKeyFrame(key_time, from_keytime)
 			local time = self.times[index];
 			
 			if(time~=key_time and key_time ~= from_keytime) then
-				if(time<key_time) then
+				if(time and time<key_time) then
 					index = index + 1;
 				end
 				commonlib.insertArrayItem(self.times, index, key_time);
@@ -742,6 +742,27 @@ function AnimBlock:CopyKeyFrame(key_time, from_keytime)
 	end
 end
 
+-- Update or insert (Upsert) a key frame at given time.
+-- @param data: data is cloned before updating. 
+function AnimBlock:UpsertKeyFrame(key_time, data)
+	if(key_time and data) then
+		local index = self:GetNextKeyIndex(1, key_time) or 1;
+		local time = self.times[index];
+		if(time~=key_time) then
+			-- insert a new one. 
+			if(time and time<key_time) then
+				index = index + 1;
+			end
+			commonlib.insertArrayItem(self.times, index, key_time);
+			commonlib.insertArrayItem(self.data, index, commonlib.clone(data));
+			self:SetRangeByIndex(1, 1, #(self.times));	
+		elseif(time) then
+			-- update existing one
+			self.data[time] = commonlib.clone(data);
+		end
+		return true;
+	end
+end
 
 -- remove the key frame at key_time if there is a key frame. 
 -- return true if deleted. 

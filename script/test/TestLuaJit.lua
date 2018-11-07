@@ -5,6 +5,7 @@ Date: 2013-11-23
 Desc: testing LuaJit and FFI
 -----------------------------------------------
 NPL.load("(gl)script/test/TestLuaJit.lua");
+TestJit.TestLocalVectorInArrays()
 TestJit.TestArrayMulti()
 TestJit.TestFFIArrays()
 -----------------------------------------------
@@ -20,7 +21,7 @@ local C = ffi.C;
 TestJit = {};
 
 
--- same performance
+-- same performance, and extremely fast
 function TestJit.TestFFIArrays()
 
 	--sparse array is also fine
@@ -39,6 +40,32 @@ function TestJit.TestFFIArrays()
 	end, 10, 100);
 
 	
+	npl_profiler.perf_dump_result()
+end
+
+-- same performance, and extremely fast
+-- INFO:VectorArrayWithoutLocalVariable:max_fps(inner):2041,avg(inner):0.000523000,fps(inner):1912cur_value=0.050000000, avg_value=0.052300000, count=10, fps=19, cfps=19, min_value=0.0490000, max_value=0.0680000
+-- INFO:VectorArrayUsingLocalVariable:max_fps(inner):2174,avg(inner):0.000495000,fps(inner):2020cur_value=0.048000000, avg_value=0.049500000, count=10, fps=20, cfps=20, min_value=0.0460000, max_value=0.0640000
+function TestJit.TestLocalVectorInArrays()
+	local triangles = ffi.new('struct Vector3[24]');
+
+	npl_profiler.perf_func("VectorArrayWithoutLocalVariable", function() 
+		for k=1, 20000 do
+			for i=0, 23 do
+				triangles[i].x, triangles[i].y, triangles[i].z = 0,0,0;
+			end
+		end
+	end, 10, 100);
+
+	npl_profiler.perf_func("VectorArrayUsingLocalVariable", function() 
+		for k=1, 20000 do
+			for i=0, 23 do
+				local triangle = triangles[i];
+				triangle.x, triangle.y, triangle.z = 0,0,0;
+			end
+		end
+	end, 10, 100);
+
 	npl_profiler.perf_dump_result()
 end
 

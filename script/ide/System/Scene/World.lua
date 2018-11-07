@@ -254,7 +254,7 @@ function World:CreateWorld(NewWorldpath, BaseWorldPath, bUseBaseWorldNPC, bClone
 		return false, "世界已经存在了, 如想重新创建, 请手工删除文件夹./"..commonlib.Encoding.DefaultToUtf8(NewWorldpath);
 	else
 		if(world:SetBaseWorldName(BaseWorldPath) ==  true) then
-			local sConfigFileName = ParaWorld.NewWorld(NewWorldpath, world.sBaseWorldCfgFile);
+			local sConfigFileName = ParaWorld.NewWorld(NewWorldpath.."/", world.sBaseWorldCfgFile);
 			if(sConfigFileName ~= "") then
 				world.sConfigFile = sConfigFileName;
 				-- copy the base world's attribute file to the newly created world.
@@ -373,10 +373,10 @@ function World:CreateWorld(NewWorldpath, BaseWorldPath, bUseBaseWorldNPC, bClone
 				--TODO: keep other info from the user.
 				return true;
 			else 
-				return false, "世界创建失败了。";
+				return false, L"世界创建失败了。";
 			end
 		else
-			return false, "被派生的世界不存在。";
+			return false, L"被派生的世界不存在。";
 		end
 	end
 end

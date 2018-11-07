@@ -1,7 +1,7 @@
 --[[
 Title: 
-Author(s): LiXizhi
-Date: 2015/4/29
+Author(s): LiPeng
+Date: 2017/10/3
 Desc: it handles HTML tags of <pe:pager> . 
 use the lib:
 ------------------------------------------------------------
@@ -150,6 +150,8 @@ function pe_pager:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	
 	-- just use the standard style to create the control	
 	--Map3DSystem.mcml_controls.pe_simple_styles.create(rootName, self, bindingContext, _parent, left, top, width, height, style, parentLayout);
+
+	pe_pager._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
 end
 
 -- previous page

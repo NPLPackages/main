@@ -1,7 +1,7 @@
 --[[
 Title: pe:treeview element
-Author(s): LiXizhi
-Date: 2016/7/19
+Author(s): LiPeng
+Date: 2017/10/3
 Desc: pe:treeview element
 
 ### `pe:treeview` tag
@@ -53,11 +53,11 @@ function pe_treenode:LoadComponent(parentElem, parentLayout, styleItem)
 	if(not _this) then
 		_this = TreeNode:new():init(parentElem);
 		self:SetControl(_this);
+	else
+		_this:SetParent(parentElem);
 	end
-	local buttonName = self:GetAttributeWithCode("name",nil,true);
-	_this:Connect("clicked", function()
-		self:OnClick(buttonName);
-	end);
+	self.buttonName = self:GetAttributeWithCode("name",nil,true);
+	_this:Connect("clicked", self, self.OnClick, "UniqueConnection");
 	PageElement.LoadComponent(self, _this, parentLayout, styleItem)
 end
 
@@ -131,14 +131,13 @@ function pe_treenode:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 --			end
 --		end
 --	end
+
+	pe_treenode._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
 end
 
 function pe_treenode:OnLoadComponentAfterChild(parentElem, parentLayout, css)
 	if(self.node and self.node.expandBtn and self.node.expandBtn.control) then
-		local buttonName = self:GetAttributeWithCode("name",nil,true);
-		self.node.expandBtn.control:Connect("clicked", function()
-			self:OnClick(buttonName);
-		end);
+		self.node.expandBtn.control:Connect("clicked", self, self.OnClick, "UniqueConnection");
 	end
 
 --	if(self.control and self.expandBtn) then
@@ -313,7 +312,7 @@ function pe_treenode:setChildrenVisible(visible)
 	end
 end
 
-function pe_treenode:OnClick(buttonName)
+function pe_treenode:OnClick()
 	
 	if(#self > 1) then
 		self.expanded = not self.expanded;
@@ -343,7 +342,7 @@ function pe_treenode:OnClick(buttonName)
 
 	local result;
 	if(onclick) then
-		result = self:DoPageEvent(onclick, buttonName, self)
+		result = self:DoPageEvent(onclick, self.buttonName, self)
 	end
 	return result;
 end

@@ -330,11 +330,12 @@ function Map3DSystem.App.WebBrowser.OnExec(app, commandName, params)
 		
 		if(params.filepath~=nil) then
 			local absPath;
-			if(string.match(params.filepath,":")) then
+			if(commonlib.Files.IsAbsolutePath(params.filepath)) then
 				absPath = params.filepath
 			else	
-				absPath = string.gsub(ParaIO.GetCurDirectory(0)..params.filepath, "/", "\\");
+				absPath = ParaIO.GetCurDirectory(0)..params.filepath;
 			end
+			absPath = commonlib.Files.ToCanonicalFilePath(absPath);
 			
 			if(absPath~=nil) then
 				if(not params.silentmode) then

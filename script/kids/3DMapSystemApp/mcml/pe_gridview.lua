@@ -442,7 +442,7 @@ function pe_gridview.DataBind(mcmlNode, pageInstName, bDoNotRefreshUI)
 	end	
 	local pagesize = tonumber(mcmlNode:GetAttributeWithCode("pagesize"));
 	local AllowPaging = mcmlNode:GetBool("AllowPaging");
-	local ItemsPerLine = mcmlNode:GetNumber("ItemsPerLine") or 1;
+	local ItemsPerLine = tonumber(mcmlNode:GetAttributeWithCode("ItemsPerLine", 1, true));
 
 	local ScrollToEnd = mcmlNode:GetBool("ScrollToEnd");
 	
@@ -548,21 +548,25 @@ function pe_gridview.DataBind(mcmlNode, pageInstName, bDoNotRefreshUI)
 					-- set row index and all other column data in the row 
 					-- so that in rowNode it can reference them via page scope Eval(), such as <%=Eval("index")%>
 					local envCode = format("index=%d", i);
-					local n, v;
+					
 					for n,v in pairs(mcmlNode.eval_names_) do
-						mcmlNode.eval_names_[n] = false;
+						if(n~="__index") then
+							mcmlNode.eval_names_[n] = false;
+						end
 					end
 					for n,v in pairs(row) do
-						mcmlNode.eval_names_[n] = true;
-						local typeV = type(v)
-						if(typeV == "number") then
-							envCode = format("%s\n%s=%s", envCode, n, tostring(v));
-						elseif(typeV == "string") then
-							envCode = string_format("%s\n%s=%q", envCode, n, v);
-						elseif(typeV == "boolean" or typeV == "nil") then
-							envCode = format("%s\n%s=%s", envCode, n, tostring(v));
-						elseif(typeV == "table") then
-							envCode = format("%s\n%s=%s", envCode, n, commonlib.serialize_compact(v));
+						if(n~="__index") then
+							mcmlNode.eval_names_[n] = true;
+							local typeV = type(v)
+							if(typeV == "number") then
+								envCode = format("%s\n%s=%s", envCode, n, tostring(v));
+							elseif(typeV == "string") then
+								envCode = string_format("%s\n%s=%q", envCode, n, v);
+							elseif(typeV == "boolean" or typeV == "nil") then
+								envCode = format("%s\n%s=%s", envCode, n, tostring(v));
+							elseif(typeV == "table") then
+								envCode = format("%s\n%s=%s", envCode, n, commonlib.serialize_compact(v));
+							end
 						end
 					end
 					for n,v in pairs(mcmlNode.eval_names_) do
@@ -570,6 +574,7 @@ function pe_gridview.DataBind(mcmlNode, pageInstName, bDoNotRefreshUI)
 							envCode = format("%s\n%s=nil", envCode, n);
 						end
 					end
+					
 					rowNode:SetPreValue("this", row);
 					-- set prescript attribute of pe:bindingblock
 					rowNode:SetAttribute("prescript", envCode);

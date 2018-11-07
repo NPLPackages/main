@@ -63,6 +63,7 @@ local Overlay = commonlib.inherit(commonlib.gettable("System.Core.ToolBase"), co
 
 Overlay:Property("Name", "Overlay");
 Overlay:Property({"enabled", true, "isEnabled", auto=true});
+Overlay:Property({"visible", true, "IsVisible", "SetVisible"});
 Overlay:Property({"EnableZPass", true});
 Overlay:Property({"ZPassOpacity", 0.2, "GetZPassOpacity", "SetZPassOpacity", auto=true});
 Overlay:Property({"EnablePicking", true});
@@ -71,6 +72,7 @@ Overlay:Property({"PickingRenderFrame", 0, auto=true});
 Overlay:Property({"m_hasMouseTracking", nil, "hasMouseTracking", "setMouseTracking", auto=true});
 Overlay:Property({"m_render_pass", false, });
 Overlay:Property({"m_position", nil, "getPosition", "setPosition"});
+Overlay:Property({"isSolid", nil, "IsSolid", "SetSolid"});
 -- always use camera position
 Overlay:Property({"UseCameraPos", false, "IsUseCameraPos", "SetUseCameraPos"});
 -- default to nil, which self:Tick() is not called. 
@@ -154,7 +156,26 @@ function Overlay:create_sys(native_scene_obj, x, y, z)
 		self:SetPickingRenderFrame(commonlib.TimerManager.GetCurrentTime())
 		self:handleRender();
 	end);
+
+	if(self:IsSolid()) then
+		self.native_scene_obj:SetField("transparent", false);
+	end
 end
+
+-- default to false. solid object is rendered before all transparent ones in the scene. 
+function Overlay:SetSolid(bIsSolid)
+	if(self.isSolid ~= bIsSolid) then
+		self.isSolid = bIsSolid;
+		if(self.native_scene_obj) then
+			self.native_scene_obj:SetField("transparent", not bIsSolid);
+		end
+	end
+end
+
+function Overlay:IsSolid()
+	return self.isSolid;
+end
+
 
 -- send key events to all child nodes
 function Overlay:handleKeyEvent(event)
@@ -163,6 +184,26 @@ function Overlay:handleKeyEvent(event)
 		local child = children:first();
 		while (child) do
 			child:handleKeyEvent(event);
+			if(event:isAccepted()) then
+				break;
+			end
+			child = children:next(child);
+		end
+	end
+	if(not event:isAccepted()) then
+		self:event(event);
+	end
+end
+
+-- we prefer to use handleKeyEvent (key down event) for processing key strokes.
+function Overlay:handleKeyReleaseEvent(event)
+	if(self.children) then
+		local children = self.children;
+		local child = children:first();
+		while (child) do
+			if(child.handleKeyReleaseEvent) then
+				child:handleKeyReleaseEvent(event);
+			end
 			if(event:isAccepted()) then
 				break;
 			end
@@ -208,6 +249,19 @@ function Overlay:Destroy()
 		self.native_scene_obj = nil;
 	end
 	Overlay._super.Destroy(self);
+end
+
+function Overlay:SetVisible(bVisible)
+	if(self.visible ~= bVisible) then
+		self.visible = bVisible;
+		if(self.native_scene_obj) then
+			self.native_scene_obj:SetVisible(bVisible==true);
+		end
+	end
+end
+
+function Overlay:IsVisible()
+	return self.visible;
 end
 
 -- called whenever an event comes. Subclass can overwrite this function. 
@@ -298,7 +352,10 @@ end
 
 -- @param paintFuncName: should be "paintEvent", "paintPickingEvent", "paintZPassEvent", etc.
 function Overlay:DoPaintRecursive(painter, paintFuncName)
-	self:PushLocalTransform(painter);
+	if(not self:IsVisible()) then
+		return
+	end
+	self:BeginPaint(painter);
 	self[paintFuncName](self, painter);
 	if(self.children) then
 		local children = self.children;
@@ -309,6 +366,16 @@ function Overlay:DoPaintRecursive(painter, paintFuncName)
 			child = children:next(child);
 		end
 	end
+	self:EndPaint(painter)
+end
+
+-- virtual function: setup transform for this and child overlays
+function Overlay:BeginPaint(painter)
+	self:PushLocalTransform(painter);
+end
+
+-- virtual function: setup transform for this and child overlays
+function Overlay:EndPaint(painter)
 	self:PopLocalTransform(painter);
 end
 
@@ -398,6 +465,12 @@ end
 -- picking name from the last picking result.
 function Overlay:GetActivePickingName()
 	return OverlayPicking:GetActivePickingName();
+end
+
+-- this number is increased by 1 everytime picking buffer is redrawn, 
+-- this is useful to decide if a pickingName is valid or associated with the current picking frame number
+function Overlay:GetPickingFrameNumber()
+	return OverlayPicking:GetPickingFrameNumber();
 end
 
 -- set position using the current camera position in the scene. 

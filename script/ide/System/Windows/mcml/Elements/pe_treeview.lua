@@ -1,7 +1,7 @@
 --[[
 Title: pe:treeview element
-Author(s): LiXizhi
-Date: 2016/7/19
+Author(s): LiPeng
+Date: 2017/10/3
 Desc: pe:treeview element
 
 ### `pe:treeview` tag
@@ -43,6 +43,7 @@ local pe_treeview = commonlib.inherit(commonlib.gettable("System.Windows.mcml.El
 pe_treeview:Property({"class_name", "pe:treeview"});
 
 function pe_treeview:ctor()
+	self.myLayout = nil;
 end
 
 function pe_treeview:LoadComponent(parentElem, parentLayout, styleItem)
@@ -52,6 +53,8 @@ function pe_treeview:LoadComponent(parentElem, parentLayout, styleItem)
 		_this:setHorizontalScrollBarPolicy("AlwaysOff");
 --		_this:setVerticalScrollBarPolicy("AlwaysOff");
 		self:SetControl(_this);
+	else
+		_this:SetParent(parentElem);
 	end
 	PageElement.LoadComponent(self, _this.viewport, parentLayout, styleItem)
 end
@@ -87,7 +90,7 @@ function pe_treeview:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 		_this:setVerticalScrollBarPolicy("AlwaysOff");
 	end
 
-	if(not css.background and not css.background2) then
+	if(not css.background and not css.background2 and css["background-color"]~="#ffffff00") then
 		if(css["background-color"]) then
 			css.background = "Texture/whitedot.png";	
 		else
@@ -115,6 +118,8 @@ function pe_treeview:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 		-- instantiate child nodes from data source 
 		self:DataBind(false);
 	end
+
+	pe_treeview._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
 end
 
 function pe_treeview:OnLoadComponentAfterChild(parentElem, parentLayout, css)
@@ -176,7 +181,16 @@ function pe_treeview:Rebuild(parentElem)
 	if(not parentElem and self.control) then
 		parentElem = self.control.viewport;
 	end
-	pe_treeview._super.Rebuild(self, parentElem);
+	--pe_treeview._super.Rebuild(self, parentElem);
+
+	local layout = self.myLayout:clone();
+	local css = self:GetStyle();
+
+	self:OnLoadChildrenComponent(parentElem, layout, css);
+
+	self:OnLoadComponentAfterChild(parentElem, layout, css);
+
+	self:UpdateChildLayout(layout);
 end
 
 function pe_treeview:SetDataSource(dataSource)
@@ -319,15 +333,34 @@ function pe_treeview:AllowWheel(canWheel)
 	end
 end
 
+function pe_treeview:ScrollToEnd()
+	if(self.control) then
+		self.control:scrollToEnd();
+	end	
+end
+
 function pe_treeview:scrollToChild(index)
-	local node = self[index];
-	local style = node:GetStyle();
 	if(self.control) then
 		self.control:scrollToPos(nil, self.DefaultNodeHeight * (index - 1));
 	end	
 end
 
+function pe_treeview:OnBeforeChildLayout(layout)
+	if(#self == 0) then
+		local myLayout = layout:new();
+		local css = self:GetStyle();
+		local width, height = layout:GetPreferredSize();
+		local padding_left, padding_top = css:padding_left(),css:padding_top();
+		myLayout:reset(padding_left,padding_top,width+padding_left, height+padding_top);
+		self.myLayout = myLayout;
+	end
+	return pe_treeview._super.OnBeforeChildLayout(self, layout);
+end
+
 function pe_treeview:UpdateChildLayout(layout)
+	if(not self.myLayout) then
+		self.myLayout = layout:clone();
+	end
 	pe_treeview._super.UpdateChildLayout(self, layout);
 	
 	local width, height = layout:GetUsedSize()

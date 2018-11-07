@@ -31,6 +31,7 @@ function OverlayPicking:CreatePickingBuffer_sys()
 end
 
 function OverlayPicking:ResetPickingName()
+	self.pickingFrameNumber = (self.pickingFrameNumber or 0) + 1;
 	self.next_picking_id = first_picking_name;
 end
 
@@ -40,14 +41,65 @@ function OverlayPicking:GetPickingCount()
 	return OverlayPicking._super.GetPickingCount(self);
 end
 
+
+-- this number is increased by 1 everytime picking buffer is redrawn, 
+-- this is useful to decide if a pickingName is valid or associated with the current picking frame number
+function OverlayPicking:GetPickingFrameNumber()
+	return self.pickingFrameNumber;
+end
+
+-- x, z direction vectors: east, south, west, north
+local xzDirectionsConst = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
+
 function OverlayPicking:GetPickingResult()
 	local nPickedId = 0; 
-	local result = OverlayPicking._super.GetPickingResult(self);
+	local result, nCount = OverlayPicking._super.GetPickingResult(self);
 	if(result) then
-		for i =1, #result do
-			if(result[i] ~= 0) then
-				nPickedId = result[i];
-				break;
+		local width, height = self:GetPickWidthHeight()
+		if(height>2 and width>2 and width==height) then
+			-- the one that is closest to center is tested first. 
+			-- we will add using a spiral rectangle path from the center. 
+			local nIndex = 0;
+			local dx = 0;
+			local dz = 0;
+			local nSize = nCount;
+			local width = math.floor(math.sqrt(nSize));
+			local cx,cz = math.floor(width/2), math.floor(width/2);
+			for length = 1, width do
+				for k = 1, 2 do
+					local dir = xzDirectionsConst[(nIndex % 4)+1];
+					nIndex = nIndex+1;
+					for i = 1, length do
+						dx = dx + dir[1];
+						dz = dz + dir[2];
+						local nIndex_ = (cx + dx) + (cz + dz)*width;
+						if(nIndex_ >= 0 and nIndex_<nSize and result[nIndex_] ~= 0) then
+							nPickedId = result[nIndex_];
+							self:SetActivePickingName(nPickedId);
+							return result;
+						end
+					end
+				end
+			end
+
+			nIndex = (nIndex % 4) + 1;
+			for length = 1, width do
+				dx = dx + xzDirectionsConst[nIndex][1];
+				dz = dz + xzDirectionsConst[nIndex][2];
+				local nIndex_ = (cx + dx) + (cz + dz)*width;
+				if(nIndex_ >= 0 and nIndex_<nSize and result[nIndex_] ~= 0) then
+					nPickedId = result[nIndex_];
+					self:SetActivePickingName(nPickedId);
+					return result;
+				end
+			end
+		else
+			-- brutal force search 
+			for i = 0, nCount-1 do
+				if(result[i] ~= 0) then
+					nPickedId = result[i];
+					break;
+				end
 			end
 		end
 	end

@@ -1,7 +1,7 @@
 --[[
 Title: gridview
-Author(s): LiXizhi
-Date: 2015/4/29
+Author(s): LiPeng
+Date: 2017/10/3
 Desc: it handles HTML tags of <gridview> . 
 use the lib:
 ------------------------------------------------------------
@@ -31,6 +31,8 @@ function pe_gridview:LoadComponent(parentElem, parentLayout, styleItem)
 	if(not _this) then
 		_this = GridView:new():init(parentElem);
 		self:SetControl(_this);
+	else
+		_this:SetParent(parentElem);
 	end
 	PageElement.LoadComponent(self, _this, parentLayout, styleItem)
 end
@@ -94,6 +96,8 @@ function pe_gridview:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	end
 
 	self:CreatePagerNode();
+
+	pe_gridview._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
 end
 
 function pe_gridview:OnLoadComponentAfterChild(parentElem, parentLayout, css)
@@ -105,6 +109,11 @@ function pe_gridview:OnLoadComponentAfterChild(parentElem, parentLayout, css)
 end
 
 function pe_gridview:CountHeight()
+	local css = self:GetStyle();
+	local css_height = css["height"];
+	if(not self.AllowPaging and css_height) then
+		return css_height;
+	end
 	local height = nil;
 	local pagesize = tonumber(self:GetAttributeWithCode("pagesize", nil, true));
 	if(pagesize) then
@@ -118,6 +127,8 @@ function pe_gridview:CountHeight()
 			end
 		end	
 		height = pagesize * nodeHeight;
+	else
+		height = css_height;
 	end
 	return height;
 end
@@ -233,6 +244,7 @@ function pe_gridview:CreateTreeViewNode()
 			cellPadding = string.match(cellPadding, "%d+");
 		end	
 		local attr={};
+		attr.style = "";
 		if(self.fitHeight) then
 			attr.style = format("max-height:%dpx;",self.fitHeight);
 		end
@@ -287,8 +299,16 @@ function pe_gridview:CreateTreeViewNode()
 	end
 end
 
+function pe_gridview:refreshDataSource()
+	local ds = self:GetAttributeWithCode("DataSource",nil,true);
+	self:resetDataSource(ds);
+end
+
 function pe_gridview:resetDataSource(dataSource)
 	self:SetAttribute("pageindex", 1);
+	if(self.treeview) then
+		self.treeview:ClearAllChildren();
+	end
 	self:SetDataSource(dataSource);
 	if(self.treeview) then
 		self.treeview:Rebuild();
@@ -359,8 +379,6 @@ function pe_gridview:DataBind(pageInstName)
 	local pagesize = tonumber(self:GetAttributeWithCode("pagesize", nil, true));
 	--local AllowPaging = self:GetBool("AllowPaging");
 	local ItemsPerLine = self:GetNumber("ItemsPerLine") or 1;
-
-	local ScrollToEnd = self:GetBool("ScrollToEnd");
 	
 	local columnsNode = self:GetChild("Columns");
 	if(columnsNode) then
@@ -470,21 +488,25 @@ function pe_gridview:DataBind(pageInstName)
 					-- set row index and all other column data in the row 
 					-- so that in rowNode it can reference them via page scope Eval(), such as <%=Eval("index")%>
 					local envCode = format("index=%d", i);
-					local n, v;
 					for n,v in pairs(self.eval_names_) do
-						self.eval_names_[n] = false;
+						if(n~="__index") then
+							self.eval_names_[n] = false;
+						end
 					end
 					for n,v in pairs(row) do
-						self.eval_names_[n] = true;
-						local typeV = type(v)
-						if(typeV == "number") then
-							envCode = format("%s\n%s=%s", envCode, n, tostring(v));
-						elseif(typeV == "string") then
-							envCode = format("%s\n%s=\"%s\"", envCode, n, v);
-						elseif(typeV == "boolean" or typeV == "nil") then
-							envCode = format("%s\n%s=%s", envCode, n, tostring(v));
-						elseif(typeV == "table") then
-							envCode = format("%s\n%s=%s", envCode, n, commonlib.serialize_compact(v));
+						if(n~="__index") then
+							self.eval_names_[n] = true;
+							local typeV = type(v)
+							if(typeV == "number") then
+								envCode = format("%s\n%s=%s", envCode, n, tostring(v));
+							elseif(typeV == "string") then
+								---v = string.gsub(v, "\r\n", "\\r\\n");
+								envCode = format("%s\n%s=\"%s\"", envCode, n, v);
+							elseif(typeV == "boolean" or typeV == "nil") then
+								envCode = format("%s\n%s=%s", envCode, n, tostring(v));
+							elseif(typeV == "table") then
+								envCode = format("%s\n%s=%s", envCode, n, commonlib.serialize_compact(v));
+							end
 						end
 					end
 					for n,v in pairs(self.eval_names_) do
@@ -565,18 +587,9 @@ end
 
 function pe_gridview:OnAfterChildLayout(layout, left, top, right, bottom)
 	pe_gridview._super.OnAfterChildLayout(self, layout, left, top, right, bottom);
-	if(self.AllowPaging and self.treeview) then
-		local nodeHeight = self.DefaultNodeHeight;
-		local cellPadding = self:GetAttribute("CellPadding");
-		if(cellPadding) then
-			cellPadding = tonumber(string.match(cellPadding, "%d+"));
-			if(cellPadding) then
-				--nodeHeight = nodeHeight + cellPadding * 2;
-				nodeHeight = nodeHeight + cellPadding;
-			end
-		end	
-		local height = self.pagesize * self.pagecount * nodeHeight;
-		self.treeview:setRealSize(nil, height);
+	local ScrollToEnd = self:GetBool("ScrollToEnd");
+	if(ScrollToEnd) then
+		self.treeview:ScrollToEnd();
 	end
 end
 

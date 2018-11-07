@@ -338,11 +338,27 @@ function PluginLoader:GetModsByQuery(query)
 	return mods;
 end
 
+function PluginLoader:HasNewerPlugin(displayName, version)
+	return self:HasSystemPlugin(displayName);
+end
+
+function PluginLoader:HasSystemPlugin(displayName)
+	for _, modItem in pairs(self.sysModList) do
+		if(modItem.displayName == displayName) then
+			return true;
+		end
+	end
+end
+
 -- enable a plugin for current world
 -- @param bAutoDisableOtherVersions: if true we will automatically disable other versions of the same plugin
 function PluginLoader:EnablePlugin(modname, bChecked, bAutoDisableOtherVersions)
 	local pluginConfig = self:GetPluginConfig(modname, bChecked == true);
 	if(pluginConfig) then
+		if(bChecked and self:HasSystemPlugin(pluginConfig:GetAttribute("displayName"))) then
+			return false;
+		end
+
 		pluginConfig:SetEnabled(self:GetWorldFilterName(), bChecked);
 		for i, item in ipairs(self.modList) do
 			if(item.name == modname) then
@@ -365,6 +381,7 @@ function PluginLoader:EnablePlugin(modname, bChecked, bAutoDisableOtherVersions)
 			end
 		end
 		self:contentChanged("pluginEnabled");
+		return bChecked;
 	end
 end
 

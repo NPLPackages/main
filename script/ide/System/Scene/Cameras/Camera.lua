@@ -7,7 +7,7 @@ use the lib:
 ------------------------------------------------------------
 NPL.load("(gl)script/ide/System/Scene/Cameras/Camera.lua");
 local Cameras = commonlib.gettable("System.Scene.Cameras");
-echo(Cameras.Current:GetViewMatrix());
+echo(Cameras:GetCurrent():GetViewMatrix());
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/System/Scene/Cameras/Cameras.lua");
@@ -15,6 +15,8 @@ NPL.load("(gl)script/ide/math/Matrix4.lua");
 NPL.load("(gl)script/ide/System/Windows/Screen.lua");
 NPL.load("(gl)script/ide/System/Windows/Mouse.lua");
 NPL.load("(gl)script/ide/math/ShapeRay.lua");
+NPL.load("(gl)script/ide/System/Scene/Viewports/ViewportManager.lua");
+local ViewportManager = commonlib.gettable("System.Scene.Viewports.ViewportManager");
 local ShapeRay = commonlib.gettable("mathlib.ShapeRay");
 local Mouse = commonlib.gettable("System.Windows.Mouse");
 local Screen = commonlib.gettable("System.Windows.Screen");
@@ -28,6 +30,7 @@ function Camera:ctor()
 	self.viewprojMatrix = Matrix4:new();
 	self.viewMatrix = Matrix4:new();
 	self.projMatrix = Matrix4:new();
+	self.fieldOfView = 60/180*3.1415926;
 end
 
 function Camera:activate()
@@ -46,7 +49,19 @@ function Camera:GetProjMatrix()
 	return self.projMatrix;
 end
 
--- pretty slow, get it and cache it. 
+function Camera:GetEyePosition()
+	return {0,0,0};
+end
+
+function Camera:GetRenderOrigin()
+	return {0,0,0};
+end
+
+function Camera:GetFieldOfView()
+	return self.fieldOfView;
+end
+
+-- pretty slow, get it and cache it. return mouse ray in current scene viewport
 -- @param mouse_x, mouse_y: if nil, default to current mouse position. 
 -- @param matWorld: if nil, it will simply return the ray in view space. 
 -- @return ShapeRay 
@@ -55,8 +70,9 @@ function Camera:GetMouseRay(mouse_x, mouse_y, matWorld)
 		mouse_x, mouse_y = Mouse:GetMousePosition();
 	end
 	local matProj = self:GetProjMatrix();
-
-	local screenWidth, screenHeight = Screen:GetWidth(), Screen:GetHeight()
+	local viewport = ViewportManager:GetSceneViewport();
+	mouse_x, mouse_y = mouse_x-viewport:GetLeft(), mouse_y-viewport:GetTop();
+	local screenWidth, screenHeight = Screen:GetWidth()-viewport:GetMarginRight(), Screen:GetHeight() - viewport:GetMarginBottom();
 	-- Compute the vector of the pick ray in screen space
 	local v = {
 		 ( ( ( 2.0 * mouse_x ) / screenWidth  ) - 1 ) / matProj[1],

@@ -54,6 +54,10 @@ local items = {
 --		background_down="Texture/Aries/Creator/Theme/GameCommonIcon_32bits.png;473 396 16 16:4 4 4 4",
 --		background_over="Texture/Aries/Creator/Theme/GameCommonIcon_32bits.png;496 400 1 1",
 	},
+	["pe:label"] = {
+		["padding-top"]=2,
+		["padding-bottom"]=2,
+	},
 	["pe:editbox"] = {
 		height=24, 
 		["min-width"]=10,

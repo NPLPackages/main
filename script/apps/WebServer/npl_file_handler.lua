@@ -178,9 +178,17 @@ local function filehandler(req, res, baseDir, nocache, BrowserCacheExpire)
 	end
 
 	res.headers["Content-Encoding"] = encodingfrompath(path)
-
 	
 	local pathLowered = string.lower(path);
+	local bAllowGZip;
+	local acceptEncoding = req.headers["Accept-Encoding"];
+	
+	if(acceptEncoding and acceptEncoding:match("gzip")) then
+		-- we will cache two copies for compressed and non-compressed file on demand. 
+		bAllowGZip = true;
+		pathLowered = pathLowered.."#gzip";
+	end
+
 	local memItem = MemCache():get(pathLowered);
 	if(memItem and memItem.size == fileInfo.size and fileInfo.modification == memItem.modification) then
 		-- fetch from cache
@@ -214,14 +222,16 @@ local function filehandler(req, res, baseDir, nocache, BrowserCacheExpire)
 			if(not nocache and fileInfo.size < maxCachedFileSize) then
 				data = file:GetText(0, -1);
 				-- try compress the file before it is saved in mem cache
-				if(fileInfo.size >= minCompressSize and res:isContentTypePlainText(res.headers["Content-Type"]) and not res.headers["Content-Encoding"]) then
-					local acceptEncoding = req.headers["Accept-Encoding"];
-					if(acceptEncoding and acceptEncoding:match("gzip")) then
-						local dataIO = {content=data, method="gzip"};
-						if(NPL.Compress(dataIO)) then
+				if(bAllowGZip and fileInfo.size >= minCompressSize and res:isContentTypePlainText(res.headers["Content-Type"]) and not res.headers["Content-Encoding"]) then
+					local dataIO = {content=data, method="gzip"};
+					if(NPL.Compress(dataIO)) then
+						-- only use compression when compressed size is smaller, this will skip file that is already compressed. 
+						if(#(dataIO.result) <= (#data + 100) ) then 
 							res.headers["Content-Encoding"] = "gzip";
 							data = dataIO.result;
 							res.headers["Content-Length"] = #(data);
+						else
+							LOG.std(nil, "warn", "npl_file_handler", "file: %s gzip is skipped because it may already be a zipped file.", pathLowered);
 						end
 					end
 				end
@@ -292,6 +302,7 @@ function WebServer.filehandler(baseDir)
 			baseDir = baseDir .. "/";
 		end
 	end
+	
 	return function(req, res)
 		local baseDir_ = baseDir;
 		if(bReplaceWorldDir) then

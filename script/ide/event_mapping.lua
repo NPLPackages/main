@@ -536,6 +536,28 @@ render_tech = {
 	TECH_SHADOWMAP_BLUR = AutoEnum(),
 	--  GUI rendering
 	TECH_GUI = AutoEnum(),
+	-- vertex declaration is POSITION | NORMAL | TEXCord1, 
+	TECH_SIMPLE_MESH_NORMAL_BORDER = AutoEnum(),
+	-- vertex declaration is POSITION | NORMAL | TEXCord1, these are usually for static meshes. For (CMeshObject) whose asset ParaX file contains the normal data.
+	TECH_SIMPLE_CAD_MODEL = AutoEnum(),
+	-- 
+	TECH_SIMPLE_DROPSHADOW = AutoEnum(),
+	-- screen water wave effect shader
+	TECH_SCREEN_WAVE = AutoEnum(),
+	-- block rendering
+	TECH_BLOCK = AutoEnum(),
+	-- rendering cloud ocean
+	TECH_OCEAN_CLOUD = AutoEnum(),
+	-- render fancy blocks
+	TECH_BLOCK_FANCY = AutoEnum(),
+	-- single color: POSITION | COLOR
+	TECH_SINGLE_COLOR = AutoEnum(),
+	-- text effect
+	TECH_GUI_TEXT = AutoEnum(),
+	-- block max model
+	TECH_BMAX_MODEL = AutoEnum(),
+	-- for external unknown effect. 
+	TECH_UNKNOWN = AutoEnum(),
 };
 
 -- system events
@@ -550,6 +572,8 @@ Sys_Event = {
 	SYS_WM_DESTROY = AutoEnum(),
 	-- such as the slate or dock mode is changing under win8. 
 	SYS_WM_SETTINGCHANGE = AutoEnum(),
+	--
+	SYS_RENDERER_RECREATED = AutoEnum(),
 };
 
 -- NPL return code. it is also the NPL network event code

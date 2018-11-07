@@ -11,6 +11,7 @@ commonlib.Debugger.HTTPDebugger.Start("127.0.0.1",8099,true);
 ]]
 if(is_ajax())then
 	local action = request:get("action") or "";
+	local result = {};
 	NPL.load("(gl)script/ide/Debugger/HTTPDebugger.lua");
 	local HTTPDebugger = commonlib.gettable("commonlib.Debugger.HTTPDebugger");
     local targetFile = "script/ide/Debugger/HTTPDebugger.lua";
@@ -47,6 +48,20 @@ if(is_ajax())then
 	if(action == "removebreakpoint")then
 		NPL.activate(targetFile, {filename="delb", code={filename=request:get("filename"), line=tonumber(request:get("line"))}});
 	end
+	if(action == "getdirectories")then
+		result.currentDir = ParaIO.GetCurDirectory(0);
+		result.devDir = commonlib.Files.GetDevDirectory();
+	end
+	if(action == "setmainloop")then
+		local bootstrapper = request:get("bootstrapper");
+		if(bootstrapper) then
+			ParaGlobal.SetGameLoop(bootstrapper);
+			LOG.std(nil, "info", "mainloop", "main loop changed to %s", bootstrapper);
+		end
+	end
+	if(action == "exitapp")then
+		ParaGlobal.Exit(1);
+	end
 	if(action == "poll_msg")then
 		local output = {msgs={}};
 		local output_queue = HTTPDebugger.GetOutputMsgList();
@@ -57,7 +72,8 @@ if(is_ajax())then
 		end
         wp_send_json(output, true);
 	else
-		echo("rsp:"..action);
+		result.action = action;
+		wp_send_json(result, true);
 	end
     return;
 end

@@ -13,8 +13,11 @@ if(not WP_USE_MINI_LOADER) then
 	include_once( ABSPATH .. '/wp-load.page' );
 end
 
+-- allow cross-domain from any domain
+add_filter( 'http_origin', function(origin) return "*" end);
+
 -- Allow for cross-domain requests (from the frontend). 
-send_origin_headers();
+send_origin_headers(true);
 
 -- Require an action parameter, default to page name
 local action = request:get('action') or wp_query:pagename();

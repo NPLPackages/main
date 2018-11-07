@@ -186,11 +186,10 @@ function ObjEditor.CreateObjectByParams(param)
 		-- create static model 
 		local asset;
 		
-		local asset;
 		if(type(param.AssetFile) == "string") then
 			asset = ParaAsset.LoadStaticMesh("", param.AssetFile);
 		else
-			asset = param.AssetFile
+			asset = param.AssetFile;
 		end	
 		
 		if((asset == nil) or (asset:IsValid()==false))then
@@ -217,13 +216,9 @@ function ObjEditor.CreateObjectByParams(param)
 		end
 		
 		if(obj:IsValid()) then
-			if(param.ReplaceableTextures and obj:GetNumReplaceableTextures()>0) then
-				local i;
-				for i=1, obj:GetNumReplaceableTextures() do
-					local filename = param.ReplaceableTextures[i];
-					if(filename and filename~="") then
-						obj:SetReplaceableTexture(i-1, ParaAsset.LoadTexture("",filename,1));
-					end	
+			if(param.ReplaceableTextures) then
+				for i, filename in pairs(param.ReplaceableTextures) do
+					obj:SetReplaceableTexture(i-1, ParaAsset.LoadTexture("",filename,1));
 				end
 			end
 			
@@ -244,6 +239,7 @@ function ObjEditor.CreateObjectByParams(param)
 				obj:SetField("persistent", false); 
 			end
 		else
+			--LOG.std(nil, "info", "object_editor", "failed to load model: %s", tostring(param.AssetFile));
 			ObjEditor.LastErrorMessage ="unable to create mesh physics object\n";
 			return
 		end

@@ -28,6 +28,8 @@ NPL.load("(gl)script/ide/System/Windows/Mouse.lua");
 NPL.load("(gl)script/ide/System/Core/Event.lua");
 NPL.load("(gl)script/ide/math/Point.lua");
 NPL.load("(gl)script/ide/gui_helper.lua");
+NPL.load("(gl)script/ide/System/Core/SceneContextManager.lua");
+local SceneContextManager = commonlib.gettable("System.Core.SceneContextManager");
 local Point = commonlib.gettable("mathlib.Point");
 local Event = commonlib.gettable("System.Core.Event");
 local SizeEvent = commonlib.gettable("System.Windows.SizeEvent");
@@ -37,17 +39,21 @@ local Application = commonlib.gettable("System.Windows.Application");
 local UIElement = commonlib.gettable("System.Windows.UIElement");
 local KeyEvent = commonlib.gettable("System.Windows.KeyEvent");
 local MouseEvent = commonlib.gettable("System.Windows.MouseEvent");
+local FocusPolicy = commonlib.gettable("System.Core.Namespace.FocusPolicy");
 local Window = commonlib.inherit(commonlib.gettable("System.Windows.UIElement"), commonlib.gettable("System.Windows.Window"));
 
 Window:Property("Name", "Window");
 Window:Property({"AutoClearBackground", true, nil, "SetAutoClearBackground"});
 Window:Property({"CanDrag", false, auto=true});
 Window:Property({"Alignment", "_lt", auto=true});
+Window:Property({"InputMethodEnabled", true, "IsInputMethodEnabled", "SetInputMethodEnabled", auto=true});
+
 Window:Signal("urlChanged", function(url) end)
 
 function Window:ctor()
 	self.window = self;
 	self:setAttribute("WA_AlwaysShowToolTips", true);
+	self:setFocusPolicy(FocusPolicy.TabFocus);
 end
 
 -- show and bind to a new ParaUI control object to receive events from. 
@@ -233,7 +239,20 @@ function Window:create_sys(native_window, initializeWindow, destroyOldWindow)
 		self:handleMouseEnterLeaveEvent(MouseEvent:init("mouseEnterEvent", self));
 	end);
 	_this:SetScript("onkeydown", function()
-		Application:sendEvent(self:focusWidget(), KeyEvent:init("keyPressEvent"));
+		local event = KeyEvent:init("keyPressEvent")
+		
+		self:HandlePagePressKeyEvent(event);
+
+		if(not event:isAccepted()) then
+			Application:sendEvent(self:focusWidget(), event);
+		end
+
+		if(not event:isAccepted()) then
+			local context = SceneContextManager:GetCurrentContext();
+			if(context) then
+				context:handleKeyEvent(event);
+			end
+		end
 	end);
 	_this:SetScript("onkeyup", function()
 		Application:sendEvent(self:focusWidget(), KeyEvent:init("keyReleaseEvent"));
@@ -244,6 +263,14 @@ function Window:create_sys(native_window, initializeWindow, destroyOldWindow)
 	_this:SetScript("onactivate", function()
 		local isActive = (param1 and param1>0);
 		self:handleActivateEvent(isActive);
+	end);
+	_this:SetScript("onfocusin", function()
+		self:handleActivateEvent(true);
+	end);
+	_this:SetScript("onfocusout", function()
+		if(self:focusWidget() and self:focusWidget():hasFocus()) then
+			self:handleActivateEvent(false);
+		end
 	end);
 	_this:SetScript("ondestroy", function()
 		self:handleDestroy_sys();
@@ -315,6 +342,10 @@ function Window:UpdateGeometry_Sys()
 	if(self:width() ~= width or self:height() ~= height) then
 		self:setGeometry(self.screen_x, self.screen_y, width, height);
 	end
+end
+
+function Window:GetScreenPos()
+	return self.screen_x, self.screen_y;
 end
 
 function Window:setGeometry_sys(ax, ay, aw, ah)
@@ -402,9 +433,16 @@ function Window:SetFocus_sys()
 			-- enable key focus only once
 			self.CanHaveFocus = true;
 			self.native_ui_obj:SetField("CanHaveFocus", self.CanHaveFocus); 
-			self.native_ui_obj:SetField("InputMethodEnabled", self.CanHaveFocus); 
+			self.native_ui_obj:SetField("InputMethodEnabled", self.CanHaveFocus and self:IsInputMethodEnabled()); 
 		end
 		self.native_ui_obj:Focus();
+	end
+end
+
+function Window:SetInputMethodEnabled(bEnabled)
+	self.InputMethodEnabled = bEnabled;
+	if(self.native_ui_obj) then
+		self.native_ui_obj:SetField("InputMethodEnabled", bEnabled==true); 
 	end
 end
 
@@ -538,4 +576,30 @@ function Window:mouseReleaseEvent(event)
 		event:accept();
 	end
 	self.isMouseDown = nil;
+end
+
+function Window:SetEnabled(enabled)
+	self.enabled = enabled;
+	if(self.native_ui_obj) then
+		self.native_ui_obj.enabled = enabled;
+	end
+end
+
+function Window:isEnabled()
+	return self.enabled;
+end
+
+function Window:Page()
+	if(self.layout) then
+		return self.layout:GetPage();
+	end
+end
+
+function Window:HandlePagePressKeyEvent(event)
+	local page = self:Page();
+	if(page) then
+		if(page:HandlKeyPressEvent(event:KeyName())) then
+			event:accept();
+		end
+	end
 end

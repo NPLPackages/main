@@ -3,7 +3,7 @@ Title: displaying head on speech on character
 Author(s): LiXizhi
 Date: 2006/9/5
 Desc: global AI related functions.
-Use Lib: For displaying head on speech on character, 
+Use Lib: For displaying head on speech on character,
 -------------------------------------------------------
 NPL.load("(gl)script/ide/headon_speech.lua");
 headon_speech.Speek("<player>", "Hello World", 5);
@@ -33,7 +33,7 @@ local asset_mapping = {
 	["aries_walk_point_teen"] = "character/common/walk_point/walk_point_teen.x",
 }
 
--- a mapping from ID to name, so that we can prevent text to be attached twice to the same 3D object. 
+-- a mapping from ID to name, so that we can prevent text to be attached twice to the same 3D object.
 local IDNameMap = {};
 -- id and their last use time
 local IDUsedTime = {};
@@ -41,7 +41,7 @@ local IDUsedTime = {};
 local headon_speech = commonlib.createtable("headon_speech", {
 	-- how many concurrent speech dialog can be displayed in the screen.
 	MaxConcurrentSpeech = 10,
-	-- the next blank ID. 
+	-- the next blank ID.
 	nNextID = 1,
 	-- ParaAssets, such as ParaX models which are attached to the head of the character.
 	Assets={},
@@ -51,26 +51,26 @@ local headon_speech = commonlib.createtable("headon_speech", {
 	log = {},
 	-- maximum number of speech log, that is kept in memory.
 	MaxLogSize = 20,
-	-- whether we will prolong the headon text life time, when mouse is over it. 
+	-- whether we will prolong the headon text life time, when mouse is over it.
 	ProlongLifeTimeWhenMouseOver = false,
 	-- next blank log index
 	NextBlankLogIndex = 1,
-	
+
 	-- dialog background
 	dialog_bg = "Texture/Aries/HeadOn/head_speak_bg_32bits.png;0 0 128 62:24 20 64 41",
-	
-	-- max width of the dialog. if text is long, it will wrap. 
+
+	-- max width of the dialog. if text is long, it will wrap.
 	max_width = 200,
-	-- min width of the dialog. if text is few, it will enlarge. 
+	-- min width of the dialog. if text is few, it will enlarge.
 	min_width = 80,
 	-- max height
 	max_height = 200,
-	-- one line text height. 
+	-- one line text height.
 	min_height = 20,
 	padding = 10,
 	padding_bottom = 32,
 	-- default text font,
-	default_font = "System;12;", 
+	default_font = "System;12;",
 	-- font color
 	text_color = "79 125 187",
 	-- pixel distance from dialog image to head of character
@@ -112,12 +112,12 @@ end
 local lifetime_timer;
 local monitored_items = {};
 local function MonitorUILifeTime(uiobject, lifetime, ProlongLifeTimeWhenMouseOver)
-	if(not uiobject or not lifetime or lifetime<=0) then 
-		return 
+	if(not uiobject or not lifetime or lifetime<=0) then
+		return
 	end
 	local id = uiobject.id;
 	monitored_items[id] = {start_time = commonlib.TimerManager.GetCurrentTime(), lifetime = lifetime, is_mouseover_reset = ProlongLifeTimeWhenMouseOver}
-	
+
 	if(not lifetime_timer) then
 		lifetime_timer = commonlib.Timer:new({callbackFunc = function()
 			local remove_map;
@@ -161,19 +161,32 @@ local function MonitorUILifeTime(uiobject, lifetime, ProlongLifeTimeWhenMouseOve
 end
 
 
---[[ display a simple 3D text on the head of a given character for a given seconds. 
-@param charName: character name or the object itself, to which the text is attached.it first searches the global object, if not found, it will search the OPC list.  
+function headon_speech.SpeakClear(charName)
+	if(type(charName) == "userdata") then
+		charName = tostring(charName.id);
+	end
+	-- we will force using an existing ID, if the charName has been attached before.
+	for i = 1, headon_speech.MaxConcurrentSpeech do
+		if(IDNameMap[i] == charName) then
+			local sCtrlName = headon_speech.GetNextSpeechGUIName(i);
+			ParaUI.Destroy(sCtrlName);
+		end
+	end
+end
+
+--[[ display a simple 3D text on the head of a given character for a given seconds.
+@param charName: character name or the object itself, to which the text is attached.it first searches the global object, if not found, it will search the OPC list.
 @param text: the text to be displayed on the head of the character. if nil, displays nothing. if it is pure text, it will displayed using centered text control
 or it may contains any static MCML tags, in which case it will be rendered as interactive mcml elements. such as "<a>href links</a>"
-@param nLifeTime: number of seconds the text maintains on the head of the character. if -1, it will be permanent. if 0 and text is "", it will remove head on text. 
-@param bAbove3D: default to nil, if true, headon UI will be displayed above all 3D objects. if false or nil, it just renders the UI with z buffer test enabled. 
-@param bHideBG: if true, it will hide background image. default to nil. 
+@param nLifeTime: number of seconds the text maintains on the head of the character. if -1, it will be permanent. if 0 and text is "", it will remove head on text.
+@param bAbove3D: default to nil, if true, headon UI will be displayed above all 3D objects. if false or nil, it just renders the UI with z buffer test enabled.
+@param bHideBG: if true, it will hide background image. default to nil.
 @param bNoneOverwrite: default to nil. if true, it will not overwrite the previous UI object attached to the same charName.  This is only valid when nLifeTime is specified and larger than 0.
 @param zorder: default to -1
-@param bg_color: default to nil. which is the original color. it can also be "#ffffff80", etc. 
+@param bg_color: default to nil. which is the original color. it can also be "#ffffff80", etc.
 @return: the headon display ui control name, sCtrlName
 ]]
-function headon_speech.Speak(charName, text, nLifeTime, bAbove3D, bHideBG, bNoneOverwrite, zorder, bg_color, margin_bottom)
+function headon_speech.Speak(charName, text, nLifeTime, bAbove3D, bHideBG, bNoneOverwrite, zorder, bg_color, margin_bottom, dialog_bg)
 	if(text == nil) then
 		return;
 	end
@@ -188,27 +201,27 @@ function headon_speech.Speak(charName, text, nLifeTime, bAbove3D, bHideBG, bNone
 		LOG.warn("%s does not exist when calling headon_speech.Speek", charName);
 		return
 	end
-	
+
 	local _this, _parent, i, nForceID;
 
 	-- add to log
 	if(bLog)then
 		headon_speech.AddLog(charName, text);
-	end	
+	end
 
-	
-	-- check distance	
-	if(obj:DistanceToCameraSq() > headon_speech.MaxDisplayDistSQ) then 
+
+	-- check distance
+	if(obj:DistanceToCameraSq() > headon_speech.MaxDisplayDistSQ) then
 		return
 	end
 	if(bNoneOverwrite) then
-		 if(not nLifeTime or nLifeTime<=0) then	
+		 if(not nLifeTime or nLifeTime<=0) then
 			bNoneOverwrite = nil;
 		 end
 	end
 	if(not bNoneOverwrite) then
 		-- we will force using an existing ID, if the charName has been attached before.
-		for i = 1, headon_speech.MaxConcurrentSpeech do 
+		for i = 1, headon_speech.MaxConcurrentSpeech do
 			if(IDNameMap[i] == charName) then
 				nForceID = i;
 				break;
@@ -221,17 +234,17 @@ function headon_speech.Speak(charName, text, nLifeTime, bAbove3D, bHideBG, bNone
 			IDNameMap[headon_speech.nNextID] = charName;
 		end
 	end
-	
+
 	local width, height;
 	-- always destroy the control, if the background and padding are reset
 	ParaUI.Destroy(sCtrlName);
-	
+
 	if(not string.match(text, "<.+>") or not Map3DSystem and Map3DSystem.mcml_controls) then
 		local textWidth = _guihelper.GetTextWidth(text, headon_speech.default_font)+6;
 		if(textWidth>headon_speech.max_width) then
 			width = headon_speech.max_width
 			height = headon_speech.min_height + (math.ceil(textWidth/headon_speech.max_width)-1)*16;
-			
+
 			if(height > headon_speech.max_height) then
 				height = headon_speech.max_height;
 			end
@@ -241,19 +254,19 @@ function headon_speech.Speak(charName, text, nLifeTime, bAbove3D, bHideBG, bNone
 		end
 		width = width + headon_speech.padding*2
 		height = height + headon_speech.padding + headon_speech.padding_bottom
-	
+
 		-- create the control if not exists
 		_parent=ParaUI.CreateUIObject("container",sCtrlName,"_lt",-width/2,-height-headon_speech.margin_bottom,width, height);
 		if(not bHideBG) then
-			_parent.background=headon_speech.dialog_bg;
+			_parent.background=dialog_bg or headon_speech.dialog_bg;
 			if(bg_color) then
 				_guihelper.SetUIColor(_parent, bg_color)
 			end
-		else	
+		else
 			_parent.background = "";
-		end	
+		end
 		_parent.zorder = zorder or -1;
-		
+
 		_this=ParaUI.CreateUIObject("button","text","_fi",headon_speech.padding,headon_speech.padding,headon_speech.padding, headon_speech.padding_bottom);
 		_this.text = text;
 		_this.font=headon_speech.default_font;
@@ -261,7 +274,7 @@ function headon_speech.Speak(charName, text, nLifeTime, bAbove3D, bHideBG, bNone
 		_this.background = "";
 		_guihelper.SetUIFontFormat(_this, 21) -- centered and with word break
 		_parent:AddChild(_this);
-		
+
 		_parent.lifetime = nLifeTime;
 		MonitorUILifeTime(_parent, nLifeTime, headon_speech.ProlongLifeTimeWhenMouseOver);
 
@@ -269,9 +282,9 @@ function headon_speech.Speak(charName, text, nLifeTime, bAbove3D, bHideBG, bNone
 			_parent.zdepth = 0;
 		end
 		_parent:AttachTo3D(obj);
-		
-		-- disable parent for performance. 
-		_parent.enabled = false; 
+
+		-- disable parent for performance.
+		_parent.enabled = false;
 	else
 		-- text = "<img style=\"margin-bottom:10px;width:128px;height:128px;background:Texture/Aries/Temp/Quest4.png;\" />";
 		-- text = [[<div style="margin-bottom:10px;width:128px;height:64px;color:#00FF00;background:url(Texture/Aries/Temp/Quest4.png)" >hello</div>]]
@@ -296,19 +309,19 @@ function headon_speech.Speak(charName, text, nLifeTime, bAbove3D, bHideBG, bNone
 
 				width = math.max(headon_speech.min_width, usedWidth);
 				height = math.max(headon_speech.min_height, usedHeight);
-				
+
 				width = width + headon_speech.padding * 2;
 				height = height + headon_speech.padding + headon_speech.padding_bottom;
 
 				local _parent =ParaUI.CreateUIObject("container",sCtrlName,"_lt",-width/2,-height - (margin_bottom or headon_speech.margin_bottom),width, height);
 				if(not bHideBG) then
-					_parent.background=headon_speech.dialog_bg;
+					_parent.background=dialog_bg or headon_speech.dialog_bg;
 					if(bg_color) then
 						_guihelper.SetUIColor(_parent, bg_color)
 					end
 				else
 					_parent.background = "";
-				end	
+				end
 				_parent.zorder = zorder or -1;
 				_parent.lifetime = nLifeTime;
 				MonitorUILifeTime(_parent, nLifeTime, headon_speech.ProlongLifeTimeWhenMouseOver);
@@ -318,8 +331,8 @@ function headon_speech.Speak(charName, text, nLifeTime, bAbove3D, bHideBG, bNone
 				_parent:AttachTo3D(obj);
 				_parent:AddChild(_this);
 
-				-- enable parent since it may contain interactive content. 
-				-- _parent.enabled = true; 
+				-- enable parent since it may contain interactive content.
+				-- _parent.enabled = true;
 			end
 		else
 			LOG.std(nil, "warn", "headon_speech", "invalid mcml text %s", text);
@@ -338,7 +351,7 @@ function headon_speech.GetBoldTextMCML(text)
 	end
 end
 
--- if mouse cursor is over the control, we will prolong the life time 5 seconds each time. 
+-- if mouse cursor is over the control, we will prolong the life time 5 seconds each time.
 function headon_speech.OnDialogBoxFrameMove(sCtrlName)
 	local _parent = ParaUI.GetUIObject(sCtrlName);
 	if(_parent:IsValid() and _parent.visible) then
@@ -353,7 +366,7 @@ function headon_speech.OnDialogBoxFrameMove(sCtrlName)
 end
 
 local last_time = 1;
--- [private]get next free speech GUI name, auto increase the ID. 
+-- [private]get next free speech GUI name, auto increase the ID.
 -- @param nid: if nil, headon_speech.nNextID is used.
 function headon_speech.GetNextSpeechGUIName(nid)
 	last_time = last_time + 1;
@@ -384,14 +397,14 @@ function headon_speech.GetAsset(key)
 			headon_speech.Assets[key] = asset;
 		else
 			commonlib.log("warning: headon_speech asset %s not found \n", tostring(key))
-		end	
-	end	
+		end
+	end
 	return asset;
 end
 
 --[[
 change the models which are displayed on the head of the given character
-@param charName: If nil or "", it is current player. the character on whose head the model is attached.it first searches the global object, if not found, it will search the OPC list.  
+@param charName: If nil or "", it is current player. the character on whose head the model is attached.it first searches the global object, if not found, it will search the OPC list.
 @param markName: the mark name, such as "arrow", "quest", "claim", "summon". It should be a field in headon_speech.Assets.
 	if this is nil or "", the mark is removed from the head of the character.
 ]]
@@ -402,7 +415,7 @@ function headon_speech.ChangeHeadMark(charName, markName)
 	else
 		player = ParaScene.GetCharacter(charName);
 	end
-	
+
 	if(player:IsValid()==true)then
 		player:ToCharacter():RemoveAttachment(11);
 		if(markName~=nil and markName~="") then
@@ -419,7 +432,7 @@ function headon_speech.ChangeHeadUITemplate(obj, text, nLifeTime, bAbove3D, bHid
 	if(text == nil) then
 		return;
 	end
-	
+
 	if(type(obj) == "string") then
 		obj = ParaScene_GetObject(obj);
 	end
@@ -428,16 +441,16 @@ function headon_speech.ChangeHeadUITemplate(obj, text, nLifeTime, bAbove3D, bHid
 		return
 	end
 	local charName = obj.name;
-	
+
 	local _this, _parent, i, nForceID;
-	
-	-- check distance	
-	if(obj:DistanceToCameraSq() > headon_speech.MaxDisplayDistSQ) then 
+
+	-- check distance
+	if(obj:DistanceToCameraSq() > headon_speech.MaxDisplayDistSQ) then
 		return
 	end
 
 	-- we will force using an existing ID, if the charName has been attached before.
-	for i = 1, headon_speech.MaxConcurrentSpeech do 
+	for i = 1, headon_speech.MaxConcurrentSpeech do
 		if(IDNameMap[i] == charName) then
 			nForceID = i;
 			break;
@@ -447,18 +460,18 @@ function headon_speech.ChangeHeadUITemplate(obj, text, nLifeTime, bAbove3D, bHid
 	if(nForceID==nil) then
 		IDNameMap[headon_speech.nNextID] = charName;
 	end
-	
+
 	local width, height;
 	-- always destroy the control, if the background and padding are reset
 	ParaUI.Destroy(sCtrlName);
-	
+
 	nLifeTime = nLifeTime or 4;
 	if(not string.match(text, "<.+>") or not Map3DSystem and Map3DSystem.mcml_controls) then
 		local textWidth = _guihelper.GetTextWidth(text, headon_speech.default_font)+6;
 		if(textWidth>headon_speech.max_width) then
 			width = headon_speech.max_width
 			height = headon_speech.min_height + (math.ceil(textWidth/headon_speech.max_width)-1)*16;
-			
+
 			if(height > headon_speech.max_height) then
 				height = headon_speech.max_height;
 			end
@@ -468,17 +481,17 @@ function headon_speech.ChangeHeadUITemplate(obj, text, nLifeTime, bAbove3D, bHid
 		end
 		width = width + headon_speech.padding*2
 		height = height + headon_speech.padding + headon_speech.padding_bottom
-	
+
 		-- create the control if not exists
 		_parent=ParaUI.CreateUIObject("container",sCtrlName,"_lt",-width/2,-height-headon_speech.margin_bottom,width, height);
 		if(not bHideBG) then
 			_parent.background=headon_speech.dialog_bg;
-		else	
+		else
 			_parent.background = "";
-		end	
-		
+		end
+
 		_parent.zorder = -1;
-		
+
 		_this=ParaUI.CreateUIObject("button","text","_fi",headon_speech.padding,headon_speech.padding,headon_speech.padding, headon_speech.padding_bottom);
 		_this.text = text;
 		_this.font=headon_speech.default_font;
@@ -486,16 +499,16 @@ function headon_speech.ChangeHeadUITemplate(obj, text, nLifeTime, bAbove3D, bHid
 		_this.background = "";
 		_guihelper.SetUIFontFormat(_this, 21) -- centered and with word break
 		_parent:AddChild(_this);
-		
+
 		_parent.lifetime = nLifeTime;
 		MonitorUILifeTime(_parent, nLifeTime, headon_speech.ProlongLifeTimeWhenMouseOver);
 		if(bAbove3D) then
 			_parent.zdepth = 0;
 		end
 		_parent:AttachTo3D(obj);
-		
-		-- disable parent for performance. 
-		_parent.enabled = false; 
+
+		-- disable parent for performance.
+		_parent.enabled = false;
 	else
 		-- text = "<img style=\"margin-bottom:10px;width:128px;height:128px;background:Texture/Aries/Temp/Quest4.png;\" />";
 		-- text = [[<div style="margin-bottom:10px;width:128px;height:64px;color:#00FF00;background:url(Texture/Aries/Temp/Quest4.png)" >hello</div>]]
@@ -508,7 +521,7 @@ function headon_speech.ChangeHeadUITemplate(obj, text, nLifeTime, bAbove3D, bHid
 			local mcmlNode = xmlRoot[1];
 			if(mcmlNode) then
 				height, width = headon_speech.max_width, headon_speech.max_height;
-				
+
 				_this = ParaUI.CreateUIObject("container", "mcml", "_fi", headon_speech.padding, headon_speech.padding, headon_speech.padding, headon_speech.padding_bottom);
 				--_this.background = "Texture/alphadot.png";
 				_this.background = "";
@@ -522,7 +535,7 @@ function headon_speech.ChangeHeadUITemplate(obj, text, nLifeTime, bAbove3D, bHid
 
 				width = math.max(headon_speech.min_width, usedWidth);
 				height = math.max(headon_speech.min_height, usedHeight);
-				
+
 				width = width + headon_speech.padding * 2;
 				height = height + headon_speech.padding + headon_speech.padding_bottom;
 
@@ -531,7 +544,7 @@ function headon_speech.ChangeHeadUITemplate(obj, text, nLifeTime, bAbove3D, bHid
 					_parent.background=headon_speech.dialog_bg;
 				else
 					_parent.background = "";
-				end	
+				end
 				_parent.zorder = -1;
 				_parent.lifetime = nLifeTime;
 				MonitorUILifeTime(_parent, nLifeTime, headon_speech.ProlongLifeTimeWhenMouseOver);
@@ -541,8 +554,8 @@ function headon_speech.ChangeHeadUITemplate(obj, text, nLifeTime, bAbove3D, bHid
 				_parent:AttachTo3D(obj);
 				_parent:AddChild(_this);
 
-				-- enable parent since it may contain interactive content. 
-				-- _parent.enabled = true; 
+				-- enable parent since it may contain interactive content.
+				-- _parent.enabled = true;
 			end
 		end
 	end

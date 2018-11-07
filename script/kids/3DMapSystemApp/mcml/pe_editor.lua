@@ -83,6 +83,8 @@ if it is "_mcmlblank", it will be opened in a new popup mcml window.
 | fontsize | font size to use for multiline text. | 
 | css.lineheight | line height for multiline text. |
 | spacing	| for text or button control.  |
+| UseSystemControl | true to use advanced multiple line edit box in new system control |
+| InputMethodEnabled | only valid when UseSystemControl is true. default to true |
 use the lib:
 -------------------------------------------------------
 NPL.load("(gl)script/kids/3DMapSystemApp/mcml/pe_editor.lua");
@@ -356,9 +358,17 @@ function pe_editor.create(rootName, mcmlNode, bindingContext, _parent, left, top
 		ontouch = nil;
 	end
 
-	local tooltip = mcmlNode:GetString("tooltip");
+	local tooltip = mcmlNode:GetAttributeWithCode("tooltip",nil,true);
 	if(tooltip and tooltip~="") then
-		_parent.tooltip = tooltip;
+		local tooltip_page = string.match(tooltip or "", "page://(.+)");
+		local tooltip_static_page = string.match(tooltip or "", "page_static://(.+)");
+		if(tooltip_page) then
+			CommonCtrl.TooltipHelper.BindObjTooltip(mcmlNode.uiobject_id, tooltip_page, mcmlNode:GetNumber("tooltip_offset_x"), mcmlNode:GetNumber("tooltip_offset_y"), mcmlNode:GetNumber("show_width"),mcmlNode:GetNumber("show_height"),mcmlNode:GetNumber("show_duration"), mcmlNode:GetBool("enable_tooltip_hover"), nil, mcmlNode:GetBool("tooltip_is_interactive"), mcmlNode:GetBool("is_lock_position"), mcmlNode:GetBool("use_mouse_offset"), mcmlNode:GetNumber("screen_padding_bottom"), nil, nil, nil, mcmlNode:GetBool("offset_ctrl_width"), mcmlNode:GetBool("offset_ctrl_height"));
+		elseif(tooltip_static_page) then
+			CommonCtrl.TooltipHelper.BindObjTooltip(mcmlNode.uiobject_id, tooltip_static_page, mcmlNode:GetNumber("tooltip_offset_x"), mcmlNode:GetNumber("tooltip_offset_y"), mcmlNode:GetNumber("show_width"),mcmlNode:GetNumber("show_height"),mcmlNode:GetNumber("show_duration"),mcmlNode:GetBool("enable_tooltip_hover"),mcmlNode:GetBool("click_through"));
+		else
+			_parent.tooltip = tooltip;
+		end
 	end
 
 	local btnName = mcmlNode:GetAttributeWithCode("name")
@@ -385,6 +395,21 @@ function pe_editor.create(rootName, mcmlNode, bindingContext, _parent, left, top
 	if(onsize_callback) then
 		_parent:SetScript("onsize",  function(uiobj)
 			Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, onsize_callback, btnName, mcmlNode, uiobj)
+		end)
+	end
+
+	local candrag = mcmlNode:GetAttributeWithCode("candrag");
+	if(candrag==true or candrag == "true") then
+		_parent.candrag = true;
+
+		local onDragBegin_callback = mcmlNode:GetAttributeWithCode("ondragbegin");
+		_parent:SetScript("ondragbegin",  function(uiobj)
+			Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, onDragBegin_callback, btnName, mcmlNode, uiobj)
+		end)
+
+		local onDragEnd_callback = mcmlNode:GetAttributeWithCode("ondragend");
+		_parent:SetScript("ondragend",  function(uiobj)
+			Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, onDragEnd_callback, btnName, mcmlNode, uiobj)
 		end)
 	end
 end
@@ -776,6 +801,7 @@ function pe_editor_button.create(rootName, mcmlNode, bindingContext, _parent, le
 	if(ontouch == "")then
 		ontouch = nil;
 	end
+	local btnName
 	if(href) then
 		if(href ~= "#") then
 			href = mcmlNode:GetAbsoluteURL(href);
@@ -795,9 +821,8 @@ function pe_editor_button.create(rootName, mcmlNode, bindingContext, _parent, le
 			log("warning: mcml <input type=\"button\"> can not find any iframe in its ancestor node to which the target url can be loaded\n");
 		end
 	elseif(onclick or onclick_for or ontouch) then
-		local btnName = mcmlNode:GetAttributeWithCode("name",nil,true)
+		btnName = mcmlNode:GetAttributeWithCode("name",nil,true)
 		-- tricky: we will just prefetch any params with code that may be used in the callback 
-		local i;
 		for i=1,5 do
 			if(not mcmlNode:GetAttributeWithCode("param"..i)) then
 				break;
@@ -823,10 +848,12 @@ function pe_editor_button.create(rootName, mcmlNode, bindingContext, _parent, le
 	end
 	local onmouseenter = mcmlNode:GetString("onmouseenter");
 	if(onmouseenter and onmouseenter ~= "")then
+		btnName = btnName or mcmlNode:GetAttributeWithCode("name",nil,true)
 		_this:SetScript("onmouseenter", pe_editor_button.onmouseenter, mcmlNode, instName, bindingContext, btnName);
 	end
 	local onmouseleave = mcmlNode:GetString("onmouseleave");
 	if(onmouseleave and onmouseleave ~= "")then
+		btnName = btnName or mcmlNode:GetAttributeWithCode("name",nil,true)
 		_this:SetScript("onmouseleave", pe_editor_button.onmouseleave, mcmlNode, instName, bindingContext, btnName);
 	end
 
@@ -846,7 +873,7 @@ function pe_editor_button.create(rootName, mcmlNode, bindingContext, _parent, le
 		local tooltip_page = string.match(tooltip or "", "page://(.+)");
 		local tooltip_static_page = string.match(tooltip or "", "page_static://(.+)");
 		if(tooltip_page) then
-			CommonCtrl.TooltipHelper.BindObjTooltip(mcmlNode.uiobject_id, tooltip_page, mcmlNode:GetNumber("tooltip_offset_x"), mcmlNode:GetNumber("tooltip_offset_y"), mcmlNode:GetNumber("show_width"),mcmlNode:GetNumber("show_height"),mcmlNode:GetNumber("show_duration"), nil, nil, nil, mcmlNode:GetBool("is_lock_position"), mcmlNode:GetBool("use_mouse_offset"), mcmlNode:GetNumber("screen_padding_bottom"));
+			CommonCtrl.TooltipHelper.BindObjTooltip(mcmlNode.uiobject_id, tooltip_page, mcmlNode:GetNumber("tooltip_offset_x"), mcmlNode:GetNumber("tooltip_offset_y"), mcmlNode:GetNumber("show_width"),mcmlNode:GetNumber("show_height"),mcmlNode:GetNumber("show_duration"), nil, nil, nil, mcmlNode:GetBool("is_lock_position"), mcmlNode:GetBool("use_mouse_offset"), mcmlNode:GetNumber("screen_padding_bottom"), nil, nil, nil, mcmlNode:GetBool("offset_ctrl_width"), mcmlNode:GetBool("offset_ctrl_height"));
 		elseif(tooltip_static_page) then
 			CommonCtrl.TooltipHelper.BindObjTooltip(mcmlNode.uiobject_id, tooltip_static_page, mcmlNode:GetNumber("tooltip_offset_x"), mcmlNode:GetNumber("tooltip_offset_y"), mcmlNode:GetNumber("show_width"),mcmlNode:GetNumber("show_height"),mcmlNode:GetNumber("show_duration"),mcmlNode:GetBool("enable_tooltip_hover"),mcmlNode:GetBool("click_through"));
 		else
@@ -1229,7 +1256,7 @@ Map3DSystem.mcml_controls.pe_editor_text = pe_editor_text;
 function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left, top, width, height, style, parentLayout)
 	local name = mcmlNode:GetAttributeWithCode("name",nil,true);
 	local text =  mcmlNode:GetAttribute("text") or mcmlNode:GetAttributeWithCode("value",nil,true) or mcmlNode:GetInnerText();
-	local rows =  mcmlNode:GetNumber("rows") or 1;
+	local rows =  tonumber(mcmlNode:GetAttributeWithCode("rows", 1, true));
 	
 	local css = mcmlNode:GetStyle(mcml_controls.pe_css.default["pe:editor-text"] or mcml_controls.pe_html.css["pe:editor-text"]);
 	
@@ -1242,7 +1269,27 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 	if(css["line-height"]) then
 		lineheight = tonumber(css["line-height"]);
 	end
-	width, height = width-left-margin_left-margin_right, css.height or (lineheight or 20)*rows;
+	if(mcmlNode:GetAttribute("height")) then
+		local height = mcmlNode:GetAttribute("height");
+		css.height = tonumber(string.match(height, "%d+"));
+		if(css.height and string.match(height, "%%$")) then
+			if(css.position == "screen") then
+				css.height = ParaUI.GetUIObject("root").height * css.height/100;
+			else	
+				local availWidth, availHeight = parentLayout:GetPreferredSize();
+				local maxWidth, maxHeight = parentLayout:GetMaxSize();
+				css.height=math.floor((maxHeight-margin_top-margin_bottom)*css.height/100);
+				if(availHeight<(css.height+margin_top+margin_bottom)) then
+					css.height=availHeight-margin_top-margin_bottom;
+				end
+				if(css.height<=0) then
+					css.height = nil;
+				end
+			end	
+		end	
+	end
+
+	width, height = width-left-margin_left-margin_right, css.height or ((lineheight or 20)*rows + (css["padding-top"] or 0) + (css["padding-bottom"] or 0));
 	if(css.width and (rows==1 or css.width<width)) then
 		width = css.width
 	end
@@ -1256,7 +1303,6 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 	local instName = mcmlNode:GetAttributeWithCode("uiname", nil, true) or mcmlNode:GetInstanceName(rootName);
 	
 	if(rows>1 or mcmlNode.name=="textarea") then
-		
 		-- multiline editbox
 		NPL.load("(gl)script/ide/MultiLineEditbox.lua");
 		local ctl = CommonCtrl.MultiLineEditbox:new{
@@ -1269,13 +1315,17 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 			DefaultNodeHeight = lineheight,
 			fontsize = mcmlNode:GetNumber("fontsize"),
 			ReadOnly = mcmlNode:GetBool("ReadOnly"),
-			ShowLineNumber = mcmlNode:GetAttribute("ShowLineNumber"),
+			ShowLineNumber = mcmlNode:GetBool("ShowLineNumber"),
 			SingleLineEdit = mcmlNode:GetBool("SingleLineEdit"),
 			VerticalScrollBarStep = mcmlNode:GetNumber("VerticalScrollBarStep"),
 			WordWrap = mcmlNode:GetBool("WordWrap"),
 			textcolor = mcmlNode:GetString("textcolor") or css.textcolor,
 			empty_text = mcmlNode:GetAttributeWithCode("EmptyText"),
 			container_bg = "",
+			bUseSystemControl = mcmlNode:GetBool("UseSystemControl"),
+			language = mcmlNode:GetAttributeWithCode("language", nil),
+			AlwaysShowCurLineBackground = mcmlNode:GetBool("AlwaysShowCurLineBackground", true),
+			InputMethodEnabled = mcmlNode:GetBool("enable_ime", true),
 		};
 		local onkeyup = mcmlNode:GetString("onkeyup");
 		if(onkeyup)then
@@ -1382,6 +1432,11 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 			end
 		end
 		
+		if(System.options.IsTouchDevice and mcmlNode:GetBool("auto_virtual_keyboard", System.options.auto_virtual_keyboard)) then
+			-- _this:SetField("InputMethodEnabled", false);
+			_this:SetScript("onfocusin", pe_editor_text.onfocusin, mcmlNode, instName, bindingContext, name);
+		end
+		
 
 		local text_color = mcmlNode:GetString("textcolor") or css.textcolor;
 		if(text_color) then
@@ -1393,7 +1448,7 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 		end
 	end	
 end
--- this is the new on_click handler. 
+
 function pe_editor_text.onactivate(uiobj, mcmlNode, instName, bindingContext, name)
 	if(not mcmlNode or not uiobj) then
 		return
@@ -1402,6 +1457,23 @@ function pe_editor_text.onactivate(uiobj, mcmlNode, instName, bindingContext, na
 	-- the callback function format is function(name, mcmlNode) end
 	Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, onactivate, name, mcmlNode,uiobj);
 end
+
+function pe_editor_text.onfocusin(uiobj, mcmlNode, instName, bindingContext, name)
+	if(not mcmlNode or not uiobj) then
+		return
+	end
+
+	if(mcmlNode:GetBool("auto_virtual_keyboard", System.options.auto_virtual_keyboard)) then
+		NPL.load("(gl)script/apps/Aries/Creator/Game/GUI/TouchVirtualKeyboardIcon.lua");
+		local TouchVirtualKeyboardIcon = commonlib.gettable("MyCompany.Aries.Game.GUI.TouchVirtualKeyboardIcon");
+		TouchVirtualKeyboardIcon.GetSingleton():ShowKeyboard(true)
+	end
+
+	local onclick = mcmlNode:GetString("onfocusin") or "";
+	-- the callback function format is function(name, mcmlNode) end
+	Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, onclick, name, mcmlNode,uiobj);
+end
+
 
 -- this is the new on_click handler. 
 function pe_editor_text.onkeyup(uiobj, mcmlNode, instName, bindingContext, name)

@@ -12,20 +12,21 @@ NPL.load("(gl)script/ide/System/Windows/Controls/EditBox.lua");
 local EditBox = commonlib.gettable("System.Windows.Controls.EditBox");
 ------------------------------------------------------------
 ]]
-NPL.load("(gl)script/ide/System/Windows/UIElement.lua");
+NPL.load("(gl)script/ide/System/Windows/UITextElement.lua");
 NPL.load("(gl)script/ide/System/Core/UniString.lua");
 NPL.load("(gl)script/ide/math/Rect.lua");
 local Rect = commonlib.gettable("mathlib.Rect");
 local UniString = commonlib.gettable("System.Core.UniString");
 local Application = commonlib.gettable("System.Windows.Application");
 local FocusPolicy = commonlib.gettable("System.Core.Namespace.FocusPolicy");
-local EditBox = commonlib.inherit(commonlib.gettable("System.Windows.UIElement"), commonlib.gettable("System.Windows.Controls.EditBox"));
+local EditBox = commonlib.inherit(commonlib.gettable("System.Windows.UITextElement"), commonlib.gettable("System.Windows.Controls.EditBox"));
 EditBox:Property("Name", "EditBox");
 EditBox:Property({"Background", "", auto=true});
 EditBox:Property({"BackgroundColor", "#cccccc", auto=true});
 EditBox:Property({"m_text", nil, "GetText", "SetText"})
 EditBox:Property({"Color", "#000000", auto=true})
 EditBox:Property({"CursorColor", "#33333388", auto=true})
+EditBox:Property({"EmptyTextColor", "#888888", auto=true})
 EditBox:Property({"SelectedBackgroundColor", "#00006680", auto=true})
 EditBox:Property({"m_placeholderText", "", "placeholderText", "setPlaceholderText"})
 EditBox:Property({"m_echoMode", "Normal", "echoMode", "setEchoMode"})
@@ -35,6 +36,7 @@ EditBox:Property({"m_cursorWidth", 2,})
 EditBox:Property({"m_maxLength", 65535, "getMaxLength", "setMaxLength", auto=true})
 EditBox:Property({"m_readOnly", false, "isReadOnly", "setReadOnly"})
 EditBox:Property({"m_blinkPeriod", 0, "getCursorBlinkPeriod", "setCursorBlinkPeriod"})
+EditBox:Property({"m_encrypted", false, "isEncrypted", "setEncrypted", auto=true})
 EditBox:Property({"Font", "System;14;norm", auto=true})
 EditBox:Property({"Scale", nil, "GetScale", "SetScale", auto=true})
 EditBox:Property({"horizontalMargin", 0});
@@ -42,6 +44,7 @@ EditBox:Property({"leftTextMargin", 0});
 EditBox:Property({"topTextMargin", 2});
 EditBox:Property({"rightTextMargin", 0});
 EditBox:Property({"bottomTextMargin", 2});
+EditBox:Property({"EmptyText", nil, "GetEmptyText", "SetEmptyText", auto=true});				  --*********************************************	 
 
 EditBox:Signal("resetInputContext");
 EditBox:Signal("selectionChanged");
@@ -75,6 +78,7 @@ end
 
 function EditBox:ctor()
 	self.m_text = UniString:new();
+	self.m_encryptedText = UniString:new();
 	self.m_history = commonlib.Array:new();
 	self:setFocusPolicy(FocusPolicy.StrongFocus);
 	self:setAttribute("WA_InputMethodEnabled");
@@ -109,7 +113,8 @@ function EditBox:internalSetText(txt, pos, edited)
 	self:resetInputContext();
 	local oldText = self.m_text;
 	self.m_text:SetText(UniString.left(txt, self.m_maxLength));
-	
+	self:UpdateEncryptedText();
+
 	self.m_history:clear();
 	self.m_modifiedState = 0;
 	self.m_undoState = 0;
@@ -248,6 +253,7 @@ function EditBox:removeSelectedText()
 			end
         end
 		self.m_text:remove(self.m_selstart+1, self.m_selend - self.m_selstart);
+		self:UpdateEncryptedText();
         
         if (self.m_cursor > self.m_selstart) then
             self.m_cursor = self.m_cursor - (math.min(self.m_cursor, self.m_selend) - self.m_selstart);
@@ -278,6 +284,7 @@ function EditBox:internalInsert(s)
     if (remaining > 0) then
 		s = s:left(remaining);
         self.m_text:insert(self.m_cursor, s);
+		self:UpdateEncryptedText();
         for i = 1, s:length() do
             self:addCommand(Command:new():init("Insert", self.m_cursor, s[i], -1, -1));
 			self.m_cursor = self.m_cursor + 1;
@@ -296,6 +303,7 @@ function EditBox:internalDelete(wasBackspace)
         self:addCommand(Command:new():init(if_else(wasBackspace, "Remove", "Delete"),
                    self.m_cursor, self.m_text[self.m_cursor+1], -1, -1));
 		self.m_text:remove(self.m_cursor+1, 1);
+		self:UpdateEncryptedText();
         self.m_textDirty = true;
     end
 end
@@ -402,6 +410,7 @@ function EditBox:focusInEvent(event)
 	-- Application:inputMethod():show();
 	self:setCursorVisible(true);
 	self:setCursorBlinkPeriod(Application:cursorFlashTime());
+	EditBox._super.focusInEvent(self, event)
 end
 
 -- virtual: 
@@ -409,6 +418,15 @@ function EditBox:focusOutEvent(event)
 	-- Application:inputMethod():hide();
 	self:setCursorVisible(false);
 	self:setCursorBlinkPeriod(0);
+
+	EditBox._super.focusOutEvent(self, event)
+end
+
+function EditBox:GetPasswordText()
+	if(self:isEncrypted()) then	
+		return self.m_encryptedText:GetText();
+	end
+	return self:GetText();
 end
 
 function EditBox:naturalTextWidth()
@@ -448,6 +466,7 @@ function EditBox:paintEvent(painter)
 	local textTop = lineRect:y();
 
 	local text = self:GetText();
+
 	if(hasTextClipping) then
 		-- obsoleted: we will clip the text in software, instead of doing hardware clipping. 
 		-- local endClipOfText = self.m_text:xToCursor(self.hscroll+lineRect:width()-1, nil, self:GetFont());
@@ -464,13 +483,15 @@ function EditBox:paintEvent(painter)
 	if (self:hasSelectedText()) then
 		-- render selection
 		local sel_from_x = 0;
-		local beforeSelectText = self.m_text:sub(1, self.m_selstart);
+		local uniText = if_else(self:isEncrypted(), self.m_encryptedText, self.m_text);
+		local beforeSelectText = uniText:sub(1, self.m_selstart);
 		if(not beforeSelectText:empty()) then
 			local textWidth = beforeSelectText:GetWidth(self:GetFont());
 			sel_from_x = textWidth * (self:GetScale() or 1);
 		end
 		local sel_width = 0;
-		local selectText = self.m_text:sub(self.m_selstart+1, self.m_selend);
+		
+		local selectText = uniText:sub(self.m_selstart+1, self.m_selend);
 		if(not selectText:empty()) then
 			local textWidth = selectText:GetWidth(self:GetFont());
 			sel_width = textWidth * (self:GetScale() or 1);
@@ -481,13 +502,20 @@ function EditBox:paintEvent(painter)
 		end
 	end
 	
-	if(text and text~="") then
+	painter:SetFont(self:GetFont());
+	local scale = self:GetScale();	
+
+	if(text and text~="") then							
 		-- draw text
 		painter:SetPen(self:GetColor());
-		painter:SetFont(self:GetFont());
-		--painter:SetPen(self:GetColor());
-		local scale = self:GetScale();
-		painter:DrawTextScaled(self:x() + textLeft, self:y() + textTop, text, scale);
+		self:DrawTextScaledEx2(painter, self:x() + textLeft, self:y() + textTop, lineRect:width(), lineRect:height(), self:GetPasswordText(), self:GetAlignment(), scale);
+	else
+		local emptyText = self:GetEmptyText();	
+		if(emptyText and emptyText~="" and not self:hasFocus()) then
+			painter:SetPen(self:GetEmptyTextColor());
+			self:DrawTextScaledEx2(painter, self:x() + textLeft, self:y() + textTop, lineRect:width(), lineRect:height(), emptyText, self:GetAlignment(), scale);																																				
+		end
+
 	end
 
 	if(hasTextClipping) then
@@ -503,6 +531,13 @@ function EditBox:paintEvent(painter)
 	end
 end
 
+function EditBox:UpdateEncryptedText()
+	if(self:isEncrypted()) then
+		local text = string.rep("*",string.len(self:GetText()))
+		self.m_encryptedText:SetText(text);
+	end
+end
+
 function EditBox:adjustedContentsRect()
 	local r = self:rect();
 	local right = r:right();
@@ -515,13 +550,15 @@ function EditBox:adjustedContentsRect()
 end
 
 function EditBox:cursorToX()
-	return self.m_text:cursorToX(self.m_cursor, self:GetFont());
+	local uniText = if_else(self:isEncrypted(), self.m_encryptedText, self.m_text);
+	return uniText:cursorToX(self.m_cursor, self:GetFont());
 end
 
 function EditBox:xToPos(x, betweenOrOn)
     local cr = self:adjustedContentsRect();
     x = x - cr:x() - self.hscroll + self.horizontalMargin;
-    return self.m_text:xToCursor(x, betweenOrOn, self:GetFont());
+	local uniText = if_else(self:isEncrypted(), self.m_encryptedText, self.m_text);
+    return uniText:xToCursor(x, betweenOrOn, self:GetFont());
 end
 
 function EditBox:inSelection(x)
@@ -541,6 +578,16 @@ function EditBox:mousePressEvent(e)
 		local mark = e.shift_pressed;
 		local cursor = self:xToPos(e:pos():x());
 		self:moveCursor(cursor, mark);
+		if(e.isTripleClick) then
+			-- move to line begin			
+			self:moveCursor(0, false);					  
+			-- move to line end
+	   		self:moveCursor(self.m_text:length(), true);
+		elseif(e.isDoubleClick) then
+			local begin_pos , end_pos = self.m_text:wordPosition(cursor);		
+			self:moveCursor(begin_pos, false);
+	   		self:moveCursor(end_pos, true);				  
+		end
 		e:accept();
 	end
 end
@@ -626,6 +673,7 @@ function EditBox:internalUndo(untilPos)
 
 		if(cmd.type == "Insert") then
             self.m_text:remove(cmd.pos+1, 1);
+			self:UpdateEncryptedText();
             self.m_cursor = cmd.pos;
 		elseif(cmd.type == "SetSelection") then
             self.m_selstart = cmd.selStart;
@@ -633,9 +681,11 @@ function EditBox:internalUndo(untilPos)
             self.m_cursor = cmd.pos;
 		elseif(cmd.type == "Remove" or cmd.type == "RemoveSelection") then
             self.m_text:insert(cmd.pos+1, cmd.uc);
+			self:UpdateEncryptedText();
             self.m_cursor = cmd.pos + 1;
 		elseif(cmd.type == "Delete" or cmd.type == "DeleteSelection") then
             self.m_text:insert(cmd.pos+1, cmd.uc);
+			self:UpdateEncryptedText();
             self.m_cursor = cmd.pos;
 		end
 		if(cmd.type ~= "Separator") then
@@ -663,6 +713,7 @@ function EditBox:internalRedo()
 		self.m_undoState = self.m_undoState + 1;
         if(cmd.type == "Insert") then
             self.m_text:insert(cmd.pos+1, cmd.uc);
+			self:UpdateEncryptedText();
             self.m_cursor = cmd.pos + 1;
 		elseif(cmd.type == "SetSelection") then
             self.m_selstart = cmd.selStart;
@@ -670,6 +721,7 @@ function EditBox:internalRedo()
             self.m_cursor = cmd.pos;
 		elseif(cmd.type == "Remove" or cmd.type == "Delete" or cmd.type == "RemoveSelection" or cmd.type == "DeleteSelection") then
             self.m_text:remove(cmd.pos+1, 1);
+			self:UpdateEncryptedText();
             self.m_selstart = cmd.selStart;
             self.m_selend = cmd.selEnd;
             self.m_cursor = cmd.pos;
@@ -819,6 +871,13 @@ function EditBox:setCursorBlinkPeriod(msec)
     self.m_blinkPeriod = msec;
 end
 
+function EditBox:ApplyCss(css)
+	EditBox._super.ApplyCss(self, css);
+	self:SetAlignment(css:GetTextAlignment(0)); -- left align
+	if(css["caret-color"]) then
+		self:SetCursorColor(css["caret-color"]);
+	end
+end
 
 function EditBox:keyPressEvent(event)
 	if(self:isReadOnly()) then

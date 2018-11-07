@@ -53,9 +53,21 @@ function Bone:init(attr, allbones)
 	self.rot_name = attr:GetField("RotName", "");
 	self.trans_name = attr:GetField("TransName", "");
 	self.scale_name = attr:GetField("ScaleName", "");
+	self.isEditable = not attr:GetField("IsTransformationNode", false);
+	self.isPivotBone = attr:GetField("IsPivotBone", false);
+
 	self.display_name = self.name; -- format("%d %s", self.boneIndex, self.name);
 	self.bones = allbones;
 	return self;
+end
+
+-- some pivot bones(transform only bone) are exported via FBX, but should NOT be editable.
+function Bone:IsEditable()
+	return self.isEditable;
+end
+
+function Bone:SetEditable(isEditable)
+	self.isEditable = isEditable;
 end
 
 -- final rotation
@@ -384,7 +396,7 @@ local ParentRotationBoneNames = {
 
 -- if nil, it means parent bone, if "mass", it means center of mass. 
 function Bone:GetRotationParentName()
-	return ParentRotationBoneNames[self.name];
+	return self.isPivotBone and ParentRotationBoneNames[self.name];
 end
 
 -- Position Hierarchy

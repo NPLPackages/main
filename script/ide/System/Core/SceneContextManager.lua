@@ -57,6 +57,10 @@ function SceneContextManager:Hook()
 		hookName = "cm_keydown", appName="input", wndName = "key_down"};
 	o.callback = SceneContextManager.OnKeyDownProc;
 	CommonCtrl.os.hook.SetWindowsHook(o, self.priority);
+	o = {hookType=hookType, 
+		hookName = "cm_keyup", appName="input", wndName = "key_up"};
+	o.callback = SceneContextManager.OnKeyUpProc;
+	CommonCtrl.os.hook.SetWindowsHook(o, self.priority);
 end
 
 function SceneContextManager:UnHook()
@@ -146,6 +150,13 @@ function SceneContextManager.OnMouseDown(nCode, appName, msg)
 				ParaEngine.GetAttributeObject():SetField("CaptureMouse", true);
 			end
 			-- prevent any other hooks
+			local attr = ParaCamera.GetAttributeObject();
+
+			if(attr:GetField("EnableMouseLeftDrag", false)) then
+				SceneContextManager.restoreCameraMouseLeftDrag = true;
+				attr:SetField("EnableMouseLeftDrag", false);
+			end
+
 			return nil;
 		end
 	end
@@ -191,11 +202,17 @@ function SceneContextManager.OnMouseUp(nCode, appName, msg)
 		context:handleMouseEvent(event);
 		ParaEngine.GetAttributeObject():SetField("CaptureMouse", false);
 
+		if(SceneContextManager.restoreCameraMouseLeftDrag) then
+			SceneContextManager.restoreCameraMouseLeftDrag = nil;
+			ParaCamera.GetAttributeObject():SetField("EnableMouseLeftDrag", true);
+		end
+
 		if(event:isAccepted() or context:IsAcceptAllEvents()) then
 			-- prevent any other hooks
 			return nil;
 		end
 	end
+	
 	if(self:IsAcceptAllEvents()) then
 		-- prevent any other hooks
 		return nil;
@@ -231,6 +248,28 @@ function SceneContextManager.OnKeyDownProc(nCode, appName, msg)
 	if(context) then
 		local event = KeyEvent:init("keyPressEvent", msg.virtual_key);
 		context:handleKeyEvent(event);
+		if(event:isAccepted()) then
+			-- prevent any other hooks
+			return nil;
+		end
+	end
+	if(self:IsAcceptAllEvents()) then
+		-- prevent any other hooks
+		return nil;
+	end
+	return true;
+end
+
+function SceneContextManager.OnKeyUpProc(nCode, appName, msg)
+	-- return the nCode to be passed to the next hook procedure in the hook chain. 
+	-- in most cases, if nCode is nil, the hook procedure should do nothing. 
+	if(nCode==nil) then return end
+	
+	local self = SceneContextManager;
+	local context = self:GetCurrentContext();
+	if(context) then
+		local event = KeyEvent:init("keyReleaseEvent", msg.virtual_key);
+		context:handleKeyReleaseEvent(event);
 		if(event:isAccepted()) then
 			-- prevent any other hooks
 			return nil;

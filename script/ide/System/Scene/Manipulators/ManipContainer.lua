@@ -96,16 +96,22 @@ end
 function ManipContainer:keyPressEvent(key_event)
 end
 
+-- add the dependency node as well if not added before
+function ManipContainer:addPlugNode(node)
+	self.plug_objs = self.plug_objs or {};
+	if(not self.plug_objs[node]) then
+		self.plug_objs[node] = true;
+		node:Connect("valueChanged", self, self.OnPlugValueChanged);
+	end
+end
+
 -- virtual function: connect plugs between manipulators and dependend node
 -- make sure to call finishAddingManips() when everything is done.
 -- @param node: usually a ToolBase or AttributeObject, sometimes it can be a command object that support undo/redo.
 function ManipContainer:connectToDependNode(node)
 	self:finishAddingManips();
-	-- add the dependency node as well if not added before
-	if(not self.plug_objs[node]) then
-		self.plug_objs[node] = true;
-		node:Connect("valueChanged", self, self.OnPlugValueChanged);
-	end
+	self:addPlugNode(node);
+
 	-- add all manip nodes  
 	if(self.children) then
 		local children = self.children;

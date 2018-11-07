@@ -1,0 +1,74 @@
+--[[
+title: simple console for npl
+author: chenqh
+date: 2017/12/29
+desc: read and exec npl code
+]]
+
+local quit = false
+
+local function getline(line)
+    line = line or ""
+    if line~="" then
+        return line .. "\n" .. (ParaIO.readline(">> ") or "")
+    end
+
+    return ParaIO.readline("> ") or ""
+end
+
+local function getcode(line)
+    local code, error_msg = loadstring(line)
+
+    if code == nil then
+        code = loadstring("print(" .. line .. ")")
+    else
+        local retcode, err = loadstring("return " .. line)
+        if not err then
+            code = retcode
+        end
+    end
+    return code, error_msg
+end
+
+local function print_error(error_msg)
+    error_msg = error_msg:gsub("%[.*%]:", "")
+    print(error_msg)
+end
+
+local function open_console()
+    q = function()
+        quit = true
+    end
+    print("======================================")
+    print("welcome to npl console :)")
+    print("======================================")
+end
+
+local function exit_console()
+    print("nplc: byebye ~\n")
+    q = nil -- remove global function q
+end
+
+return function(ctx)
+    open_console()
+    local line = getline("")
+    while not quit do
+        local code, error_msg = getcode(line)
+        if code ~= nil then
+            local result = table.pack(pcall(code))
+            local success = table.remove(result, 1)
+            line = ""
+
+            if not success then
+                print_error(result[1])
+            elseif #result > 0 then
+                console_print(table.unpack(result))
+            end
+        elseif error_msg:sub(-7) ~= "'<eof>'" then
+            line = ""
+            print(error_msg)
+        end
+        if not quit then line = getline(line) end
+    end
+    exit_console()
+end

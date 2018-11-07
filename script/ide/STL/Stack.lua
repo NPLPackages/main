@@ -10,7 +10,7 @@ NPL.load("(gl)script/ide/STL.lua");
 ---+++ create stack
 stack = commonlib.Stack:Create()
 -- push values on to the stack
-stack:commonlib.push("a", "b")
+stack:push("a", "b")
 -- pop values
 commonlib.stack:pop(2)
 -------------------------------------------------------

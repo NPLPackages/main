@@ -1,7 +1,7 @@
 --[[
 Title: sliderbar
-Author(s): LiXizhi
-Date: 2015/5/3
+Author(s): LiPeng
+Date: 2017/10/3
 Desc: 
 use the lib:
 ------------------------------------------------------------
@@ -25,6 +25,8 @@ function pe_sliderbar:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	if(not _this) then
 		_this = SliderBar:new():init(parentElem);
 		self:SetControl(_this);
+	else
+		_this:SetParent(parentElem);
 	end
 	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
 	_this:SetMin(self:GetAttributeWithCode("min", 1, true));
@@ -36,11 +38,15 @@ function pe_sliderbar:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	_this:SetSliderBackground(self:GetAttributeWithCode("button_bg", nil, true));
 	_this:SetSliderWidth(self:GetNumber("button_width", nil));
 	_this:SetSliderHeight(self:GetNumber("button_height", nil));
-
+	_this:SetGrooveBackground(self:GetAttributeWithCode("background", nil, true) or css["background"]);
+	_this:SetGrooveWidth(self:GetNumber("background_width", nil));
+	_this:SetGrooveHeight(self:GetNumber("background_height", nil));
 
 	--local buttonName = self:GetAttributeWithCode("name"); -- touch name
 
-	_this:Connect("valueChanged", self, self.OnChange)
+	_this:Connect("valueChanged", self, self.OnChange, "UniqueConnection")
+
+	pe_sliderbar._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
 end
 
 function pe_sliderbar:OnAfterChildLayout(layout, left, top, right, bottom)
@@ -50,6 +56,7 @@ function pe_sliderbar:OnAfterChildLayout(layout, left, top, right, bottom)
 end
 
 function pe_sliderbar:SetValue(value)
+	self:SetAttribute("value", value);
 	if(self.control) then
 		self.control:SetValue(value, true);
 	end

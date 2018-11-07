@@ -58,6 +58,10 @@
     if request queue is full, System.os.GetUrl() will be ignored. 
     -->
     <number name='ServerCurlThreadQueueSize'>500</number>
+    <!--if 0 it will use only main thread, it can be 40 in most production server if npl_thread_handler is used.--> 
+    <number name='max_worker_thread_count'>0</number>
+    <!--if true, we will use a monitor and allocate request to thread with minimum pending messages.-->
+    <bool name='use_worker_monitor'>false</bool>
     <!--HTTP server related-->
     <table name='NPLRuntime'>
       <!--whether to use compression for incoming connections. This must be true in order for CompressionLevel and CompressionThreshold to take effect--> 

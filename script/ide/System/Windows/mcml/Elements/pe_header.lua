@@ -1,7 +1,7 @@
 --[[
 Title: header element
 Author(s): LiPeng
-Date: 2015/4/29
+Date: 2017/10/3
 Desc: it handles HTML tags of <h1>,<h2>,<h3>,<h4> in HTML. 
 use the lib:
 ------------------------------------------------------------

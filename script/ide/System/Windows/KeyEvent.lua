@@ -20,7 +20,7 @@ function KeyEvent:ctor()
 end
 
 -- return current mouse event object. 
--- @param event_type: "keyDownEvent", "keyPressedEvent"
+-- @param event_type: "keyDownEvent", "keyPressedEvent", "keyReleaseEvent"
 function KeyEvent:init(event_type, vKey)
 	KeyEvent._super.init(self, event_type);
 	-- global position. 
@@ -41,6 +41,7 @@ local ctrl_seq_map = {
 	["DIK_A"] = "SelectAll",
 	["DIK_C"] = "Copy",
 	["DIK_V"] = "Paste",
+	["DIK_X"] = "Cut",
 	["DIK_HOME"] = "MoveToStartOfWord",
 	["DIK_END"] = "MoveToEndOfWord",
 	["DIK_UP"] = "ScrollToPreviousLine",
@@ -76,6 +77,21 @@ local std_seq_map = {
 	["DIK_DELETE"] = "Delete",
 }
 
+local function_key_map = {
+	["DIK_F1"] = true,
+	["DIK_F2"] = true,
+	["DIK_F3"] = true,
+	["DIK_F4"] = true,
+	["DIK_F5"] = true,
+	["DIK_F6"] = true,
+	["DIK_F7"] = true,
+	["DIK_F8"] = true,
+	["DIK_F9"] = true,
+	["DIK_F10"] = true,
+	["DIK_F11"] = true,
+	["DIK_F12"] = true,
+}
+
 -- win32 sequence map
 function KeyEvent:GetKeySequence()
 	if(self.ctrl_pressed and self.shift_pressed) then
@@ -92,6 +108,14 @@ end
 -- @param keySequence: "Undo", "Redo", "SelectAll", "Copy", "Paste"
 function KeyEvent:IsKeySequence(keySequence)
 	return self.key_sequence == keySequence;
+end
+
+function KeyEvent:IsFunctionKey()
+	return function_key_map[self.keyname];
+end
+
+function KeyEvent:KeyName()
+	return self.keyname;
 end
 
 

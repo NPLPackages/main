@@ -57,6 +57,7 @@ local PageElement = commonlib.inherit(commonlib.gettable("System.Core.ToolBase")
 -- default style sheet
 PageElement:Property("Name", "PageElement");
 PageElement:Property({"class_name", nil});
+PageElement:Property({"tab_index", -1, "TabIndex", "SetTabIndex", auto=true});
 PageElement:Property({"classNames", nil, "GetClassNames", "SetClassNames", auto=true});
 local pairs = pairs
 local ipairs = ipairs
@@ -448,8 +449,9 @@ end
 
 -- private: redirector
 local function paintEventRedirectFunc(uiElement, painter)
-	if(uiElement._page_element) then
-		uiElement._page_element:paintEvent(painter);
+	local page_element = uiElement:PageElement();
+	if(page_element) then
+		page_element:paintEvent(painter);
 	end
 end
 
@@ -462,7 +464,7 @@ function PageElement:EnableSelfPaint(parentElem)
 		_this.paintEvent = paintEventRedirectFunc;
 		self:SetControl(_this);
 	else
-		if(self.control._page_element == self) then
+		if(self.control:PageElement() == self) then
 			self.control:SetParent(parentElem);
 		else
 			LOG.std("", "error", "mcml", "self paint can only be enabled when there is no control created for the page element");
@@ -704,6 +706,15 @@ end
 -- virtual function: 
 -- @param css: style
 function PageElement:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
+	local tab_index = self:GetAttributeWithCode("tabindex", nil, true);
+	if(tab_index) then
+		tab_index = tonumber(tab_index);
+	end
+	if(tab_index and tab_index > 0) then
+		self:SetTabIndex(tab_index);
+		local page = self:GetPageCtrl();
+		page:AddTabIndexNode(tab_index, self);
+	end
 end
 
 function PageElement:OnLoadComponentAfterChild(parentElem, parentLayout, css)
@@ -837,6 +848,22 @@ function PageElement:GetAttribute(attrName,defaultValue)
 	return defaultValue;
 end
 
+local EscapeCharacters = {
+	["&#10;"] = "\n",
+	["&#13;"] = "\r",
+	["&#32;"] = " ",
+	["&#33;"] = "!",
+	["&#34;"] = '"',
+	["&quot;"] = '"',
+}
+
+local function processEscapeCharacters(str)
+	for escapeChar, realChar in pairs(EscapeCharacters) do
+		str = string.gsub(str, escapeChar, realChar);
+	end
+	return str;
+end
+
 -- get the value of an attribute of this node (usually string)
 -- this differs from GetAttribute() in that the attribute string may contain embedded code block which may evaluates to a different string, table or even function. 
 -- please note that only the first call of this method will evaluate embedded code block, subsequent calls simply return the previous evaluated result. 
@@ -850,6 +877,9 @@ function PageElement:GetAttributeWithCode(attrName,defaultValue, bNoOverwrite)
 			local code = string_match(value, "^[<%%]%%(=.*)%%[%%>]$")
 			if(code) then
 				value = Elements.pe_script.DoPageCode(code, self:GetPageCtrl());
+				if(type(value) == "string") then
+					value = processEscapeCharacters(value);
+				end
 				if(not bNoOverwrite) then
 					self.attr[attrName] = value;
 				end	
@@ -1219,6 +1249,14 @@ function PageElement:GetCssStyle(attrName)
 	end
 end
 
+-- update the css attribute.
+-- this function is called when the texture attribute changed, such as "background", "background-color","background2", "background2-color", "background-image"
+function PageElement:UpdateCssStyle()
+	if(self.control) then
+		self.control:ApplyCss(self.style);
+	end
+end
+
 function PageElement:InvalidateStyle()
 	self.style = nil;
 end
@@ -1257,6 +1295,7 @@ function PageElement:CreateStyle(baseStyle, base_baseStyle)
 	--
 	-- apply instance if any
 	--
+
 	if(self.attr and self.attr.style) then
 		local style_code = self:GetAttributeWithCode("style", nil, true);
 		if(style_code) then
@@ -1475,11 +1514,12 @@ end
 
 -- detach this node from its parent node. 
 function PageElement:Detach()
+	self:DetachControls();
+
 	local parentNode = self.parent
 	if(parentNode == nil) then
 		return
 	end
-	
 	local nSize = #(parentNode);
 	local i, node;
 	
@@ -1554,7 +1594,7 @@ end
 function PageElement:GetParentAttribute(attrName)
 	local parent = self.parent;
 	while (parent~=nil) do
-		if(parent:GetAttribute(attrName)~=nil) then
+		if(parent.GetAttribute and parent:GetAttribute(attrName)~=nil) then
 			return parent:GetAttribute(attrName);
 		end
 		parent = parent.parent;
@@ -1621,14 +1661,6 @@ end
 -- Get child count
 function PageElement:GetChildCount()
 	return #(self);
-end
-
--- Clear all child nodes
-function PageElement:ClearAllChildren()
-	if(self.control) then
-		self.control:deleteChildren();
-	end
-	commonlib.resize(self, 0);
 end
 
 -- remove all child nodes and move them to an internal template node
@@ -1783,14 +1815,14 @@ end
 function PageElement:SearchChildByAttribute(name, value)
 	for node in self:next() do
 		if(type(node)=="table") then
-			if(value == node:GetAttribute(name)) then
+			if(value == node:GetAttributeWithCode(name, nil, true) or (node.buttonName and node.buttonName == value)) then
 				return node;
 			else
 				node = node:SearchChildByAttribute(name, value);
 				if(node) then
 					return node;
 				end
-			end	
+			end
 		end
 	end
 
@@ -2410,6 +2442,54 @@ function PageElement:ClipRegion()
 			end
 		end
 		parent = parent.parent;
+	end
+end
+
+function PageElement:SetFocus()
+	if(self.control) then
+		self.control:setFocus("TabFocusReason");
+	end
+end
+
+function PageElement:TabLostFocus()
+	return true;
+end
+
+function PageElement:Focused()
+	return self:GetPageCtrl():FocusNode() == self;
+end
+
+function PageElement:FocusInEvent()
+	if(not self:Focused()) then
+		self:GetPageCtrl():SetFocusNode(self);
+	end
+end
+
+function PageElement:FocusOutEvent()
+	if(self:Focused()) then
+		self:GetPageCtrl():SetFocusNode();
+	end
+end
+
+function PageElement:NextTabNode(node)
+	if(self:TabIndex() == 0 and not self:Focused()) then
+		return self;
+	end
+
+	local size = #self;
+	if(size == 0 or (node and node.index == size)) then
+		if(self.parent) then
+			return self.parent:NextTabNode(self);
+		else
+			return;
+		end
+	else
+		if(node) then
+			node = self[node.index + 1];
+		else
+			node = self[1];
+		end
+		return node:NextTabNode();
 	end
 end
 

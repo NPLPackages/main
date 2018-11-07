@@ -70,11 +70,16 @@ local MultiLineEditbox = commonlib.inherit(commonlib.gettable("CommonCtrl.TreeVi
 	OnContextMenu = nil, 
 	-- nil or the syntax highlighting map. Use CommonCtrl.MultiLineEditbox.syntax_map_NPL
 	syntax_map = nil,
+	-- "npl" syntax highlighting
+	language = nil, 
 	onkeyup = nil,
-	--+++++++++++++++++++
+	
 	AutoHorizontalScrollBar=false;
 	HorizontalScrollBarHeight=20,
-	--+++++++++++++++++++
+	-- whether to use the new advanced system control. This is recommended for multiline editing experience. 
+	bUseSystemControl = false,
+	AlwaysShowCurLineBackground = true,
+	InputMethodEnabled = true,
 }))
 
 -- NPL syntax highlighting rules
@@ -108,16 +113,87 @@ MultiLineEditbox.syntax_map_PureText = {
 ---------------------------------------
 --@param bShow: boolean to show or hide. if nil, it will toggle current setting. 
 function MultiLineEditbox:Show(bShow)
+	if(self.bUseSystemControl) then
+		if(bShow == false) then
+			if(self.window) then
+				self.window:hide();
+			end
+			return
+		end
+		if(not self.window) then
+			NPL.load("(gl)script/ide/System/Windows/Window.lua");
+			NPL.load("(gl)script/ide/System/Windows/Controls/MultiLineEditbox.lua");
+			local MultiLineEditbox = commonlib.gettable("System.Windows.Controls.MultiLineEditbox");
+			local Window = commonlib.gettable("System.Windows.Window");
+			self.window = Window:new();
+			self.ctrlEditbox = MultiLineEditbox:new():init(self.window);
+			if(self.empty_text and self.empty_text~="") then
+				self.ctrlEditbox:SetEmptyText(self.empty_text);
+			end
+			if(self.textcolor) then
+				self.ctrlEditbox:SetColor(self.textcolor);
+				if(self.textcolor == "#ffffff") then
+					self.ctrlEditbox:SetSelectedBackgroundColor("#1456b4");
+					self.ctrlEditbox:SetCurLineBackgroundColor("#444444e0");
+					self.ctrlEditbox:SetCursorColor("#ffffff");
+				end
+			end
+			if(self.container_bg ~= "") then
+				self.ctrlEditbox:SetBackground(self.container_bg);
+			end
+			if(self.language) then
+				self.ctrlEditbox:SetLanguage(self.language);
+			end
+
+			self.ctrlEditbox:ShowLineNumber(self.ShowLineNumber == true);
+			self.ctrlEditbox:SetBackgroundColor("#00000000");
+			self.ctrlEditbox:SetItemHeight(self.DefaultNodeHeight);
+			self.ctrlEditbox:SetAlwaysShowCurLineBackground(self.AlwaysShowCurLineBackground);
+			if(self.fontsize) then
+				self.ctrlEditbox:SetFont(format("System;%d;norm", self.fontsize))
+			end
+			if(self.ReadOnly) then
+				self.ctrlEditbox:setReadOnly(true);
+			end
+			if(not self.InputMethodEnabled) then
+				self.ctrlEditbox:SetInputMethodEnabled(false);
+			end
+			self.window:Connect("SizeChanged", nil, function()
+				self.ctrlEditbox:setGeometry(0, 0, self.window:width(), self.window:height());	
+			end)
+		end
+		if(bShow == nil) then
+			bShow = not self.window:isVisible();
+		end
+		if(bShow) then
+			self.window:Show("", self.parent, self.alignment, self.left, self.top, self.width, self.height);
+		end
+		return;
+	end
+	
 	CommonCtrl.TreeView.Show(self, bShow);
 end
 
 -- get line count of the text. 
 function MultiLineEditbox:GetLineCount()
+	if(self.bUseSystemControl) then
+		if(self.ctrlEditbox) then
+			return self.ctrlEditbox:GetRow();
+		end
+		return 0;
+	end
 	return self.RootNode:GetChildCount();
 end
 
 -- set the text, we will reuse the treenode as necessary. 
 function MultiLineEditbox:SetText(text, bForceNoUpdate)
+	if(self.bUseSystemControl) then
+		if(self.ctrlEditbox) then
+			self.ctrlEditbox:SetText(text);
+		end
+		return;
+	end
+
 	local line_text;	
 	local i = 0;
 	
@@ -160,6 +236,13 @@ end
 
 -- return the concartenated text
 function MultiLineEditbox:GetText()
+	if(self.bUseSystemControl) then
+		if(self.ctrlEditbox) then
+			return self.ctrlEditbox:GetText() or "";
+		end
+		return "";
+	end
+
 	local text="";
 	local currentLineCount = self:GetLineCount();
 	local i;

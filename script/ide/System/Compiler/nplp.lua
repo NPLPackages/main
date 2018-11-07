@@ -1,10 +1,45 @@
-----------------------------------------------------------------------
--- NPL Parser
--- Extended from Metalua Parser
--- Add a 'def' macro structure
--- Author:Zhiyuan
--- Date: 2016-12-13
-----------------------------------------------------------------------
+--[[
+Title: NPL Parser
+Author: Zhiyuan
+Date: 2016-12-13
+Desc: Extended from Metalua Parser
+Add a 'def' macro structure
+use the lib:
+------------------------------------------------------------
+NPL.load("(gl)script/ide/System/Compiler/nplp.lua");
+local nplpClass = commonlib.gettable("System.Compiler.nplp")
+local nplp = nplpClass:new()
+local ast = nplp:src_to_ast("registerClickEvent('click', function() say('hello'); end)", "filename.npl");
+echo(ast);
+-- above code should look like below
+{
+  [1] = {
+	["tag"] = "Call",
+	[1] = {
+	  "registerClickEvent", ["tag"] = "Id",
+	},
+	[2] = {
+	  "click", ["tag"] = "String",
+	},
+	[3] = {
+	  ["tag"] = "Function",
+	  [1] = {},
+	  [2] = {
+		[1] = {
+		  ["tag"] = "Call",
+		  [1] = {
+			[1] = "say", ["tag"] = "Id",
+		  },
+		  [2] = {
+			[1] = "hello", ["tag"] = "String",
+		  },
+		},
+	  },
+	},
+  },
+}
+------------------------------------------------------------
+]]
 NPL.load("(gl)script/ide/System/Compiler/lib/util.lua");
 NPL.load("(gl)script/ide/System/Compiler/lib/lexer.lua");
 NPL.load("(gl)script/ide/System/Compiler/lib/gg.lua");

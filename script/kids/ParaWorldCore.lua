@@ -63,7 +63,7 @@ ParaEngine.SetWindowText(string.format("www.paraengine.com -- powered by ParaEng
 -- whether we are in a web browser plugin. 
 options.IsWebBrowser = ((ParaEngine.GetAttributeObject():GetField("CoreUsage", 1) % 2) == 0);
 -- whether we are in the mobile platform
-options.IsMobilePlatform = ParaEngine.GetAttributeObject():GetField("IsMobilePlatform", false);
+options.IsMobilePlatform = (ParaEngine.GetAppCommandLineByParam("IsMobilePlatform", "false") == "true"); -- ParaEngine.GetAttributeObject():GetField("IsMobilePlatform", false);
 -- do not allow resizing windows when running standalone mode. Allow resizing in web browser
 ParaEngine.GetAttributeObject():SetField("IgnoreWindowSizeChange", not options.IsWebBrowser);
 
@@ -279,7 +279,7 @@ function Map3DSystem.CreateWorld(NewWorldpath, BaseWorldPath, bUseBaseWorldNPC, 
 		return L"世界已经存在了, 如想重新创建, 请手工删除文件夹./"..commonlib.Encoding.DefaultToUtf8(NewWorldpath);
 	else
 		if(world:SetBaseWorldName(BaseWorldPath) ==  true) then
-			local sConfigFileName = ParaWorld.NewWorld(NewWorldpath, world.sBaseWorldCfgFile);
+			local sConfigFileName = ParaWorld.NewWorld(NewWorldpath.."/", world.sBaseWorldCfgFile);
 			if(sConfigFileName ~= "") then
 				world.sConfigFile = sConfigFileName;
 				-- copy the base world's attribute file to the newly created world.
@@ -398,10 +398,10 @@ function Map3DSystem.CreateWorld(NewWorldpath, BaseWorldPath, bUseBaseWorldNPC, 
 				--TODO: keep other info from the user.
 				return true;
 			else 
-				return "世界创建失败了。";
+				return L"世界创建失败了。";
 			end
 		else
-			return "被派生的世界不存在。";
+			return L"被派生的世界不存在。";
 		end
 	end
 end

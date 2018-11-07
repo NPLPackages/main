@@ -1,7 +1,7 @@
 --[[
 Title: ListBox
-Author(s): LiXizhi
-Date: 2015/4/29
+Author(s): LiPeng
+Date: 2017/10/3
 Desc:
 use the lib:
 ------------------------------------------------------------
@@ -199,7 +199,7 @@ function ListBox:updateViewportPos()
 end
 
 function ListBox:GetRow()
-	return math.floor(self:ClipRegion():height()/self.viewport:GetLineHeight());
+	return math.floor(self:ViewRegion():height()/self.viewport:GetLineHeight());
 end
 
 function ListBox:emitclicked()
@@ -216,7 +216,7 @@ function ListBox:selectIndex()
 end
 
 function ListBox:updateScrollInfo()
-	local clip = self:ClipRegion();
+	local clip = self:ViewRegion();
 	--if(not self.hbar:isHidden()) then
 		self.hbar:setRange(0, self.viewport:GetRealWidth() - clip:width() - 1);
 		self.hbar:setStep(self.viewport:WordWidth(), clip:width());
@@ -241,7 +241,7 @@ function ListBox:updateScrollValue()
 end
 
 function ListBox:updateScrollStatus(textbox_w, textbox_h)
-	local clip = self:ClipRegion();
+	local clip = self:ViewRegion();
 	if(textbox_w > clip:width()) then
 		--self.hbar:show();
 		self:horizontalScrollBarShow();
@@ -250,11 +250,11 @@ function ListBox:updateScrollStatus(textbox_w, textbox_h)
 		self:horizontalScrollBarHide();
 	end
 
-	clip = self:ClipRegion();
+	clip = self:ViewRegion();
 	if(textbox_h > clip:height()) then
 		--self.vbar:show();
 		self:verticalScrollBarShow();
-		clip = self:ClipRegion();
+		clip = self:ViewRegion();
 		if(textbox_w > clip:width()) then
 			--self.hbar:show();
 			self:horizontalScrollBarShow();

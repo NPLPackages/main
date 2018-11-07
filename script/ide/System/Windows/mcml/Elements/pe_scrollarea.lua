@@ -1,7 +1,7 @@
 --[[
 Title: scrollarea element
-Author(s): LiXizhi
-Date: 2015/4/29
+Author(s): LiPeng
+Date: 2017/10/3
 Desc: it create scroll area
 use the lib:
 ------------------------------------------------------------
@@ -25,6 +25,8 @@ function pe_scrollarea:LoadComponent(parentElem, parentLayout, style)
 	if(not _this) then
 		_this = ScrollArea:new():init(parentElem);
 		self:SetControl(_this);
+	else
+		_this:SetParent(parentElem);
 	end
 	PageElement.LoadComponent(self, _this.viewport, parentLayout, style);
 	_this:ApplyCss(self:GetStyle());

@@ -229,6 +229,10 @@ function pe_script.DoPageCode(code, pageCtrl)
 	end
 end
 
+function pe_script:NextTabNode()
+	return self.parent:NextTabNode(self);
+end
+
 -----------------------------
 -- page scope functions
 -----------------------------

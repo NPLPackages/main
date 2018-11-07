@@ -12,6 +12,7 @@ local ctl = CommonCtrl.FileExplorerCtrl:new{
 	parent = _parent,
 	rootfolder = "temp",
 	filter = "*.png;*.jpg",
+	folderlevels = 0,
 	AllowFolderSelection = true,
 	OnSelect = function(filepath) _guihelper.MessageBox(filepath);	end,
 	OnDoubleClick = nil,
@@ -140,14 +141,13 @@ local FileExplorerCtrl = commonlib.inherit(CommonCtrl.TreeView, {
 	selectedNodePath = nil,
 	treeViewName = nil,
 	
-	--记录所有被选中的目录
+	--seleted folder
 	CheckedPathList = {},
 	
-	--已经存在的一个路径列表
+	--existing folder path
 	fromTxtPathList = {},
-	
+	folderlevels = 0,
 	filterList = {"*.x","*.png","*.dds","*.lua","*.htm","*.html","*.xml","*.jpg","*.jpeg","*.gif","*.swf","*.avi","*.mp3"}
-	
 })
 CommonCtrl.FileExplorerCtrl = FileExplorerCtrl;
 
@@ -242,7 +242,7 @@ function FileExplorerCtrl:RefreshNode(node)
 		-- add folders
 		local folderPath = self:GetNodeNamePath(node)
 		if(not self.HideFolder) then
-			local output = FileExplorerCtrl.SearchFiles(nil, folderPath,self.MaxItemPerFolder);
+			local output = FileExplorerCtrl.SearchFiles(nil, folderPath,self.MaxItemPerFolder, nil, self.folderlevels);
 			if(output and #output>0) then
 				local _, path;
 				for _, path in ipairs(output) do
@@ -261,7 +261,7 @@ function FileExplorerCtrl:RefreshNode(node)
 			local filter;
 			local output = {};
 			for filter in string.gfind(self.filter, "([^%s;]+)") do
-				FileExplorerCtrl.SearchFiles(output, folderPath,self.MaxItemPerFolder, filter);
+				FileExplorerCtrl.SearchFiles(output, folderPath,self.MaxItemPerFolder, filter, self.folderlevels);
 			end
 			if(#output>0) then
 				local _, path;
@@ -294,13 +294,20 @@ end
 -- @param nMaxFilesNum: one can limit the total number of files in the search result. Default value is 50. the search will stop at this value even there are more matching files.
 -- @param filter: if nil, it defaults to "*."
 -- @return a table array containing relative to rootfolder file name.
-function FileExplorerCtrl.SearchFiles(output, rootfolder,nMaxFilesNum, filter)
+function FileExplorerCtrl.SearchFiles(output, rootfolder,nMaxFilesNum, filter, folderlevels)
 	if(rootfolder == nil) then return; end
 	if(filter == nil) then filter = "*." end
 	
 	output = output or {};
-	local sInitDir = ParaIO.GetCurDirectory(0)..rootfolder.."/";
-	local search_result = ParaIO.SearchFiles(sInitDir,filter, "", 0, nMaxFilesNum or 50, 0);
+	local sInitDir;
+	NPL.load("(gl)script/ide/Files.lua");
+	if(commonlib.Files.IsAbsolutePath(rootfolder)) then
+		sInitDir = rootfolder.."/";
+	else
+		sInitDir = ParaIO.GetCurDirectory(0)..rootfolder.."/";
+	end
+	
+	local search_result = ParaIO.SearchFiles(sInitDir,filter, "", folderlevels or 0, nMaxFilesNum or 500, 0);
 		local nCount = search_result:GetNumOfResult();		
 		local nextIndex = #output+1;
 		local i;

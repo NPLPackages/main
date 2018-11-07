@@ -313,6 +313,15 @@ function WebCacheDB:Init()
 		self:CreateOrUpgradeDatabase()
 	else
 		self.system_info_table_ = System.localserver.NameValueTable:new(self._db, self.kSystemInfoTableName);
+		
+		local hasInfoTable;
+		for row in self._db:rows(format("SELECT name FROM sqlite_master WHERE type='table' AND name='%s';", self.kSystemInfoTableName)) do
+			hasInfoTable = true;
+		end
+		if(not hasInfoTable) then
+			LOG.std("", "error", "localserver", "db file may be corrupted. we will recreate it");
+			self:CreateOrUpgradeDatabase()
+		end
 	end
 	
 	if(self._db) then

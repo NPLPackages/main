@@ -130,10 +130,8 @@ end
 function npl_page_env.InstallMethods(o)
 	for _, func_name in ipairs(s_env_methods) do
 		local f = function(...)
-			local self = getfenv(1);
-			return env_imp[func_name](self, ...);
+			return env_imp[func_name](o, ...);
 		end
-		setfenv(f, o);
 		o[func_name] = f;
 	end
 end

@@ -46,6 +46,7 @@ end
 
 function pe_text:LoadComponent(parentElem, parentLayout, style)
 	--local css = self:CreateStyle(nil, style);
+	css["text-align"] = css["text-align"] or "left";
 
 	local value = self:GetTextTrimmed();
 	self.value = value;
@@ -183,7 +184,7 @@ function pe_text:CalculateTextLayout_helper(labelText, parentLayout, css)
 
 		local _this = Label:new():init();
 		_this:SetText(labelText);
-		_this:setGeometry(left, top+line_padding, width, height);
+		_this:setGeometry(left, top, width, height);
 		self.labels:add(_this);
 
 		if(css) then
@@ -246,8 +247,19 @@ function pe_text:paintEvent(painter)
 		for i = 1, #self.labels do
 			local label = self.labels[i];
 			if(label) then
+				local x = label.crect:x();
+				local y = label.crect:y()+self.line_padding;
+				local w = label.crect:width();
+				local h = label.crect:height()-self.line_padding-self.line_padding;
 				local text = label:GetText();
-				painter:DrawTextScaled(label.crect:x(), label.crect:y(), text, self.scale);
+
+				if(be_shadow) then
+					painter:SetPen(shadow_color);
+					painter:DrawTextScaledEx(x + shadow_offset_x, y + shadow_offset_y, w, h, text, textAlignment, self.scale);
+					painter:SetPen(css.color or "#000000");
+				end
+
+				painter:DrawTextScaledEx(x, y, w, h, text, textAlignment, self.scale);
 			end
 		end
 	end

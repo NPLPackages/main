@@ -71,6 +71,7 @@ end
 --	pe_div._super.LoadComponent(self, _this, parentLayout, style);
 --end
 
+			end, "UniqueConnection");
 function pe_div:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 --	local ignore_onclick, ignore_tooltip, ignore_background;
 --	local onclick, ontouch;
@@ -103,13 +104,13 @@ function pe_div:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 --		end
 --	end
 
---	if(not css.background and not css.background2) then
---		if(css["background-color"]) then
---			css.background = "Texture/whitedot.png";	
---		else
---			css["background-color"] = "#ffffff00";
---		end
---	end
+	if(not css.background and not css.background2 and css["background-color"]~="#ffffff00") then
+		if(css["background-color"]) then
+			css.background = "Texture/whitedot.png";	
+		else
+			css["background-color"] = "#ffffff00";
+		end
+	end
 
 --	local _this = self.control;
 --	if(_this) then
@@ -169,6 +170,8 @@ function pe_div:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 --			_this:SetBackgroundColor();
 --		end
 --	end
+
+	pe_div._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)	
 end
 
 function pe_div:OnBeforeChildLayout(layout)
@@ -195,7 +198,7 @@ function pe_div:OnAfterChildLayout(layout, left, top, right, bottom)
 	end
 end
 
-function pe_div:OnClick(buttonName)
+function pe_div:OnClick()
 	local bindingContext;
 	local onclick = self.onclickscript or self:GetAttributeWithCode("onclick",nil,true);
 	if(onclick == "")then
@@ -212,11 +215,11 @@ function pe_div:OnClick(buttonName)
 				--bindingContext:UpdateControlsToData();
 				--values = bindingContext.values
 			--end	
-			result = self:DoPageEvent(onclick, buttonName, self);
+			result = self:DoPageEvent(onclick, self.buttonName, self);
 		else
 			-- user clicks the button, yet without form info
 			-- the callback function format is function(buttonName, self) end
-			result = self:DoPageEvent(onclick, buttonName, self)
+			result = self:DoPageEvent(onclick, self.buttonName, self)
 		end
 	end
 

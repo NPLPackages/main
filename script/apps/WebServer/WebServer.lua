@@ -280,6 +280,10 @@ function WebServer:GetServerConfig()
 	return self.server_configs[1];
 end
 
+function WebServer:GetConfig()
+	return self.config;
+end
+
 -- stop a server that is started by StartServer;
 function WebServer:StopServer()
 	self.is_exiting = true;

@@ -59,7 +59,7 @@ local vector3d = commonlib.gettable("mathlib.vector3d");
 local BufferPicking = commonlib.inherit(commonlib.gettable("System.Core.ToolBase"), commonlib.gettable("System.Scene.BufferPicking"));
 
 BufferPicking:Property("Name", "BufferPicking");
-BufferPicking:Property({"m_nPickingRenderFrame", 0, "GetPickingRenderFrame", "SetPickingRenderFrame"});
+BufferPicking:Property({"m_nPickingRenderFrame", 0, "GetPickingRenderFrame", "SetPickingRenderFrame", auto=true});
 
 
 function BufferPicking:ctor()
@@ -161,15 +161,27 @@ function BufferPicking:Pick(x, y, width, height, nViewportId)
 	return self:GetPickingResult();
 end
 
--- return an array of unique picking id in the last pick call. it may return nil if nothing is picked
+
+-- return array, size:  an array of unique picking id in the last pick call. it may return nil if nothing is picked
+-- array start from index 0.
 function BufferPicking:GetPickingResult()
 	local count = self:GetPickingCount();
 	if(count > 0) then
-		local result = {};
-		for i=0, count-1 do
-			result[#result+1] = self:GetPickingID(i);
+		if(ParaEngine.hasFFI) then
+			if(not self.result) then
+				local ffi = require('ffi');
+				self.result = ffi.new('uint32_t* [1]');
+			end
+			self.engine:GetFieldCData("FetchPickingResult", self.result);
+			return self.result[0], count;
+		else
+			self.result = self.result or {};
+			local result = self.result;
+			for i=0, count-1 do
+				result[i] = self:GetPickingID(i);
+			end
+			return result, count;
 		end
-		return result;
 	end
 end
 
@@ -287,23 +299,27 @@ end
 -- @param alignment: default to "_lt" left top.
 -- @param left, top, width, height:
 function BufferPicking:DebugShow(alignment, left, top, width, height)
+	local textureAsset;
 	if(self.rendertarget) then
+		textureAsset = self.rendertarget:GetPrimaryAsset();
+	elseif(self:IsOverlay()) then
+		textureAsset = ParaAsset.LoadTexture("_miniscenegraph_overlay", "_miniscenegraph_overlay", 0)
+	end
+
+	if(textureAsset) then
 		alignment, left, top, width, height = alignment or "_lt", left or 10, top or 60, width or 128, height or 128;
 		if(not self.debug_ui) then
 			-- create a GUI object that displays the render target. 
 			local _parent = ParaUI.CreateUIObject("button", "paintDevice", alignment, left, top, width, height);
 			_parent.zorder=10;
-			_parent.tooltip = "click to make dirty and redraw";
-			_parent:SetScript("onclick", function()
-				-- click to redraw
-				-- renderTarget:SetField("Dirty", true);
-			end)
+			_parent.enabled = false;
 			_parent:AttachToRoot();
 			self.debug_ui = _parent;
+			_guihelper.SetUIColor(_parent, "255 255 255 255");
 		else
 			self.debug_ui:Reposition(alignment, left, top, width, height);
 		end
-		self.debug_ui:SetBGImage(self.rendertarget:GetPrimaryAsset());
+		self.debug_ui:SetBGImage(textureAsset);
 	end
 end
 	

@@ -1,7 +1,7 @@
 --[[
 Title: radio element
 Author(s): LiPeng
-Date: 2015/4/29
+Date: 2017/10/3
 Desc: it handles HTML tags of <radio> in HTML. 
 use the lib:
 ------------------------------------------------------------
@@ -18,6 +18,7 @@ pe_radio:Property({"class_name", "pe:radio"});
 
 function pe_radio:ctor()
 	self.groupName = nil;
+	self:SetTabIndex(0);
 end
 
 function pe_radio:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
@@ -35,6 +36,8 @@ function pe_radio:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 		_this = Button:new():init(parentElem);
 		_this:SetPolygonStyle(polygonStyle or "radio");
 		self:SetControl(_this);
+	else
+		_this:SetParent(parentElem);
 	end
 	
 	_this:setCheckable(true);
@@ -44,17 +47,18 @@ function pe_radio:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 
 	local checked = self:GetAttributeWithCode("checked", nil, true);
 	if(checked) then
-		_this:setChecked(true);
+		checked = if_else(checked == "true" or checked == "checked",true,false);
+		_this:setChecked(checked);
 	end
 
 	self.groupName = self:GetAttribute("name") or "_defaultRadioGroup";
-	local buttonName = self:GetAttributeWithCode("name",nil,true);
-	_this:Connect("clicked", function()
-		self:OnClick(buttonName);
-	end);
+	self.buttonName = self:GetAttributeWithCode("name",nil,true);
+	_this:Connect("clicked", self, self.OnClick, "UniqueConnection");
+
+	pe_radio._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
 end
 
-function pe_radio:OnClick(buttonName)
+function pe_radio:OnClick()
 	local result;
 	local value = self:GetAttributeWithCode("value", nil, true);
 	
@@ -79,7 +83,7 @@ function pe_radio:OnClick(buttonName)
 							count = count + 1;
 						else
 							ctl:setChecked(false);
-							radio:SetAttribute("checked", nil);
+							radio:SetAttribute("checked", "false");
 						end
 					elseif(radio_value == value) then
 						is_last_checked = false;
@@ -98,7 +102,7 @@ function pe_radio:OnClick(buttonName)
 	end
 	if(onclick) then
 		-- the callback function format is function(buttonName, self) end
-		result = self:DoPageEvent(onclick, buttonName, self);
+		result = self:DoPageEvent(onclick, value, self);
 	end
 
 	return result;

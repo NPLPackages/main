@@ -1,7 +1,7 @@
 --[[
 Title: ScrollArea
-Author(s): LiXizhi
-Date: 2015/4/29
+Author(s): LiPeng
+Date: 2017/10/3
 Desc:
 use the lib:
 ------------------------------------------------------------
@@ -27,7 +27,7 @@ end
 
 -- clip region. 
 function ViewPort:ClipRegion()
-	local r = self.parent:ClipRegion();
+	local r = self.parent:ViewRegion();
 	if(r) then
 		r:setX(r:x() - self:x());
 		r:setY(r:y() - self:y());
@@ -103,7 +103,7 @@ function ScrollArea:updateViewportPos()
 end
 
 function ScrollArea:updateScrollInfo()
-	local clip = self:ClipRegion();
+	local clip = self:ViewRegion();
 	--if(not self.hbar:isHidden()) then
 		self.hbar:setRange(0, self.viewport:width() - clip:width() - 1);
 		self.hbar:setStep(clip:width()/10, clip:width());
@@ -128,7 +128,7 @@ function ScrollArea:updateScrollValue()
 end
 
 function ScrollArea:updateScrollStatus(textbox_w, textbox_h)
-	local clip = self:ClipRegion();
+	local clip = self:ViewRegion();
 	if(textbox_w > clip:width()) then
 		--self.hbar:show();
 		self:horizontalScrollBarShow();
@@ -137,11 +137,11 @@ function ScrollArea:updateScrollStatus(textbox_w, textbox_h)
 		self:horizontalScrollBarHide();
 	end
 
-	clip = self:ClipRegion();
+	clip = self:ViewRegion();
 	if(textbox_h > clip:height()) then
 		--self.vbar:show();
 		self:verticalScrollBarShow();
-		clip = self:ClipRegion();
+		clip = self:ViewRegion();
 		if(textbox_w > clip:width()) then
 			--self.hbar:show();
 			self:horizontalScrollBarShow();

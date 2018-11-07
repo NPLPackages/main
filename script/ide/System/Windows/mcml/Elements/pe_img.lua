@@ -1,7 +1,7 @@
 --[[
 Title: imgeak row
-Author(s): LiXizhi
-Date: 2015/4/29
+Author(s): LiPeng
+Date: 2017/10/3
 Desc: it handles HTML tags of <img> . 
 use the lib:
 ------------------------------------------------------------

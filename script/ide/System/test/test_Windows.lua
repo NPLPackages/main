@@ -22,6 +22,7 @@ NPL.load("(gl)script/ide/System/Windows/Controls/Button.lua");
 NPL.load("(gl)script/ide/System/Windows/Application.lua");
 NPL.load("(gl)script/ide/System/Windows/Controls/EditBox.lua");
 NPL.load("(gl)script/ide/System/Windows/Controls/MultiLineEditbox.lua");
+NPL.load("(gl)script/ide/System/Windows/Controls/ProgressBar.lua");
 local MultiLineEditbox = commonlib.gettable("System.Windows.Controls.MultiLineEditbox");
 local EditBox = commonlib.gettable("System.Windows.Controls.EditBox");
 local Application = commonlib.gettable("System.Windows.Application");
@@ -30,6 +31,7 @@ local Rectangle = commonlib.gettable("System.Windows.Shapes.Rectangle");
 local UIElement = commonlib.gettable("System.Windows.UIElement");
 local Window = commonlib.gettable("System.Windows.Window")
 local Event = commonlib.gettable("System.Core.Event");
+local ProgressBar = commonlib.gettable("System.Windows.Controls.ProgressBar");
 	
 -- define a new class
 local test_Windows = commonlib.gettable("System.Core.Test.test_Windows");
@@ -145,7 +147,7 @@ function test_Windows:TestMouseEnterLeaveEvents()
 end
 
 -- test loading componets via url
-function test_Windows:TestMCMLPage()
+function test_Windows:TestMCMLPage(url)
 	-- remove old window
 	local window = commonlib.gettable("test.window")
 	if(window and window.CloseWindow) then
@@ -157,7 +159,7 @@ function test_Windows:TestMCMLPage()
 	local Window = commonlib.gettable("System.Windows.Window")
 	local window = Window:new();
 	window:Show({
-		url="script/ide/System/test/test_mcml_page.html", 
+		url=url or "script/ide/System/test/test_mcml_page.html", 
 		alignment="_lt", left = 0, top = 0, width = 800, height = 400,
 	});
 	-- keep a reference for refresh
@@ -243,5 +245,28 @@ function test_Windows:test_button()
 	button:setGeometry(50, 50, 60, 20);
 
 	window:Show("my_window", nil, "_mt", 0,0, 600, 600);
+	test_Windows.windows = {window};
+end
+
+function test_Windows:test_progressbar()
+	local window = Window:new();
+	local progressBar = ProgressBar:new():init(window);
+	progressBar:setRange(0,10);
+	progressBar:SetValue(0,true);
+--	progressBar:SetDirection("vertical");
+--	progressBar:setGeometry(50,50,32,200);
+	progressBar:setGeometry(100,100,200,32);
+
+	local button = Button:new():init(window);
+	local style = "normal";
+	button:SetPolygonStyle(style);
+	button:setText("Add");
+	button:Connect("clicked",function()
+		progressBar:SliderSingleStepAdd();
+	end)
+	button:setGeometry(50, 300, 60, 20);
+
+	window:Show("my_window", nil, "_mt", 0,0, 500, 500);
+
 	test_Windows.windows = {window};
 end

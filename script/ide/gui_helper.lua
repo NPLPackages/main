@@ -181,6 +181,7 @@ function _guihelper.GetTextObjectByFont(fontName)
 				_this.font = fontName;
 			end
 			_this:GetFont("text").format = 1+256; -- center and no clip
+			-- _this:GetFont("text").format = 32+256; -- left top single line and no clip
 			_parent:AddChild(_this);
 			font_objects[fontName] = _this;
 			return font_objects[fontName];

@@ -43,12 +43,21 @@ end
 -- If the request is an OPTIONS request, the script exits with either access
 -- control headers sent, or a 403 response if the origin is not allowed. For
 -- other request methods, you will receive a return value.
+-- @param bAllowEverything: true to allow all kinds of request. this is not safe, use with care.
 -- @return bool|string Returns the origin URL if headers are sent. Returns false
 -- if headers are not sent.
-function send_origin_headers()
+function send_origin_headers(bAllowEverything)
 	local origin = get_http_origin();
 
-	if ( is_allowed_http_origin( origin ) ) then
+	if ( is_allowed_http_origin(origin) ) then
+		addheader('Access-Control-Allow-Origin', origin);
+		if(bAllowEverything) then
+			addheader('Access-Control-Allow-Credentials', "true");
+			addheader("Access-Control-Allow-Headers", "Origin, No-Cache, X-Requested-With, If-Modified-Since, Pragma, Last-Modified, Cache-Control, Expires, Content-Type, X-E4M-With, Authorization");
+		end
+		if ( 'OPTIONS' == request:GetMethod() ) then
+			exit();
+		end
 		return origin;
 	end
 
