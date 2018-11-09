@@ -402,21 +402,23 @@ function Button:paintRadioButton(painter)
 	local radius = math.ceil(size/2);
 	local x, y = self:x() + self:width()/2, self:y() + self:height()/2;
 	
+	painter:Translate(x, y);
 	painter:SetPen("#b5b5b5");
-	painter:DrawCircle(x,y,0,radius,"z", true);
+	painter:DrawCircle(0,0,0,radius,"z", true);
 
 	painter:SetPen("#dedede");
-	painter:DrawCircle(x,y,0,radius-2,"z",true);
-
+	painter:DrawCircle(0,0,0,radius-2,"z",true);
 
 	if(self.down or self.menuOpen or self.checked) then
 		painter:SetPen("#666666");
-		painter:DrawCircle(x,y,0,radius-3,"z",true);
+		painter:DrawCircle(0,0,0,radius-3,"z",true);
 	end
 
 	-- BackgourdOver
 	if(self:underMouse()) then
 		painter:SetPen("#ffffff33");
-		painter:DrawCircle(x,y,0,radius,"z");
+		painter:DrawCircle(0,0,0,radius,"z");
 	end
+
+	painter:Translate(-x, -y);
 end
