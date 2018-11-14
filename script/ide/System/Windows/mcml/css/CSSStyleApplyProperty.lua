@@ -150,6 +150,7 @@ function CSSStyleApplyProperty:init()
 	self:SetPropertyHandler("direction", ApplyPropertyDefault:new():init(ComputedStyle.Direction, ComputedStyle.SetDirection, ComputedStyle.initialDirection));
 
 	self:SetPropertyHandler("background-image", ApplyPropertyDefault:new():init(ComputedStyle.BackgroundImage, ComputedStyle.SetBackgroundImage, ComputedStyle.initialBackgroundImage));
+	self:SetPropertyHandler("background", ApplyPropertyDefault:new():init(ComputedStyle.BackgroundImage, ComputedStyle.SetBackgroundImage, ComputedStyle.initialBackgroundImage));
 	self:SetPropertyHandler("background-color", ApplyPropertyDefault:new():init(ComputedStyle.BackgroundColor, ComputedStyle.SetBackgroundColor, ComputedStyle.initialBackgroundColor));
 
 	self:SetPropertyHandler("border-bottom-color", ApplyPropertyDefault:new():init(ComputedStyle.BorderBottomColor, ComputedStyle.SetBorderBottomColor, ComputedStyle.initialColor));

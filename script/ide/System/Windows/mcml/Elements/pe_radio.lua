@@ -21,41 +21,81 @@ function pe_radio:ctor()
 	self:SetTabIndex(0);
 end
 
-function pe_radio:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
-	local default_css = mcml:GetStyleItem(self.class_name);
-	css.float = css.float or true;
-	css.width = css.width or default_css.iconSize;
-	css.height = css.height or default_css.iconSize;
-	css["background"] = self:GetAttributeWithCode("UncheckedBG", nil, true) or default_css["background"];
-	css["background_checked"] = self:GetAttributeWithCode("CheckedBG", nil, true) or default_css["background_checked"];
+function pe_radio:CreateControl()
+	local parentElem = self:GetParentControl();
+	local _this = Button:new():init(parentElem);
+	self:SetControl(_this);
 
 	local polygonStyle = self:GetAttributeWithCode("polygonStyle", nil, true);
+	local direction = self:GetAttributeWithCode("direction", nil, true);
+	_this:SetPolygonStyle(polygonStyle or "radio");
+	_this:SetDirection(direction);
 
-	local _this = self.control;
-	if(not _this) then
-		_this = Button:new():init(parentElem);
-		_this:SetPolygonStyle(polygonStyle or "radio");
-		self:SetControl(_this);
-	else
-		_this:SetParent(parentElem);
-	end
-	
-	_this:setCheckable(true);
-	_this:ApplyCss(css);
-	_this:SetText(self:GetAttributeWithCode("Label", nil, true));
 	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
+	_this:setCheckable(self:GetBool("enabled",true));
 
 	local checked = self:GetAttributeWithCode("checked", nil, true);
 	if(checked) then
 		checked = if_else(checked == "true" or checked == "checked",true,false);
-		_this:setChecked(checked);
+		self:setChecked(checked);
 	end
 
 	self.groupName = self:GetAttribute("name") or "_defaultRadioGroup";
 	self.buttonName = self:GetAttributeWithCode("name",nil,true);
 	_this:Connect("clicked", self, self.OnClick, "UniqueConnection");
+end
+
+function pe_radio:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
+--	local default_css = mcml:GetStyleItem(self.class_name);
+--	css.float = css.float or true;
+--	css.width = css.width or default_css.iconSize;
+--	css.height = css.height or default_css.iconSize;
+--	css["background"] = self:GetAttributeWithCode("UncheckedBG", nil, true) or default_css["background"];
+--	css["background_checked"] = self:GetAttributeWithCode("CheckedBG", nil, true) or default_css["background_checked"];
+--
+--	local polygonStyle = self:GetAttributeWithCode("polygonStyle", nil, true);
+--
+--	local _this = self.control;
+--	if(not _this) then
+--		_this = Button:new():init(parentElem);
+--		_this:SetPolygonStyle(polygonStyle or "radio");
+--		self:SetControl(_this);
+--	else
+--		_this:SetParent(parentElem);
+--	end
+--	
+--	_this:setCheckable(true);
+--	_this:ApplyCss(css);
+--	_this:SetText(self:GetAttributeWithCode("Label", nil, true));
+--	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
+--
+--	local checked = self:GetAttributeWithCode("checked", nil, true);
+--	if(checked) then
+--		checked = if_else(checked == "true" or checked == "checked",true,false);
+--		_this:setChecked(checked);
+--	end
+--
+--	self.groupName = self:GetAttribute("name") or "_defaultRadioGroup";
+--	self.buttonName = self:GetAttributeWithCode("name",nil,true);
+--	_this:Connect("clicked", self, self.OnClick, "UniqueConnection");
 
 	pe_radio._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
+end
+
+function pe_radio:setChecked(checked)
+	if(self.control) then
+		self.control:setChecked(checked);
+	end
+	checked = if_else(checked, "true", "false");
+	self:SetAttribute("checked", checked);
+end
+
+function pe_radio:getChecked()
+	local checked = self:GetAttributeWithCode("checked", nil, true);
+	if(checked) then
+		checked = if_else(checked == "true" or checked == "checked",true,false);
+	end
+	return checked;
 end
 
 function pe_radio:OnClick()
@@ -82,13 +122,15 @@ function pe_radio:OnClick()
 							max_left = max_left - 1;
 							count = count + 1;
 						else
-							ctl:setChecked(false);
-							radio:SetAttribute("checked", "false");
+							radio:setChecked(false);
+							--ctl:setChecked(false);
+							--radio:SetAttribute("checked", "false");
 						end
 					elseif(radio_value == value) then
 						is_last_checked = false;
-						ctl:setChecked(true);
-						radio:SetAttribute("checked", "true");
+						radio:setChecked(true);
+						--ctl:setChecked(true);
+						--radio:SetAttribute("checked", "true");
 					end	
 				end
 			end

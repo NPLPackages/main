@@ -113,6 +113,7 @@ end
 function CSSSelectorParser:GetAttribute(str)
 	str = string.gsub(str, "]", "");
 	local name,flag,value = string.match(str,"([^=|~*^$]+)([=|~*^$]*)([^^=|~*^$]*)");
+	value = string.gsub(value,"\"","");
 	local matchType = CSSSelector.MatchType.kAttributeSet;
 	if(flag) then
 		if(flag == "=") then

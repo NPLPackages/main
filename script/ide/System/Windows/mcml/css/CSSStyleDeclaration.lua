@@ -316,7 +316,7 @@ end
 function CSSStyleDeclaration:FindPropertyWithName(name)
 	local pos = self:FindPropertyPositionWithName(name);
 	if(pos) then
-		return self.properties.get(pos);
+		return self.properties:get(pos);
 	end
 	return nil;
 end

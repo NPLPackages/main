@@ -127,6 +127,6 @@ function LayoutTheme:BaselinePosition(o)
 --    return box->height() + box->marginTop() + m_theme->baselinePositionAdjustment(o->style()->appearance()) * o->style()->effectiveZoom();
 --#else
     --return math.floor(box:Height()*0.95+0.5);
-	return box:MarginTop();
+	return box:Height();
 --#endif
 end

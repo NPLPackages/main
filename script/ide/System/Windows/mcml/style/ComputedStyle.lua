@@ -1285,7 +1285,7 @@ function ComputedStyle:ResetBorderBottomRightRadius() self.surround.border.m_bot
 function ComputedStyle:ResetOutline() self.m_background.m_outline = OutlineValue:new(); end
 
 function ComputedStyle:SetBackgroundColor(v) self.m_background.m_color = v; end
-function ComputedStyle:SetBackgroundImage(v) self.m_background.background = v; end
+function ComputedStyle:SetBackgroundImage(v) self.m_background.m_background = v; end
 
 function ComputedStyle:SetBorderTopLeftRadius(s) self.surround.border.m_topLeft = s; end
 function ComputedStyle:SetBorderTopRightRadius(s) self.surround.border.m_topRight = s; end
