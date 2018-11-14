@@ -18,6 +18,8 @@ local ComputedStyleConstants = commonlib.gettable("System.Windows.mcml.style.Com
 local Color = commonlib.gettable("System.Windows.mcml.style.Color");
 local Length = commonlib.gettable("System.Windows.mcml.platform.Length");
 
+local string_gsub = string.gsub;
+
 local CSSProperty = commonlib.gettable("System.Windows.mcml.css.CSSProperty");
 CSSProperty.__index = CSSProperty;
 

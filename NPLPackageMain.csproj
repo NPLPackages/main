@@ -1071,6 +1071,8 @@
     <Content Include="script\test\gridviewtest.lua" />
     <Content Include="script\test\IDE_Test.lua" />
     <Content Include="script\test\MCMLV2\mcml_window.html" />
+    <Content Include="script\test\MCMLV2\test_layout_button.html" />
+    <Content Include="script\test\MCMLV2\test_layout_img.html" />
     <Content Include="script\test\MCMLV2\test_pe_textarea.html" />
     <Content Include="script\test\MCMLV2\test_layout_anonymous_block.html" />
     <Content Include="script\test\MCMLV2\test_layout_block.html" />
@@ -1080,7 +1082,8 @@
     <Content Include="script\test\MCMLV2\test_layout_position.html" />
     <Content Include="script\test\MCMLV2\test_layout_refresh_when_add_or_remove_node.html" />
     <Content Include="script\test\MCMLV2\test_layout_refresh_when_style_changed.html" />
-    <Content Include="script\test\MCMLV2\test_layout_text.html" />    <Content Include="script\test\MCML_Sample.xml" />
+    <Content Include="script\test\MCMLV2\test_layout_text.html" />
+    <Content Include="script\test\MCML_Sample.xml" />
     <Content Include="script\test\media\bumpMap.dds" />
     <Content Include="script\test\media\cloud.dds" />
     <Content Include="script\test\media\ocean_water.fx" />
@@ -1150,7 +1153,7 @@
     <None Include="script\ide\System\Scene\Assets\ParaXModelAttr.lua" />
     <None Include="script\ide\System\Util\SyntaxAnalysis.lua" />
     <None Include="script\ide\System\Util\EnumCreater.lua" />
-    <None Include="script\ide\System\Windows\Controls\Box.lua" />    <None Include="script\ide\System\Windows\Controls\Button_p.lua" />
+    <None Include="script\ide\System\Windows\Controls\Button_p.lua" />
     <None Include="script\ide\System\Windows\Controls\DropdownListbox.lua" />
     <None Include="script\ide\System\Windows\Controls\GridView.lua" />
     <None Include="script\ide\System\Windows\Controls\ListBox.lua" />
@@ -1158,8 +1161,11 @@
     <None Include="script\ide\System\Windows\Controls\MultiLineEditbox.lua" />
     <None Include="script\ide\System\Windows\Controls\Primitives\ScrollAreaBase.lua" />
     <None Include="script\ide\System\Windows\Controls\Primitives\SliderBase.lua" />
+    <None Include="script\ide\System\Windows\mcml\layout\LayoutImage.lua" />
+    <None Include="script\ide\System\Windows\mcml\layout\LayoutReplaced.lua" />
     <None Include="script\ide\System\Windows\UITextElement.lua" />
-    <None Include="script\ide\System\Windows\Controls\ProgressBar.lua" />    <None Include="script\ide\System\Windows\Controls\ScrollArea.lua" />
+    <None Include="script\ide\System\Windows\Controls\ProgressBar.lua" />
+    <None Include="script\ide\System\Windows\Controls\ScrollArea.lua" />
     <None Include="script\ide\System\Windows\Controls\ScrollBar.lua" />
     <None Include="script\ide\System\Windows\Controls\SliderBar.lua" />
     <None Include="script\ide\System\Windows\Controls\TextControl.lua" />

@@ -2085,7 +2085,7 @@ function LayoutBlock:LayoutRunsAndFloatsInRange(layoutState, resolver, cleanLine
             -- FIXME: This ownership is reversed. We should own the BidiRunList and pass it to createBidiRunsForLine.
             local bidiRuns = resolver:Runs();
             constructBidiRuns(resolver, bidiRuns, _end, override, layoutState:LineInfo():PreviousLineBrokeCleanly());
-			bidiRuns:print();
+			--bidiRuns:print();
             --ASSERT(resolver.position() == end);
 
             --BidiRun* trailingSpaceRun = !layoutState.lineInfo().previousLineBrokeCleanly() ? handleTrailingSpaces(bidiRuns, resolver.context()) : 0;

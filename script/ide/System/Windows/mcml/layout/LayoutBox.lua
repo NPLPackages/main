@@ -817,7 +817,6 @@ function LayoutBox:ComputeLogicalWidthInRegion(region, offsetFromLogicalTopOfFir
 	else
 		logicalWidthLength = self:Style():LogicalWidth();
 	end
-
 	local cb = self:ContainingBlock();
 	local containerLogicalWidth = math.max(0, self:ContainingBlockLogicalWidthForContentInRegion(region, offsetFromLogicalTopOfFirstPage));
 	local hasPerpendicularContainingBlock = cb:IsHorizontalWritingMode() ~= self:IsHorizontalWritingMode();
@@ -831,7 +830,7 @@ function LayoutBox:ComputeLogicalWidthInRegion(region, offsetFromLogicalTopOfFir
         self:SetMarginStart(self:Style():MarginStart():CalcMinValue(containerLogicalWidth));
         self:SetMarginEnd(self:Style():MarginEnd():CalcMinValue(containerLogicalWidth));
         if (treatAsReplaced) then
-            self:SetLogicalWidth(math.max(LogicalWidthLength:CalcFloatValue(0) + self:BorderAndPaddingLogicalWidth(), self:MinPreferredLogicalWidth()));
+            self:SetLogicalWidth(math.max(logicalWidthLength:CalcFloatValue(0) + self:BorderAndPaddingLogicalWidth(), self:MinPreferredLogicalWidth()));
 		end
         return;
     end
@@ -2024,8 +2023,12 @@ end
 function LayoutBox:BaselinePosition(baselineType, firstLine, direction, linePositionMode)
 	linePositionMode = linePositionMode or "PositionOnContainingLine";
 	if (self:IsReplaced()) then
+		echo("LayoutBox:BaselinePosition");
+		self:PrintNodeInfo();
+		echo({self.marginTop, self.marginBottom})
+		echo(self:FrameRect());
         --local result = if_else(direction == "HorizontalLine", self.marginTop + self:Height() + self.marginBottom, self.marginRight + self:Width() + self.marginLeft);
-		local result = if_else(direction == "HorizontalLine", self.marginTop + self.marginBottom, self.marginRight + self.marginLeft);
+		local result = if_else(direction == "HorizontalLine", self.marginTop + self:Height() + self.marginBottom, self.marginRight + self:Width() + self.marginLeft);
         if (baselineType == "AlphabeticBaseline") then
             return result;
 		end
@@ -2944,6 +2947,8 @@ end
 
 --LayoutUnit RenderBox::computeReplacedLogicalWidthRespectingMinMaxWidth(LayoutUnit logicalWidth, bool includeMaxWidth) const
 function LayoutBox:ComputeReplacedLogicalWidthRespectingMinMaxWidth(logicalWidth, includeMaxWidth)
+	echo("LayoutBox:ComputeReplacedLogicalWidthRespectingMinMaxWidth");
+	echo(logicalWidth);
     local minLogicalWidth = self:ComputeReplacedLogicalWidthUsing(self:Style():LogicalMinWidth());
     local maxLogicalWidth = if_else(not includeMaxWidth or self:Style():LogicalMaxWidth():IsUndefined(), logicalWidth, self:ComputeReplacedLogicalWidthUsing(self:Style():LogicalMaxWidth()));
     return math.max(minLogicalWidth, math.min(logicalWidth, maxLogicalWidth));

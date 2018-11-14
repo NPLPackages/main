@@ -1,0 +1,50 @@
+<!-- "script/test/MCMLV2/test_layout_img.html" -->
+<html>
+<pe:mcml>
+<script type="text/npl" refresh="false">
+    <![CDATA[
+    function tvwOnClickNode(treenode)
+        echo("tvwOnClickNode");
+    end
+    function tvwOnClickNode2()
+        echo("tvwOnClickNode2");
+        --local nodes = Page:jquery("input#button");
+        local nodes = Page:jquery("div#div1");
+        echo("nodes");
+        echo(#nodes)
+        local node = nodes[1];
+        echo(node.name);
+        echo(node.attr.name);
+        --node:SetAttribute("style","margin:50px;background-color:green;font-weight:bold;");
+        --node:SetAttribute("class","fontBold");
+        --node:GetInlineStyleDecl():SetProperty("font-weight","");
+        node:GetInlineStyleDecl():SetProperty("font-size","30px");
+        --node:GetInlineStyleDecl():SetProperty("padding","");
+    end
+    ]]>
+</script>
+<style>
+    .green {
+        background-color:green;
+        margin:30px;
+        padding:20px;
+    }
+
+    .burlywood {
+        background-color:burlywood;
+        padding:10px;
+    }
+    .fontBold {
+        font-weight:bold;
+    }
+</style>
+<!--<div name="div1" id="testDiv" style="" class="burlywood">1111<input name="button" type="button" value="111" style="background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="tvwOnClickNode2()"/></div>-->
+    <div name="div" style="margin:20px;background-color:antiquewhite;line-height:40px;font-size:30px;"><img src="Textures/left.jpg" width="30" height="30"/>gp李鹏</div>
+<!--<div name="div1" style="margin:20px;background-color:aquamarine;">
+    <span style="background-color:antiquewhite;">xxxx</span>yyyy
+</div>
+<span style="display:inline-block;margin:20px;padding:30px;background-color:orangered;">1111111</span>-->
+<!--<div name="div1" id="testDiv" style="padding:50px;" class="burlywood"><button style="margin:25px;padding:25px;background-color:white;color:aqua;font-weight:bold;" onclick="tvwOnClickNode2()" >1111</button></div>-->
+<!--<div name="div2" class="green" style="font-weight:bold">无背景颜色</div>-->
+</pe:mcml>
+</html>
