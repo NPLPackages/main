@@ -21,9 +21,9 @@ function FontMetrics:new(size)
 --	o.m_ascent = size*0.8;
 --	o.m_descent = size*0.2;
 --	o.m_lineGap = size*0.3;
-	o.m_ascent = size*16/16;
-	o.m_descent = size*3/16;
-	o.m_lineGap = size*3/16;
+	o.m_ascent = size*0.86;
+	o.m_descent = size*0.14;
+	o.m_lineGap = size*0.3;
 	o.m_lineSpacing = o.m_ascent + o.m_descent + o.m_lineGap;
 	
 	setmetatable(o, self);
@@ -31,8 +31,8 @@ function FontMetrics:new(size)
 end
 
 function FontMetrics:init(size)
-	self.m_ascent = size*0.8;
-	self.m_descent = size*0.2;
+	self.m_ascent = size*0.86;
+	self.m_descent = size*0.14;
 	self.m_lineGap = size*0.3;
 	self.m_lineSpacing = self.m_ascent + self.m_descent + self.m_lineGap;
 
