@@ -97,7 +97,7 @@ function InlineIterator:Increment(resolver)
 	end
     if (self.obj:IsText()) then
         self:FastIncrementInTextNode();
-        if (self.pos <= self.obj:TextLength()) then
+        if (self.pos <= self.obj:TextLength() and not self.obj:IsBR()) then
             return;
 		end
     end
