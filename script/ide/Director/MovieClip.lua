@@ -322,10 +322,15 @@ function MovieClip:DoPlay_ByMcmlNode(movie_mcmlNode,motion_index,run_time)
 			local delta = timer:GetDelta(200);
 			local motion = self.motion_list[motion_index];
 			if(not motion)then
-				echo({self.uid,motion_index});
+				echo({self.uid,motion_index, "error: wrong MovieClip mcml node"});
+				self:Clear();
+				self:DispatchEvent({type = "movie_end" ,motion_index = motion_index, run_time = run_time, });
+				return;
 			end 
 			local Motion_Node = motion["Motion_Node"];
+			
 			local duration = Movie.GetNumber(Motion_Node,"Duration") or 0;
+			
 			if(run_time > duration)then
 				motion_index = motion_index + 1;
 				if(motion_index > motion_cnt)then

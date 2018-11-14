@@ -748,7 +748,7 @@ function MotionXmlToTable.PlayCombatMotion_Internal2(filepath,callbackFunc,args)
 	local self = MotionXmlToTable;
 	args = args or {};
 	MotionXmlToTable.inner_combat_callback = nil;
-	if(not filepath)then
+	if(not filepath or filepath == "")then
 		if(callbackFunc)then
 			callbackFunc();
 		end
@@ -823,7 +823,7 @@ end
 function MotionXmlToTable.PlayCombatMotion_Internal(filepath,callbackFunc,args)
 	local self = MotionXmlToTable;
 	args = args or {};
-	if(not filepath)then
+	if(not filepath or filepath == "")then
 		if(callbackFunc)then
 			callbackFunc();
 		end
