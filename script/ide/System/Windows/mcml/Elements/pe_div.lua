@@ -71,7 +71,6 @@ end
 --	pe_div._super.LoadComponent(self, _this, parentLayout, style);
 --end
 
-			end, "UniqueConnection");
 function pe_div:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 --	local ignore_onclick, ignore_tooltip, ignore_background;
 --	local onclick, ontouch;
@@ -104,13 +103,13 @@ function pe_div:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 --		end
 --	end
 
-	if(not css.background and not css.background2 and css["background-color"]~="#ffffff00") then
-		if(css["background-color"]) then
-			css.background = "Texture/whitedot.png";	
-		else
-			css["background-color"] = "#ffffff00";
-		end
-	end
+--	if(not css.background and not css.background2 and css["background-color"]~="#ffffff00") then
+--		if(css["background-color"]) then
+--			css.background = "Texture/whitedot.png";	
+--		else
+--			css["background-color"] = "#ffffff00";
+--		end
+--	end
 
 --	local _this = self.control;
 --	if(_this) then

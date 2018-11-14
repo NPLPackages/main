@@ -46,7 +46,7 @@ end
 
 function pe_text:LoadComponent(parentElem, parentLayout, style)
 	--local css = self:CreateStyle(nil, style);
-	css["text-align"] = css["text-align"] or "left";
+	--css["text-align"] = css["text-align"] or "left";
 
 	local value = self:GetTextTrimmed();
 	self.value = value;

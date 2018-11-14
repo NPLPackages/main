@@ -9,8 +9,8 @@ NPL.load("(gl)script/ide/System/Windows/Controls/Primitives/ButtonBase.lua");
 local ButtonBase = commonlib.gettable("System.Windows.Controls.Primitives.ButtonBase");
 ------------------------------------------------------------
 ]]
-NPL.load("(gl)script/ide/System/Windows/UIElement.lua");
-local ButtonBase = commonlib.inherit(commonlib.gettable("System.Windows.UIElement"), commonlib.gettable("System.Windows.Controls.Primitives.ButtonBase"));
+NPL.load("(gl)script/ide/System/Windows/UITextElement.lua");
+local ButtonBase = commonlib.inherit(commonlib.gettable("System.Windows.UITextElement"), commonlib.gettable("System.Windows.Controls.Primitives.ButtonBase"));
 ButtonBase:Property("Name", "ButtonBase");
 ButtonBase:Property({"BackgroundColor", "#ffffff", auto=true});
 ButtonBase:Property({"Icon", nil, auto=true});

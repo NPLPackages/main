@@ -10,8 +10,6 @@ System.Windows.mcml.Elements.pe_checkbox:RegisterAs("pe:checkbox","checkbox");
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/System/Windows/Controls/Button.lua");
-NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutButton.lua");
-local LayoutButton = commonlib.gettable("System.Windows.mcml.layout.LayoutButton");
 local Button = commonlib.gettable("System.Windows.Controls.Button");
 local mcml = commonlib.gettable("System.Windows.mcml");
 
@@ -29,15 +27,6 @@ function pe_checkbox:CreateControl()
 
 	local polygonStyle = self:GetAttributeWithCode("polygonStyle", nil, true);
 	local direction = self:GetAttributeWithCode("direction", nil, true);
-	local _this = self.control;
-	if(not _this) then
-		_this = Button:new():init(parentElem);
-		_this:SetPolygonStyle(polygonStyle or "check");
-		self:SetControl(_this);
-	end
-	
-	_this:ApplyCss(css);
-	local buttonName = self:GetAttributeWithCode("name",nil,true); -- touch name
 	_this:SetPolygonStyle(polygonStyle or "check");
 	_this:SetDirection(direction);
 
@@ -46,15 +35,12 @@ function pe_checkbox:CreateControl()
 
 	local checked = self:GetAttributeWithCode("checked", nil, true);
 	if(checked) then
-		_this:setChecked(true);
+		checked = if_else(checked == "true" or checked == "checked",true,false);
+		self:setChecked(checked);
 	end
-	local buttonName = self:GetAttributeWithCode("name",nil,true);
-	_this:Connect("clicked", function()
-		self:OnClick(buttonName);
-	end)
-	_this:Connect("clicked", function()
-		self:OnClick(buttonName);
-	end)
+
+	self.buttonName = self:GetAttributeWithCode("name",nil,true);
+	_this:Connect("clicked", self, self.OnClick, "UniqueConnection");
 end
 
 function pe_checkbox:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
@@ -86,6 +72,8 @@ function pe_checkbox:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 --	_this:Connect("clicked", function()
 --		self:OnClick(buttonName);
 --	end)
+
+	pe_checkbox._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
 end
 
 function pe_checkbox:setChecked(checked)
@@ -130,11 +118,3 @@ function pe_checkbox:OnAfterChildLayout(layout, left, top, right, bottom)
 		self.control:setGeometry(left, top, right-left, bottom-top);
 	end
 end
-
---function pe_checkbox:CreateLayoutObject(arena, style)
---	return LayoutButton:new():init(self);
---end
-
---function pe_checkbox:attachLayoutTree()
---	pe_checkbox._super.attachLayoutTree(self);
---end

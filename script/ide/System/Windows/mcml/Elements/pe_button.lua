@@ -30,26 +30,14 @@ function pe_button:CreateControl()
 
 	local polygonStyle = self:GetAttributeWithCode("polygonStyle", nil, true);
 	local direction = self:GetAttributeWithCode("direction", nil, true);
-	local _this = self.control;
-	if(not _this) then
-		_this = Button:new():init(parentElem);
-		_this:SetPolygonStyle(polygonStyle);
-		_this:SetDirection(direction);
-		self:SetControl(_this);
-	end
-	_this:ApplyCss(css);
-	_this:SetText(self:GetAttributeWithCode("value", nil, true));
-	local buttonName = self:GetAttributeWithCode("name",nil,true); -- touch name
 	_this:SetPolygonStyle(polygonStyle);
 	_this:SetDirection(direction);
 
 	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
 
-	local buttonName = self:GetAttributeWithCode("name",nil,true); -- touch name
+	self.buttonName = self:GetAttributeWithCode("name",nil,true); -- touch name
 
-	_this:Connect("clicked", function()
-		self:OnClick(buttonName);
-	end)
+	_this:Connect("clicked", self, self.OnClick, "UniqueConnection")
 end
 
 --function pe_button:OnLoadComponentBeforeChild(parentElem, parentLayout, css)

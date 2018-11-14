@@ -18,13 +18,13 @@ Label:Property({"Font", "System;14;norm", auto=true})
 Label:Property({"FontSize", nil, auto=true});
 Label:Property({"FontScaling", nil, auto=true});
 -- default to centered and no clipping. 
-Label:Property({"Alignment", 1+4+256, auto=true, desc="text alignment"});
+Label:Property({"Alignment", 0+4+256, auto=true, desc="text alignment"});
 
 -- text padding
-Label:Property({"padding_left", 5, });
-Label:Property({"padding_top", 5, });
-Label:Property({"padding_right", 5, });
-Label:Property({"padding_bottom", 5, });
+Label:Property({"padding_left", 0, });
+Label:Property({"padding_top", 0, });
+Label:Property({"padding_right", 0, });
+Label:Property({"padding_bottom", 0, });
 
 function Label:ctor()
 end
@@ -56,7 +56,7 @@ end
 -- virtual: apply css style
 function Label:ApplyCss(css)
 	Label._super.ApplyCss(self, css);
-	self:SetAlignment(css:GetTextAlignment());
-	self:SetPaddings(css:paddings());
+	--self:SetAlignment(css:GetTextAlignment());
+	--self:SetPaddings(css:paddings());
 end
 

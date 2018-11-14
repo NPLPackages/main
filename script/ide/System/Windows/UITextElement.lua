@@ -83,20 +83,21 @@ end
 -- virtual: apply css style
 function UITextElement:ApplyCss(css)
 	UITextElement._super.ApplyCss(self, css);
-	local font, font_size, font_scaling = css:GetFontSettings();
-	self:SetFont(font);
-	self:SetFontSize(font_size);
-	self:SetFontScaling(font_scaling);
+	self:SetFont(css:Font():ToTable());
+--	local font, font_size, font_scaling = css:GetFontSettings();
+--	self:SetFont(font);
+--	self:SetFontSize(font_size);
+--	self:SetFontScaling(font_scaling);
 	--self:SetAlignment(css:GetTextAlignment());
-	if(css.color) then
-		self:SetColor(css.color);
-	end
+--	if(css.color) then
+--		self:SetColor(css.color);
+--	end
 
-	local be_shadow,shadow_offset_x,shadow_offset_y,shadow_color = css:GetTextShadow();
-	if(be_shadow) then
-		self:SetTextShadow(be_shadow);
-		self:SetShadowOffsetX(shadow_offset_x);
-		self:SetShadowOffsetY(shadow_offset_y);
-		self:SetShadowColor(shadow_color);
-	end
+--	local be_shadow,shadow_offset_x,shadow_offset_y,shadow_color = css:GetTextShadow();
+--	if(be_shadow) then
+--		self:SetTextShadow(be_shadow);
+--		self:SetShadowOffsetX(shadow_offset_x);
+--		self:SetShadowOffsetY(shadow_offset_y);
+--		self:SetShadowColor(shadow_color);
+--	end
 end
