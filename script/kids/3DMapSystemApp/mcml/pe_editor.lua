@@ -411,6 +411,11 @@ function pe_editor.create(rootName, mcmlNode, bindingContext, _parent, left, top
 		_parent:SetScript("ondragend",  function(uiobj)
 			Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, onDragEnd_callback, btnName, mcmlNode, uiobj)
 		end)
+
+		local onDragEnd_callback = mcmlNode:GetAttributeWithCode("ondragmove");
+		_parent:SetScript("ondragmove",  function(uiobj)
+			Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, onDragEnd_callback, btnName, mcmlNode, uiobj)
+		end)
 	end
 end
 
