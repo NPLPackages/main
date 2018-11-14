@@ -24,6 +24,10 @@ function LayoutBR:init(node)
 	return self;
 end
 
+function LayoutBR:GetName()
+	return "LayoutBR";
+end
+
 --int RenderBR::lineHeight(bool firstLine) const
 function LayoutBR:LineHeight(firstLine)
     if (firstLine and self:Document():UsesFirstLineRules()) then
