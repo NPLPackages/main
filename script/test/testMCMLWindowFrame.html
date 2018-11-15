@@ -27,13 +27,18 @@
                     end, 1000)
                 end
                 function ondragmove()
-                    local x, y = Page:FindControl("dragContainer"):GetAbsPosition();
+                    local x, y, width, height = Page:FindControl("dragContainer"):GetAbsPosition();
                     Page:SetValue("x", tostring(x))
                     Page:SetValue("y", tostring(y))
+
+                    local wnd = Page:GetWindow():GetWindowFrame():GetWindowUIObject();
+                    if(wnd) then
+                        wnd:Reposition("_lt", x, y, width, height)
+                    end
                 end
 
                 function ondragend()
-                    onclick()
+                    -- onclick()
                 end
             ]]>
         </script>
