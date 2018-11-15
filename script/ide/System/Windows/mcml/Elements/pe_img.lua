@@ -26,13 +26,17 @@ function pe_img:CreateControl()
 end
 
 function pe_img:ParseMappedAttribute(attrName, value)
-	if(attrName == "src") then
-		self:GetInlineStyleDecl():SetProperty("background",self:GetAbsoluteURL(value));
-	elseif(attrName == "width" or attrName == "height") then
-		self:GetInlineStyleDecl():SetProperty(attrName, value.."px");
+	if(attrName == "src" or attrName == "width" or attrName == "height") then
+		local propertyKey, propertyValue;
+		if(attrName == "src") then
+			propertyKey, propertyValue = "background", self:GetAbsoluteURL(value);
+		elseif(attrName == "width" or attrName == "height") then
+			propertyKey, propertyValue = attrName, value.."px";
+		end
+		self:AddAttributeCSSProperty(attrName, propertyKey, propertyValue);
+	else
+		pe_img._super.ParseMappedAttribute(self, attrName, value)
 	end
-
-	pe_img._super.ParseMappedAttribute(self, attrName, value)
 end
 
 function pe_img:CreateControl()

@@ -132,6 +132,7 @@ function PageElement:ctor()
 
 	self.layout_object = nil;
 	-- inline style, CSSStyleDeclaration from the attribute "style". According to inlineStyleDecl in webkit;
+	-- now use "inlineStyleDecl" replaced it.
 	self.style = nil;
 
 	self.m_previous = nil;
@@ -142,7 +143,7 @@ function PageElement:ctor()
 
 	self.inlineStyleDecl = nil;
 
-	self.m_attributes = nil;
+	self.m_attributeMap = {};
 
 	self.m_nodeFlags = NodeFlags:new();
 end
@@ -764,16 +765,36 @@ function PageElement:SetAttribute(attrName, value, beForceResetLayout)
 	end
 end
 
+function PageElement:AttributeMap()
+	--self.m_attributeMap = self.m_attributeMap or {};
+	return self.m_attributeMap;
+end
+
+function PageElement:AddAttributeCSSProperty(attrName, key, value)
+	local attributeMap = self:AttributeMap();
+	if(value == nil or value == "") then
+		if(attributeMap[attrName]) then
+			attributeMap[attrName] = nil;
+		end
+		self:SetNeedsStyleRecalc();
+		return;
+	end
+	local attrStyleDecl = attributeMap[attrName];
+	if(attrStyleDecl == nil) then
+		attributeMap[attrName] = CSSStyleDeclaration:new():init(self);
+		attrStyleDecl = attributeMap[attrName];
+	end
+	attrStyleDecl:SetProperty(key, value);
+end
+
 function PageElement:ParseAllMappedAttribute()
 	if(self.attr) then
-		self.m_attributes = self.m_attributes or {};
 		for name, value in pairs(self.attr) do
 			if(name == "request_url" or name == "page_ctrl") then
 				-- do nothing for pe:mcml node "request_url" and "page_ctrl" attribute.
 				-- continue; 
 			else
 				value = self:GetAttributeWithCode(name, nil, true);
-				self.m_attributes[name] = value;
 
 				self:AttributeChanged(name, value);
 			end
@@ -790,15 +811,17 @@ function PageElement:ParseMappedAttribute(attrName, value)
 	--if (isIdAttributeName(attr->name()))
 	if (attrName == "id") then
         self:IdAttributeChanged(value);
+		self:SetNeedsStyleRecalc();
     --else if (attr->name() == classAttr)
 	elseif(attrName == "class") then
         self:ClassAttributeChanged(value);
+		self:SetNeedsStyleRecalc();
     --else if (attr->name() == styleAttr) {
 	elseif(attrName == "style") then
         self:StyleAttributeChanged(value);
+		self:SetNeedsStyleRecalc();
     end
 
-	self:SetNeedsStyleRecalc();
 end
 
 function PageElement:IdAttributeChanged(value)

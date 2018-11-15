@@ -21,6 +21,11 @@
         --SetNodeProperty(node, "width", "120px");
         --SetNodeProperty(node, "height", "120px");
     end
+    function ChangeImageMargin()
+        local nodes = Page:jquery("img#img");
+        local node = nodes[1];
+        SetNodeProperty(node, "margin", "");
+    end
     ]]>
 </script>
 <style>
@@ -38,10 +43,11 @@
         font-weight:bold;
     }
 </style>
-<div name="div" style="margin:20px;background-color:antiquewhite;height:300px;font-size:30px;">文字<img name="img" id="img" src="Textures/icon1.png" width="60" height="60"/>gp李鹏</div>
+<div name="div" style="margin:20px;background-color:antiquewhite;height:300px;font-size:30px;"><img name="img" id="img" src="Textures/icon1.png" width="60" height="30" style="margin:20px;"/></div>
 <div style="background-color:aquamarine;margin:20px;">
     <input name="button" type="button" value="更改图片源" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="ChangeImageSource()" />
     <input name="button" type="button" value="更改图片大小" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="ChangeImageSize()" />
+    <input name="button" type="button" value="更改图片margin" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="ChangeImageMargin()" />
 </div>
 </pe:mcml>
 </html>

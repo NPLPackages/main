@@ -155,6 +155,11 @@ function CSSStyleSelector:MatchAllRules(result)
 	self:MatchUARules(result);
 	self:MatchAuthorRules(result);
 
+	local attributeMap = self.element:AttributeMap();
+	for attrName, styleDecl in pairs(attributeMap) do
+		self:AddMatchedDeclaration(styleDecl);
+	end
+
 	local inlineDecl = self.element:InlineStyleDecl();
 	if(inlineDecl) then
 		self:AddMatchedDeclaration(inlineDecl);
