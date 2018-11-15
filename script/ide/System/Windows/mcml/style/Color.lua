@@ -329,5 +329,4 @@ Color.white = createFromHex("#FFFFFFFF");
 Color.darkGray = createFromHex("#808080FF");
 Color.gray = createFromHex("#A0A0A0FF");
 Color.lightGray = createFromHex("#C0C0C0FF");
---Color.transparent = createFromHex("#00000000");
-Color.transparent = createFromHex("#ffffffff");
+Color.transparent = createFromHex("#00000000");

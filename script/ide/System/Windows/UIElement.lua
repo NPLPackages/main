@@ -57,6 +57,8 @@ NPL.load("(gl)script/ide/math/Point.lua");
 NPL.load("(gl)script/ide/System/Windows/Mouse.lua");
 NPL.load("(gl)script/ide/System/Windows/UIElement_p.lua");
 NPL.load("(gl)script/ide/System/Windows/Tooltip.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/style/Color.lua");
+local Color = commonlib.gettable("System.Windows.mcml.style.Color");
 local Tooltip = commonlib.gettable("System.Windows.Tooltip");
 local FocusPolicy = commonlib.gettable("System.Core.Namespace.FocusPolicy");
 local SizeEvent = commonlib.gettable("System.Windows.SizeEvent");
@@ -125,8 +127,13 @@ end
 
 -- virtual: apply css style
 function UIElement:ApplyCss(css)
-	self:SetBackgroundColor(css:BackgroundColor():ToDWORD());
-	self:SetBackground(css:BackgroundImage());
+	local background_image = css:BackgroundImage();
+	self:SetBackground(background_image);
+	if(background_image == nil or background_image == "") then
+		self:SetBackgroundColor(css:BackgroundColor():ToDWORD());
+	else
+		self:SetBackgroundColor(Color.white:ToDWORD());
+	end
 end
 
 -- Returns true if this object is a parent, (or grandparent and so on

@@ -1071,6 +1071,7 @@
     <Content Include="script\test\gridviewtest.lua" />
     <Content Include="script\test\IDE_Test.lua" />
     <Content Include="script\test\MCMLV2\mcml_window.html" />
+    <Content Include="script\test\MCMLV2\test_layout_background.html" />
     <Content Include="script\test\MCMLV2\test_layout_button.html" />
     <Content Include="script\test\MCMLV2\test_layout_img.html" />
     <Content Include="script\test\MCMLV2\test_pe_textarea.html" />

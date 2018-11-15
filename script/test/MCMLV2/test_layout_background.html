@@ -1,0 +1,72 @@
+<!-- "script/test/MCMLV2/test_layout_background.html" -->
+<html>
+<pe:mcml>
+<script type="text/npl" refresh="false">
+    <![CDATA[
+
+    function SetNodeProperty(node,key,value)
+        node:GetInlineStyleDecl():SetProperty(key,value);
+    end
+
+    function SetBackgroundImage()
+        local nodes = Page:jquery("div#div2");
+        local node = nodes[1];
+        SetNodeProperty(node, "background-image", "Textures/login_bg.png");
+    end
+
+    function ClearBackgroundImage()
+        local nodes = Page:jquery("div#div2");
+        local node = nodes[1];
+        SetNodeProperty(node, "background-image", "");
+    end
+
+    function ClearBackgroundColor()
+        local nodes = Page:jquery("div#div2");
+        local node = nodes[1];
+        SetNodeProperty(node, "background-color", "");
+    end
+
+    function SetBackgroundColor()
+        local nodes = Page:jquery("div#div2");
+        local node = nodes[1];
+        SetNodeProperty(node, "background-color", "green");
+    end
+    ]]>
+</script>
+<style>
+    .green {
+        background-color:green;
+        margin:30px;
+        padding:20px;
+    }
+
+    .burlywood {
+        background-color:burlywood;
+        padding:10px;
+    }
+    .fontBold {
+        font-weight:bold;
+    }
+</style>
+<!--<div name="div1" id="testDiv" style="" class="burlywood">1111<input name="button" type="button" value="111" style="background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="tvwOnClickNode2()"/></div>-->
+    <div name="div1" id="div1" style="margin:20px;width:300px;height:300px;background-color:antiquewhite;">
+        div1
+        <div name="div2" id="div2" style="margin:20px;width:100px;height:80px;background-color:aqua;">
+            div2
+        </div>
+    </div>
+    <div style="background-color:aquamarine;margin:20px;">
+        <input name="button" type="button" value="设置div2背景色" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="SetBackgroundColor()" />
+        <input name="button" type="button" value="取消div2背景色" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="ClearBackgroundColor()" />
+        <input name="button" type="button" value="设置div2背景图" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="SetBackgroundImage()" />
+        <input name="button" type="button" value="取消div2背景图" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="ClearBackgroundImage()" />
+    </div>
+    <!--<div style="height:200px;background:url(Textures/login_bg.png);"><div style="height:100px;width:100px;background-color:#000000ff"></div></div>-->
+<!--<div name="div1" style="margin:20px;background-color:aquamarine;">
+    <span style="background-color:antiquewhite;">xxxx</span>yyyy
+</div>
+<span style="display:inline-block;margin:20px;padding:30px;background-color:orangered;">1111111</span>-->
+<!--<div name="div1" id="testDiv" style="padding:50px;" class="burlywood"><button style="margin:25px;padding:25px;background-color:white;color:aqua;font-weight:bold;" onclick="tvwOnClickNode2()" >1111</button></div>-->
+<!--<div name="div2" class="green" style="font-weight:bold">无背景颜色</div>-->
+</pe:mcml>
+</html>
