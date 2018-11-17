@@ -8,8 +8,27 @@ p {
     margin-bottom:12px;
 }
 
-span {
-    display:inline;
+h1 {
+    display: block;
+    font-size: 19px;
+    font-weight: bold;
+}
+
+h2 {
+    display: block;
+    font-size: 17px;
+    font-weight: bold;
+}
+
+h3 {
+    display: block;
+    font-size: 15px;
+    font-weight: bold;
+}
+
+h4 {
+    display: block;
+    font-weight: bold;
 }
 
 button, input {

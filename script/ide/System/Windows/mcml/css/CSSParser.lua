@@ -62,15 +62,15 @@ end
 function CSSParser:LoadFromTable(styles, stylesheet)
 	self:StaticInit();
 	if(styles) then
-		for flag, style in pairs(styles) do
+		for tag, style in pairs(styles) do
 			local matchtype;
---			if(mcml:isElementClass(flag)) then
+--			if(mcml:isElementClass(tag)) then
 --				matchtype = CSSSelector.MatchType.kClass;
 --			else
 --				matchtype = CSSSelector.MatchType.kTag;
 --			end
 			matchtype = CSSSelector.MatchType.kTag;
-			local selector_list = {CSSSelector:new():init(flag, matchtype)};
+			local selector_list = {CSSSelector:new():init(tag, matchtype, nil, tag)};
 			local properties = CSSStyleDeclaration:new(style);
 			local rule = CSSStyleRule:new():init(selector_list, properties);
 			stylesheet:AddStyleRule(rule);

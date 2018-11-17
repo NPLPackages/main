@@ -47,8 +47,8 @@ local CSSStyleSelector = commonlib.inherit(nil, commonlib.gettable("System.Windo
 local function LoalDefaultStyle()
 	local rule_set = RuleSet:new();
 
-	local stylesheet = CSSStyleSheet:new():loadFromTable(CSSStyleDefault.items);
-	rule_set:AddRulesFromSheet(stylesheet);
+--	local stylesheet = CSSStyleSheet:new():loadFromTable(CSSStyleDefault.items);
+--	rule_set:AddRulesFromSheet(stylesheet);
 
 	stylesheet = CSSStyleSheet:new():loadFromFile("script/ide/System/Windows/mcml/css/html.css")
 	rule_set:AddRulesFromSheet(stylesheet);

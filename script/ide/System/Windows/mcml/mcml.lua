@@ -94,12 +94,13 @@ function mcml:LoadAllElements()
 	Elements.pe_text:RegisterAs("text", "pe:text");
 	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_div.lua");
 	Elements.pe_div:RegisterAs("div", "pe:div", "NodeTemplate", "form");
+	Elements.pe_div:RegisterAs("h1", "h2", "h3", "h4");
 	Elements.pe_div:RegisterAs("p");
 	Elements.pe_mcml:RegisterAs("pe:mcml");
 		NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_font.lua");
 		Elements.pe_font:RegisterAs("font");
 		NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_span.lua");
-		Elements.pe_span:RegisterAs("span");
+		Elements.pe_span:RegisterAs("span","label");
 		NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_container.lua");
 		Elements.pe_container:RegisterAs("pe:container");
 		NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_custom.lua");
@@ -122,8 +123,8 @@ function mcml:LoadAllElements()
 	Elements.pe_identicon:RegisterAs("pe:identicon");
 	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_style.lua");
 	Elements.pe_style:RegisterAs("pe:style", "style", "link");
-	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_header.lua");
-	Elements.pe_header:RegisterAs("h1", "h2", "h3", "h4");
+--	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_header.lua");
+--	Elements.pe_header:RegisterAs("h1", "h2", "h3", "h4");
 	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_radio.lua");
 	Elements.pe_radio:RegisterAs("pe:radio","radio");
 	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_checkbox.lua");
@@ -150,8 +151,8 @@ function mcml:LoadAllElements()
 	Elements.pe_pager:RegisterAs("pe:pager");
 	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_img.lua");
 	Elements.pe_img:RegisterAs("pe:img","img");
-	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_label.lua");
-	Elements.pe_label:RegisterAs("label","pe:label");
+--	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_label.lua");
+--	Elements.pe_label:RegisterAs("label","pe:label");
 	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_progressbar.lua");
 	Elements.pe_progressbar:RegisterAs("pe:progressbar", "progressbar");
 	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_iframe.lua");

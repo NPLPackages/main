@@ -43,7 +43,7 @@ function CSSSelectorParser:ConsumeCompoundSelector(str)
 		selectorInfos[#selectorInfos+1] = {["combinator"] = combinator};
 		local subselectors = selectorInfos[#selectorInfos];
 		
-		local tag = string.match(selectorStr, "^[%a%*%:]+");
+		local tag = string.match(selectorStr, "^[%w%*%:]+");
 		subselectors["tag"] = tag or "*";
 		if(tag) then
 			subselectors[#subselectors + 1] = {"", tag};
