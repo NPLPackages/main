@@ -209,6 +209,7 @@ end
 -- @param request_id: request id 
 -- @param index: url index in the request
 function System.localserver.ProcessFile_result(request_id, index)
+	local msg = msg;
 	--log(request_id..", "..index..commonlib.serialize(msg))
 	
 	local task = TaskManager:GetTask(request_id);
