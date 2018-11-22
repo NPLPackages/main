@@ -330,12 +330,15 @@ function CSSStyleSelector:ApplyDeclaration(styleDeclaration)
 end
 
 function CSSStyleSelector:ApplyProperty(name, value)
-	local isInherit = (value == "inherit");
+	local isInherit = self.parentNode ~= nil and value == "inherit";
+	local isInitial = value == "initial" or (self.parentNode == nil and value == "inherit");
 
 	local handler = self.applyProperty:PropertyHandler(name);
 	if(handler) then
 		if(isInherit) then
 			handler:ApplyInheritValue(self);
+		elseif (isInitial) then
+            handler:ApplyInitialValue(self);
 		else
 			handler:ApplyValue(self, value);
 		end

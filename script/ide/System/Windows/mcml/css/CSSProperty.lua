@@ -192,7 +192,7 @@ local enum_fields = {
 
 function CSSProperty:CreateValueFromCssString()
 	local name, value = self.name, self.value;
-	if(value == "inherit") then
+	if(value == "inherit" or value == "initial") then
 		return value;
 	end
 	if(length_fields[name]) then

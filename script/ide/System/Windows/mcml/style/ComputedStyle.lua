@@ -185,7 +185,11 @@ function ComputedStyle.initialLineBoxContain() return mathlib.bit.bor(mathlib.bi
 
 function ComputedStyle.initialFlowThread() return ""; end
 
-function ComputedStyle.InitialBorderRadius() end;
+function ComputedStyle.InitialBorderRadius() end
+
+function ComputedStyle.InitialFontFamily()	return "System"; end
+function ComputedStyle.InitialFontSize() return 12; end
+function ComputedStyle.InitialFontWeight() return false; end
 
 -- inherit
 local InheritedFlags = {};

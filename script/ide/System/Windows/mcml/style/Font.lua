@@ -10,7 +10,8 @@ local Font = commonlib.gettable("System.Windows.mcml.style.Font");
 local FontMetrics = commonlib.gettable("System.Windows.mcml.style.Font.FontMetrics");
 -------------------------------------------------------
 ]]
-
+NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyle.lua");
+local ComputedStyle = commonlib.gettable("System.Windows.mcml.style.ComputedStyle");
 
 local FontMetrics = commonlib.gettable("System.Windows.mcml.style.Font.FontMetrics");
 FontMetrics.__index = FontMetrics;
@@ -101,9 +102,9 @@ Font.__index = Font;
 function Font:new(family, size, bold)
 	local o = {};
 
-	o.family = family or "System";
-	o.size = size or 12;
-	o.bold = if_else(bold == nil, false, bold);
+	o.family = family or ComputedStyle.InitialFontFamily();
+	o.size = size or ComputedStyle.InitialFontSize();
+	o.bold = if_else(bold == nil, ComputedStyle.InitialFontWeight(), bold);
 	o.m_letterSpacing = 0;
 	o.m_wordSpacing = 0;
 

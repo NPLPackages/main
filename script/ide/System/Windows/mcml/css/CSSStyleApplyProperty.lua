@@ -172,9 +172,9 @@ function CSSStyleApplyProperty:init()
 	self:SetPropertyHandler("border-width", ApplyPropertyExpanding:new():init(self:PropertyHandler("border-bottom-width"), self:PropertyHandler("border-left-width"), self:PropertyHandler("border-right-width"), self:PropertyHandler("border-top-width")));
 	self:SetPropertyHandler("border-color", ApplyPropertyExpanding:new():init(self:PropertyHandler("border-bottom-color"), self:PropertyHandler("border-left-color"), self:PropertyHandler("border-right-color"), self:PropertyHandler("border-top-color")));
 
-	self:SetPropertyHandler("font-size", ApplyPropertyDefault:new():init(ComputedStyle.FontSize, ComputedStyle.SetFontSize));
-	self:SetPropertyHandler("font-weight", ApplyPropertyDefault:new():init(ComputedStyle.FontBold, ComputedStyle.SetFontBold));
-	self:SetPropertyHandler("font-family", ApplyPropertyDefault:new():init(ComputedStyle.FontFamily, ComputedStyle.SetFontFamily));
+	self:SetPropertyHandler("font-size", ApplyPropertyDefault:new():init(ComputedStyle.FontSize, ComputedStyle.SetFontSize, ComputedStyle.InitialFontSize));
+	self:SetPropertyHandler("font-weight", ApplyPropertyDefault:new():init(ComputedStyle.FontBold, ComputedStyle.SetFontBold, ComputedStyle.InitialFontWeight));
+	self:SetPropertyHandler("font-family", ApplyPropertyDefault:new():init(ComputedStyle.FontFamily, ComputedStyle.SetFontFamily, ComputedStyle.InitialFontFamily));
 
 --	setPropertyHandler("outline-style", new ApplyPropertyExpanding<ExpandValue>(new ApplyPropertyDefault<OutlineIsAuto>(&RenderStyle::outlineStyleIsAuto, &RenderStyle::setOutlineStyleIsAuto, &RenderStyle::initialOutlineStyleIsAuto), new ApplyPropertyDefault<EBorderStyle>(&RenderStyle::outlineStyle, &RenderStyle::setOutlineStyle, &RenderStyle::initialBorderStyle)));
 --    setPropertyHandler("outline-color", new ApplyPropertyColor<InheritFromParent>(&RenderStyle::outlineColor, &RenderStyle::setOutlineColor, &RenderStyle::setVisitedLinkOutlineColor, &RenderStyle::color));
