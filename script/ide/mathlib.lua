@@ -114,7 +114,7 @@ function mathlib.ToStandardAngle(fAngle)
 		end
 	else
 		fAngle = fAngle + 6.28318*(math_floor(-fAngle/6.28318));
-		if(fAngle<-3.14159) then
+		if(fAngle < -3.14159) then
 			fAngle = fAngle + 6.28318;
 		end
 	end

@@ -22,6 +22,8 @@ NPL.load("(gl)script/ide/Debugger/NPLCompiler.lua");
 NPL.CompileFiles("script/config.lua");
 -- *.npl is also supported with meta-compiler
 NPL.CompileFiles("script/ide/System/Compiler/dsl/DSL_NPL.npl");
+-- strip only
+NPL.CompileFiles("script/ide/Debugger/NPLCompiler.lua", "-stripcomments");
 -----------------------------------------------
 ]]
 -- luac.lua - partial reimplementation of luac in Lua.
@@ -38,39 +40,39 @@ local function npl_compile(...)
 	local iserror = false
 	local parseonly = false
 	while arg[1] do
-	  if     allowoptions and arg[1] == '-' then
-		chunks[#chunks + 1] = arg[1]
-		allowoptions = false
-	  elseif allowoptions and arg[1] == '-l' then
-		LOG.std("", "warn", "NPL", '-l option not implemented')
-		iserror = true
-	  elseif allowoptions and arg[1] == '-o' then
-		outfile = assert(arg[2], '-o needs argument')
+		if allowoptions and arg[1] == '-' then
+			chunks[#chunks + 1] = arg[1]
+			allowoptions = false
+		elseif allowoptions and arg[1] == '-l' then
+			LOG.std("", "warn", "NPL", '-l option not implemented')
+			iserror = true
+		elseif allowoptions and arg[1] == '-o' then
+			outfile = assert(arg[2], '-o needs argument')
+			table.remove(arg, 1)
+		elseif allowoptions and arg[1] == '-p' then
+			parseonly = true
+		elseif allowoptions and arg[1] == '-s' then
+			LOG.std("", "warn", "NPL", "-s option ignored")
+		elseif allowoptions and arg[1] == '-v' then
+			LOG.std("", "warn", "NPL", tostring(_VERSION).. " Copyright (C) 2007-2010 ParaEngine Co.")
+		elseif allowoptions and arg[1] == '--' then
+			allowoptions = false
+		elseif allowoptions and arg[1]:sub(1, 1) == '-' then
+			LOG.std("", "warn", "NPL", "luac: unrecognized option '" .. arg[1]);
+			iserror = true
+			break
+		else
+			chunks[#chunks + 1] = arg[1]
+		end
 		table.remove(arg, 1)
-	  elseif allowoptions and arg[1] == '-p' then
-		parseonly = true
-	  elseif allowoptions and arg[1] == '-s' then
-		LOG.std("", "warn", "NPL", "-s option ignored")
-	  elseif allowoptions and arg[1] == '-v' then
-		LOG.std("", "warn", "NPL", tostring(_VERSION).. " Copyright (C) 2007-2010 ParaEngine Co.")
-	  elseif allowoptions and arg[1] == '--' then
-		allowoptions = false
-	  elseif allowoptions and arg[1]:sub(1,1) == '-' then
-		LOG.std("", "warn", "NPL", "luac: unrecognized option '" .. arg[1]);
-		iserror = true
-		break
-	  else
-		chunks[#chunks + 1] = arg[1]
-	  end
-	  table.remove(arg, 1)
 	end
 	if #chunks == 0 then
-	  LOG.std("", "warn", "NPL", "luac: no input files given");
-	  iserror = true
+		LOG.std("", "warn", "NPL", "luac: no input files given");
+		iserror = true
 	end
 
 	if iserror then
-	  LOG.std("", "error", "NPL", [[
+		LOG.std("", "error", "NPL", [[
 	usage: luac [options] [filenames].
 	Available options are:
 	  -        process stdin
@@ -84,7 +86,7 @@ local function npl_compile(...)
 	end
 
 	-- Load/compile chunks.
-	for i,filename in ipairs(chunks) do
+	for i, filename in ipairs(chunks) do
 		--chunks[i] = assert(loadfile(filename ~= '-' and filename or nil))
 		local file = ParaIO.open(filename, "r");
 		if(file:IsValid()) then
@@ -97,27 +99,27 @@ local function npl_compile(...)
 			end
 			file:close();
 		else
-			LOG.std(nil, "warn", "NPL.compiler", "file: %s not found or size is 0",  filename);
+			LOG.std(nil, "warn", "NPL.compiler", "file: %s not found or size is 0", filename);
 			return;
 		end
 	end
 
 	if parseonly then
-	  return
+		return
 	end
 
 	-- Combine chunks.
 	if #chunks == 1 then
-	  chunks = chunks[1]
+		chunks = chunks[1]
 	else
 	  -- Note: the reliance on loadstring is possibly not ideal,
 	  -- though likely unavoidable.
-	  local ts = { "local loadstring=loadstring;"  }
-	  for i,f in ipairs(chunks) do
-		ts[i] = ("loadstring%q(...);"):format(string.dump(f))
-	  end
+		local ts = { "local loadstring=loadstring;" }
+		for i, f in ipairs(chunks) do
+			ts[i] =("loadstring%q(...);"):format(string.dump(f))
+		end
 	  --possible extension: ts[#ts] = 'return ' .. ts[#ts]
-	  chunks = assert(loadstring(table.concat(ts)))
+		chunks = assert(loadstring(table.concat(ts)))
 	end
 
 	-- Output.
@@ -136,7 +138,7 @@ function NPL.Compile(cmdLine)
 			args[#args + 1] = arg;
 		end
 		-- LOG.info({cmdLine, args})
-		local ok, errmsg = pcall(function() npl_compile(unpack(args)) end );
+		local ok, errmsg = pcall(function() npl_compile(unpack(args)) end);
 		if(not ok and errmsg) then
 			LOG.std(nil, "error", "NPL.compiler", errmsg);
 		end
@@ -157,13 +159,14 @@ end
 -- @param additionalParams: additional parameter. this is usually nil. Alternatively one can also specify 
 --		"-p": which only parses the file but does not generate output files. 
 --		"-s": to strip debug information.
+--		"-stripcomments": plain source code without comments
 -- @param searchDepth: if nil, it defaults to 0. otherwise "script/*.lua" will search recursively for *.lua files. 
 -- @param targetDir: if nil, it defaults to "bin" folder, hence "script/*.lua" will be compiled to "bin/script/*.o"
 function NPL.CompileFiles(files, additionalParams, searchDepth, targetDir)
 	local error_count = 0;
 	if(type(files) == "string") then
 		if(string.find(files, "%*")) then
-			local _,_,dir, filepattern = string.find(files, "^(.*/)([^/]+)$")
+			local _, _, dir, filepattern = string.find(files, "^(.*/)([^/]+)$")
 			if(dir and filepattern) then
 				local output = {};
 				commonlib.SearchFiles(output, dir, filepattern, searchDepth or 0, 100000, true)
@@ -187,11 +190,19 @@ function NPL.CompileFiles(files, additionalParams, searchDepth, targetDir)
 			if(ParaIO.CreateDirectory(output)) then
 				args = string.format("%s -o %s %s", args, output, files)
 				commonlib.log("Compiling: %s\n", files)
-				local ok, msg = NPL.Compile(args);
-				if(ok) then
-					commonlib.log("\t\t--> %s\n", output)
+				if(additionalParams == "-stripcomments") then
+					if(NPL.StripFileComment(args)) then
+						commonlib.log("\t\t--> %s\n", output)
+					else
+						error_count = error_count + 1;
+					end
 				else
-					error_count = error_count + 1;
+					local ok, msg = NPL.Compile(args);
+					if(ok) then
+						commonlib.log("\t\t--> %s\n", output)
+					else
+						error_count = error_count + 1;
+					end
 				end
 			else
 				commonlib.log("warning: unable to create directory at %s \n", output);
@@ -204,4 +215,123 @@ function NPL.CompileFiles(files, additionalParams, searchDepth, targetDir)
 		end
 	end
 	return error_count;
+end
+
+-- strip single line and multiline comment
+-- @param bUseAST: true to use advanced 
+local function npl_strip_comment(text, filename, bUseAST)
+	if(bUseAST) then
+		NPL.load("(gl)script/ide/System/Compiler/nplc.lua");
+		NPL.load("(gl)script/ide/System/Compiler/nplgen.lua");
+		local nplpClass = commonlib.gettable("System.Compiler.nplp")
+		local nplgen = commonlib.gettable("System.Compiler.nplgen")
+		local nplp = nplpClass:new()
+		local ast = nplp:src_to_ast(text, filename)
+		return nplgen.ast_to_str(ast)
+		
+--		local ok;
+--		ok, compiled_src = pcall(function()
+--			local ast = nplp:src_to_ast(text, filename)
+--			return nplgen.ast_to_str(ast)
+--		end)
+--		if(ok) then
+--			return compiled_src
+--		else
+--			commonlib.log(compiled_src);
+--		end
+	else
+		local insideCommentBlock = false;
+		local lines = {};
+		for line in text:gmatch("([^\n]*\n)")  do
+			if(not insideCommentBlock) then
+				if(line:match("^%s*%-%-[^%[]")) then
+					line = "\n"; -- comment like this are preserved
+				elseif(line:match("^%s*%-%-%[%[")) then
+					insideCommentBlock = true; 
+					line = line:match("%]%](.*)$")
+					if(line) then
+						insideCommentBlock = false;	
+					else
+						line = "\n"
+					end
+				end
+			else
+				line = line:match("%]%](.*)$")
+				if(line) then
+					insideCommentBlock = false;
+				else
+					line = "\n"
+				end
+			end
+			lines[#lines+1] = line;
+		end
+		return table.concat(lines);
+	end
+end
+
+-- @param cmdLine: string like: -stripcomments -o [output_path] [src_path1] [src_path2] ...
+function NPL.StripFileComment(cmdLine)
+	local args = {};
+	local arg;
+	for arg in cmdLine:gmatch("[^\" \t]+") do 
+		args[#args + 1] = arg;
+	end
+
+	-- Parse options.
+	local chunks = {}
+	local allowoptions = true
+
+	while args[1] do
+		if allowoptions and args[1] == '-o' then
+			outfile = assert(args[2], '-o needs argument')
+			table.remove(args, 1)
+		elseif allowoptions and args[1] == '-stripcomments' then
+		elseif allowoptions and args[1] == '-v' then
+			LOG.std("", "warn", "NPL", tostring(_VERSION).. " Copyright (C) 2007-2010 ParaEngine Co.")
+		elseif allowoptions and args[1] == '--' then
+			allowoptions = false
+		else
+			chunks[#chunks + 1] = args[1]
+		end
+		table.remove(args, 1)
+	end
+
+	-- Load/compile chunks.
+	for i, filename in ipairs(chunks) do
+		local file = ParaIO.open(filename, "r");
+		if(file:IsValid()) then
+			local text = file:GetText();
+			if(filename:match("%.npl$")) then
+				chunks[i] = text;
+			else
+				chunks[i] = npl_strip_comment(text, filename, true);
+				if(not chunks[i]) then
+					return false;
+				end
+			end
+			file:close();
+		else
+			LOG.std(nil, "warn", "NPL.compiler", "file: %s not found or size is 0", filename);
+			return;
+		end
+	end
+
+	-- Combine chunks.
+	if #chunks == 1 then
+		chunks = chunks[1]
+	else
+		local ts = {};
+		for _, text in ipairs(chunks) do
+			ts[#ts+1] = "do"
+			ts[#ts+1] = text
+			ts[#ts+1] = "end"
+		end	
+		chunks = table.concat(ts, "\n");
+	end
+
+	-- Output.
+	local out = assert(ParaIO.open(outfile, "wb"))
+	out:write(chunks, #chunks);
+	out:close();
+	return true;
 end
