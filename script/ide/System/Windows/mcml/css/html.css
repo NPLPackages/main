@@ -108,6 +108,19 @@ input[type="text"], input[type="password"] {
     cursor: text;*/
 }
 
+textarea {
+    appearance: textarea;
+    background-color: #cccccc;
+    /*border: 1px solid;
+    -webkit-rtl-ordering: logical;
+    flex-direction: column;
+    resize: auto;
+    cursor: text;*/
+    padding: 2px;
+    /*white-space: pre-wrap;
+    word-wrap: break-word;*/
+}
+
 style {
     display: none
 }

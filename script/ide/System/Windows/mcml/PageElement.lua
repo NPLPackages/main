@@ -2494,13 +2494,19 @@ function PageElement:FocusOutEvent()
 	end
 end
 
+function PageElement:HaveChildren()
+	if(self.m_firstChild) then
+		return true;
+	end
+	return false;
+end
+
 function PageElement:NextTabNode(node)
 	if(self:TabIndex() == 0 and not self:Focused()) then
 		return self;
 	end
 
-	local size = #self;
-	if(size == 0 or (node and node.index == size)) then
+	if(not self:HaveChildren() or (node ~= nil and node:NextSibling() == nil)) then
 		if(self.parent) then
 			return self.parent:NextTabNode(self);
 		else
@@ -2508,9 +2514,9 @@ function PageElement:NextTabNode(node)
 		end
 	else
 		if(node) then
-			node = self[node.index + 1];
+			node = node:NextSibling();
 		else
-			node = self[1];
+			node = self:FirstChild();
 		end
 		return node:NextTabNode();
 	end

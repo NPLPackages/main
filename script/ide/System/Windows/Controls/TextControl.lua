@@ -9,7 +9,7 @@ NPL.load("(gl)script/ide/System/Windows/Controls/TextControl.lua");
 local TextControl = commonlib.gettable("System.Windows.Controls.TextControl");
 ------------------------------------------------------------
 ]]
-NPL.load("(gl)script/ide/System/Windows/UIElement.lua");
+NPL.load("(gl)script/ide/System/Windows/UITextElement.lua");
 NPL.load("(gl)script/ide/System/Core/UniString.lua");
 NPL.load("(gl)script/ide/System/Util/SyntaxAnalysis.lua");
 local SyntaxAnalysis = commonlib.gettable("System.Util.SyntaxAnalysis");
@@ -19,7 +19,7 @@ local Application = commonlib.gettable("System.Windows.Application");
 local FocusPolicy = commonlib.gettable("System.Core.Namespace.FocusPolicy");
 local Point = commonlib.gettable("mathlib.Point");
 
-local TextControl = commonlib.inherit(commonlib.gettable("System.Windows.UIElement"), commonlib.gettable("System.Windows.Controls.TextControl"));
+local TextControl = commonlib.inherit(commonlib.gettable("System.Windows.UITextElement"), commonlib.gettable("System.Windows.Controls.TextControl"));
 TextControl:Property("Name", "TextControl");
 
 TextControl:Property({"Background", "", auto=true});
@@ -171,6 +171,8 @@ function TextControl:focusInEvent(event)
 	self:setCursorBlinkPeriod(Application:cursorFlashTime());
 
 	TextControl._super.focusInEvent(self, event)
+
+	self:PageElement():FocusInEvent();
 end
 
 -- virtual: 
@@ -180,6 +182,8 @@ function TextControl:focusOutEvent(event)
 	self:setCursorBlinkPeriod(0);
 
 	TextControl._super.focusOutEvent(self, event)
+
+	self:PageElement():FocusOutEvent();
 end
 
 function TextControl:setCursorVisible(visible)
@@ -1666,9 +1670,10 @@ end
 
 function TextControl:ApplyCss(css)
 	TextControl._super.ApplyCss(self, css);
-	if(css["caret-color"]) then
-		self:SetCursorColor(css["caret-color"]);
-	end
+	self:SetLineHeight(css:ComputedLineHeight());
+--	if(css["caret-color"]) then
+--		self:SetCursorColor(css["caret-color"]);
+--	end
 end
 
 function TextControl:paintEvent(painter)

@@ -23,15 +23,11 @@ local LayoutTextControlSingleLine = commonlib.inherit(commonlib.gettable("System
 local LengthTypeEnum = Length.LengthTypeEnum;
 
 function LayoutTextControlSingleLine:ctor()
-	self.m_innerText = nil;
+	
 end
 
 function LayoutTextControlSingleLine:IsTextField()
 	return true;
-end
-
-function LayoutTextControlSingleLine:InnerTextRenderBox()
-	return self.m_innerText;
 end
 
 -- virtual function
@@ -128,18 +124,7 @@ function LayoutTextControlSingleLine:UpdateFromElement()
 end
 
 function LayoutTextControlSingleLine:SetText(str)
-	if (not str or str == "") then
-        if (self.m_innerText) then
-            self.m_innerText:Destroy();
-            self.m_innerText = nil;
-        end
-    else
-        if (self.m_innerText) then
-            self.m_innerText:SetText(str);
-        else
-            self.m_innerText = LayoutText:new():init(nil, str);
-            self.m_innerText:SetStyle(self:CreateInnerTextStyle(self:Style()));
-            self:AddChild(self.m_innerText);
-        end
-    end
+	local innerText = LayoutText:new():init(nil, str or "");
+    innerText:SetStyle(self:CreateInnerTextStyle(self:Style()));
+    self:AddChild(innerText);
 end

@@ -428,6 +428,7 @@ end
 -- virtual: apply css style
 function MultiLineEditbox:ApplyCss(css)
 	MultiLineEditbox._super.ApplyCss(self, css);
+	self:SetItemHeight(css:ComputedLineHeight());
 	if(self.viewport) then
 		self.viewport:ApplyCss(css);
 	end
@@ -499,3 +500,9 @@ function MultiLineEditbox:paintEvent(painter)
 	end
 end
 
+function MultiLineEditbox:SetTextMargin(left, top, right, bottom)
+	self.leftTextMargin = left or self.leftTextMargin;
+	self.topTextMargin = top or self.topTextMargin;
+	self.rightTextMargin = right or self.rightTextMargin;
+	self.bottomTextMargin = bottom or self.bottomTextMargin;
+end

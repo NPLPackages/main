@@ -10,9 +10,12 @@ local LayoutTextControl = commonlib.gettable("System.Windows.mcml.layout.LayoutT
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutBlock.lua");
-NPL.load("(gl)script/ide/System/Core/UniString.lua");
-local UniString = commonlib.gettable("System.Core.UniString");
+NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyleConstants.lua");
+local ComputedStyleConstants = commonlib.gettable("System.Windows.mcml.style.ComputedStyleConstants");
 local LayoutTextControl = commonlib.inherit(commonlib.gettable("System.Windows.mcml.layout.LayoutBlock"), commonlib.gettable("System.Windows.mcml.layout.LayoutTextControl"));
+
+local OverflowEnum = ComputedStyleConstants.OverflowEnum;
+local WordWrapEnum = ComputedStyleConstants.WordWrapEnum;
 
 function LayoutTextControl:ctor()
 	self.innerTextStyle = nil;
@@ -75,27 +78,29 @@ end
 function LayoutTextControl:AdjustControlHeightBasedOnLineHeight(lineHeight)
 
 end
--- virtual function
-function LayoutTextControl:InnerTextRenderBox()
 
+function LayoutTextControl:ScrollbarThickness()
+    -- FIXME: We should get the size of the scrollbar from the RenderTheme instead.
+    --return ScrollbarTheme::theme()->scrollbarThickness();
+	return 0;
 end
 
 function LayoutTextControl:ComputeLogicalHeight()
-
-	local innerTextRenderBox = self:InnerTextRenderBox();
 	self:SetHeight(0);
---	setHeight(innerTextRenderBox:BorderTop() + innerTextRenderBox:BorderBottom() +
---              innerTextRenderBox:PaddingTop() + innerTextRenderBox:PaddingBottom() +
---              innerTextRenderBox:MarginTop() + innerTextRenderBox:MarginBottom());
-    self:AdjustControlHeightBasedOnLineHeight(innerTextRenderBox:Style():ComputedLineHeight());
+    self:AdjustControlHeightBasedOnLineHeight(self.innerTextStyle:ComputedLineHeight());
     self:SetHeight(self:Height() + self:BorderAndPaddingHeight());
 
     -- We are able to have a horizontal scrollbar if the overflow style is scroll, or if its auto and there's no word wrap.
---    if (self:Style():OverflowX() == OSCROLL or  (self:Style():OverflowX() == OAUTO and self:Style():WordWrap() == NormalWordWrap)) then
---        self:SetHeight(self:Height() + scrollbarThickness());
---	end
+    if (self:Style():OverflowX() == OverflowEnum.OSCROLL or  (self:Style():OverflowX() == OverflowEnum.OAUTO and self:Style():WordWrap() == WordWrapEnum.NormalWordWrap)) then
+        self:SetHeight(self:Height() + self:ScrollbarThickness());
+	end
 
     LayoutTextControl._super.ComputeLogicalHeight(self);
+end
+
+--float RenderTextControl::getAvgCharWidth(AtomicString family)
+local function getAvgCharWidth(font)
+	return _guihelper.GetTextWidth("0", font);
 end
 
 -- virtual function
@@ -117,7 +122,7 @@ function LayoutTextControl:ComputePreferredLogicalWidths()
 --        AtomicString family = style()->font().family().family();
 --        RenderBox* innerTextRenderBox = innerTextElement()->renderBox();
 --        self.maxPreferredLogicalWidth = preferredContentWidth(getAvgCharWidth(family)) + innerTextRenderBox->paddingLeft() + innerTextRenderBox->paddingRight();
-		self.maxPreferredLogicalWidth = self:PreferredContentWidth(UniString.GetSpaceWidth(self:Style():Font():ToString()));
+		self.maxPreferredLogicalWidth = self:PreferredContentWidth(getAvgCharWidth(self:Style():Font():ToString()));
     end
 
     if (self:Style():MinWidth():IsFixed() and self:Style():MinWidth():Value() > 0) then

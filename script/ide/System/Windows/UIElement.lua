@@ -1050,6 +1050,10 @@ function UIElement:setPageElement(page_elem)
 	self._page_element = page_elem;
 end
 
+function UIElement:PageElement()
+	return self._page_element;
+end
+
 function UIElement:emitPositionChanged()
 	self:PositionChanged(self:x(), self:y());
 end
