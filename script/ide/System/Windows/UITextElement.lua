@@ -23,7 +23,7 @@ UITextElement:Property({"Font", nil, auto=true});
 UITextElement:Property({"FontSize", nil, auto=true});
 UITextElement:Property({"FontScaling", nil, auto=true});
 -- default to centered and no clipping. 
-UITextElement:Property({"Alignment", 1+4+256, auto=true, desc="text alignment"});
+UITextElement:Property({"Alignment", 0+4+256, auto=true, desc="text alignment"});
 UITextElement:Property({"TextShadow", false, "HasTextShadow", "SetTextShadow", auto=true});
 UITextElement:Property({"ShadowColor", "#00000088", auto=true});
 --UITextElement:Property({"ShadowQuality", 1, auto=true});
@@ -83,7 +83,8 @@ end
 -- virtual: apply css style
 function UITextElement:ApplyCss(css)
 	UITextElement._super.ApplyCss(self, css);
-	self:SetFont(css:Font():ToTable());
+	self:SetFont(css:Font():ToString());
+	self:SetColor(css:Color():ToDWORD());
 --	local font, font_size, font_scaling = css:GetFontSettings();
 --	self:SetFont(font);
 --	self:SetFontSize(font_size);

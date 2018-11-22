@@ -31,8 +31,20 @@ h4 {
     font-weight: bold;
 }
 
-button, input {
+input, textarea, select, button {
+    /*margin: 0__qem;*/
+    font-family: initial;
+    font-weight: initial;
+    font-size: initial;
+    color: initial;
+    /*letter-spacing: normal;
+    word-spacing: normal;*/
+    line-height: initial;
+    /*text-transform: none;
+    text-indent: 0;
+    text-shadow: none;*/
     display: inline-block;
+    /*text-align: start;*/
 }
 
 input {
@@ -83,6 +95,17 @@ input[type="checkbox"] {
 
 input[type="radio"] {
     appearance: radio;
+}
+
+input[type="text"], input[type="password"] {
+    background-color: #cccccc;
+    appearance: textfield;
+    padding: 1px;
+    margin:1px;
+    /*background-color: white;
+    border: 2px inset;
+    -webkit-rtl-ordering: logical;
+    cursor: text;*/
 }
 
 style {

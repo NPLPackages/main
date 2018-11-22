@@ -873,10 +873,10 @@ end
 
 function EditBox:ApplyCss(css)
 	EditBox._super.ApplyCss(self, css);
-	self:SetAlignment(css:GetTextAlignment(0)); -- left align
-	if(css["caret-color"]) then
-		self:SetCursorColor(css["caret-color"]);
-	end
+	--self:SetAlignment(css:GetTextAlignment(0)); -- left align
+--	if(css["caret-color"]) then
+--		self:SetCursorColor(css["caret-color"]);
+--	end
 end
 
 function EditBox:keyPressEvent(event)
@@ -983,4 +983,11 @@ function EditBox:keyPressEvent(event)
     else
         event:accept();
 	end
+end
+
+function EditBox:SetTextMargin(left, top, right, bottom)
+	self.leftTextMargin = left or self.leftTextMargin;
+	self.topTextMargin = top or self.topTextMargin;
+	self.rightTextMargin = right or self.rightTextMargin;
+	self.bottomTextMargin = bottom or self.bottomTextMargin;
 end

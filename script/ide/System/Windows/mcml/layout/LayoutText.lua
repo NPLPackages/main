@@ -140,6 +140,28 @@ function LayoutText:Text()
 	return self.text;
 end
 
+--void RenderText::setTextInternal(PassRefPtr<StringImpl> text)
+function LayoutText:SetTextInternal(text)
+	self.text:SetText(text);
+end
+
+--void RenderText::setText(PassRefPtr<StringImpl> text, bool force)
+function LayoutText:SetText(text, force)
+    --ASSERT(text);
+	force = if_else(force == nil, false, force);
+    if (not force and self.text:GetText() == text) then
+        return;
+	end
+
+    self:SetTextInternal(text);
+    self:SetNeedsLayoutAndPrefWidthsRecalc();
+    self.knownToHaveNoOverflowAndNoFallbackFonts = false;
+    
+--    AXObjectCache* axObjectCache = document()->axObjectCache();
+--    if (axObjectCache->accessibilityEnabled())
+--        axObjectCache->contentChanged(this);
+end
+
 function LayoutText:CreateTextBox()
     return InlineTextBox:new():init(self);
 end

@@ -43,6 +43,11 @@ function Color:ToDWORD()
 	return ColorHelper.RGBA_TO_DWORD(self.r, self.g, self.b, self.a);
 end
 
+function Color:ToString()
+	return string.format("#%X%X%X%X", self.r, self.g, self.b, self.a);
+end
+
+
 function Color:clone()
 	return Color:new(self.r, self.g, self.b, self.a);
 end

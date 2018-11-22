@@ -3600,7 +3600,7 @@ function LayoutBlock:LastLineBoxBaseline()
         if (not self:FirstLineBox() and self:HasLineIfEmpty()) then
             local fontMetrics = self:FirstLineStyle():FontMetrics();
             return fontMetrics:ascent()
-                 + (self:LineHeight(true, lineDirection, PositionOfInteriorLineBoxes) - fontMetrics:height()) / 2
+                 + (self:LineHeight(true, lineDirection, "PositionOfInteriorLineBoxes") - fontMetrics:height()) / 2
                  + if_else(lineDirection == "HorizontalLine", self:BorderTop() + self:PaddingTop(), self:BorderRight() + self:PaddingRight());
         end
         if (self:LastLineBox()) then
@@ -3626,7 +3626,7 @@ function LayoutBlock:LastLineBoxBaseline()
         if (not haveNormalFlowChild and self:HasLineIfEmpty()) then
             local fontMetrics = self:FirstLineStyle():FontMetrics();
             return fontMetrics:ascent()
-                 + (self:LineHeight(true, lineDirection, PositionOfInteriorLineBoxes) - fontMetrics:height()) / 2
+                 + (self:LineHeight(true, lineDirection, "PositionOfInteriorLineBoxes") - fontMetrics:height()) / 2
                  + if_else(lineDirection == "HorizontalLine", self:BorderTop() + self:PaddingTop(), self:BorderRight() + self:PaddingRight());
         end
     end
