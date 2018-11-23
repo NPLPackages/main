@@ -115,6 +115,7 @@ local function is_ident(id)
 	return id:match "^[%a_][%w_]*$" 
 end
 
+
 --------------------------------------------------------------------------------
 -- Return true iff ast represents a legal function name for
 -- syntax sugar ``function foo.bar.gnat() ... end'':
@@ -252,6 +253,20 @@ function M:Do(node)
 end
 
 function M:Set(node)
+	do
+		-- ``... = ...'', no syntax sugar --
+		local lhs = node[1]
+		local rhs = node[2]
+		self:goHead(node)
+		self:list(lhs, ", ")
+		self:acc " = "
+		self:goTail(node)
+		self:list(rhs, ", ")
+		return
+	end
+	-- Note by Xizhi: following code is wrong for "a[1] = function() end"
+
+
 	-- ``function foo:bar(...) ... end'' --
 	if type(node[1][1]) == 'table'
 	and node[1][1].tag == 'Index' 
@@ -508,7 +523,7 @@ function M:Table(node)
 		for i, elem in ipairs(node) do
 			if elem.tag == 'Pair' 
 			and elem[1].tag == 'String' 
-			and is_ident(elem[1][1]) then
+			and is_ident(elem[1][1]) and not keywords[elem[1][1]] then
 				---- ``key = value''. --
 				local key = elem[1][1]
 				local value = elem[2]

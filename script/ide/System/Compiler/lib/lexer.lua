@@ -57,18 +57,28 @@ number_hex = "^0[xX]%x+()",
 word = "^([%a_][%w_]*)()"
 }
 
+local t = { 
+	a = "\a", b = "\b", f = "\f",
+	n = "\n", r = "\r", t = "\t", v = "\v",
+	["\\"] = "\\",["'"] = "'",['"'] = '"',["\n"] = "\n" 
+}
+
 ----------------------------------------------------------------------
 -- unescape a whole string, applying [unesc_digits] and
 -- [unesc_letter] as many times as required.
 ----------------------------------------------------------------------
 local function unescape_string(s)
+	do 
+		return s
+	end
+	-- By Xizhi: following code is wrong: for "\\\t"
 
    -- Turn the digits of an escape sequence into the corresponding
    -- character, e.g. [unesc_digits("123") == string.char(123)].
 	local function unesc_digits(backslashes, digits)
 		if #backslashes%2==0 then
          -- Even number of backslashes, they escape each other, not the digits.
-         -- Return them so that unesc_letter() can treaat them
+         -- Return them so that unesc_letter() can treat them
 			return backslashes..digits
 		else
          -- Remove the odd backslash, which escapes the number sequence.
@@ -87,10 +97,6 @@ local function unescape_string(s)
    -- Take a letter [x], and returns the character represented by the 
    -- sequence ['\\'..x], e.g. [unesc_letter "n" == "\n"].
 	local function unesc_letter(x)
-		local t = { 
-		a = "\a", b = "\b", f = "\f",
-		n = "\n", r = "\r", t = "\t", v = "\v",
-		["\\"] = "\\",["'"] = "'",['"'] = '"',["\n"] = "\n" }
 		return t[x] or error([[Unknown escape sequence '\]]..x..[[']])
 	end
 
