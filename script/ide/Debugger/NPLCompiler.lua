@@ -226,19 +226,20 @@ local function npl_strip_comment(text, filename, bUseAST)
 		local nplpClass = commonlib.gettable("System.Compiler.nplp")
 		local nplgen = commonlib.gettable("System.Compiler.nplgen")
 		local nplp = nplpClass:new()
-		local ast = nplp:src_to_ast(text, filename)
-		return nplgen.ast_to_str(ast)
 		
---		local ok;
---		ok, compiled_src = pcall(function()
---			local ast = nplp:src_to_ast(text, filename)
---			return nplgen.ast_to_str(ast)
---		end)
---		if(ok) then
---			return compiled_src
---		else
---			commonlib.log(compiled_src);
---		end
+		local ok, compiled_src = pcall(function()
+			local ast = nplp:src_to_ast_raw(text, filename)
+			local gen = nplgen:new()
+			gen:SetIgnoreNewLine(true)
+			return gen:run(ast)
+		end)
+
+		if(ok) then
+			return compiled_src
+		else
+			commonlib.log(compiled_src);
+			return false;
+		end
 	else
 		local insideCommentBlock = false;
 		local lines = {};
@@ -298,21 +299,26 @@ function NPL.StripFileComment(cmdLine)
 
 	-- Load/compile chunks.
 	for i, filename in ipairs(chunks) do
-		local file = ParaIO.open(filename, "r");
-		if(file:IsValid()) then
-			local text = file:GetText();
-			if(filename:match("%.npl$")) then
-				chunks[i] = text;
-			else
-				chunks[i] = npl_strip_comment(text, filename, true);
-				if(not chunks[i]) then
-					return false;
+		if(ParaIO.DoesFileExist(filename, false)) then
+			local file = ParaIO.open(filename, "r");
+			if(file:IsValid()) then
+				local text = file:GetText();
+				if(filename:match("%.npl$")) then
+					chunks[i] = text;
+				else
+					chunks[i] = npl_strip_comment(text, filename, true);
+					if(not chunks[i]) then
+						return false;
+					end
 				end
+				file:close();
+			else
+				-- LOG.std(nil, "warn", "NPL.compiler", "file: %s size is 0", filename);
+				chunks[i] = "";
 			end
-			file:close();
 		else
-			LOG.std(nil, "warn", "NPL.compiler", "file: %s not found or size is 0", filename);
-			return;
+			LOG.std(nil, "warn", "NPL.compiler", "file: %s not found", filename);
+			chunks[i] = "";
 		end
 	end
 
