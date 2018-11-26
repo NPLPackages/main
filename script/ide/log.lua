@@ -518,7 +518,7 @@ end
 
 -- create a global logger with level "TRACE", one can usually set to "WARN" for release mode
 LOG = commonlib.logging.GetLogger("");
-LOG.level = "TRACE";
+LOG.level = ParaEngine.GetAppCommandLineByParam("loglevel","TRACE");
 
 -- @param level: string of FATAL, ERROR, WARN, INFO, DEBUG, TRACE
 function LOG.SetLogLevel(level)
@@ -530,3 +530,10 @@ function LOG.SetLogLevel(level)
 		end
 	end
 end
+
+-- NPL.activate("(gl)script/ide/log.lua", {type="setloglevel", level = "INFO"})
+NPL.this(function()
+	if(msg.type == "setloglevel" and msg.level) then
+		LOG.SetLogLevel(msg.level)
+	end
+end)
