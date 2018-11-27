@@ -181,6 +181,7 @@ local enum_fields = {
 	["appearance"] = {map = {
 		["checkbox"] = "CheckboxPart",
 		["radio"] = "RadioPart",
+		["narrow"] = "NarrowPart",
 		["button"] = "ButtonPart",
 		["listbox"] = "ListboxPart",
 		["progress-bar"] = "ProgressBarPart",

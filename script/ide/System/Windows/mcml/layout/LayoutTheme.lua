@@ -48,6 +48,9 @@ function LayoutTheme:AdjustStyle(selector, style, e, UAHasAppearance, border, ba
 	if(part == ControlPartEnum.RadioPart) then
 		return self:AdjustRadioStyle(selector, style, e);
 	end
+	if(part == ControlPartEnum.NarrowPart) then
+		return self:AdjustNarrowStyle(selector, style, e);
+	end
 end
 
 --void RenderTheme::adjustCheckboxStyle(CSSStyleSelector*, RenderStyle* style, Element*) const
@@ -91,6 +94,24 @@ function LayoutTheme:SetRadioSize(style)
 	self:SetCheckboxSize(style);
 end
 
+function LayoutTheme:SetNarrowSize(style)
+	-- If the width and height are both specified, then we have nothing to do.
+    if (not style:Width():IsIntrinsicOrAuto() and not style:Height():IsAuto()) then
+        return;
+	end
+
+    -- FIXME:  A hard-coded size of 12 is used.  This is wrong but necessary for now.  It matches Firefox.
+    -- At different DPI settings on Windows, querying the theme gives you a larger size that accounts for
+    -- the higher DPI.  Until our entire engine honors a DPI setting other than 96, we can't rely on the theme's
+    -- metrics.
+    if (style:Width():IsIntrinsicOrAuto()) then
+        style:SetWidth(Length:new(12, LengthTypeEnum.Fixed));
+	end
+    if (style:Height():IsAuto()) then
+        style:SetHeight(Length:new(12, LengthTypeEnum.Fixed));
+	end
+end
+
 --void RenderTheme::adjustRadioStyle(CSSStyleSelector*, RenderStyle* style, Element*) const
 function LayoutTheme:AdjustRadioStyle(selector, style, element)
     -- A summary of the rules for checkbox designed to match WinIE:
@@ -108,11 +129,27 @@ function LayoutTheme:AdjustRadioStyle(selector, style, element)
     --style->setBoxShadow(nullptr);
 end
 
+function LayoutTheme:AdjustNarrowStyle(selector, style, element)
+    -- A summary of the rules for checkbox designed to match WinIE:
+    -- width/height - honored (WinIE actually scales its control for small widths, but lets it overflow for small heights.)
+    -- font-size - not honored (control has no text), but we use it to decide which control size to use.
+    self:SetNarrowSize(style);
+
+    -- padding - not honored by WinIE, needs to be removed.
+    style:ResetPadding();
+
+    -- border - honored by WinIE, but looks terrible (just paints in the control box and turns off the Windows XP theme)
+    -- for now, we will not honor it.
+    style:ResetBorder();
+
+    --style->setBoxShadow(nullptr);
+end
+
 --bool RenderTheme::isControlContainer(ControlPart appearance) const
 function LayoutTheme:IsControlContainer(appearance)
     -- There are more leaves than this, but we'll patch this function as we add support for
     -- more controls.
-    return appearance ~= ControlPartEnum.CheckboxPart and appearance ~= ControlPartEnum.RadioPart;
+    return appearance ~= ControlPartEnum.CheckboxPart and appearance ~= ControlPartEnum.RadioPart and appearance ~= ControlPartEnum.NarrowPart;
 end
 
 --int RenderTheme::baselinePosition(const RenderObject* o) const

@@ -543,7 +543,7 @@ ComputedStyleConstants.UnicodeBidiEnum = EnumCreater.Transform({
 
 -- Must follow CSSValueKeywords.in order
 ComputedStyleConstants.ControlPartEnum = EnumCreater.Transform({
-    "NoControlPart", "CheckboxPart", "RadioPart", "PushButtonPart", "SquareButtonPart", "ButtonPart",
+    "NoControlPart", "CheckboxPart", "RadioPart", "NarrowPart", "PushButtonPart", "SquareButtonPart", "ButtonPart",
 	"ButtonBevelPart", "DefaultButtonPart", "InnerSpinButtonPart", "InputSpeechButtonPart", "ListButtonPart", "ListboxPart", "ListItemPart",
 	"MediaFullscreenButtonPart", "MediaMuteButtonPart", "MediaPlayButtonPart", "MediaSeekBackButtonPart",
 	"MediaSeekForwardButtonPart", "MediaRewindButtonPart", "MediaReturnToRealtimeButtonPart", "MediaToggleClosedCaptionsButtonPart",

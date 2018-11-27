@@ -30,6 +30,10 @@ function pe_button:CreateControl()
 
 	local polygonStyle = self:GetAttributeWithCode("polygonStyle", nil, true);
 	local direction = self:GetAttributeWithCode("direction", nil, true);
+	local type = self:GetAttributeWithCode("type", nil, true);
+	if(type == "narrow") then
+		polygonStyle = polygonStyle or "narrow";
+	end
 	_this:SetPolygonStyle(polygonStyle);
 	_this:SetDirection(direction);
 

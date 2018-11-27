@@ -31,7 +31,7 @@ function pe_input:createFromXmlNode(o)
 		return Elements.pe_checkbox:createFromXmlNode(o);	
 	elseif(type == "hidden") then
 		return Elements.pe_unknown:createFromXmlNode(o);	
-	elseif(type == "submit" or type == "button" or type == "reset" ) then
+	elseif(type == "submit" or type == "button" or type == "reset" or type == "narrow") then
 		return Elements.pe_button:createFromXmlNode(o);	
 	elseif(type == "file") then
 		--return Elements.pe_fileupload:createFromXmlNode(o);	
