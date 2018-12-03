@@ -1495,7 +1495,7 @@ function TextControl:cursorToX(text)
 		if(self:GetCurrentLine()) then
 			text = self:GetCurrentLine().text;
 		else
-			text = Unistring:new();
+			text = UniString:new();
 		end
 	end
 	--local text = text or self:GetCurrentLine().text;
