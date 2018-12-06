@@ -248,8 +248,12 @@ function AudioEngine.Stop(sound_name)
 	if(sound) then
 		sound:stop();
 		sound:release();
-		instance_map[sound_name] = nil;
 	end
+end
+
+-- delete the audio source 
+function AudioEngine.Delete(sound_name)
+	instance_map[sound_name] = nil;
 end
 
 -- stop and release the sound by name
