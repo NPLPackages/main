@@ -60,37 +60,39 @@ local string_find = string.find;
 local string_gfind = string.gfind;
 local string_lower = string.lower;
 
-
---local month_days_nonleap = {31,28,31,30,31,30,31,31,30,31,30,31}; 
---local month_days_leap =    {31,29,31,30,31,30,31,31,30,31,30,31};
---
----- get day count from 1900-1-1, if input (1900, 1, 1) return 1
---function commonlib.GetDaysFrom_1900_1_1(year, month, day)
-	--local count = 0;
-	--if(year and month and day) then
-		--local m = 1;
-		--for m = 1, month - 1 do
-			--if(mod(year, 4) == 0) then
-				--count = count + month_days_leap[m]
-			--else
-				--count = count + month_days_nonleap[m]
-			--end
-		--end
-		--local y = 1900;
-		--for y = 1900, year - 1 do
-			--if(mod(y, 4) == 0) then
-				--count = count + 366;
-			--else
-				--count = count + 365;
-			--end
-		--end
-		--count = count + day;
-		--return count;
-	--end
---end
-
+-- @param year: number of "yy-mm-dd"
+-- @param month, day: nil or number
+-- @return number of days or nil
 function commonlib.GetDaysFrom_1900_1_1(year, month, day)
-	return timehelp.makedaynum(year, month, day) - 693594; -- timehelp.makedaynum(1900, 0, 1) --> 693595;
+	if(not month and type(year) == "string") then
+		year, month, day = timehelp.GetYearMonthDayFromStr(year)
+	end
+	if(year and month and day) then
+		return timehelp.makedaynum(year, month, day) - 693594; -- timehelp.makedaynum(1900, 0, 1) --> 693595;
+	end
+end
+
+-- @param date: "yy-mm-dd"
+-- @param year, month, day
+function commonlib.timehelp.GetYearMonthDayFromStr(date)
+	if(date) then
+		local year,month,day = date:match("^(%d+)%D(%d+)%D(%d+)")
+		if(year and month and day) then
+			year = tonumber(year);
+			month = tonumber(month);
+			day = tonumber(day);
+			return year, month, day
+		end
+	end
+end
+
+-- return number(date2-date1) or nil if date is invalid string
+function commonlib.timehelp.GetDaysTweenDate(date1, date2)
+	local days1 = commonlib.GetDaysFrom_1900_1_1(date1)
+	local days2 = commonlib.GetDaysFrom_1900_1_1(date2)
+	if(days1 and days2) then
+		return days2 - days1;
+	end
 end
 
 --返回日期的毫秒数
