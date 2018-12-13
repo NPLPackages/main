@@ -1681,8 +1681,8 @@ function TextControl:paintEvent(painter)
 	self.from_line = math.max(1, 1 + math.floor((-(self:y() - self.parent:ViewRegionOffsetY())) / self.lineHeight)); 
 	self.to_line = math.min(self.items:size(), 1 + math.ceil((-self:y() + clipRegion:height()) / self.lineHeight));
 
-	-- draw cursor even for readonly mode, since we will allow selection and copy paste
-	if((self:isAlwaysShowCurLineBackground() or (self.cursorVisible and self:hasFocus()))) then
+	
+	if(not self:isReadOnly() and (self:isAlwaysShowCurLineBackground() or (self.cursorVisible and self:hasFocus()))) then
 		-- the curor line backgroud
 		local curline_x, curline_y = 0, (self.cursorLine - 1) * self.lineHeight;
 		painter:SetPen(self:GetCurLineBackgroundColor());
@@ -1817,6 +1817,7 @@ function TextControl:paintEvent(painter)
 		end
 	end
 
+	-- draw cursor even for readonly mode, since we will allow selection and copy paste
 	if(self.cursorVisible and self:hasFocus()) then
 		-- draw cursor
 		if(self.m_blinkPeriod==0 or self.m_blinkStatus) then
