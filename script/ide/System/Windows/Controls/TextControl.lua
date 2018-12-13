@@ -515,9 +515,11 @@ function TextControl:keyPressEvent(event)
 	local mark = event.shift_pressed;
 	local unknown = false;
 	if(keyname == "DIK_RETURN") then
-		if(self:hasAcceptableInput()) then
-			--self:accepted(); -- emit
-			self:newLine(mark);
+		if(not self:isReadOnly()) then
+			if(self:hasAcceptableInput()) then
+				--self:accepted(); -- emit
+				self:newLine(mark);
+			end
 		end
 	elseif(keyname == "DIK_BACKSPACE") then
 		if (not self:isReadOnly()) then
@@ -1679,7 +1681,8 @@ function TextControl:paintEvent(painter)
 	self.from_line = math.max(1, 1 + math.floor((-(self:y() - self.parent:ViewRegionOffsetY())) / self.lineHeight)); 
 	self.to_line = math.min(self.items:size(), 1 + math.ceil((-self:y() + clipRegion:height()) / self.lineHeight));
 
-	if(not self:isReadOnly() and (self:isAlwaysShowCurLineBackground() or (self.cursorVisible and self:hasFocus() and not self:isReadOnly()))) then
+	-- draw cursor even for readonly mode, since we will allow selection and copy paste
+	if((self:isAlwaysShowCurLineBackground() or (self.cursorVisible and self:hasFocus()))) then
 		-- the curor line backgroud
 		local curline_x, curline_y = 0, (self.cursorLine - 1) * self.lineHeight;
 		painter:SetPen(self:GetCurLineBackgroundColor());
@@ -1814,7 +1817,7 @@ function TextControl:paintEvent(painter)
 		end
 	end
 
-	if(self.cursorVisible and self:hasFocus() and not self:isReadOnly()) then
+	if(self.cursorVisible and self:hasFocus()) then
 		-- draw cursor
 		if(self.m_blinkPeriod==0 or self.m_blinkStatus) then
 			local cursor_x = self:cursorToX();
