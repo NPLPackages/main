@@ -139,6 +139,16 @@ function Overlay:Tick()
 	end
 end
 
+-- the smaller, the earlier to render
+-- @param order: default to 0, set to -1 to force render first. 
+function Overlay:SetRenderOrder(order)
+	if(self.native_scene_obj) then
+		-- TRICKY: the C++ sorts by render_tech, instead of render_order, so we just set render_tech any way. 
+		self.native_scene_obj:SetField("render_tech", order)
+	end
+end
+
+
 -- private: bind to native scene object.
 -- @param native_scene_obj: if nil, we will create one 
 function Overlay:create_sys(native_scene_obj, x, y, z)
