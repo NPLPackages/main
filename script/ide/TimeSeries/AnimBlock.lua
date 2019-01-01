@@ -473,11 +473,11 @@ function AnimBlock:InterpolateLinearTable(range, fromT, toT, isAngleData)
 				else
 					thisT[name] = self:InterpolateLinearAngle(range, value, toT[name] or value);
 				end
-			elseif(dataType == "string") then
-				thisT[name] = value;
 			elseif(dataType == "table") then
 				local isAngleData = name:match("^rot")~=nil;
 				thisT[name] = self:InterpolateLinearTable(range, value, toT[name] or value, isAngleData)
+			else
+				thisT[name] = value;
 			end
 		end
 
