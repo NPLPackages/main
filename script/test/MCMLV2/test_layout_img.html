@@ -3,28 +3,47 @@
 <pe:mcml>
 <script type="text/npl" refresh="false">
     <![CDATA[
+    local changeMap = {
+        ["data"] = {
+            ["src"] = {"Textures/icon1.png", "Textures/login_bg.png"},
+            ["size"] = {"60", "120"},
+            ["margin"] = {"", "50px"},
+        }    
+    }
 
     function SetNodeProperty(node,key,value)
         node:GetInlineStyleDecl():SetProperty(key,value);
     end
-    function ChangeImageSource()
+    function ChangeImageSource(value)
         local nodes = Page:jquery("img#img");
         local node = nodes[1];
-        node:SetAttribute("src", "Textures/login_bg.png")
+        node:SetAttribute("src", value)
         --SetNodeProperty(node, "background-image", "Textures/login_bg.png");
     end
-    function ChangeImageSize()
+    function ChangeImageSize(value)
         local nodes = Page:jquery("img#img");
         local node = nodes[1];
-        node:SetAttribute("width", "120");
-        node:SetAttribute("height", "120");
+        node:SetAttribute("width", value);
+        node:SetAttribute("height", value);
         --SetNodeProperty(node, "width", "120px");
         --SetNodeProperty(node, "height", "120px");
     end
-    function ChangeImageMargin()
+    function ChangeImageMargin(value)
         local nodes = Page:jquery("img#img");
         local node = nodes[1];
-        SetNodeProperty(node, "margin", "");
+        SetNodeProperty(node, "margin", value);
+    end
+    changeMap["func"] = {
+        ["src"] = ChangeImageSource,
+        ["size"] = ChangeImageSize,
+        ["margin"] = ChangeImageMargin,
+    }
+    function ChangeImageProperty(checked, node)
+        local type = node:GetAttribute("name");
+        local index = if_else(checked, 2, 1);
+        local value = changeMap["data"][type][index];
+        local func = changeMap["func"][type];
+        func(value);
     end
     ]]>
 </script>
@@ -43,11 +62,14 @@
         font-weight:bold;
     }
 </style>
-<div name="div" style="margin:20px;background-color:antiquewhite;height:300px;font-size:30px;"><img name="img" id="img" src="Textures/icon1.png" width="60" height="30" style="margin:20px;"/></div>
+<div name="div" style="margin:20px;background-color:antiquewhite;">11<img name="img" id="img" src="Textures/icon1.png" width="60" height="30"/>22</div>
 <div style="background-color:aquamarine;margin:20px;">
-    <input name="button" type="button" value="更改图片源" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="ChangeImageSource()" />
+    <!--<input name="button" type="button" value="更改图片源" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="ChangeImageSource()" />
     <input name="button" type="button" value="更改图片大小" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="ChangeImageSize()" />
-    <input name="button" type="button" value="更改图片margin" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="ChangeImageMargin()" />
+    <input name="button" type="button" value="更改图片margin" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="ChangeImageMargin()" />-->
+    <input name="src" type="checkbox" style="background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="ChangeImageProperty()" />更改图片源(src="Textures/login_bg.png")<br/>
+    <input name="size" type="checkbox" style="background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="ChangeImageProperty()" />更改图片大小(width=height=120px)<br />
+    <input name="margin" type="checkbox" style="background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="ChangeImageProperty()" />更改图片外边距(margin:50px)<br />
 </div>
 </pe:mcml>
 </html>

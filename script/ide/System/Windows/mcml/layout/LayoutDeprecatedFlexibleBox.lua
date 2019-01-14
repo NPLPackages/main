@@ -413,7 +413,7 @@ function LayoutDeprecatedFlexibleBox:LayoutHorizontalBox(relayoutChildren)
     local haveFlex = false;
     highestFlexGroup, lowestFlexGroup, haveFlex = gatherFlexChildrenInfo(iterator, relayoutChildren, highestFlexGroup, lowestFlexGroup, haveFlex);
 
-    -- RenderBlock::startDelayUpdateScrollInfo();
+	LayoutDeprecatedFlexibleBox._super.StartDelayUpdateScrollInfo(self);
 
     -- We do 2 passes.  The first pass is simply to lay everyone out at
     -- their preferred widths.  The second pass handles flexing the children.
@@ -663,7 +663,7 @@ function LayoutDeprecatedFlexibleBox:LayoutHorizontalBox(relayoutChildren)
 
     self.m_flexingChildren = false;
 
-    -- RenderBlock::finishDelayUpdateScrollInfo();
+    LayoutDeprecatedFlexibleBox._super.FinishDelayUpdateScrollInfo(self);
 
     if (remainingSpace > 0 and ((self:Style():IsLeftToRightDirection() and self:Style():BoxPack() ~= BoxAlignmentEnum.BSTART)
         or (not self:Style():IsLeftToRightDirection() and self:Style():BoxPack() ~= BoxAlignmentEnum.BEND))) then
@@ -753,7 +753,7 @@ function LayoutDeprecatedFlexibleBox:LayoutVerticalBox(relayoutChildren)
         self:ApplyLineClamp(iterator, relayoutChildren);
 	end
 
-    --RenderBlock::startDelayUpdateScrollInfo();
+    LayoutDeprecatedFlexibleBox._super.StartDelayUpdateScrollInfo(self);
 
     -- We do 2 passes.  The first pass is simply to lay everyone out at
     -- their preferred widths.  The second pass handles flexing the children.
@@ -959,7 +959,7 @@ function LayoutDeprecatedFlexibleBox:LayoutVerticalBox(relayoutChildren)
         end
     until (not haveFlex)
 
-    --RenderBlock::finishDelayUpdateScrollInfo();
+    LayoutDeprecatedFlexibleBox._super.FinishDelayUpdateScrollInfo(self);
 
     if (self:Style():BoxPack() ~= BoxAlignmentEnum.BSTART and remainingSpace > 0) then
         -- Children must be repositioned.

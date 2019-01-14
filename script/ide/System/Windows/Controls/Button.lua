@@ -74,7 +74,9 @@ end
 
 function Button:SetBackgroundColor(color)
 	Button._super.SetBackgroundColor(self, color);
-	self:MultiplyBackgroundColor(color);
+	if(self.polygon_style == "normal") then
+		self:MultiplyBackgroundColor(color);
+	end
 end
 
 function Button:setChecked(checked)

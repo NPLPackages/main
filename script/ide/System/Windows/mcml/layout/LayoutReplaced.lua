@@ -55,9 +55,12 @@ end
 --void RenderBox::paintBoxDecorations(PaintInfo& paintInfo, const LayoutPoint& paintOffset)
 function LayoutReplaced:PaintBoxDecorations(paintInfo, paintOffset)
 	local rect = self.frame_rect:clone_from_pool();
-	if(self:HasSelfPaintingLayer()) then
-		rect:Move(paintOffset:X(), paintOffset:Y());
-	end
+	echo("LayoutReplaced:PaintBoxDecorations")
+	echo(self.frame_rect)
+	echo(paintOffset)
+--	if(self:HasSelfPaintingLayer()) then
+--		rect:Move(paintOffset:X(), paintOffset:Y());
+--	end
 	self:PaintBackground(paintInfo, rect);
 end
 

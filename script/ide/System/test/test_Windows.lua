@@ -66,9 +66,11 @@ end
 -- test destroy windows
 function test_Windows:DestroyWindows(windows)
 	windows = windows or self.windows;
-	for _,window in ipairs(windows) do
-		if(window and window.CloseWindow) then
-			window:CloseWindow(true);
+	if(windows) then
+		for _,window in ipairs(windows) do
+			if(window and window.CloseWindow) then
+				window:CloseWindow(true);
+			end
 		end
 	end
 end

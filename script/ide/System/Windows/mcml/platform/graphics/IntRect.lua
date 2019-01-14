@@ -53,6 +53,7 @@ function Rect:Reset(x,y,width,height)
 
 	self.location:Reset(x_, y_);
 	self.size:Reset(width_, height_);
+	return self;
 end
 
 -- this is actually a ring buffer of 200, pay attention not to reach over this value in recursive calls. 
@@ -384,5 +385,5 @@ function Rect:Type()
 end
 
 function Rect:TransposedRect()
-	return IntRect:new(self.location:TransposedPoint(), self.size:TransposedSize());
+	return Rect:new(self.location:TransposedPoint(), self.size:TransposedSize());
 end

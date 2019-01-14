@@ -11,6 +11,8 @@ local LayoutTextControl = commonlib.gettable("System.Windows.mcml.layout.LayoutT
 ]]
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutBlock.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyleConstants.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/platform/ScrollbarTheme.lua");
+local ScrollbarTheme = commonlib.gettable("System.Windows.mcml.platform.ScrollbarTheme");
 local ComputedStyleConstants = commonlib.gettable("System.Windows.mcml.style.ComputedStyleConstants");
 local LayoutTextControl = commonlib.inherit(commonlib.gettable("System.Windows.mcml.layout.LayoutBlock"), commonlib.gettable("System.Windows.mcml.layout.LayoutTextControl"));
 
@@ -81,8 +83,8 @@ end
 
 function LayoutTextControl:ScrollbarThickness()
     -- FIXME: We should get the size of the scrollbar from the RenderTheme instead.
-    --return ScrollbarTheme::theme()->scrollbarThickness();
-	return 0;
+    return ScrollbarTheme:theme():scrollbarThickness();
+	--return 0;
 end
 
 function LayoutTextControl:ComputeLogicalHeight()

@@ -1,5 +1,5 @@
 /*mcml is paracraft element*/
-mcml, div, p {
+mcml, div, p, container {
     display:block;
 }
 
@@ -91,6 +91,11 @@ input[type="button"], input[type="submit"], input[type="reset"] {
     /*-webkit-appearance: push-button;*/
     /*-webkit-user-select: none;
     white-space: pre*/
+}
+
+input[type="button"], input[type="submit"], input[type="reset"], button {
+    box-align: center;
+    text-align: center;
 }
 
 input[type="checkbox"] {

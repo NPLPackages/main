@@ -7,7 +7,7 @@ Use Lib:
 -------------------------------------------------------
 NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/IntSize.lua");
 local Size = commonlib.gettable("System.Windows.mcml.platform.graphics.IntSize");
-local sz1 = Size:new():init(0,0);
+local sz1 = Size:new(0,0);
 local sz2 = Size:new_from_pool(9,0);
 -------------------------------------------------------
 ]]
@@ -39,6 +39,7 @@ end
 
 function Size:Reset(w,h)
 	self[1], self[2] = w or 0, h or 0;
+	return self;
 end
 
 -- this is actually a ring buffer of 200, pay attention not to reach over this value in recursive calls. 
@@ -160,7 +161,7 @@ function Size:ToPoint()
 	return Point:new(self[1], self[2]);
 end
 
-function Size.__num(o)
+function Size.__unm(o)
 	return Size:new(-o[1], -o[2]);
 end
 

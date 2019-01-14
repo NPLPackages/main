@@ -52,3 +52,18 @@ end
 function ScrollableArea:ScrollOrigin()
 	return self.scrollOrigin;
 end
+
+--bool ScrollableArea::hasOverlayScrollbars() const
+function ScrollableArea:HasOverlayScrollbars()
+    return (self:VerticalScrollbar() and self:VerticalScrollbar():IsOverlayScrollbar())
+        or (self:HorizontalScrollbar() and self:HorizontalScrollbar():IsOverlayScrollbar());
+end
+
+-- virtual function
+function ScrollableArea:HorizontalScrollbar() 
+
+end
+-- virtual function
+function ScrollableArea:VerticalScrollbar()
+
+end

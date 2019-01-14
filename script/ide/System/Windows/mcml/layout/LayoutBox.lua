@@ -66,6 +66,8 @@ NPL.load("(gl)script/ide/System/Windows/mcml/platform/Length.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/InlineBox.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/IntPoint.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyleConstants.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutOverflow.lua");
+local LayoutOverflow = commonlib.gettable("System.Windows.mcml.layout.LayoutOverflow");
 local ComputedStyleConstants = commonlib.gettable("System.Windows.mcml.style.ComputedStyleConstants");
 local Point = commonlib.gettable("System.Windows.mcml.platform.graphics.IntPoint");
 local InlineBox = commonlib.gettable("System.Windows.mcml.layout.InlineBox");
@@ -387,11 +389,30 @@ function LayoutBox:PaddingBoxRect()
 	return self:ClientLeft(), self:ClientTop(), self:ClientWidth(), self:ClientHeight();
 end
 
+--bool RenderBox::includeVerticalScrollbarSize() const
+function LayoutBox:IncludeVerticalScrollbarSize()
+    return self:HasOverflowClip() and not self:Layer():HasOverlayScrollbars()
+        and (self:Style():OverflowY() == OverflowEnum.OSCROLL or self:Style():OverflowY() == OverflowEnum.OAUTO);
+end
+
+--bool RenderBox::includeHorizontalScrollbarSize() const
+function LayoutBox:IncludeHorizontalScrollbarSize()
+    return self:HasOverflowClip() and not self:Layer():HasOverlayScrollbars()
+        and (self:Style():OverflowX() == OverflowEnum.OSCROLL or self:Style():OverflowX() == OverflowEnum.OAUTO);
+end
+
 function LayoutBox:VerticalScrollbarWidth()
+	if(self:IncludeVerticalScrollbarSize()) then
+		return self:Layer():VerticalScrollbarWidth()
+	end
 	return 0;
 end
 
 function LayoutBox:HorizontalScrollbarHeight()
+	echo("LayoutBox:HorizontalScrollbarHeight")
+	if(self:IncludeHorizontalScrollbarSize()) then
+		return self:Layer():HorizontalScrollbarHeight()
+	end
 	return 0;
 end
 
@@ -412,6 +433,8 @@ function LayoutBox:ClientWidth()
 end
 
 function LayoutBox:ClientHeight()
+	echo("LayoutBox:ClientHeight")
+	echo({self:Height(), self:BorderTop(), self:BorderBottom(), self:HorizontalScrollbarHeight()})
 	return self:Height() - self:BorderTop() - self:BorderBottom() - self:HorizontalScrollbarHeight();
 end
 
@@ -533,6 +556,9 @@ function LayoutBox:SetLogicalLocation(location)
 end
 
 function LayoutBox:SetLogicalWidth(width)
+	echo("LayoutBox:SetLogicalWidth")
+	self:PrintNodeInfo()
+	echo(width)
 	if(self:Style():IsHorizontalWritingMode()) then
 		self:SetWidth(width);
 	else
@@ -631,11 +657,11 @@ function LayoutBox:MaxPreferredLogicalWidth()
 end
 
 function LayoutBox:HasOverrideHeight()
-    return gOverrideHeightMap and gOverrideHeightMap[self];
+    return gOverrideHeightMap ~= nil and gOverrideHeightMap[self] ~= nil;
 end
 
 function LayoutBox:HasOverrideWidth()
-    return gOverrideWidthMap and gOverrideWidthMap[self];
+    return gOverrideWidthMap ~= nil and gOverrideWidthMap[self] ~= nil;
 end
 
 function LayoutBox:SetOverrideHeight(height)
@@ -679,6 +705,12 @@ function LayoutBox:ClearLayoutOverflow()
 	if(not self.overflow) then
 		return;
 	end
+	if (self:VisualOverflowRect() == self:BorderBoxRect()) then
+        self.overflow = nil;
+        return;
+    end
+    
+    self.overflow:ResetLayoutOverflow(self:BorderBoxRect());
 end
 
 function LayoutBox:FirstLineBoxBaseline() 
@@ -1312,15 +1344,6 @@ function LayoutBox:ComputePositionedLogicalWidth(region, offsetFromLogicalTopOfF
 --    }
 end
 
-function LayoutBox:ShouldComputeSizeAsReplaced()
-	return self:IsReplaced() and self:IsInlineBlockOrInlineTable();
-end
-
-function LayoutBox:HasOverrideHeight()
-	return false;
-	--return gOverrideHeightMap && gOverrideHeightMap->contains(this);
-end
-
 function LayoutBox:SetMarginBeforeAfter(before, after)
 	local isHorizontal = self:IsHorizontalWritingMode();
 	local isFlipped = self:Style():IsFlippedBlocksWritingMode();
@@ -1745,7 +1768,6 @@ function LayoutBox:ComputeLogicalHeight()
         local stretching = self:Parent():Style():BoxAlign() == BoxAlignmentEnum.BSTRETCH;
         local treatAsReplaced = self:ShouldComputeSizeAsReplaced() and (not inHorizontalBox or not stretching);
         local checkMinMaxHeight = false;
-
         -- The parent box is flexing us, so it has increased or decreased our height.  We have to
         -- grab our cached flexible height.
         -- FIXME: Account for block-flow in flexible boxes.
@@ -1758,7 +1780,6 @@ function LayoutBox:ComputeLogicalHeight()
             h = self:Style():LogicalHeight();
             checkMinMaxHeight = true;
         end
-
         -- Block children of horizontal flexible boxes fill the height of the box.
         -- FIXME: Account for block-flow in flexible boxes.
         -- https://bugs.webkit.org/show_bug.cgi?id=46418
@@ -1766,7 +1787,6 @@ function LayoutBox:ComputeLogicalHeight()
             h = Length:new(self:ParentBox():ContentLogicalHeight() - self:MarginBefore() - self:MarginAfter() - self:BorderAndPaddingLogicalHeight(), LengthTypeEnum.Fixed);
             checkMinMaxHeight = false;
         end
-
         local heightResult;
         if (checkMinMaxHeight) then
             heightResult = self:ComputeLogicalHeightUsing(self:Style():LogicalHeight());
@@ -1997,7 +2017,30 @@ function LayoutBox:UpdateBoxModelInfoFromStyle()
 	self:SetPositioned(self:Style():Position() == PositionEnum.AbsolutePosition or self:Style():Position() == PositionEnum.FixedPosition);
     self:SetFloating(self:Style():IsFloating() and (not self:IsPositioned() or self:Style():Floating() == FloatEnum.PositionedFloat));
 
-
+	-- We also handle <body> and <html>, whose overflow applies to the viewport.
+    if (self:Style():OverflowX() ~= OverflowEnum.OVISIBLE and not isRootObject and (self:IsLayoutBlock() or self:IsTableRow() or self:IsTableSection())) then
+        local boxHasOverflowClip = true;
+--        if (isBody()) {
+--            // Overflow on the body can propagate to the viewport under the following conditions.
+--            // (1) The root element is <html>.
+--            // (2) We are the primary <body> (can be checked by looking at document.body).
+--            // (3) The root element has visible overflow.
+--            if (document()->documentElement()->hasTagName(htmlTag) &&
+--                document()->body() == node() &&
+--                document()->documentElement()->renderer()->style()->overflowX() == OVISIBLE)
+--                boxHasOverflowClip = false;
+--        }
+        
+        -- Check for overflow clip.
+        -- It's sufficient to just check one direction, since it's illegal to have visible on only one overflow value.
+        if (boxHasOverflowClip) then
+            if (not s_hadOverflowClip) then
+                -- Erase the overflow
+                self:Repaint();
+			end
+            self:SetHasOverflowClip();
+        end
+    end
 
 	--self:SetHasTransform(self:Style():HasTransformRelatedProperty());
     --self:SetHasReflection(self:Style():BoxReflect());
@@ -2005,6 +2048,10 @@ end
 
 function LayoutBox:SetInlineBoxWrapper(boxWrapper)
 	self.inlineBoxWrapper = boxWrapper;
+end
+
+function LayoutBox:InlineBoxWrapper()
+	return self.inlineBoxWrapper;
 end
 
 function LayoutBox:CreateInlineBox()
@@ -2076,27 +2123,37 @@ end
 -- respectively are flipped when compared to their physical counterparts.  For example minX is on the left in vertical-lr,
 -- but it is on the right in vertical-rl.
 function LayoutBox:LayoutOverflowRect()
-	--return m_overflow ? m_overflow->layoutOverflowRect() : clientBoxRect();
+	if(self.overflow) then
+		return self.overflow:LayoutOverflowRect();
+	end
 	return self:ClientBoxRect();
 end
 
 function LayoutBox:MinYLayoutOverflow()
-	--return m_overflow? m_overflow->minYLayoutOverflow() : borderTop();
+	if(self.overflow) then
+		self.overflow:MinYLayoutOverflow();
+	end
 	return self:BorderTop();
 end
 
 function LayoutBox:MaxYLayoutOverflow()
-	--return m_overflow ? m_overflow->maxYLayoutOverflow() : borderTop() + clientHeight();
+	if(self.overflow) then
+		self.overflow:MaxYLayoutOverflow();
+	end
 	return self:BorderTop() + self:ClientHeight();
 end
 
 function LayoutBox:MinXLayoutOverflow()
-	--return m_overflow ? m_overflow->minXLayoutOverflow() : borderLeft();
+	if(self.overflow) then
+		self.overflow:MinXLayoutOverflow();
+	end
 	return self:BorderLeft();
 end
 
 function LayoutBox:MaxXLayoutOverflow()
-	--return m_overflow ? m_overflow->maxXLayoutOverflow() : borderLeft() + clientWidth();
+	if(self.overflow) then
+		self.overflow:MaxXLayoutOverflow();
+	end
 	return self:BorderLeft() + self:ClientWidth();
 end
 
@@ -2113,30 +2170,37 @@ function LayoutBox:LogicalRightLayoutOverflow()
 end
 
 function LayoutBox:VisualOverflowRect()
---	if(self.overflow) then
---		-- TODO: add latter
---		--overflow:VisualOverflowRect();
---	end
+	if(self.overflow) then
+		self.overflow:VisualOverflowRect();
+	end
 	return self:BorderBoxRect();
 end
 
 function LayoutBox:MinYVisualOverflow()
-	--return m_overflow? m_overflow->minYVisualOverflow() : 0;
+	if(self.overflow) then
+		self.overflow:MinYVisualOverflow();
+	end
 	return 0;
 end
 
 function LayoutBox:MaxYVisualOverflow()
-	--return m_overflow ? m_overflow->maxYVisualOverflow() : height();
+	if(self.overflow) then
+		self.overflow:MaxYVisualOverflow();
+	end
 	return self:Height();
 end
 
 function LayoutBox:MinXVisualOverflow()
-	--return m_overflow ? m_overflow->minXVisualOverflow() : 0;
+	if(self.overflow) then
+		self.overflow:MinXVisualOverflow();
+	end
 	return 0;
 end
 
 function LayoutBox:MaxXVisualOverflow()
-	--return m_overflow ? m_overflow->maxXVisualOverflow() : width();
+	if(self.overflow) then
+		self.overflow:MaxXVisualOverflow();
+	end
 	return self:Width();
 end
 
@@ -2214,11 +2278,14 @@ end
 
 --void RenderBox::paint(PaintInfo& paintInfo, const LayoutPoint& paintOffset)
 function LayoutBox:Paint(paintInfo, paintOffset)
-    local adjustedPaintOffset = paintOffset + self:Location();
+    --local adjustedPaintOffset = paintOffset + self:Location();
+	local adjustedPaintOffset = paintOffset;
     -- default implementation. Just pass paint through to the children
 --    PaintInfo childInfo(paintInfo);
 --    childInfo.updatePaintingRootForChildren(this);
-	local childInfo = paintInfo;
+	local childInfo = paintInfo:clone();
+	childInfo:Rect():SetX(childInfo:Rect():X() - self:X())
+	childInfo:Rect():SetY(childInfo:Rect():Y() - self:Y())
 	local child = self:FirstChild();
 	while(child) do
 		child:Paint(childInfo, adjustedPaintOffset);
@@ -2294,6 +2361,15 @@ function LayoutBox:EnclosingFloatPaintingLayer()
     return nil;
 end
 
+--LayoutRect RenderBox::logicalLayoutOverflowRectForPropagation(RenderStyle* parentStyle) const
+function LayoutBox:LogicalLayoutOverflowRectForPropagation(parentStyle)
+    local rect = self:LayoutOverflowRectForPropagation(parentStyle);
+    if (not parentStyle:IsHorizontalWritingMode()) then
+        return rect:TransposedRect();
+	end
+    return rect;
+end
+
 --LayoutRect RenderBox::layoutOverflowRectForPropagation(RenderStyle* parentStyle) const
 function LayoutBox:LayoutOverflowRectForPropagation(parentStyle)
 	-- Only propagate interior layout overflow if we don't clip it.
@@ -2338,6 +2414,15 @@ function LayoutBox:LayoutOverflowRectForPropagation(parentStyle)
 	return rect;
 end
 
+--LayoutRect RenderBox::logicalVisualOverflowRectForPropagation(RenderStyle* parentStyle) const
+function LayoutBox:LogicalVisualOverflowRectForPropagation(parentStyle)
+    local rect = self:VisualOverflowRectForPropagation(parentStyle);
+    if (not parentStyle:IsHorizontalWritingMode()) then
+        return rect:TransposedRect();
+	end
+    return rect;
+end
+
 --LayoutRect RenderBox::visualOverflowRectForPropagation(RenderStyle* parentStyle) const
 function LayoutBox:VisualOverflowRectForPropagation(parentStyle)
     -- If the writing modes of the child and parent match, then we don't have to 
@@ -2364,11 +2449,11 @@ function LayoutBox:AddVisualOverflow(rect)
     if (borderBox:Contains(rect) or rect:IsEmpty()) then
         return;
     end
-	-- TODO: add later.
---    if (!m_overflow)
---        m_overflow = adoptPtr(new RenderOverflow(clientBoxRect(), borderBox));
---    
---    m_overflow->addVisualOverflow(rect);
+    if (not self.overflow) then
+        self.overflow = LayoutOverflow:new():init(self:ClientBoxRect(), borderBox);
+	end
+    
+    self.overflow:AddVisualOverflow(rect);
 end
 
 --void addOverflowFromChild(RenderBox* child, const LayoutSize& delta);
@@ -2378,6 +2463,7 @@ function LayoutBox:AddOverflowFromChild(child, delta)
 	end
 	local childLayoutOverflowRect = child:LayoutOverflowRectForPropagation(self:Style());
     childLayoutOverflowRect:Move(delta);
+	echo("LayoutBox:AddOverflowFromChild")
     self:AddLayoutOverflow(childLayoutOverflowRect);
             
     -- Add in visual overflow from the child.  Even if the child clips its overflow, it may still
@@ -2393,11 +2479,45 @@ end
 
 --void RenderBox::addLayoutOverflow(const LayoutRect& rect)
 function LayoutBox:AddLayoutOverflow(rect)
+	echo("LayoutBox:AddLayoutOverflow begin")
+	echo(rect)
     local clientBox = self:ClientBoxRect();
     if (clientBox:Contains(rect) or rect:IsEmpty()) then
         return;
 	end
-	--TODO:add later.
+	-- For overflow clip objects, we don't want to propagate overflow into unreachable areas.
+    local overflowRect = LayoutRect:new(rect);
+    if (self:HasOverflowClip() or self:IsLayoutView()) then
+        -- Overflow is in the block's coordinate space and thus is flipped for horizontal-bt and vertical-rl 
+        -- writing modes.  At this stage that is actually a simplification, since we can treat horizontal-tb/bt as the same
+        -- and vertical-lr/rl as the same.
+        local hasTopOverflow = not self:Style():IsLeftToRightDirection() and not self:IsHorizontalWritingMode();
+        local hasLeftOverflow = not self:Style():IsLeftToRightDirection() and self:IsHorizontalWritingMode();
+        
+        if (not hasTopOverflow) then
+            overflowRect:ShiftYEdgeTo(math.max(overflowRect:Y(), clientBox:Y()));
+        else
+            overflowRect:ShiftMaxYEdgeTo(math.min(overflowRect:MaxY(), clientBox:MaxY()));
+		end
+        if (not hasLeftOverflow) then
+            overflowRect:ShiftXEdgeTo(math.max(overflowRect:X(), clientBox:X()));
+        else
+            overflowRect:ShiftMaxXEdgeTo(math.min(overflowRect:MaxX(), clientBox:MaxX()));
+		end
+        
+        -- Now re-test with the adjusted rectangle and see if it has become unreachable or fully
+        -- contained.
+        if (clientBox:Contains(overflowRect) or overflowRect:IsEmpty()) then
+            return;
+		end
+    end
+
+    if (not self.overflow) then
+        self.overflow = LayoutOverflow:new():init(clientBox, self:BorderBoxRect());
+	end
+    echo("LayoutBox:AddLayoutOverflow end")
+	echo("self.overflow:AddLayoutOverflow")
+    self.overflow:AddLayoutOverflow(overflowRect);
 end
 
 --LayoutSize RenderBox::topLeftLocationOffset() const
@@ -2907,7 +3027,11 @@ function LayoutBox:DeleteLineBoxWrapper()
 end
 
 function LayoutBox:HasRenderOverflow() 
-	return self.overflow;
+	return self.overflow ~= nil;
+end
+
+function LayoutBox:HasVisualOverflow()
+	return self.overflow ~= nil and not self:BorderBoxRect():Contains(self.overflow:VisualOverflowRect());
 end
 
 --LayoutUnit RenderBox::computeReplacedLogicalWidthUsing(Length logicalWidth) const
@@ -3165,4 +3289,105 @@ function LayoutBox:OutlineBoundsForRepaint(repaintContainer, cachedOffsetToRepai
     box:Move(self:View():LayoutDelta());
 
     return box;
+end
+
+--LayoutRect RenderBox::overflowClipRect(const LayoutPoint& location, RenderRegion* region, OverlayScrollbarSizeRelevancy relevancy)
+function LayoutBox:OverflowClipRect(location, region, relevancy)
+    -- FIXME: When overflow-clip (CSS3) is implemented, we'll obtain the property
+    -- here.
+    local clipRect = self:BorderBoxRectInRegion(region);
+    clipRect:SetLocation(location + clipRect:Location() + LayoutSize:new(self:BorderLeft(), self:BorderTop()));
+    clipRect:SetSize(clipRect:Size() - LayoutSize:new(self:BorderLeft() + self:BorderRight(), self:BorderTop() + self:BorderBottom()));
+
+    -- Subtract out scrollbars if we have them.
+    if (self:Layer()) then
+        clipRect:Contract(self:Layer():VerticalScrollbarWidth(relevancy), self:Layer():HorizontalScrollbarHeight(relevancy));
+	end
+
+    return clipRect;
+end
+
+--LayoutRect RenderBox::clipRect(const LayoutPoint& location, RenderRegion* region)
+function LayoutBox:ClipRect(location, region)
+	echo("LayoutBox:ClipRect")
+	echo(location)
+    local borderBoxRect = self:BorderBoxRectInRegion(region);
+    local clipRect = LayoutRect:new(borderBoxRect:Location() + location, borderBoxRect:Size());
+
+    if (not self:Style():ClipLeft():IsAuto()) then
+        local c = self:Style():ClipLeft():CalcValue(borderBoxRect:Width());
+        clipRect:Move(c, 0);
+        clipRect:Contract(c, 0);
+    end
+
+    -- We don't use the region-specific border box's width and height since clip offsets are (stupidly) specified
+    -- from the left and top edges. Therefore it's better to avoid constraining to smaller widths and heights.
+
+    if (not self:Style():ClipRight():IsAuto()) then
+        clipRect:Contract(self:Width() - self:Style():ClipRight():CalcValue(self:Width()), 0);
+	end
+
+    if (not self:Style():ClipTop():IsAuto()) then
+        local c = self:Style():ClipTop():CalcValue(borderBoxRect:Height());
+        clipRect:Move(0, c);
+        clipRect:Contract(0, c);
+    end
+
+    if (not self:Style():ClipBottom():IsAuto()) then
+        clipRect:Contract(0, self:Height() - self:Style():ClipBottom():CalcValue(self:Height()));
+	end
+
+    return clipRect;
+end
+
+--LayoutRect RenderBox::borderBoxRectInRegion(RenderRegion* region, LayoutUnit offsetFromTopOfFirstPage, RenderBoxRegionInfoFlags cacheFlag) const
+function LayoutBox:BorderBoxRectInRegion(region, offsetFromTopOfFirstPage, cacheFlag)
+    if (not region) then
+        return self:BorderBoxRect();
+	end
+--    
+--    -- Compute the logical width and placement in this region.
+--    RenderBoxRegionInfo* boxInfo = renderBoxRegionInfo(region, offsetFromTopOfFirstPage, cacheFlag);
+--    if (not boxInfo)
+--        return borderBoxRect();
+--
+--    -- We have cached insets.
+--    LayoutUnit logicalWidth = boxInfo->logicalWidth();
+--    LayoutUnit logicalLeft = boxInfo->logicalLeft();
+--        
+--    -- Now apply the parent inset since it is cumulative whenever anything in the containing block chain shifts.
+--    -- FIXME: Doesn't work right with perpendicular writing modes.
+--    const RenderBlock* currentBox = containingBlock();
+--    offsetFromTopOfFirstPage -= logicalTop();
+--    RenderBoxRegionInfo* currentBoxInfo = currentBox->renderBoxRegionInfo(region, offsetFromTopOfFirstPage);
+--    while (currentBoxInfo and currentBoxInfo->isShifted()) then
+--        if (currentBox:Style()->direction() == LTR)
+--            logicalLeft += currentBoxInfo->logicalLeft();
+--        else
+--            logicalLeft -= (currentBox->logicalWidth() - currentBoxInfo->logicalWidth()) - currentBoxInfo->logicalLeft();
+--        offsetFromTopOfFirstPage -= logicalTop();
+--        currentBox = currentBox->containingBlock();
+--        region = currentBox->clampToStartAndEndRegions(region);
+--        currentBoxInfo = currentBox->renderBoxRegionInfo(region, offsetFromTopOfFirstPage);
+--    end
+--    
+--    if (cacheFlag == DoNotCacheRenderBoxRegionInfo)
+--        delete boxInfo;
+--
+--    if (isHorizontalWritingMode())
+--        return LayoutRect(logicalLeft, 0, logicalWidth, self:Height());
+--    return LayoutRect(0, logicalLeft, self:Width(), logicalWidth);
+end
+
+--void RenderBox::clearRenderBoxRegionInfo()
+function LayoutBox:ClearRenderBoxRegionInfo()
+    if (not self:InRenderFlowThread() or self:IsLayoutFlowThread()) then
+        return;
+	end
+
+--    RenderFlowThread* flowThread = enclosingRenderFlowThread();
+--    if (not flowThread->hasValidRegions())
+--        return;
+--
+--    flowThread->removeRenderBoxRegionInfo(this);
 end

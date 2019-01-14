@@ -182,6 +182,8 @@ end
 
 --function LayoutText:Width(unsigned from, unsigned len, const Font& f, float xPos, HashSet<const SimpleFontData*>* fallbackFonts, GlyphOverflow* glyphOverflow) const
 function LayoutText:Width(from, len, font, xPos, fallbackFonts, glyphOverflow)
+	echo("LayoutText:Width")
+	echo({self.text, from, len})
 	if(type(font) == "number" and type(xPos) == "boolean") then
 		if(from > self:TextLength()) then
 			return 0;
@@ -200,7 +202,8 @@ function LayoutText:Width(from, len, font, xPos, fallbackFonts, glyphOverflow)
 	end
 
     local w = self.text:GetWidth(font, from, len);
-
+	echo(font)
+	echo(w)
 --	if (&f == &style()->font()) {
 --        if (!style()->preserveNewline() && !from && len == textLength() && (!glyphOverflow || !glyphOverflow->computeBounds)) {
 --            if (fallbackFonts) {

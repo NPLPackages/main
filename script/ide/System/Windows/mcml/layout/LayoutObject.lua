@@ -33,6 +33,9 @@ local DisplayEnum = ComputedStyleConstants.DisplayEnum;
 local PseudoIdEnum = ComputedStyleConstants.PseudoIdEnum;
 local StyleDifferenceEnum = ComputedStyleConstants.StyleDifferenceEnum;
 local BorderFitEnum = ComputedStyleConstants.BorderFitEnum;
+local VisibilityEnum = ComputedStyleConstants.VisibilityEnum;
+
+local s_affectsParentBlock = false;
 
 local PositionedStateEum = {
     ["IsStaticallyPositioned"] = 0,
@@ -125,7 +128,6 @@ function LayoutObject:init(node)
 	return self;
 end
 
--- 后面需要完善，暂时不调用该函数
 function LayoutObject.CreateLayoutObject(node, style)
 	local display = style:Display();
 	if(display == DisplayEnum.BLOCK or display == DisplayEnum.INLINE_BLOCK) then
@@ -192,15 +194,30 @@ function LayoutObject:SetAnonymousControl(control)
 	self.anonymousControl = control;
 end
 
+function LayoutObject:InlineBoxWrapper()
+	return nil;
+end
+
 function LayoutObject:GetParentControl()
+	if(self:InlineBoxWrapper()) then
+		local box = self:InlineBoxWrapper();
+		return box:Parent():GetControl()
+	end
 	if(self.parent) then
 		return self.parent:GetControl();
 	end
 end
 
+function LayoutObject:GetAnonymousControl()
+	if(self.anonymousControl == nil) then
+		self.anonymousControl = self:Parent():CreateAnonymousControl()
+	end
+	return self.anonymousControl;
+end
+
 function LayoutObject:GetControl()
 	if(self:IsAnonymous()) then
-		return self.anonymousControl;
+		return self:GetAnonymousControl();
 	end
 	if(self.node) then
 		return self.node:GetControl();
@@ -1482,6 +1499,11 @@ function LayoutObject:Destroy()
     self:WillBeDestroyed();
 	--TODO: fixed this function
     --self:ArenaDelete(renderArena(), this);
+
+--	local control = self:GetControl();
+--	if(control) then
+--		control:Destroy()
+--	end
 end
 
 -- virtual function
@@ -1559,6 +1581,10 @@ function LayoutObject:IsFlexingChildren()
 	return false;
 end
 
+function LayoutObject:IsStretchingChildren()
+	return false;
+end
+
 function LayoutObject:IsFlexibleBox()
 	return false;
 end
@@ -1590,10 +1616,28 @@ function LayoutObject:RenderArena()
 	return nil;
 end
 
+function LayoutObject:HandleDynamicFloatPositionChange()
+    -- We have gone from not affecting the inline status of the parent flow to suddenly
+    -- having an impact.  See if there is a mismatch between the parent flow's
+    -- childrenInline() state and our state.
+    self:SetInline(self:Style():IsDisplayInlineType());
+    if (self:IsInline() ~= self:Parent():ChildrenInline()) then
+        if (not self:IsInline()) then
+            self:Parent():ToRenderBoxModelObject():ChildBecameNonInline(self);
+        else
+            -- An anonymous block must be made to wrap this inline.
+            local block = self:Parent():ToRenderBlock():CreateAnonymousBlock();
+            local childlist = self:Parent():VirtualChildren();
+            childlist:InsertChildNode(self:Parent(), block, self);
+            block:Children():AppendChildNode(block, childlist:RemoveChildNode(self:Parent(), self));
+        end
+    end
+end
+
 function LayoutObject:StyleDidChange(diff, oldStyle)
---	if (s_affectsParentBlock) then
---        handleDynamicFloatPositionChange();
---	end
+	if (s_affectsParentBlock) then
+        self:HandleDynamicFloatPositionChange();
+	end
 
 	if (not self.parent) then
         return;
@@ -1626,7 +1670,54 @@ end
 
 --void RenderObject::styleWillChange(StyleDifference diff, const RenderStyle* newStyle)
 function LayoutObject:StyleWillChange(diff, newStyle)
+	if(self.style) then
+		if(newStyle) then
+			-- Keep layer hierarchy visibility bits up to date if visibility changes.
+            if (self.style:Visibility() ~= newStyle:Visibility()) then
+				local l = self:EnclosingLayer()
+                if (l) then
+                    if (newStyle:Visibility() == VisibilityEnum.VISIBLE) then
+                        l:SetHasVisibleContent(true);
+                    elseif (l:HasVisibleContent() and (self == l:Renderer() or l:Renderer():Style():Visibility() ~= VisibilityEnum.VISIBLE)) then
+                        l:DirtyVisibleContentStatus();
+                        if (diff > StyleDifferenceEnum.StyleDifferenceRepaintLayer) then
+                            self:Repaint();
+						end
+                    end
+                end
+            end
+		end 
 
+		if (self.parent ~= nil and (diff == StyleDifferenceEnum.StyleDifferenceRepaint or newStyle:OutlineSize() < self.style:OutlineSize())) then
+            self:Repaint();
+		end
+        if (self:IsFloating() and (self.style:Floating() ~= newStyle:Floating())) then
+            -- For changes in float styles, we need to conceivably remove ourselves
+            -- from the floating objects list.
+            self:ToRenderBox():RemoveFloatingOrPositionedChildFromBlockLists();
+        elseif (self:IsPositioned() and (self.style:Position() ~= newStyle:Position())) then
+            -- For changes in positioning styles, we need to conceivably remove ourselves
+            -- from the positioned objects list.
+            self:ToRenderBox():RemoveFloatingOrPositionedChildFromBlockLists();
+		end
+        s_affectsParentBlock = self:IsFloatingOrPositioned() and
+            (not newStyle:IsFloating() and newStyle:Position() ~= PositionEnum.AbsolutePosition and newStyle:Position() ~= PositionEnum.FixedPosition)
+            and self:Parent() ~= nil and (self:Parent():IsBlockFlow() or self:Parent():IsLayoutInline());
+
+        -- reset style flags
+        if (diff == StyleDifferenceEnum.StyleDifferenceLayout or diff == StyleDifferenceEnum.StyleDifferenceLayoutPositionedMovementOnly) then
+            self.floating = false;
+            self.positioned = false;
+            self.relPositioned = false;
+        end
+        self.horizontalWritingMode = true;
+        self.paintBackground = false;
+        self.hasOverflowClip = false;
+        self.hasTransform = false;
+        self.hasReflection = false;
+	else
+        s_affectsParentBlock = false;
+	end
 end
 
 function LayoutObject:PreservesNewline()
@@ -1888,6 +1979,10 @@ end
 
 --void RenderObject::repaintUsingContainer(RenderBoxModelObject* repaintContainer, const LayoutRect& r, bool immediate)
 function LayoutObject:RepaintUsingContainer(repaintContainer, rect, immediate)
+	echo("LayoutObject:RepaintUsingContainer");
+	if(repaintContainer) then
+		echo("repaintContainer")
+	end
     if (not repaintContainer) then
         self:View():RepaintViewRectangle(rect, immediate);
         return;
@@ -2013,7 +2108,12 @@ function LayoutObject:PropagateStyleToAnonymousChildren(blockChildrenOnly)
 	end
 end
 
+function LayoutObject:GetName()
+	return "LayoutObject";
+end
+
 function LayoutObject:PrintNodeInfo() 
+	echo(self:GetName())
 	if(self.node) then
 		echo(self.node.name);
 		if(self.node.attr and self.node.attr.name) then

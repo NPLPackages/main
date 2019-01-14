@@ -24,6 +24,9 @@ local cFullTruncation = USHRT_MAX - 1;
 
 local VisibilityEnum = ComputedStyleConstants.VisibilityEnum;
 
+--typedef WTF::HashMap<const InlineTextBox*, LayoutRect> InlineTextBoxOverflowMap;
+local gTextBoxesWithOverflow = nil;
+
 function InlineTextBox:ctor()
 	self.prevTextBox = nil; -- The previous box that also uses our RenderObject
     self.nextTextBox = nil; -- The next box that also uses our RenderObject
@@ -61,6 +64,10 @@ function InlineTextBox:SetPreviousTextBox(prev)
 	self.prevTextBox = prev;
 end
 
+function InlineTextBox:Text()
+	return self:Renderer():Text():substr(self:Start(), self:End());
+end
+
 function InlineTextBox:Start()
 	return self.start;
 end
@@ -94,9 +101,9 @@ function InlineTextBox:Truncation()
 end
 
 function InlineTextBox:Destroy(arena)
---    if (!m_knownToHaveNoOverflow && gTextBoxesWithOverflow) then
---        gTextBoxesWithOverflow->remove(this);
---	end
+    if (not self.knownToHaveNoOverflow and gTextBoxesWithOverflow ~= nil) then
+        gTextBoxesWithOverflow[self] = nil;
+	end
 	if(self.control) then
 		self.control:Destroy();
 		self.control = nil;
@@ -114,12 +121,21 @@ function InlineTextBox:SetCanHaveLeadingExpansion(canHaveLeadingExpansion)
 end
 
 function InlineTextBox:GetParentControl()
+	echo("InlineTextBox:GetParentControl")
 	if(self:Parent()) then
+		self:Parent():Renderer():PrintNodeInfo();
 		return self:Parent():GetControl();
 	end
+	echo("InlineTextBox not parent");
 end
 
 function InlineTextBox:CreateAndAppendLabel(left, top, width, height, text, parent)
+	echo("InlineTextBox:CreateAndAppendLabel");
+	if(parent:PageElement()) then
+		parent:PageElement():PrintNodeInfo();
+	end
+	echo(text)
+	echo({left, top, width, height});
 	local _this = Label:new():init(parent);
 	_this:SetText(text);
 
@@ -135,19 +151,23 @@ end
 
 --void paint(PaintInfo&, const LayoutPoint&, LayoutUnit lineTop, LayoutUnit lineBottom)
 function InlineTextBox:Paint(paintInfo, paintOffset, lineTop, lineBottom)
+	echo("InlineTextBox:Paint");
+	echo(self:Text())
 --	if (isLineBreak() || !paintInfo.shouldPaintWithinRoot(renderer()) || renderer()->style()->visibility() != VISIBLE ||
 --        m_truncation == cFullTruncation || paintInfo.phase == PaintPhaseOutline || !m_len)
 --        return;
 	if(self:IsLineBreak() or not paintInfo:ShouldPaintWithinRoot(self:Renderer()) or self:Renderer():Style():Visibility() ~= VisibilityEnum.VISIBLE) then
 		return;
 	end
-	local logicalLeftSide = self:LogicalLeftVisualOverflow();
-    local logicalRightSide = self:LogicalRightVisualOverflow();
-    local logicalStart = logicalLeftSide + if_else(self:IsHorizontal(), paintOffset:X(), paintOffset:Y());
-    local logicalExtent = logicalRightSide - logicalLeftSide;
+--	local logicalLeftSide = self:LogicalLeftVisualOverflow();
+--    local logicalRightSide = self:LogicalRightVisualOverflow();
+--    local logicalStart = logicalLeftSide + if_else(self:IsHorizontal(), paintOffset:X(), paintOffset:Y());
+--    local logicalExtent = logicalRightSide - logicalLeftSide;
 
 	local left, top, width ,height = self:LogicalLeftVisualOverflow(), self:LogicalTopVisualOverflow(), self.logicalWidth, self:LogicalHeight();
-
+--	left = left + if_else(self:IsHorizontal(), paintOffset:X(), paintOffset:Y());
+--	top = top + if_else(self:IsHorizontal(), paintOffset:Y(), paintOffset:X());
+	echo({left, top, width ,height})
 	if(self:Renderer() and self:Renderer():IsText()) then
 		if(self.control) then
 			self.control:setGeometry(left, top, width ,height);
@@ -167,18 +187,20 @@ function InlineTextBox:LogicalFrameRect()
 	return Rect:new(self.topLeft:Y(), self.topLeft:X(), self.logicalWidth, self:LogicalHeight());
 end
 
-local gTextBoxesWithOverflow = {};
-
 --    LayoutRect logicalOverflowRect() const;
 function InlineTextBox:LogicalOverflowRect()
---    if (m_knownToHaveNoOverflow || !gTextBoxesWithOverflow)
---        return enclosingIntRect(logicalFrameRect());
---    return gTextBoxesWithOverflow->get(this);
-	return self:LogicalFrameRect();
+    if (self.knownToHaveNoOverflow or gTextBoxesWithOverflow == nil) then
+        return self:LogicalFrameRect();
+	end
+    return gTextBoxesWithOverflow[self];
+	--return self:LogicalFrameRect();
 end
 
 function InlineTextBox:SetLogicalOverflowRect(rect)
-
+	if (not gTextBoxesWithOverflow) then
+        gTextBoxesWithOverflow = {};
+	end
+    gTextBoxesWithOverflow[self] = rect;
 end
 
 function InlineTextBox:LogicalTopVisualOverflow()

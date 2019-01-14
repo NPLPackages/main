@@ -11,10 +11,8 @@ System.Windows.mcml.Elements.pe_div:RegisterAs("pe:mcml", "div", "pe:div");
 ]]
 
 NPL.load("(gl)script/ide/System/Windows/mcml/PageElement.lua");
-NPL.load("(gl)script/ide/System/Windows/Shapes/Rectangle.lua");
-NPL.load("(gl)script/ide/System/Windows/Controls/Button.lua");
-local Button = commonlib.gettable("System.Windows.Controls.Button");
-local Rectangle = commonlib.gettable("System.Windows.Shapes.Rectangle");
+NPL.load("(gl)script/ide/System/Windows/Controls/ScrollAreaForPage.lua");
+local ScrollAreaForPage = commonlib.gettable("System.Windows.Controls.ScrollAreaForPage");
 local PageElement = commonlib.gettable("System.Windows.mcml.PageElement");
 
 local StyleChangeEnum = PageElement.StyleChangeEnum;
@@ -26,9 +24,16 @@ function pe_div:ctor()
 	
 end
 
+--function pe_div:CreateControl()
+--	local parentElem = self:GetParentControl();
+--	local _this = Rectangle:new():init(parentElem);
+--	self:SetControl(_this);
+--end
 function pe_div:CreateControl()
+echo("pe_div:CreateControl")
+echo(self.name)
 	local parentElem = self:GetParentControl();
-	local _this = Rectangle:new():init(parentElem);
+	local _this = ScrollAreaForPage:new():init(parentElem);
 	self:SetControl(_this);
 end
 

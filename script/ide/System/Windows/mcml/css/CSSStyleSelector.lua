@@ -19,6 +19,8 @@ NPL.load("(gl)script/ide/System/Windows/mcml/css/SelectorChecker.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyle.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/css/CSSStyleApplyProperty.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutTheme.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyleConstants.lua");
+local ComputedStyleConstants = commonlib.gettable("System.Windows.mcml.style.ComputedStyleConstants");
 local LayoutTheme = commonlib.gettable("System.Windows.mcml.layout.LayoutTheme");
 local CSSStyleApplyProperty = commonlib.gettable("System.Windows.mcml.css.CSSStyleApplyProperty");
 local ComputedStyle = commonlib.gettable("System.Windows.mcml.style.ComputedStyle");
@@ -29,6 +31,7 @@ local StyleSheetManager = commonlib.gettable("System.Windows.mcml.css.StyleSheet
 local CSSStyleSheet = commonlib.gettable("System.Windows.mcml.css.CSSStyleSheet");
 local CSSStyleDeclaration = commonlib.gettable("System.Windows.mcml.css.CSSStyleDeclaration");
 
+local OverflowEnum = ComputedStyleConstants.OverflowEnum;
 
 local MatchedStyleDeclaration = {};
 MatchedStyleDeclaration.__index = MatchedStyleDeclaration;
@@ -191,7 +194,8 @@ function CSSStyleSelector:MatchRules(rule_set)
 		end
 	end
 
-	local tag = self.element.name;
+	local tag = self.element:TagName();
+	echo(tag)
 	self:MatchRulesForList(rule_set:tagRules()[tag]);
 	self:MatchRulesForList(rule_set:universalRules());
 end
@@ -202,12 +206,18 @@ function CSSStyleSelector:AddMatchedDeclaration(decl, linkMatchType)
 end
 
 function CSSStyleSelector:MatchRulesForList(rule_list)
+	if(self.element.name == "pe:container") then
+		echo("CSSStyleSelector:checkSelector failed")
+		echo(rule_list)
+	end
 	if(rule_list) then
 		for i = 1,#rule_list do
 			local rule_data = rule_list[i];
 			if(self:checkSelector(rule_data, self.element)) then
 				self:AddMatchedDeclaration(rule_data:Rule():GetProperties());
 				--style_decl:Merge(rule_data:Rule():GetProperties());
+			else
+				
 			end
 		end
 	end
@@ -265,6 +275,8 @@ end
 
 --PassRefPtr<RenderStyle> CSSStyleSelector::styleForElement(Element* element, RenderStyle* defaultParent, bool allowSharing, bool resolveForRootDefault)
 function CSSStyleSelector:StyleForElement(element, defaultParent, allowSharing, resolveForRootDefault)
+	echo("CSSStyleSelector:StyleForElement")
+	echo(element.name)
 	allowSharing = if_else(allowSharing == nil, true, allowSharing);
 	resolveForRootDefault = if_else(resolveForRootDefault == nil, false, resolveForRootDefault);
 
@@ -314,6 +326,23 @@ function CSSStyleSelector:AdjustRenderStyle(style, parentStyle, e)
 --	// Make sure our z-index value is only applied if the object is positioned.
 --    if (style->position() == StaticPosition)
 --        style->setHasAutoZIndex();
+
+	-- Textarea considers overflow visible as auto.
+    if (e and e:HasTagName("textarea")) then
+        style:SetOverflowX(if_else(style:OverflowX() == OverflowEnum.OVISIBLE, OverflowEnum.OAUTO, style:OverflowX()));
+        style:SetOverflowY(if_else(style:OverflowY() == OverflowEnum.OVISIBLE, OverflowEnum.OAUTO, style:OverflowY()));
+    end
+
+	-- If either overflow value is not visible, change to auto.
+    if (style:OverflowX() == OverflowEnum.OMARQUEE and style:OverflowY() ~= OverflowEnum.OMARQUEE) then
+        style:SetOverflowY(OverflowEnum.OMARQUEE);
+    elseif (style:OverflowY() == OverflowEnum.OMARQUEE and style:OverflowX() ~= OverflowEnum.OMARQUEE) then
+        style:SetOverflowX(OverflowEnum.OMARQUEE);
+    elseif (style:OverflowX() == OverflowEnum.OVISIBLE and style:OverflowY() ~= OverflowEnum.OVISIBLE) then
+        style:SetOverflowX(OverflowEnum.OAUTO);
+    elseif (style:OverflowY() == OverflowEnum.OVISIBLE and style:OverflowX() ~= OverflowEnum.OVISIBLE) then
+        style:SetOverflowY(OverflowEnum.OAUTO);
+	end
 
 	-- Let the theme also have a crack at adjusting the style.
     if (style:HasAppearance()) then

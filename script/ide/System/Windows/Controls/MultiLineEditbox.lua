@@ -20,6 +20,8 @@ NPL.load("(gl)script/ide/System/Windows/Controls/ScrollBar.lua");
 NPL.load("(gl)script/ide/math/Point.lua");
 NPL.load("(gl)script/ide/System/Windows/Controls/TextControl.lua");
 NPL.load("(gl)script/ide/System/Windows/Controls/Button.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyleConstants.lua");
+local ComputedStyleConstants = commonlib.gettable("System.Windows.mcml.style.ComputedStyleConstants");
 local Button = commonlib.gettable("System.Windows.Controls.Button");
 local TextControl = commonlib.gettable("System.Windows.Controls.TextControl");
 local Point = commonlib.gettable("mathlib.Point");
@@ -80,7 +82,7 @@ MultiLineEditbox:Signal("textChanged");
 --MultiLineEditbox:Signal("editingFinished");
 --MultiLineEditbox:Signal("updateNeeded");
 
-
+local OverflowEnum = ComputedStyleConstants.OverflowEnum;
 
 function MultiLineEditbox:ctor()
 --	self:setFocusPolicy(FocusPolicy.StrongFocus);
@@ -425,13 +427,28 @@ function MultiLineEditbox:ViewRegionOffsetY()
 	return offset_y;
 end
 
--- virtual: apply css style
+local overflowMap = {
+	[OverflowEnum.OSCROLL] = "AlwaysOn",
+	[OverflowEnum.OHIDDEN] = "AlwaysOff",
+	[OverflowEnum.OAUTO] = "Auto",
+}
+
 function MultiLineEditbox:ApplyCss(css)
 	MultiLineEditbox._super.ApplyCss(self, css);
 	self:SetItemHeight(css:ComputedLineHeight());
 	if(self.viewport) then
 		self.viewport:ApplyCss(css);
 	end
+
+	local overflow_x = css:OverflowX();
+	local overflow_y = css:OverflowY();
+	if(overflow_x == OverflowEnum.OVISIBLE and overflow_x == OverflowEnum.OVISIBLE) then
+		--self:setHorizontalScrollBarPolicy()
+	else
+		self:setHorizontalScrollBarPolicy(overflowMap[overflow_x])
+		self:setVerticalScrollBarPolicy(overflowMap[overflow_y])
+	end
+
 --	local font, font_size, font_scaling = css:GetFontSettings();
 --	self:SetFont(font);
 --	self:SetFontSize(font_size);
@@ -465,7 +482,7 @@ function MultiLineEditbox:GetItemHeight()
 end
 
 function MultiLineEditbox:paintEvent(painter)
-	self:updateScrollGeometry();
+	--self:updateScrollGeometry();
 	painter:SetPen(self:GetBackgroundColor());
 	painter:DrawRectTexture(self:x(), self:y(), self:width(), self:height(), self:GetBackground());
 

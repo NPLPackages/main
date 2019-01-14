@@ -46,6 +46,10 @@ function PaintInfo:init(newContext, newRect, newPhase, newForceBlackText, newPai
 	return self;
 end
 
+function PaintInfo:clone()
+	return PaintInfo:new():init(self.context, self.rect, self.phase, self.forceBlackText, self.paintingRoot,self.renderRegion, self.newOutlineObjects, self.overlapTestRequests)
+end
+
 --void updatePaintingRootForChildren(const RenderObject* renderer)
 function PaintInfo:UpdatePaintingRootForChildren(renderer)
     if (not self.paintingRoot) then

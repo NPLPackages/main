@@ -24,7 +24,7 @@ scrollBar:setStep(1,5);
 scrollBar:setGeometry(50,50,200,30);
 --scrollBar:setGeometry(50,50,30,200);
 window:Show("my_window", nil, "_mt", 0,0, 600, 600);
-test_Windows.window = window;
+test_Windows.window = {window};
 
 
 NPL.load("(gl)script/ide/System/Windows/Window.lua");
@@ -37,7 +37,7 @@ local window = Window:new();
 local scrollBar = ScrollBar:vScrollBar(window)
 window:Show("my_window", nil, "_mt", 0,0, 600, 600);
 scrollBar:setGeometry(50,50,30,200);
-test_Windows.window = window;
+test_Windows.window = {window};
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/System/Windows/Controls/Primitives/SliderBase.lua");
@@ -245,6 +245,12 @@ function ScrollBar:mouseReleaseEvent(e)
 	e:accept();
 end
 
+function ScrollBar:SetDisabled(disabled)
+	ScrollBar._super.SetDisabled(self, disabled)
+
+	self.prevButton:SetDisabled(disabled);
+	self.nextButton:SetDisabled(disabled);
+end
 
 function ScrollBar:setSliderPosition(pos)
 	local value = self:pixelPosToRangeValue(pos);
@@ -318,7 +324,7 @@ end
 function ScrollBar:paintEvent(painter)
 	self:updateButtonGeometry();
 	self:updateGroove();
-	self:updateSlider();
+	
 	local groove = self:Groove();
 	local groovBackground = self.grooveBackground;
 	local groove_x, groove_y, groove_w, groove_h = groove:x(), groove:y(), groove:width(), groove:height();
@@ -341,13 +347,16 @@ function ScrollBar:paintEvent(painter)
 		painter:DrawRectTexture(self:x() + groove_x, self:y() + groove_y, groove_w, groove_h, "");
 	end
 
-	local slider = self:Slider();
-	local sliderBackground = self.sliderBackground;
-	if(sliderBackground and sliderBackground~="") then
-		painter:SetPen("#00ffff");
-		painter:DrawRectTexture(self:x() + slider:x(), self:y() + slider:y(), slider:width(), slider:height(), sliderBackground);
-	else
-		painter:SetPen("#c1c1c1");
-		painter:DrawRectTexture(self:x() + slider:x(), self:y() + slider:y(), slider:width(), slider:height(), "");
+	if(not self:isDisabled()) then
+		self:updateSlider();
+		local slider = self:Slider();
+		local sliderBackground = self.sliderBackground;
+		if(sliderBackground and sliderBackground~="") then
+			painter:SetPen("#00ffff");
+			painter:DrawRectTexture(self:x() + slider:x(), self:y() + slider:y(), slider:width(), slider:height(), sliderBackground);
+		else
+			painter:SetPen("#c1c1c1");
+			painter:DrawRectTexture(self:x() + slider:x(), self:y() + slider:y(), slider:width(), slider:height(), "");
+		end
 	end
 end

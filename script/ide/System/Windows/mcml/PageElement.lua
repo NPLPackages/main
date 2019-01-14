@@ -2553,7 +2553,8 @@ end
 --end
 
 function PageElement:ParentNodeForRenderingAndStyle()
-	return LayoutTreeBuilder:init(self):ParentNodeForRenderingAndStyle();
+	--return LayoutTreeBuilder:init(self):ParentNodeForRenderingAndStyle();
+	return self.parent;
 end
 
 function PageElement:TagName()

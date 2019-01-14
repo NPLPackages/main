@@ -108,10 +108,12 @@ function CSSSelector:ctor()
 end
 
 function CSSSelector:Tag()
-	return self.tag;
+	return string.gsub(self.tag,"pe:","");
+	--return self.tag;
 end
 
 function CSSSelector:SetTag(tag)
+	--self.tag = string.gsub(tag,"pe:","");
 	self.tag = tag;
 end
 

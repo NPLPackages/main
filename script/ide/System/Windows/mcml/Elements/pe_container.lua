@@ -21,25 +21,32 @@ pe_container:Property({"class_name", "pe:container"});
 function pe_container:ctor()
 end
 
-function pe_container:LoadComponent(parentElem, parentLayout, style)
-	local _this = self.control;
-	if(not _this) then
-		_this = Canvas:new():init(parentElem);
-		self:SetControl(_this);
-	else
-		_this:SetParent(parentElem);
-	end
-
-	PageElement.LoadComponent(self, _this, parentLayout, style);
-	_this:ApplyCss(self:GetStyle());
+function pe_container:CreateControl()
+	echo("pe_container:CreateControl");
+	local parentElem = self:GetParentControl();
+	local _this = Canvas:new():init(parentElem);
+	self:SetControl(_this);
 end
 
-function pe_container:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
-	pe_container._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
-end
+--function pe_container:LoadComponent(parentElem, parentLayout, style)
+--	local _this = self.control;
+--	if(not _this) then
+--		_this = Canvas:new():init(parentElem);
+--		self:SetControl(_this);
+--	else
+--		_this:SetParent(parentElem);
+--	end
+--
+--	PageElement.LoadComponent(self, _this, parentLayout, style);
+--	_this:ApplyCss(self:GetStyle());
+--end
 
-function pe_container:OnLoadComponentAfterChild(parentElem, parentLayout, css)
-end
+--function pe_container:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
+--	pe_container._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
+--end
+
+--function pe_container:OnLoadComponentAfterChild(parentElem, parentLayout, css)
+--end
 
 --function pe_container:OnBeforeChildLayout(layout)
 --	if(#self ~= 0) then

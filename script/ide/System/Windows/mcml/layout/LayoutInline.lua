@@ -89,6 +89,7 @@ function LayoutInline:UpdateAlwaysCreateLineBoxes(fullLayout)
         if (not fullLayout) then
             self:DirtyLineBoxes(false);
 		end
+			echo("self.alwaysCreateLineBoxes = true;");
         self.alwaysCreateLineBoxes = true;
     end
 end
@@ -101,25 +102,36 @@ function LayoutInline:DirtyLineBoxes(fullLayout)
 
     if (not self:AlwaysCreateLineBoxes()) then
         -- We have to grovel into our children in order to dirty the appropriate lines.
---        for (RenderObject* curr = firstChild(); curr; curr = curr->nextSibling()) {
---            if (curr->isFloatingOrPositioned())
---                continue;
---            if (curr->isBox() && !curr->needsLayout()) {
---                RenderBox* currBox = toRenderBox(curr);
---                if (currBox->inlineBoxWrapper())
---                    currBox->inlineBoxWrapper()->root()->markDirty();
---            } else if (!curr->selfNeedsLayout()) {
---                if (curr->isRenderInline()) {
---                    RenderInline* currInline = toRenderInline(curr);
---                    for (InlineFlowBox* childLine = currInline->firstLineBox(); childLine; childLine = childLine->nextLineBox())
---                        childLine->root()->markDirty();
---                } else if (curr->isText()) {
---                    RenderText* currText = toRenderText(curr);
---                    for (InlineTextBox* childText = currText->firstTextBox(); childText; childText = childText->nextTextBox())
---                        childText->root()->markDirty();
---                }
---            }
---        }
+		local curr = self:FirstChild();
+		while(curr) do
+			if (curr:IsFloatingOrPositioned()) then
+                --continue;
+			else
+				if (curr:IsBox() and not curr:NeedsLayout()) then
+					local currBox = curr:ToRenderBox();
+					if (currBox:InlineBoxWrapper()) then
+						currBox:InlineBoxWrapper():Root():MarkDirty();
+					end
+				elseif (not curr:SelfNeedsLayout()) then
+					if (curr:IsLayoutInline()) then
+						local currInline = curr:ToRenderInline();
+						local childLine = currInline:FirstLineBox();
+						while(childLine) do
+							childLine:Root():MarkDirty();
+							childLine = childLine:NextLineBox();
+						end
+					elseif (curr:IsText()) then
+						local currText = curr:ToRenderText();
+						local childText = currText:FirstTextBox();
+						while(childText) do
+							childText:Root():MarkDirty();
+							childText = childText:NextTextBox();
+						end
+					end
+				end
+			end
+			curr = curr:NextSibling();
+		end
     else
 		self.lineBoxes:DirtyLineBoxes();
 	end
@@ -230,6 +242,7 @@ end
 function LayoutInline:BaselinePosition(baselineType, firstLine, direction, linePositionMode)
 	local fontMetrics = self:Style(firstLine):FontMetrics();
 	return fontMetrics:ascent(baselineType) + math.floor((self:LineHeight(firstLine, direction, linePositionMode) - fontMetrics:height()) / 2 + 0.5);
+	-- 
 end
 
 function LayoutInline:UpdateBoxModelInfoFromStyle()
@@ -255,6 +268,7 @@ function LayoutInline:CreateInlineFlowBox()
 end
 
 function LayoutInline:CreateAndAppendInlineFlowBox()
+	echo("LayoutInline:CreateAndAppendInlineFlowBox()");
     self:SetAlwaysCreateLineBoxes();
     local flowBox = self:CreateInlineFlowBox();
     self.lineBoxes:AppendLineBox(flowBox);
@@ -669,4 +683,47 @@ end
 function LayoutInline:BorderBoundingBox()
     local boundingBox = self:LinesBoundingBox();
     return LayoutRect:new(0, 0, boundingBox:Width(), boundingBox:Height());
+end
+
+--LayoutSize RenderInline::relativePositionedInlineOffset(const RenderBox* child) const
+function LayoutInline:RelativePositionedInlineOffset(child)
+    -- FIXME: This function isn't right with mixed writing modes.
+
+    -- ASSERT(isRelPositioned());
+    if (not self:IsRelPositioned()) then
+        return LayoutSize:new();
+	end
+
+    -- When we have an enclosing relpositioned inline, we need to add in the offset of the first line
+    -- box from the rest of the content, but only in the cases where we know we're positioned
+    -- relative to the inline itself.
+
+    local logicalOffset = LayoutSize:new();
+    local inlinePosition, blockPosition;
+    if (self:FirstLineBox()) then
+        inlinePosition = math.floor(self:FirstLineBox():LogicalLeft() + 0.5);
+        blockPosition = self:FirstLineBox():LogicalTop();
+    else
+        inlinePosition = self:Layer():StaticInlinePosition();
+        blockPosition = self:Layer():StaticBlockPosition();
+    end
+
+    if (not child:Style():HasStaticInlinePosition(self:Style():IsHorizontalWritingMode())) then
+        logicalOffset:SetWidth(inlinePosition);
+
+    -- This is not terribly intuitive, but we have to match other browsers.  Despite being a block display type inside
+    -- an inline, we still keep our x locked to the left of the relative positioned inline.  Arguably the correct
+    -- behavior would be to go flush left to the block that contains the inline, but that isn't what other browsers
+    -- do.
+    elseif (not child:Style():IsOriginalDisplayInlineType()) then
+        -- Avoid adding in the left border/padding of the containing block twice.  Subtract it out.
+        logicalOffset:SetWidth(inlinePosition - child:ContainingBlock():BorderAndPaddingLogicalLeft());
+	end
+    if (not child:Style():HasStaticBlockPosition(self:Style():IsHorizontalWritingMode())) then
+        logicalOffset:SetHeight(blockPosition);
+	end
+	if(self:Style():IsHorizontalWritingMode()) then
+		return logicalOffset;
+	end
+    return logicalOffset:TransposedSize();
 end

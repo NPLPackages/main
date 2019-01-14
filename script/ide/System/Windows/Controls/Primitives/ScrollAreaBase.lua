@@ -214,6 +214,14 @@ function ScrollAreaBase:ViewRegion()
 	return Rect:new_from_pool(0, 0, w, h);
 end
 
+function ScrollAreaBase:updateScrollGeometry()
+	
+end
+
+function ScrollAreaBase:updateGeometryIfNeeded()
+	self:updateScrollGeometry();
+end
+
 function ScrollAreaBase:paintEvent(painter)
 
 end

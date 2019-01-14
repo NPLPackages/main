@@ -39,6 +39,7 @@ end
 
 function Point:Reset(x,y)
 	self[1], self[2] = x or 0, y or 0;
+	return self;
 end
 
 -- this is actually a ring buffer of 200, pay attention not to reach over this value in recursive calls. 
@@ -143,7 +144,7 @@ function Point:Type()
 	return "Point";
 end
 
-function Point.__num(o)
+function Point.__unm(o)
 	return Point:new(-o[1], -o[2]);
 end
 

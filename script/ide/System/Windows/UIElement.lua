@@ -85,6 +85,7 @@ UIElement:Property({"mouseTracking", nil, "hasMouseTracking", "setMouseTracking"
 UIElement:Property({"render_priority", 0, auto=true});
 
 UIElement:Property({"clip", false, "IsClip", "SetClip", auto=true});
+UIElement:Property({"disabled", false, "isDisabled", "SetDisabled", auto=true});
 
 -- number of posted events
 UIElement.postedEvents = 0;
@@ -380,11 +381,9 @@ function UIElement:event(event)
 		local func = self[event:GetHandlerFuncName()];
 		if(type(func) == "function") then
 			if(event_type == "paintEvent") then
-				self:setClipRegion(event);
-			end
-			func(self, event);
-			if(event_type == "paintEvent") then
-				self:resetClipRegion(event);
+				self:prepareToPaintEvent(event)
+			else
+				func(self, event);
 			end
 		end
 		if(event_type == "focusInEvent" or event_type == "moveEvent" or event_type == "sizeEvent") then
@@ -465,7 +464,7 @@ end
 -- set key focus to the UIElement. 
 -- @param reason: nil
 function UIElement:setFocus(reason)
-	if (not self:isEnabled()) then
+	if (not self:isEnabled() or self:isDisabled()) then
         return;
 	end
 	if(Application:focusWidget() == self) then
@@ -587,6 +586,33 @@ function UIElement:drawWidget(painterContext, offset)
 		end
 		painterContext:Translate(-widget_offset:x(), -widget_offset:y());
 	end
+end
+
+function UIElement:updateGeometryIfNeeded()
+
+end
+
+function UIElement:prepareToPaintEvent(event)
+	self:updateGeometryIfNeeded()
+
+	local func = self[event:GetHandlerFuncName()];
+	local needClip = self:needClipping();
+	if(needClip) then
+		local clipRect = self:ClipRegion();
+		local rect = self:rect();
+		if(clipRect:contains(rect)) then
+			func(self, event);
+			return;
+		end
+		if(clipRect:isIntersected(self:rect())) then
+			self:setClipRegion(event);
+			func(self, event);
+			self:resetClipRegion(event);
+			return;
+		end
+		return;
+	end
+	func(self, event);
 end
 
 -- virtual: render everything here

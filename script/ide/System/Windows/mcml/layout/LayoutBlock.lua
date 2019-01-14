@@ -808,6 +808,11 @@ end
 -- Used to store state between styleWillChange and styleDidChange
 local s_canPropagateFloatIntoSibling = false;
 
+--typedef WTF::HashSet<RenderBlock*> DelayedUpdateScrollInfoSet;
+local gDelayUpdateScrollInfo = 0;
+--static DelayedUpdateScrollInfoSet* gDelayedUpdateScrollInfoSet = 0;
+local gDelayedUpdateScrollInfoSet = nil
+
 function LayoutBlock:ctor()
 	self.name = "LayoutBlock";
 
@@ -1713,6 +1718,8 @@ function LayoutBlock:IsBlockFlow()
 end
 
 function LayoutBlock:LayoutBlock(relayoutChildren, pageLogicalHeight, layoutPass)
+	echo("LayoutBlock:LayoutBlock");
+	self:PrintNodeInfo()
 	pageLogicalHeight = pageLogicalHeight or 0;
 	layoutPass = layoutPass or "NormalLayoutPass";
 	if(not self:NeedsLayout()) then
@@ -1730,6 +1737,8 @@ function LayoutBlock:LayoutBlock(relayoutChildren, pageLogicalHeight, layoutPass
 	local oldWidth = self:LogicalWidth();
 
 	self:ComputeLogicalWidth();
+
+	self.overflow = nil;
 
 	if(oldWidth ~= self:LogicalWidth()) then
 		relayoutChildren = true;
@@ -1797,14 +1806,14 @@ function LayoutBlock:LayoutBlock(relayoutChildren, pageLogicalHeight, layoutPass
 
 
 	-- For overflow:scroll blocks, ensure we have both scrollbars in place always.
---    if (self:ScrollsOverflow()) then
---        if (self:Style()->overflowX() == OSCROLL) then
---            layer()->setHasHorizontalScrollbar(true);
---		end
---        if (self:Style()->overflowY() == OSCROLL) then
---            layer()->setHasVerticalScrollbar(true);
---		end
---    end
+    if (self:ScrollsOverflow()) then
+        if (self:Style():OverflowX() == OverflowEnum.OSCROLL) then
+            self:Layer():SetHasHorizontalScrollbar(true);
+		end
+        if (self:Style():OverflowY() == OverflowEnum.OSCROLL) then
+            self:Layer():SetHasVerticalScrollbar(true);
+		end
+    end
 
 	local repaintLogicalTop = 0;
     local repaintLogicalBottom = 0;
@@ -1812,18 +1821,23 @@ function LayoutBlock:LayoutBlock(relayoutChildren, pageLogicalHeight, layoutPass
     if (not self:FirstChild() and not self:IsAnonymousBlock()) then
         self:SetChildrenInline(true);
 	end
-
+	echo("self:ChildrenInline()")
+	self:PrintNodeInfo()
+	echo(self:ChildrenInline())
     if (self:ChildrenInline()) then
         repaintLogicalTop, repaintLogicalBottom = self:LayoutInlineChildren(relayoutChildren, repaintLogicalTop, repaintLogicalBottom);
     else
         self:LayoutBlockChildren(relayoutChildren, maxFloatLogicalBottom);
 	end
-
+	echo("self:ChildrenInline() end")
+	self:PrintNodeInfo()
+	echo(self.frame_rect)
 	-- Expand our intrinsic height to encompass floats.
     local toAdd = self:BorderAfter() + self:PaddingAfter() + self:ScrollbarLogicalHeight();
---    if (lowestFloatLogicalBottom() > (logicalHeight() - toAdd) && expandsToEncloseOverhangingFloats())
---        setLogicalHeight(lowestFloatLogicalBottom() + toAdd);
---    
+    if (self:LowestFloatLogicalBottom() > (self:LogicalHeight() - toAdd) and self:ExpandsToEncloseOverhangingFloats()) then
+        self:SetLogicalHeight(self:LowestFloatLogicalBottom() + toAdd);
+	end
+    
 --    if (layoutColumns(hasSpecifiedPageLogicalHeight, pageLogicalHeight, statePusher))
 --        return;
 
@@ -1884,13 +1898,13 @@ function LayoutBlock:LayoutBlock(relayoutChildren, pageLogicalHeight, layoutPass
         -- it had to lay out.  We wouldn't need the hasOverflowClip() hack in that case either.
         local repaintLogicalLeft = self:LogicalLeftVisualOverflow();
         local repaintLogicalRight = self:LogicalRightVisualOverflow();
---        if (hasOverflowClip()) {
---            // If we have clipped overflow, we should use layout overflow as well, since visual overflow from lines didn't propagate to our block's overflow.
---            // Note the old code did this as well but even for overflow:visible.  The addition of hasOverflowClip() at least tightens up the hack a bit.
---            // layoutInlineChildren should be patched to compute the entire repaint rect.
---            repaintLogicalLeft = min(repaintLogicalLeft, logicalLeftLayoutOverflow());
---            repaintLogicalRight = max(repaintLogicalRight, logicalRightLayoutOverflow());
---        }
+        if (self:HasOverflowClip()) then
+            -- If we have clipped overflow, we should use layout overflow as well, since visual overflow from lines didn't propagate to our block's overflow.
+            -- Note the old code did this as well but even for overflow:visible.  The addition of hasOverflowClip() at least tightens up the hack a bit.
+            -- layoutInlineChildren should be patched to compute the entire repaint rect.
+            repaintLogicalLeft = math.min(repaintLogicalLeft, self:LogicalLeftLayoutOverflow());
+            repaintLogicalRight = math.max(repaintLogicalRight, self:LogicalRightLayoutOverflow());
+        end
         
         local repaintRect = nil;
         if (self:IsHorizontalWritingMode()) then
@@ -1902,15 +1916,15 @@ function LayoutBlock:LayoutBlock(relayoutChildren, pageLogicalHeight, layoutPass
         -- The repaint rect may be split across columns, in which case adjustRectForColumns() will return the union.
         -- adjustRectForColumns(repaintRect);
 
-        -- repaintRect.inflate(maximalOutlineSize(PaintPhaseOutline));
+         --repaintRect.inflate(self:MaximalOutlineSize(PaintPhaseOutline));
         
---        if (hasOverflowClip()) {
---            // Adjust repaint rect for scroll offset
---            repaintRect.move(-layer()->scrolledContentOffset());
---
---            // Don't allow this rect to spill out of our overflow box.
---            repaintRect.intersect(LayoutRect(LayoutPoint(), size()));
---        }
+        if (self:HasOverflowClip()) then
+            -- Adjust repaint rect for scroll offset
+            repaintRect:Move(-self:Layer():ScrolledContentOffset());
+
+            -- Don't allow this rect to spill out of our overflow box.
+            repaintRect:Intersect(LayoutRect:new(LayoutPoint:new(), self:Size()));
+        end
 
         -- Make sure the rect is still non-empty after intersecting for overflow above
         if (not repaintRect:IsEmpty()) then
@@ -1920,7 +1934,9 @@ function LayoutBlock:LayoutBlock(relayoutChildren, pageLogicalHeight, layoutPass
 --                repaintRectangle(reflectedRect(repaintRect));
         end
     end
-
+	echo("LayoutBlock:LayoutBlock end")
+	self:PrintNodeInfo()
+	echo(self.frame_rect)
 	if (needAnotherLayoutPass and layoutPass == "NormalLayoutPass") then
         self:SetChildNeedsLayout(true, false);
         self:LayoutBlock(false, pageLogicalHeight, "PositionedFloatLayoutPass");
@@ -2306,7 +2322,14 @@ function LayoutBlock:MarkAllDescendantsWithFloatsForLayout(floatToRemove, inLayo
 end
 
 function LayoutBlock:MarkForPaginationRelayoutIfNeeded()
-	
+	if (self:NeedsLayout()) then
+        return;
+	end
+
+    if (self:View():LayoutState():PageLogicalHeightChanged() or (self:View():LayoutState():PageLogicalHeight() and self:View():LayoutState():PageLogicalOffset(self:LogicalTop()) ~= self:LageLogicalOffset())) then
+		self:PrintNodeInfo()
+        self:SetChildNeedsLayout(true, false);
+	end
 end
 
 function LayoutBlock:ClearFloatsIfNeeded(child, marginInfo, oldTopPosMargin, oldTopNegMargin, yPos)
@@ -2840,12 +2863,157 @@ function LayoutBlock:SetCollapsedBottomMargin(marginInfo)
     end
 end
 
+function LayoutBlock:AddOverflowFromFloats()
+    if (not self.floatingObjects) then
+        return;
+	end
+	local floatingObjectSet = self.floatingObjects:Set();
+	local it = floatingObjectSet:Begin();
+	while(it) do
+		local floatingObject = it();
+        if (floatingObject.isDescendant and not floatingObject.renderer:IsPositioned()) then
+            self:AddOverflowFromChild(floatingObject.renderer, IntSize:new(self:XPositionForFloatIncludingMargin(floatingObject), self:YPositionForFloatIncludingMargin(floatingObject)));
+		end
+		it = floatingObjectSet:next(it);
+	end
+    return;
+end
+
+function LayoutBlock:AddOverflowFromPositionedObjects()
+    if (not self.positionedObjects) then
+        return;
+	end
+
+	local positionedObject = nil;
+	local it = self.positionedObjects:Begin();
+	while(it) do
+		positionedObject = it();
+
+		-- Fixed positioned elements don't contribute to layout overflow, since they don't scroll with the content.
+        if (positionedObject:Style():Position() ~= PositionEnum.FixedPosition) then
+            self:AddOverflowFromChild(positionedObject);
+		end
+
+		it = self.positionedObjects:next(it);
+	end
+end
+
+function LayoutBlock:AddOverflowFromBlockChildren()
+	local child = self:FirstChildBox();
+	while(child) do
+		if (not child:IsFloatingOrPositioned()) then
+            self:AddOverflowFromChild(child);
+		end
+
+		child = child:NextSiblingBox();
+	end
+end
+
+function LayoutBlock:AddOverflowFromChildren()
+    if (not self:HasColumns()) then
+        if (self:ChildrenInline()) then
+            self:AddOverflowFromInlineChildren();
+        else
+            self:AddOverflowFromBlockChildren();
+		end
+    else
+--        ColumnInfo* colInfo = columnInfo();
+--        if (columnCount(colInfo)) {
+--            LayoutRect lastRect = columnRectAt(colInfo, columnCount(colInfo) - 1);
+--            if (isHorizontalWritingMode()) {
+--                LayoutUnit overflowLeft = !style()->isLeftToRightDirection() ? min<LayoutUnit>(0, lastRect.x()) : 0;
+--                LayoutUnit overflowRight = style()->isLeftToRightDirection() ? max(width(), lastRect.maxX()) : 0;
+--                LayoutUnit overflowHeight = borderBefore() + paddingBefore() + colInfo->columnHeight();
+--                addLayoutOverflow(LayoutRect(overflowLeft, 0, overflowRight - overflowLeft, overflowHeight));
+--                if (!hasOverflowClip())
+--                    addVisualOverflow(LayoutRect(overflowLeft, 0, overflowRight - overflowLeft, overflowHeight));
+--            } else {
+--                LayoutRect lastRect = columnRectAt(colInfo, columnCount(colInfo) - 1);
+--                LayoutUnit overflowTop = !style()->isLeftToRightDirection() ? min<LayoutUnit>(0, lastRect.y()) : 0;
+--                LayoutUnit overflowBottom = style()->isLeftToRightDirection() ? max(height(), lastRect.maxY()) : 0;
+--                LayoutUnit overflowWidth = borderBefore() + paddingBefore() + colInfo->columnHeight();
+--                addLayoutOverflow(LayoutRect(0, overflowTop, overflowWidth, overflowBottom - overflowTop));
+--                if (!hasOverflowClip())
+--                    addVisualOverflow(LayoutRect(0, overflowTop, overflowWidth, overflowBottom - overflowTop));
+--            }
+--        }
+    end
+end
+
+function LayoutBlock:ExpandsToEncloseOverhangingFloats()
+    return self:IsInlineBlockOrInlineTable() or self:IsFloatingOrPositioned() or self:HasOverflowClip() or (self:Parent() ~= nil and self:Parent():IsDeprecatedFlexibleBox())
+           or self:HasColumns() or self:IsTableCell() or self:IsFieldset() or self:IsWritingModeRoot() or self:IsRoot();
+end
+
 function LayoutBlock:ComputeOverflow(oldClientAfterEdge, recomputeFloats)
-	--TODO: fixed this function
+	
+	-- Add overflow from children.
+    self:AddOverflowFromChildren();
+
+    if (not self:HasColumns() and (recomputeFloats or self:IsRoot() or self:ExpandsToEncloseOverhangingFloats() or self:HasSelfPaintingLayer())) then
+        self:AddOverflowFromFloats();
+	end
+
+    -- Add in the overflow from positioned objects.
+    self:AddOverflowFromPositionedObjects();
+
+    if (self:HasOverflowClip()) then
+        -- When we have overflow clip, propagate the original spillout since it will include collapsed bottom margins
+        -- and bottom padding.  Set the axis we don't care about to be 1, since we want this overflow to always
+        -- be considered reachable.
+        local clientRect = self:ClientBoxRect();
+        local rectToApply;
+        if (self:IsHorizontalWritingMode()) then
+            rectToApply = LayoutRect:new(clientRect:X(), clientRect:Y(), 1, math.max(0, oldClientAfterEdge - clientRect:Y()));
+        else
+            rectToApply = LayoutRect:new(clientRect:X(), clientRect:Y(), math.max(0, oldClientAfterEdge - clientRect:X()), 1);
+		end
+		echo("LayoutBlock:ComputeOverflow")
+        self:AddLayoutOverflow(rectToApply);
+    end
+        
+    -- Add visual overflow from box-shadow and border-image-outset.
+    -- addBoxShadowAndBorderOverflow();
+end
+
+function LayoutBlock:StartDelayUpdateScrollInfo()
+    if (gDelayUpdateScrollInfo == 0) then
+        --ASSERT(!gDelayedUpdateScrollInfoSet);
+        --gDelayedUpdateScrollInfoSet = new DelayedUpdateScrollInfoSet;
+		gDelayedUpdateScrollInfoSet = {}
+    end
+    --ASSERT(gDelayedUpdateScrollInfoSet);
+    gDelayUpdateScrollInfo = gDelayUpdateScrollInfo + 1;
+end
+
+function LayoutBlock:FinishDelayUpdateScrollInfo()
+    gDelayUpdateScrollInfo = gDelayUpdateScrollInfo - 1;
+    --ASSERT(gDelayUpdateScrollInfo >= 0);
+    if (gDelayUpdateScrollInfo == 0) then
+        --ASSERT(gDelayedUpdateScrollInfoSet);
+
+        --OwnPtr<DelayedUpdateScrollInfoSet> infoSet(adoptPtr(gDelayedUpdateScrollInfoSet));
+		local infoSet = gDelayedUpdateScrollInfoSet;
+
+        gDelayedUpdateScrollInfoSet = 0;
+		if(infoSet) then
+			for block, _ in pairs(infoSet) do
+				if (block:HasOverflowClip()) then
+					block:Layer():UpdateScrollInfoAfterLayout();
+				end
+			end
+		end
+    end
 end
 
 function LayoutBlock:UpdateScrollInfoAfterLayout()
-	--TODO: fixed this function
+	if (self:HasOverflowClip()) then
+        if (gDelayUpdateScrollInfo ~= 0) then
+            gDelayedUpdateScrollInfoSet[self] = true;
+        else
+            self:Layer():UpdateScrollInfoAfterLayout();
+		end
+    end
 end
 
 function LayoutBlock:SimplifiedLayout()
@@ -2856,11 +3024,16 @@ function LayoutBlock:SimplifiedLayout()
         return false;
 	end
 
+--	// Lay out positioned descendants or objects that just need to recompute overflow.
+--    if (needsSimplifiedNormalFlowLayout())
+--        simplifiedNormalFlowLayout();
+
 	if(self:PosChildNeedsLayout() and self:LayoutPositionedObjects(false)) then
 		return false;
 	end
 
-	--self.overflow:Clear();
+	self.overflow = nil;
+
 	self:ComputeOverflow(self:ClientLogicalBottom(), true);
 
 	self:UpdateLayerTransform();
@@ -3275,7 +3448,58 @@ function LayoutBlock:AddChildIgnoringAnonymousColumnBlocks(newChild, beforeChild
 end
 
 function LayoutBlock:RemoveLeftoverAnonymousBlock(child)
-	--TODO: fixed this function
+	--ASSERT(child->isAnonymousBlock());
+    --ASSERT(!child->childrenInline());
+    
+    	if (child:Continuation() or (child:FirstChild() and (child:IsAnonymousColumnSpanBlock() or child:IsAnonymousColumnsBlock()))) then
+        return;
+    end
+    local firstAnChild = child.children:FirstChild();
+    local lastAnChild = child.children:LastChild();
+    if (firstAnChild) then
+        local o = firstAnChild;
+        while (o) do
+            o:SetParent(self);
+            o = o:NextSibling();
+        end
+        firstAnChild:SetPreviousSibling(child:PreviousSibling());
+        lastAnChild:SetNextSibling(child:NextSibling());
+        if (child:PreviousSibling()) then
+            child:PreviousSibling():SetNextSibling(firstAnChild);
+		end
+        if (child:NextSibling()) then
+            child:NextSibling():SetPreviousSibling(lastAnChild);
+		end
+        if (child == self.children:FirstChild()) then
+            self.children:SetFirstChild(firstAnChild);
+		end
+		
+        if (child == self.children:LastChild()) then
+            self.children:SetLastChild(lastAnChild);
+		end
+    else
+        if (child == self.children:FirstChild()) then
+            self.children:SetFirstChild(child:NextSibling());
+		end
+        if (child == self.children:LastChild()) then
+            self.children:SetLastChild(child:PreviousSibling());
+		end
+
+        if (child:PreviousSibling()) then
+            child:PreviousSibling():SetNextSibling(child:NextSibling());
+		end
+        if (child:NextSibling()) then
+            child:NextSibling():SetPreviousSibling(child:PreviousSibling());
+		end
+    end
+    child:SetParent(nil);
+    child:SetPreviousSibling(nil);
+    child:SetNextSibling(nil);
+    
+    child:Children():SetFirstChild(nil);
+    child.next = nil;
+
+    child:Destroy();
 end
 
 function LayoutBlock:FirstRootBox()
@@ -3590,12 +3814,16 @@ function LayoutBlock:LineHeight(firstLine, direction, linePositionMode)
 end
 
 function LayoutBlock:LastLineBoxBaseline()
+	echo("LayoutBlock:LastLineBoxBaseline")
+	self:PrintNodeInfo()
+--	echo((not self:IsInline() or self:IsReplaced()) and not self:IsTable())
+--	echo({self:IsInline(), self:IsReplaced(), self:IsTable()})
 	if (not self:IsBlockFlow() or (self:IsWritingModeRoot() and not self:IsRubyRun())) then
         return -1;
 	end
 
     local lineDirection = if_else(self:IsHorizontalWritingMode(), "HorizontalLine", "VerticalLine");
-
+	echo(self:ChildrenInline())
     if (self:ChildrenInline()) then
         if (not self:FirstLineBox() and self:HasLineIfEmpty()) then
             local fontMetrics = self:FirstLineStyle():FontMetrics();
@@ -3604,8 +3832,10 @@ function LayoutBlock:LastLineBoxBaseline()
                  + if_else(lineDirection == "HorizontalLine", self:BorderTop() + self:PaddingTop(), self:BorderRight() + self:PaddingRight());
         end
         if (self:LastLineBox()) then
-			return self:LastLineBox():LogicalTop() + self:Style(self:LastLineBox() == self:FirstLineBox()):FontMetrics():ascent(self:LastRootBox():BaselineType());
-            --return self:LastLineBox():LogicalTop() + self:Style(self:LastLineBox() == self:FirstLineBox()):FontAscent(self:LastRootBox():BaselineType());
+			--return self:LastLineBox():LogicalTop() + self:Style(self:LastLineBox() == self:FirstLineBox()):FontMetrics():ascent(self:LastRootBox():BaselineType());
+			local fontMetrics = self:Style(self:LastLineBox() == self:FirstLineBox()):FontMetrics();
+            return fontMetrics:ascent()
+                 + (fontMetrics:lineSpacing() - fontMetrics:height()) / 2 + self:LastLineBox():LogicalTop()
 		end
         return -1;
     else
@@ -3626,7 +3856,7 @@ function LayoutBlock:LastLineBoxBaseline()
         if (not haveNormalFlowChild and self:HasLineIfEmpty()) then
             local fontMetrics = self:FirstLineStyle():FontMetrics();
             return fontMetrics:ascent()
-                 + (self:LineHeight(true, lineDirection, "PositionOfInteriorLineBoxes") - fontMetrics:height()) / 2
+                 + (fontMetrics:lineSpacing() - fontMetrics:height()) / 2
                  + if_else(lineDirection == "HorizontalLine", self:BorderTop() + self:PaddingTop(), self:BorderRight() + self:PaddingRight());
         end
     end
@@ -3662,7 +3892,8 @@ function LayoutBlock:BaselinePosition(baselineType, firstLine, direction, linePo
 			or (self:IsWritingModeRoot() and not self:IsRubyRun());
         
         local baselinePos = if_else(ignoreBaseline, -1, self:LastLineBoxBaseline());
-        
+		echo("ignoreBaseline, baselinePos")
+        echo({ignoreBaseline, baselinePos})
         local bottomOfContent = if_else(direction == "HorizontalLine", self:BorderTop() + self:PaddingTop() + self:ContentHeight(), self:BorderRight() + self:PaddingRight() + self:ContentWidth());
         if (baselinePos ~= -1 and baselinePos <= bottomOfContent) then
             return if_else(direction == "HorizontalLine", self:MarginTop() + baselinePos, self:MarginRight() + baselinePos);
@@ -3675,9 +3906,6 @@ function LayoutBlock:BaselinePosition(baselineType, firstLine, direction, linePo
 --    return fontMetrics.ascent(baselineType) + (lineHeight(firstLine, direction, linePositionMode) - fontMetrics.height()) / 2;
 	local fontMetrics = self:Style(firstLine):FontMetrics();
     return fontMetrics:ascent(baselineType) + math.floor((self:LineHeight(firstLine, direction, linePositionMode) - fontMetrics:height())/2+0.5);
---	local fontHeight = self:Style():FontSize();
---	local fontAscent = self:Style():FontAscent(baselineType);
---	return fontAscent + (self:LineHeight(firstLine, direction, linePositionMode) - fontHeight) / 2;
 end
 
 function LayoutBlock:AvailableLogicalWidthForContent(region, offsetFromLogicalTopOfFirstPage)
@@ -3712,29 +3940,57 @@ end
 
 --void RenderBlock::paint(PaintInfo& paintInfo, const LayoutPoint& paintOffset)
 function LayoutBlock:Paint(paintInfo, paintOffset)
-    local adjustedPaintOffset = paintOffset + self:Location();
+	echo("LayoutBlock:Paint")
+	self:PrintNodeInfo()
+	echo(paintInfo:Rect())
+	echo(paintOffset)
+    --local adjustedPaintOffset = paintOffset + self:Location();
+	local adjustedPaintOffset = paintOffset;
     -- default implementation. Just pass paint through to the children
 --    PaintInfo childInfo(paintInfo);
 --    childInfo.updatePaintingRootForChildren(this);
 	self:PaintObject(paintInfo, adjustedPaintOffset)
+
+	-- Our scrollbar widgets paint exactly when we tell them to, so that they work properly with
+    -- z-index.  We paint after we painted the background/border, so that the scrollbars will
+    -- sit above the background/border.
+	--if (hasOverflowClip() && style()->visibility() == VISIBLE && (phase == PaintPhaseBlockBackground || phase == PaintPhaseChildBlockBackground) && paintInfo.shouldPaintWithinRoot(this))
+    if (self:HasOverflowClip() and self:Style():Visibility() == VisibilityEnum.VISIBLE and paintInfo:ShouldPaintWithinRoot(self)) then
+        self:Layer():PaintOverflowControls(paintInfo.context, adjustedPaintOffset, paintInfo.rect);
+	end
 end
 
 --void RenderBlock::paintObject(PaintInfo& paintInfo, const LayoutPoint& paintOffset)
 function LayoutBlock:PaintObject(paintInfo, paintOffset)
 	-- 1. paint background, borders etc
 	self:PaintBoxDecorations(paintInfo, paintOffset);
+	echo("LayoutBlock:PaintObject")
+	self:PrintNodeInfo()
+	echo(paintOffset)
+	-- Adjust our painting position if we're inside a scrolled layer (e.g., an overflow:auto div).
+    local scrolledOffset = paintOffset:clone();
+    if (self:HasOverflowClip()) then
+        scrolledOffset:Move(-self:Layer():ScrolledContentOffset());
+	end
+	echo("scrolledOffset")
+	echo(scrolledOffset)
 	-- 2. paint contents
-	self:PaintContents(paintInfo, paintOffset);
+	self:PaintContents(paintInfo, scrolledOffset);
 	-- 4. paint floats.
-	self:PaintFloats(paintInfo, paintOffset)
+	self:PaintFloats(paintInfo, scrolledOffset)
 end
 
 --void RenderBox::paintBoxDecorations(PaintInfo& paintInfo, const LayoutPoint& paintOffset)
 function LayoutBlock:PaintBoxDecorations(paintInfo, paintOffset)
+	echo("LayoutBlock:PaintBoxDecorations")
+	self:PrintNodeInfo()
+	echo(paintOffset)
+	echo(self:HasSelfPaintingLayer())
 	local rect = self.frame_rect:clone_from_pool();
-	if(self:HasSelfPaintingLayer()) then
+	if(self:InlineBoxWrapper() == nil) then
 		rect:Move(paintOffset:X(), paintOffset:Y());
 	end
+	--rect:Move(paintOffset:X(), paintOffset:Y());
 	self:PaintBackground(paintInfo, rect);
 
 --	local control = self:GetControl();
@@ -3752,6 +4008,9 @@ end
 
 --void RenderBlock::paintContents(PaintInfo& paintInfo, const LayoutPoint& paintOffset)
 function LayoutBlock:PaintContents(paintInfo, paintOffset)
+	echo("LayoutBlock:PaintContents")
+	self:PrintNodeInfo()
+	echo(self.frame_rect)
     -- Avoid painting descendants of the root element when stylesheets haven't loaded.  This eliminates FOUC.
     -- It's ok not to draw, because later on, when all the stylesheets do load, updateStyleSelector on the Document
     -- will do a full repaint().
@@ -3762,8 +4021,14 @@ function LayoutBlock:PaintContents(paintInfo, paintOffset)
 --        m_lineBoxes.paint(this, paintInfo, paintOffset);
 --    else
 --        paintChildren(paintInfo, paintOffset);
+	echo(self:ChildrenInline())
 	if (self:ChildrenInline()) then
-        self.lineBoxes:Paint(self, paintInfo, paintOffset);
+		local childInfo = paintInfo:clone();
+		if(not self:HasSelfPaintingLayer()) then
+			childInfo:Rect():SetX(childInfo:Rect():X() - self:X())
+			childInfo:Rect():SetY(childInfo:Rect():Y() - self:Y())
+		end
+        self.lineBoxes:Paint(self, childInfo, paintOffset);
     else
 --        local control = self:GetControl();
 --		if(control) then
@@ -3776,16 +4041,22 @@ end
 
 --void RenderBlock::paintChildren(PaintInfo& paintInfo, const LayoutPoint& paintOffset)
 function LayoutBlock:PaintChildren(paintInfo, paintOffset)
-	local info = paintInfo;
+	echo("LayoutBlock:PaintChildren")
+	self:PrintNodeInfo()
+	echo(paintOffset)
+	local childInfo = paintInfo:clone();
+	childInfo:Rect():SetX(childInfo:Rect():X() - self:X())
+	childInfo:Rect():SetY(childInfo:Rect():Y() - self:Y())
 	local child = self:FirstChild();
 	while(child) do
---		if(not child:IsFloating()) then
---			child:Paint(info, paintOffset);
---		end
-
 		local childPoint = self:FlipForWritingModeForChild(child, paintOffset);
+		echo("while(child) do")
+		child:PrintNodeInfo()
+		echo(childPoint)
         if (not child:HasSelfPaintingLayer() and not child:IsFloating()) then
-            child:Paint(info, childPoint);
+            child:Paint(childInfo, childPoint);
+		else
+			echo("not child:HasSelfPaintingLayer() and not child:IsFloating()")
 		end
 
 		child = child:NextSibling();
@@ -3879,6 +4150,8 @@ end
 
 --RenderBlock* RenderBlock::createAnonymousBlock(bool isFlexibleBox) const
 function LayoutBlock:CreateAnonymousBlock(isFlexibleBox)
+	echo("LayoutBlock:CreateAnonymousBlock")
+	self:PrintNodeInfo()
 	isFlexibleBox = if_else(isFlexibleBox == nil, false, isFlexibleBox);
 	local newStyle = ComputedStyle.CreateAnonymousStyle(self:Style());
 
@@ -3891,7 +4164,7 @@ function LayoutBlock:CreateAnonymousBlock(isFlexibleBox)
         newBox = LayoutBlock:new():init();
     end
 	newBox:SetIsAnonymous(true);
-	newBox:SetAnonymousControl(self:CreateAnonymousControl());
+	--newBox:SetAnonymousControl(self:CreateAnonymousControl());
     newBox:SetStyle(newStyle);
     return newBox;
 end
@@ -4793,4 +5066,17 @@ end
 function LayoutBlock:OutlineStyleForRepaint()
     --return isAnonymousBlockContinuation() ? continuation()->style() : style();
 	return self:Style();
+end
+
+-- virtual 
+function LayoutBlock:ChildBecameNonInline(child)
+    self:MakeChildrenNonInline();
+    if (self:IsAnonymousBlock() and self:Parent() ~= nil and self:Parent():IsLayoutBlock()) then
+        self:Parent():ToRenderBlock():RemoveLeftoverAnonymousBlock(self);
+	end
+end
+
+-- virtual void scrollbarsChanged(bool horizontalScrollbarChanged, bool verticalScrollbarChanged);
+function LayoutBlock:ScrollbarsChanged(horizontalScrollbarChanged, verticalScrollbarChanged)
+
 end

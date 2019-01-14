@@ -51,7 +51,7 @@ local function InitApp()
 		{app={app_key="Debug_GUID"}, IP_file="script/kids/3DMapSystemApp/DebugApp/IP.xml"},
 	})
 
-	System.App.Commands.Call("Help.Debug");
+	--System.App.Commands.Call("Help.Debug");
 	System.App.Commands.Call("File.MCMLBrowser");
 
 --	local app = Map3DSystem.App.Registration.GetApp("Debug_GUID");

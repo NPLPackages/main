@@ -21,6 +21,7 @@ local LayoutBoxModelObject = commonlib.inherit(commonlib.gettable("System.Window
 local LayoutSize = IntSize;
 
 local PositionEnum = ComputedStyleConstants.PositionEnum;
+local OverflowEnum = ComputedStyleConstants.OverflowEnum;
 
 -- Used to store state between styleWillChange and styleDidChange
 local s_wasFloating = false;
@@ -367,6 +368,11 @@ function LayoutBoxModelObject:BaselinePosition(baselineType, firstLine, directio
 
 end
 
+-- virtual 
+function LayoutBoxModelObject:ChildBecameNonInline(child)
+
+end
+
 function LayoutBoxModelObject:Layer()
 	return self.layer;
 end
@@ -450,14 +456,43 @@ function LayoutBoxModelObject:RelativePositionOffsetY()
     return 0;
 end
 
+function LayoutBoxModelObject:RelativePositionLogicalOffset()
+	if(self:Style():IsHorizontalWritingMode()) then
+		self:RelativePositionOffset();
+	end
+	return self:RelativePositionOffset():TransposedSize();
+end
+
+function LayoutBoxModelObject:NeedClip()
+	if(self.layer) then
+		local hasHorizontalBar = self.layer:HorizontalScrollbar() ~= nil;
+		local hasVerticalBar = self.layer:VerticalScrollbar() ~= nil;
+		if(hasHorizontalBar or hasVerticalBar or (self:Style():OverflowY() == OverflowEnum.OHIDDEN or self:Style():OverflowX() == OverflowEnum.OHIDDEN)) then
+			return true;
+		end
+	end
+	return false;
+end
+
 function LayoutBoxModelObject:PaintFillLayerExtended(paintInfo, rect)
+	echo("LayoutBoxModelObject:PaintFillLayerExtended");
+	self:PrintNodeInfo()
 	local control = self:GetControl();
+	
 	if(control) then
+		if(self:InlineBoxWrapper() ~= nil and control:GetParent() == nil) then
+			control:SetParent(self:GetParentControl())
+		end
+
+		local clip = self:NeedClip();
+		control:SetClip(clip)
+
 		local x, y, w, h = rect:X(), rect:Y(), rect:Width(), rect:Height();
---		if(self:HasSelfPaintingLayer()) then
---			x, y = x + paintOffset:X(), y + paintOffset:Y();
---		end
-		control:ApplyCss(self:Style());
+		echo({x, y, w, h});
+		if(self:Style()) then
+			echo(self:Style():BackgroundImage());
+			control:ApplyCss(self:Style());
+		end
 		control:setGeometry(x, y, w, h);
 	end
 end

@@ -154,6 +154,7 @@ function FrameView:DoDeferredRepaints()
 end
 
 function FrameView:Layout()
+	echo("FrameView:Layout")
 	if(self.inLayout) then
 		return;
 	end
@@ -221,10 +222,13 @@ end
 --end
 
 function FrameView:RepaintIfNeeded()
+	echo("FrameView:RepaintIfNeeded()")
 	if(not self.dirty) then
         return false;
 	end
     --layoutIfNeeded();
+	echo("FrameView:RepaintIfNeeded")
+	echo(self.dirtyArea)
 	self:Paint(nil, self.dirtyArea);
 
 
@@ -358,6 +362,8 @@ local cRepaintRectUnionThreshold = 25;
 
 --void FrameView::repaintContentRectangle(const LayoutRect& r, bool immediate)
 function FrameView:RepaintContentRectangle(rect, immediate)
+	echo("FrameView:RepaintContentRectangle");
+	echo(rect)
 	immediate = if_else(immediate == nil, false, immediate);
     --ASSERT(!m_frame->ownerElement());
     
@@ -369,6 +375,7 @@ function FrameView:RepaintContentRectangle(rect, immediate)
 
 	local paintRect = rect:clone();
     if (self:ClipsRepaints() and not self:PaintsEntireContents()) then
+		echo("paintRect:Intersect")
         paintRect:Intersect(self:VisibleContentRect());
 	end
     if (paintRect:IsEmpty()) then

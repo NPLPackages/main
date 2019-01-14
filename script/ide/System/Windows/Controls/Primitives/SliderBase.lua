@@ -22,6 +22,7 @@ SliderBase:Property({"min", 1, "GetMin", "SetMin", auto=true});
 SliderBase:Property({"max", 100, "GetMax", "SetMax", auto=true});
 SliderBase:Property({"singleStep", 1, "GetSingleStep", "SetSingleStep", auto=true});
 SliderBase:Property({"pageStep", 10, "GetPageStep", "SetPageStep", auto=true});
+SliderBase:Property({"scrollStep", 10, "GetScrollStep", "SetScrollStep", auto=true});
 SliderBase:Property({"sliderPosition", 1, "GetSliderPosition", "SetSliderPosition", auto=true});
 -- nil, "vertical" or "horizontal". If nil it will deduce from the width and height. 
 SliderBase:Property({"direction", "horizontal", nil, "SetDirection", auto=true});
@@ -63,9 +64,10 @@ function SliderBase:setRange(min, max, emitSingal)
 	self:SetValue(self.value, emitSingal);
 end
 
-function SliderBase:setStep(single, page)
+function SliderBase:setStep(single, page, scroll)
 	self.singleStep = single;
 	self.pageStep = page;
+	self.scrollStep = scroll or single;
 	--self:SetValue(value);
 end
 
@@ -175,13 +177,17 @@ end
 
 function SliderBase:scrollByDelta(delta)
 	delta = -delta;
-	local offset = delta / 120;
-	local stepToScroll = math.floor(self.pageStep * offset + 0.5);
-	if(stepToScroll == 0) then
-		stepToScroll = if_else(delta > 0, self.singleStep, -self.singleStep);
-	else
-		stepToScroll = math.max(-self.pageStep, math.min(self.pageStep, stepToScroll));
-	end
+--	local offset = delta / 120;
+--	local stepToScroll = math.floor(self.pageStep * offset + 0.5);
+--	echo("stepToScroll")
+--	echo(self.pageStep)
+--	echo(stepToScroll)
+--	if(stepToScroll == 0) then
+--		stepToScroll = if_else(delta > 0, self.singleStep, -self.singleStep);
+--	else
+--		stepToScroll = math.max(-self.pageStep, math.min(self.pageStep, stepToScroll));
+--	end
+	local stepToScroll = delta * self.scrollStep;
 	self:SetValue(self.value + stepToScroll, true);
 end
 

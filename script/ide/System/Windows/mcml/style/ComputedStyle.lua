@@ -375,6 +375,10 @@ function ComputedStyle:new(box, visual, background, surround, rareNonInheritedDa
 	return o;
 end
 
+function ComputedStyle.CreateDefaultStyle()
+	return ComputedStyle:new();
+end
+
 function ComputedStyle:clone()
 	local box = self.m_box:clone();
 	local visual = self.visual:clone();
@@ -820,6 +824,7 @@ function ComputedStyle:KhtmlLineBreak() return self.rareInheritedData.khtmlLineB
 function ComputedStyle:MatchNearestMailBlockquoteColor() return self.rareNonInheritedData.matchNearestMailBlockquoteColor; end
 function ComputedStyle:Hyphens() return self.rareInheritedData.hyphens; end
 function ComputedStyle:BorderFit() return self.rareNonInheritedData.m_borderFit; end
+function ComputedStyle:Resize() return self.rareInheritedData.resize; end
 function ComputedStyle:TextCombine() return self.rareNonInheritedData.m_textCombine; end
 function ComputedStyle:HasTextCombine() return self:TextCombine() ~= ComputedStyleConstants.TextCombineEnum.TextCombineNone; end
 function ComputedStyle:FlowThread() return self.rareNonInheritedData.m_flowThread; end

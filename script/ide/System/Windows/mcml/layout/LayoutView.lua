@@ -229,11 +229,12 @@ end
 function LayoutView:RepaintViewRectangle(ur, immediate)
 	-- parameter default value;
 	immediate = if_else(immediate == nil, false, immediate);
-
+	echo("LayoutView:RepaintViewRectangle")
+	echo(ur)
     if (not self:ShouldRepaint(ur)) then
         return;
 	end
-
+	
 	self.frameView:RepaintContentRectangle(ur, immediate);
 
 --    // We always just invalidate the root view, since we could be an iframe that is clipped out

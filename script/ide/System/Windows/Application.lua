@@ -341,8 +341,28 @@ end
 local cancelTooltipEvents = {
 	mousePressEvent = true, mouseReleaseEvent = true, mouseWheelEvent = true, mouseLeaveEvent = true,
 };
+
+local disabledEvents = {
+	["mousePressEvent"] = true,
+	["mouseReleaseEvent"] = true,
+	["mouseMoveEvent"] = true,
+	["mouseWheelEvent"] = true,
+	["mouseLeaveEvent"] = true,
+	["mouseEnterEvent"] = true,
+	["keyPressEvent"] = true,
+	["keyReleaseEvent"] = true,
+	["inputMethodEvent"] = true,
+	["focusInEvent"] = true,
+	["focusOutEvent"] = true,
+}
+
 function Application:notify(receiver, event)
 	local type = event:GetType();
+	if(receiver:isDisabled() and disabledEvents[event:GetType()]) then
+		return false;
+	end
+
+
 	local res;
 
 	if(cancelTooltipEvents[type]) then

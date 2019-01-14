@@ -81,16 +81,24 @@ end
 
 function Button:MultiplyBackgroundColor(color)
 	self:resetPolygonPensInfo();
-	for _,polygon_info in pairs(self.polygon_styles) do
-		local pens = polygon_info.pens;
-		for k,v in pairs(pens) do
-			for key, pen_color in pairs(v) do
-				if(key ~= "over") then
-					v[key] = Color.Multiply(pen_color, color);
-				end
+	local pens = self.polygon_styles.normal.pens;
+	for k,v in pairs(pens) do
+		for key, pen_color in pairs(v) do
+			if(key ~= "over") then
+				v[key] = Color.Multiply(pen_color, color);
 			end
 		end
 	end
+--	for _,polygon_info in pairs(self.polygon_styles) do
+--		local pens = polygon_info.pens;
+--		for k,v in pairs(pens) do
+--			for key, pen_color in pairs(v) do
+--				if(key ~= "over") then
+--					v[key] = Color.Multiply(pen_color, color);
+--				end
+--			end
+--		end
+--	end
 end
 
 function Button:isUsingPolygon()

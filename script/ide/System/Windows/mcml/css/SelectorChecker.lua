@@ -54,7 +54,7 @@ function SelectorChecker:fastCheckRightmostSelector(selector, pageElement)
 	if(matchtype == CSSSelector.MatchType.kUnknown) then
 		return true;
 	elseif(matchtype == CSSSelector.MatchType.kTag) then
-		return pageElement.name == value;
+		return pageElement:TagName() == value;
 	elseif(matchtype == CSSSelector.MatchType.kId) then
 		local id = pageElement:GetAttributeWithCode("id",nil,true);
 		return id == value;
@@ -142,7 +142,8 @@ function SelectorChecker:TagMatches(element, selector)
     if (not selector:HasTag()) then
         return true;
 	end	
-	local tag = string.gsub(selector:Tag(),"pe:","");
+	--local tag = string.gsub(selector:Tag(),"pe:","");
+	local tag = selector:Tag();
 	return tag == element:TagName();
 --    const AtomicString& localName = selector->tag().localName();
 --    if (localName != starAtom && localName != element->localName())

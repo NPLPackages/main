@@ -1074,6 +1074,7 @@
     <Content Include="script\test\MCMLV2\test_layout_background.html" />
     <Content Include="script\test\MCMLV2\test_layout_button.html" />
     <Content Include="script\test\MCMLV2\test_layout_img.html" />
+    <Content Include="script\test\MCMLV2\test_layout_overflow.html" />
     <Content Include="script\test\MCMLV2\test_layout_textarea.html" />
     <Content Include="script\test\MCMLV2\test_pe_textarea.html" />
     <Content Include="script\test\MCMLV2\test_layout_anonymous_block.html" />
@@ -1163,11 +1164,16 @@
     <None Include="script\ide\System\Windows\Controls\MultiLineEditbox.lua" />
     <None Include="script\ide\System\Windows\Controls\Primitives\ScrollAreaBase.lua" />
     <None Include="script\ide\System\Windows\Controls\Primitives\SliderBase.lua" />
+    <None Include="script\ide\System\Windows\Controls\ScrollAreaForPage.lua" />
     <None Include="script\ide\System\Windows\mcml\layout\LayoutImage.lua" />
+    <None Include="script\ide\System\Windows\mcml\layout\LayoutOverflow.lua" />
     <None Include="script\ide\System\Windows\mcml\layout\LayoutReplaced.lua" />
+    <None Include="script\ide\System\Windows\mcml\layout\LayoutScrollbar.lua" />
+    <None Include="script\ide\System\Windows\mcml\layout\LayoutScrollCorner.lua" />
     <None Include="script\ide\System\Windows\mcml\layout\LayoutTextControl.lua" />
     <None Include="script\ide\System\Windows\mcml\layout\LayoutTextControlMultiLine.lua" />
     <None Include="script\ide\System\Windows\mcml\layout\LayoutTextControlSingleLine.lua" />
+    <None Include="script\ide\System\Windows\mcml\platform\ScrollbarTheme.lua" />
     <None Include="script\ide\System\Windows\UITextElement.lua" />
     <None Include="script\ide\System\Windows\Controls\ProgressBar.lua" />
     <None Include="script\ide\System\Windows\Controls\ScrollArea.lua" />

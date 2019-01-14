@@ -156,6 +156,9 @@ end
 -- Returns true if the given point is inside or on the edge of the rectangle; otherwise returns false.
 function Rect:contains(x, y)
 	if(not y) then
+		if(x.xp and x.yp and x.w and x.h) then
+			return self.xp <= x.xp and self.yp <= x.yp and self.xp + self.w >= x.xp + x.w and self.yp + self.h >= x.yp + x.h;
+		end
 		y = x[2];
 		x = x[1];
 	end
@@ -191,5 +194,20 @@ function Rect:contains(x, y)
 		return false;
 	end
 
+	return true;
+end
+
+-- @param rect: another rect
+-- Returns true if self intersects with another one; otherwise returns false.
+function Rect:isIntersected(rect)
+	local l = math.max(self:left(), rect:left());
+    local t = math.max(self:top(), rect:top());
+    local r = math.min(self:right(), rect:right());
+    local b = math.min(self:bottom(), rect:bottom());
+
+    -- Return false for non-intersecting cases.
+    if (l >= r or t >= b) then
+        return false;
+    end
 	return true;
 end

@@ -1676,14 +1676,19 @@ function TextControl:ApplyCss(css)
 --	end
 end
 
-function TextControl:paintEvent(painter)
+function TextControl:updateGeometryIfNeeded()
 	if(self.needRecomputeTextHeight or self.needRecomputeTextWidth or self.needUpdateControlSize) then
 		self:updateGeometry();
 	end
+end
+
+function TextControl:paintEvent(painter)
+	--echo("TextControl:paintEvent")
+	self:updateGeometryIfNeeded()
 	local clipRegion = self:ClipRegion();
 	self.from_line = math.max(1, 1 + math.floor((-(self:y() - self.parent:ViewRegionOffsetY())) / self.lineHeight)); 
 	self.to_line = math.min(self.items:size(), 1 + math.ceil((-self:y() + clipRegion:height()) / self.lineHeight));
-
+	--echo(self:rect())
 	if(not self:isReadOnly() and (self:isAlwaysShowCurLineBackground() or (self.cursorVisible and self:hasFocus() and not self:isReadOnly()))) then
 		-- the curor line backgroud
 		local curline_x, curline_y = 0, (self.cursorLine - 1) * self.lineHeight;

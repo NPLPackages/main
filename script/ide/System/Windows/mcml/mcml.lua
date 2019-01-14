@@ -102,7 +102,7 @@ function mcml:LoadAllElements()
 		NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_span.lua");
 		Elements.pe_span:RegisterAs("span","label");
 		NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_container.lua");
-		Elements.pe_container:RegisterAs("pe:container");
+		Elements.pe_container:RegisterAs("pe:container","container");
 		NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_custom.lua");
 		Elements.pe_custom:RegisterAs("pe:custom");
 	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_script.lua");

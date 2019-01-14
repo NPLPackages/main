@@ -173,6 +173,13 @@ local enum_fields = {
 		["center"] = "CENTER",
 		["justify"] = "JUSTIFY",
 	}, enum = ComputedStyleConstants.TextAlignEnum},
+	["box-align"] = {map = {
+		["start"] = "BSTART",
+		["end"] = "BEND",
+		["center"] = "BCENTER",
+		["baseline"] = "BBASELINE",
+		["stretch"] = "BSTRETCH",
+	}, enum = ComputedStyleConstants.BoxAlignmentEnum},
 	["visibility"] = {map = { 
 		["visible"] = "VISIBLE",
 		["hidden"] = "HIDDEN",

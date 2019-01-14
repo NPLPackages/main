@@ -1141,7 +1141,7 @@ local function dirtyLineBoxesForRenderer(o, fullLayout)
 end
 
 function LayoutBlock:LayoutInlineChildren(relayoutChildren, repaintLogicalTop, repaintLogicalBottom)
-	--self.overflow.clear();
+	self.overflow = nil;
 
     self:SetLogicalHeight(self:BorderBefore() + self:PaddingBefore());
 	local isFullLayout = not self:FirstLineBox() or self:SelfNeedsLayout() or relayoutChildren;
@@ -1503,10 +1503,11 @@ function LayoutBlock:LayoutRunsAndFloats(layoutState, hasInlineChild)
 
 	local firstLineBox = self:FirstLineBox();
 	local lastLineBox = self:LastLineBox();
-
+	echo("LayoutRunsAndFloats printLineBoxsInfo")
+	self:PrintNodeInfo()
 	local lineBox = firstLineBox;
 	while(lineBox) do
-		--printLineBoxsInfo(lineBox);
+		printLineBoxsInfo(lineBox);
 		lineBox = lineBox:NextRootBox();
 	end
 --    linkToEndLineIfNeeded(layoutState);
@@ -1612,7 +1613,9 @@ local function setLogicalWidthForTextRun(lineBox, run, renderer, xPos, lineInfo,
 --        const Font& font = renderer->style(lineInfo.isFirstLine())->font();
 --        hyphenWidth = measureHyphenWidth(renderer, font);
 --    }
-    run.box:SetLogicalWidth(renderer:Width(run.start, run.stop - run.start + 1, xPos, lineInfo:IsFirstLine(), fallbackFonts, glyphOverflow) + hyphenWidth);
+	echo("run.box:SetLogicalWidth")
+	echo({run.start, run.stop, })
+    run.box:SetLogicalWidth(renderer:Width(run.start, run.stop - run.start - 1, xPos, lineInfo:IsFirstLine(), fallbackFonts, glyphOverflow) + hyphenWidth);
 	if(not textBoxDataMap[run.box:ToInlineTextBox()]) then
 		textBoxDataMap[run.box:ToInlineTextBox()] = {};
 	end
@@ -1716,6 +1719,7 @@ function LayoutBlock:ComputeInlineDirectionPositionsForLine(lineBox, lineInfo, f
 					local renderBox = r.object;
 --					if (renderBox->isRubyRun())
 --						setMarginsForRubyRun(r, toRenderRubyRun(renderBox), previousObject, lineInfo);
+					echo("r.box:SetLogicalWidth")
 					r.box:SetLogicalWidth(self:LogicalWidthForChild(renderBox));
 					totalLogicalWidth = totalLogicalWidth + self:MarginStartForChild(renderBox) + self:MarginEndForChild(renderBox);
 				end
@@ -1745,6 +1749,8 @@ end
 --void RenderBlock::computeBlockDirectionPositionsForLine(RootInlineBox* lineBox, BidiRun* firstRun, GlyphOverflowAndFallbackFontsMap& textBoxDataMap,
 --                                                        VerticalPositionCache& verticalPositionCache)
 function LayoutBlock:ComputeBlockDirectionPositionsForLine(lineBox, firstRun, textBoxDataMap, verticalPositionCache)
+	echo("LayoutBlock:ComputeBlockDirectionPositionsForLine")
+	self:PrintNodeInfo()
 	self:SetLogicalHeight(lineBox:AlignBoxesInBlockDirection(self:LogicalHeight(), textBoxDataMap, verticalPositionCache));
 	-- Now make sure we place replaced render objects correctly.
 	local r = firstRun;
@@ -2197,11 +2203,6 @@ function LayoutBlock:RepaintDirtyFloats(floats)
     end
 end
 
-function LayoutBlock:LinkToEndLineIfNeeded(layoutState)
-	-- TODO: fixed latter;
-end
-
-
 local function createRun(_start, _end, obj, resolver)
     return BidiRun:new():init(_start, _end, obj, resolver:Context(), resolver:Dir());
 end
@@ -2584,4 +2585,22 @@ function LayoutBlock:LinkToEndLineIfNeeded(layoutState)
 			layoutState:SetLastFloat(floatingObjectSet:last());
 		end
     end
+end
+
+function LayoutBlock:AddOverflowFromInlineChildren()
+    local endPadding = if_else(self:HasOverflowClip(), self:PaddingEnd(), 0);
+    -- FIXME: Need to find another way to do this, since scrollbars could show when we don't want them to.
+    --if (hasOverflowClip() && !endPadding && node() && node()->rendererIsEditable() && node() == node()->rootEditableElement() && style()->isLeftToRightDirection())
+--	if (self:HasOverflowClip() and endPadding == 0 and self:Style():IsLeftToRightDirection()) then
+--        endPadding = 1;
+--	end
+	local curr = self:FirstRootBox();
+	while(curr) do
+		echo("LayoutBlock:AddOverflowFromInlineChildren")
+		self:AddLayoutOverflow(curr:PaddedLayoutOverflowRect(endPadding));
+        if (not self:HasOverflowClip()) then
+            self:AddVisualOverflow(curr:VisualOverflowRect(curr:LineTop(), curr:LineBottom()));
+		end
+		curr = curr:NextRootBox();
+	end
 end
