@@ -599,7 +599,7 @@ function LayoutInline:ClippedOverflowRectForRepaint(repaintContainer)
 --    local cb = self:ContainingBlock();
 --	local inlineFlow = self;
 --	while(inlineFlow and inlineFlow:IsLayoutInline() and inlineFlow ~= cb) do
---		if (inlineFlow:Style():Position() == RelativePosition and inlineFlow:HasLayer()) then
+--		if (inlineFlow:Style():Position() == PositionEnum.RelativePosition and inlineFlow:HasLayer()) then
 --            inlineFlow:ToRenderInline():Layer():RelativePositionOffset(left, top);
 --		end
 --		

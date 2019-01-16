@@ -3938,17 +3938,49 @@ function LayoutBlock:NewLine(clear)
 	end
 end
 
+function LayoutBlock:ShouldPaint()
+	if(self:HasSelfPaintingLayer()) then
+		return true;
+	end
+	local layer = nil;
+	local offsetFromLayer = LayoutPoint:new();
+	local curr = self;
+    while (curr) do
+		if(curr:HasLayer()) then
+			layer = curr:Layer();
+		end
+        if (layer) then
+			local scrollOffset = layer:ScrolledContentOffset()
+			offsetFromLayer:Move(-scrollOffset:Width(), -scrollOffset:Height());
+            break;
+		end
+		offsetFromLayer:MoveBy(curr:Location());
+
+        curr = curr:Parent();
+    end
+	local w, h = layer:Size():Width() - layer:VerticalScrollbarWidth(), layer:Size():Height() - layer:HorizontalScrollbarHeight()
+	local layerClipRect = LayoutRect:new_from_pool(0, 0, w, h);
+	local selfRect = LayoutRect:new_from_pool(offsetFromLayer, self:Size())
+	local rect = Rect.Intersection(selfRect, layerClipRect);
+	if(rect:IsEmpty()) then
+		return false;
+	end
+	return true;
+end
+
 --void RenderBlock::paint(PaintInfo& paintInfo, const LayoutPoint& paintOffset)
 function LayoutBlock:Paint(paintInfo, paintOffset)
 	echo("LayoutBlock:Paint")
 	self:PrintNodeInfo()
 	echo(paintInfo:Rect())
 	echo(paintOffset)
+--	if(not self:ShouldPaint()) then
+--		self:DetachControl();	
+--		return;
+--	end
+--	self:AttachControl();
     --local adjustedPaintOffset = paintOffset + self:Location();
 	local adjustedPaintOffset = paintOffset;
-    -- default implementation. Just pass paint through to the children
---    PaintInfo childInfo(paintInfo);
---    childInfo.updatePaintingRootForChildren(this);
 	self:PaintObject(paintInfo, adjustedPaintOffset)
 
 	-- Our scrollbar widgets paint exactly when we tell them to, so that they work properly with
@@ -3987,8 +4019,15 @@ function LayoutBlock:PaintBoxDecorations(paintInfo, paintOffset)
 	echo(paintOffset)
 	echo(self:HasSelfPaintingLayer())
 	local rect = self.frame_rect:clone_from_pool();
-	if(self:InlineBoxWrapper() == nil) then
+	if(self:InlineBoxWrapper() == nil and self:Parent() and self:Parent():HasSelfPaintingLayer()) then
 		rect:Move(paintOffset:X(), paintOffset:Y());
+	end
+	if(self:HasSelfPaintingLayer()) then
+		local layer = self:Layer();
+		if(layer:Parent()) then
+			local parentScrollOffset = layer:Parent():ScrolledContentOffset();
+			rect:Move(-parentScrollOffset)
+		end
 	end
 	--rect:Move(paintOffset:X(), paintOffset:Y());
 	self:PaintBackground(paintInfo, rect);
@@ -4045,6 +4084,7 @@ function LayoutBlock:PaintChildren(paintInfo, paintOffset)
 	self:PrintNodeInfo()
 	echo(paintOffset)
 	local childInfo = paintInfo:clone();
+	childInfo:UpdatePaintingRootForChildren(self);
 	childInfo:Rect():SetX(childInfo:Rect():X() - self:X())
 	childInfo:Rect():SetY(childInfo:Rect():Y() - self:Y())
 	local child = self:FirstChild();
@@ -5079,4 +5119,11 @@ end
 -- virtual void scrollbarsChanged(bool horizontalScrollbarChanged, bool verticalScrollbarChanged);
 function LayoutBlock:ScrollbarsChanged(horizontalScrollbarChanged, verticalScrollbarChanged)
 
+end
+
+function LayoutBlock:AdjustForColumns(offset, point)
+    if (not self:HasColumns()) then
+        return;
+	end
+	-- TODO: add later;
 end

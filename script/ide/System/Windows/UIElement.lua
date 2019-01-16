@@ -85,6 +85,9 @@ UIElement:Property({"mouseTracking", nil, "hasMouseTracking", "setMouseTracking"
 UIElement:Property({"render_priority", 0, auto=true});
 
 UIElement:Property({"clip", false, "IsClip", "SetClip", auto=true});
+-- a rect value,  clip region for self. the corresponding of attribute for css property "clip". now wo do't use it.
+UIElement:Property({"selfClipRegion", nil, "GetSelfClipRegion", "SetSelfClipRegion", auto=true});
+UIElement:Property({"childrenClip", false, "IsChildrenClip", "SetChildrenClip", auto=true});
 UIElement:Property({"disabled", false, "isDisabled", "SetDisabled", auto=true});
 
 -- number of posted events
@@ -598,14 +601,23 @@ function UIElement:prepareToPaintEvent(event)
 	local func = self[event:GetHandlerFuncName()];
 	local needClip = self:needClipping();
 	if(needClip) then
+		--echo("UIElement:prepareToPaintEvent")
+		--echo(self:GetField("Name","no Name"))
+--		if(self._page_element) then
+--			self._page_element:PrintNodeInfo()
+--		end
 		local clipRect = self:ClipRegion();
 		local rect = self:rect();
+		--echo(clipRect)
+		--echo(rect)
+		--echo(clipRect:contains(rect))
+		--echo(clipRect:isIntersected(self:rect()))
 		if(clipRect:contains(rect)) then
 			func(self, event);
 			return;
 		end
 		if(clipRect:isIntersected(self:rect())) then
-			self:setClipRegion(event);
+			self:setClipRegion(event, clipRect);
 			func(self, event);
 			self:resetClipRegion(event);
 			return;
@@ -678,6 +690,8 @@ function UIElement:childAt(point)
 end
 
 function UIElement:childAt_helper(point)
+	--echo("UIElement:childAt_helper")
+	--echo(self:GetField("Name","nil"))
 	if(not self:isHidden() and self.children and not self.children:empty()) then
 		if (self:pointInsideRectAndMask(point)) then
 			return self:childAtRecursiveHelper(point);
@@ -688,7 +702,10 @@ end
 -- private: 
 -- @param p: point in local coordinate system. 
 function UIElement:childAtRecursiveHelper(p)
+	--echo("UIElement:childAtRecursiveHelper")
+	--echo(self:GetField("Name","nil"))
 	if(not self.children) then
+		--echo("111111111111111")
 		return
 	end
 	local child = self.children:last();
@@ -703,17 +720,27 @@ function UIElement:childAtRecursiveHelper(p)
 				-- Do the same for the child's descendants.
 				return child:childAtRecursiveHelper(childPoint) or child;
 			else
+				--echo("return child;")
+				--echo(child:GetField("Name","nil"))
 				return child;
 			end
 		end
 		child = self.children:prev(child);
 	end
+	--echo("222222222222")
 end
 
 function UIElement:pointInsideRectAndMask(p)
+	--echo("UIElement:pointInsideRectAndMask")
+	--echo(self:GetField("Name","nil"))
+	--echo(self:rect())
+	--echo(p)
 	local posInClip = true;
-	if(self.clip) then
+	if(self:needClipping()) then
 		local clip = self:ClipRegion();
+		--echo("self.clip")
+		--echo(clip)
+		--echo(p)
 		if(clip) then
 			posInClip = clip:contains(p);
 		end
@@ -1089,21 +1116,23 @@ function UIElement:emitSizeChanged()
 end
 
 function UIElement:needClipping()
-	local parent = self;
+	if(self:IsClip()) then
+		return true;
+	end
+	local parent = self.parent;
 	while(parent) do
-		if(parent:IsClip()) then
+		if(parent:IsClip() or parent:IsChildrenClip()) then
 			return true;
 		end
 		parent = parent.parent;
 	end
---	if(self._page_element and self._page_element:IsClip()) then
---		return true;
---	end
+	return false;
 end
 
-function UIElement:setClipRegion(painter)
+function UIElement:setClipRegion(painter, rect)
 	if(self:needClipping()) then
-		local clip = self:ClipRegion();
+		--local clip = self:ClipRegion();
+		local clip = rect;
 		painter:Save();
 		painter:SetClipRegion(self:x() + clip:x(), self:y() +clip:y(),clip:width(),clip:height());
 	end
@@ -1116,8 +1145,17 @@ function UIElement:resetClipRegion(painter)
 end
 
 function UIElement:ParentClipRegion()
-	if(self.parent and self.parent.ClipRegion) then
-		local clip_rect = self.parent:ClipRegion();
+--	if(self.parent and self.parent.ClipRegion) then
+--		local clip_rect = self.parent:ClipRegion();
+--		if(clip_rect) then
+--			clip_rect:setX(clip_rect:x() - self:x());
+--			clip_rect:setY(clip_rect:y() - self:y());
+--			return clip_rect;
+--		end
+--	end
+
+	if(self.parent) then
+		local clip_rect = self.parent:SelfAndParentClipIntersection();
 		if(clip_rect) then
 			clip_rect:setX(clip_rect:x() - self:x());
 			clip_rect:setY(clip_rect:y() - self:y());
@@ -1126,17 +1164,80 @@ function UIElement:ParentClipRegion()
 	end
 end
 
--- clip region. 
-function UIElement:ClipRegion()
+function UIElement:SelfAndParentClipIntersection()
+	--echo("UIElement:SelfAndParentClipIntersection")
+	--echo(self:GetField("Name","no Name"))
+	local clipRegion, parentClipRegion;
 	if(self:IsClip()) then
-		return self:rect();
-	else
-		return self:ParentClipRegion();
+		clipRegion = self:GetSelfClipRegion();
+		if(clipRegion == nil) then
+			clipRegion = self:rect();
+		else
+			clipRegion = clipRegion:clone_from_pool();
+		end
 	end
+	if(self:GetParent() and self:GetParent():IsChildrenClip()) then
+		parentClipRegion = self:GetParent():rect();
+		parentClipRegion:setX(parentClipRegion:x() - self:x());
+		parentClipRegion:setY(parentClipRegion:y() - self:y());
+	end
+	--echo(clipRegion)
+	--echo(parentClipRegion)
+	if(clipRegion) then
+		if(parentClipRegion) then
+			clipRegion = Rect.intersection(clipRegion, parentClipRegion);
+		end
+	elseif(parentClipRegion) then
+		clipRegion = parentClipRegion;
+	end
+	--echo("UIElement:SelfAndParentClipIntersection end")
+	return clipRegion;
 end
 
-function UIElement:PageElementClipRegion()
-	if(self._page_element and self._page_element:IsClip()) then
-		return self._page_element:ClipRegion();
+-- clip region. 
+function UIElement:ClipRegion()
+	--echo("UIElement:ClipRegion")
+	--echo(self:GetField("Name","no Name"))
+--	if(self:IsClip()) then
+--		return self:rect();
+--	else
+--		return self:ParentClipRegion();
+--	end
+
+	
+	local clipRegion = self:SelfAndParentClipIntersection();
+	--echo(clipRegion)
+	local offsetX, offsetY = self:x(),self:y()
+	parent = self:GetParent();
+	while(parent) do
+		--echo("while(parent) do")
+		local parentClipRegion = parent:SelfAndParentClipIntersection();
+		--echo(parentClipRegion)
+		--echo(clipRegion)
+		if(parentClipRegion) then
+			parentClipRegion:setX(parentClipRegion:x() - offsetX);
+			parentClipRegion:setY(parentClipRegion:y() - offsetY);
+
+			if(clipRegion) then
+				clipRegion = Rect.intersection(clipRegion, parentClipRegion);
+			else
+				clipRegion = parentClipRegion;
+			end
+		end
+
+		offsetX = offsetX + parent:x();
+		offsetY = offsetY + parent:y();
+		parent = parent:GetParent();
+	end
+	return clipRegion;
+end
+
+function UIElement:SetSelfClipRegion(rect)
+	if(rect == nil) then
+		self.clip = false;
+		self.selfClipRegion = nil;
+	else
+		self.clip = true;
+		self.selfClipRegion = rect;
 	end
 end

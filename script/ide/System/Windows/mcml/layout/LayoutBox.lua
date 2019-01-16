@@ -409,7 +409,7 @@ function LayoutBox:VerticalScrollbarWidth()
 end
 
 function LayoutBox:HorizontalScrollbarHeight()
-	echo("LayoutBox:HorizontalScrollbarHeight")
+--	echo("LayoutBox:HorizontalScrollbarHeight")
 	if(self:IncludeHorizontalScrollbarSize()) then
 		return self:Layer():HorizontalScrollbarHeight()
 	end
@@ -2239,7 +2239,7 @@ function LayoutBox:ClippedOverflowRectForRepaint(repaintContainer)
         end
     end
     
-    self:ComputeRectForRepaint(repaintContainer, rect);
+    rect = self:ComputeRectForRepaint(repaintContainer, rect);
     return rect;
 end
 
@@ -2248,28 +2248,111 @@ function LayoutBox:ComputeRectForRepaint(repaintContainer, rect, fixed)
 	-- parameter default value;
 	fixed = if_else(fixed == nil, false, fixed);
 
-	-- TODO: fixed latter;
+	local v = self:View();
+    if (v) then
+        -- LayoutState is only valid for root-relative, non-fixed position repainting
+        if (v:LayoutStateEnabled() and repaintContainer ~= nil and self:Style():Position() ~= PositionEnum.FixedPosition) then
+            local layoutState = v:LayoutState();
 
-	if (repaintContainer == self) then
-		return;
+            if (self:Layer() ~= nil and self:Layer():Transform() ~= nil) then
+                --rect = layer()->transform()->mapRect(rect);
+			end
+
+            if (self:Style():Position() == PositionEnum.RelativePosition and self:Layer()) then
+                rect:Move(self:Layer():RelativePositionOffset());
+			end
+
+            rect:MoveBy(self:Location());
+            rect:Move(layoutState.paintOffset);
+            if (layoutState.clipped) then
+                rect:Intersect(layoutState.clipRect);
+			end
+            return rect;
+        end
+    end
+
+    if (self:HasReflection()) then
+        --rect.unite(reflectedRect(rect));
 	end
 
-    local object, containerSkipped = self:Container(repaintContainer);
-	if(not object) then
-		return;
-	end
+    if (repaintContainer == self) then
+        if (repaintContainer:Style():IsFlippedBlocksWritingMode()) then
+            rect = self:FlipForWritingMode(rect);
+		end
+        return rect;
+    end
 
+    local o, containerSkipped = self:Container(repaintContainer);
+	if(o == nil) then
+		return rect;
+	end
+	if (self:IsWritingModeRoot() and not self:IsPositioned()) then
+        rect = self:FlipForWritingMode(rect);
+	end
 	local topLeft = rect:Location();
     topLeft:Move(self:X(), self:Y());
 
 	local position = self:Style():Position();
 
-	fixed = position == PositionEnum.FixedPosition;
+	-- We are now in our parent container's coordinate space.  Apply our transform to obtain a bounding box
+    -- in the parent's coordinate space that encloses us.
+    if (self:Layer() and self:Layer():Transform()) then
+        --fixed = position == PositionEnum.FixedPosition;
+        --rect = layer()->transform()->mapRect(rect);
+        --topLeft = rect.location();
+        --topLeft.move(x(), y());
+    elseif (position == PositionEnum.FixedPosition) then
+        fixed = true;
+	end
+    if (position == PositionEnum.AbsolutePosition and o:IsRelPositioned() and o:IsRenderInline()) then
+        topLeft = topLeft + o:ToRenderInline():RelativePositionedInlineOffset(self);
+    elseif (position == PositionEnum.RelativePosition and self:Layer()) then
+        -- Apply the relative position offset when invalidating a rectangle.  The layer
+        -- is translated, but the render box isn't, so we need to do this to get the
+        -- right dirty rect.  Since this is called from RenderObject::setStyle, the relative position
+        -- flag on the RenderObject has been cleared, so use the one on the style().
+        topLeft = topLeft + self:Layer():RelativePositionOffset();
+    end
+    
+    if (o:IsBlockFlow() and position ~= PositionEnum.AbsolutePosition and position ~= PositionEnum.FixedPosition) then
+        local cb = o:ToRenderBlock();
+        if (cb:HasColumns()) then
+            --LayoutRect repaintRect(topLeft, rect.size());
+            --cb->adjustRectForColumns(repaintRect);
+            --topLeft = repaintRect.location();
+            --rect = repaintRect;
+        end
+    end
 
-	-- TODO: layer transform latter add
+    -- FIXME: We ignore the lightweight clipping rect that controls use, since if |o| is in mid-layout,
+    -- its controlClipRect will be wrong. For overflow clip we use the values cached by the layer.
+    if (o:HasOverflowClip()) then
+        local containerBox = o:ToRenderBox();
+
+        -- o->height() is inaccurate if we're in the middle of a layout of |o|, so use the
+        -- layer's size instead.  Even if the layer's size is wrong, the layer itself will repaint
+        -- anyway if its size does change.
+        topLeft = topLeft - containerBox:Layer():ScrolledContentOffset(); -- For overflow:auto/scroll/hidden.
+
+        local repaintRect = LayoutRect:new_from_pool(topLeft, rect:Size());
+        local boxRect = LayoutRect:new_from_pool(LayoutPoint:new(), containerBox:Layer():Size());
+        rect = Rect.Intersection(repaintRect, boxRect);
+        if (rect:IsEmpty()) then
+            return rect;
+		end
+   else
+        rect:SetLocation(topLeft);
+	end
+    if (containerSkipped) then
+        -- If the repaintContainer is below o, then we need to map the rect into repaintContainer's coordinates.
+        local containerOffset = repaintContainer:OffsetFromAncestorContainer(o);
+        rect:Move(-containerOffset);
+        return rect;
+    end
 
 
-	object:ComputeRectForRepaint(repaintContainer, rect, fixed);
+	rect = o:ComputeRectForRepaint(repaintContainer, rect, fixed);
+	return rect;
 end
 
 function LayoutBox:HasControlClip()
@@ -2281,9 +2364,8 @@ function LayoutBox:Paint(paintInfo, paintOffset)
     --local adjustedPaintOffset = paintOffset + self:Location();
 	local adjustedPaintOffset = paintOffset;
     -- default implementation. Just pass paint through to the children
---    PaintInfo childInfo(paintInfo);
---    childInfo.updatePaintingRootForChildren(this);
 	local childInfo = paintInfo:clone();
+	childInfo:UpdatePaintingRootForChildren(self);
 	childInfo:Rect():SetX(childInfo:Rect():X() - self:X())
 	childInfo:Rect():SetY(childInfo:Rect():Y() - self:Y())
 	local child = self:FirstChild();
@@ -2383,7 +2465,7 @@ function LayoutBox:LayoutOverflowRectForPropagation(parentStyle)
 		-- If we are relatively positioned or if we have a transform, then we have to convert
 		-- this rectangle into physical coordinates, apply relative positioning and transforms
 		-- to it, and then convert it back.
-		self:FlipForWritingMode(rect);
+		rect = self:FlipForWritingMode(rect);
 	
 		if (hasTransform) then
 			-- rect = layer()->currentTransform().mapRect(rect);
@@ -2394,7 +2476,7 @@ function LayoutBox:LayoutOverflowRectForPropagation(parentStyle)
 		end
 	
 		-- Now we need to flip back.
-		self:FlipForWritingMode(rect);
+		rect = self:FlipForWritingMode(rect);
 	end
 
 	-- If the writing modes of the child and parent match, then we don't have to 
@@ -2463,7 +2545,7 @@ function LayoutBox:AddOverflowFromChild(child, delta)
 	end
 	local childLayoutOverflowRect = child:LayoutOverflowRectForPropagation(self:Style());
     childLayoutOverflowRect:Move(delta);
-	echo("LayoutBox:AddOverflowFromChild")
+--	echo("LayoutBox:AddOverflowFromChild")
     self:AddLayoutOverflow(childLayoutOverflowRect);
             
     -- Add in visual overflow from the child.  Even if the child clips its overflow, it may still
@@ -2479,8 +2561,8 @@ end
 
 --void RenderBox::addLayoutOverflow(const LayoutRect& rect)
 function LayoutBox:AddLayoutOverflow(rect)
-	echo("LayoutBox:AddLayoutOverflow begin")
-	echo(rect)
+--	echo("LayoutBox:AddLayoutOverflow begin")
+--	echo(rect)
     local clientBox = self:ClientBoxRect();
     if (clientBox:Contains(rect) or rect:IsEmpty()) then
         return;
@@ -2515,8 +2597,8 @@ function LayoutBox:AddLayoutOverflow(rect)
     if (not self.overflow) then
         self.overflow = LayoutOverflow:new():init(clientBox, self:BorderBoxRect());
 	end
-    echo("LayoutBox:AddLayoutOverflow end")
-	echo("self.overflow:AddLayoutOverflow")
+--    echo("LayoutBox:AddLayoutOverflow end")
+--	echo("self.overflow:AddLayoutOverflow")
     self.overflow:AddLayoutOverflow(overflowRect);
 end
 
@@ -3251,7 +3333,7 @@ function LayoutBox:ClippedOverflowRectForRepaint(repaintContainer)
         end
     end
     
-    self:ComputeRectForRepaint(repaintContainer, r);
+    r = self:ComputeRectForRepaint(repaintContainer, r);
     return r;
 end
 
@@ -3293,6 +3375,8 @@ end
 
 --LayoutRect RenderBox::overflowClipRect(const LayoutPoint& location, RenderRegion* region, OverlayScrollbarSizeRelevancy relevancy)
 function LayoutBox:OverflowClipRect(location, region, relevancy)
+	echo("LayoutBox:OverflowClipRect")
+	echo(location)
     -- FIXME: When overflow-clip (CSS3) is implemented, we'll obtain the property
     -- here.
     local clipRect = self:BorderBoxRectInRegion(region);
@@ -3303,7 +3387,7 @@ function LayoutBox:OverflowClipRect(location, region, relevancy)
     if (self:Layer()) then
         clipRect:Contract(self:Layer():VerticalScrollbarWidth(relevancy), self:Layer():HorizontalScrollbarHeight(relevancy));
 	end
-
+	echo(clipRect)
     return clipRect;
 end
 

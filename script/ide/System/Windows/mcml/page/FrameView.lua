@@ -322,11 +322,13 @@ function FrameView:VisibleContentRect(includeScrollbars)
 	includeScrollbars = if_else(includeScrollbars == nil, false, includeScrollbars);
 
 	-- TODO: fixed later;
-	local x ,y ,w, h = 0, 0, self:LayoutWidth(), self:LayoutHeight();
+	local x ,y ,w, h = self.scrollOffset:Width(), self.scrollOffset:Height(), self:LayoutWidth(), self:LayoutHeight();
 	return Rect:new_from_pool(x ,y ,w, h);
 end
 
 function FrameView:AddDirtyArea(x, y, w, h)
+	echo("FrameView:AddDirtyArea")
+	echo({x, y, w, h})
     if (w > 0 and h > 0) then
         self.dirtyArea:Unite(Rect:new_from_pool(x, y, w, h));
         self.dirty = true;
@@ -376,8 +378,10 @@ function FrameView:RepaintContentRectangle(rect, immediate)
 	local paintRect = rect:clone();
     if (self:ClipsRepaints() and not self:PaintsEntireContents()) then
 		echo("paintRect:Intersect")
+		echo(self:VisibleContentRect())
         paintRect:Intersect(self:VisibleContentRect());
 	end
+	echo(paintRect)
     if (paintRect:IsEmpty()) then
         return;
 	end

@@ -299,6 +299,52 @@ function LayoutBoxModelObject:StyleWillChange(diff, newStyle)
         s_layerWasSelfPainting = self:Layer():IsSelfPaintingLayer();
 	end
 
+		-- If our z-index changes value or our visibility changes,
+    -- we need to dirty our stacking context's z-order list.
+    if (self:Style() and newStyle) then
+        if (self:Parent()) then
+            -- Do a repaint with the old style first, e.g., for example if we go from
+            -- having an outline to not having an outline.
+            if (diff == StyleDifferenceEnum.StyleDifferenceRepaintLayer) then
+                self:Layer():RepaintIncludingDescendants();
+                if (not (self:Style():Clip() == newStyle:Clip())) then
+                    self:Layer():ClearClipRectsIncludingDescendants();
+				end
+            elseif (diff == StyleDifferenceEnum.StyleDifferenceRepaint or newStyle:OutlineSize() < self:Style():OutlineSize()) then
+                self:Repaint();
+			end
+        end
+        
+        if (diff == StyleDifferenceEnum.StyleDifferenceLayout or diff == StyleDifferenceEnum.StyleDifferenceSimplifiedLayout) then
+            -- When a layout hint happens, we go ahead and do a repaint of the layer, since the layer could
+            -- end up being destroyed.
+            if (self:HasLayer()) then
+                if (self:Style():Position() ~= newStyle:Position() or
+                    self:Style():ZIndex() ~= newStyle:ZIndex() or
+                    self:Style():HasAutoZIndex() ~= newStyle:HasAutoZIndex() or
+                    not (self:Style():Clip() == newStyle:Clip()) or
+                    self:Style():HasClip() ~= newStyle:HasClip() or
+                    self:Style():Opacity() ~= newStyle:Opacity() or
+                    self:Style():Transform() ~= newStyle:Transform()) then
+					self:Layer():RepaintIncludingDescendants();
+				end
+            elseif (newStyle:HasTransform() or newStyle:Opacity() < 1) then
+                -- If we don't have a layer yet, but we are going to get one because of transform or opacity,
+                --  then we need to repaint the old position of the object.
+                self:Repaint();
+            end
+        end
+
+        if (self:HasLayer() and (self:Style():HasAutoZIndex() ~= newStyle:HasAutoZIndex() or
+                           self:Style():ZIndex() ~= newStyle:ZIndex() or
+                           self:Style():Visibility() ~= newStyle:Visibility())) then
+			self:Layer():DirtyStackingContextZOrderLists();
+            if (self:Style():HasAutoZIndex() ~= newStyle:HasAutoZIndex() or self:Style():Visibility() ~= newStyle:Visibility()) then
+                self:Layer():DirtyZOrderLists();
+			end
+        end
+    end
+
 	LayoutBoxModelObject._super.StyleWillChange(self, diff, newStyle);
 end
 
@@ -485,7 +531,10 @@ function LayoutBoxModelObject:PaintFillLayerExtended(paintInfo, rect)
 		end
 
 		local clip = self:NeedClip();
+		echo("clip")
+		echo(clip)
 		control:SetClip(clip)
+		--control:SetChildrenClip(clip)
 
 		local x, y, w, h = rect:X(), rect:Y(), rect:Width(), rect:Height();
 		echo({x, y, w, h});

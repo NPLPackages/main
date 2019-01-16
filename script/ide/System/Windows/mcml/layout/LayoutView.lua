@@ -268,3 +268,19 @@ end
 function LayoutView:LayoutStateEnabled() 
 	return self.layoutStateDisableCount == 0 and self.layoutState ~= nil;
 end
+
+--IntRect RenderView::unscaledDocumentRect() const
+function LayoutView:UnscaledDocumentRect()
+    local overflowRect = self:LayoutOverflowRect();
+    overflowRect = self:FlipForWritingMode(overflowRect);
+    return overflowRect;
+end
+
+--IntRect RenderView::documentRect() const
+function LayoutView:DocumentRect()
+    local overflowRect = self:UnscaledDocumentRect();
+    if (self:HasTransform()) then
+        --overflowRect = layer()->currentTransform().mapRect(overflowRect);
+	end
+    return overflowRect;
+end

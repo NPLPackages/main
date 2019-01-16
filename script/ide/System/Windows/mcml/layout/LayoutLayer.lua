@@ -25,7 +25,7 @@ local ComputedStyleConstants = commonlib.gettable("System.Windows.mcml.style.Com
 local PaintInfo = commonlib.gettable("System.Windows.mcml.layout.PaintInfo");
 local LayoutPoint = commonlib.gettable("System.Windows.mcml.platform.graphics.IntPoint");
 local LayoutSize = commonlib.gettable("System.Windows.mcml.platform.graphics.IntSize");
-local LayoutRect = commonlib.gettable("System.Windows.mcml.platform.graphics.IntRect");
+local Rect = commonlib.gettable("System.Windows.mcml.platform.graphics.IntRect");
 
 local LayoutLayer = commonlib.inherit(commonlib.gettable("System.Windows.mcml.platform.ScrollableArea"), commonlib.gettable("System.Windows.mcml.layout.LayoutLayer"));
 
@@ -35,6 +35,8 @@ local PositionEnum = ComputedStyleConstants.PositionEnum;
 local OverflowEnum = ComputedStyleConstants.OverflowEnum;
 local MarqueeBehaviorEnum = ComputedStyleConstants.MarqueeBehaviorEnum;
 local ResizeEnum = ComputedStyleConstants.ResizeEnum;
+
+local LayoutRect,IntRect = Rect, Rect;
 
 local ClipRect = commonlib.gettable("System.Windows.mcml.layout.ClipRect");
 local ClipRects = commonlib.gettable("System.Windows.mcml.layout.ClipRects");
@@ -289,6 +291,47 @@ function LayoutLayer:ctor()
 	self.blockSelectionGapsBounds = 0;
 
 	self.backing = nil;
+
+	self.inClipRect = true;
+end
+
+function LayoutLayer:InClipRect()
+	return self.inClipRect;
+end
+
+function LayoutLayer:IsInClipRect()
+	if(not self:Parent()) then
+		--return true;
+	elseif(self:Parent():InClipRect() == false) then
+		self.inClipRect = false;
+	else
+		echo("LayoutLayer:IsInClipRect")
+		self:Renderer():PrintNodeInfo()
+		echo({self:Parent():Location(), self:Location()})
+		local parentRect = IntRect:new_from_pool(0, 0, self:Parent():Size():Width(), self:Parent():Size():Height())
+		local selfRect = IntRect:new_from_pool(self:Location(), self:Size())
+
+--		local scrollOffset = self:Parent():ScrolledContentOffset();
+--		echo(scrollOffset)
+--		selfRect:Move(scrollOffset);
+
+--		if (self:Renderer():IsRelPositioned()) then
+--			--local relativeOffset = self:Renderer():RelativePositionOffset();
+--			selfRect:Move(self.relativeOffset);
+--		end
+		echo(selfRect)
+		echo(parentRect)
+		local rect = Rect.Intersection(parentRect, selfRect);
+
+		self.inClipRect = if_else(rect:IsEmpty(), false, true)
+	end
+
+	return self.inClipRect;
+end
+
+--const LayoutSize& relativePositionOffset() const { return m_relativeOffset; }
+function LayoutLayer:RelativePositionOffset()
+	return self.relativeOffset;
 end
 
 function LayoutLayer:Destroy(renderArena)
@@ -377,6 +420,7 @@ end
 function LayoutLayer:ShouldBeNormalFlowOnly()
 	local r = self:Renderer();
     return (r:HasOverflowClip()
+				or r:IsLayoutView()
                 or r:HasReflection()
                 or r:HasMask()
                 or r:IsCanvas()
@@ -750,9 +794,10 @@ end
 
 --void RenderLayer::updateLayerPositions(LayoutPoint* offsetFromRoot, UpdateLayerPositionsFlags flags)
 function LayoutLayer:UpdateLayerPositions(offsetFromRoot, flags)
-	
+	echo("LayoutLayer:UpdateLayerPositions begin")
+	self:Renderer():PrintNodeInfo()
 	self:UpdateLayerPosition();
-
+	echo("LayoutLayer:UpdateLayerPositions 1111111111")
 		local oldOffsetFromRoot;
     if (offsetFromRoot) then
         -- We can't cache our offset to the repaint container if the mapping is anything more complex than a simple translation
@@ -781,8 +826,9 @@ function LayoutLayer:UpdateLayerPositions(offsetFromRoot, flags)
         -- as canUseConvertToLayerCoords may be true for an ancestor layer.
         offset = self:ConvertToLayerCoords(self:Root(), offset);
     end
+	echo("LayoutLayer:UpdateLayerPositions 22222222222")
     self:PositionOverflowControls(offset:ToSize());
-
+	echo("LayoutLayer:UpdateLayerPositions 33333333333")
     self:UpdateVisibilityStatus();
 
     if (self.hasVisibleContent) then
@@ -805,7 +851,7 @@ function LayoutLayer:UpdateLayerPositions(offsetFromRoot, flags)
 	end
 
 	self.needsFullRepaint = false;
-
+	echo("LayoutLayer:UpdateLayerPositions 44444444444444444444")
 	local child = self:FirstChild();
 	while(child) do
 		child:UpdateLayerPositions(offsetFromRoot, flags);
@@ -815,6 +861,7 @@ function LayoutLayer:UpdateLayerPositions(offsetFromRoot, flags)
 	if (offsetFromRoot) then
         offsetFromRoot = oldOffsetFromRoot;
 	end
+	echo("LayoutLayer:UpdateLayerPositions end")
 end
 
 function LayoutLayer:RemoveOnlyThisLayer()
@@ -1013,10 +1060,13 @@ end
 
 --void RenderLayer::computeRepaintRects(IntPoint* offsetFromRoot)
 function LayoutLayer:ComputeRepaintRects(offsetFromRoot)
+	echo("LayoutLayer:ComputeRepaintRects")
+	self:Renderer():PrintNodeInfo();
     --ASSERT(!m_visibleContentStatusDirty);
 
     local repaintContainer = self:Renderer():ContainerForRepaint();
     self.repaintRect = self:Renderer():ClippedOverflowRectForRepaint(repaintContainer);
+	echo(ComputeRepaintRects)
     self.outlineBox = self:Renderer():OutlineBoundsForRepaint(repaintContainer, offsetFromRoot);
 end
 
@@ -1027,14 +1077,18 @@ function LayoutLayer:SetHasVisibleContent(b)
     self.visibleContentStatusDirty = false; 
     self.hasVisibleContent = b;
     if (self.hasVisibleContent) then
---        self:ComputeRepaintRects();
---        if (not self:IsNormalFlowOnly()) then
---            for (RenderLayer* sc = stackingContext(); sc; sc = sc->stackingContext()) {
---                sc->dirtyZOrderLists();
---                if (sc->hasVisibleContent())
---                    break;
---            }
---        end
+        self:ComputeRepaintRects();
+        if (not self:IsNormalFlowOnly()) then
+			local sc = self:StackingContext();
+			while(sc) do
+				sc:DirtyZOrderLists();
+                if (sc:HasVisibleContent()) then
+                    break;
+				end
+
+				sc = sc:StackingContext();
+			end
+        end
     end
     if (self:Parent()) then
         self:Parent():ChildVisibilityChanged(self.hasVisibleContent);
@@ -1141,11 +1195,16 @@ end
 
 function LayoutLayer:IsStackingContext()
 --bool isStackingContext() const { return !hasAutoZIndex() || renderer()->isRenderView(); }
-	return true;
+	return not self:HasAutoZIndex() or self:Renderer():IsLayoutView();
+	--return true;
 end
 
+--bool hasAutoZIndex() const { return renderer()->style()->hasAutoZIndex(); }
+function LayoutLayer:HasAutoZIndex()
+	return self:Renderer():Style():HasAutoZIndex();
+end
+--int zIndex() const { return renderer()->style()->zIndex(); }
 function LayoutLayer:ZIndex()
-	--int zIndex() const { return renderer()->style()->zIndex(); }
 	return self:Renderer():Style():ZIndex();
 end
 
@@ -1189,8 +1248,9 @@ end
 
 --void RenderLayer::updateZOrderLists()
 function LayoutLayer:UpdateZOrderLists()
---    if (!isStackingContext() || !m_zOrderListsDirty)
---        return;
+    if (not self:IsStackingContext() or not self.zOrderListsDirty) then
+        return;
+	end
 
 	local child = self:FirstChild();
 	while(child) do
@@ -1232,22 +1292,23 @@ function LayoutLayer:IntersectsDamageRect(layerBounds, damageRect, rootLayer)
         return true;
 	end
 
-	return false;
+	--return false;
 
---    // If we aren't an inline flow, and our layer bounds do intersect the damage rect, then we 
---    // can go ahead and return true.
---    RenderView* view = renderer()->view();
---    ASSERT(view);
---    if (view && !renderer()->isRenderInline()) {
---        LayoutRect b = layerBounds;
---        b.inflate(view->maximalOutlineSize());
---        if (b.intersects(damageRect))
---            return true;
---    }
---        
---    // Otherwise we need to compute the bounding box of this single layer and see if it intersects
---    // the damage rect.
---    return boundingBox(rootLayer).intersects(damageRect);
+    -- If we aren't an inline flow, and our layer bounds do intersect the damage rect, then we 
+    -- can go ahead and return true.
+    local view = self:Renderer():View();
+    --ASSERT(view);
+    if (view and not self:Renderer():IsLayoutInline()) then
+        local b = layerBounds:clone_from_pool();
+        b:Inflate(view:MaximalOutlineSize());
+        if (b:Intersects(damageRect)) then
+            return true;
+		end
+    end
+        
+    -- Otherwise we need to compute the bounding box of this single layer and see if it intersects
+    -- the damage rect.
+    return self:BoundingBox(rootLayer):Intersects(damageRect);
 end
 
 --void RenderLayer::clipToRect(RenderLayer* rootLayer, GraphicsContext* context, const LayoutRect& paintDirtyRect, const ClipRect& clipRect, BorderRadiusClippingRule rule)
@@ -1281,6 +1342,7 @@ end
 --void RenderLayer::paintLayer(RenderLayer* rootLayer, GraphicsContext*, const LayoutRect& paintDirtyRect, PaintBehavior, RenderObject* paintingRoot, RenderRegion* = 0, OverlapTestRequestMap* = 0, PaintLayerFlags = 0);
 function LayoutLayer:PaintLayer(rootLayer, p, paintDirtyRect, paintBehavior, paintingRoot, region, overlapTestRequests, paintFlags)
 	echo("LayoutLayer:PaintLayer begin")
+	self:Renderer():PrintNodeInfo()
 	echo(paintDirtyRect)
 	if (shouldSuppressPaintingLayer(self)) then
         return;
@@ -1304,13 +1366,17 @@ function LayoutLayer:PaintLayer(rootLayer, p, paintDirtyRect, paintBehavior, pai
     --ClipRect damageRect, clipRectToApply, outlineRect;
 	local damageRect, clipRectToApply, outlineRect = ClipRect:new(), ClipRect:new(), ClipRect:new();
     --calculateRects(rootLayer, region, paintDirtyRect, layerBounds, damageRect, clipRectToApply, outlineRect, localPaintFlags & PaintLayerTemporaryClipRects);
-	paintDirtyRect, layerBounds, damageRect, clipRectToApply, outlineRect = self:CalculateRects(rootLayer, region, paintDirtyRect, layerBounds, damageRect, clipRectToApply, outlineRect, localPaintFlags);
+	layerBounds, damageRect, clipRectToApply, outlineRect = self:CalculateRects(rootLayer, region, paintDirtyRect, layerBounds, damageRect, clipRectToApply, outlineRect, localPaintFlags);
 	echo("LayoutLayer:PaintLayer")
-	echo({self.topLeft, self.relativeOffset})
+	echo(self:IsInClipRect())
+	echo(self.clipRects)
+	--echo(self.clipsRepaints)
+	echo({self.topLeft, self.layerSize, self.relativeOffset})
 	self:Renderer():PrintNodeInfo()
 	echo(damageRect)
 	echo(layerBounds)
 	echo(self:RenderBoxLocation())
+	echo(clipRectToApply)
     --local paintOffset = (layerBounds:Location() - self:RenderBoxLocation()):ToPoint();
 	local paintOffset = layerBounds:Location();
 
@@ -1328,10 +1394,16 @@ function LayoutLayer:PaintLayer(rootLayer, p, paintDirtyRect, paintBehavior, pai
 
 
 	-- We want to paint our layer, but only if we intersect the damage rect.
-    --local shouldPaint = self:IntersectsDamageRect(layerBounds, damageRect.rect(), rootLayer) && m_hasVisibleContent && isSelfPaintingLayer();
-	local shouldPaint = true;
+    local shouldPaint = self:IntersectsDamageRect(layerBounds, damageRect:Rect(), rootLayer) and self.hasVisibleContent and self:IsSelfPaintingLayer();
+	echo("shouldPaint")
+	echo(shouldPaint)
+	echo(self:IntersectsDamageRect(layerBounds, damageRect:Rect(), rootLayer))
+	echo(self.hasVisibleContent)
+	echo(self:IsSelfPaintingLayer())
+	--local shouldPaint = true;
     --if (shouldPaint && !selectionOnly && !damageRect.isEmpty() && !paintingOverlayScrollbars) {
 	if (shouldPaint and not damageRect:IsEmpty()) then
+		self:Renderer():AttachControl()
         -- Begin transparency layers lazily now that we know we have to paint something.
 --        if (haveTransparency)
 --            beginTransparencyLayers(p, rootLayer, paintBehavior);
@@ -1349,6 +1421,12 @@ function LayoutLayer:PaintLayer(rootLayer, p, paintDirtyRect, paintBehavior, pai
 
 --        // Restore the clip.
 --        restoreClip(p, paintDirtyRect, damageRect);
+	else
+		if(self:IsInClipRect()) then
+			self:Renderer():AttachControl()
+		else
+			self:Renderer():DetachControl()
+		end
     end
 
 	-- Now walk the sorted list of children with negative z-indices.
@@ -1404,16 +1482,76 @@ end
 --void RenderLayer::calculateClipRects(const RenderLayer* rootLayer, RenderRegion* region, ClipRects& clipRects,
 --    bool useCached, OverlayScrollbarSizeRelevancy relevancy) const
 function LayoutLayer:CalculateClipRects(rootLayer, region, clipRects, useCached, relevancy)
+	echo("LayoutLayer:CalculateClipRects")
+	echo(clipRects)
 	useCached = if_else(useCached == nil, false, useCached);
 	relevancy = if_else(relevancy == nil, "IgnoreOverlayScrollbarSize" , relevancy);
 
 	if (not self:Parent()) then
         -- The root layer's clip rect is always infinite.
         clipRects:Reset(PaintInfo.InfiniteRect());
-        return;
+        return clipRects;
     end
 
-	-- TODO: add later
+		-- For transformed layers, the root layer was shifted to be us, so there is no need to
+    -- examine the parent.  We want to cache clip rects with us as the root.
+    local parentLayer = if_else(rootLayer ~= self, self:Parent(), nil);
+    
+    -- Ensure that our parent's clip has been calculated so that we can examine the values.
+    if (parentLayer) then
+        if (useCached and parentLayer:ClipRects()) then
+            clipRects = parentLayer:ClipRects();
+        else
+            clipRects = parentLayer:CalculateClipRects(rootLayer, region, clipRects);
+		end
+    else
+        clipRects:Reset(PaintInfo.InfiniteRect());
+	end
+
+    -- A fixed object is essentially the root of its containing block hierarchy, so when
+    -- we encounter such an object, we reset our clip rects to the fixedClipRect.
+    if (self:Renderer():Style():Position() == PositionEnum.FixedPosition) then
+        clipRects:SetPosClipRect(clipRects:FixedClipRect());
+        clipRects:SetOverflowClipRect(clipRects:FixedClipRect());
+        clipRects:SetFixed(true);
+    elseif (self:Renderer():Style():Position() == PositionEnum.RelativePosition) then
+        clipRects:SetPosClipRect(clipRects:OverflowClipRect());
+    elseif (self:Renderer():Style():Position() == PositionEnum.AbsolutePosition) then
+        clipRects:SetOverflowClipRect(clipRects:PosClipRect());
+    end
+    -- Update the clip rects that will be passed to child layers.
+    if (self:Renderer():HasOverflowClip() or self:Renderer():HasClip()) then
+        -- This layer establishes a clip of some kind.
+        local offset = LayoutPoint:new();
+        offset = self:ConvertToLayerCoords(rootLayer, offset);
+        local view = self:Renderer():View();
+        --ASSERT(view);
+        if (view and clipRects:Fixed() and rootLayer:Renderer() == view) then
+            offset = offset - view:FrameView():ScrollOffsetForFixedPosition();
+        end
+        
+        if (self:Renderer():HasOverflowClip()) then
+            local newOverflowClip = ClipRect:new(self:Renderer():ToRenderBox():OverflowClipRect(offset, region, relevancy));
+            if (self:Renderer():Style():HasBorderRadius()) then
+                newOverflowClip:SetHasRadius(true);
+			end
+			echo("newOverflowClip")
+			echo(newOverflowClip)
+			echo(clipRects)
+            clipRects:SetOverflowClipRect(ClipRect.Intersection(newOverflowClip, clipRects:OverflowClipRect()));
+            if (self:Renderer():IsPositioned() or self:Renderer():IsRelPositioned()) then
+                clipRects:SetPosClipRect(ClipRect.Intersection(newOverflowClip, clipRects:PosClipRect()));
+			end
+        end
+		echo("1111111111111111111111")
+        if (self:Renderer():HasClip()) then
+            local newPosClip = ClipRect:new(self:Renderer():ToRenderBox():ClipRect(offset, region));
+            clipRects:SetPosClipRect(Rect.Intersection(newPosClip, clipRects:PosClipRect()));
+            clipRects:SetOverflowClipRect(Rect.Intersection(newPosClip, clipRects:OverflowClipRect()));
+            clipRects:SetFixedClipRect(Rect.Intersection(newPosClip, clipRects:FixedClipRect()));
+        end
+    end
+	return clipRects;
 end
 
 --void RenderLayer::updateClipRects(const RenderLayer* rootLayer, RenderRegion* region, OverlayScrollbarSizeRelevancy relevancy)
@@ -1433,7 +1571,7 @@ function LayoutLayer:UpdateClipRects(rootLayer, region, relevancy)
 	end
 
     local clipRects = ClipRects:new();
-    self:CalculateClipRects(rootLayer, region, clipRects, true, relevancy);
+    clipRects = self:CalculateClipRects(rootLayer, region, clipRects, true, relevancy);
 
     if (parentLayer and parentLayer:ClipRects() and clipRects == parentLayer:ClipRects()) then
         self.clipRects = parentLayer:ClipRects();
@@ -1456,7 +1594,7 @@ function LayoutLayer:ParentClipRects(rootLayer, region, clipRects, temporaryClip
 	relevancy = if_else(relevancy == nil, "IgnoreOverlayScrollbarSize" , relevancy);
     --ASSERT(parent());
     if (temporaryClipRects) then
-        self:Parent():CalculateClipRects(rootLayer, region, clipRects, false, relevancy);
+        clipRects = self:Parent():CalculateClipRects(rootLayer, region, clipRects, false, relevancy);
         return clipRects;
     end
 
@@ -1597,7 +1735,7 @@ function LayoutLayer:ConvertToLayerCoords(ancestorLayer, location)
         return location;
 	end
 
-    parentLayer:ConvertToLayerCoords(ancestorLayer, location);
+    location = parentLayer:ConvertToLayerCoords(ancestorLayer, location);
     location = location + self.topLeft:ToSize();
 	return location;
 end
@@ -1609,21 +1747,39 @@ function LayoutLayer:CalculateRects(rootLayer, region, paintDirtyRect, layerBoun
 	echo("LayoutLayer:CalculateRects")
 	echo({region, paintDirtyRect, layerBounds, backgroundRect, foregroundRect, outlineRect, temporaryClipRects, relevancy})
 	temporaryClipRects = if_else(temporaryClipRects == nil, false, temporaryClipRects);
-	OverlayScrollbarSizeRelevancy = if_else(OverlayScrollbarSizeRelevancy == nil, "IgnoreOverlayScrollbarSize" , OverlayScrollbarSizeRelevancy);
+	relevancy = if_else(relevancy == nil, "IgnoreOverlayScrollbarSize" , relevancy);
 
---    if (rootLayer ~= self and self:Parent()) then
---        backgroundRect = self:BackgroundClipRect(rootLayer, region, temporaryClipRects, relevancy);
---        backgroundRect:Intersect(paintDirtyRect);
---    else
---        backgroundRect = ClipRect:new(paintDirtyRect);
---	end
-	backgroundRect = ClipRect:new(paintDirtyRect);
+    if (rootLayer ~= self and self:Parent()) then
+        backgroundRect = self:BackgroundClipRect(rootLayer, region, true, relevancy);
+		echo("backgroundRect")
+		echo(backgroundRect)
+        backgroundRect:Intersect(paintDirtyRect);
+--
+--		local tempBackgroundRect = self:BackgroundClipRect(rootLayer, region, true, relevancy)
+--		echo("tempBackgroundRect")
+--		echo(tempBackgroundRect)
+    else
+        backgroundRect = ClipRect:new(paintDirtyRect);
+	end
+	--backgroundRect = ClipRect:new(paintDirtyRect);
 	echo("backgroundRect")
 	echo(backgroundRect)
     foregroundRect = backgroundRect:clone();
+	foregroundRect:Rect():SetLocation(LayoutPoint:new());
     outlineRect = backgroundRect:clone();
     
     local offset = LayoutPoint:new();
+
+--	if(self:Parent()) then
+--		local scrollOffset = self:Parent():ScrolledContentOffset();
+--		offset = offset - scrollOffset;
+--	end
+
+	if (self:Renderer():IsRelPositioned()) then
+		--local relativeOffset = self:Renderer():RelativePositionOffset();
+		offset:Move(self.relativeOffset);
+	end
+
 	
     --offset = self:ConvertToLayerCoords(rootLayer, offset);
     layerBounds = LayoutRect:new(offset, self:Size());
@@ -1657,7 +1813,7 @@ function LayoutLayer:CalculateRects(rootLayer, region, paintDirtyRect, layerBoun
             -- FIXME: Does not do the right thing with CSS regions yet, since we don't yet factor in the
             -- individual region boxes as overflow.
             local layerBoundsWithVisualOverflow = self:RenderBox():VisualOverflowRect();
-            self:RenderBox():FlipForWritingMode(layerBoundsWithVisualOverflow); -- Layers are in physical coordinates, so the overflow has to be flipped.
+            layerBoundsWithVisualOverflow = self:RenderBox():FlipForWritingMode(layerBoundsWithVisualOverflow); -- Layers are in physical coordinates, so the overflow has to be flipped.
             layerBoundsWithVisualOverflow:MoveBy(offset);
             backgroundRect:Intersect(layerBoundsWithVisualOverflow);
 			echo("backgroundRect:Intersect(layerBoundsWithVisualOverflow)")
@@ -1673,7 +1829,7 @@ function LayoutLayer:CalculateRects(rootLayer, region, paintDirtyRect, layerBoun
 			echo(backgroundRect)
         end
     end
-	return paintDirtyRect, layerBounds, backgroundRect, foregroundRect, outlineRect;
+	return layerBounds, backgroundRect, foregroundRect, outlineRect;
 end
 
 --LayoutPoint RenderLayer::computeOffsetFromRoot(bool& hasLayerOffset) const
@@ -1706,6 +1862,7 @@ function LayoutLayer:ComputeOffsetFromRoot(hasLayerOffset)
 end
 
 function LayoutLayer:UpdateLayerPosition()
+	echo("LayoutLayer:UpdateLayerPosition begin")
     local localPoint = LayoutPoint:new();
     local inlineBoundingBoxOffset = LayoutSize:new(); -- We don't put this into the RenderLayer x/y for inlines, so we need to subtract it out when done.
     if (self:Renderer():IsLayoutInline()) then
@@ -1721,7 +1878,7 @@ function LayoutLayer:UpdateLayerPosition()
 			localPoint = localPoint + box:TopLeftLocationOffset();
 		end
     end
-
+	echo(localPoint)
     -- Clear our cached clip rect information.
     self:ClearClipRects();
  
@@ -1742,7 +1899,7 @@ function LayoutLayer:UpdateLayerPosition()
             localPoint = localPoint - curr:TopLeftLocationOffset();
         end
     end
-    
+    echo(localPoint)
     -- Subtract our parent's scroll offset.
     if (self:Renderer():IsPositioned() and self:EnclosingPositionedAncestor()) then
         local positionedParent = self:EnclosingPositionedAncestor();
@@ -1763,11 +1920,12 @@ function LayoutLayer:UpdateLayerPosition()
 --            parent()->renderer()->adjustForColumns(columnOffset, localPoint);
 --            localPoint += columnOffset;
         end
-
+		echo("scrollOffset")
         local scrollOffset = self:Parent():ScrolledContentOffset();
+		echo(scrollOffset)
         localPoint = localPoint - scrollOffset;
     end
-        
+    echo(localPoint)    
     if (self:Renderer():IsRelPositioned()) then
         self.relativeOffset = self:Renderer():RelativePositionOffset();
         localPoint:Move(self.relativeOffset);
@@ -1778,6 +1936,8 @@ function LayoutLayer:UpdateLayerPosition()
     -- FIXME: We'd really like to just get rid of the concept of a layer rectangle and rely on the renderers.
     localPoint = localPoint - inlineBoundingBoxOffset;
 	echo("LayoutLayer:UpdateLayerPosition")
+	self:Renderer():PrintNodeInfo()
+	echo(self:Renderer():IsPositioned())
 	echo(localPoint);
     self:SetLocation(localPoint:X(), localPoint:Y());
 end
@@ -1901,6 +2061,10 @@ function LayoutLayer:UpdateScrollInfoAfterLayout()
 		self:SetHasScrollCorner(true)
 	end
 
+	if (self:Renderer():Node()) then
+        self:UpdateOverflowStatus(horizontalOverflow, verticalOverflow);
+	end
+
 	echo(self.scrollSize)
 	echo("LayoutLayer:UpdateScrollInfoAfterLayout end")
 end
@@ -1925,7 +2089,7 @@ end
 function LayoutLayer:OverflowLeft()
     local box = self:RenderBox();
     local overflowRect = box:LayoutOverflowRect();
-    box:FlipForWritingMode(overflowRect);
+    overflowRect = box:FlipForWritingMode(overflowRect);
     return overflowRect:X();
 end
 
@@ -1933,7 +2097,7 @@ end
 function LayoutLayer:OverflowRight()
     local box = self:RenderBox();
     local overflowRect = box:LayoutOverflowRect();
-    box:FlipForWritingMode(overflowRect);
+    overflowRect = box:FlipForWritingMode(overflowRect);
     return overflowRect:MaxX();
 end
 
@@ -1941,7 +2105,7 @@ end
 function LayoutLayer:OverflowTop()
     local box = self:RenderBox();
     local overflowRect = box:LayoutOverflowRect();
-    box:FlipForWritingMode(overflowRect);
+    overflowRect = box:FlipForWritingMode(overflowRect);
     return overflowRect:Y();
 end
 
@@ -1951,7 +2115,7 @@ function LayoutLayer:OverflowBottom()
     local box = self:RenderBox();
     local overflowRect = box:LayoutOverflowRect();
 	echo(overflowRect)
-    box:FlipForWritingMode(overflowRect);
+    overflowRect = box:FlipForWritingMode(overflowRect);
     return overflowRect:MaxY();
 end
 
@@ -2265,6 +2429,8 @@ function LayoutLayer:ScrollTo(x, y)
     local repaintContainer = self:Renderer():ContainerForRepaint();
 
     -- Just schedule a full repaint of our object.
+	echo("self.repaintRect")
+	echo(self.repaintRect)
     if (view) then
         self:Renderer():RepaintUsingContainer(repaintContainer, self.repaintRect);
 	end
@@ -2272,6 +2438,8 @@ end
 
 --void RenderLayer::updateLayerPositionsAfterScroll(bool fixed)
 function LayoutLayer:UpdateLayerPositionsAfterScroll(fixed)
+	echo("LayoutLayer:UpdateLayerPositionsAfterScroll")
+	self:Renderer():PrintNodeInfo()
 	fixed = if_else(fixed == nil, false, fixed);
     --ASSERT(!m_visibleContentStatusDirty);
 
@@ -2284,7 +2452,7 @@ function LayoutLayer:UpdateLayerPositionsAfterScroll(fixed)
 
     self:UpdateLayerPosition();
 
-    if (fixed or self:Renderer():Style():Position() == FixedPosition) then
+    if (fixed or self:Renderer():Style():Position() == PositionEnum.FixedPosition) then
         -- FIXME: Is it worth passing the offsetFromRoot around like in updateLayerPositions?
         self:ComputeRepaintRects();
         fixed = true;
@@ -2324,3 +2492,131 @@ function LayoutLayer:Root()
 	end
     return curr;
 end
+
+--void RenderLayer::updateOverflowStatus(bool horizontalOverflow, bool verticalOverflow)
+function LayoutLayer:UpdateOverflowStatus(horizontalOverflow, verticalOverflow)
+    if (self.overflowStatusDirty) then
+        self.horizontalOverflow = horizontalOverflow;
+        self.verticalOverflow = verticalOverflow;
+        self.overflowStatusDirty = false;
+        return;
+    end
+    
+    local horizontalOverflowChanged = (self.horizontalOverflow ~= horizontalOverflow);
+    local verticalOverflowChanged = (self.verticalOverflow ~= verticalOverflow);
+    
+    if (horizontalOverflowChanged or verticalOverflowChanged) then
+        self.horizontalOverflow = horizontalOverflow;
+        self.verticalOverflow = verticalOverflow;
+        
+--        if (FrameView* frameView = renderer()->document()->view()) {
+--            frameView->scheduleEvent(OverflowEvent::create(horizontalOverflowChanged, horizontalOverflow, verticalOverflowChanged, verticalOverflow),
+--                renderer()->node());
+--        end
+    end
+end
+
+--LayoutRect RenderLayer::localBoundingBox() const
+function LayoutLayer:LocalBoundingBox()
+    -- There are three special cases we need to consider.
+    -- (1) Inline Flows.  For inline flows we will create a bounding box that fully encompasses all of the lines occupied by the
+    -- inline.  In other words, if some <span> wraps to three lines, we'll create a bounding box that fully encloses the
+    -- line boxes of all three lines (including overflow on those lines).
+    -- (2) Left/Top Overflow.  The width/height of layers already includes right/bottom overflow.  However, in the case of left/top
+    -- overflow, we have to create a bounding box that will extend to include this overflow.
+    -- (3) Floats.  When a layer has overhanging floats that it paints, we need to make sure to include these overhanging floats
+    -- as part of our bounding box.  We do this because we are the responsible layer for both hit testing and painting those
+    -- floats.
+    local result;
+    if (self:Renderer():IsLayoutInline()) then
+        result = self:Renderer():ToRenderInline():LinesVisualOverflowBoundingBox();
+    elseif (self:Renderer():IsTableRow()) then
+        -- Our bounding box is just the union of all of our cells' border/overflow rects.
+--        for (RenderObject* child = self:Renderer()->firstChild(); child; child = child->nextSibling()) then
+--            if (child->isTableCell()) then
+--                LayoutRect bbox = toRenderBox(child)->borderBoxRect();
+--                result.unite(bbox);
+--                LayoutRect overflowRect = renderBox()->visualOverflowRect();
+--                if (bbox != overflowRect)
+--                    result.unite(overflowRect);
+--            end
+--        end
+    else
+        local box = self:RenderBox();
+        -- ASSERT(box);
+        if (box:HasMask()) then
+            -- result = box->maskClipRect();
+            -- box->flipForWritingMode(result); -- The mask clip rect is in physical coordinates, so we have to flip, since localBoundingBox is not.
+        else
+            local bbox = box:BorderBoxRect();
+            result = bbox;
+            local overflowRect = box:VisualOverflowRect();
+            if (bbox ~= overflowRect) then
+                result:Unite(overflowRect);
+			end
+        end
+    end
+
+    local view = self:Renderer():View();
+    -- ASSERT(view);
+    if (view) then
+        result:Inflate(view:MaximalOutlineSize()); -- Used to apply a fudge factor to dirty-rect checks on blocks/tables.
+	end
+    return result;
+end
+
+--LayoutRect RenderLayer::boundingBox(const RenderLayer* ancestorLayer) const
+function LayoutLayer:BoundingBox(ancestorLayer)
+    local result = self:LocalBoundingBox();
+    if (self:Renderer():IsBox()) then
+        result = self:RenderBox():FlipForWritingMode(result);
+    else
+        result = self:Renderer():ContainingBlock():FlipForWritingMode(result);
+	end
+    local delta = LayoutPoint:new();
+    delta = self:ConvertToLayerCoords(ancestorLayer, delta);
+    result:MoveBy(delta);
+    return result;
+end
+
+--LayoutRect RenderLayer::absoluteBoundingBox() const
+function LayoutLayer:AbsoluteBoundingBox()
+    return self:BoundingBox(self:Root());
+end
+
+--void RenderLayer::repaintIncludingDescendants()
+function LayoutLayer:RepaintIncludingDescendants()
+    self:Renderer():Repaint();
+	local curr = self:FirstChild();
+	while(curr) do
+		curr:RepaintIncludingDescendants();
+		curr = curr:NextSibling();
+	end
+end
+
+--static inline const RenderLayer* compositingContainer(const RenderLayer* layer)
+local function compositingContainer(layer)
+    return if_else(layer:IsNormalFlowOnly(), layer:Parent(), layer:StackingContext());
+end
+
+--RenderLayer* RenderLayer::clippingRoot() const
+function LayoutLayer:ClippingRoot()
+    local current = self;
+    while (current) do
+        if (current:Renderer():IsLayoutView()) then
+            return current;
+		end
+
+        current = compositingContainer(current);
+        --ASSERT(current);
+        if (current:Transform()) then
+            return current;
+		end
+    end
+    return nil;
+end
+
+---- Returns the foreground clip rect of the layer in the document's coordinate space.
+--LayoutRect childrenClipRect() const; 
+---- Returns the background clip rect of the layer in the document's coordinate space.
+--LayoutRect selfClipRect() const; 

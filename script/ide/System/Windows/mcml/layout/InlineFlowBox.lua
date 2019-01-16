@@ -1352,7 +1352,7 @@ function InlineFlowBox:PaintBoxDecorations(paintInfo, paintOffset)
     --local adjustedPaintoffset = paintOffset + localRect:Location();
 	echo(localRect)
 	local adjustedPaintoffset = localRect:Location();
-	if(self:IsRootInlineBox() and not self:Renderer():IsAnonymous()) then
+	if(self:IsRootInlineBox() and not self:Renderer():IsAnonymous() and self:Renderer():HasSelfPaintingLayer()) then
 		adjustedPaintoffset = adjustedPaintoffset + paintOffset;
 	end
 

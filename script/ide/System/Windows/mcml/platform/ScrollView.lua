@@ -10,12 +10,18 @@ local ScrollView = commonlib.gettable("System.Windows.mcml.platform.ScrollView")
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/IntPoint.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/IntSize.lua");
+local Size = commonlib.gettable("System.Windows.mcml.platform.graphics.IntSize");
 local IntPoint = commonlib.gettable("System.Windows.mcml.platform.graphics.IntPoint");
 local ScrollView = commonlib.inherit(commonlib.gettable("System.Windows.mcml.platform.ScrollableArea"), commonlib.gettable("System.Windows.mcml.platform.ScrollView"));
+
+local IntSize = Size;
 
 function ScrollView:ctor()
 	self.paintsEntireContents = false;
     self.clipsRepaints = true;
+
+	self.scrollOffset = IntSize:new();
 end
 
 --function ScrollView:init()
@@ -59,10 +65,13 @@ end
 
 --void ScrollView::repaintContentRectangle(const IntRect& rect, bool now)
 function ScrollView:RepaintContentRectangle(rect, now)
+	echo("ScrollView:RepaintContentRectangle")
+	echo(rect)
     local paintRect = rect:clone_from_pool();
     if (self:ClipsRepaints() and not self:PaintsEntireContents()) then
         paintRect:Intersect(self:VisibleContentRect());
 	end
+	echo(paintRect)
     if (paintRect:IsEmpty()) then
         return;
 	end

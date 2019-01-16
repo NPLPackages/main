@@ -224,6 +224,27 @@ function LayoutObject:GetControl()
 	end	
 end
 
+function LayoutObject:AttachControl()
+	local control = self:GetControl()
+	if(control) then
+		if(not control:GetParent()) then
+			local parentControl = self:GetParentControl();
+			if(parentControl) then
+				control:SetParent(parentControl)
+			end
+		end
+	end
+end
+
+function LayoutObject:DetachControl()
+	local control = self:GetControl()
+	if(control) then
+		if(control:GetParent()) then
+			control:SetParent(nil)
+		end
+	end
+end
+
 function LayoutObject:PreviousSibling()
 	return self.previous;
 end
@@ -1980,6 +2001,7 @@ end
 --void RenderObject::repaintUsingContainer(RenderBoxModelObject* repaintContainer, const LayoutRect& r, bool immediate)
 function LayoutObject:RepaintUsingContainer(repaintContainer, rect, immediate)
 	echo("LayoutObject:RepaintUsingContainer");
+	echo(rect)
 	if(repaintContainer) then
 		echo("repaintContainer")
 	end
@@ -2051,7 +2073,7 @@ function LayoutObject:RepaintRectangle(rect, immediate)
     dirtyRect:Move(view:LayoutDelta());
 
     local repaintContainer = self:ContainerForRepaint();
-    self:ComputeRectForRepaint(repaintContainer, dirtyRect);
+    dirtyRect = self:ComputeRectForRepaint(repaintContainer, dirtyRect);
 	repaintContainer = if_else(repaintContainer, repaintContainer, view)
     self:RepaintUsingContainer(repaintContainer, dirtyRect, immediate);
 end
@@ -2283,4 +2305,47 @@ function LayoutObject:AdjustRectForOutlineAndShadow(rect)
     end
 
     rect:Inflate(outlineSize);
+end
+
+-- virtual function
+--void RenderBlock::adjustForColumns(LayoutSize& offset, const LayoutPoint& point) const
+function LayoutObject:AdjustForColumns(offset, point)
+
+end
+
+--LayoutSize RenderObject::offsetFromContainer(RenderObject* o, const LayoutPoint& point) const
+function LayoutObject:OffsetFromContainer(o, point)
+    --ASSERT(o == container());
+
+    local offset = LayoutSize:new();
+
+    o:AdjustForColumns(offset, point);
+
+    if (o:HasOverflowClip()) then
+        offset = offset - o:ToRenderBox():Layer():ScrolledContentOffset();
+	end
+
+    return offset;
+end
+
+--LayoutSize RenderObject::offsetFromAncestorContainer(RenderObject* container) const
+function LayoutObject:OffsetFromAncestorContainer(container)
+    local offset = LayoutSize:new();
+    local referencePoint = LayoutPoint:new();
+    local currContainer = self;
+
+	repeat
+		local nextContainer = currContainer:Container();
+        -- ASSERT(nextContainer);  -- This means we reached the top without finding container.
+        if (nextContainer == nil) then
+            break;
+		end
+        --ASSERT(!currContainer->hasTransform());
+        local currentOffset = currContainer:OffsetFromContainer(nextContainer, referencePoint);
+        offset = offset + currentOffset;
+        referencePoint:Move(currentOffset);
+        currContainer = nextContainer;
+	until (currContainer == container)
+
+    return offset;
 end

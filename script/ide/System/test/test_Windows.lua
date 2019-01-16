@@ -14,6 +14,7 @@ test_Windows:TestCreateWindow();
 test_Windows:TestPostEvents();
 test_Windows:test_pe_custom();
 test_Windows:TestMultiLineEditbox();
+test_Windows:TestChildrenClip();
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/System/Windows/Window.lua");
@@ -269,6 +270,30 @@ function test_Windows:test_progressbar()
 	button:setGeometry(50, 300, 60, 20);
 
 	window:Show("my_window", nil, "_mt", 0,0, 500, 500);
+
+	test_Windows.windows = {window};
+end
+
+function test_Windows:TestChildrenClip()
+	test_Windows:DestroyWindows()
+
+	local window = Window:new();
+
+	local redBox = Rectangle:new():init(window);
+	redBox:SetChildrenClip(true)
+	redBox:setGeometry(80,80,80,80);
+	redBox:SetBackgroundColor("#ff0000");
+
+	local greenBox = Rectangle:new():init(redBox);
+	greenBox:SetChildrenClip(true)
+	greenBox:setGeometry(40,40,20,80);
+	greenBox:SetBackgroundColor("#00ff00");
+
+	local blueBox = Rectangle:new():init(greenBox);
+	blueBox:setGeometry(0,20,60,60);
+	blueBox:SetBackgroundColor("#0000ff");
+
+	window:Show("my_window", nil, "_lt", 0,0, 200, 200);
 
 	test_Windows.windows = {window};
 end

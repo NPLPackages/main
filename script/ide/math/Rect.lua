@@ -211,3 +211,38 @@ function Rect:isIntersected(rect)
     end
 	return true;
 end
+
+function Rect:maxX()
+	return self:x() + self:width();
+end
+
+function Rect:maxY()
+	return self:y() + self:height();
+end
+
+function Rect:intersect(rect)
+	local l = math.max(self:x(), rect:x());
+    local t = math.max(self:y(), rect:y());
+    local r = math.min(self:maxX(), rect:maxX());
+    local b = math.min(self:maxY(), rect:maxY());
+
+    -- Return a clean empty rectangle for non-intersecting cases.
+    if (l >= r or t >= b) then
+        l = 0;
+        t = 0;
+        r = 0;
+        b = 0;
+    end
+
+    self:setX(l);
+    self:setY(t);
+    self:setWidth(r - l);
+    self:setHeight(b - t);
+end
+
+--inline IntRect intersection(const IntRect& a, const IntRect& b)
+function Rect.intersection(a, b)
+    local c = a:clone_from_pool();
+    c:intersect(b);
+    return c;
+end
