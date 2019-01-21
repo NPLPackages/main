@@ -23,7 +23,7 @@ MOD_ROOT = dirname(__FILE__)..modname.."/";
 
 if(isAPI == "api") then	
 	-- Allow for cross-domain requests (from the frontend). 
-    if(modname == "nplshape")then
+    if(modname == "nplcad")then
         addheader('Access-Control-Allow-Origin', "*");
     else
 	    send_origin_headers();
