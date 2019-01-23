@@ -389,7 +389,7 @@ function CaptureTask:Run(index)
 				
 				-- we will first download to the temp folder.It may resume from last download
 				-- get rid of query string ? and separator section #
-				local file_url = string.gsub(url, "[%?#].*$", "");
+				local file_url = url; -- string.gsub(url, "[%?#].*$", "");
 				ParaIO.CreateDirectory("temp/tempdownloads/");
 				local filename = string.format("temp/tempdownloads/%d-%d.dat", self.capture_request_.id, i);
 				-- delete dest file to prevent multi-section download

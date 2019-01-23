@@ -1065,7 +1065,7 @@ function pe_a.create(rootName,mcmlNode, bindingContext, _parent, left, top, widt
 			
 			if(_targetName== "_blank") then
 				-- TODO: open in a new window
-				if(href:match("^http://")) then
+				if(href:match("^https?://")) then
 					-- TODO: this may be a security warning
 					_this.onclick = string.format([[;ParaGlobal.ShellExecute("open", %q, "", "", 1);]], href);
 				end
