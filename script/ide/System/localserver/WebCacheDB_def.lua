@@ -168,6 +168,7 @@ local PayloadInfo = commonlib.createtable("System.localserver.WebCacheDB.Payload
     -- the body response data itself. Only applicable to webservices where the response is stored as strings in the database instead of local file system. 
     data = nil,
     is_synthesized_http_redirect = false,
+	headers_table = nil,
 });
 
 function PayloadInfo:new(o)
@@ -177,17 +178,36 @@ function PayloadInfo:new(o)
 	return o
 end
 
+function PayloadInfo:GetHeaders()
+	if(not self.headers_table and self.headers) then
+		local headers_table = {}	
+		for n,v in string.gfind(self.headers, "%s*(%S+)%s*:%s*([^\r\n]*)\r?\n") do
+			headers_table[string.lower(n)] = v;
+		end
+		self.headers_table = headers_table;
+	end
+	return self.headers_table;
+end
+
 -- Returns a particular header value. may return nil if not found. 
 function PayloadInfo:GetHeader(name)
-	if (not name or not self.headers) then return end
-	local value;
-	local n,v
-	for n,v in string.gfind(self.headers, "%s*(%S+)%s*:%s*([^\r\n]*)\r\n") do
-		if(n == name) then
-			value = v;
+	if (name) then 
+		local headers = self:GetHeaders();
+		if(headers) then
+			return headers[string.lower(name)]
 		end
 	end
-	return value
+end
+
+-- in seconds or nil
+function PayloadInfo:GetCacheMaxAge()
+	local cacheline = self:GetHeader("Cache-Control")
+	if(cacheline) then
+		local seconds = cacheline:match("max%-age=(%d+)")
+		if(seconds) then
+			return tonumber(seconds);
+		end
+	end
 end
 
 -- this function is assumed that the member data is a message table possible from the reponse of a web service.

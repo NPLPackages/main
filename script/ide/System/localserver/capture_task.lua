@@ -266,12 +266,9 @@ function System.localserver.ProcessFile_result(request_id, index)
 			}),
 		};
 		
-		if(msg.ContentType and string.find(msg.ContentType, "text/html")) then
-			-- this is an HTTP web page. we will save the headers as well. 
-			new_item.payload.headers = msg.Headers;
-			-- new_item.payload.status_code = msg.StatusCode;
-			new_item.payload.status_line = msg.StatusDescription;
-		else
+		if(msg.rcode == 200 and msg.header) then
+			new_item.payload.headers = msg.header;
+			new_item.payload.status_code = msg.rcode;
 		end
 		
 		success = task.store_:PutItem(new_item);

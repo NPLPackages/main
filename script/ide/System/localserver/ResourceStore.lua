@@ -72,10 +72,10 @@ function ResourceStore:GetFile(Cache_policy, urls, callbackFunc, callbackContext
 		while url do
 			local entry = self:GetItem(url);
 			if(entry) then
-				if(not Cache_policy:IsExpired(entry.payload.creation_date)) then
+				local expireTime = (entry.payload:GetCacheMaxAge() or 0) + entry.payload.creation_date;
+				if(not Cache_policy:IsExpired(expireTime)) then
 					commonlib.removeArrayItem(urls, i);
 					log("Unexpired local version is used for "..url.."\n")
-
 					if(callbackFunc) then
 						entry.IsFromCache = true;
 						callbackFunc(entry, callbackContext)
