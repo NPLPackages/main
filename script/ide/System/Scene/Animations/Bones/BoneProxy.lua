@@ -431,7 +431,7 @@ end
 
 local Known_IKHandleBones = {L_Hand = true, R_Hand=true, L_Foot=true, R_Foot=true};
 
--- if the bone is a well known IK handle, such as hand and foot. 
+-- if the bone is a well known IK handle, such as hand and foot. or its name contains "_IK"
 function Bone:HasIKHandle()
 	return Known_IKHandleBones[self.name] or self.name:match("_IK")~=nil;
 end
