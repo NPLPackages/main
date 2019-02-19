@@ -216,15 +216,17 @@ function BidiRunList:ClearWithoutDestroyingRuns()
 end
 
 function BidiRunList:print()
-	echo("BidiRunList:print");
+	echo("BidiRunList:print begin");
 	if(self.firstRun) then
 		local run = self.firstRun;
 		local run_index = 1;
 		while(run) do
 			echo("run_index:"..run_index);
 			run.object:PrintNodeInfo();
+			echo({run.start, run.stop})
 			run_index = run_index + 1;
 			run = run:Next();
 		end
 	end
+	echo("BidiRunList:print end");
 end

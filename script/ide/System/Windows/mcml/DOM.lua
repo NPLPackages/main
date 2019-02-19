@@ -66,13 +66,17 @@ end
 -- flush all previous write operations to create a node 
 -- @return: return nil or the root MCML node containing MCML node contents from previous write functions. The root node name is always "p"
 function Document:flush() 
+	echo("Document:flush")
+	echo(self.textbuffer_)
 	if(self.textbuffer_~=nil) then
 		self.textbuffer_ = "<p>"..self.textbuffer_.."</p>";
 		--self.textbuffer_ = ParaMisc.EncodingConvert("", "HTML", self.textbuffer_);
 		local xmlRoot = ParaXML.LuaXML_ParseString(self.textbuffer_);
+		echo(xmlRoot)
 		if(type(xmlRoot)=="table" and table.getn(xmlRoot)>0) then
 			local xmlRoot = mcml:createFromXmlNode(xmlRoot);
-			return xmlRoot[1];
+			--return xmlRoot[1];
+			return xmlRoot:FirstChild();
 		end
 	end	
 end

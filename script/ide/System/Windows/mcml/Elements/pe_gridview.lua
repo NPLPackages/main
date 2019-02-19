@@ -9,15 +9,15 @@ NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_gridview.lua");
 System.Windows.mcml.Elements.pe_gridview:RegisterAs("pe:gridview");
 ------------------------------------------------------------
 ]]
-NPL.load("(gl)script/ide/System/Windows/mcml/PageElement.lua");
 NPL.load("(gl)script/ide/System/Windows/Controls/GridView.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_treeview.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_bindingblock.lua");
-NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_container.lua");
-local mcml = commonlib.gettable("System.Windows.mcml");
+NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_div.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/PageElement.lua");
 local PageElement = commonlib.gettable("System.Windows.mcml.PageElement");
+local mcml = commonlib.gettable("System.Windows.mcml");
 local GridView = commonlib.gettable("System.Windows.Controls.GridView");
-local pe_gridview = commonlib.inherit(commonlib.gettable("System.Windows.mcml.Elements.pe_container"), commonlib.gettable("System.Windows.mcml.Elements.pe_gridview"));
+local pe_gridview = commonlib.inherit(commonlib.gettable("System.Windows.mcml.Elements.pe_div"), commonlib.gettable("System.Windows.mcml.Elements.pe_gridview"));
 pe_gridview:Property({"class_name", "pe:gridview"});
 
 function pe_gridview:ctor()
@@ -26,53 +26,68 @@ function pe_gridview:ctor()
 	self.bottomPager= nil;
 end
 
-function pe_gridview:LoadComponent(parentElem, parentLayout, styleItem)
-	local _this = self.control;
-	if(not _this) then
-		_this = GridView:new():init(parentElem);
-		self:SetControl(_this);
-	else
-		_this:SetParent(parentElem);
-	end
-	PageElement.LoadComponent(self, _this, parentLayout, styleItem)
-end
+function pe_gridview:CreateControl()
+	echo("pe_gridview:CreateControl")
+	local parentElem = self:GetParentControl();
+	local _this = GridView:new():init(parentElem);
+	self:SetControl(_this);
 
-function pe_gridview:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
-	css:Merge(mcml:GetStyleItem(self.class_name));
-
-	local _this = self.control;
-
-	self.ItemOpenBG = self:GetString("ItemOpenBG") or css.ItemOpenBG;
-	self.ItemCloseBG = self:GetString("ItemCloseBG") or css.ItemCloseBG;
-	self.ItemToggleSize = self:GetNumber("ItemToggleSize") or css.ItemToggleSize;
-	self.DefaultNodeHeight = self:GetNumber("DefaultNodeHeight") or css.DefaultNodeHeight or 20;
-	self.ItemToggleRightSpacing = self:GetNumber("ItemToggleRightSpacing") or css.ItemToggleRightSpacing;
-	self.DefaultIndentation = self:GetNumber("DefaultIndentation") or css.DefaultIndentation;
-	self.AllowPaging = self:GetAttributeWithCode("AllowPaging", nil, true);
-	self.pagesize = tonumber(self:GetAttributeWithCode("pagesize", nil, true));
-	if(type(self.AllowPaging) == "string") then
-		self.AllowPaging = string.lower(self.AllowPaging);
-	end
-	if(self.AllowPaging == "true") then
-		self.AllowPaging = true;
-	elseif(self.AllowPaging == "false") then
-		self.AllowPaging = false;
-	end
-	self.fitHeight = self:CountHeight();
-	
-
-	--container_bg = css.background or self:GetString("background"), -- change to css background first
 	_this:SetDefaultNodeHeight(self.DefaultNodeHeight or 24);
-	_this:SetDefaultIconSize(self:GetNumber("DefaultIconSize") or css.DefaultIconSize);
+	_this:SetDefaultIconSize(self:GetNumber("DefaultIconSize"));
 	_this:SetShowIcon(self:GetBool("ShowIcon"));
 	_this:SetItemOpenBG(self.ItemOpenBG);
 	_this:SetItemCloseBG(self.ItemCloseBG); 
 	_this:SetItemToggleSize(self.ItemToggleSize);
 	_this:SetDefaultIndentation(self.DefaultIndentation);
-	_this:SetVerticalScrollBarOffsetX(self:GetNumber("VerticalScrollBarOffsetX") or css.VerticalScrollBarOffsetX);
-	_this:SetVerticalScrollBarStep(self:GetNumber("VerticalScrollBarStep") or css.VerticalScrollBarStep);
-	_this:SetVerticalScrollBarPageSize(self:GetNumber("VerticalScrollBarPageSize") or css.VerticalScrollBarPageSize);
-	_this:SetMouseOverBG(self:GetString("MouseOverBG") or css.MouseOverBG);
+	_this:SetVerticalScrollBarOffsetX(self:GetNumber("VerticalScrollBarOffsetX"));
+	_this:SetVerticalScrollBarStep(self:GetNumber("VerticalScrollBarStep"));
+	_this:SetVerticalScrollBarPageSize(self:GetNumber("VerticalScrollBarPageSize"));
+	_this:SetMouseOverBG(self:GetString("MouseOverBG"));
+end
+
+function pe_gridview:LoadComponent(parentElem, parentLayout, styleItem)
+	self.AllowPaging = self:GetBool("AllowPaging", false);
+	if(not self.AllowPaging) then
+		self.attr = self.attr or {};
+		self.attr.style = self.attr.style or "";
+		self.attr.style = string.format("overflow:auto;%s",self.attr.style)
+	end
+
+	
+	pe_gridview._super.LoadComponent(self, parentElem, parentLayout, styleItem)
+end
+
+function pe_gridview:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
+	--css:Merge(mcml:GetStyleItem(self.class_name));
+
+	--local _this = self.control;
+
+	self.ItemOpenBG = self:GetString("ItemOpenBG");
+	self.ItemCloseBG = self:GetString("ItemCloseBG");
+	self.ItemToggleSize = self:GetNumber("ItemToggleSize");
+	self.DefaultNodeHeight = self:GetNumber("DefaultNodeHeight") or 20;
+	self.cellPadding = self:GetNumber("CellPadding");
+	self.ItemToggleRightSpacing = self:GetNumber("ItemToggleRightSpacing");
+	self.DefaultIndentation = self:GetNumber("DefaultIndentation");
+	self.pagesize = tonumber(self:GetAttributeWithCode("pagesize", nil, true) or 10);
+
+	self.fitHeight = self:CountHeight();
+	echo("self.fitHeight")
+	echo(self.fitHeight)
+	
+
+	--container_bg = css.background or self:GetString("background"), -- change to css background first
+--	_this:SetDefaultNodeHeight(self.DefaultNodeHeight or 24);
+--	_this:SetDefaultIconSize(self:GetNumber("DefaultIconSize") or css.DefaultIconSize);
+--	_this:SetShowIcon(self:GetBool("ShowIcon"));
+--	_this:SetItemOpenBG(self.ItemOpenBG);
+--	_this:SetItemCloseBG(self.ItemCloseBG); 
+--	_this:SetItemToggleSize(self.ItemToggleSize);
+--	_this:SetDefaultIndentation(self.DefaultIndentation);
+--	_this:SetVerticalScrollBarOffsetX(self:GetNumber("VerticalScrollBarOffsetX") or css.VerticalScrollBarOffsetX);
+--	_this:SetVerticalScrollBarStep(self:GetNumber("VerticalScrollBarStep") or css.VerticalScrollBarStep);
+--	_this:SetVerticalScrollBarPageSize(self:GetNumber("VerticalScrollBarPageSize") or css.VerticalScrollBarPageSize);
+--	_this:SetMouseOverBG(self:GetString("MouseOverBG") or css.MouseOverBG);
 	--_this:SetClickThrough(self:GetBool("ClickThrough"));
 
 
@@ -101,37 +116,37 @@ function pe_gridview:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 end
 
 function pe_gridview:OnLoadComponentAfterChild(parentElem, parentLayout, css)
-	if(self.AllowPaging and self.treeview) then
-		self.treeview:AllowWheel(false);
-	end
 	self:UpdatePageText();
 	pe_gridview._super.OnLoadComponentAfterChild(self, parentElem, parentLayout, css)
 end
 
 function pe_gridview:CountHeight()
-	local css = self:GetStyle();
-	local css_height = css["height"];
-	if(not self.AllowPaging and css_height) then
-		return css_height;
+--	local css = self:GetInlineStyleDecl();
+--	local css_height = css:GetProperty("height");
+--	if(not self.AllowPaging and css_height) then
+--		return css_height;
+--	end
+	if(not self.AllowPaging) then
+		return;
 	end
 	local height = nil;
 	local pagesize = tonumber(self:GetAttributeWithCode("pagesize", nil, true));
 	if(pagesize) then
 		local nodeHeight = self.DefaultNodeHeight;
-		local cellPadding = self:GetAttribute("CellPadding");
-		if(cellPadding) then
-			cellPadding = tonumber(string.match(cellPadding, "%d+"));
-			if(cellPadding) then
-				--nodeHeight = nodeHeight + cellPadding * 2;
-				nodeHeight = nodeHeight + cellPadding;
-			end
-		end	
+		echo("CountHeight")
+		echo({nodeHeight, self.cellPadding, pagesize})
+		if(self.cellPadding) then
+			--nodeHeight = nodeHeight + self.cellPadding * 2;
+			nodeHeight = nodeHeight + self.cellPadding;
+		end
 		height = pagesize * nodeHeight;
-	else
-		height = css_height;
+--	else
+--		height = css_height;
 	end
 	return height;
 end
+
+local GetNodeAttribute = PageElement.GetAttribute
 
 function pe_gridview:CreatePagerNode()
 	if(self.AllowPaging) then
@@ -141,16 +156,16 @@ function pe_gridview:CreatePagerNode()
 			local PagerSettings = {
 				height = 26,
 				-- can be either "Top", "Bottom", or "TopAndBottom"
-				Position = "TopAndBottom",
-				--Position = "Bottom",
+				--Position = "TopAndBottom",
+				Position = "Bottom",
 			};
 			local node = self:GetChild("PagerSettings");
 			if(node) then
-				PagerSettings.Position = node:GetAttribute("Position") or PagerSettings.Position;
-				PagerSettings.height = node:GetAttribute("height") or PagerSettings.height;
-				PagerSettings.NextPageText = node:GetAttribute("NextPageText");
-				PagerSettings.PreviousPageText = node:GetAttribute("PreviousPageText")
-				PagerSettings.style = node:GetAttribute("style")
+				PagerSettings.Position = GetNodeAttribute(node, "Position") or PagerSettings.Position;
+				PagerSettings.height = GetNodeAttribute(node, "height") or PagerSettings.height;
+				PagerSettings.NextPageText = GetNodeAttribute(node, "NextPageText");
+				PagerSettings.PreviousPageText = GetNodeAttribute(node, "PreviousPageText")
+				PagerSettings.style = GetNodeAttribute(node, "style")
 			end
 
 
@@ -208,9 +223,14 @@ function pe_gridview:CreatePagerNode()
 						self.bottomPager = node;
 					end	
 					if(PagerSettings.style) then
-						node:SetAttribute("style", PagerSettings.style);
+						node:SetAttribute("style", PagerSettings.style, false);
 					end
-					self:AddChild(node, index);
+					if(i == 1) then
+						self:InsertBefore(node, self.treeview, false);
+					else
+						self:AppendChild(node, false);
+					end
+					
 				end
 			end	
 --		else
@@ -239,18 +259,14 @@ end
 function pe_gridview:CreateTreeViewNode()
 	local TreeViewNode = self:GetChild("pe:treeview");
 	if( not TreeViewNode ) then
-		local cellPadding = self:GetAttribute("CellPadding");
-		if(cellPadding) then
-			cellPadding = string.match(cellPadding, "%d+");
-		end	
 		local attr={};
 		attr.style = "";
 		if(self.fitHeight) then
 			attr.style = format("max-height:%dpx;",self.fitHeight);
 		end
-		if(cellPadding) then
-			attr.style = format("%smargin:%spx;",attr.style,cellPadding);
-			--TreeViewNode:SetAttribute("style", format("margin:%spx", cellPadding))
+		if(self.cellPadding) then
+			--attr.style = format("%smargin:%spx;",attr.style,self.cellPadding);
+			--TreeViewNode:SetAttribute("style", format("margin:%spx", self.cellPadding))
 		end
 		if(self.AllowPaging) then
 			attr.style = format("%s%s;",attr.style,"overflow-y:hidden;");
@@ -258,7 +274,7 @@ function pe_gridview:CreateTreeViewNode()
 		TreeViewNode = mcml.Elements.pe_treeview:new({name="pe:treeview",attr=attr});
 		local defaultnodeheight = self:GetAttribute("DefaultNodeHeight")
 		if(defaultnodeheight) then
-			TreeViewNode:SetAttribute("DefaultNodeHeight", defaultnodeheight + (cellPadding or 0))
+			TreeViewNode:SetAttribute("DefaultNodeHeight", defaultnodeheight)
 		end
 		local verticalscrollbarstep = self:GetAttribute("VerticalScrollBarStep")
 		if(verticalscrollbarstep) then
@@ -293,7 +309,7 @@ function pe_gridview:CreateTreeViewNode()
 			TreeViewNode:SetAttribute("ScrollBarTrackWidth", ScrollBarTrackWidth);
 		end
 
-		self:AddChild(TreeViewNode);
+		self:AppendChild(TreeViewNode, false);
 
 		self.treeview = TreeViewNode;
 	end
@@ -372,10 +388,6 @@ function pe_gridview:DataBind(pageInstName)
 	end
 	
 	-- iterate and create node. 
-	local cellPadding = self:GetAttribute("CellPadding");
-	if(cellPadding) then
-		cellPadding = string.match(cellPadding, "%d+");
-	end	
 	local pagesize = tonumber(self:GetAttributeWithCode("pagesize", nil, true));
 	--local AllowPaging = self:GetBool("AllowPaging");
 	local ItemsPerLine = self:GetNumber("ItemsPerLine") or 1;
@@ -398,7 +410,8 @@ function pe_gridview:DataBind(pageInstName)
 		if(type(nDataCount) == "number" and pagesize) then
 			self.pagecount = math.ceil(nDataCount/pagesize);
 		end
-		
+		echo("nDataCount")
+		echo(nDataCount or "nDataCount is nil")
 		if(nDataCount==nil or nDataCount==0) then
 			-- if empty data, show empty templates if any. 
 			local EmptyTemplateNode;
@@ -408,14 +421,16 @@ function pe_gridview:DataBind(pageInstName)
 				EmptyTemplateNode = self:GetChild("EmptyDataTemplate");
 			end
 			if(EmptyTemplateNode) then
-				local rowNode = EmptyTemplateNode:clone();
-				rowNode.name = "div";
-				if(cellPadding) then
-					--rowNode:SetAttribute("style", format("padding-right:%spx;padding-bottom:%spx", cellPadding, cellPadding))
-					rowNode:SetAttribute("style", format("padding-right:%spx;padding-bottom:%spx", cellPadding, cellPadding))
-					--rowNode:SetAttribute("style", format("padding:%spx", cellPadding))
+				local o = commonlib.copy(EmptyTemplateNode);
+				o.name = "div";
+				local rowNode = mcml:createFromXmlNode(o);
+
+				if(self.cellPadding) then
+					--rowNode:SetAttribute("style", format("padding-right:%spx;padding-bottom:%spx", self.cellPadding, self.cellPadding))
+					--rowNode:SetAttribute("style", format("padding-right:%spx;padding-bottom:%spx", self.cellPadding, self.cellPadding))
+					rowNode:SetAttribute("style", format("margin:%spx", self.cellPadding))
 				end
-				TreeViewNode:AddChild(rowNode, nil);
+				TreeViewNode:AppendChild(rowNode, false);
 			end
 		else
 			-- show data of current page. 
@@ -447,13 +462,13 @@ function pe_gridview:DataBind(pageInstName)
 					o.name = "pe:bindingblock";
 					local rowNode = mcml:createFromXmlNode(o);
 
-					if(cellPadding) then
-						--rowNode:SetAttribute("style", format("margin-right:%spx;margin-bottom:%spx;", cellPadding, cellPadding), false);
-						rowNode:SetAttribute("style", format("padding-right:%spx;padding-bottom:%spx;", cellPadding, cellPadding), false);
-						--rowNode:SetAttribute("style", format("padding:%spx;", cellPadding), false);
+					if(self.cellPadding) then
+						--rowNode:SetAttribute("style", format("margin-right:%spx;margin-bottom:%spx;", self.cellPadding, self.cellPadding), false);
+						--rowNode:SetAttribute("style", format("padding-right:%spx;padding-bottom:%spx;", self.cellPadding, self.cellPadding), false);
+						rowNode:SetAttribute("style", format("margin:%spx;", self.cellPadding), false);
 					end
 					if(ItemsPerLine == 1) then
-						TreeViewNode:AddChild(rowNode, nil);
+						TreeViewNode:AppendChild(rowNode, false);
 					else
 						rowNode:SetAttribute("style", format("float:float;%s", rowNode:GetAttribute("style") or ""));
 						
@@ -530,6 +545,7 @@ end
 
 -- Public method: update pager text
 function pe_gridview:UpdatePageText()
+	echo("pe_gridview:UpdatePageText")
 	if(self.AllowPaging) then
 		for pagerNode in self:next("pe:pager") do
 			local pageindex = self:GetAttribute("pageindex");
@@ -572,7 +588,8 @@ end
 function pe_gridview:ScrollToPage(pageInstName, nPageIndex)
 	if(self.AllowPaging and self.pagesize and nPageIndex) then
 		local child_index = self.pagesize * (nPageIndex - 1) + 1;
-		self.treeview:scrollToChild(child_index);
+		--self.treeview:scrollToChild(child_index);
+		self.treeview:ScrollTo(nil, (self.DefaultNodeHeight + (self.cellPadding or 0)) * (child_index - 1))
 
 		for pagerNode in self:next("pe:pager") do
 			pagerNode:UpdatePager(pageInstName, nPageIndex, self.pagecount);

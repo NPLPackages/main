@@ -33,79 +33,109 @@ System.Windows.mcml.Elements.pe_treeview:RegisterAs("pe:treeview");
 ------------------------------------------------------------
 ]]
 
-local PageElement = commonlib.gettable("System.Windows.mcml.PageElement");
-NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_scrollarea.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_div.lua");
 NPL.load("(gl)script/ide/System/Windows/Controls/TreeView.lua");
 local TreeView = commonlib.gettable("System.Windows.Controls.TreeView");
 local mcml = commonlib.gettable("System.Windows.mcml");
 
-local pe_treeview = commonlib.inherit(commonlib.gettable("System.Windows.mcml.Elements.pe_scrollarea"), commonlib.gettable("System.Windows.mcml.Elements.pe_treeview"));
+local pe_treeview = commonlib.inherit(commonlib.gettable("System.Windows.mcml.Elements.pe_div"), commonlib.gettable("System.Windows.mcml.Elements.pe_treeview"));
 pe_treeview:Property({"class_name", "pe:treeview"});
 
 function pe_treeview:ctor()
-	self.myLayout = nil;
+	echo("pe_treeview:ctor")
 end
 
-function pe_treeview:LoadComponent(parentElem, parentLayout, styleItem)
-	local _this = self.control;
-	if(not _this) then
-		_this = TreeView:new():init(parentElem);
-		_this:setHorizontalScrollBarPolicy("AlwaysOff");
---		_this:setVerticalScrollBarPolicy("AlwaysOff");
-		self:SetControl(_this);
-	else
-		_this:SetParent(parentElem);
-	end
-	PageElement.LoadComponent(self, _this.viewport, parentLayout, styleItem)
-end
+function pe_treeview:CreateControl()
+	echo("pe_treeview:CreateControl")
+	local parentElem = self:GetParentControl();
+	local _this = TreeView:new():init(parentElem);
+	self:SetControl(_this);
 
-function pe_treeview:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
-	css:Merge(mcml:GetStyleItem(self.class_name));
-
-	local _this = self.control;
-
-	self.ItemOpenBG = self:GetString("ItemOpenBG") or css.ItemOpenBG;
-	self.ItemCloseBG = self:GetString("ItemCloseBG") or css.ItemCloseBG;
-	self.ItemToggleSize = self:GetNumber("ItemToggleSize") or css.ItemToggleSize;
-	self.DefaultNodeHeight = self:GetNumber("DefaultNodeHeight") or css.DefaultNodeHeight or 24;
-	self.ItemToggleRightSpacing = self:GetNumber("ItemToggleRightSpacing") or css.ItemToggleRightSpacing;
-	self.DefaultIndentation = self:GetNumber("DefaultIndentation") or css.DefaultIndentation;
+	--_this:setHorizontalScrollBarPolicy("AlwaysOff");
 
 	--container_bg = css.background or self:GetString("background"), -- change to css background first
 	_this:SetDefaultNodeHeight(self.DefaultNodeHeight);
-	_this:SetDefaultIconSize(self:GetNumber("DefaultIconSize") or css.DefaultIconSize);
+	_this:SetDefaultIconSize(self:GetNumber("DefaultIconSize"));
 	_this:SetShowIcon(self:GetBool("ShowIcon"));
 	_this:SetItemOpenBG(self.ItemOpenBG);
 	_this:SetItemCloseBG(self.ItemCloseBG); 
 	_this:SetItemToggleSize(self.ItemToggleSize);
 	_this:SetDefaultIndentation(self.DefaultIndentation);
-	_this:SetVerticalScrollBarOffsetX(self:GetNumber("VerticalScrollBarOffsetX") or css.VerticalScrollBarOffsetX);
-	_this:SetVerticalScrollBarStep(self:GetNumber("VerticalScrollBarStep") or css.VerticalScrollBarStep);
-	_this:SetVerticalScrollBarPageSize(self:GetNumber("VerticalScrollBarPageSize") or css.VerticalScrollBarPageSize);
-	_this:SetMouseOverBG(self:GetString("MouseOverBG") or css.MouseOverBG);
-	--_this:SetClickThrough(self:GetBool("ClickThrough"));
-	self.onclick = self:GetAttributeWithCode("OnClick", nil, true);
+	_this:SetVerticalScrollBarOffsetX(self:GetNumber("VerticalScrollBarOffsetX"));
+	_this:SetVerticalScrollBarStep(self:GetNumber("VerticalScrollBarStep"));
+	_this:SetVerticalScrollBarPageSize(self:GetNumber("VerticalScrollBarPageSize"));
+	_this:SetMouseOverBG(self:GetString("MouseOverBG"));
 
-	if(css["overflow-y"] and css["overflow-y"] == "hidden") then
-		_this:setVerticalScrollBarPolicy("AlwaysOff");
-	end
+end
 
-	if(not css.background and not css.background2 and css["background-color"]~="#ffffff00") then
-		if(css["background-color"]) then
-			css.background = "Texture/whitedot.png";	
-		else
-			css["background-color"] = "#ffffff00";
-		end
-	end
+--function pe_treeview:LoadComponent(parentElem, parentLayout, styleItem)
+--	local _this = self.control;
+--	if(not _this) then
+--		_this = TreeView:new():init(parentElem);
+----		_this:setHorizontalScrollBarPolicy("AlwaysOff");
+----		_this:setVerticalScrollBarPolicy("AlwaysOff");
+--		self:SetControl(_this);
+--	else
+--		_this:SetParent(parentElem);
+--	end
+--	PageElement.LoadComponent(self, _this.viewport, parentLayout, styleItem)
+--end
 
-	if(self.control) then
-		self.control:ApplyCss(css);
-	end
+function pe_treeview:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
+	echo("pe_treeview:OnLoadComponentBeforeChild")
+--	css:Merge(mcml:GetStyleItem(self.class_name));
+--
+--	local _this = self.control;
+--
+--	self.ItemOpenBG = self:GetString("ItemOpenBG") or css.ItemOpenBG;
+--	self.ItemCloseBG = self:GetString("ItemCloseBG") or css.ItemCloseBG;
+--	self.ItemToggleSize = self:GetNumber("ItemToggleSize") or css.ItemToggleSize;
+--	self.DefaultNodeHeight = self:GetNumber("DefaultNodeHeight") or css.DefaultNodeHeight or 24;
+--	self.ItemToggleRightSpacing = self:GetNumber("ItemToggleRightSpacing") or css.ItemToggleRightSpacing;
+--	self.DefaultIndentation = self:GetNumber("DefaultIndentation") or css.DefaultIndentation;
+--
+--	--container_bg = css.background or self:GetString("background"), -- change to css background first
+--	_this:SetDefaultNodeHeight(self.DefaultNodeHeight);
+--	_this:SetDefaultIconSize(self:GetNumber("DefaultIconSize") or css.DefaultIconSize);
+--	_this:SetShowIcon(self:GetBool("ShowIcon"));
+--	_this:SetItemOpenBG(self.ItemOpenBG);
+--	_this:SetItemCloseBG(self.ItemCloseBG); 
+--	_this:SetItemToggleSize(self.ItemToggleSize);
+--	_this:SetDefaultIndentation(self.DefaultIndentation);
+--	_this:SetVerticalScrollBarOffsetX(self:GetNumber("VerticalScrollBarOffsetX") or css.VerticalScrollBarOffsetX);
+--	_this:SetVerticalScrollBarStep(self:GetNumber("VerticalScrollBarStep") or css.VerticalScrollBarStep);
+--	_this:SetVerticalScrollBarPageSize(self:GetNumber("VerticalScrollBarPageSize") or css.VerticalScrollBarPageSize);
+--	_this:SetMouseOverBG(self:GetString("MouseOverBG") or css.MouseOverBG);
+--	--_this:SetClickThrough(self:GetBool("ClickThrough"));
+--	self.onclick = self:GetAttributeWithCode("OnClick", nil, true);
+--
+--	if(css["overflow-y"] and css["overflow-y"] == "hidden") then
+--		_this:setVerticalScrollBarPolicy("AlwaysOff");
+--	end
+--
+--	if(not css.background and not css.background2 and css["background-color"]~="#ffffff00") then
+--		if(css["background-color"]) then
+--			css.background = "Texture/whitedot.png";	
+--		else
+--			css["background-color"] = "#ffffff00";
+--		end
+--	end
+--
+--	if(self.control) then
+--		self.control:ApplyCss(css);
+--	end
 	
+	self.ItemOpenBG = self:GetString("ItemOpenBG");
+	self.ItemCloseBG = self:GetString("ItemCloseBG");
+	self.ItemToggleSize = self:GetNumber("ItemToggleSize");
+	self.DefaultNodeHeight = self:GetNumber("DefaultNodeHeight") or 24;
+	self.ItemToggleRightSpacing = self:GetNumber("ItemToggleRightSpacing");
+	self.DefaultIndentation = self:GetNumber("DefaultIndentation") or 30;
 
 
 	-- Extract from datasource if it is already provided in the input. 
 	local ds = self:GetAttributeWithCode("DataSourceID", nil, true);
+	echo(ds)
 	if(ds) then
 		self:SetDataSource(ds);
 	else
@@ -124,7 +154,9 @@ end
 
 function pe_treeview:OnLoadComponentAfterChild(parentElem, parentLayout, css)
 	local function setNodeMinHeightRecursive(node, ignores, recursives)
+		echo("setNodeMinHeightRecursive")
 		for childnode in node:next() do
+			childnode:PrintNodeInfo()
 			local setMinHeight = false;
 			if(ignores[childnode.name]) then
 				-- do nothing
@@ -136,11 +168,18 @@ function pe_treeview:OnLoadComponentAfterChild(parentElem, parentLayout, css)
 			else
 				setMinHeight = true;
 			end
+
 			if(setMinHeight) then
-				local style = childnode:GetStyle();
-				if(not style["min-height"]) then
-					style["min-height"] = self.DefaultNodeHeight;
+				local inline_style = childnode:GetInlineStyleDecl();
+				local min_height = inline_style:GetProperty("min-height");
+				if(not min_height) then
+					inline_style:SetProperty("min-height", self.DefaultNodeHeight);
 				end
+--
+--				local style = childnode:GetStyle();
+--				if(not style["min-height"]) then
+--					style["min-height"] = self.DefaultNodeHeight;
+--				end
 			end
 		end
 	end
@@ -151,30 +190,9 @@ function pe_treeview:OnLoadComponentAfterChild(parentElem, parentLayout, css)
 
 	local recursives = {
 		["pe:treenode"] = true,
-		["DataNodePlaceholder"] = true,
 	}
 
 	setNodeMinHeightRecursive(self, ignores, recursives);
-
---	for childnode in self:next() do
---		if(childnode.name == "NodeTemplates") then
---			-- do nothing
---		elseif(childnode.name == "DataNodePlaceholder") then
---			for temp_node in childnode:next() do
---				if(temp_node.name == "NodeTemplate") then
---					
---				elseif(temp_node.name == "pe:treenode") then
---
---				else
---
---				end
---			end		
---		elseif(childnode.name == "pe:treenode") then
---
---		else
---
---		end
---	end
 end
 
 function pe_treeview:Rebuild(parentElem)
@@ -194,6 +212,7 @@ function pe_treeview:Rebuild(parentElem)
 end
 
 function pe_treeview:SetDataSource(dataSource)
+	echo("pe_treeview:SetDataSource")
 	local pageCtrl = self:GetPageCtrl();
 	if(not pageCtrl) then return end
 	if(type(dataSource) == "string") then
@@ -202,6 +221,7 @@ function pe_treeview:SetDataSource(dataSource)
 	else
 		self.datasource = dataSource;
 	end
+	echo(self.datasource.name)
 end
 
 -- Public method: rebind (refresh) the data.
@@ -210,8 +230,10 @@ end
 -- such as <%=Eval("xpath")%> will return the xpath of the node
 -- @param bRefreshUI: true to refresh UI. otherwise node is updated but UI is not. 
 function pe_treeview:DataBind(bRefreshUI)
+	echo("pe_treeview:DataBind")
 	local templates_node = self:GetChild("NodeTemplates");
 	if(not templates_node or type(self.datasource)~="table") then
+		echo("not templates_node")
 		return 
 	end
 	-- build a fast map for look up. 
@@ -231,14 +253,17 @@ function pe_treeview:DataBind(bRefreshUI)
 	
 	local output = self:GetAllChildWithName("DataNodePlaceholder");
 	if(not output) then
-		local generated_node = PageElement:new({name="DataNodePlaceholder"}); 
+		--local generated_node = PageElement:new({name="div"}); 
+		local generated_node = mcml:createFromXmlNode({name="div"}); 
 		--local generated_node = Map3DSystem.mcml.new(nil,{name="DataNodePlaceholder"});
-		self:AddChild(generated_node);
+		--self:AddChild(generated_node);
+		self:AppendChild(generated_node, false);
 		output = {generated_node};
 	end
 	local _, generated_node
 	for _, generated_node in ipairs(output) do
-		generated_node:ClearAllChildren();
+		--generated_node:ClearAllChildren();
+		generated_node:RemoveChildren();
 	
 		-- now tranverse the datasource to create all tree nodes. 
 		-- Note: right now databinding is not suitable for extreamly large data source like tens of thousands of nodes
@@ -248,11 +273,28 @@ function pe_treeview:DataBind(bRefreshUI)
 		local function CreatePageElement(o)
 			if(type(o) == "table") then
 				o = commonlib.copy(o)
+				--o = o:CopyOriginalData()
 			end
 			return mcml:createFromXmlNode(o)
 		end
 
+		local function needIndented(node)
+			local parent = node:Parent();
+			while(parent and parent:TagName() ~= "treeview") do
+				if(parent:TagName() == "treenode") then
+					return true;
+				end
+				parent = parent:Parent();
+			end
+			return false;
+		end
+
 		local function CreateTreeNode(inTable, parentNode)
+			echo("CreateTreeNode")
+			echo(inTable.name)
+			echo(inTable.attr)
+			echo(parentNode.name)
+			echo(parentNode.attr)
 			if(not inTable) then return end
 			if(type(inTable) == "table") then 	
 				local template_node = template_map[inTable.name]
@@ -277,13 +319,20 @@ function pe_treeview:DataBind(bRefreshUI)
 							tree_node = CreatePageElement(source_node); 
 						end
 					else
-						template_node = commonlib.copy(template_node);
+						--template_node = commonlib.copy(template_node);
+						template_node = template_node:clone();
 						template_node.name = "div";
 						tree_node = CreatePageElement(template_node);
 					end
 					if(tree_node) then
 						tree_node:SetPreValue("this", inTable.attr);
-						parentNode:AddChild(tree_node)
+						parentNode:AppendChild(tree_node, false)
+--						if(needIndented(tree_node)) then
+--							echo("if(needIndented(tree_node)) then")
+--							tree_node.attr = tree_node.attr or {};
+--							tree_node.attr.style = tree_node.attr.style or "";
+--							tree_node.attr.style = string.format("margin-left:%dpx;%s", self.DefaultIndentation, tree_node.attr.style)
+--						end
 						thisNode = tree_node;
 					end
 				end	
@@ -311,13 +360,13 @@ function pe_treeview:DataBind(bRefreshUI)
 	end
 end
 
--- Clear all child nodes
-function pe_treeview:ClearAllChildren()
-	if(self.control and self.control.viewport) then
-		self.control.viewport:deleteChildren();
-	end
-	commonlib.resize(self, 0);
-end
+---- Clear all child nodes
+--function pe_treeview:ClearAllChildren()
+--	if(self.control and self.control.viewport) then
+--		self.control.viewport:deleteChildren();
+--	end
+--	commonlib.resize(self, 0);
+--end
 
 function pe_treeview:setRealSize(width, height)
 	if(self.control and self.control.viewport) then
@@ -340,9 +389,10 @@ function pe_treeview:ScrollToEnd()
 end
 
 function pe_treeview:scrollToChild(index)
-	if(self.control) then
-		self.control:scrollToPos(nil, self.DefaultNodeHeight * (index - 1));
-	end	
+--	if(self.control) then
+--		self.control:scrollToPos(nil, self.DefaultNodeHeight * (index - 1));
+--	end	
+	self:ScrollTo(nil, self.DefaultNodeHeight * (index - 1))
 end
 
 function pe_treeview:OnBeforeChildLayout(layout)

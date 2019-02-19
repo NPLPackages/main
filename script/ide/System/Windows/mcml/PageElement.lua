@@ -98,8 +98,6 @@ local NodeFlags = commonlib.inherit(nil, commonlib.gettable("System.Windows.mcml
 local DefaultFlagValues = {
 	["IsElementFlag"] = false;
 	["IsStyledElementFlag"] = false;
-	["IsActiveFlag"] = false;
-	["IsHoveredFlag"] = false;
 	["HasIDFlag"] = false;
 	["HasClassFlag"] = false;
 	["IsAttachedFlag"] = false;
@@ -108,7 +106,10 @@ local DefaultFlagValues = {
     ["IsActiveFlag"] = false;
     ["IsHoveredFlag"] = false;
 	["InDetachFlag"] = false;
+
+	["IsParsingChildrenFinishedFlag"] = false;
 	["IsStyleAttributeValidFlag"] = false;
+
 	
 	["StyleChangeMask"] = StyleChangeTypeEnum.NoStyleChange;
 };
@@ -154,9 +155,33 @@ end
 -- @return the input o is returned. 
 function PageElement:createFromXmlNode(o)
 	o = self:new(o);
---	o:ParseAllMappedAttribute();
+	o:BeginParsingChildren();
 	o:createChildRecursive_helper();
+	o:FinishParsingChildren();
 	return o;
+end
+
+function PageElement:BeginParsingChildren()
+	self:ClearIsParsingChildrenFinished();
+end
+
+function PageElement:FinishParsingChildren()
+	self:SetIsParsingChildrenFinished();
+end
+
+function PageElement:CopyOriginalData()
+	local o = {};
+	o.name = self.name;
+	o.attr = commonlib.copy(self.attr);
+	if(#self ~= 0) then
+		for i, child in ipairs(self) do
+			if(type(child) == "table" and child.clone) then
+				o[i] = child:CopyOriginalData();
+			else
+				o[i] = commonlib.copy(child)
+			end
+		end
+	end
 end
 
 function PageElement:clone()
@@ -255,7 +280,9 @@ local no_parse_nodes = {
 	["EmptyDataTemplate"] = true,
 	["FetchingDataTemplate"] = true,
 	["Columns"] = true,
+	["PagerSettings"] = true,
 	["PagerTemplate"] = true,
+	["Resource"] = true,
 }
 
 function PageElement:Rebuild(parentElem)
@@ -268,14 +295,15 @@ function PageElement:Rebuild(parentElem)
 end
 
 function PageElement:NeedsLoadComponent()
-	if(self:GetAttribute("display") == "none" or no_parse_nodes[self.name]) then
+	if(no_parse_nodes[self.name]) then
 		return false;
 	end
 	return true;
 end
 
+--[[
 function PageElement:NeedsCreateControl()
-	if(self:GetAttribute("display") == "none" or no_parse_nodes[self.name]) then
+	if(no_parse_nodes[self.name]) then
 		return false;
 	end
 	return true;
@@ -286,12 +314,14 @@ function PageElement:CreateControlIfNeeded(parentElem)
 		self:CreateControl(parentElem);
 	end
 end
-
+--]]
 function PageElement:CreateControl()
 
 end
 
 function PageElement:DestroyControl()
+	echo("PageElement:DestroyControl")
+	self:PrintNodeInfo();
 	if(self.control) then
 		self.control:Destroy();
 		self.control = nil;
@@ -299,6 +329,8 @@ function PageElement:DestroyControl()
 end
 
 function PageElement:LoadComponentIfNeeded(parentElem, parentLayout, style_decl)
+	echo("PageElement:LoadComponentIfNeeded begin")
+	self:PrintNodeInfo()
 	--self:CreateStyle(nil, style_decl);
 	
 	--self:CreateControlIfNeeded();
@@ -309,7 +341,7 @@ function PageElement:LoadComponentIfNeeded(parentElem, parentLayout, style_decl)
 		self:LoadComponent(parentElem, parentLayout, style_decl);
 	end
 
-	--
+	echo("PageElement:LoadComponentIfNeeded end")
 end
 
 -- virtual function: load component recursively. 
@@ -359,6 +391,14 @@ function PageElement:LoadComponent(parentElem, parentLayout, styleItem)
 	self:UnapplyPreValues();
 end
 
+function PageElement:ScrollTo(x, y)
+	echo("PageElement:ScrollTo")
+	self:PrintNodeInfo()
+	echo({x, y})
+	if(self.layout_object) then
+		self.layout_object:ScrollToWithNotify(x, y);
+	end
+end
 
 function PageElement:LayoutObjectIsNeeded(style)
 	if(style and style:Display() == DisplayEnum.NONE) then
@@ -366,6 +406,8 @@ function PageElement:LayoutObjectIsNeeded(style)
 	end
 	return true;
 end
+
+PageElement.RendererIsNeeded = PageElement.LayoutObjectIsNeeded;
 
 
 function PageElement:CreateLayoutObject(arena, style)
@@ -389,6 +431,8 @@ function PageElement:SetRenderer(renderer)
 end
 
 function PageElement:attachLayoutTree()
+	echo("PageElement:attachLayoutTree")
+	self:PrintNodeInfo()
 	--local computed_style = self:StyleForLayoutObject();
 	--local computed_style = if_else(self.style, self.style.computed_style, nil);
 	LayoutTreeBuilder:init(self):CreateLayoutObjectIfNeeded();
@@ -407,6 +451,8 @@ function PageElement:attachLayoutTree()
 end
 
 function PageElement:reattachLayoutTree()
+	echo("PageElement:reattachLayoutTree")
+	self:PrintNodeInfo()
     if (self:Attached()) then
         self:detachLayoutTree();
 --		self:DestroyControl();
@@ -415,6 +461,8 @@ function PageElement:reattachLayoutTree()
 end
 
 function PageElement:detachLayoutTree()
+	echo("PageElement:detachLayoutTree")
+	self:PrintNodeInfo()
 	local child = self.m_firstChild;
 	while(child) do
 		child:detachLayoutTree();
@@ -422,7 +470,7 @@ function PageElement:detachLayoutTree()
 		child = child:NextSibling();
 	end
 
-	self:DestroyControl();
+	--self:DestroyControl();
 
     self:ClearChildNeedsStyleRecalc();
 
@@ -726,9 +774,25 @@ function PageElement:OnLoadComponentAfterChild(parentElem, parentLayout, css)
 end
 
 function PageElement:OnLoadChildrenComponent(parentElem, parentLayout, css)
-	for childnode in self:next() do
+	echo("PageElement:OnLoadChildrenComponent")
+	self:PrintNodeInfo()
+	local childnode = self:FirstChild()
+	while(childnode) do
+		echo("for childnode")
+		self:PrintNodeInfo()
+		childnode:PrintNodeInfo()
+		echo(self:ChildNodeCount())
 		childnode:LoadComponentIfNeeded(parentElem, parentLayout, css);
+
+		childnode = childnode:NextSibling();
 	end
+--	for childnode in self:next() do
+--		echo("for childnode")
+--		self:PrintNodeInfo()
+--		childnode:PrintNodeInfo()
+--		echo(self:ChildNodeCount())
+--		childnode:LoadComponentIfNeeded(parentElem, parentLayout, css);
+--	end
 end
 
 local reset_layout_attrs = {
@@ -737,13 +801,14 @@ local reset_layout_attrs = {
 };
 
 -- set the value of an attribute of this node. This function is rarely used. 
-function PageElement:SetAttribute(attrName, value, beForceResetLayout)
+function PageElement:SetAttribute(attrName, value, notifyChanged)
+	notifyChanged = if_else(notifyChanged==nil, true, notifyChanged)
 	self.attr = self.attr or {};
 	if(self.attr[attrName] ~= value) then
 		self.attr[attrName] = value;
-
-		self:AttributeChanged(attrName, value);
-
+		if(notifyChanged) then
+			self:AttributeChanged(attrName, value);
+		end
 --		if(attrName == "style" or attrName == "id" or attrName == "class") then
 --			-- tricky code: since we will cache style table on the node, we need to delete the cached style when it is changed. 
 --			-- self.style = nil;
@@ -820,6 +885,8 @@ function PageElement:ParseMappedAttribute(attrName, value)
 	elseif(attrName == "style") then
         self:StyleAttributeChanged(value);
 		self:SetNeedsStyleRecalc();
+	elseif(attrName == "display") then
+		self:AddAttributeCSSProperty("display", "display", if_else(value=="none", "none", nil));
     end
 
 end
@@ -850,7 +917,7 @@ function PageElement:StyleAttributeChanged(value)
 end
 
 -- set the attribute if attribute is not code. 
-function PageElement:SetAttributeIfNotCode(attrName, value)
+function PageElement:SetAttributeIfNotCode(attrName, value, notifyChanged)
 	self.attr = self.attr or {};
 	local old_value = self.attr[attrName];
 	if(type(old_value) == "string") then
@@ -860,7 +927,7 @@ function PageElement:SetAttributeIfNotCode(attrName, value)
 		end
 	end
 
-	self:SetAttribute(attrName,value);
+	self:SetAttribute(attrName,value,notifyChanged);
 end
 
 -- get the value of an attribute of this node as its original format (usually string)
@@ -1006,6 +1073,64 @@ function PageElement:GetInnerText()
 	return text;
 end
 
+--static inline bool hasOneChild(ContainerNode* node)
+local function hasOneChild(node)
+    local firstChild = node:FirstChild();
+    return firstChild and not firstChild:NextSibling();
+end
+
+--static inline bool hasOneTextChild(ContainerNode* node)
+local function hasOneTextChild(node)
+    return hasOneChild(node) and node:FirstChild():IsTextNode();
+end
+
+--static void replaceChildrenWithFragment(HTMLElement* element, PassRefPtr<DocumentFragment> fragment, ExceptionCode& ec)
+local function replaceChildrenWithFragment(element, fragment)
+    if (not fragment) then
+        element:RemoveChildren();
+        return;
+    end
+
+    if (hasOneTextChild(element) and fragment:IsTextNode()) then
+        element:FirstChild():SetData(fragment:Data());
+        return;
+    end
+
+--    if (hasOneChild(element)) {
+--        element->replaceChild(fragment, element->firstChild(), ec);
+--        return;
+--    }
+
+    element:RemoveChildren();
+    element:AppendChild(fragment);
+end
+
+--static PassRefPtr<DocumentFragment> createFragmentFromSource(const String& markup, Element* contextElement, ExceptionCode& ec)
+function createFragmentFromSource(html)
+	echo("createFragmentFromSource")
+	echo(html)
+	local fragment = nil;
+    local htmlBuffer = "<p>"..html.."</p>";
+	local xmlRoot = ParaXML.LuaXML_ParseString(htmlBuffer);
+	echo(xmlRoot)
+	if(type(xmlRoot)=="table" and table.getn(xmlRoot)>0) then
+		local xmlRoot = mcml:createFromXmlNode(xmlRoot[1]);
+		--return xmlRoot[1];
+		fragment = xmlRoot:FirstChild();
+	end
+	echo("fragment info")
+	fragment:PrintNodeInfo()
+    return fragment;
+end
+
+--void HTMLElement::setInnerHTML(const String& html, ExceptionCode& ec)
+function PageElement:SetInnerHTML(html)
+	local fragment = createFragmentFromSource(html);
+    if (fragment) then
+        replaceChildrenWithFragment(self, fragment);
+	end
+end
+
 -- set inner text. It will replace all child nodes with a text node
 function PageElement:SetInnerText(text)
 	self[1] = text;
@@ -1085,13 +1210,26 @@ function PageElement:SetControl(control)
 end
 
 function PageElement:GetParentControl()
+	echo("PageElement:GetParentControl")
+	self:PrintNodeInfo()
 	if(self:Renderer()) then
 		return self:Renderer():GetParentControl();
 	end
 	if(self:ParentNode()) then
 		return self:ParentNode():GetControl();
 	end
+	echo("ParentControl is nil")
 	return;
+end
+
+function PageElement:GetOrCreateControl(pageName)
+	local control = self:GetControl(pageName)
+	if(not control) then
+		echo("CreateControl")
+		self:PrintNodeInfo()
+		self:CreateControl();
+	end
+	return self.control;
 end
 
 -- get the control associated with this node. 
@@ -1120,11 +1258,7 @@ function PageElement:GetControl(pageName)
 			end
 		end
 	end
-
-	if(not self.control) then
-		self:CreateControl();
-	end
-	return self.control;
+	return nil;
 end
 
 -- return font: "System;12;norm";  return nil if not available. 
@@ -1378,14 +1512,19 @@ local function collectTargetNodes(node, nodes)
     collectNodes(node, nodes);
 end
 
-function PageElement:AppendChild(child)
-	return self:InsertBefore(child);
+function PageElement:AppendChild(child, refresh)
+	echo("PageElement:AppendChild")
+	self:PrintNodeInfo()
+	--child:PrintNodeInfo()
+	return self:InsertBefore(child, nil, refresh);
 end
 
 --void ContainerNode::insertBeforeCommon(Node* nextChild, Node* newChild)
 function PageElement:InsertBeforeCommon(nextChild, newChild)
+	echo("PageElement:InsertBeforeCommon")
 	newChild.parent = self;
 	if(nextChild) then
+		echo("has nextChild")
 		local prev = nextChild:PreviousSibling();
 		nextChild:SetPreviousSibling(newChild);
 		if (prev) then
@@ -1396,7 +1535,9 @@ function PageElement:InsertBeforeCommon(nextChild, newChild)
 		
 		newChild:SetPreviousSibling(prev);
 		newChild:SetNextSibling(nextChild);
+		echo(self:GetChildCount())
 	else
+		echo("not has nextChild")
         if (self.m_lastChild) then
             newChild:SetPreviousSibling(self.m_lastChild);
             self.m_lastChild:SetNextSibling(newChild);
@@ -1410,7 +1551,18 @@ end
 
 -- @param child: it can be mcmlNode or string node. 
 -- @param refChild: the next node for the child.
-function PageElement:InsertBefore(child, refChild)
+-- @param refresh: if nil or true, attach node and relayout page.
+function PageElement:InsertBefore(child, refChild, refresh)
+	if(refresh == nil) then
+		local parent = self:Parent();
+		if(parent and parent:Attached()) then
+			refresh = true;
+		else
+			refresh = false;
+		end
+	end
+
+	refresh = if_else(refresh == nil, true, false);
 	if(type(child)=="string") then
 		child = Elements.pe_text:createFromString(child);
 	elseif(type(child)=="table") then
@@ -1418,16 +1570,22 @@ function PageElement:InsertBefore(child, refChild)
 			child = mcml:createFromXmlNode(child);
 		end
 	end
-
+	echo("PageElement:InsertBefore begin")
+	self:PrintNodeInfo()
+	child:PrintNodeInfo()
+	echo(self:GetChildCount())
 	self:InsertBeforeCommon(refChild, child);
 
-	child:LoadComponentIfNeeded();
+	if(refresh) then
+		child:LoadComponentIfNeeded();
 
-	child:LazyAttach();
+		child:LazyAttach();
 
-	self:PostLayoutRequestEvent();
+		self:PostLayoutRequestEvent();
+	end
 	--self:resetLayout();
-
+	echo("PageElement:InsertBefore end")
+	
 	return child;
 end
 
@@ -1683,7 +1841,8 @@ end
 
 -- Get child count
 function PageElement:GetChildCount()
-	return #(self);
+	return self:ChildNodeCount()
+	--return #(self);
 end
 
 -- remove all child nodes and move them to an internal template node
@@ -1875,7 +2034,6 @@ function PageElement:next(name)
 		local node = current_node;
 		while(node) do
 			--node:PrintNodeInfo();
-			
 			current_node = current_node:NextSibling();
 --			if(current_node) then
 --				current_node:PrintNodeInfo();
@@ -1969,12 +2127,12 @@ end
 
 -- show this node. one may needs to refresh the page if page is already rendered
 function PageElement:show()
-	self:SetAttribute("display", nil);
+	self:GetInlineStyleDecl():SetProperty("display", "");
 end
 
 -- hide this node. one may needs to refresh the page if page is already rendered
 function PageElement:hide()
-	self:SetAttribute("display", "none")
+	self:GetInlineStyleDecl():SetProperty("display", "none");
 end
 
 -- get/set inner text
@@ -2728,6 +2886,10 @@ function PageElement:Parent()
 	return self.parent;
 end
 
+function PageElement:SetParent(p)
+	self.parent = p;
+end
+
 function PageElement:ParentNode()
 	return self:Parent();
 end
@@ -2755,6 +2917,18 @@ end
 
 function PageElement:SetAttached()
 	self:SetFlag("IsAttachedFlag")
+end
+
+function PageElement:IsParsingChildrenFinished() 
+	return self:GetFlag("IsParsingChildrenFinishedFlag");
+end
+
+function PageElement:SetIsParsingChildrenFinished(f) 
+	self:SetFlag("IsParsingChildrenFinishedFlag", f);
+end
+
+function PageElement:ClearIsParsingChildrenFinished() 
+	self:ClearFlag("IsParsingChildrenFinishedFlag");
 end
 
 function PageElement:IsStyleAttributeValid() 
@@ -2880,3 +3054,99 @@ function PageElement:TraverseNextNode(stayWithin)
 	end
     return nil;
 end
+
+--unsigned ContainerNode::childNodeCount() const
+function PageElement:ChildNodeCount()
+    local count = 0;
+    local node = self:FirstChild();
+	while(node) do
+		count = count + 1;
+		node = node:NextSibling();
+	end
+    return count;
+end
+
+-- this differs from other remove functions because it forcibly removes all the children,
+-- regardless of read-only status or event exceptions, e.g.
+--void ContainerNode::removeChildren()
+function PageElement:RemoveChildren()
+	echo("PageElement:RemoveChildren")
+	self:PrintNodeInfo();
+    if (not self.m_firstChild) then
+		echo("not self.m_firstChild")
+        return;
+	end
+
+    -- The container node can be removed from event handlers.
+    -- RefPtr<ContainerNode> protect(this);
+
+    -- Do any prep work needed before actually starting to detach
+    -- and remove... e.g. stop loading frames, fire unload events.
+    -- willRemoveChildren(protect.get());
+
+    -- exclude this node when looking for removed focusedNode since only children will be removed
+    -- document()->removeFocusedNodeOfSubtree(this, true);
+
+
+    -- forbidEventDispatch();
+    --Vector<RefPtr<Node>, 10> removedChildren;
+    --removedChildren.reserveInitialCapacity(childNodeCount());
+	local removedChildren = {};
+	local n = self.m_firstChild;
+	echo("while (n) do")
+    while (n) do
+		
+        local next = n:NextSibling();
+
+        -- Remove the node from the tree before calling detach or removedFromDocument (4427024, 4129744).
+        -- removeChild() does this after calling detach(). There is no explanation for
+        -- this discrepancy between removeChild() and its optimized version removeChildren().
+        n:SetPreviousSibling(nil);
+        n:SetNextSibling(nil);
+        n:SetParent(nil);
+        --n->setTreeScopeRecursively(document());
+
+        self.m_firstChild = next;
+        if (n == self.m_lastChild) then
+            self.m_lastChild = nil;
+		end
+        --removedChildren.append(n.release());
+		removedChildren[#removedChildren + 1] = n
+
+		n = self.m_firstChild;
+    end
+	echo("removedChildrenCount")
+	echo(removedChildrenCount)
+    local removedChildrenCount = #removedChildren;
+
+    -- Detach the nodes only after properly removed from the tree because
+    -- a. detaching requires a proper DOM tree (for counters and quotes for
+    -- example) and during the previous loop the next sibling still points to
+    -- the node being removed while the node being removed does not point back
+    -- and does not point to the same parent as its next sibling.
+    -- b. destroying Renderers of standalone nodes is sometimes faster.
+    for i = 1, removedChildrenCount do
+        local removedChild = removedChildren[i];
+        if (removedChild:Attached()) then
+            removedChild:detachLayoutTree();
+		end
+    end
+
+    --allowEventDispatch();
+
+    -- Dispatch a single post-removal mutation event denoting a modified subtree.
+    -- childrenChanged(false, 0, 0, -static_cast<int>(removedChildrenCount));
+    -- dispatchSubtreeModifiedEvent();
+
+--    for (i = 0; i < removedChildrenCount; ++i) {
+--        Node* removedChild = removedChildren[i].get();
+--        if (removedChild->inDocument())
+--            removedChild->removedFromDocument();
+--        -- removeChild() calls removedFromTree(true) if the child was not in the
+--        -- document. There is no explanation for this discrepancy between removeChild()
+--        -- and its optimized version removeChildren().
+--    }
+	self:PostLayoutRequestEvent();
+end
+
+PageElement.ClearAllChildren = PageElement.RemoveChildren;

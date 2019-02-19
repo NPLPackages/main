@@ -21,6 +21,17 @@
         node:GetInlineStyleDecl():SetProperty("font-size","30px");
         --node:GetInlineStyleDecl():SetProperty("padding","");
     end
+    function SetNodeProperty(node,key,value)
+        node:GetInlineStyleDecl():SetProperty(key,value);
+    end
+    function click(name, mcmlnode)
+        --local nodes = Page:jquery("div#divButton");
+        --local node = nodes[1];
+        --SetNodeProperty(node, "width", "");
+        echo("111111")
+        echo(mcmlnode.name)
+        echo(mcmlnode:GetValue())
+    end
     ]]>
 </script>
 <style>
@@ -38,8 +49,12 @@
         font-weight:bold;
     }
 </style>
+<!--<div name="divButton" style="background-color:red;width:100px;">
+    <input name="button" type="button" value="修改大小" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="click()" />
+</div>-->
 <div name="div0" id="div0" style="background-color:aquamarine;margin:10px;">
-    <input name="button" type="button" value="button" style="background-color:burlywood;color:aqua;font-weight:bold;color:blueviolet;" onclick="ChangeFontSize()" />
+    <input name="button" type="button" value="button" style="background-color:burlywood;color:aqua;font-weight:bold;color:blueviolet;" />
+    <input name="button" type="text" value="123455" /> <input name="button" type="password" value="123455" />
 </div>
 <div name="div0" id="div0" style="background-color:aquamarine;margin:10px;">
     上一页<input type="narrow" direction="left"/>6/11<input type="narrow" direction="right" />下一页
@@ -61,5 +76,11 @@
 <div name="div" style="margin:10px;background-color:antiquewhite;font-size:20px;color:blue;line-height:40px;">
     2<input type="text" value="male" style="color:red;font-size:15px;"/>1
 </div>
+<div name="div" style="margin:10px;background-color:antiquewhite;font-size:20px;color:blue;line-height:40px;">
+    <button style="background-color:aquamarine;" onclick="click()">外部<input type="button" value="内部button" style="font-size:15px;background-color:red;" onclick="click()"/>button</button>
+</div>
+<!--<div name="div" style="margin:10px;background-color:antiquewhite;font-size:20px;color:blue;line-height:40px;">
+    <pager></pager>
+</div>-->
 </pe:mcml>
 </html>

@@ -281,9 +281,9 @@ function pe_mcml:View()
 	return self.frameView;
 end
 
---function pe_mcml:attachLayoutTree()
---
---end
+function pe_mcml:CreateLayoutObject(arena, style)
+	return LayoutView:new():init(self, self.frameView);
+end
 
 function pe_mcml:UsesFirstLineRules() 
 	return self.m_usesFirstLineRules;
@@ -295,6 +295,10 @@ end
 
 function pe_mcml:InQuirksMode()
 	return self.m_compatibilityMode == CompatibilityMode.QuirksMode;
+end
+
+function pe_mcml:DocumentElement()
+	return self;
 end
 
 function pe_mcml:RecalcStyle(change)

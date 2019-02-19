@@ -1,0 +1,25 @@
+﻿<!-- "script/test/MCMLv2/test_layout.html" -->
+<html>
+<pe:mcml>
+    <pe:pager target="gvwTableTest" height="26" position="Bottom" style="text-align:center">
+        <form>
+            <input type="hidden" style="display:none;" name="target" value="gvwTableTest" />
+
+            <label style="color:#000066;">
+                <input onclick="System.Windows.mcml.Elements.pe_pager.OnPrePage" style="background:" type="button" polygonStyle="narrow" name="pre" direction="left" />
+
+                Previous
+            </label>
+
+            <label name="page" style="margin-left:10px;margin-right:10px;">
+                1/1
+            </label>
+
+            <label style="color:#000066;">
+                Next
+                <input onclick="System.Windows.mcml.Elements.pe_pager.OnNextPage" style="background:" type="button" polygonStyle="narrow" name="next" direction="right" />
+            </label>
+        </form>
+    </pe:pager>
+</pe:mcml>
+</html>

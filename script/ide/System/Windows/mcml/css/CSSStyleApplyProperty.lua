@@ -226,6 +226,7 @@ function CSSStyleApplyProperty:init()
 	--self:SetPropertyHandler("border", ApplyPropertyExpanding:new():init(ComputedStyle.BorderTopWidth, ComputedStyle.SetBorderTopWidth, ComputedStyle.initialBorderWidth));
 	--setPropertyHandler(CSSPropertyColor, new ApplyPropertyColor<InheritFromParent>(&RenderStyle::color, &RenderStyle::setColor,  &RenderStyle::setVisitedLinkColor, 0, RenderStyle::initialColor));
 
+	self:SetPropertyHandler("box-sizing", ApplyPropertyDefault:new():init(ComputedStyle.BoxSizing, ComputedStyle.SetBoxSizing, ComputedStyle.initialBoxSizing));
 	return self;
 end
 

@@ -156,14 +156,17 @@ function LayoutTreeBuilder:ParentLayoutObject()
 end
 
 function LayoutTreeBuilder:CreateLayoutObjectIfNeeded()
+	echo("LayoutTreeBuilder:CreateLayoutObjectIfNeeded")
 	if(self:ShouldCreateLayoutObject()) then
 		self.style = self.style or self.node:StyleForLayoutObject();
 
 		local next_layout_object = self:NextLayoutObject();
 
 		local layout_object = self:CreateLayoutObject();
-
+		echo("LayoutTreeBuilder:CreateLayoutObjectIfNeeded")
+		layout_object:PrintNodeInfo()
 		local parent_layout_object = self:ParentLayoutObject();
+		parent_layout_object:PrintNodeInfo()
 		if(parent_layout_object and layout_object) then
 			local child = parent_layout_object:FirstChild();
 			

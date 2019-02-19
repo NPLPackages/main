@@ -279,6 +279,10 @@ function CSSStyleDeclaration:RemoveProperty(name, notifyChanged)
 	end
 end
 
+function CSSStyleDeclaration:GetProperty(name)
+	return self:FindPropertyWithName(name)
+end
+
 function CSSStyleDeclaration:SetProperty(name, value, notifyChanged)
 	notifyChanged = if_else(notifyChanged == nil, true, notifyChanged);
 

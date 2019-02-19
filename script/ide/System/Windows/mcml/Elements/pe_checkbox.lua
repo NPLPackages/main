@@ -21,6 +21,7 @@ function pe_checkbox:ctor()
 end
 
 function pe_checkbox:CreateControl()
+	echo("pe_checkbox:CreateControl")
 	local parentElem = self:GetParentControl();
 	local _this = Button:new():init(parentElem);
 	self:SetControl(_this);
@@ -34,6 +35,9 @@ function pe_checkbox:CreateControl()
 	_this:setCheckable(self:GetBool("enabled",true));
 
 	local checked = self:GetAttributeWithCode("checked", nil, true);
+	echo("checked")
+	echo(self.attr)
+	echo(checked)
 	if(checked) then
 		checked = if_else(checked == "true" or checked == "checked",true,false);
 		self:setChecked(checked);
@@ -77,6 +81,8 @@ function pe_checkbox:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 end
 
 function pe_checkbox:setChecked(checked)
+	echo("pe_checkbox:setChecked")
+	echo(checked)
 	if(self.control) then
 		self.control:setChecked(checked);
 	end
@@ -93,6 +99,7 @@ function pe_checkbox:getChecked()
 end
 
 function pe_checkbox:OnClick()
+	echo("pe_checkbox:OnClick")
 	local ctl = self:GetControl();
 	if(ctl and ctl:isCheckable()) then
 		local checked = not (ctl:isChecked());

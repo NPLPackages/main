@@ -331,10 +331,15 @@ end
 
 --const LayoutSize& relativePositionOffset() const { return m_relativeOffset; }
 function LayoutLayer:RelativePositionOffset()
+	echo("LayoutLayer:RelativePositionOffset")
+	self:Renderer():PrintNodeInfo()
+	echo(self.relativeOffset)
 	return self.relativeOffset;
 end
 
 function LayoutLayer:Destroy(renderArena)
+	echo("LayoutLayer:Destroy")
+	self:Renderer():PrintNodeInfo()
 --    delete this;
 --
 --    // Recover the size left there for us by operator delete and free the memory.
@@ -343,9 +348,7 @@ function LayoutLayer:Destroy(renderArena)
 	self:DestroyScrollbar("HorizontalScrollbar")
 	self:DestroyScrollbar("VerticalScrollbar")
 
-	if (self.scrollCorner) then
-        self.scrollCorner:Destroy();
-	end
+	self:DestroyScrollCorner();
 end
 
 function LayoutLayer:Renderer()
@@ -420,7 +423,6 @@ end
 function LayoutLayer:ShouldBeNormalFlowOnly()
 	local r = self:Renderer();
     return (r:HasOverflowClip()
-				or r:IsLayoutView()
                 or r:HasReflection()
                 or r:HasMask()
                 or r:IsCanvas()
@@ -436,8 +438,7 @@ function LayoutLayer:ShouldBeNormalFlowOnly()
 end
 
 function LayoutLayer:IsSelfPaintingLayer()
-    --return not self:IsNormalFlowOnly()
-	return self:IsNormalFlowOnly()
+    return not self:IsNormalFlowOnly()
         or self:Renderer():HasReflection()
         or self:Renderer():HasMask()
         or self:Renderer():IsTableRow()
@@ -622,6 +623,9 @@ end
 
 --void RenderLayer::addChild(RenderLayer* child, RenderLayer* beforeChild)
 function LayoutLayer:AddChild(child, beforeChild)
+	echo("LayoutLayer:AddChild")
+	self:Renderer():PrintNodeInfo()
+	child:Renderer():PrintNodeInfo()
 	local prevSibling;
 	if(beforeChild) then
 		prevSibling = beforeChild:PreviousSibling();
@@ -716,10 +720,12 @@ function LayoutLayer:RemoveChild(oldChild)
 end
 
 function LayoutLayer:init(renderer)
+	echo("LayoutLayer:init")
+	renderer:PrintNodeInfo()
 	self.renderer = renderer;
 
 	self.isNormalFlowOnly = self:ShouldBeNormalFlowOnly();
-
+	echo(self.isNormalFlowOnly)
     --ScrollableArea::setConstrainsScrollingToContentEdge(false);
 	self:SetConstrainsScrollingToContentEdge(false);
 
@@ -1116,17 +1122,24 @@ function LayoutLayer:UpdateLayerListsIfNeeded()
 end
 
 function LayoutLayer:UpdateNormalFlowList()
+	echo("LayoutLayer:UpdateNormalFlowList begin")
     if (not self.normalFlowListDirty) then
         return;
 	end
-        
+        echo("LayoutLayer:UpdateNormalFlowList")
+		self:Renderer():PrintNodeInfo()
 	local child = self:FirstChild();
 	while(child) do
+		echo("while(child) do")
+		child:Renderer():PrintNodeInfo()
+		echo(child:IsNormalFlowOnly())
 		-- Ignore non-overflow layers and reflections.
 		if (child:IsNormalFlowOnly() and (not self.reflection or self:ReflectionLayer() ~= child)) then
             if (not self.normalFlowList) then
                 self.normalFlowList = commonlib.vector:new();
 			end
+			echo("self.normalFlowList:append")
+			
             self.normalFlowList:append(child);
 		end
 
@@ -1210,10 +1223,12 @@ end
 
 --void RenderLayer::collectLayers(Vector<RenderLayer*>*& posBuffer, Vector<RenderLayer*>*& negBuffer)
 function LayoutLayer:CollectLayers(posBuffer, negBuffer)
+	echo("LayoutLayer:CollectLayers")
+	self:Renderer():PrintNodeInfo();
     self:UpdateVisibilityStatus();
-
+	echo({self.hasVisibleContent, self.hasVisibleDescendant, self:IsStackingContext(), self:IsNormalFlowOnly(), self:Renderer():IsLayoutFlowThread()})
     -- Overflow layers are just painted by their enclosing layers, so they don't get put in zorder lists.
-    if ((self.hasVisibleContent or (self.hasVisibleDescendant and self:IsStackingContext())) and self:IsNormalFlowOnly() == false and self:Renderer():IsLayoutFlowThread() == false) then
+    if ((self.hasVisibleContent or (self.hasVisibleDescendant and self:IsStackingContext())) and not self:IsNormalFlowOnly() and not self:Renderer():IsLayoutFlowThread()) then
         -- Determine which buffer the child should be in.
         local buffer = if_else(self:ZIndex() >= 0, posBuffer, negBuffer);
 
@@ -1226,6 +1241,7 @@ function LayoutLayer:CollectLayers(posBuffer, negBuffer)
 				negBuffer = buffer;
 			end
 		end
+		echo("buffer:append")
         -- Append ourselves at the end of the appropriate buffer.
         buffer:append(self);
     end
@@ -1237,7 +1253,7 @@ function LayoutLayer:CollectLayers(posBuffer, negBuffer)
 		while(child) do
 			-- Ignore reflections.
             if (self.reflection == nil or self:ReflectionLayer() ~= child) then
-                child:CollectLayers(posBuffer, negBuffer);
+                posBuffer, negBuffer = child:CollectLayers(posBuffer, negBuffer);
 			end
 
 			child = child:NextSibling();
@@ -1248,10 +1264,14 @@ end
 
 --void RenderLayer::updateZOrderLists()
 function LayoutLayer:UpdateZOrderLists()
+	echo("LayoutLayer:UpdateZOrderLists begin")
+	self:Renderer():PrintNodeInfo()
+	echo(self:IsStackingContext())
+	echo(self.zOrderListsDirty)
     if (not self:IsStackingContext() or not self.zOrderListsDirty) then
         return;
 	end
-
+	echo("LayoutLayer:UpdateZOrderLists")
 	local child = self:FirstChild();
 	while(child) do
 		if (not self.reflection or self:ReflectionLayer() ~= child) then
@@ -1261,12 +1281,16 @@ function LayoutLayer:UpdateZOrderLists()
 		child = child:NextSibling();
 	end
 
---    // Sort the two lists.
---    if (m_posZOrderList)
---        std::stable_sort(m_posZOrderList->begin(), m_posZOrderList->end(), compareZIndex);
---
---    if (m_negZOrderList)
---        std::stable_sort(m_negZOrderList->begin(), m_negZOrderList->end(), compareZIndex);
+    -- Sort the two lists.
+    if (self.posZOrderList) then
+        --std::stable_sort(m_posZOrderList->begin(), m_posZOrderList->end(), compareZIndex);
+		table.sort(self.posZOrderList,function(a,b) return a:ZIndex() < b:ZIndex() end )
+	end
+
+    if (self.negZOrderList) then
+        --std::stable_sort(m_negZOrderList->begin(), m_negZOrderList->end(), compareZIndex);
+		table.sort(self.negZOrderList,function(a,b) return a:ZIndex() < b:ZIndex() end )
+	end
 
     self.zOrderListsDirty = false;
 end
@@ -1377,6 +1401,7 @@ function LayoutLayer:PaintLayer(rootLayer, p, paintDirtyRect, paintBehavior, pai
 	echo(layerBounds)
 	echo(self:RenderBoxLocation())
 	echo(clipRectToApply)
+	echo(self.relativeOffset)
     --local paintOffset = (layerBounds:Location() - self:RenderBoxLocation()):ToPoint();
 	local paintOffset = layerBounds:Location();
 
@@ -1457,12 +1482,14 @@ function LayoutLayer:PaintList(list, rootLayer, p, paintDirtyRect, paintBehavior
 		local childLayer = list:get(i);
         if (not childLayer:IsPaginated()) then
 			--local location = childLayer:RenderBoxLocation()
-			local location = childLayer:Location()
+			--local location = childLayer:Location()
+			local offset = childLayer:ConvertToLayerCoords(self, LayoutPoint:new());
 			childPaintDirtyRect = paintDirtyRect:clone();
-			childPaintDirtyRect:Move(-location:ToSize())
+			childPaintDirtyRect:Move(-offset:ToSize())
 			echo("childPaintDirtyRect:Move")
 			echo(paintDirtyRect)
-			echo(location)
+			--echo(location)
+			echo(offset)
 			echo(childPaintDirtyRect)
             childLayer:PaintLayer(rootLayer, p, childPaintDirtyRect, paintBehavior, paintingRoot, region, overlapTestRequests, paintFlags);
         else
@@ -1925,7 +1952,8 @@ function LayoutLayer:UpdateLayerPosition()
 		echo(scrollOffset)
         localPoint = localPoint - scrollOffset;
     end
-    echo(localPoint)    
+    echo(localPoint)  
+	echo(self:Renderer():IsRelPositioned())  
     if (self:Renderer():IsRelPositioned()) then
         self.relativeOffset = self:Renderer():RelativePositionOffset();
         localPoint:Move(self.relativeOffset);
@@ -1935,6 +1963,7 @@ function LayoutLayer:UpdateLayerPosition()
 
     -- FIXME: We'd really like to just get rid of the concept of a layer rectangle and rely on the renderers.
     localPoint = localPoint - inlineBoundingBoxOffset;
+	echo(self.relativeOffset)
 	echo("LayoutLayer:UpdateLayerPosition")
 	self:Renderer():PrintNodeInfo()
 	echo(self:Renderer():IsPositioned())
@@ -2175,6 +2204,7 @@ end
 
 --void RenderLayer::destroyScrollbar(ScrollbarOrientation orientation)
 function LayoutLayer:DestroyScrollbar(orientation)
+	echo("LayoutLayer:DestroyScrollbar")
 	local scrollbar = if_else(orientation == "HorizontalScrollbar", self.hBar, self.vBar);
     if (scrollbar) then
 --        scrollbar:ClearOwningRenderer();
@@ -2388,11 +2418,32 @@ function LayoutLayer:SetScrollOffset(offset)
     self:ScrollTo(offset:X(), offset:Y());
 end
 
+function LayoutLayer:ScrollToWithNotify(x, y)
+	if(self.hBar or self.vBar) then
+		if(self.hBar and x) then
+			self.hBar:SetValue(x, true);
+		end
+
+		if(self.vBar and y) then
+			self.vBar:SetValue(y, true);
+		end
+	else
+		self:ScrollTo(x, y)
+		local view = self:Renderer():View();
+		if(view) then
+			local frameview = view:FrameView();
+			frameview:PostLayoutRequestEvent();
+		end
+	end
+	
+end
+
 --void RenderLayer::scrollTo(LayoutUnit x, LayoutUnit y)
 function LayoutLayer:ScrollTo(x, y)
 	echo("LayoutLayer:ScrollTo")
 	echo(self.scrollOrigin)
 	echo(self.scrollOffset)
+	echo({x,y})
 	x = if_else(x == nil, self.scrollOffset:Width(), x)
 	y = if_else(y == nil, self.scrollOffset:Height(), y)
     local box = self:RenderBox();

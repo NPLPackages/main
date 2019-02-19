@@ -94,7 +94,23 @@ function InlineBox:BoxName()
 end
 
 function InlineBox:Destroy(renderArena)
-	
+	echo("InlineBox:Destroy")
+	echo(self:BoxName())
+	self:Renderer():PrintNodeInfo()
+	if(not self:IsInlineFlowBox() and not self:IsInlineTextBox())then
+--		if(self:Renderer():IsReplaced()) then
+--			local control = self:Renderer():GetControl();
+--			if(control) then
+--				echo("control:SetParent nil")
+--				control:SetParent(nil)
+--			end
+--		end
+		local control = self:Renderer():GetControl();
+		if(control) then
+			echo("control:SetParent nil")
+			control:SetParent(nil)
+		end
+	end
 end
 
 function InlineBox:Renderer()
@@ -578,7 +594,9 @@ function InlineBox:Paint(paintInfo, paintOffset, lineTop, lineBottom)
 --        info.phase = PaintPhaseOutline;
 --        renderer()->paint(info, childPoint);
 --    }
-	local info = paintInfo;
+	local info = paintInfo:clone();
+	info:Rect():SetX(info:Rect():X() - self:Renderer():X())
+	info:Rect():SetY(info:Rect():Y() - self:Renderer():Y())
 	local childPoint = paintOffset;
 	self:Renderer():Paint(info, childPoint);
 end

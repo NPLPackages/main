@@ -10,8 +10,8 @@ Elements.pe_scrollarea:RegisterAs("pe:scrollarea");
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_container.lua");
-NPL.load("(gl)script/ide/System/Windows/Controls/ScrollArea.lua");
-local ScrollArea = commonlib.gettable("System.Windows.Controls.ScrollArea");
+NPL.load("(gl)script/ide/System/Windows/Controls/ScrollAreaForPage.lua");
+local ScrollAreaForPage = commonlib.gettable("System.Windows.Controls.ScrollAreaForPage");
 local PageElement = commonlib.gettable("System.Windows.mcml.PageElement");
 
 local pe_scrollarea = commonlib.inherit(commonlib.gettable("System.Windows.mcml.Elements.pe_container"), commonlib.gettable("System.Windows.mcml.Elements.pe_scrollarea"));
@@ -20,17 +20,30 @@ pe_scrollarea:Property({"class_name", "pe:scrollarea"});
 function pe_scrollarea:ctor()
 end
 
-function pe_scrollarea:LoadComponent(parentElem, parentLayout, style)
-	local _this = self.control;
-	if(not _this) then
-		_this = ScrollArea:new():init(parentElem);
-		self:SetControl(_this);
-	else
-		_this:SetParent(parentElem);
-	end
-	PageElement.LoadComponent(self, _this.viewport, parentLayout, style);
-	_this:ApplyCss(self:GetStyle());
+function pe_scrollarea:CreateControl()
+	local parentElem = self:GetParentControl();
+	local _this = ScrollAreaForPage:new():init(parentElem);
+	self:SetControl(_this);
 end
+
+--function pe_scrollarea:GetControl(pageName)
+--	if(self.control) then
+--		return self.control:ViewPort();
+--	end
+--	return pe_scrollarea._super.GetControl(self, pageName)
+--end
+
+--function pe_scrollarea:LoadComponent(parentElem, parentLayout, style)
+--	local _this = self.control;
+--	if(not _this) then
+--		_this = ScrollAreaForPage:new():init(parentElem);
+--		self:SetControl(_this);
+--	else
+--		_this:SetParent(parentElem);
+--	end
+--	PageElement.LoadComponent(self, _this.viewport, parentLayout, style);
+--	_this:ApplyCss(self:GetStyle());
+--end
 
 function pe_scrollarea:OnAfterChildLayout(layout, left, top, right, bottom)
 	local css = self:GetStyle();

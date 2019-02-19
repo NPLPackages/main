@@ -43,6 +43,9 @@ local LayoutBlock = commonlib.gettable("System.Windows.mcml.layout.LayoutBlock")
 local FloatingObject = commonlib.gettable("System.Windows.mcml.layout.LayoutBlock.FloatingObject");
 local FloatWithRect = commonlib.gettable("System.Windows.mcml.layout.LayoutBlock.FloatWithRect");
 local TrailingFloatsRootInlineBox = commonlib.gettable("System.Windows.mcml.layout.TrailingFloatsRootInlineBox");
+local MidpointState = commonlib.gettable("System.Windows.mcml.platform.text.MidpointState");
+
+local LineMidpointState = MidpointState;
 
 local WhiteSpaceEnum = ComputedStyleConstants.WhiteSpaceEnum;
 local ClearEnum = ComputedStyleConstants.ClearEnum;
@@ -61,12 +64,122 @@ local LineWidth = commonlib.inherit(nil, {});
 local LineBreaker = commonlib.inherit(nil, {});
 local LineLayoutState = commonlib.inherit(nil, {});
 local LineInfo = commonlib.inherit(nil, {});
+local TrailingObjects = commonlib.inherit(nil, {});
+
+function TrailingObjects:ctor()
+	self.m_whitespace = nil;
+	self.m_boxes = commonlib.vector:new();
+end
+
+
+--inline void TrailingObjects::setTrailingWhitespace(RenderText* whitespace)
+function TrailingObjects:SetTrailingWhitespace(whitespace)
+    --ASSERT(whitespace);
+    self.m_whitespace = whitespace;
+end
+
+function TrailingObjects:Clear()
+    self.m_whitespace = nil;
+    self.m_boxes:clear();
+end
+
+--inline void TrailingObjects::appendBoxIfNeeded(RenderBox* box)
+function TrailingObjects:AppendBoxIfNeeded(box)
+    if (self.m_whitespace) then
+        self.m_boxes:append(box);
+	end
+end
+
+--static void checkMidpoints(LineMidpointState& lineMidpointState, InlineIterator& lBreak)
+local function checkMidpoints(lineMidpointState, lBreak)
+    -- Check to see if our last midpoint is a start point beyond the line break.  If so,
+    -- shave it off the list, and shave off a trailing space if the previous end point doesn't
+    -- preserve whitespace.
+    if (lBreak.obj and lineMidpointState.numMidpoints ~= 0 and (lineMidpointState.numMidpoints % 2) == 0) then
+        local midpoints = lineMidpointState.midpoints;
+        local endpoint = midpoints[lineMidpointState.numMidpoints - 2];
+        local startpoint = midpoints[lineMidpointState.numMidpoints - 1];
+        local currpoint = endpoint;
+        while (not currpoint:AtEnd() and currpoint ~= startpoint and currpoint ~= lBreak) do
+            currpoint:Increment();
+		end
+        if (currpoint == lBreak) then
+            -- We hit the line break before the start point.  Shave off the start point.
+            lineMidpointState.numMidpoints = lineMidpointState.numMidpoints - 1;
+            if (endpoint.obj:Style():CollapseWhiteSpace()) then
+                endpoint.pos = endpoint.pos - 1;
+			end
+        end
+    end
+end
+
+--static void addMidpoint(LineMidpointState& lineMidpointState, const InlineIterator& midpoint)
+local function addMidpoint(lineMidpointState, midpoint)
+--    if (lineMidpointState.midpoints.size() <= lineMidpointState.numMidpoints)
+--        lineMidpointState.midpoints.grow(lineMidpointState.numMidpoints + 10);
+
+    local midpoints = lineMidpointState.midpoints;
+	lineMidpointState.numMidpoints = lineMidpointState.numMidpoints + 1;
+    midpoints[lineMidpointState.numMidpoints] = midpoint;
+end
+
+--void TrailingObjects::updateMidpointsForTrailingBoxes(LineMidpointState& lineMidpointState, const InlineIterator& lBreak, CollapseFirstSpaceOrNot collapseFirstSpace)
+function TrailingObjects:UpdateMidpointsForTrailingBoxes(lineMidpointState, lBreak, collapseFirstSpace)
+    if (not self.m_whitespace) then
+        return;
+	end
+
+    -- This object is either going to be part of the last midpoint, or it is going to be the actual endpoint.
+    -- In both cases we just decrease our pos by 1 level to exclude the space, allowing it to - in effect - collapse into the newline.
+    if (lineMidpointState.numMidpoints % 2 ~= 0) then
+        -- Find the trailing space object's midpoint.
+        local trailingSpaceMidpoint = lineMidpointState.numMidpoints - 1;
+		while(trailingSpaceMidpoint > 0 and lineMidpointState.midpoints[trailingSpaceMidpoint].obj ~= self.m_whitespace) do
+			trailingSpaceMidpoint = trailingSpaceMidpoint - 1;
+		end
+        --for ( ; trailingSpaceMidpoint > 0 && lineMidpointState.midpoints[trailingSpaceMidpoint].m_obj != m_whitespace; --trailingSpaceMidpoint) { }
+        --ASSERT(trailingSpaceMidpoint >= 0);
+        if (collapseFirstSpace == "CollapseFirstSpace") then
+            lineMidpointState.midpoints[trailingSpaceMidpoint].pos = lineMidpointState.midpoints[trailingSpaceMidpoint].pos - 1;
+		end
+
+        -- Now make sure every single trailingPositionedBox following the trailingSpaceMidpoint properly stops and starts
+        -- ignoring spaces.
+        local currentMidpoint = trailingSpaceMidpoint + 1;
+        --for (size_t i = 0; i < m_boxes.size(); ++i) {
+		for i = 1, self.m_boxes:size() do
+            if (currentMidpoint >= lineMidpointState.numMidpoints) then
+                -- We don't have a midpoint for this box yet.
+                local ignoreStart = InlineIterator:new():init(nil, self.m_boxes[i], 1);
+                addMidpoint(lineMidpointState, ignoreStart); -- Stop ignoring.
+                addMidpoint(lineMidpointState, ignoreStart); -- Start ignoring again.
+            else
+                --ASSERT(lineMidpointState.midpoints[currentMidpoint].m_obj == m_boxes[i]);
+                --ASSERT(lineMidpointState.midpoints[currentMidpoint + 1].m_obj == m_boxes[i]);
+            end
+            currentMidpoint = currentMidpoint + 2;
+        end
+    elseif (not lBreak.obj) then
+        --ASSERT(m_whitespace->isText());
+        --ASSERT(collapseFirstSpace == CollapseFirstSpace);
+        -- Add a new end midpoint that stops right at the very end.
+        local length = self.m_whitespace:TextLength();
+        local pos = if_else(length >= 2 , length - 2, INT_MAX);
+        local endMid=InlineIterator:new():init(nil, self.m_whitespace, pos);
+        addMidpoint(lineMidpointState, endMid);
+        for i = 1, self.m_boxes:size() do
+            local ignoreStart = InlineIterator:new():init(nil, self.m_boxes[i], 1);
+            addMidpoint(lineMidpointState, ignoreStart); -- Stop ignoring spaces.
+            addMidpoint(lineMidpointState, ignoreStart); -- Start ignoring again.
+        end
+    end
+end
 
 function LineBreaker:ctor()
 	self.block = nil;
     self.hyphenated = nil;
     self.clear = nil;
-    self.positionedObjects = nil;
+    self.positionedObjects = commonlib.vector:new();
 end
 
 function LineBreaker:init(block)
@@ -76,7 +189,7 @@ function LineBreaker:init(block)
 end
 
 function LineBreaker:Reset()
-	--self.positionedObjects.clear();
+	self.positionedObjects:clear();
     self.hyphenated = false;
     self.clear = ClearEnum.CNONE;
 end
@@ -136,7 +249,7 @@ local function shouldSkipWhitespaceAfterStartObject(block, obj, lineMidpointStat
         local nextText = next;
         local nextChar = nextText:Characters()[0];
         if (nextText:Style():IsCollapsibleWhiteSpace(nextChar)) then
-            --addMidpoint(lineMidpointState, InlineIterator(0, o, 0));
+            addMidpoint(lineMidpointState, InlineIterator:new():init(nil, o, 1));
             return true;
         end
     end
@@ -145,6 +258,7 @@ local function shouldSkipWhitespaceAfterStartObject(block, obj, lineMidpointStat
 end
 
 function LineBreaker:NextLineBreak(resolver, lineInfo, lineBreakIteratorInfo, lastFloatFromPreviousLine, consecutiveHyphenatedLines)
+	echo("LineBreaker:NextLineBreak")
 	self:Reset();
 
 	local appliedStartWidth = resolver:Position().pos > 1;
@@ -159,6 +273,7 @@ function LineBreaker:NextLineBreak(resolver, lineInfo, lineBreakIteratorInfo, la
 	end
 
 	local ignoringSpaces = false;
+	local ignoreStart = InlineIterator:new();
 
 	-- This variable tracks whether the very last character we saw was a space.  We use
     -- this to detect when we encounter a second space so we know we have to terminate
@@ -166,7 +281,7 @@ function LineBreaker:NextLineBreak(resolver, lineInfo, lineBreakIteratorInfo, la
     local currentCharacterIsSpace = false;
     local currentCharacterIsWS = false;
     --TrailingObjects trailingObjects;
-	local trailingObjects;
+	local trailingObjects = TrailingObjects:new();
 
 	local lBreak = resolver:Position():Clone();
 
@@ -189,6 +304,13 @@ function LineBreaker:NextLineBreak(resolver, lineInfo, lineBreakIteratorInfo, la
 
 	local go_to_end = false;
 	while (current.obj) do
+		echo("while (current.obj) do")
+		current.obj:PrintNodeInfo();
+		if(current.obj:Parent()) then
+			current.obj:Parent():PrintNodeInfo();
+		else
+			echo("current.obj:Parent() not exist")
+		end
 		if(go_to_end) then
 			break;
 		end
@@ -229,7 +351,7 @@ function LineBreaker:NextLineBreak(resolver, lineInfo, lineBreakIteratorInfo, la
                 if (startingNewParagraph) then
                     lineInfo:SetEmpty(false, self.block, width);
 				end
-                --trailingObjects.clear();
+                trailingObjects:Clear();
                 lineInfo:SetPreviousLineBrokeCleanly(true);
 
                 if (not lineInfo:IsEmpty()) then
@@ -242,6 +364,7 @@ function LineBreaker:NextLineBreak(resolver, lineInfo, lineBreakIteratorInfo, la
 		end
 
 		if (current.obj:IsFloating()) then
+			echo("current.obj:IsFloating()")
 			local floatBox = current.obj;
             local f = self.block:InsertFloatingObject(floatBox);
             -- check if it fits in the current line.
@@ -256,6 +379,9 @@ function LineBreaker:NextLineBreak(resolver, lineInfo, lineBreakIteratorInfo, la
             else
                 floatsFitOnLine = false;
 			end
+			echo("LayoutBlock:PositionNewFloatOnLine end")
+			f:Renderer():PrintNodeInfo()
+			echo(f:Renderer().frame_rect)
 		elseif(current.obj:IsPositioned()) then
 
 		elseif(current.obj:IsLayoutInline()) then
@@ -271,9 +397,9 @@ function LineBreaker:NextLineBreak(resolver, lineInfo, lineBreakIteratorInfo, la
             if (inlineFlowRequiresLineBox(flowBox)) then
                 lineInfo:SetEmpty(false, self.block, width);
                 if (ignoringSpaces) then
-                    -- trailingObjects.clear();
-                    --addMidpoint(lineMidpointState, InlineIterator(0, current.m_obj, 0)); -- Stop ignoring spaces.
-                    --addMidpoint(lineMidpointState, InlineIterator(0, current.m_obj, 0)); -- Start ignoring again.
+                    trailingObjects:Clear();
+                    addMidpoint(lineMidpointState, InlineIterator:new():init(nil, current.obj, 1)); -- Stop ignoring spaces.
+                    addMidpoint(lineMidpointState, InlineIterator:new():init(nil, current.obj, 1)); -- Start ignoring again.
                 elseif (self.block:Style():CollapseWhiteSpace() and resolver:Position().obj == current.obj
                     and shouldSkipWhitespaceAfterStartObject(m_block, current.m_obj, lineMidpointState)) then
                     -- Like with list markers, we start ignoring spaces to make sure that any
@@ -295,14 +421,14 @@ function LineBreaker:NextLineBreak(resolver, lineInfo, lineBreakIteratorInfo, la
             end
 
             if (ignoringSpaces) then
-                --addMidpoint(lineMidpointState, InlineIterator(0, current.obj, 0));
+                addMidpoint(lineMidpointState, InlineIterator:new():init(nil, current.obj, 1));
 			end
 
             lineInfo:SetEmpty(false, self.block, width);
             ignoringSpaces = false;
             currentCharacterIsSpace = false;
             currentCharacterIsWS = false;
-            --trailingObjects.clear();
+            trailingObjects:Clear();
 
             -- Optimize for a common case. If we can't find whitespace after the list
             -- item, then this is all moot.
@@ -324,6 +450,8 @@ function LineBreaker:NextLineBreak(resolver, lineInfo, lineBreakIteratorInfo, la
                 --width.applyOverhang(toRenderRubyRun(current.obj), last, next);
 			end
 		elseif(current.obj:IsText()) then
+			echo("current.obj:IsText()")
+			echo(current.obj:Characters())
 			if (current.pos ~= 1) then
 				appliedStartWidth = false;
 			end
@@ -361,8 +489,11 @@ function LineBreaker:NextLineBreak(resolver, lineInfo, lineBreakIteratorInfo, la
 				--ASSERT(current.m_pos == t->textLength());
 			end
 
+			local extraWidth = 0;
 
 			while(current.pos <= t:TextLength()) do
+				echo("current.pos")
+				echo(current.pos)
 				local previousCharacterIsSpace = currentCharacterIsSpace;
 				local previousCharacterIsWS = currentCharacterIsWS;
 				local c = current:Current();
@@ -390,8 +521,10 @@ function LineBreaker:NextLineBreak(resolver, lineInfo, lineBreakIteratorInfo, la
 --                    and (self:Style:Hyphens() ~= "HyphensNone" or (current:PreviousInSameNode() ~= "softHyphen")));
 				local isBreakable;
 				isBreakable, current.nextBreakablePosition = BreakLines.IsBreakable(lineBreakIteratorInfo.second, current.pos, current.nextBreakablePosition, breakNBSP);
+				echo({isBreakable, current.nextBreakablePosition})
 				local betweenWords = c_str == "\n" or (currWS ~= WhiteSpaceEnum.PRE and not atStart and isBreakable);
-				if((betweenWords or midWordBreak) and (ignoringSpaces and currentCharacterIsSpace)) then
+				echo({betweenWords, midWordBreak, ignoringSpaces, currentCharacterIsSpace})
+				if((betweenWords or midWordBreak) and ignoringSpaces and currentCharacterIsSpace) then
 					-- Just keep ignoring these spaces.
 					--continue;
 				else
@@ -403,11 +536,18 @@ function LineBreaker:NextLineBreak(resolver, lineInfo, lineBreakIteratorInfo, la
 								ignoringSpaces = false;
 								lastSpaceWordSpacing = 0;
 								lastSpace = current.pos; -- e.g., "Foo    goo", don't add in any of the ignored spaces.
-								--addMidpoint(lineMidpointState, InlineIterator(0, current.m_obj, current.m_pos));
+								addMidpoint(lineMidpointState, InlineIterator:new():init(nil, current.obj, current.pos));
 								stoppedIgnoringSpaces = true;
 							end
 						end
 
+						if(string.byte(c_str, 1) > 127) then
+							extraWidth = textWidth(t, current.pos, 0, f);
+						end
+						echo("extraWidth")
+						echo(extraWidth)
+						echo({wordTrailingSpaceWidth, currentCharacterIsSpace})
+						echo({lastSpace})
 						local additionalTmpW;
 						if (wordTrailingSpaceWidth ~= 0 and currentCharacterIsSpace) then
 							additionalTmpW = textWidth(t, lastSpace, current.pos - lastSpace + 1 - 1, f) - wordTrailingSpaceWidth + lastSpaceWordSpacing;
@@ -426,7 +566,8 @@ function LineBreaker:NextLineBreak(resolver, lineInfo, lineBreakIteratorInfo, la
 							width:FitBelowFloats();
 						end
 
-
+						echo("width info")
+						echo({width:CommittedWidth(), width:UncommittedWidth(), width:AvailableWidth()})
 						if (autoWrap or breakWords) then
 							local lineWasTooWide = false;
 --							if (width.fitsOnLine() && currentCharacterIsWS && current.m_obj->style()->breakOnlyAfterWhiteSpace() && !midWordBreak) {
@@ -451,8 +592,8 @@ function LineBreaker:NextLineBreak(resolver, lineInfo, lineBreakIteratorInfo, la
 								if (lBreak:AtTextParagraphSeparator()) then
 									if (not stoppedIgnoringSpaces and current.pos > 0) then
 										-- We need to stop right before the newline and then start up again.
-										--addMidpoint(lineMidpointState, InlineIterator(0, current.m_obj, current.m_pos - 1)); // Stop
-										--addMidpoint(lineMidpointState, InlineIterator(0, current.m_obj, current.m_pos)); // Start
+										addMidpoint(lineMidpointState, InlineIterator:new():init(nil, current.obj, current.pos - 1)); -- Stop
+										addMidpoint(lineMidpointState, InlineIterator:new():init(nil, current.obj, current.pos)); -- Start
 									end
 									lBreak:Increment();
 									lineInfo:SetPreviousLineBrokeCleanly(true);
@@ -460,6 +601,7 @@ function LineBreaker:NextLineBreak(resolver, lineInfo, lineBreakIteratorInfo, la
 --								if (lBreak.m_obj && lBreak.m_pos && lBreak.m_obj->isText() && toRenderText(lBreak.m_obj)->textLength() && toRenderText(lBreak.m_obj)->characters()[lBreak.m_pos - 1] == softHyphen && style->hyphens() != HyphensNone)
 --									m_hyphenated = true;
 								go_to_end = true; -- Didn't fit. Jump to the end.
+								echo("1111111111111111111")
 								break;
 							else
 								if (not betweenWords or (midWordBreak and not autoWrap)) then
@@ -476,8 +618,8 @@ function LineBreaker:NextLineBreak(resolver, lineInfo, lineBreakIteratorInfo, la
 						if (c == "\n" and preserveNewline) then
 							if (not stoppedIgnoringSpaces and current.pos > 0) then
 								-- We need to stop right before the newline and then start up again.
-								--addMidpoint(lineMidpointState, InlineIterator(0, current.m_obj, current.m_pos - 1)); // Stop
-								--addMidpoint(lineMidpointState, InlineIterator(0, current.m_obj, current.m_pos)); // Start
+								addMidpoint(lineMidpointState, InlineIterator:new():init(nil, current.obj, current.pos - 1)); -- Stop
+								addMidpoint(lineMidpointState, InlineIterator:new():init(nil, current.obj, current.pos)); -- Start
 							end
 							lBreak:MoveTo(current.obj, current.pos, current.nextBreakablePosition);
 							lBreak:Increment();
@@ -488,6 +630,7 @@ function LineBreaker:NextLineBreak(resolver, lineInfo, lineBreakIteratorInfo, la
 						if (autoWrap and betweenWords) then
 							width:Commit();
 							wrapW = 0;
+							echo("lBreak:MoveTo")
 							lBreak:MoveTo(current.obj, current.pos, current.nextBreakablePosition);
 							-- Auto-wrapping text should not wrap in the middle of a word once it has had an opportunity to break after a word.
 							breakWords = false;
@@ -514,8 +657,8 @@ function LineBreaker:NextLineBreak(resolver, lineInfo, lineBreakIteratorInfo, la
 --								// We just entered a mode where we are ignoring
 --								// spaces. Create a midpoint to terminate the run
 --								// before the second space.
---								addMidpoint(lineMidpointState, ignoreStart);
---								trailingObjects.updateMidpointsForTrailingBoxes(lineMidpointState, InlineIterator(), TrailingObjects::DoNotCollapseFirstSpace);
+								addMidpoint(lineMidpointState, ignoreStart);
+								trailingObjects:UpdateMidpointsForTrailingBoxes(lineMidpointState, InlineIterator:new(), "DoNotCollapseFirstSpace");
 							end
 						end
 					elseif (ignoringSpaces) then
@@ -523,12 +666,12 @@ function LineBreaker:NextLineBreak(resolver, lineInfo, lineBreakIteratorInfo, la
 						ignoringSpaces = false;
 						lastSpaceWordSpacing = if_else(applyWordSpacing, wordSpacing, 0);
 						lastSpace = current.pos; -- e.g., "Foo    goo", don't add in any of the ignored spaces.
-						--addMidpoint(lineMidpointState, InlineIterator(0, current.m_obj, current.m_pos));
+						addMidpoint(lineMidpointState, InlineIterator:new():init(nil, current.obj, current.pos));
 					end
 
 					if (currentCharacterIsSpace and not previousCharacterIsSpace) then
-						--ignoreStart.m_obj = current.m_obj;
-						--ignoreStart.m_pos = current.m_pos;
+						ignoreStart.obj = current.obj;
+						ignoreStart.pos = current.pos;
 					end
 
 					if (not currentCharacterIsWS and previousCharacterIsWS) then
@@ -537,10 +680,11 @@ function LineBreaker:NextLineBreak(resolver, lineInfo, lineBreakIteratorInfo, la
 						end
 					end
 
---					if (collapseWhiteSpace && currentCharacterIsSpace && !ignoringSpaces)
---						trailingObjects.setTrailingWhitespace(toRenderText(current.m_obj));
---					else if (!current.m_obj->style()->collapseWhiteSpace() || !currentCharacterIsSpace)
---						trailingObjects.clear();
+					if (collapseWhiteSpace and currentCharacterIsSpace and not ignoringSpaces) then
+						trailingObjects:SetTrailingWhitespace(current.obj:ToRenderText());
+					elseif (not current.obj:Style():CollapseWhiteSpace() or not currentCharacterIsSpace) then
+						trailingObjects:Clear();
+					end
 
 					atStart = false;
 				end
@@ -551,7 +695,7 @@ function LineBreaker:NextLineBreak(resolver, lineInfo, lineBreakIteratorInfo, la
 			end
 
 			-- IMPORTANT: current.m_pos is > length here!
-            local additionalTmpW = if_else(ignoringSpaces, 0, textWidth(t, lastSpace, current.pos - lastSpace, f) + lastSpaceWordSpacing);
+            local additionalTmpW = if_else(ignoringSpaces, 0, textWidth(t, lastSpace, current.pos - lastSpace - 1, f) + lastSpaceWordSpacing);
             width:AddUncommittedWidth(additionalTmpW + inlineLogicalWidth(current.obj, not appliedStartWidth, includeEndWidth));
             includeEndWidth = false;
 
@@ -568,11 +712,21 @@ function LineBreaker:NextLineBreak(resolver, lineInfo, lineBreakIteratorInfo, la
 		else
 			--ASSERT_NOT_REACHED();
 		end
-
+		echo("lBreak 1111111111111")
+		if(lBreak.obj) then
+			lBreak.obj:PrintNodeInfo()
+			if(lBreak.obj:IsText()) then
+				echo(lBreak.obj:Characters())
+				echo(lBreak.pos)
+			end
+		end
+		echo({width:CommittedWidth(), width:UncommittedWidth(), width:FitsOnLine()})
 		local checkForBreak = autoWrap;
         if (width:CommittedWidth() ~= 0 and not width:FitsOnLine() and lBreak.obj and currWS == WhiteSpaceEnum.NOWRAP) then
+			echo("3333333333333333333333333333")
             checkForBreak = true;
         elseif (next and current.obj:IsText() and next:IsText() and not next:IsBR() and (autoWrap or (next:Style():AutoWrap()))) then
+			echo("44444444444")
             if (currentCharacterIsSpace) then
                 checkForBreak = true;
             else
@@ -601,9 +755,9 @@ function LineBreaker:NextLineBreak(resolver, lineInfo, lineBreakIteratorInfo, la
 		if (checkForBreak and not width:FitsOnLine()) then
             -- if we have floats, try to get below them.
             if (currentCharacterIsSpace and not ignoringSpaces and current.obj:Style():CollapseWhiteSpace()) then
-                --trailingObjects.clear();
+                trailingObjects:Clear();
 			end
-
+			echo("5555555555555555");
             if (width:CommittedWidth() ~= 0) then
                 go_to_end = true;
 				break;
@@ -638,12 +792,35 @@ function LineBreaker:NextLineBreak(resolver, lineInfo, lineBreakIteratorInfo, la
         atStart = false;
 	end
 
+	echo("lBreak go_to_end before")
+	echo(go_to_end)
+	if(lBreak.obj) then
+		lBreak.obj:PrintNodeInfo()
+		if(lBreak.obj:IsText()) then
+			echo(lBreak.obj:Characters())
+			echo(lBreak.pos)
+		end
+	end
+
 	if(not go_to_end) then
 		if (width:FitsOnLine() or lastWS == WhiteSpaceEnum.NOWRAP) then
 			lBreak:Clear();
 		end
 	end
-
+	echo("resolver:Position")
+	resolver:Position().obj:PrintNodeInfo()
+	if(resolver:Position().obj:IsText()) then
+		echo(resolver:Position().obj:Characters())
+	end
+	echo(resolver:Position().pos)
+	echo("lBreak")
+	if(lBreak.obj) then
+		lBreak.obj:PrintNodeInfo()
+		if(lBreak.obj:IsText()) then
+			echo(lBreak.obj:Characters())
+		end
+		echo(lBreak.pos)
+	end
 	if (lBreak:Equal(resolver:Position()) and (not lBreak.obj or not lBreak.obj:IsBR())) then
         -- we just add as much as possible
         if (self.block:Style():WhiteSpace() == WhiteSpaceEnum.PRE) then
@@ -654,7 +831,7 @@ function LineBreaker:NextLineBreak(resolver, lineInfo, lineBreakIteratorInfo, la
                 lBreak.obj = current.obj;
                 lBreak.pos = current.pos - 1;
             else
-                lBreak:MoveTo(last, if_else(last:IsText(), last:Length(), 0));
+                lBreak:MoveTo(last, if_else(last:IsText(), last:Length(), 1));
 			end
         elseif (lBreak.obj) then
             -- Don't ever break in the middle of a word if we can help it.
@@ -670,9 +847,9 @@ function LineBreaker:NextLineBreak(resolver, lineInfo, lineBreakIteratorInfo, la
 	end
 
     -- Sanity check our midpoints.
-    --checkMidpoints(lineMidpointState, lBreak);
+    checkMidpoints(lineMidpointState, lBreak);
 
-    --trailingObjects.updateMidpointsForTrailingBoxes(lineMidpointState, lBreak, TrailingObjects::CollapseFirstSpace);
+    trailingObjects:UpdateMidpointsForTrailingBoxes(lineMidpointState, lBreak, "CollapseFirstSpace");
 
     -- We might have made lBreak an iterator that points past the end
     -- of the object. Do this adjustment to make it point to the start
@@ -682,7 +859,22 @@ function LineBreaker:NextLineBreak(resolver, lineInfo, lineBreakIteratorInfo, la
         lBreak.pos = lBreak.pos - 1;
         lBreak:Increment();
     end
+	echo("lBreak")
+	if(lBreak.obj) then
+		lBreak.obj:PrintNodeInfo()
+		if(lBreak.obj:IsText()) then
+			echo(lBreak.obj:Characters())
+			echo(lBreak.pos)
+		end
+	end
 
+--	if(lBreak.obj and lBreak.obj:IsText()) then
+--		local ch = tostring(lBreak:Current())
+--		if(string.byte(ch, 1) > 127) then
+--			lBreak:Increment();
+--		end
+--	end
+	
     return lBreak;
 end
 
@@ -698,11 +890,6 @@ function LineBreaker:Clear()
 	return self.clear;
 end
 
---const Vector<RenderBox*>& positionedObjects() { return m_positionedObjects; }
---EClear clear() { return m_clear; }
-function LineBreaker:SkipTrailingWhitespace(iterator, lineInfo)
-	--TODO: fixed this function
-end
 -- @param flow: LayoutInline
 local function InlineFlowRequiresLineBox(flow)
     -- FIXME: Right now, we only allow line boxes for inlines that are truly empty.
@@ -721,6 +908,7 @@ local function shouldCollapseWhiteSpace(style, lineInfo, whitespacePosition)
 end
 
 local noBreakSpace = UniString.SpecialCharacter.Nbsp;
+local softHyphen = UniString.SpecialCharacter.SoftHyphen;
 
 -- @param it:InlineIterator
 local function skipNonBreakingSpace(it, lineInfo)
@@ -739,9 +927,8 @@ local function skipNonBreakingSpace(it, lineInfo)
     return true;
 end
 
-local softHyphen = UniString.SpecialCharacter.SoftHyphen;
-
 -- @param it:InlineIterator
+-- static bool requiresLineBox(const InlineIterator& it, const LineInfo& lineInfo = LineInfo(), WhitespacePosition whitespacePosition = LeadingWhitespace)
 local function requiresLineBox(it, lineInfo, whitespacePosition)
 	lineInfo = lineInfo or LineInfo:new();
 	whitespacePosition = whitespacePosition or "LeadingWhitespace";
@@ -758,7 +945,23 @@ local function requiresLineBox(it, lineInfo, whitespacePosition)
 	end
     local current = it:Current();
 	local current_str = if_else(current, tostring(current), "");
+	echo("current_str")
+	echo(current_str)
     return current_str ~= " " and current_str ~= "\t" and string.byte(current_str, 1) ~= softHyphen and (current_str ~= "\n" or it.obj:PreservesNewline()) and not skipNonBreakingSpace(it, lineInfo);
+end
+
+--static inline bool isCollapsibleSpace(UChar character, RenderText* renderer)
+local function isCollapsibleSpace(character, renderer)
+    if (character == " " or character == "\t" or character == softHyphen) then
+        return true;
+	end
+    if (character == "\n") then
+        return not renderer:Style():PreserveNewline();
+	end
+    if (character == noBreakSpace) then
+        return renderer:Style():NbspMode() == NBSPModeEnum.SPACE;
+	end
+    return false;
 end
 
 --static void setStaticPositions(RenderBlock* block, RenderBox* child)
@@ -783,13 +986,30 @@ local function setStaticPositions(block, child)
     child:Layer():SetStaticBlockPosition(blockHeight);
 end
 
+function LineBreaker:SkipTrailingWhitespace(iterator, lineInfo)
+	while (not iterator:AtEnd() and not requiresLineBox(iterator, lineInfo, TrailingWhitespace)) do
+        local object = iterator.obj;
+        if (object:IsFloating()) then
+            self.block:InsertFloatingObject(object:ToRenderBox());
+        elseif (object:IsPositioned()) then
+            setStaticPositions(self.block, object:ToRenderBox());
+		end
+        iterator:Increment();
+    end
+end
+
 function LineBreaker:SkipLeadingWhitespace(resolver, lineInfo, lastFloatFromPreviousLine, width)
+	echo("LineBreaker:SkipLeadingWhitespace")
 	while (not resolver:Position():AtEnd() and not requiresLineBox(resolver:Position(), lineInfo, "LeadingWhitespace")) do
+		echo("while (not resolver:Position():AtEnd")
         local object = resolver:Position().obj;
         if (object:IsFloating()) then
             self.block:PositionNewFloatOnLine(self.block:InsertFloatingObject(object), lastFloatFromPreviousLine, lineInfo, width);
+			echo("object.frame_rect")
+			echo(object.frame_rect)
+
         elseif (object:IsPositioned()) then
-            -- setStaticPositions(self.block, object);
+            setStaticPositions(self.block, object);
 		end
         resolver:Increment();
     end
@@ -1141,6 +1361,7 @@ local function dirtyLineBoxesForRenderer(o, fullLayout)
 end
 
 function LayoutBlock:LayoutInlineChildren(relayoutChildren, repaintLogicalTop, repaintLogicalBottom)
+	echo("LayoutBlock:LayoutInlineChildren")
 	self.overflow = nil;
 
     self:SetLogicalHeight(self:BorderBefore() + self:PaddingBefore());
@@ -1167,12 +1388,14 @@ function LayoutBlock:LayoutInlineChildren(relayoutChildren, repaintLogicalTop, r
         local hasInlineChild = false;
 		local walker = InlineWalker:new():init(self);
 		while(not walker:AtEnd()) do
+		echo("while(not walker:AtEnd()) do")
 			local o = walker:Current();
             if (not hasInlineChild and o:IsInline()) then
                 hasInlineChild = true;
 			end
 
             if (o:IsReplaced() or o:IsFloating() or o:IsPositioned()) then
+				echo("o:IsReplaced() or o:IsFloating() or o:IsPositioned()")
 				--RenderBox* box = toRenderBox(o);
 				local box = o;
 
@@ -1191,7 +1414,10 @@ function LayoutBlock:LayoutInlineChildren(relayoutChildren, repaintLogicalTop, r
                     layoutState:Floats():append(FloatWithRect:new():init(box));
                 elseif (layoutState:IsFullLayout() or o:NeedsLayout()) then
                     -- Replaced elements
+					echo("o:LayoutIfNeeded();")
+					echo({layoutState:IsFullLayout(), o:NeedsLayout()})
                     o:DirtyLineBoxes(layoutState:IsFullLayout());
+					
                     o:LayoutIfNeeded();
                 end
             elseif (o:IsText() or (o:IsLayoutInline() and not walker:AtEndOfInline())) then
@@ -1235,6 +1461,7 @@ function LayoutBlock:LayoutInlineChildren(relayoutChildren, repaintLogicalTop, r
 end
 
 function LayoutBlock:DetermineStartPosition(layoutState, resolver)
+	echo("LayoutBlock:DetermineStartPosition")
 	local curr = nil;
     local last = nil;
 
@@ -1424,6 +1651,7 @@ end
 
 -- static void deleteLineRange(LineLayoutState& layoutState, RenderArena* arena, RootInlineBox* startLine, RootInlineBox* stopLine = 0)
 local function deleteLineRange(layoutState, arena, startLine, stopLine)
+	echo("deleteLineRange")
     local boxToDelete = startLine;
     while (boxToDelete and boxToDelete ~= stopLine) do
         layoutState:UpdateRepaintRangeFromBox(boxToDelete);
@@ -1436,6 +1664,7 @@ local function deleteLineRange(layoutState, arena, startLine, stopLine)
 end
 
 function LayoutBlock:LayoutRunsAndFloats(layoutState, hasInlineChild)
+	echo("LayoutBlock:LayoutRunsAndFloats")
 	-- We want to skip ahead to the first dirty line
     local resolver = InlineBidiResolver:new():init();
     local startLine = self:DetermineStartPosition(layoutState, resolver);
@@ -1507,10 +1736,11 @@ function LayoutBlock:LayoutRunsAndFloats(layoutState, hasInlineChild)
 	self:PrintNodeInfo()
 	local lineBox = firstLineBox;
 	while(lineBox) do
+		echo("while(lineBox) do")
 		printLineBoxsInfo(lineBox);
 		lineBox = lineBox:NextRootBox();
 	end
---    linkToEndLineIfNeeded(layoutState);
+	self:LinkToEndLineIfNeeded(layoutState);
     self:RepaintDirtyFloats(layoutState:Floats());
 end
 
@@ -1637,9 +1867,116 @@ local function setLogicalWidthForTextRun(lineBox, run, renderer, xPos, lineInfo,
 --    }
 end
 
+--static void updateLogicalWidthForLeftAlignedBlock(bool isLeftToRightDirection, BidiRun* trailingSpaceRun, float& logicalLeft, float& totalLogicalWidth, float availableLogicalWidth)
+local function updateLogicalWidthForLeftAlignedBlock(isLeftToRightDirection, trailingSpaceRun, logicalLeft, totalLogicalWidth, availableLogicalWidth)
+    -- The direction of the block should determine what happens with wide lines.
+    -- In particular with RTL blocks, wide lines should still spill out to the left.
+    if (isLeftToRightDirection) then
+        if (totalLogicalWidth > availableLogicalWidth and trailingSpaceRun) then
+            trailingSpaceRun.box:SetLogicalWidth(math.max(0, trailingSpaceRun.box:LogicalWidth() - totalLogicalWidth + availableLogicalWidth));
+		end
+        return logicalLeft, totalLogicalWidth;
+    end
+
+    if (trailingSpaceRun) then
+        trailingSpaceRun.box:SetLogicalWidth(0);
+    elseif (totalLogicalWidth > availableLogicalWidth) then
+        logicalLeft = logicalLeft - (totalLogicalWidth - availableLogicalWidth);
+	end
+	return logicalLeft, totalLogicalWidth;
+end
+
+--static void updateLogicalWidthForRightAlignedBlock(bool isLeftToRightDirection, BidiRun* trailingSpaceRun, float& logicalLeft, float& totalLogicalWidth, float availableLogicalWidth)
+local function updateLogicalWidthForRightAlignedBlock(isLeftToRightDirection, trailingSpaceRun, logicalLeft, totalLogicalWidth, availableLogicalWidth)
+    -- Wide lines spill out of the block based off direction.
+    -- So even if text-align is right, if direction is LTR, wide lines should overflow out of the right
+    -- side of the block.
+    if (isLeftToRightDirection) then
+        if (trailingSpaceRun) then
+            totalLogicalWidth = totalLogicalWidth - trailingSpaceRun.box:LogicalWidth();
+            trailingSpaceRun.box:SetLogicalWidth(0);
+        end
+        if (totalLogicalWidth < availableLogicalWidth) then
+            logicalLeft = logicalLeft + availableLogicalWidth - totalLogicalWidth;
+		end
+        return logicalLeft, totalLogicalWidth;
+    end
+
+    if (totalLogicalWidth > availableLogicalWidth and trailingSpaceRun) then
+        trailingSpaceRun.box:SetLogicalWidth(math.max(0, trailingSpaceRun.box:LogicalWidth() - totalLogicalWidth + availableLogicalWidth));
+        totalLogicalWidth = totalLogicalWidth - trailingSpaceRun.box:LogicalWidth();
+    else
+        logicalLeft = logicalLeft + availableLogicalWidth - totalLogicalWidth;
+	end
+	return logicalLeft, totalLogicalWidth;
+end
+
+--static void updateLogicalWidthForCenterAlignedBlock(bool isLeftToRightDirection, BidiRun* trailingSpaceRun, float& logicalLeft, float& totalLogicalWidth, float availableLogicalWidth)
+local function updateLogicalWidthForCenterAlignedBlock(isLeftToRightDirection, trailingSpaceRun, logicalLeft, totalLogicalWidth, availableLogicalWidth)
+	echo("updateLogicalWidthForCenterAlignedBlock")
+	echo({isLeftToRightDirection, logicalLeft, totalLogicalWidth, availableLogicalWidth})
+    local trailingSpaceWidth = 0;
+    if (trailingSpaceRun) then
+        totalLogicalWidth = totalLogicalWidth - trailingSpaceRun.box:LogicalWidth();
+        trailingSpaceWidth = math.min(trailingSpaceRun.box:LogicalWidth(), (availableLogicalWidth - totalLogicalWidth + 1) / 2);
+        trailingSpaceRun.box:SetLogicalWidth(math.max(0, trailingSpaceWidth));
+    end
+    if (isLeftToRightDirection) then
+        logicalLeft = logicalLeft + math.max((availableLogicalWidth - totalLogicalWidth) / 2, 0);
+    else
+        logicalLeft = logicalLeft + if_else(totalLogicalWidth > availableLogicalWidth, (availableLogicalWidth - totalLogicalWidth), (availableLogicalWidth - totalLogicalWidth) / 2 - trailingSpaceWidth);
+	end
+	echo("logicalLeft, totalLogicalWidth")
+	echo({logicalLeft, totalLogicalWidth})
+	return logicalLeft, totalLogicalWidth;
+end
+
 --void RenderBlock::updateLogicalWidthForAlignment(const ETextAlign& textAlign, BidiRun* trailingSpaceRun, float& logicalLeft, float& totalLogicalWidth, float& availableLogicalWidth, int expansionOpportunityCount)
 function LayoutBlock:UpdateLogicalWidthForAlignment(textAlign, trailingSpaceRun, logicalLeft, totalLogicalWidth, availableLogicalWidth, expansionOpportunityCount)
-	-- TODO: add function later;
+	echo("LayoutBlock:UpdateLogicalWidthForAlignment")
+	self:PrintNodeInfo()
+	echo(textAlign)
+    -- Armed with the total width of the line (without justification),
+    -- we now examine our text-align property in order to determine where to position the
+    -- objects horizontally. The total width of the line can be increased if we end up
+    -- justifying text.
+    if(textAlign == TextAlignEnum.LEFT or textAlign == TextAlignEnum.WEBKIT_LEFT) then
+        logicalLeft, totalLogicalWidth = updateLogicalWidthForLeftAlignedBlock(self:Style():IsLeftToRightDirection(), trailingSpaceRun, logicalLeft, totalLogicalWidth, availableLogicalWidth);
+    elseif(textAlign == TextAlignEnum.JUSTIFY) then
+--        adjustInlineDirectionLineBounds(expansionOpportunityCount, logicalLeft, availableLogicalWidth);
+--        if (expansionOpportunityCount) then
+--            if (trailingSpaceRun) then
+--                totalLogicalWidth -= trailingSpaceRun.box:LogicalWidth();
+--                trailingSpaceRun.box:SetLogicalWidth(0);
+--            end
+--            break;
+--        end
+        -- fall through
+    elseif(textAlign == TextAlignEnum.TAAUTO) then
+        -- for right to left fall through to right aligned
+        if (self:Style():IsLeftToRightDirection()) then
+            if (totalLogicalWidth > availableLogicalWidth and trailingSpaceRun) then
+                trailingSpaceRun.box:SetLogicalWidth(math.max(0, trailingSpaceRun.box:LogicalWidth() - totalLogicalWidth + availableLogicalWidth));
+            end
+        end
+    elseif(textAlign == TextAlignEnum.RIGHT or textAlign == TextAlignEnum.WEBKIT_RIGHT) then
+        logicalLeft, totalLogicalWidth = updateLogicalWidthForRightAlignedBlock(self:Style():IsLeftToRightDirection(), trailingSpaceRun, logicalLeft, totalLogicalWidth, availableLogicalWidth);
+    elseif(textAlign == TextAlignEnum.CENTER or textAlign == TextAlignEnum.WEBKIT_CENTER) then
+        logicalLeft, totalLogicalWidth = updateLogicalWidthForCenterAlignedBlock(self:Style():IsLeftToRightDirection(), trailingSpaceRun, logicalLeft, totalLogicalWidth, availableLogicalWidth);
+    elseif(textAlign == TextAlignEnum.TASTART) then
+        if (self:Style():IsLeftToRightDirection()) then
+            logicalLeft, totalLogicalWidth = updateLogicalWidthForLeftAlignedBlock(self:Style():IsLeftToRightDirection(), trailingSpaceRun, logicalLeft, totalLogicalWidth, availableLogicalWidth);
+        else
+            logicalLeft, totalLogicalWidth = updateLogicalWidthForRightAlignedBlock(self:Style():IsLeftToRightDirection(), trailingSpaceRun, logicalLeft, totalLogicalWidth, availableLogicalWidth);
+        end
+    elseif(textAlign == TextAlignEnum.TAEND) then
+        if (self:Style():IsLeftToRightDirection()) then
+            logicalLeft, totalLogicalWidth = updateLogicalWidthForRightAlignedBlock(self:Style():IsLeftToRightDirection(), trailingSpaceRun, logicalLeft, totalLogicalWidth, availableLogicalWidth);
+        else
+            logicalLeft, totalLogicalWidth = updateLogicalWidthForLeftAlignedBlock(self:Style():IsLeftToRightDirection(), trailingSpaceRun, logicalLeft, totalLogicalWidth, availableLogicalWidth);
+        end
+    end
+	return logicalLeft, totalLogicalWidth;
 end
 
 --static inline void computeExpansionForJustifiedText(BidiRun* firstRun, BidiRun* trailingSpaceRun, Vector<unsigned, 16>& expansionOpportunities, unsigned expansionOpportunityCount, float& totalLogicalWidth, float availableLogicalWidth)
@@ -1736,7 +2073,7 @@ function LayoutBlock:ComputeInlineDirectionPositionsForLine(lineBox, lineInfo, f
 --        expansionOpportunityCount--;
 --    }
 
-	self:UpdateLogicalWidthForAlignment(textAlign, trailingSpaceRun, logicalLeft, totalLogicalWidth, availableLogicalWidth, expansionOpportunityCount);
+	logicalLeft, totalLogicalWidth = self:UpdateLogicalWidthForAlignment(textAlign, trailingSpaceRun, logicalLeft, totalLogicalWidth, availableLogicalWidth, expansionOpportunityCount);
 
     computeExpansionForJustifiedText(firstRun, trailingSpaceRun, expansionOpportunities, expansionOpportunityCount, totalLogicalWidth, availableLogicalWidth);
 
@@ -2091,11 +2428,14 @@ function LayoutBlock:LayoutRunsAndFloatsInRange(layoutState, resolver, cleanLine
             -- FIXME: This ownership is reversed. We should own the BidiRunList and pass it to createBidiRunsForLine.
             local bidiRuns = resolver:Runs();
             constructBidiRuns(resolver, bidiRuns, _end, override, layoutState:LineInfo():PreviousLineBrokeCleanly());
-			--bidiRuns:print();
+			bidiRuns:print();
             --ASSERT(resolver.position() == end);
 
             --BidiRun* trailingSpaceRun = !layoutState.lineInfo().previousLineBrokeCleanly() ? handleTrailingSpaces(bidiRuns, resolver.context()) : 0;
 			local trailingSpaceRun = nil;
+			if(not layoutState:LineInfo():PreviousLineBrokeCleanly()) then
+				trailingSpaceRun = self:HandleTrailingSpaces(bidiRuns, resolver:Context())
+			end
 
             if (bidiRuns:RunCount() ~= 0 and lineBreaker:LineWasHyphenated()) then
                 bidiRuns:LogicallyLastRun().hasHyphen = true;
@@ -2142,12 +2482,9 @@ function LayoutBlock:LayoutRunsAndFloatsInRange(layoutState, resolver, cleanLine
 --                }
             end
 
---			for i = 0, lineBreaker:PositionedObjects():Size() do
---				--setStaticPositions(this, lineBreaker.positionedObjects()[i]);
---			end
-
---            for (size_t i = 0; i < lineBreaker.positionedObjects().size(); ++i)
---                setStaticPositions(this, lineBreaker.positionedObjects()[i]);
+			for i = 1, lineBreaker:PositionedObjects():size() do
+				setStaticPositions(self, lineBreaker:PositionedObjects()[i]);
+			end
 
             layoutState:LineInfo():SetFirstLine(false);
             self:NewLine(lineBreaker:Clear());
@@ -2255,10 +2592,12 @@ end
 
 --bool RenderBlock::positionNewFloatOnLine(FloatingObject* newFloat, FloatingObject* lastFloatFromPreviousLine, LineInfo& lineInfo, LineWidth& width)
 function LayoutBlock:PositionNewFloatOnLine(newFloat, lastFloatFromPreviousLine, lineInfo, width)
+	echo("LayoutBlock:PositionNewFloatOnLine")
     if (not self:PositionNewFloats()) then
         return false;
 	end
-
+	newFloat:Renderer():PrintNodeInfo()
+	echo(newFloat:Renderer().frame_rect)
     width:ShrinkAvailableWidthForNewFloatIfNeeded(newFloat);
 
     -- We only connect floats to lines for pagination purposes if the floats occur at the start of
@@ -2603,4 +2942,66 @@ function LayoutBlock:AddOverflowFromInlineChildren()
 		end
 		curr = curr:NextRootBox();
 	end
+end
+
+--inline BidiRun* RenderBlock::handleTrailingSpaces(BidiRunList<BidiRun>& bidiRuns, BidiContext* currentContext)
+function LayoutBlock:HandleTrailingSpaces(bidiRuns, currentContext)
+    if (bidiRuns:RunCount() == 0
+        or not bidiRuns:LogicallyLastRun().object:Style():BreakOnlyAfterWhiteSpace()
+        or not bidiRuns:LogicallyLastRun().object:Style():AutoWrap()) then
+        return nil;
+	end
+
+    local trailingSpaceRun = bidiRuns:LogicallyLastRun();
+    local lastObject = trailingSpaceRun.object;
+    if (not lastObject:IsText()) then
+        return nil;
+	end
+
+    local lastText = lastObject:ToRenderText();
+    local characters = lastText:Characters();
+    local firstSpace = trailingSpaceRun:Stop();
+    while (firstSpace > trailingSpaceRun:Start()) do
+        local current = tostring(characters[firstSpace - 1]);
+        if (not isCollapsibleSpace(current, lastText)) then
+            break;
+		end
+        firstSpace = firstSpace - 1;
+    end
+    if (firstSpace == trailingSpaceRun:Stop()) then
+        return nil;
+	end
+
+    local direction = self:Style():Direction();
+    local shouldReorder = trailingSpaceRun ~= if_else(direction == TextDirectionEnum.LTR, bidiRuns:LastRun(), bidiRuns:FirstRun());
+    if (firstSpace ~= trailingSpaceRun:Start()) then
+        local baseContext = currentContext;
+		local parent = baseContext:Parent();
+        while (parent) do
+            baseContext = parent;
+			parent = baseContext:Parent()
+		end
+
+        local newTrailingRun = BidiRun:new(firstSpace, trailingSpaceRun.stop, trailingSpaceRun.object, baseContext, "OtherNeutral");
+        trailingSpaceRun.stop = firstSpace;
+        if (direction == TextDirectionEnum.LTR) then
+            bidiRuns:AddRun(newTrailingRun);
+        else
+            bidiRuns:PrependRun(newTrailingRun);
+		end
+        trailingSpaceRun = newTrailingRun;
+        return trailingSpaceRun;
+    end
+    if (not shouldReorder) then
+        return trailingSpaceRun;
+	end
+
+    if (direction == TextDirectionEnum.LTR) then
+        bidiRuns:MoveRunToEnd(trailingSpaceRun);
+        trailingSpaceRun.level = 0;
+    else
+        bidiRuns:MoveRunToBeginning(trailingSpaceRun);
+        trailingSpaceRun.level = 1;
+    end
+    return trailingSpaceRun;
 end

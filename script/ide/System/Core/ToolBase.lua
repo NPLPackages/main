@@ -68,6 +68,7 @@ function ToolBase:ctor()
 end
 
 function ToolBase:Destroy()
+	echo("ToolBase:Destroy")
 	self.wasDeleted = true;
 	-- disconnect all receivers
 	self:Disconnect();
@@ -473,6 +474,12 @@ function ToolBase:setParent_helper(parent)
     if (parent) then
 		local children = parent:GetChildren();
 		children:add(self);
+	else
+		echo("ToolBase:setParent_helper is nil")
+		echo(self:GetField("Name","Name is nil"))
+		if(self._page_element) then
+			self._page_element:PrintNodeInfo()
+		end
 	end
 end
 

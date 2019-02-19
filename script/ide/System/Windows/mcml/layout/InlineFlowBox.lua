@@ -253,12 +253,13 @@ function InlineFlowBox:RemoveLineBoxFromRenderObject()
 end
 
 function InlineFlowBox:DeleteLine(arena)
+	echo("InlineFlowBox:DeleteLine")
     local child = self:FirstChild();
     local next = nil;
     while (child) do
         --ASSERT(this == child->parent());
         next = child:NextOnLine();
-        child:SetParent(0);
+        child:SetParent(nil);
         child:DeleteLine(arena);
         child = next;
     end
@@ -275,12 +276,16 @@ function InlineFlowBox:RendererLineBoxes()
 end
 
 function InlineFlowBox:Destroy(arena)
+	echo("InlineFlowBox:Destroy")
+	echo(self:BoxName())
+	self:Renderer():PrintNodeInfo()
 --    if (!m_knownToHaveNoOverflow && gTextBoxesWithOverflow) then
 --        gTextBoxesWithOverflow->remove(this);
 --	end
 	if(self.control) then
-		self.control:Destroy();
-		self.control = nil;
+		--self.control:Destroy();
+		self.control:SetParent(nil);
+		--self.control = nil;
 	end
 
 	InlineFlowBox._super.Destroy(self, arena);
@@ -1347,12 +1352,15 @@ function InlineFlowBox:PaintBoxDecorations(paintInfo, paintOffset)
 	-- Move x/y to our coordinates.
     local localRect = frameRect:clone();
 	echo("localRect");
+	self:Renderer():PrintNodeInfo()
 	echo(localRect)
     localRect = self:FlipForWritingMode(localRect);
     --local adjustedPaintoffset = paintOffset + localRect:Location();
 	echo(localRect)
+	echo({self:IsRootInlineBox(), not self:Renderer():IsAnonymous(), self:Renderer():HasSelfPaintingLayer()})
 	local adjustedPaintoffset = localRect:Location();
-	if(self:IsRootInlineBox() and not self:Renderer():IsAnonymous() and self:Renderer():HasSelfPaintingLayer()) then
+	--if(self:IsRootInlineBox() and not self:Renderer():IsAnonymous() and self:Renderer():HasSelfPaintingLayer()) then
+	if(self:IsRootInlineBox() and not self:Renderer():IsAnonymous() and self:Renderer():HasOverflowClip()) then
 		adjustedPaintoffset = adjustedPaintoffset + paintOffset;
 	end
 
@@ -1381,7 +1389,7 @@ function InlineFlowBox:GetControl()
 end
 
 function InlineFlowBox:GetParentControl()
-echo("InlineFlowBox:GetParentControl()")
+	echo("InlineFlowBox:GetParentControl()")
 	if(self:Parent()) then
 		return self:Parent():GetControl()
 	end
@@ -1402,6 +1410,7 @@ function InlineFlowBox:PaintFillLayer(paintInfo, rect)
 		if(self.control) then
 			self.control:setGeometry(x, y, w, h);
 		else
+			echo("Create Rectangle")
 			local _this = Rectangle:new():init(control);
 			_this:setGeometry(x, y, w, h);
 			local style = if_else(self:IsRootInlineBox(), ComputedStyle.CreateDefaultStyle(), self:Renderer():Style())

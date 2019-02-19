@@ -246,13 +246,16 @@ local function shouldBreakAfter(lastCh, ch, nextCh)
 end
 
 local function needsLineBreakIterator(ch)
+	if(not ch) then
+		return false;
+	end
 	local ch_num = string.byte(ch);
     return ch_num > 127;
 end
 
 function UniString:nextBreakablePosition(position)
 	local len = self:length();
-	local ch, lastCh, lastLastCh = nil, 0, 0;
+	local ch, lastCh, lastLastCh = nil, nil, nil;
 	if(position > 1) then
 		lastCh = self:at(position - 1);
 	end

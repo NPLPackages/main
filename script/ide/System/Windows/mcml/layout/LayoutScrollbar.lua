@@ -20,9 +20,14 @@ local LayoutScrollbar = commonlib.inherit(commonlib.gettable("System.Windows.mcm
 
 local IntRect = Rect;
 
+local directionMap = {
+	["HorizontalScrollbar"] = "horizontal",
+	["VerticalScrollbar"] = "vertical",
+}
+
 function LayoutScrollbar:ctor()
 	-- LayoutLayer
-	self.scrollArea = nil
+	self.scrollableArea = nil
 	self.orientation = nil
 	self.control = nil;
 	-- LayoutBox
@@ -42,9 +47,9 @@ function LayoutScrollbar:ctor()
     --float m_pixelStep;
 end
 
-function LayoutScrollbar:init(scrollArea, orientation, renderer)
+function LayoutScrollbar:init(scrollableArea, orientation, renderer)
 	LayoutScrollbar._super.init(self)
-	self.scrollArea = scrollArea;
+	self.scrollableArea = scrollableArea;
 	self.orientation = orientation;
 	self.owner = renderer;
 
@@ -77,14 +82,14 @@ function LayoutScrollbar:OwningRenderer()
 end
 
 function LayoutScrollbar:Destroy()
-	scrollbar:ClearOwningRenderer();
-    scrollbar:DisconnectFromScrollableArea();
 	if(self.control) then
-		local scrollArea_control = self.scrollArea:Renderer():GetControl();
+		local scrollableArea_control = self.scrollableArea:Renderer():GetControl();
 		local direction = directionMap[self.orientation];
-		scrollArea_control:DestroyScrollbar(direction); 
+		scrollableArea_control:DestroyScrollbar(direction); 
 		self.control = nil;
 	end
+	self:ClearOwningRenderer();
+    self:DisconnectFromScrollableArea();
 end
 
 function LayoutScrollbar:ClearOwningRenderer()
@@ -92,7 +97,7 @@ function LayoutScrollbar:ClearOwningRenderer()
 end
 
 function LayoutScrollbar:DisconnectFromScrollableArea() 
-	self.scrollableArea = 0;
+	self.scrollableArea = nil;
 end
 --ScrollableArea* scrollableArea() const { return m_scrollableArea; }
 function LayoutScrollbar:ScrollableArea()
@@ -136,28 +141,33 @@ function LayoutScrollbar:SetProportion(visibleSize, totalSize)
     --updateThumbProportion();
 end
 
-local directionMap = {
-	["HorizontalScrollbar"] = "horizontal",
-	["VerticalScrollbar"] = "vertical",
-}
-
 function LayoutScrollbar:GetControl()	
+	return self.control;
+end
+
+function LayoutScrollbar:SetValue(value, emitSingal)	
+	if(self.control) then
+		self.control:SetValue(value, emitSingal)	
+	end
+end
+
+function LayoutScrollbar:GetOrCreateControl()	
 	if(not self.control) then
-		local scrollArea_control = self.scrollArea:Renderer():GetControl();
+		local scrollableArea_control = self.scrollableArea:Renderer():GetControl();
 		local direction = directionMap[self.orientation];
-		local scrollbar = scrollArea_control:CreateScrollbar(direction);
+		local scrollbar = scrollableArea_control:CreateScrollbar(direction);
 		scrollbar:Connect("valueChanged", function(value)
 			echo("valueChanged");
 			echo(value)
-			if(self.scrollArea) then
+			if(self.scrollableArea) then
 				if(self.orientation == "HorizontalScrollbar") then
-					self.scrollArea:ScrollTo(value, nil)
+					self.scrollableArea:ScrollTo(value, nil)
 				end
 				if(self.orientation == "VerticalScrollbar") then
-					self.scrollArea:ScrollTo(nil, value)
+					self.scrollableArea:ScrollTo(nil, value)
 				end
 
-				local view = self.scrollArea:Renderer():View();
+				local view = self.scrollableArea:Renderer():View();
 				if(view) then
 					local frameview = view:FrameView();
 					frameview:PostLayoutRequestEvent();

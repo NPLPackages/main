@@ -12,8 +12,6 @@ local ScrollAreaForPage = commonlib.gettable("System.Windows.Controls.ScrollArea
 NPL.load("(gl)script/ide/System/Windows/UIElement.lua");
 NPL.load("(gl)script/ide/math/Rect.lua");
 NPL.load("(gl)script/ide/System/Windows/Controls/ScrollBar.lua");
-NPL.load("(gl)script/ide/System/Windows/Controls/Canvas.lua");
-local Canvas = commonlib.gettable("System.Windows.Controls.Canvas");
 local ScrollBar = commonlib.gettable("System.Windows.Controls.ScrollBar");
 local Rect = commonlib.gettable("mathlib.Rect");
 local Application = commonlib.gettable("System.Windows.Application");
@@ -119,6 +117,10 @@ end
 --end
 
 function ScrollAreaForPage:paintEvent(painter)
+--	echo("ScrollAreaForPage:paintEvent")
+--	if(self._page_element) then
+--		self._page_element:PrintNodeInfo()
+--	end
 	painter:SetPen(self:GetBackgroundColor());
 	painter:DrawRectTexture(self:x(), self:y(), self:width(), self:height(), self:GetBackground());
 end

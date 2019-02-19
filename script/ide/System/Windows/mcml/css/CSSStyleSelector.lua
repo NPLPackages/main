@@ -32,6 +32,7 @@ local CSSStyleSheet = commonlib.gettable("System.Windows.mcml.css.CSSStyleSheet"
 local CSSStyleDeclaration = commonlib.gettable("System.Windows.mcml.css.CSSStyleDeclaration");
 
 local OverflowEnum = ComputedStyleConstants.OverflowEnum;
+local PositionEnum = ComputedStyleConstants.PositionEnum;
 
 local MatchedStyleDeclaration = {};
 MatchedStyleDeclaration.__index = MatchedStyleDeclaration;
@@ -323,9 +324,19 @@ function CSSStyleSelector:AdjustRenderStyle(style, parentStyle, e)
     style:SetOriginalDisplay(style:Display());
 	-- TODO: add latter;
 
---	// Make sure our z-index value is only applied if the object is positioned.
---    if (style->position() == StaticPosition)
---        style->setHasAutoZIndex();
+	-- Make sure our z-index value is only applied if the object is positioned.
+    if (style:Position() == PositionEnum.StaticPosition) then
+        style:SetHasAutoZIndex();
+	end
+
+	-- Auto z-index becomes 0 for the root element and transparent objects.  This prevents
+    -- cases where objects that should be blended as a single unit end up with a non-transparent
+    -- object wedged in between them.  Auto z-index also becomes 0 for objects that specify transforms/masks/reflections.
+    if (style:HasAutoZIndex() and ((e and e:Document():DocumentElement() == e) or style:Opacity() < 1
+        --or style:HasTransformRelatedProperty() or style:HasMask() or style:BoxReflect())) then
+		or style:HasMask())) then
+        style:SetZIndex(0);
+	end
 
 	-- Textarea considers overflow visible as auto.
     if (e and e:HasTagName("textarea")) then

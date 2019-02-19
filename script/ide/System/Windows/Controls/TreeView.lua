@@ -9,11 +9,8 @@ NPL.load("(gl)script/ide/System/Windows/Controls/TreeView.lua");
 local TreeView = commonlib.gettable("System.Windows.Controls.TreeView");
 ------------------------------------------------------------
 ]]
-NPL.load("(gl)script/ide/System/Windows/Controls/TreeNode.lua");
-NPL.load("(gl)script/ide/System/Windows/Controls/ScrollArea.lua");
---local ScrollArea = commonlib.gettable("System.Windows.Controls.ScrollArea");
-local TreeNode = commonlib.gettable("System.Windows.Controls.TreeNode");
-local TreeView = commonlib.inherit(commonlib.gettable("System.Windows.Controls.ScrollArea"), commonlib.gettable("System.Windows.Controls.TreeView"));
+NPL.load("(gl)script/ide/System/Windows/Controls/Primitives/ScrollAreaForPage.lua");
+local TreeView = commonlib.inherit(commonlib.gettable("System.Windows.Controls.ScrollAreaForPage"), commonlib.gettable("System.Windows.Controls.TreeView"));
 TreeView:Property("Name", "TreeView");
 
 -- the client area X, Y position in pixels relative to the logical tree view container. 

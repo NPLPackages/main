@@ -1,0 +1,59 @@
+﻿<!-- "script/test/MCMLv2/test_layout.html" -->
+<html>
+<pe:mcml>
+    <script type="text/npl" refresh="false">
+        <![CDATA[
+
+        function SetNodeProperty(node,key,value)
+            node:GetInlineStyleDecl():SetProperty(key,value);
+        end
+
+        function SetBackgroundImage()
+            local nodes = Page:jquery("div#div2");
+            local node = nodes[1];
+            SetNodeProperty(node, "background-image", "Textures/login_bg.png");
+        end
+
+        function ClearBackgroundImage()
+            local nodes = Page:jquery("div#div2");
+            local node = nodes[1];
+            SetNodeProperty(node, "background-image", "");
+        end
+
+        function ClearBackgroundColor()
+            local nodes = Page:jquery("div#div2");
+            local node = nodes[1];
+            SetNodeProperty(node, "background-color", "");
+        end
+
+        function SetBackgroundColor()
+            local nodes = Page:jquery("div#div2");
+            local node = nodes[1];
+            SetNodeProperty(node, "background-color", "green");
+        end
+
+        function clickRadio(value, mcmlnode)
+            local nodes = Page:jquery("div#divPoetry");
+            local node = nodes[1];
+            SetNodeProperty(node, "text-align", value);
+        end
+        ]]>
+    </script>
+    <div name="div" style="margin:10px;padding:10px;background-color:antiquewhite;overflow:auto;">
+        <div name="div" style="margin:40px;padding:20px;background-color:aquamarine;width:100px;float:left;">
+            <input type="radio" name="text-align" value="left" onclick="clickRadio()"/> 靠左
+            <br/>
+            <input type="radio" name="text-align" value="center" onclick="clickRadio()"/> 居中
+            <br />
+            <input type="radio" name="text-align" value="right" onclick="clickRadio()"/> 靠右
+        </div>
+        <div name="divPoetry" style="margin:40px;padding:20px;background-color:aquamarine;width:200px;float:left;">
+            春晓<br />
+            春眠不觉晓<br/>
+            处处闻啼鸟<br />
+            夜来风雨声<br />
+            花落知多少<br />
+        </div>
+    </div>
+</pe:mcml>
+</html>

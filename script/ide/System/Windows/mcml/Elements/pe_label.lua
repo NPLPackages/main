@@ -9,31 +9,29 @@ NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_label.lua");
 System.Windows.mcml.Elements.pe_label:RegisterAs("label","pe:label");
 ------------------------------------------------------------
 ]]
-NPL.load("(gl)script/ide/System/Windows/mcml/PageElement.lua");
-NPL.load("(gl)script/ide/System/Windows/Controls/Label.lua");
-local Label = commonlib.gettable("System.Windows.Controls.Label");
-local pe_label = commonlib.inherit(commonlib.gettable("System.Windows.mcml.PageElement"), commonlib.gettable("System.Windows.mcml.Elements.pe_label"));
+NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_span.lua");
+local pe_label = commonlib.inherit(commonlib.gettable("System.Windows.mcml.Elements.pe_span"), commonlib.gettable("System.Windows.mcml.Elements.pe_label"));
 pe_label:Property({"class_name", "pe:label"});
 
 function pe_label:ctor()
 end
 
-function pe_label:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
-	css.float = css.float or true;
-
-	local _this = self.control;
-	if(not _this) then
-		_this = Label:new():init(parentElem);
-		self:SetControl(_this);
-	else
-		_this:SetParent(parentElem);
-	end
-	_this:ApplyCss(css);
-	_this:SetText(tostring(self:GetAttributeWithCode("value", nil, true)));
-	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
-
-	pe_label._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
-end
+--function pe_label:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
+--	css.float = css.float or true;
+--
+--	local _this = self.control;
+--	if(not _this) then
+--		_this = Label:new():init(parentElem);
+--		self:SetControl(_this);
+--	else
+--		_this:SetParent(parentElem);
+--	end
+--	_this:ApplyCss(css);
+--	_this:SetText(tostring(self:GetAttributeWithCode("value", nil, true)));
+--	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
+--
+--	pe_label._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
+--end
 
 -- get value: it is usually one of the editor tag, such as <input>
 function pe_label:GetValue()

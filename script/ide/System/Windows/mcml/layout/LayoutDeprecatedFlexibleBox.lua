@@ -191,8 +191,11 @@ local function childDoesNotAffectWidthOrFlexing(child)
 end
 
 function LayoutDeprecatedFlexibleBox:CalcHorizontalPrefWidths()
+	echo("LayoutDeprecatedFlexibleBox:CalcHorizontalPrefWidths")
 	local child = self:FirstChildBox();
 	while(child) do
+		echo("while(child) do")
+		child:PrintNodeInfo()
 		if (childDoesNotAffectWidthOrFlexing(child)) then
             --continue;
 		else
@@ -224,6 +227,7 @@ function LayoutDeprecatedFlexibleBox:CalcVerticalPrefWidths()
 end
 
 function LayoutDeprecatedFlexibleBox:ComputePreferredLogicalWidths()
+	echo("LayoutDeprecatedFlexibleBox:ComputePreferredLogicalWidths")
     -- ASSERT(preferredLogicalWidthsDirty());
 
     if (self:Style():Width():IsFixed() and self:Style():Width():Value() > 0) then
@@ -239,7 +243,7 @@ function LayoutDeprecatedFlexibleBox:ComputePreferredLogicalWidths()
 		end
         self.maxPreferredLogicalWidth = math.max(self.minPreferredLogicalWidth, self.maxPreferredLogicalWidth);
     end
-
+	echo("LayoutDeprecatedFlexibleBox:ComputePreferredLogicalWidths end")
     if (self:HasOverflowClip() and self:Style():OverflowY() == OverflowEnum.OSCROLL) then
         self:Layer():SetHasVerticalScrollbar(true);
         local scrollbarWidth = self:VerticalScrollbarWidth();
@@ -265,6 +269,7 @@ function LayoutDeprecatedFlexibleBox:ComputePreferredLogicalWidths()
 end
 
 function LayoutDeprecatedFlexibleBox:LayoutBlock(relayoutChildren, pageLogicalHeight, layoutPass)
+	echo("LayoutDeprecatedFlexibleBox:LayoutBlock")
 	pageHeight = pageHeight or 0;
 	layoutPass = layoutPass or "NormalLayoutPass";
     --ASSERT(needsLayout());
@@ -272,22 +277,23 @@ function LayoutDeprecatedFlexibleBox:LayoutBlock(relayoutChildren, pageLogicalHe
     if (not relayoutChildren and self:SimplifiedLayout()) then
         return;
 	end
-
+	echo("LayoutDeprecatedFlexibleBox:LayoutBlock 1")
     -- LayoutRepainter repainter(*this, checkForRepaintDuringLayout());
     -- LayoutStateMaintainer statePusher(view(), this, IntSize(x(), y()), hasTransform() or hasReflection() or self:Style():IsFlippedBlocksWritingMode());
 
     local previousSize = self:Size();
 
     self:ComputeLogicalWidth();
+	echo("LayoutDeprecatedFlexibleBox:LayoutBlock 11")
     self:ComputeLogicalHeight();
-
+	echo("LayoutDeprecatedFlexibleBox:LayoutBlock 2")
     -- self.m_overflow:Clear();
     if (previousSize ~= self:Size()
         or (self:Parent():IsDeprecatedFlexibleBox() and self:Parent():Style():BoxOrient() == BoxOrientEnum.HORIZONTAL
         and self:Parent():Style():BoxAlign() == BoxAlignmentEnum.BSTRETCH)) then
         relayoutChildren = true;
 	end
-
+	echo("LayoutDeprecatedFlexibleBox:LayoutBlock 3")
     self:SetHeight(0);
 
     self.m_flexingChildren, self.m_stretchingChildren = false, false;
@@ -303,7 +309,7 @@ function LayoutDeprecatedFlexibleBox:LayoutBlock(relayoutChildren, pageLogicalHe
             self:Layer():SetHasVerticalScrollbar(true);
 		end
     end
-
+	echo("LayoutDeprecatedFlexibleBox:LayoutBloc 4k")
     if (self:IsHorizontal()) then
         self:LayoutHorizontalBox(relayoutChildren);
     else
@@ -398,6 +404,7 @@ local function gatherFlexChildrenInfo(iterator, relayoutChildren, highestFlexGro
 end
 
 function LayoutDeprecatedFlexibleBox:LayoutHorizontalBox(relayoutChildren)
+	echo("LayoutDeprecatedFlexibleBox:LayoutHorizontalBox")
     local toAdd = self:BorderBottom() + self:PaddingBottom() + self:HorizontalScrollbarHeight();
     local yPos = self:BorderTop() + self:PaddingTop();
     local xPos = self:BorderLeft() + self:PaddingLeft();
@@ -730,6 +737,7 @@ function LayoutDeprecatedFlexibleBox:LayoutHorizontalBox(relayoutChildren)
     if (heightSpecified) then
         self:SetHeight(oldHeight);
 	end
+	echo("LayoutDeprecatedFlexibleBox:LayoutHorizontalBox end")
 end
 
 function LayoutDeprecatedFlexibleBox:LayoutVerticalBox(relayoutChildren)

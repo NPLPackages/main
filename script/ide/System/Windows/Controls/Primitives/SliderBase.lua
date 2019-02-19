@@ -88,7 +88,7 @@ function SliderBase:GetValue()
 end
 
 function SliderBase:bound(value)
-	return math.max(self.min, math.min(self.max, value));
+	return math.floor(math.max(self.min, math.min(self.max, value))+0.5);
 end
 
 function SliderBase:SliderSingleStepAdd()

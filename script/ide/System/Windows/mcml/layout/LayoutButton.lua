@@ -11,8 +11,13 @@ local LayoutButton = commonlib.gettable("System.Windows.mcml.layout.LayoutButton
 ]]
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutDeprecatedFlexibleBox.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutText.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyleConstants.lua");
+local ComputedStyleConstants = commonlib.gettable("System.Windows.mcml.style.ComputedStyleConstants");
 local LayoutText = commonlib.gettable("System.Windows.mcml.layout.LayoutText");
 local LayoutButton = commonlib.inherit(commonlib.gettable("System.Windows.mcml.layout.LayoutDeprecatedFlexibleBox"), commonlib.gettable("System.Windows.mcml.layout.LayoutButton"));
+
+local OverflowEnum = ComputedStyleConstants.OverflowEnum;
+local DisplayEnum = ComputedStyleConstants.DisplayEnum;
 
 function LayoutButton:ctor()
 	self.name = "LayoutButton";
@@ -43,7 +48,7 @@ function LayoutButton:AddChild(newChild, beforeChild)
         -- Create an anonymous block.
         --ASSERT(!firstChild());
 		local display = self:Style():Display();
-        local isFlexibleBox = display == BOX or display == INLINE_BOX;
+        local isFlexibleBox = display == DisplayEnum.BOX or display == DisplayEnum.INLINE_BOX;
         self.m_inner = self:CreateAnonymousBlock(isFlexibleBox);
         self:SetupInnerStyle(self.m_inner:Style());
         LayoutButton._super.AddChild(self, self.m_inner);
@@ -77,6 +82,9 @@ function LayoutButton:SetupInnerStyle(innerStyle)
     -- safe to modify.
     innerStyle:SetBoxFlex(1);
     innerStyle:SetBoxOrient(self:Style():BoxOrient());
+
+--	innerStyle:SetOverflowX(OverflowEnum.OHIDDEN);
+--	innerStyle:SetOverflowY(OverflowEnum.OHIDDEN);
 end
 
 function LayoutButton:UpdateFromElement()

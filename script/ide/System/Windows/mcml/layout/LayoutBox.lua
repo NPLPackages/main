@@ -144,6 +144,9 @@ function LayoutBox:Y()
 end
 
 function LayoutBox:SetX(x)
+	echo("LayoutBox:SetX")
+	self:PrintNodeInfo()
+	echo(x)
 	return self.frame_rect:SetX(x);
 end
 
@@ -582,7 +585,10 @@ function LayoutBox:SetLogicalSize(size)
 end
 
 function LayoutBox:ComputeBorderBoxLogicalWidth(width)
+	echo("LayoutBox:ComputeBorderBoxLogicalWidth")
+	echo(width)
 	local bordersPlusPadding = self:BorderAndPaddingLogicalWidth();
+	echo(bordersPlusPadding)
 	if (self:Style():BoxSizing() == BoxSizingEnum.CONTENT_BOX) then
         return width + bordersPlusPadding;
 	end
@@ -643,6 +649,7 @@ function LayoutBox:NeedsPreferredWidthsRecalculation()
 end
 
 function LayoutBox:MinPreferredLogicalWidth()
+	echo("LayoutBox:MinPreferredLogicalWidth()")
 	if (self:PreferredLogicalWidthsDirty()) then
         self:ComputePreferredLogicalWidths();
 	end
@@ -757,6 +764,8 @@ end
 
 -- @param widthType: can be "LogicalWidth","MinLogicalWidth","MaxLogicalWidth";
 function LayoutBox:ComputeLogicalWidthUsing(widthType, availableLogicalWidth)
+	echo("LayoutBox:ComputeLogicalWidthUsing")
+	echo({widthType, availableLogicalWidth})
     local logicalWidthResult = self:LogicalWidth();
     local logicalWidth;
     if (widthType == "LogicalWidth") then
@@ -766,6 +775,8 @@ function LayoutBox:ComputeLogicalWidthUsing(widthType, availableLogicalWidth)
     else
         logicalWidth = self:Style():LogicalMaxWidth();
 	end
+	echo(logicalWidth)
+	echo(logicalWidth:IsIntrinsicOrAuto())
 	if (logicalWidth:IsIntrinsicOrAuto()) then
         local marginStart = self:Style():MarginStart():CalcMinValue(availableLogicalWidth);
         local marginEnd = self:Style():MarginEnd():CalcMinValue(availableLogicalWidth);
@@ -831,6 +842,7 @@ function LayoutBox:SizesToIntrinsicLogicalWidth(widthType)
 end
 
 function LayoutBox:ComputeLogicalWidthInRegion(region, offsetFromLogicalTopOfFirstPage)
+	echo("LayoutBox:ComputeLogicalWidthInRegion")
 	if(self:IsPositioned()) then
 		self:ComputePositionedLogicalWidth(region, offsetFromLogicalTopOfFirstPage);
 	end
@@ -844,6 +856,8 @@ function LayoutBox:ComputeLogicalWidthInRegion(region, offsetFromLogicalTopOfFir
     local stretching = self:Parent():Style():BoxAlign() == BoxAlignmentEnum.BSTRETCH;
     local treatAsReplaced = self:ShouldComputeSizeAsReplaced() and (not inVerticalBox or not stretching);
 	local logicalWidthLength;
+	echo("treatAsReplaced")
+	echo(treatAsReplaced)
 	if(treatAsReplaced) then
 		logicalWidthLength = Length:new(self:ComputeReplacedLogicalWidth(), LengthTypeEnum.Fixed);
 	else
@@ -2213,13 +2227,17 @@ function LayoutBox:LogicalRightVisualOverflow()
 end
 
 function LayoutBox:ClippedOverflowRectForRepaint(repaintContainer)
+	echo("LayoutBox:ClippedOverflowRectForRepaint")
+	self:PrintNodeInfo()
     if (self:Style():Visibility() ~= VisibilityEnum.VISIBLE and not self:EnclosingLayer():HasVisibleContent()) then
         return LayoutRect:new();
 	end
 
     local rect = self:VisualOverflowRect();
-
+	echo(rect)
     local view = self:View();
+	echo(view:LayoutDelta())
+	echo(view:MaximalOutlineSize())
     if (view) then
         -- FIXME: layoutDelta needs to be applied in parts before/after transforms and
         -- repaint containers. https://bugs.webkit.org/show_bug.cgi?id=23308
@@ -2238,7 +2256,7 @@ function LayoutBox:ClippedOverflowRectForRepaint(repaintContainer)
             rect:Inflate(view:MaximalOutlineSize());
         end
     end
-    
+    echo(rect)
     rect = self:ComputeRectForRepaint(repaintContainer, rect);
     return rect;
 end
@@ -3302,39 +3320,6 @@ function LayoutBox:ComputePositionedLogicalHeightReplaced()
     local logicalTopPos = logicalTopValue + marginBeforeAlias;
     computeLogicalTopPositionedOffset(logicalTopPos, self, self:LogicalHeight(), containerBlock, containerLogicalHeight);
     self:SetLogicalTop(logicalTopPos);
-end
-
---LayoutRect RenderBox::clippedOverflowRectForRepaint(RenderBoxModelObject* repaintContainer) const
-function LayoutBox:ClippedOverflowRectForRepaint(repaintContainer)
-    if (self:Style():Visibility() ~= VisibilityEnum.VISIBLE and not self:EnclosingLayer():HasVisibleContent()) then
-        return LayoutRect:new();
-	end
-
-    local r = self:VisualOverflowRect();
-
-    local v = self:View();
-    if (v) then
-        -- FIXME: layoutDelta needs to be applied in parts before/after transforms and
-        -- repaint containers. https://bugs.webkit.org/show_bug.cgi?id=23308
-        r:Move(v:LayoutDelta());
-    end
-    
-    if (self:Style()) then
-        if (self:Style():HasAppearance()) then
-            -- The theme may wish to inflate the rect used when repainting.
-            --theme()->adjustRepaintRect(this, r);
-		end
-
-        -- We have to use maximalOutlineSize() because a child might have an outline
-        -- that projects outside of our overflowRect.
-        if (v) then
-            --ASSERT(style()->outlineSize() <= v->maximalOutlineSize());
-            r:Inflate(v:MaximalOutlineSize());
-        end
-    end
-    
-    r = self:ComputeRectForRepaint(repaintContainer, r);
-    return r;
 end
 
 --LayoutRect RenderBox::outlineBoundsForRepaint(RenderBoxModelObject* repaintContainer, LayoutPoint* cachedOffsetToRepaintContainer) const

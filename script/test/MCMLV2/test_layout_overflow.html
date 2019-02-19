@@ -62,37 +62,80 @@
         local node = nodes[1];
         SetNodeProperty(node, "background-color", "red");
     end
+    function click()
+        local nodes = Page:jquery("div#divImg");
+        local node = nodes[1];
+        SetNodeProperty(node, "display", "none");
+    end
+
+    function scroll()
+        local nodes = Page:jquery("div#divMultipleText");
+        local node = nodes[1];
+
+        local sValue = 50;
+        node:ScrollTo(nil, sValue)
+    end
     ]]>
 </script>
-<div name="div1" style="background-color:antiquewhite;margin:20px;padding:20px;width:600px;height:400px;overflow:auto">
+<div style="background-color:aquamarine;margin:20px;padding:20px;width:100px;height:400px;float:left;"></div>
+<div name="div1" style="background-color:antiquewhite;margin:20px;padding:20px;width:600px;height:400px;overflow:auto;float:left;">
+    <div name="divMultiple" style="display:none;">
+        <div name="divText" style="padding:20px;background-color:green;width:80px;height:180px;overflow:auto;">
+            <span style="background-color:greenyellow;">11111111</span>0123456789abcdefghijklmn 22222 3333333 <span style="background-color:red;">4444444444</span> 55555 66666 77777 88888 99999
+        </div>
+        <div name="divImg" style="padding:20px;background-color:burlywood;width:180px;height:280px;overflow:auto;">
+            <div style="padding:20px;background-color:chartreuse;width:180px;">111<img name="img" id="img" src="Textures/icon1.png" width="180" height="220" />222</div>
+            <div style="padding:20px;background-color:darkturquoise;width:180px;height:100px;"><div style="padding:20px;background-color:deeppink;width:60px;height:60px;"></div></div>
+        </div>
+        <div name="divButton" style="padding:20px;background-color:cornflowerblue;width:80px;height:80px;overflow:auto;">
+            <input type="radio" checked="checked" name="Sex" value="male" />男性
+            <br />
+            <input type="radio" name="Sex" value="female" />女性
+            <br />
+            <input name="checkbox" type="checkbox" />课程一
+            <br />
+            <input name="checkbox" type="checkbox" />课程二
+            <br />
+            <input name="checkbox" type="checkbox" />课程三
+        </div>
+    </div>
+    <div name="divHidden">
+        <div name="divMultipleText" style="padding:20px;background-color:green;width:80px;height:180px;overflow:hidden;">
+            0000000000000000
+            1111111111111111
+            2222222222222222
+            3333333333333333
+            4444444444444444
+            5555555555555555
+            6666666666666666
+            7777777777777777
+            8888888888888888
+            9999999999999999
+            aaaaaaaaaaaaaaaa
+            bbbbbbbbbbbbbbbb
+            cccccccccccccccc
+            dddddddddddddddd
+            eeeeeeeeeeeeeeee
+            ffffffffffffffff
+            gggggggggggggggg
+        </div>
+        <div name="divText" style="padding:20px;background-color:burlywood;width:80px;">
+            <input name="scrollValue" type="text" value="80" style="width:40px;"/>
+            <input type="button" value="scroll" onclick="scroll()"/>
+        </div>
+    </div>
     <!--<div name="div11" id="div2" style="margin:20px;width:100px;height:80px;background-color:aqua;">
         11111<span style="background-color:greenyellow;">222</span>
     </div>-->
     <!--<input name="button" type="button" value="改变div2背景色" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="ClearBackgroundColor()" />-->
     <!--<scrollarea id="MyDIV" style="width:80px;height:80px;overflow:auto;background-color:red;">LayoutBoxModelObject</scrollarea>-->
+    <!--<input name="button" type="button" value="隐藏控件" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="click()" />-->
     
-    <div name="divText" style="padding:20px;background-color:green;width:80px;height:180px;overflow:auto;">
-        <span style="background-color:greenyellow;">11111111</span>0123456789abcdefghijklmn 22222 3333333 <span style="background-color:red;">4444444444</span> 55555 66666 77777 88888 99999
-    </div>
-    <div name="divImg" style="padding:20px;background-color:burlywood;width:180px;height:280px;overflow:auto;">
-        <div style="padding:20px;background-color:chartreuse;width:180px;">111<img name="img" id="img" src="Textures/icon1.png" width="180" height="220" />222</div>
-        <div style="padding:20px;background-color:darkturquoise;width:180px;height:100px;"><div style="padding:20px;background-color:deeppink;width:60px;height:60px;"></div></div>
-    </div>
     <!--<div name="divImg" style="background-color:green;width:180px;height:180px;overflow-x:hidden;">
         <img name="img" id="img" src="Textures/icon1.png" width="180" height="180" />
         <input type="radio" checked="checked" name="Sex" value="male" />男性
     </div>-->
-    <div name="divButton" style="padding:20px;background-color:cornflowerblue;width:80px;height:80px;overflow:auto;">
-        <input type="radio" checked="checked" name="Sex" value="male" />男性
-        <br />
-        <input type="radio" name="Sex" value="female" />女性
-        <br />
-        <input name="checkbox" type="checkbox" />课程一
-        <br />
-        <input name="checkbox" type="checkbox" />课程二
-        <br />
-        <input name="checkbox" type="checkbox" />课程三
-    </div>
+    
     <!--<input type="checkbox"/>-->
     <!--<div name="div1" style="background-color:antiquewhite;">
         <div style="background-color:green;margin:20px;width:40px;">

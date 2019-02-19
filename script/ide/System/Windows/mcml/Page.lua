@@ -118,6 +118,8 @@ function Page:Init(url, cache_policy, bRefresh)
 		local filename = string.gsub(url, "%?.*$", "")
 
 		local xmlRoot = ParaXML.LuaXML_ParseFile(filename);
+		echo("xmlRoot")
+		echo(xmlRoot)
 		if(type(xmlRoot)=="table" and table.getn(xmlRoot)>0) then
 			Page.OnPageDownloaded_CallBack(xmlRoot, nil, self)
 		else
@@ -762,15 +764,18 @@ end
 function Page:LoadComponent()
 	local layout = self.layout;
 	if(layout and self.mcmlNode) then
-		local layoutView = LayoutView:new():init(self.mcmlNode, layout);
-		layoutView:SetStyle(self.mcmlNode:StyleForLayoutObject());
-		self.mcmlNode:SetLayoutObject(layoutView);
-		self.mcmlNode:SetView(self.layout);
-		--self:SetLayoutObject(LayoutView:new():init(self.mcmlNode, layout));
 
 		local parentElem = layout:widget();	
 		if(parentElem) then
 			self.mcmlNode:LoadComponentIfNeeded(parentElem, layout, nil);
+
+			echo("self.mcmlNode:print begin")
+			self.mcmlNode:print();
+			echo("self.mcmlNode:print end")
+			local layoutView = LayoutView:new():init(self.mcmlNode, layout);
+			layoutView:SetStyle(self.mcmlNode:StyleForLayoutObject());
+			self.mcmlNode:SetLayoutObject(layoutView);
+			self.mcmlNode:SetView(self.layout);
 
 			self.mcmlNode:attachLayoutTree();
 		end

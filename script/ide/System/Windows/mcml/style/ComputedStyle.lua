@@ -809,6 +809,7 @@ function ComputedStyle:BoxPack() return self.rareNonInheritedData.m_deprecatedFl
 
 function ComputedStyle:BoxShadow()	return self.rareNonInheritedData.m_boxShadow; end
 
+--function ComputedStyle:BoxReflect() return self.rareNonInheritedData.m_boxReflect; }
 function ComputedStyle:BoxSizing() return self.m_box:BoxSizing(); end
 function ComputedStyle:UserModify() return self.rareInheritedData.userModify; end
 function ComputedStyle:UserDrag() return self.rareNonInheritedData.userDrag; end
@@ -1216,6 +1217,11 @@ function ComputedStyle:HasAutoColumnCount() return self.rareNonInheritedData.m_m
 function ComputedStyle:HasAutoColumnWidth() return self.rareNonInheritedData.m_multiCol.m_autoWidth; end
 function ComputedStyle:ColumnSpan() return self.rareNonInheritedData.m_multiCol.m_columnSpan; end
 
+-- Return true if any transform related property (currently transform, transformStyle3D or perspective) 
+-- indicates that we are transforming
+-- bool hasTransformRelatedProperty() const { return hasTransform() || preserves3D() || hasPerspective(); }
+function ComputedStyle:HasTransformRelatedProperty() return self:HasTransform(); end
+
 function ComputedStyle:FontAscent(baselineType)
 	baselineType = baselineType or "AlphabeticBaseline"
 	return math.floor(self:FontSize() - self:FontSize() / 2 + 0.5);
@@ -1421,6 +1427,8 @@ function ComputedStyle:SetBoxLines(l) self.rareNonInheritedData.m_deprecatedFlex
 function ComputedStyle:SetBoxOrdinalGroup(og) self.rareNonInheritedData.m_deprecatedFlexibleBox.ordinal_group = og; end
 function ComputedStyle:SetBoxOrient(o) self.rareNonInheritedData.m_deprecatedFlexibleBox.orient = o; end
 function ComputedStyle:SetBoxPack(p) self.rareNonInheritedData.m_deprecatedFlexibleBox.pack = p; end
+
+function ComputedStyle:SetBoxSizing(s) self.m_box.m_boxSizing = s; end
 
 function ComputedStyle:SetUserModify(u) self.rareInheritedData.userModify = u; end
 function ComputedStyle:SetUserDrag(d) self.rareNonInheritedData.userDrag = d; end

@@ -1,5 +1,5 @@
 /*mcml is paracraft element*/
-mcml, div, p, container {
+div, p, form {
     display:block;
 }
 
@@ -70,7 +70,7 @@ input[type="button"], button {
     padding-left:6px;
     color: ButtonText;
     background-color: ButtonFace;
-    /*box-sizing: border-box*/
+    box-sizing: border-box
 }
 
 input[type="radio"], input[type="checkbox"] {
@@ -135,6 +135,20 @@ textarea {
     word-wrap: break-word;*/
 }
 
+treeview {
+    display:block;
+    overflow-x:hidden;
+    overflow-y:auto;
+}
+
+treenode {
+    display:block;
+}
+
+gridview {
+    display:block;
+}
+
 style {
     display: none
 }
@@ -160,4 +174,18 @@ title {
 }
 
 
+option, NodeTemplates, EmptyDataTemplate, FetchingDataTemplate, Columns, PagerTemplate, Resource {
+    display: none
+}
 
+DataNodePlaceholder, bindingblock {
+    display: block;
+}
+
+mcml, container, pager {
+    display:block;
+}
+
+pager {
+    text-align:center;
+}

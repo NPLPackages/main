@@ -49,17 +49,22 @@
     }
 </style>
 <!--<div name="div1" id="testDiv" style="" class="burlywood">1111<input name="button" type="button" value="111" style="background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="tvwOnClickNode2()"/></div>-->
-    <div name="div1" id="div1" style="margin:20px;width:300px;height:300px;background-color:antiquewhite;">
-        div1
-        <div name="div2" id="div2" style="margin:20px;width:100px;height:80px;background-color:aqua;">
-            div2
+    <div name="outDiv" style="background-color:darksalmon;margin:20px;overflow:hidden">
+        <div name="buttonDiv" style="background-color:aquamarine;margin:20px;float:left;">
+            <input name="button" type="button" value="设置div2背景色" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="SetBackgroundColor()" />
+            <br />
+            <input name="button" type="button" value="取消div2背景色" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="ClearBackgroundColor()" />
+            <br />
+            <input name="button" type="button" value="设置div2背景图" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="SetBackgroundImage()" />
+            <br />
+            <input name="button" type="button" value="取消div2背景图" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="ClearBackgroundImage()" />
         </div>
-    </div>
-    <div style="background-color:aquamarine;margin:20px;">
-        <input name="button" type="button" value="设置div2背景色" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="SetBackgroundColor()" />
-        <input name="button" type="button" value="取消div2背景色" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="ClearBackgroundColor()" />
-        <input name="button" type="button" value="设置div2背景图" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="SetBackgroundImage()" />
-        <input name="button" type="button" value="取消div2背景图" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="ClearBackgroundImage()" />
+        <div name="div1" id="div1" style="margin:20px;width:300px;height:300px;background-color:antiquewhite;float:left;">
+            div1
+            <div name="div2" id="div2" style="margin:20px;width:100px;height:80px;background-color:aqua;">
+                div2
+            </div>
+        </div>
     </div>
     <!--<div style="height:200px;background:url(Textures/login_bg.png);"><div style="height:100px;width:100px;background-color:#000000ff"></div></div>-->
 <!--<div name="div1" style="margin:20px;background-color:aquamarine;">

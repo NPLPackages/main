@@ -9,8 +9,8 @@ NPL.load("(gl)script/ide/System/Windows/Controls/GridView.lua");
 local GridView = commonlib.gettable("System.Windows.Controls.GridView");
 ------------------------------------------------------------
 ]]
-NPL.load("(gl)script/ide/System/Windows/UIElement.lua");
-local GridView = commonlib.inherit(commonlib.gettable("System.Windows.UIElement"), commonlib.gettable("System.Windows.Controls.GridView"));
+NPL.load("(gl)script/ide/System/Windows/Controls/Primitives/ScrollAreaForPage.lua");
+local GridView = commonlib.inherit(commonlib.gettable("System.Windows.Controls.ScrollAreaForPage"), commonlib.gettable("System.Windows.Controls.GridView"));
 GridView:Property("Name", "GridView");
 
 -- the client area X, Y position in pixels relative to the logical tree view container. 

@@ -195,7 +195,11 @@ local enum_fields = {
 		["textfield"] = "TextFieldPart",
 		["textarea"] = "TextAreaPart",
 		["push-button"] = "PushButtonPart",
-	},enum = ComputedStyleConstants.ControlPartEnum};
+	},enum = ComputedStyleConstants.ControlPartEnum},
+	["box-sizing"] = {map = {
+		["content-box"] = "CONTENT_BOX",
+		["border-box"] = "BORDER_BOX",
+	}, enum = ComputedStyleConstants.BoxSizingEnum},
 }
 
 function CSSProperty:CreateValueFromCssString()

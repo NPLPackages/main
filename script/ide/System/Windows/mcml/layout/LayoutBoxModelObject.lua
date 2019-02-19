@@ -22,6 +22,7 @@ local LayoutSize = IntSize;
 
 local PositionEnum = ComputedStyleConstants.PositionEnum;
 local OverflowEnum = ComputedStyleConstants.OverflowEnum;
+local StyleDifferenceEnum = ComputedStyleConstants.StyleDifferenceEnum;
 
 -- Used to store state between styleWillChange and styleDidChange
 local s_wasFloating = false;
@@ -328,7 +329,8 @@ function LayoutBoxModelObject:StyleWillChange(diff, newStyle)
                     self:Style():Transform() ~= newStyle:Transform()) then
 					self:Layer():RepaintIncludingDescendants();
 				end
-            elseif (newStyle:HasTransform() or newStyle:Opacity() < 1) then
+            --elseif (newStyle:HasTransform() or newStyle:Opacity() < 1) then
+			elseif (newStyle:Opacity() < 1) then
                 -- If we don't have a layer yet, but we are going to get one because of transform or opacity,
                 --  then we need to repaint the old position of the object.
                 self:Repaint();
@@ -348,10 +350,21 @@ function LayoutBoxModelObject:StyleWillChange(diff, newStyle)
 	LayoutBoxModelObject._super.StyleWillChange(self, diff, newStyle);
 end
 
+function LayoutBoxModelObject:ScrollToWithNotify(x, y)
+	echo("LayoutBoxModelObject:ScrollToWithNotify")
+	if(self.layer) then
+		self.layer:ScrollToWithNotify(x, y)
+	else
+		echo("no self.layer")
+	end
+end
+
 function LayoutBoxModelObject:StyleDidChange(diff, oldStyle)
 	LayoutBoxModelObject._super.StyleDidChange(self, diff, oldStyle);
 	self:UpdateBoxModelInfoFromStyle();
-
+	echo("LayoutBoxModelObject:StyleDidChange")
+	self:PrintNodeInfo()
+	echo(self:RequiresLayer())
 	if (self:RequiresLayer()) then
         if (not self:Layer()) then
             if (s_wasFloating and self:IsFloating()) then
@@ -523,11 +536,17 @@ end
 function LayoutBoxModelObject:PaintFillLayerExtended(paintInfo, rect)
 	echo("LayoutBoxModelObject:PaintFillLayerExtended");
 	self:PrintNodeInfo()
-	local control = self:GetControl();
+	local control = self:GetOrCreateControl();
 	
 	if(control) then
-		if(self:InlineBoxWrapper() ~= nil and control:GetParent() == nil) then
-			control:SetParent(self:GetParentControl())
+		if(control:GetParent() == nil) then
+			echo("control:SetParent")
+			local parent_control = self:GetParentControl();
+			if(parent_control) then
+				control:SetParent(parent_control)
+			else
+				echo("parent_control is nil")
+			end
 		end
 
 		local clip = self:NeedClip();
@@ -543,5 +562,7 @@ function LayoutBoxModelObject:PaintFillLayerExtended(paintInfo, rect)
 			control:ApplyCss(self:Style());
 		end
 		control:setGeometry(x, y, w, h);
+	else
+		echo("not control")
 	end
 end

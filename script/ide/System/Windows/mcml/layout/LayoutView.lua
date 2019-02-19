@@ -162,13 +162,15 @@ end
 -- last layout location, in order to repaint correctly.
 -- If we're doing a full repaint m_layoutState will be 0, but in that case layoutDelta doesn't matter.
 function LayoutView:LayoutDelta()
-	if(self.layoutState) then
-		return self.layoutState.layoutDelta;
-	end
+--	if(self.layoutState) then
+--		return self.layoutState.layoutDelta;
+--	end
     return LayoutSize:new();
 end
 
 function LayoutView:AddLayoutDelta(delta) 
+	echo("LayoutView:AddLayoutDelta")
+	echo(delta)
     if (self.layoutState) then
         self.layoutState.layoutDelta = self.layoutState.layoutDelta + delta;
 	end

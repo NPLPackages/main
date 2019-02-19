@@ -34,6 +34,7 @@ function LayoutReplaced:CanHaveChildren()
 end
 
 function LayoutReplaced:Layout()
+	echo("LayoutReplaced:Layout()")
     --ASSERT(needsLayout());
     
     --LayoutRepainter repainter(*this, checkForRepaintDuringLayout());

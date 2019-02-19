@@ -183,7 +183,9 @@ function TextControl:focusOutEvent(event)
 
 	TextControl._super.focusOutEvent(self, event)
 
-	self:PageElement():FocusOutEvent();
+	if(self:PageElement()) then
+		self:PageElement():FocusOutEvent();
+	end
 end
 
 function TextControl:setCursorVisible(visible)

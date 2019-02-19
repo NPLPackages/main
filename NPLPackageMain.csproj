@@ -1071,11 +1071,16 @@
     <Content Include="script\test\gridviewtest.lua" />
     <Content Include="script\test\IDE_Test.lua" />
     <Content Include="script\test\MCMLV2\mcml_window.html" />
+    <Content Include="script\test\MCMLV2\test_layout.html" />
     <Content Include="script\test\MCMLV2\test_layout_background.html" />
     <Content Include="script\test\MCMLV2\test_layout_button.html" />
+    <Content Include="script\test\MCMLV2\test_layout_gridview.html" />
     <Content Include="script\test\MCMLV2\test_layout_img.html" />
     <Content Include="script\test\MCMLV2\test_layout_overflow.html" />
+    <Content Include="script\test\MCMLV2\test_layout_script.html" />
+    <Content Include="script\test\MCMLV2\test_layout_textalign.html" />
     <Content Include="script\test\MCMLV2\test_layout_textarea.html" />
+    <Content Include="script\test\MCMLV2\test_layout_treeview.html" />
     <Content Include="script\test\MCMLV2\test_pe_textarea.html" />
     <Content Include="script\test\MCMLV2\test_layout_anonymous_block.html" />
     <Content Include="script\test\MCMLV2\test_layout_block.html" />

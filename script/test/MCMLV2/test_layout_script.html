@@ -1,0 +1,39 @@
+<!-- "script/test/MCMLV2/test_layout_treeview.html" -->
+<html>
+<pe:mcml>
+    <!--this is a sample embedded data source which is referenced by name-->
+    <!--<Resource style="display:none" name="MySampleDataSource">
+        <folder text="folder1" expanded="true">
+            <folder text="folder1_1" expanded="true">
+                <file text="some file1" finished="true"></file>
+            </folder>
+            <file text="some file2"></file>
+            <file text="some file3"></file>
+        </folder>
+        <mcml_folder text="folder2">
+            <file text="some file4" finished="true"></file>
+        </mcml_folder>
+        <file_canclick text="some file5 (Click me!!!)"></file_canclick>
+        <file_canclick2 text="some file6 (Click me unique!!!)"></file_canclick2>
+    </Resource>
+    <pe:treeview name="tvwXMLTest4_nested" DataSourceID='MySampleDataSource' DefaultNodeHeight="20" style="margin:20px;background-color:aquamarine;">
+        <NodeTemplates>
+            <NodeTemplate DataType="folder">
+                <pe:treenode text='<%=XPath("this|text")%>' expanded='<%=XPath("this|expanded")%>'></pe:treenode>
+            </NodeTemplate>
+            <NodeTemplate DataType="file">
+                <div style="height:20px;">
+                    <%=XPath("this|text")%>
+                    <span color="#008000">(已完成)</span>
+                </div>
+            </NodeTemplate>
+        </NodeTemplates>
+    </pe:treeview>-->
+    <pe:treeview name="tvwXMLTest4" DefaultNodeHeight="20" style="width:300px;height:120px;margin:20px;background-color:antiquewhite">
+        <pe:treenode text="root" expanded="true">
+            <div style="height:120px;background-color:red">the following node is a nested treeview</div>
+        </pe:treenode>
+        <div>1231</div>
+    </pe:treeview>
+</pe:mcml>
+</html>

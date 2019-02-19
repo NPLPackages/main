@@ -33,6 +33,11 @@ function pe_editbox:CreateControl()
 	local type = self:GetAttributeWithCode("type", nil, true);
 	_this:setEncrypted(type == "password");
 
+	local beFocus = self:GetBool("autofocus");
+	if(beFocus) then
+		_this:setFocus("autofocus");
+	end
+
 	_this:Connect("textChanged", self, self.OnTextChanged)
 end
 
@@ -71,15 +76,15 @@ function pe_editbox:isPasswordButton()
 end
 
 
-function pe_editbox:OnLoadComponentAfterChild(parentElem, parentLayout, css)
-	local beFocus = self:GetBool("autofocus");
-	if(beFocus) then
-		local ctrl = self:GetControl();
-		if(ctrl) then
-			ctrl:setFocus("autofocus");
-		end
-	end
-end
+--function pe_editbox:OnLoadComponentAfterChild(parentElem, parentLayout, css)
+--	local beFocus = self:GetBool("autofocus");
+--	if(beFocus) then
+--		local ctrl = self:GetControl();
+--		if(ctrl) then
+--			ctrl:setFocus("autofocus");
+--		end
+--	end
+--end
 
 function pe_editbox:OnTextChanged(actualText)
 	local onchange = self:GetString("onchange");

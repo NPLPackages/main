@@ -13,6 +13,8 @@ NPL.load("(gl)script/ide/System/Windows/mcml/PageElement.lua");
 NPL.load("(gl)script/ide/System/Windows/UIElement.lua");
 NPL.load("(gl)script/ide/System/Windows/Controls/Label.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutText.lua");
+NPL.load("(gl)script/ide/System/Core/UniString.lua");
+local UniString = commonlib.gettable("System.Core.UniString");
 local LayoutText = commonlib.gettable("System.Windows.mcml.layout.LayoutText");
 local mcml = commonlib.gettable("System.Windows.mcml");
 local Label = commonlib.gettable("System.Windows.Controls.Label");
@@ -35,7 +37,10 @@ function pe_text:createFromString(str)
 end
 
 function pe_text:GetTextTrimmed()
+	echo("pe_text:GetTextTrimmed")
+	echo(self.value)
 	local value = self.value or self:GetAttributeWithCode("value", nil, true);
+	echo(value)
 	if(value) then
 		value = string.gsub(value, "nbsp;", "");
 		value = string.gsub(value, "^[%s]+", "");
@@ -290,6 +295,60 @@ function pe_text:RecalcTextStyle(change)
 	end
 
 	self:ClearNeedsStyleRecalc();
+end
+
+function pe_text:Data()
+	return self.value;
+end
+
+--void CharacterData::setData(const String& data, ExceptionCode&)
+function pe_text:SetData(data)
+	echo("pe_text:SetData")
+    if (self:Data() == data) then
+        return;
+	end
+
+    local oldLength = UniString:new(self.value):length();
+	local newLength = UniString:new(data):length();
+
+    self:SetDataAndUpdate(data, 1, oldLength, newLength);
+    --document()->textRemoved(this, 0, oldLength);
+end
+
+--void CharacterData::appendData(const String& data, ExceptionCode&)
+function pe_text:AppendData(data)
+    local newStr = self.value;
+    newStr = newStr..data;
+
+	local oldLength = UniString:new(self.value):length();
+	local newLength = UniString:new(data):length();
+
+    self:SetDataAndUpdate(newStr, oldLength, 0, newLength);
+end
+
+--void CharacterData::updateRenderer(unsigned offsetOfReplacedData, unsigned lengthOfReplacedData)
+function pe_text:UpdateRenderer(offsetOfReplacedData, lengthOfReplacedData)
+	echo("pe_text:UpdateRenderer")
+	echo(self.value)
+	echo(self:Attached())
+	if(self:Renderer()) then
+		self:Renderer():PrintNodeInfo();
+	end
+    if ((not self:Renderer() or not self:RendererIsNeeded(self:Renderer():Style())) and self:Attached()) then
+        self:reattachLayoutTree();
+    elseif (self:Renderer()) then
+        self:Renderer():ToRenderText():SetTextWithOffset(self.value, offsetOfReplacedData, lengthOfReplacedData);
+	end
+end
+
+--void CharacterData::setDataAndUpdate(PassRefPtr<StringImpl> newData, unsigned offsetOfReplacedData, unsigned oldLength, unsigned newLength)
+function pe_text:SetDataAndUpdate(newData, offsetOfReplacedData, oldLength, newLength)
+--    if (document()->frame())
+--        document()->frame()->selection()->textWillBeReplaced(this, offsetOfReplacedData, oldLength, newLength);
+    --RefPtr<StringImpl> oldData = m_data;
+    self.value = newData;
+    self:UpdateRenderer(offsetOfReplacedData, oldLength);
+    --dispatchModifiedEvent(oldData.get());
 end
 
 function pe_text:IsTextNode()

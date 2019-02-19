@@ -79,39 +79,41 @@
         font-size:18px;
     }
 </style>
-<div name="div1" id="div1" style="margin:20px;background-color:antiquewhite;font-size:14px;">
-    测试字体变化
+<div style="overflow:hidden;background-color:antiquewhite;margin:20px;">
+    <div name="div0" id="div0" style="background-color:aquamarine;margin:10px;float:left;">
+        <input name="button" type="button" value="font-size变化" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="ChangeFontSize()" />
+        <br />
+        <input name="button" type="button" value="margin变化" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="ChangeMargin()" />
+        <br />
+        <input name="button" type="button" value="display变化" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="ChangeDisplay()" />
+        <br />
+        <input name="button" type="button" value="float变化" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="ChangeFloat()" />
+        <br />
+        <input name="button" type="button" value="class变化" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="ChangeClass()" />
+    </div>
+    <div style="float:left;background-color:cadetblue">
+        <div name="div1" id="div1" style="margin:20px;background-color:antiquewhite;font-size:14px;">
+            测试字体变化
+        </div>
+        <div name="div2" id="div2" style="padding:20px;background-color:aquamarine;font-size:14px;">
+            测试padding、margin变化
+        </div>
+        <div name="div3" id="div3" style="margin:20px;width:100px;background-color:aquamarine;font-size:14px;">
+            1111111
+            <div name="changeDisplay" id="changeDisplay">测试display变化</div>
+            2222222
+        </div>
+        <div name="div4" id="div4" style="margin:20px;width:100px;height:100px;background-color:aquamarine;font-size:14px;">
+            <div name="floatRight" id="floatRight" style="width:20px;height:20px;background-color:red;"></div>
+            测试float变化动态刷新11111 1 1
+            <div name="floatLeft" id="floatLeft" style="width:20px;height:60px;background-color:green;float:left;" />
+        </div>
+        <div name="div5" id="div5" class="green">
+            1111111
+            <div>测试class变化</div>
+            2222222
+        </div>
+    </div>
 </div>
-<div name="div2" id="div2" style="padding:20px;background-color:aquamarine;font-size:14px;">
-    测试padding、margin变化
-</div>
-<div name="div3" id="div3" style="margin:20px;width:100px;background-color:aquamarine;font-size:14px;">
-    1111111
-    <div name="changeDisplay" id="changeDisplay">测试display变化</div>
-    2222222
-</div>
-<div name="div4" id="div4" style="margin:20px;width:100px;height:100px;background-color:aquamarine;font-size:14px;">
-    <div name="floatRight" id="floatRight" style="width:20px;height:20px;background-color:red;"></div>
-    测试float变化动态刷新11111 1 1
-    <div name="floatLeft" id="floatLeft" style="width:20px;height:60px;background-color:green;float:left;" />
-</div>
-<div name="div5" id="div5" class="green">
-    1111111
-    <div>测试class变化</div>
-    2222222
-</div>
-
-<div name="div0" id="div0" style="background-color:aquamarine;margin:10px;" >
-    <input name="button" type="button" value="font-size变化" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="ChangeFontSize()"/>
-    <input name="button" type="button" value="margin变化" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="ChangeMargin()" />
-    <input name="button" type="button" value="display变化" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="ChangeDisplay()" />
-    <input name="button" type="button" value="float变化" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="ChangeFloat()" />
-    <input name="button" type="button" value="class变化" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="ChangeClass()" />
-</div>
-
-
-
-
-
 </pe:mcml>
 </html>

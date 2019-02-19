@@ -1,0 +1,67 @@
+<!-- "script/test/MCMLV2/test_layout_gridview.html"
+Author:LiPeng
+Date: 2019.2.14
+-->
+<pe:mcml>
+    <script type="text/npl" refresh="false">
+        <![CDATA[
+
+        local t = {
+            {username="ParaEngine1", Company="PE"},
+            {username="ParaEngine2", Company="PE"},
+            {username="ParaEngine3", Company="PE"},
+            {username="ParaEngine4", Company="PE"},
+            {username="ParaEngine5", Company="PE"},
+            {username="ParaEngine6", Company="PE"},
+            {username="ParaEngine7", Company="PE"},
+            {username="ParaEngine8", Company="PE"},
+            {username="ParaEngine9", Company="PE"},
+            {username="ParaEngine10", Company="PE"},
+            {username="ParaEngine11", Company="PE"},
+            {username="ParaEngine12", Company="PE"},
+            {username="ParaEngine13", Company="PE"},
+            {username="ParaEngine14", Company="PE"},
+            {username="ParaEngine15", Company="PE"},
+            {username="ParaEngine16", Company="PE"},
+            {username="ParaEngine17", Company="PE"},
+            {username="ParaEngine18", Company="PE"},
+            {username="ParaEngine19", Company="PE"},
+
+        };
+
+        function refreshDataSource()
+            t[20] = {username="newUser", Company="PE"};
+
+            local nodes = Page:jquery("pe:gridview");
+            local node = nodes[1];
+            node:refreshDataSource();
+        end
+
+        function DS_Func(index)
+            if(not index) then
+                return #t
+            end
+                if(t[index]) then
+            return t[index]
+            end
+        end
+        ]]>
+    </script>
+    <div style="background-color:cadetblue;margin:10px;padding:10px;min-width:200px;min-height:150px;">
+        <!--<input type="button" value="刷新数据源" onclick="refreshDataSource" />-->
+        <pe:gridview style="margin:10px;height:300px;width:250px;background-color:aquamarine" name="gvwTableTest" CellPadding="5" AllowPaging="true" pagesize="5" DefaultNodeHeight="40"
+                     DataSource='<%=DS_Func%>' ScrollToEnd="true">
+            <Columns>
+                <div>
+                    <div style="height:40px;background-color:bisque"><span>index <%=Eval("index")%></span><span>  Name is<%=Eval("username")%> </span><span>Company: <%=Eval("Company")%></span></div>
+
+                </div>
+            </Columns>
+            <EmptyDataTemplate>
+                <b>NO MATCHING USER IS FOUND 没有找到符合要求的用户</b>
+            </EmptyDataTemplate>
+            <PagerSettings Position="TopAndBottom" height="26" PreviousPageText="previous page" NextPageText="next page" />
+            <PagerTemplate><form><input type="button" name="pre" value="previous page" /><input type="button" name="next" value="next page" /><label name="page" style="height:18px;margin:4px" /></form></PagerTemplate>
+        </pe:gridview>
+    </div>
+</pe:mcml>

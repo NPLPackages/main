@@ -140,9 +140,14 @@ function LayoutText:Text()
 	return self.text;
 end
 
+-- @param text: a utf8 string or another UniString object. 
 --void RenderText::setTextInternal(PassRefPtr<StringImpl> text)
 function LayoutText:SetTextInternal(text)
-	self.text:SetText(text);
+	if(type(text) == "table") then
+		self.text = text;
+	else
+		self.text:SetText(text);
+	end
 end
 
 --void RenderText::setText(PassRefPtr<StringImpl> text, bool force)
@@ -416,6 +421,7 @@ end
 
 --void RenderText::computePreferredLogicalWidths(float leadWidth, HashSet<const SimpleFontData*>& fallbackFonts, GlyphOverflow& glyphOverflow)
 function LayoutText:ComputePreferredLogicalWidths(leadWidth, fallbackFonts, glyphOverflow)
+	echo("LayoutText:ComputePreferredLogicalWidths")
 	self.minWidth = 0;
     self.beginMinWidth = 0;
     self.endMinWidth = 0;
@@ -462,9 +468,14 @@ function LayoutText:ComputePreferredLogicalWidths(leadWidth, fallbackFonts, glyp
 
 	--for (int i = 0; i < len; i++) {
 	local i = 1;
+	echo("while(i <= len) do")
+	echo(len)
+	echo(txt)
 	while(i <= len) do
 --	for i = 1, len do
         local c = txt[i];
+		echo(i)
+		echo(c)
         local previousCharacterIsSpace = isSpace;
 
         local isNewline = false;
@@ -506,14 +517,16 @@ function LayoutText:ComputePreferredLogicalWidths(leadWidth, fallbackFonts, glyp
             lastWordBoundary = lastWordBoundary + 1;
             --continue; 
         elseif (string.byte(c,1) == softHyphen) then
-            currMaxWidth = currMaxWidth + self:WidthFromCache(font_str, lastWordBoundary, i - lastWordBoundary, leadWidth + currMaxWidth, fallbackFonts, glyphOverflow);
+            currMaxWidth = currMaxWidth + self:WidthFromCache(font_str, lastWordBoundary, i - lastWordBoundary - 1, leadWidth + currMaxWidth, fallbackFonts, glyphOverflow);
 --            if (firstGlyphLeftOverflow < 0)
 --                firstGlyphLeftOverflow = glyphOverflow.left;
             lastWordBoundary = i + 1;
             --continue;
         else
-
-			local hasBreak = breakAll or BreakLines.IsBreakable(breakIterator, i, nextBreakable, breakNBSP);
+			local isBreakable;
+			isBreakable, nextBreakable = BreakLines.IsBreakable(breakIterator, i, nextBreakable, breakNBSP);
+			echo({isBreakable, nextBreakable})
+			local hasBreak = breakAll or isBreakable;
 			local betweenWords = true;
 			local j = i;
 			while (c ~= "\n" and not isSpaceAccordingToStyle(c, self:Style()) and c ~= "\t" and string.byte(c,1) ~= softHyphen) do
@@ -522,7 +535,9 @@ function LayoutText:ComputePreferredLogicalWidths(leadWidth, fallbackFonts, glyp
 					break;
 				end
 				c = txt[j];
-				if (BreakLines.IsBreakable(breakIterator, j, nextBreakable, breakNBSP)) then
+
+				isBreakable, nextBreakable = BreakLines.IsBreakable(breakIterator, j, nextBreakable, breakNBSP);
+				if (isBreakable) then
 					break;
 				end
 				if (breakAll) then
@@ -530,10 +545,10 @@ function LayoutText:ComputePreferredLogicalWidths(leadWidth, fallbackFonts, glyp
 					break;
 				end
 			end
-
+			echo({i,j})
 			local wordLen = j - i;
 			if (wordLen ~= 0) then
-				local isSpace = (j < len) and isSpaceAccordingToStyle(c, self:Style());
+				local isSpace = (j <= len) and isSpaceAccordingToStyle(c, self:Style());
 				local w;
 				if (wordTrailingSpaceWidth ~= 0 and isSpace) then
 					w = self:WidthFromCache(font_str, i, wordLen + 1 - 1, leadWidth + currMaxWidth, fallbackFonts, glyphOverflow) - wordTrailingSpaceWidth;
@@ -548,13 +563,13 @@ function LayoutText:ComputePreferredLogicalWidths(leadWidth, fallbackFonts, glyp
 					if (lastWordBoundary == i) then
 						currMaxWidth = currMaxWidth + w;
 					else
-						currMaxWidth = currMaxWidth + self:WidthFromCache(f, lastWordBoundary, j - lastWordBoundary, leadWidth + currMaxWidth, fallbackFonts, glyphOverflow);
+						currMaxWidth = currMaxWidth + self:WidthFromCache(font_str, lastWordBoundary, j - lastWordBoundary - 1, leadWidth + currMaxWidth, fallbackFonts, glyphOverflow);
 					end
 					lastWordBoundary = j;
 				end
 
-				local isCollapsibleWhiteSpace = (j < len) and self:Style():IsCollapsibleWhiteSpace(c);
-				if (j < len and self:Style():AutoWrap()) then
+				local isCollapsibleWhiteSpace = (j <= len) and self:Style():IsCollapsibleWhiteSpace(c);
+				if (j <= len and self:Style():AutoWrap()) then
 					m_hasBreakableChar = true;
 				end
 
@@ -616,14 +631,15 @@ function LayoutText:ComputePreferredLogicalWidths(leadWidth, fallbackFonts, glyp
 					--currMaxWidth += f.width(run);
 					currMaxWidth = currMaxWidth + self.text:GetWidth(font_str, i, 1);
 					--glyphOverflow.right = 0;
-					needsWordSpacing = isSpace and not previousCharacterIsSpace and i == len - 1;
+					needsWordSpacing = isSpace and not previousCharacterIsSpace and i == len;
 				end
 				--ASSERT(lastWordBoundary == i);
 				lastWordBoundary = lastWordBoundary + 1;
 			end
 		end
+		i = i + 1;
     end
-
+	echo("end")
 --	if (firstGlyphLeftOverflow > 0)
 --        glyphOverflow.left = firstGlyphLeftOverflow;
 
@@ -768,4 +784,96 @@ function LayoutText:RemoveTextBox(box)
 	end
 
     self:CheckConsistency();
+end
+
+--void RenderText::setTextWithOffset(PassRefPtr<StringImpl> text, unsigned offset, unsigned len, bool force)
+function LayoutText:SetTextWithOffset(text, offset, len, force)
+	echo("LayoutText:SetTextWithOffset")
+	echo({text, offset, len, force})
+	force = if_else(force == nil, false, force);
+    local oldLen = self:TextLength();
+    local newLen = UniString:new(text):length();
+    local delta = newLen - oldLen;
+	-- unsigned end = len ? offset + len - 1 : offset;
+    local tmpEnd = if_else(len ~= 0, offset + len, offset);
+
+    local firstRootBox = nil;
+    local lastRootBox = nil;
+
+    local dirtiedLines = false;
+
+    -- Dirty all text boxes that include characters in between offset and offset+len.
+	local curr = self:FirstTextBox();
+	while(curr) do
+		-- Text run is entirely before the affected range.
+        if (curr:End() < offset) then
+            --continue;
+		else
+			-- Text run is entirely after the affected range.
+			if (curr:Start() > tmpEnd) then
+				curr:OffsetRun(delta);
+				local root = curr:Root();
+				if (not firstRootBox) then
+					firstRootBox = root;
+					if (not dirtiedLines) then
+						-- The affected area was in between two runs. Go ahead and mark the root box of
+						-- the run after the affected area as dirty.
+						firstRootBox:MarkDirty();
+						dirtiedLines = true;
+					end
+				end
+				lastRootBox = root;
+			elseif (curr:End() >= offset and curr:End() <= tmpEnd) then
+				-- Text run overlaps with the left end of the affected range.
+				curr:DirtyLineBoxes();
+				dirtiedLines = true;
+			elseif (curr:Start() <= offset and curr:End() >= tmpEnd) then
+				-- Text run subsumes the affected range.
+				curr:DirtyLineBoxes();
+				dirtiedLines = true;
+			elseif (curr:Start() <= tmpEnd and curr:End() >= tmpEnd) then
+				-- Text run overlaps with right end of the affected range.
+				curr:DirtyLineBoxes();
+				dirtiedLines = true;
+			end
+		end
+	
+		curr = curr:NextTextBox();
+	end
+    
+
+    -- Now we have to walk all of the clean lines and adjust their cached line break information
+    -- to reflect our updated offsets.
+    if (lastRootBox) then
+        lastRootBox = lastRootBox:NextRootBox();
+	end
+    if (firstRootBox) then
+       local prev = firstRootBox:PrevRootBox();
+        if (prev) then
+            firstRootBox = prev;
+		end
+    elseif (self:LastTextBox()) then
+        --ASSERT(!lastRootBox);
+        firstRootBox = self:LastTextBox():Root();
+        firstRootBox:MarkDirty();
+        dirtiedLines = true;
+    end
+	
+	curr = firstRootBox;
+	while(curr and curr ~= lastRootBox) do
+		if (curr:LineBreakObj() == self and curr:LineBreakPos() > tmpEnd) then
+            curr:SetLineBreakPos(curr:LineBreakPos() + delta);
+		end
+	
+		curr = curr:NextRootBox();
+	end
+
+    -- If the text node is empty, dirty the line where new text will be inserted.
+    if (not self:FirstTextBox() and self:Parent()) then
+        self:Parent():DirtyLinesFromChangedChild(self);
+        dirtiedLines = true;
+    end
+
+    self.linesDirty = dirtiedLines;
+    self:SetText(text, force);
 end

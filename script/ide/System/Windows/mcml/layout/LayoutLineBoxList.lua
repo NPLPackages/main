@@ -109,7 +109,7 @@ function LayoutLineBoxList:Paint(renderer, paintInfo, paintOffset)
 --	if (!anyLineIntersectsRect(renderer, paintInfo.rect, paintOffset, usePrintRect, outlineSize))
 --        return;
 
-	local info = paintInfo;
+	
 
 	local curr = self:FirstLineBox();
 	while(curr) do
@@ -119,6 +119,9 @@ function LayoutLineBoxList:Paint(renderer, paintInfo, paintOffset)
 			echo("1111111111");
 			echo(curr:BoxName());
             local root = curr:Root();
+			local info = paintInfo:clone();
+			info:Rect():SetX(info:Rect():X() - curr:X())
+			info:Rect():SetY(info:Rect():Y() - curr:Y())
 			curr:Paint(info, paintOffset, root:LineTop(), root:LineBottom());
         end
 		

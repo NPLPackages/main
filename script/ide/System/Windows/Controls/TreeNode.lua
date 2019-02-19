@@ -11,8 +11,6 @@ local TreeNode = commonlib.gettable("System.Windows.Controls.TreeNode");
 ]]
 NPL.load("(gl)script/ide/System/Windows/UIElement.lua");
 NPL.load("(gl)script/ide/System/Windows/Controls/Button.lua");
-NPL.load("(gl)script/ide/System/Windows/Controls/Canvas.lua");
-local Canvas = commonlib.gettable("System.Windows.Controls.Canvas");
 local Button = commonlib.gettable("System.Windows.Controls.Button");
 local TreeNode = commonlib.inherit(commonlib.gettable("System.Windows.UIElement"), commonlib.gettable("System.Windows.Controls.TreeNode"));
 TreeNode:Property("Name", "TreeNode");
@@ -94,18 +92,13 @@ TreeNode:Signal("clicked");
 
 
 function TreeNode:ctor()
---	self.control = nil;
-	self.canvas = nil;
-	self.indent = nil;
+
 end
 
 function TreeNode:init(parent)
 	TreeNode._super.init(self, parent);
 
-	--self.canvas = Canvas:new():init(self);
-
 	self.treeview = self:GetParent("TreeView");
-	--self:initExpandBtn();
 
 	return self;
 end

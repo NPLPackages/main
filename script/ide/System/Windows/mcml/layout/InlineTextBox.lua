@@ -101,6 +101,8 @@ function InlineTextBox:Truncation()
 end
 
 function InlineTextBox:Destroy(arena)
+	echo("InlineTextBox:Destroy")
+	echo(self:Text())
     if (not self.knownToHaveNoOverflow and gTextBoxesWithOverflow ~= nil) then
         gTextBoxesWithOverflow[self] = nil;
 	end
@@ -126,7 +128,7 @@ function InlineTextBox:GetParentControl()
 		self:Parent():Renderer():PrintNodeInfo();
 		return self:Parent():GetControl();
 	end
-	echo("InlineTextBox not parent");
+	echo("ParentControl is nil")
 end
 
 function InlineTextBox:CreateAndAppendLabel(left, top, width, height, text, parent)
@@ -175,7 +177,12 @@ function InlineTextBox:Paint(paintInfo, paintOffset, lineTop, lineBottom)
 			local textRender = self:Renderer();
 			local text = textRender:Characters():substr(self.start, self.start + self.len - 1);
 			local control = self:GetParentControl();
-			self.control = self:CreateAndAppendLabel(left, top, width ,height, text, control);
+			if(control) then
+				self.control = self:CreateAndAppendLabel(left, top, width ,height, text, control);
+			else
+				echo("parent_control is nil")
+			end
+			
 		end
 	end
 end

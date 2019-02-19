@@ -288,17 +288,27 @@ end
 -- @param event_type: "mousePressEvent", "mouseMoveEvent", "mouseWheelEvent", "mouseReleaseEvent"
 function Window:handleMouseEvent(event)
 	event:updateModifiers();
-	
+--	if("mouseWheelEvent" == event:GetType()) then
+--		echo("mouseWheelEvent")
+--		echo(event:pos())
+--	end
 	-- which child should have it?
 	local widget = self:childAt(event:pos()) or self;
 	local mapped = event:pos();
-
+--	if("mouseWheelEvent" == event:GetType()) then
+--		echo("mouseWheelEvent widget")
+--		
+--		echo(widget:GetField("Name","nil"))
+--	end
 	if(event:GetType() == "mousePressEvent") then
 		Application.qt_button_down = widget;
 	end
 
 	local receiver = Application:pickMouseReceiver(self, event:windowPos(), mapped, event:GetType(), event:buttons(), Application.qt_button_down, widget);
-
+--	if("mouseWheelEvent" == event:GetType()) then
+--		echo("mouseWheelEvent receiver")
+--		echo(receiver:GetField("Name","nil"))
+--	end
 	if(receiver~=self) then
 		event:localPos():set(receiver:mapFromGlobal(event:globalPos()));
 	end
