@@ -126,7 +126,6 @@ function algorithm.sort_by_predicate(input, predicate_func)
 		local bad_ones = {};
 		local good_count = 0;
 		local count = #input;
-		local i;
 		for i = 1, count do
 			local item = input[i];
 			if(predicate_func(item)) then
@@ -223,7 +222,6 @@ end
 function commonlib.setfield(f, v, rootEnv)
 	if(not f) then return end
 	local t = rootEnv or _G    -- start with the table of globals
-	local w,d;
 	for w, d in string_gfind(f, "([%w_]+)(.?)") do
 		if d == "." then      -- not last field?
 			t[w] = t[w] or {}   -- create table if absent
@@ -310,7 +308,6 @@ function commonlib.deepcopy(object)
         end
         local new_table = {}
         lookup_table[object] = new_table
-        local index, value;
         for index, value in pairs(object) do
             new_table[_copy(index)] = _copy(value)
         end
@@ -333,7 +330,6 @@ function commonlib.copy(object)
         end
         local new_table = {}
         lookup_table[object] = new_table
-        local index, value;
         for index, value in pairs(object) do
             new_table[_copy(index)] = _copy(value)
         end
@@ -369,7 +365,6 @@ end
 function commonlib.mincopy(dest, src)
     local function _assign(dest, src)
 	    if type(src) =="table"  and type(dest) =="table"  then
-			local key, value;
 			for key, value in pairs(src) do
 				if(dest[key] == nil) then
 					if(type(value) =="table") then
@@ -389,10 +384,9 @@ end
 -- Note: it also compare indexed array items
 -- @param tolerance: if not nil, it will be used to compare number type values. smaller than this will be regarded as equal.
 function commonlib.partialcompare(dest, src, tolerance)
-	local function _compare(dest, src, tolerance)
+	local function _compare(dest, src)
 	    if type(src) == type(dest) then
 			if(type(src) =="table")  then
-				local key, value;
 				for key, value in pairs(src) do
 					if(not _compare(dest[key], value) ) then
 						return
@@ -406,7 +400,7 @@ function commonlib.partialcompare(dest, src, tolerance)
 			end	
         end
     end
-    return _compare(dest, src, tolerance)
+    return _compare(dest, src)
 end
 local partialcompare = commonlib.partialcompare;
 
@@ -429,12 +423,10 @@ end
 function commonlib.resize(t, size, v)
 	local curSize = table_getn(t);
 	if(curSize > size) then
-		local i
 		for i=curSize, size+1, -1 do
 			t[i] = nil;
 		end
 	elseif(curSize < size) then
-		local i
 		for i=curSize+1, size  do
 			t[i] = v;
 		end
@@ -448,12 +440,10 @@ end
 function table.resize(t, size, v)
 	local curSize = #t;
 	if(curSize > size) then
-		local i
 		for i=curSize, size+1, -1 do
 			t[i] = nil;
 		end
 	elseif(curSize < size) then
-		local i
 		for i=curSize+1, size  do
 			t[i] = v;
 		end
@@ -482,7 +472,6 @@ function commonlib.insertArrayItem(t, nIndex, item)
 	elseif(nIndex > nSize) then
 		t[nIndex] = item;
 	else
-		local k;
 		local tmp = item;
 		for k=nIndex, nSize+1 do
 			--local tmp1 = t[k];
@@ -528,14 +517,12 @@ end
 function commonlib.moveArrayItem(t, nIndex1, nIndex2)
 	if(nIndex1 > nIndex2) then
 		local tmp = t[nIndex1];
-		local k;
 		for k=nIndex1, nIndex2+1,-1 do
 			t[k] = t[k-1];
 		end
 		t[nIndex2] = tmp;
 	elseif(nIndex1 < nIndex2) then
 		local tmp = t[nIndex1];
-		local k;
 		for k=nIndex1, nIndex2-1 do
 			t[k] = t[k+1];
 		end
@@ -627,7 +614,6 @@ end
 function commonlib.tolower(o)
 	if(type(o) == "table") then
 		local changed_keys;
-		local key, value
 		for key, value in pairs(o) do
 			local key_lowered = string_lower(key);
 			if (key_lowered ~= key) then
@@ -670,7 +656,6 @@ function commonlib.GetEmptyList(source_list,goal_num,bSort)
 	if(not source_list or not goal_num or goal_num < 1)then return end
 	
 	local canSearch = false;
-	local k,v;
 	for k,v in ipairs(source_list) do
 		if(v.isEmpty)then
 			canSearch = true;
@@ -724,14 +709,12 @@ function commonlib.GetRandomList(source_num,goal_num,bSort)
 	if(not source_num or not goal_num)then return end
 	goal_num = math.min(source_num,goal_num);
 	local source_list = {};
-	local k;
 	for k = 1, source_num do
 		source_list[k] = { label = k, isEmpty = true };
 	end
 	local temp_list = commonlib.GetEmptyList(source_list,goal_num);
 	if(temp_list)then
 		local result_list = {};
-		local k,v;
 		if(bSort)then
 			table.sort(temp_list,function(a,b)
 				if(a.label and b.label)then

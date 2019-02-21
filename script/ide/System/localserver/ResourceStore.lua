@@ -75,7 +75,7 @@ function ResourceStore:GetFile(Cache_policy, urls, callbackFunc, callbackContext
 				local expireTime = (entry.payload:GetCacheMaxAge() or 0) + entry.payload.creation_date;
 				if(not Cache_policy:IsExpired(expireTime)) then
 					commonlib.removeArrayItem(urls, i);
-					log("Unexpired local version is used for "..url.."\n")
+					LOG.std(nil, "info", "ResourceStore", "Unexpired local version is used for %s", url);
 					if(callbackFunc) then
 						entry.IsFromCache = true;
 						callbackFunc(entry, callbackContext)
