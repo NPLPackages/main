@@ -42,18 +42,16 @@ function CSSSelectorParser:ConsumeCompoundSelector(str)
 	for combinator,selectorStr in string.gmatch(str,"([%s+>~]?)([^%s+>~]+)") do
 		selectorInfos[#selectorInfos+1] = {["combinator"] = combinator};
 		local subselectors = selectorInfos[#selectorInfos];
-		
-		local tag = string.match(selectorStr, "^[%w%*%:]+");
+		local tag = string.match(selectorStr, "^[%w%*]+");
 		subselectors["tag"] = tag or "*";
 		if(tag) then
 			subselectors[#subselectors + 1] = {"", tag};
 			selectorStr = string.gsub(selectorStr,tag,"");
 		end
-		for flag,value in string.gfind(selectorStr,"([.#%[]?)([^.#%[]+)") do
+		for flag,value in string.gfind(selectorStr,"([.#%[:]?[:]?)([^.#%[:]+)") do
 			subselectors[#subselectors + 1] = {flag, value};
 		end
 	end
-
 	local selector;
 	local compound_selector,simple_selector;
 	local relation;
@@ -106,6 +104,10 @@ function CSSSelectorParser:GetMatchType(flag)
 		matchType = CSSSelector.MatchType.kId;
 	elseif(flag == "[") then
 		matchType = CSSSelector.MatchType.kAttributeSet;
+	elseif(flag == ":") then
+		matchType = CSSSelector.MatchType.kPseudoClass;
+	elseif(flag == "::") then
+		matchType = CSSSelector.MatchType.kPseudoElement;
 	end
 	return matchType;
 end
@@ -133,16 +135,19 @@ function CSSSelectorParser:GetAttribute(str)
 	return name, value, matchType;
 end
 
--- @param flag: the selector flag, such as: ".", "#", "[", etc.
+-- @param flag: the selector flag, such as: ".", "#", "[", ":", "::", etc.
 -- @param value:string the selector value.
 function CSSSelectorParser:ConsumeSimpleSelector(flag, value, tag)
 	local matchType = self:GetMatchType(flag);
-	local attribute;
+	local attribute, pseudoType;
 	if(matchType == CSSSelector.MatchType.kAttributeSet) then
 		local attribute_name,attribute_value,attribute_matchtype = self:GetAttribute(value);
 		attribute = attribute_name;
 		value = attribute_value;
 		matchType = attribute_matchtype;
+	end
+	if(matchType == CSSSelector.MatchType.kPseudoClass or matchType == CSSSelector.MatchType.kPseudoElement) then
+		pseudoType = CSSSelector.NameToTypeForPseudo(value);
 	end
 	return CSSSelector:new():init(value,matchType,attribute,tag);
 end

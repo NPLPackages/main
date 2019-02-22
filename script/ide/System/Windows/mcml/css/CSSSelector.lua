@@ -64,6 +64,113 @@ local RelationType = {
 --    kShadowSlot                 // ::slotted() pseudo element
   };
 
+local PseudoType = {
+    "kPseudoUnknown",
+    "kPseudoEmpty",
+    "kPseudoFirstChild",
+    "kPseudoFirstOfType",
+    "kPseudoLastChild",
+    "kPseudoLastOfType",
+    "kPseudoOnlyChild",
+    "kPseudoOnlyOfType",
+    "kPseudoFirstLine",
+    "kPseudoFirstLetter",
+    "kPseudoNthChild",
+    "kPseudoNthOfType",
+    "kPseudoNthLastChild",
+    "kPseudoNthLastOfType",
+    "kPseudoPart",
+    "kPseudoLink",
+    "kPseudoVisited",
+    "kPseudoAny",
+    "kPseudoIs",
+    "kPseudoWhere",
+    "kPseudoAnyLink",
+    "kPseudoWebkitAnyLink",
+    "kPseudoAutofill",
+    "kPseudoAutofillPreviewed",
+    "kPseudoAutofillSelected",
+    "kPseudoHover",
+    "kPseudoDrag",
+    "kPseudoFocus",
+    "kPseudoFocusVisible",
+    "kPseudoFocusWithin",
+    "kPseudoActive",
+    "kPseudoChecked",
+    "kPseudoEnabled",
+    "kPseudoFullPageMedia",
+    "kPseudoDefault",
+    "kPseudoDisabled",
+    "kPseudoOptional",
+    "kPseudoPlaceholderShown",
+    "kPseudoRequired",
+    "kPseudoReadOnly",
+    "kPseudoReadWrite",
+    "kPseudoValid",
+    "kPseudoInvalid",
+    "kPseudoIndeterminate",
+    "kPseudoTarget",
+    "kPseudoBefore",
+    "kPseudoAfter",
+    "kPseudoBackdrop",
+    "kPseudoLang",
+    "kPseudoNot",
+    "kPseudoPlaceholder",
+    "kPseudoResizer",
+    "kPseudoRoot",
+    "kPseudoScope",
+    "kPseudoScrollbar",
+    "kPseudoScrollbarButton",
+    "kPseudoScrollbarCorner",
+    "kPseudoScrollbarThumb",
+    "kPseudoScrollbarTrack",
+    "kPseudoScrollbarTrackPiece",
+    "kPseudoWindowInactive",
+    "kPseudoCornerPresent",
+    "kPseudoDecrement",
+    "kPseudoIncrement",
+    "kPseudoHorizontal",
+    "kPseudoVertical",
+    "kPseudoStart",
+    "kPseudoEnd",
+    "kPseudoDoubleButton",
+    "kPseudoSingleButton",
+    "kPseudoNoButton",
+    "kPseudoSelection",
+    "kPseudoLeftPage",
+    "kPseudoRightPage",
+    "kPseudoFirstPage",
+    -- TODO(foolip): When the unprefixed Fullscreen API is enabled, merge
+    -- kPseudoFullScreen and kPseudoFullscreen into one. (kPseudoFullscreen is
+    -- controlled by the FullscreenUnprefixed REF, but is otherwise an alias.)
+    "kPseudoFullScreen",
+    "kPseudoFullScreenAncestor",
+    "kPseudoFullscreen",
+    "kPseudoInRange",
+    "kPseudoOutOfRange",
+    -- Pseudo elements in UA ShadowRoots. Available in any stylesheets.
+    "kPseudoWebKitCustomElement",
+    -- Pseudo elements in UA ShadowRoots. Availble only in UA stylesheets.
+    "kPseudoBlinkInternalElement",
+    "kPseudoCue",
+    "kPseudoFutureCue",
+    "kPseudoPastCue",
+    "kPseudoUnresolved",
+    "kPseudoDefined",
+    "kPseudoContent",
+    "kPseudoHost",
+    "kPseudoHostContext",
+    "kPseudoShadow",
+    "kPseudoSpatialNavigationFocus",
+    "kPseudoSpatialNavigationInterest",
+    "kPseudoIsHtml",
+    "kPseudoListBox",
+    "kPseudoHostHasAppearance",
+    "kPseudoSlotted",
+    "kPseudoVideoPersistent",
+    "kPseudoVideoPersistentAncestor",
+  }
+
 --local AttributeMatchType = {
 --    "kCaseSensitive",
 --    "kCaseInsensitive",
@@ -84,6 +191,7 @@ end
 
 CSSSelector.MatchType = CreatEnumTable(MatchType);
 CSSSelector.RelationType = CreatEnumTable(RelationType);
+CSSSelector.PseudoType = CreatEnumTable(PseudoType);
 --CSSSelector.AttributeMatchType = CreatEnumTable(AttributeMatchType);
 
 function CSSSelector:ctor()
@@ -92,6 +200,8 @@ function CSSSelector:ctor()
 	self.relation = CSSSelector.RelationType.kSubSelector;
 	
 	self.match = CSSSelector.MatchType.kUnknown;
+
+	self.pseudoType = CSSSelector.PseudoType.kPseudoUnknown;
 
 	self.is_last_in_tag_history = nil;
 	self.is_last_in_selector_list = nil;
@@ -150,13 +260,15 @@ function CSSSelector:SetMatch(match)
 end
 
 -- init a css selector with the params which content name, class, id, attr infomations;
-function CSSSelector:init(value, match, attribute, tag)
+function CSSSelector:init(value, match, attribute, tag, pseudoType)
 	self.value = value or self.value;
 
 	self.match = match or self.match;
 	-- attribute selector 
 	self.attribute = attribute or self.attribute;
-	self.tag = tag;
+	self.tag = tag or self.tag;
+
+	self.pseudoType = pseudoType or self.pseudoType;
 	return self;
 end
 
@@ -194,3 +306,12 @@ function CSSSelector:print()
 	end
 end
 
+local nameToPseudoTypeMap = {
+	["active"] = PseudoType.kPseudoActive,
+	["hover"] = PseudoType.kPseudoHover,
+	["focus"] = PseudoType.kPseudoFocus,
+}
+
+function CSSSelector.NameToTypeForPseudo(name)
+	return nameToPseudoTypeMap[name] or CSSSelector.PseudoType.kPseudoUnknown;
+end

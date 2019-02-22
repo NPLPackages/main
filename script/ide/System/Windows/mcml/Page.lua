@@ -71,9 +71,14 @@ end
 function Page:ctor()
 	-- this will prevent recursive calls to self:Refresh(), which makes self:Refresh(0) pretty safe.
 	self.refresh_depth = 0;
+
 	self.hotkeyNodes = {};
 	self.tabIndexNodes = {};
 	self.currentTabNode = nil;
+
+	self.m_focusedNode = nil;
+    self.m_hoverNode = nil;
+    self.m_activeNode = nil;
 
 	self.styleSelector = nil;
 end
@@ -949,4 +954,16 @@ function Page:PostLayoutRequestEvent()
 	if(self.layout) then
 		self.layout:PostLayoutRequestEvent();
 	end
+end
+
+function Page:FocusedNode()
+	return self.m_focusedNode;
+end
+
+function Page:HoverNode()
+	return self.m_hoverNode;
+end
+
+function Page:ActiveNode()
+	return self.m_activeNode;
 end

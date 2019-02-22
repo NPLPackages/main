@@ -105,6 +105,7 @@ local DefaultFlagValues = {
 	["IsLinkFlag"] = false;
     ["IsActiveFlag"] = false;
     ["IsHoveredFlag"] = false;
+	["IsFocusedFlag"] = false;
 	["InDetachFlag"] = false;
 
 	["IsParsingChildrenFinishedFlag"] = false;
@@ -488,9 +489,9 @@ function PageElement:detachLayoutTree()
 --    if (inActiveChain())
 --        doc->activeChainNodeDetached(this);
 
-    --clearFlag(IsActiveFlag);
-    --clearFlag(IsHoveredFlag);
-    --clearFlag(InActiveChainFlag);
+    self:ClearFlag("IsActiveFlag");
+    self:ClearFlag("IsHoveredFlag");
+    self:ClearFlag("IsFocusedFlag");
     self:ClearFlag("IsAttachedFlag");
 
     self:ClearFlag("InDetachFlag");	
@@ -2958,6 +2959,34 @@ end
 function PageElement:SetHasClass(f) 
 	self:SetFlag("HasClassFlag", f);
 end
+
+function PageElement:Active()
+	return self:GetFlag("IsActiveFlag");
+end
+
+function PageElement:Hovered()
+	return self:GetFlag("IsHoveredFlag");
+end
+
+function PageElement:Focused()
+	return self:GetFlag("IsFocusedFlag");
+end
+
+function PageElement:SetActive(f)
+	f = if_else(f == nil, true, f)
+	self:SetFlag("IsActiveFlag", f);
+end
+
+function PageElement:SetHovered(f)
+	f = if_else(f == nil, true, f)
+	self:SetFlag("IsHoveredFlag", f);
+end
+
+function PageElement:SetFocused(f)
+	f = if_else(f == nil, true, f)
+	self:SetFlag("IsFocusedFlag", f);
+end
+
 
 function PageElement:InDetach() 
 	return self:GetFlag("InDetachFlag");
