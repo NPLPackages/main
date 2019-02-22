@@ -142,7 +142,7 @@ function Button:paintWithTexture(painter)
 	if(self:underMouse()) then
 		if(self.BackgroundOver) then
 			painter:SetPen("#ffffff");
-			painter:DrawRectTexture(x+2, y+2, self:width()-4, self:height()-4, self.BackgroundOver);
+			painter:DrawRectTexture(x, y, self:width(), self:height(), self.BackgroundOver);
 		end
 	end
 end

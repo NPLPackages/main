@@ -111,6 +111,10 @@ end
 function Button:ApplyCss(css)
 	Button._super.ApplyCss(self, css);
 
+	self:SetBackgroundChecked(css:BackgroundCheckedImage());
+	self:SetBackgroundDown(css:BackgroundDownImage());
+	self:SetBackgroundOver(css:BackgroundOverImage());
+
 --	self.BackgroundChecked = css.background_checked;
 --	self.BackgroundDown = css.background_down;
 --	self.BackgroundOver = css.background_over;

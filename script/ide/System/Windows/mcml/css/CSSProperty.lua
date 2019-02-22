@@ -102,6 +102,10 @@ local image_fields = {
 	["background"] = true,
 	["background2"] = true,
 	["background-image"] = true,
+
+	["background-checked"] = true,
+	["background-down"] = true,
+	["background-over"] = true,
 }
 
 local border_style = {

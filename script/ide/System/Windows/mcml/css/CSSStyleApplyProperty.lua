@@ -151,6 +151,9 @@ function CSSStyleApplyProperty:init()
 
 	self:SetPropertyHandler("background-image", ApplyPropertyDefault:new():init(ComputedStyle.BackgroundImage, ComputedStyle.SetBackgroundImage, ComputedStyle.initialBackgroundImage));
 	self:SetPropertyHandler("background", ApplyPropertyDefault:new():init(ComputedStyle.BackgroundImage, ComputedStyle.SetBackgroundImage, ComputedStyle.initialBackgroundImage));
+	self:SetPropertyHandler("background-checked", ApplyPropertyDefault:new():init(ComputedStyle.BackgroundCheckedImage, ComputedStyle.SetBackgroundCheckedImage, ComputedStyle.initialBackgroundImage));
+	self:SetPropertyHandler("background-down", ApplyPropertyDefault:new():init(ComputedStyle.BackgroundDownImage, ComputedStyle.SetBackgroundDownImage, ComputedStyle.initialBackgroundImage));
+	self:SetPropertyHandler("background-over", ApplyPropertyDefault:new():init(ComputedStyle.BackgroundOverImage, ComputedStyle.SetBackgroundOverImage, ComputedStyle.initialBackgroundImage));
 	self:SetPropertyHandler("background-color", ApplyPropertyDefault:new():init(ComputedStyle.BackgroundColor, ComputedStyle.SetBackgroundColor, ComputedStyle.initialBackgroundColor));
 
 	self:SetPropertyHandler("border-bottom-color", ApplyPropertyDefault:new():init(ComputedStyle.BorderBottomColor, ComputedStyle.SetBorderBottomColor, ComputedStyle.initialColor));

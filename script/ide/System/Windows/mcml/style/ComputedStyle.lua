@@ -1209,6 +1209,9 @@ function ComputedStyle:BorderTopColor() return self.surround.border:Top():Color(
 function ComputedStyle:BorderBottomColor() return self.surround.border:Bottom():Color(); end
 function ComputedStyle:BackgroundColor() return self.m_background:Color(); end
 function ComputedStyle:BackgroundImage() return self.m_background:Image(); end
+function ComputedStyle:BackgroundCheckedImage() return self.m_background:CheckedImage(); end
+function ComputedStyle:BackgroundDownImage() return self.m_background:DownImage(); end
+function ComputedStyle:BackgroundOverImage() return self.m_background:OverImage(); end
 function ComputedStyle:Color() return self.inherited.color; end
 function ComputedStyle:ZIndex() return self.m_box:ZIndex(); end
 function ComputedStyle:HasAutoZIndex() return self.m_box:HasAutoZIndex(); end
@@ -1301,6 +1304,9 @@ function ComputedStyle:ResetOutline() self.m_background.m_outline = OutlineValue
 
 function ComputedStyle:SetBackgroundColor(v) self.m_background.m_color = v; end
 function ComputedStyle:SetBackgroundImage(v) self.m_background.m_background = v; end
+function ComputedStyle:SetBackgroundCheckedImage(v) self.m_background.m_background_checked = v; end
+function ComputedStyle:SetBackgroundDownImage(v) self.m_background.m_background_down = v; end
+function ComputedStyle:SetBackgroundOverImage(v) self.m_background.m_background_over = v; end
 
 function ComputedStyle:SetBorderTopLeftRadius(s) self.surround.border.m_topLeft = s; end
 function ComputedStyle:SetBorderTopRightRadius(s) self.surround.border.m_topRight = s; end

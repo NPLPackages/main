@@ -31,6 +31,12 @@
         local node = nodes[1];
         SetNodeProperty(node, "background-color", "green");
     end
+
+    function SetBackgroundDownImage()
+        local nodes = Page:jquery("input#buttonBackground");
+        local node = nodes[1];
+        SetNodeProperty(node, "background-down", "Textures/icon1.png");
+    end
     ]]>
 </script>
 <style>
@@ -63,6 +69,13 @@
             div1
             <div name="div2" id="div2" style="margin:20px;width:100px;height:80px;background-color:aqua;">
                 div2
+            </div>
+        </div>
+        <div name="div1" id="div1" style="margin:20px;width:300px;height:300px;background-color:antiquewhite;float:left;">
+            <p style="margin:20px;">测试button的checked，over，down背景图</p>
+            <div name="div2" id="div2" style="margin:20px;background-color:aqua;">
+                <input name="button" type="button" value="设置down背景图" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="SetBackgroundDownImage()" />
+                <input name="buttonBackground" id="buttonBackground" type="button" style="margin:10px;width:80px;height:40px;background:url(Textures/login_bg.png);" onclick="ClearBackgroundImage()" />
             </div>
         </div>
     </div>
