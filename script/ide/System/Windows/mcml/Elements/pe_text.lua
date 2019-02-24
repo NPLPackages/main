@@ -248,7 +248,7 @@ function pe_text:paintEvent(painter)
 	if(self.labels) then
 		local css = self:Renderer():Style();
 		painter:SetFont(css:Font():ToTable());
-		painter:SetPen(css:Color():ToDWORD());
+		painter:SetPen(css:Color():ToString());
 		for i = 1, #self.labels do
 			local label = self.labels[i];
 			if(label) then
@@ -339,6 +339,8 @@ function pe_text:UpdateRenderer(offsetOfReplacedData, lengthOfReplacedData)
     elseif (self:Renderer()) then
         self:Renderer():ToRenderText():SetTextWithOffset(self.value, offsetOfReplacedData, lengthOfReplacedData);
 	end
+
+	self:PostLayoutRequestEvent();
 end
 
 --void CharacterData::setDataAndUpdate(PassRefPtr<StringImpl> newData, unsigned offsetOfReplacedData, unsigned oldLength, unsigned newLength)
@@ -353,6 +355,10 @@ end
 
 function pe_text:IsTextNode()
 	return true;
+end
+
+function pe_text:NodeType()
+	return "TEXT_NODE";
 end
 
 function pe_text:GetAllChildWithNameIDClass(name, id, class, output)

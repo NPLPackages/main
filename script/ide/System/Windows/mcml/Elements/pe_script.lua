@@ -299,11 +299,12 @@ function pe_script.EndCode(self)
 		if(domNode~=nil) then
 			if(self) then
 				local nextNode = self:NextSibling();
-				for childnode in domNode:next() do
-					echo("for childnode")
-					childnode:PrintNodeInfo()
-					self:Parent():InsertBefore(childnode, nextNode, false);
-				end
+--				for childnode in domNode:next() do
+--					echo("for childnode")
+--					childnode:PrintNodeInfo()
+--					self:Parent():InsertBefore(childnode, nextNode, false);
+--				end
+				self:Parent():InsertBefore(domNode, nextNode, false);
 			end
 
 --			local flushnode;

@@ -69,15 +69,16 @@ function Document:flush()
 	echo("Document:flush")
 	echo(self.textbuffer_)
 	if(self.textbuffer_~=nil) then
-		self.textbuffer_ = "<p>"..self.textbuffer_.."</p>";
-		--self.textbuffer_ = ParaMisc.EncodingConvert("", "HTML", self.textbuffer_);
-		local xmlRoot = ParaXML.LuaXML_ParseString(self.textbuffer_);
-		echo(xmlRoot)
-		if(type(xmlRoot)=="table" and table.getn(xmlRoot)>0) then
-			local xmlRoot = mcml:createFromXmlNode(xmlRoot);
-			--return xmlRoot[1];
-			return xmlRoot:FirstChild();
-		end
+--		self.textbuffer_ = "<p>"..self.textbuffer_.."</p>";
+--		--self.textbuffer_ = ParaMisc.EncodingConvert("", "HTML", self.textbuffer_);
+--		local xmlRoot = ParaXML.LuaXML_ParseString(self.textbuffer_);
+--		echo(xmlRoot)
+--		if(type(xmlRoot)=="table" and table.getn(xmlRoot)>0) then
+--			local xmlRoot = mcml:createFromXmlNode(xmlRoot);
+--			--return xmlRoot[1];
+--			return xmlRoot:FirstChild();
+--		end
+		return mcml:createFragmentFromSource(self.textbuffer_)
 	end	
 end
 

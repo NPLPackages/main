@@ -84,7 +84,7 @@ end
 function UITextElement:ApplyCss(css)
 	UITextElement._super.ApplyCss(self, css);
 	self:SetFont(css:Font():ToString());
-	self:SetColor(css:Color():ToDWORD());
+	self:SetColor(css:Color():ToString());
 --	local font, font_size, font_scaling = css:GetFontSettings();
 --	self:SetFont(font);
 --	self:SetFontSize(font_size);

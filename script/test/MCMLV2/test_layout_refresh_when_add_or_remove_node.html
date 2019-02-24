@@ -7,6 +7,10 @@
     NPL.load("(gl)script/ide/System/Windows/mcml/mcml.lua");
     local mcml = commonlib.gettable("System.Windows.mcml");
 
+    function CreateNewNode(o)
+        return mcml:createFromXmlNode(o)
+    end
+
     function InsertInlineNewNode()
         echo("InsertNewNode");
         local nodes = Page:jquery("div#div5");
@@ -19,12 +23,14 @@
         --divNode:GetInlineStyleDecl():SetProperty("background-color","red");
         --node:InsertChild(divNode);
         --divNode:InsertChild("11111");
-        local node1 = node:AppendChild({"111111",name="span",attr={style="background-color:red",name="span10"}});
+        local newInlineNode = CreateNewNode({"111111",name="span",attr={style="background-color:red",name="span10"}});
+        local node1 = node:AppendChild(newInlineNode);
         if(node1 == nil) then
             echo("node1 is nil");
         end
         --node:AppendChild({"333333",name="span",attr={style="background-color:green"}});
-        node:InsertBefore({"333333",name="span",attr={style="background-color:green",name="span30"}}, node1);
+        newInlineNode = CreateNewNode({"333333",name="span",attr={style="background-color:green",name="span30"}});
+        node:InsertBefore(newInlineNode, node1);
     end
     function RemoveInlineNode()
         echo("RemoveNode");
@@ -49,12 +55,14 @@
         --divNode:GetInlineStyleDecl():SetProperty("background-color","red");
         --node:InsertChild(divNode);
         --divNode:InsertChild("11111");
-        local node1 = node:AppendChild({"111111",name="div",attr={style="background-color:red",name="div10"}});
+        local newBlockNode = CreateNewNode({"111111",name="div",attr={style="background-color:red",name="div10"}});
+        local node1 = node:AppendChild(newBlockNode);
         if(node1 == nil) then
             echo("node1 is nil");
         end
         --node:AppendChild({"333333",name="div",attr={style="background-color:green"}});
-        node:InsertBefore({"333333",name="div",attr={style="background-color:green",name="div30"}}, node1);
+        newBlockNode = CreateNewNode({"333333",name="div",attr={style="background-color:green",name="div30"}});
+        node:InsertBefore(newBlockNode, node1);
     end
     function RemoveBlockNode()
         echo("RemoveNode");

@@ -180,3 +180,23 @@ function mcml:createFromXmlNode(xmlNode)
 		LOG.std(nil, "warn", "mcml", "can not find tag name %s", xmlNode.name or "");
 	end
 end
+
+NPL.load("(gl)script/ide/System/Windows/mcml/DocumentFragment.lua");
+local DocumentFragment = commonlib.gettable("System.Windows.mcml.DocumentFragment");
+
+function mcml:createFragmentFromSource(html)
+	self:StaticInit();
+	echo("mcml:createFragmentFromSource")
+	local fragment = nil;
+    local htmlBuffer = "<fragment>"..html.."</fragment>";
+	local xmlRoot = ParaXML.LuaXML_ParseString(htmlBuffer);
+	echo(xmlRoot)
+	if(type(xmlRoot)=="table" and table.getn(xmlRoot)>0) then
+		fragment = DocumentFragment:createFromXmlNode(xmlRoot[1]);
+		--fragment = xmlRoot:FirstChild();
+	end
+	echo("fragment")
+	fragment:PrintNodeInfo()
+	echo(fragment:NodeType())
+    return fragment;
+end

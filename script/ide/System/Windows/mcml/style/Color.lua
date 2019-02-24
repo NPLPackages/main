@@ -44,7 +44,7 @@ function Color:ToDWORD()
 end
 
 function Color:ToString()
-	return string.format("#%X%X%X%X", self.r, self.g, self.b, self.a);
+	return string.format("#%02X%02X%02X%02X", self.r, self.g, self.b, self.a);
 end
 
 
@@ -214,6 +214,7 @@ local presetColors = {
 	["appworkspace"] = "#FFFFFFFF",
 	["background"] = "#6363CEFF",
 	["buttonface"] = "#C0C0C0FF",
+	["buttonface"] = "#434343FF",
 	["buttonhighlight"] = "#DDDDDDFF",
 	["buttonshadow"] = "#888888FF",
 	["buttontext"] = "#000000FF",

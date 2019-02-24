@@ -33,25 +33,18 @@ System.Windows.mcml.Elements.pe_repeat:RegisterAs("pe:repeat");
 ------------------------------------------------------------
 ]]
 
-NPL.load("(gl)script/ide/System/Windows/mcml/PageElement.lua");
-NPL.load("(gl)script/ide/System/Windows/Shapes/Rectangle.lua");
-NPL.load("(gl)script/ide/System/Windows/Controls/Button.lua");
-local Button = commonlib.gettable("System.Windows.Controls.Button");
-local Rectangle = commonlib.gettable("System.Windows.Shapes.Rectangle");
-
+NPL.load("(gl)script/ide/System/Windows/mcml/PageElement.lua")
+NPL.load("(gl)script/ide/System/Windows/mcml/mcml.lua");
+local mcml = commonlib.gettable("System.Windows.mcml");
 local pe_repeat = commonlib.inherit(commonlib.gettable("System.Windows.mcml.PageElement"), commonlib.gettable("System.Windows.mcml.Elements.pe_repeat"));
 pe_repeat:Property({"class_name", "pe:repeat"});
 
-function pe_repeat:ctor()
+-- skip child node parsing.
+function pe_repeat:createFromXmlNode(o)
+	return self:new(o);
 end
 
-function pe_repeat:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
-	if(self.isCompiled) then
-		return;
-	end
-	self.isCompiled = true;
-	self:MoveChildrenToTemplate();
-
+function pe_repeat:LoadComponent(parentElem, parentLayout, style)
 	local arrayValues, name, value;
 	local value = self:GetAttributeWithCode("value", nil, true);
 	if(type(value) == "string") then
@@ -68,18 +61,59 @@ function pe_repeat:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 		arrayValues = arrayValues();
 	end
 	if(arrayValues and type(arrayValues) == "table") then
-		local template = self:GetTemplateNode();
+		local nextNode = self:NextSibling();
 		for i, v in ipairs(arrayValues) do
-			local child = template:clone();
-			child:SetPreValue("index", i);
-			child:SetPreValue(name, v);
-			if(name == "this") then
-				for n,v in pairs(v) do
-					child:SetPreValue(n, v);
+			for j = 1, #self do
+				local template = commonlib.copy(self[j]);
+				local child = mcml:createFromXmlNode(template);
+				child:SetPreValue("index", i);
+				child:SetPreValue(name, v);
+				if(name == "this") then
+					for n,v in pairs(v) do
+						child:SetPreValue(n, v);
+					end
 				end
-			end
-			self:AddChild(child);
+				self:Parent():InsertBefore(child, nextNode, false);
+			end			
 		end
 	end
-	pe_repeat._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
 end
+--
+--function pe_repeat:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
+--	if(self.isCompiled) then
+--		return;
+--	end
+--	self.isCompiled = true;
+--	self:MoveChildrenToTemplate();
+--
+--	local arrayValues, name, value;
+--	local value = self:GetAttributeWithCode("value", nil, true);
+--	if(type(value) == "string") then
+--		name, value = value:match("^([%w_]+)%s+in%s+([^%s%(]+)");
+--		if(name and value) then
+--			arrayValues = self:GetScriptValue(value);
+--		end
+--	else
+--		arrayValues = self:GetAttributeWithCode("DataSource", nil, true);
+--		name = "this";
+--	end
+--
+--	if(type(arrayValues) == "function") then
+--		arrayValues = arrayValues();
+--	end
+--	if(arrayValues and type(arrayValues) == "table") then
+--		local template = self:GetTemplateNode();
+--		for i, v in ipairs(arrayValues) do
+--			local child = template:clone();
+--			child:SetPreValue("index", i);
+--			child:SetPreValue(name, v);
+--			if(name == "this") then
+--				for n,v in pairs(v) do
+--					child:SetPreValue(n, v);
+--				end
+--			end
+--			self:AddChild(child);
+--		end
+--	end
+--	pe_repeat._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
+--end

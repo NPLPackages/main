@@ -451,6 +451,8 @@ function PageElement:attachLayoutTree()
     self:ClearNeedsStyleRecalc();
 end
 
+--PageElement.Attach = PageElement.attachLayoutTree;
+
 function PageElement:reattachLayoutTree()
 	echo("PageElement:reattachLayoutTree")
 	self:PrintNodeInfo()
@@ -460,6 +462,8 @@ function PageElement:reattachLayoutTree()
 	end
     self:attachLayoutTree();
 end
+
+--PageElement.Reattach = PageElement.reattachLayoutTree;
 
 function PageElement:detachLayoutTree()
 	echo("PageElement:detachLayoutTree")
@@ -496,6 +500,8 @@ function PageElement:detachLayoutTree()
 
     self:ClearFlag("InDetachFlag");	
 end
+
+--PageElement.Detach = PageElement.detachLayoutTree;
 
 -- private: redirector
 local function paintEventRedirectFunc(uiElement, painter)
@@ -1087,46 +1093,30 @@ end
 
 --static void replaceChildrenWithFragment(HTMLElement* element, PassRefPtr<DocumentFragment> fragment, ExceptionCode& ec)
 local function replaceChildrenWithFragment(element, fragment)
-    if (not fragment) then
+    if (not fragment:FirstChild()) then
         element:RemoveChildren();
         return;
     end
 
-    if (hasOneTextChild(element) and fragment:IsTextNode()) then
-        element:FirstChild():SetData(fragment:Data());
+    if (hasOneTextChild(element) and hasOneTextChild(fragment)) then
+        element:FirstChild():SetData(fragment:FirstChild():Data());
         return;
     end
 
---    if (hasOneChild(element)) {
---        element->replaceChild(fragment, element->firstChild(), ec);
---        return;
---    }
+    if (hasOneChild(element)) then
+        element:ReplaceChild(fragment, element:FirstChild());
+        return;
+    end
 
     element:RemoveChildren();
     element:AppendChild(fragment);
 end
 
---static PassRefPtr<DocumentFragment> createFragmentFromSource(const String& markup, Element* contextElement, ExceptionCode& ec)
-function createFragmentFromSource(html)
-	echo("createFragmentFromSource")
-	echo(html)
-	local fragment = nil;
-    local htmlBuffer = "<p>"..html.."</p>";
-	local xmlRoot = ParaXML.LuaXML_ParseString(htmlBuffer);
-	echo(xmlRoot)
-	if(type(xmlRoot)=="table" and table.getn(xmlRoot)>0) then
-		local xmlRoot = mcml:createFromXmlNode(xmlRoot[1]);
-		--return xmlRoot[1];
-		fragment = xmlRoot:FirstChild();
-	end
-	echo("fragment info")
-	fragment:PrintNodeInfo()
-    return fragment;
-end
-
 --void HTMLElement::setInnerHTML(const String& html, ExceptionCode& ec)
 function PageElement:SetInnerHTML(html)
-	local fragment = createFragmentFromSource(html);
+	echo("PageElement:SetInnerHTML")
+	echo(html)
+	local fragment = mcml:createFragmentFromSource(html);
     if (fragment) then
         replaceChildrenWithFragment(self, fragment);
 	end
@@ -1506,18 +1496,211 @@ end
 
 --static void collectTargetNodes(Node* node, NodeVector& nodes)
 local function collectTargetNodes(node, nodes)
---    if (node->nodeType() != Node::DOCUMENT_FRAGMENT_NODE) {
---        nodes.append(node);
---        return;
---    }
+	echo("collectTargetNodes")
+	node:PrintNodeInfo()
+	echo(node:NodeType())
+    if (node:NodeType() ~= "DOCUMENT_FRAGMENT_NODE") then
+        nodes:append(node);
+        return;
+    end
     collectNodes(node, nodes);
 end
 
-function PageElement:AppendChild(child, refresh)
+function PageElement:NodeType()
+	return "ELEMENT_NODE";
+end
+
+--bool ContainerNode::replaceChild(PassRefPtr<Node> newChild, Node* oldChild, ExceptionCode& ec, bool shouldLazyAttach)
+function PageElement:ReplaceChild(newChild, oldChild, refresh)
+	refresh = if_else(refresh == nil, true, refresh);
+    -- Check that this node is not "floating".
+    -- If it is, it can be deleted as a side effect of sending mutation events.
+
+	if(not newChild) then
+		return;
+	end
+
+    if (oldChild == newChild) then -- nothing to do
+        return true;
+	end
+
+    -- NOT_FOUND_ERR: Raised if oldChild is not a child of this node.
+    if (not oldChild or oldChild:ParentNode() ~= self) then
+        return false;
+    end
+
+    local prev = oldChild:PreviousSibling();
+    local next = oldChild:NextSibling();
+
+    -- Remove the node we're replacing
+    local removedChild = oldChild;
+    self:RemoveChild(oldChild, false);
+
+    -- FIXME: After sending the mutation events, "this" could be destroyed.
+    -- We can prevent that by doing a "ref", but first we have to make sure
+    -- that no callers call with ref count == 0 and parent = 0 (as of this
+    -- writing, there are definitely callers who call that way).
+
+    local isFragment = newChild:NodeType() == "DOCUMENT_FRAGMENT_NODE";
+
+    -- Add the new child(ren)
+    local child = if_else(isFragment, newChild:FirstChild(), newChild);
+    while (child) do
+        -- If the new child is already in the right place, we're done.
+        if (prev and (prev == child or prev == child:PreviousSibling())) then
+            break;
+		end
+
+        -- For a fragment we have more children to do.
+        local nextChild = if_else(isFragment, child:NextSibling(), nil);
+
+        -- Remove child from its old position.
+		local oldParent = child:ParentNode();
+        if (oldParent) then
+            oldParent:RemoveChild(child, false);
+		end
+
+        -- Due to arbitrary code running in response to a DOM mutation event it's
+        -- possible that "prev" is no longer a child of "this".
+        -- It's also possible that "child" has been inserted elsewhere.
+        -- In either of those cases, we'll just stop.
+        if (prev and prev:ParentNode() ~= self) then
+            break;
+		end
+        if (child:ParentNode()) then
+            break;
+		end
+
+
+        --child->setTreeScopeRecursively(treeScope());
+
+        -- Add child after "prev".
+        --forbidEventDispatch();
+        local next = nil;
+        if (prev) then
+            next = prev:NextSibling();
+            --ASSERT(m_firstChild != next);
+            prev:SetNextSibling(child);
+        else
+            next = self.m_firstChild;
+            self.m_firstChild = child;
+        end
+        if (next) then
+            --ASSERT(m_lastChild != prev);
+            --ASSERT(next->previousSibling() == prev);
+            next:SetPreviousSibling(child);
+        else
+            --ASSERT(m_lastChild == prev);
+            self.m_lastChild = child;
+        end
+        child:SetParent(self);
+        child:SetPreviousSibling(prev);
+        child:SetNextSibling(next);
+        --allowEventDispatch();
+
+        --childrenChanged(false, prev.get(), next, 1);
+        --notifyChildInserted(child.get());
+                
+        -- Add child to the rendering tree
+        if (self:Attached() and not child:Attached() and child:ParentNode() == self and refresh) then
+            --if (shouldLazyAttach)
+            --    child->lazyAttach();
+            --else
+            --    child->attach();
+			child:LoadComponentIfNeeded();
+			child:LazyAttach();
+        end
+
+        -- Now that the child is attached to the render tree, dispatch
+        -- the relevant mutation events.
+        --dispatchChildInsertionEvents(child.get());
+
+        prev = child;
+        child = nextChild;
+    end
+
+    --dispatchSubtreeModifiedEvent();
+	if (self:Attached() and refresh) then
+		self:PostLayoutRequestEvent();
+	end
+    return true;
+end
+
+function PageElement:AppendChild(newChild, refresh)
+	refresh = if_else(refresh == nil, true, refresh);
 	echo("PageElement:AppendChild")
 	self:PrintNodeInfo()
-	--child:PrintNodeInfo()
-	return self:InsertBefore(child, nil, refresh);
+
+	if(not newChild) then
+		return;
+	end
+
+	if (newChild == self.m_lastChild) then -- nothing to do
+        return false;
+	end
+
+	local targets = commonlib.vector:new();
+	collectTargetNodes(newChild, targets)
+	if(targets:empty()) then
+		return;
+	end
+
+	-- Now actually add the child(ren)
+    local prev = self:LastChild();
+	for i = 1, #targets do
+        local child = targets[i];
+        -- If child is already present in the tree, first remove it
+		local oldParent = child:ParentNode();
+        if (oldParent and oldParent.RemoveChild) then
+            oldParent:RemoveChild(child, false);
+
+--            // If the child has a parent again, just stop what we're doing, because
+--            // that means someone is doing something with DOM mutation -- can't re-parent
+--            // a child that already has a parent.
+--            if (child->parentNode())
+--                break;
+        end
+
+        --child->setTreeScopeRecursively(treeScope());
+
+        -- Append child to the end of the list
+        --forbidEventDispatch();
+        child:SetParent(self);
+        if (self.m_lastChild) then
+            child:SetPreviousSibling(self.m_lastChild);
+            self.m_lastChild:SetNextSibling(child);
+        else
+            self.m_firstChild = child;
+		end
+        self.m_lastChild = child;
+        --allowEventDispatch();
+
+        -- Send notification about the children change.
+        --childrenChanged(false, prev.get(), 0, 1);
+        --notifyChildInserted(child);
+
+        -- Add child to the rendering tree
+        if (self:Attached() and not child:Attached() and child:ParentNode() == self and refresh) then
+--            if (shouldLazyAttach) then
+--                child:LazyAttach();
+--            else
+--                child:Attach();
+--			end
+			child:LoadComponentIfNeeded();
+			child:LazyAttach();
+        end
+
+        -- Now that the child is attached to the render tree, dispatch
+        -- the relevant mutation events.
+        --dispatchChildInsertionEvents(child);
+        prev = child;
+    end
+
+    --dispatchSubtreeModifiedEvent();
+	if (self:Attached() and refresh) then
+		self:PostLayoutRequestEvent();
+	end
+    return true;
 end
 
 --void ContainerNode::insertBeforeCommon(Node* nextChild, Node* newChild)
@@ -1553,41 +1736,81 @@ end
 -- @param child: it can be mcmlNode or string node. 
 -- @param refChild: the next node for the child.
 -- @param refresh: if nil or true, attach node and relayout page.
-function PageElement:InsertBefore(child, refChild, refresh)
-	if(refresh == nil) then
-		local parent = self:Parent();
-		if(parent and parent:Attached()) then
-			refresh = true;
-		else
-			refresh = false;
-		end
+function PageElement:InsertBefore(newChild, refChild, refresh)
+	refresh = if_else(refresh == nil, true, refresh);
+
+	if(not newChild) then
+		return;
 	end
 
-	refresh = if_else(refresh == nil, true, false);
-	if(type(child)=="string") then
-		child = Elements.pe_text:createFromString(child);
-	elseif(type(child)=="table") then
-		if(child.isPageElement == nil) then
-			child = mcml:createFromXmlNode(child);
-		end
+	if (not refChild) then
+        return self:AppendChild(newChild, refresh);
 	end
-	echo("PageElement:InsertBefore begin")
-	self:PrintNodeInfo()
-	child:PrintNodeInfo()
-	echo(self:GetChildCount())
-	self:InsertBeforeCommon(refChild, child);
 
-	if(refresh) then
-		child:LoadComponentIfNeeded();
+	if (refChild:ParentNode() ~= self) then
+        return false;
+    end
 
-		child:LazyAttach();
+	-- Now actually add the child(ren)
+    if (refChild:PreviousSibling() == newChild or refChild == newChild) then -- nothing to do
+        return true;
+	end
 
+	local targets = commonlib.vector:new();
+	collectTargetNodes(newChild, targets)
+	if(targets:empty()) then
+		return
+	end
+
+	local next = refChild;
+    local refChildPreviousSibling = refChild:PreviousSibling();
+	for i = 1, #targets do
+        local child = targets[i];
+
+		-- If child is already present in the tree, first remove it from the old location.
+		local oldParent = child:ParentNode();
+        if (oldParent and oldParent.RemoveChild) then
+            oldParent:RemoveChild(child, false);
+		end
+
+		if (next:ParentNode() ~= self) then
+            break;
+		end
+        if (child:ParentNode()) then
+            break;
+		end
+
+		--child->setTreeScopeRecursively(treeScope());
+
+        self:InsertBeforeCommon(next, child);
+
+--		// Send notification about the children change.
+--        childrenChanged(false, refChildPreviousSibling.get(), next.get(), 1);
+--        notifyChildInserted(child);
+
+        -- Add child to the rendering tree.
+        if (self:Attached() and not child:Attached() and child:ParentNode() == self and refresh) then
+--            if (shouldLazyAttach)
+--                child->lazyAttach();
+--            else
+--                child->attach();
+			child:LoadComponentIfNeeded();
+			child:LazyAttach();
+        end
+
+--		// Now that the child is attached to the render tree, dispatch
+--        // the relevant mutation events.
+--        dispatchChildInsertionEvents(child);
+	end
+
+
+	if(self:Attached() and refresh) then
 		self:PostLayoutRequestEvent();
 	end
 	--self:resetLayout();
 	echo("PageElement:InsertBefore end")
 	
-	return child;
+	return true;
 end
 
 --void ContainerNode::removeBetween(Node* previousChild, Node* nextChild, Node* oldChild)
@@ -1624,7 +1847,8 @@ function PageElement:RemoveBetween(previousChild, nextChild, oldChild)
     --allowEventDispatch();
 end
 
-function PageElement:RemoveChild(child)
+function PageElement:RemoveChild(child, refresh)
+	refresh = if_else(refresh == nil, true, refresh)
 	if(child == nil) then
 		return;
 	end
@@ -1638,8 +1862,9 @@ function PageElement:RemoveChild(child)
     self:RemoveBetween(prev, next, child);
 
 	--child:LazyAttach();
-
-	self:PostLayoutRequestEvent();
+	if(refresh) then
+		self:PostLayoutRequestEvent();
+	end
 end
 
 -- @param child: it can be mcmlNode or string node. 

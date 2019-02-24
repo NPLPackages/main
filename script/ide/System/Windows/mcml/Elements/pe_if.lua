@@ -9,18 +9,27 @@ NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_if.lua");
 Elements.pe_if:RegisterAs("pe:if");
 ------------------------------------------------------------
 ]]
+NPL.load("(gl)script/ide/System/Windows/mcml/DocumentFragment.lua");
+local DocumentFragment = commonlib.gettable("System.Windows.mcml.DocumentFragment");
 local pe_if = commonlib.inherit(commonlib.gettable("System.Windows.mcml.PageElement"), commonlib.gettable("System.Windows.mcml.Elements.pe_if"));
+
+-- skip child node parsing.
+function pe_if:createFromXmlNode(o)
+	return self:new(o);
+end
 
 function pe_if:LoadComponent(parentElem, parentLayout, style)
 	local condition = self:GetAttributeWithCode("condition", nil, true);
 	self.isConditionTrue = (condition==true or condition=="true");
-	if (self.isConditionTrue) then
-		self:show();
-		for childnode in self:next() do
-			childnode:LoadComponent(parentElem, parentLayout, style);
+
+	if(self.isConditionTrue) then
+		local o = {name="fragment"}
+		for i = 1, #self do
+			o[i] = self[i];
 		end
-	else
-		self:hide();
+		local fragment = DocumentFragment:createFromXmlNode(o);
+		local nextNode = self:NextSibling();
+		self:Parent():InsertBefore(fragment, nextNode, false);
 	end
 end
 

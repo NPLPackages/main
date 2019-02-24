@@ -1,0 +1,24 @@
+﻿<!-- "script/test/MCMLv2/test_layout_repeat.html" -->
+<html>
+<pe:mcml>
+    <script type="text/npl" refresh="false">
+        <![CDATA[
+        repeat_data = { {a=1}, {a=2} };
+        function GetDS()
+            return repeat_data;
+        end
+        ]]>
+    </script>
+    <div style="margin:10px;background-color:aquamarine;">
+        <pe:repeat value="item in repeat_data">
+            <div style="background-color:red"><%=item.a%></div>
+        </pe:repeat>
+        <pe:repeat value="item in GetDS()">
+            <div style="background-color:greenyellow"><%=item.a%></div>
+        </pe:repeat>
+        <pe:repeat DataSource='<%=GetDS()%>'>
+            <div style="background-color:sandybrown"><%=a%></div>
+        </pe:repeat>
+    </div>
+</pe:mcml>
+</html>

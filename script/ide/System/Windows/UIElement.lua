@@ -134,9 +134,9 @@ function UIElement:ApplyCss(css)
 	local background_image = css:BackgroundImage();
 	self:SetBackground(background_image);
 	if(background_image == nil or background_image == "") then
-		self:SetBackgroundColor(css:BackgroundColor():ToDWORD());
+		self:SetBackgroundColor(css:BackgroundColor():ToString());
 	else
-		self:SetBackgroundColor(Color.white:ToDWORD());
+		self:SetBackgroundColor(Color.white:ToString());
 	end
 end
 

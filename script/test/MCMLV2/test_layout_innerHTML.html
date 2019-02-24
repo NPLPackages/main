@@ -1,0 +1,34 @@
+﻿<!-- "script/test/MCMLv2/test_layout_innerHTML.html" -->
+<html>
+<pe:mcml>
+    <script type="text/npl" refresh="false">
+        <![CDATA[
+
+        local innerHTMLs = {["1"] = "文本",["2"] = "<h1>标题</h1>", ["3"] = "文本<img height='60' width='60' src='Textures/icon1.png' /><span style='background-color:red;'>春晓</span>"}
+
+        function ChangeDivContent(value, mcmlnode)
+            local nodes = Page:jquery("div#divChanged");
+            local node = nodes[1];
+            echo("value")
+            echo(innerHTMLs[value])
+            node:SetInnerHTML(innerHTMLs[value])
+        end
+        ]]>
+    </script>
+    <h3>目前暂不支持节点直接属性赋值，需要调用SetInnerHTML函数设置文本内容</h3>
+    <div style="margin:10px;background-color:aquamarine;width:40%;">
+        <form>
+            <input type="radio" name="content" value="1" onclick="ChangeDivContent()" /><label>文本</label>
+            <br/>
+            <input type="radio" name="content" value="2" onclick="ChangeDivContent()" /><label>单节点(标题)</label>
+            <br />
+            <input type="radio" name="content" value="3" onclick="ChangeDivContent()" /><label>多节点(文本和图片)</label>
+        </form>
+        
+        <!--<input name="button" type="button" value="改变div内容" style="margin:10px;font-weight:bold;" onclick="ChangeDivContent()" />-->
+    </div>
+    <div name="divChanged" id="divChanged" style="margin:10px;background-color:antiquewhite;width:40%;">
+        1233
+    </div>
+</pe:mcml>
+</html>

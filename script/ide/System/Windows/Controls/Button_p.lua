@@ -32,7 +32,7 @@ end
 local normal = {
 	["outline_border1"] = "#171717",
 	["outline_border2"] = "#737373",
-	["background"] = "#434343"
+	["background"] = "#ffffff00"
 };
 
 local check = {
@@ -45,7 +45,7 @@ local over = {
 
 local down = {
 	["outline_border"] = "#000000",
-	["background"] = "#242424"
+	["background"] = "#ffffff66"
 };
 
 function Button:initNormalPens()
@@ -149,8 +149,9 @@ end
 
 function Button:paintWithPolygon(painter)
 	if(self.polygon_style == "none" or self.polygon_style == "normal") then
-		painter:SetPen(self:GetBackgroundColor());
-		painter:DrawRectTexture(self:x(), self:y(), self:width(), self:height(), self:GetBackground());
+--		painter:SetPen(self:GetBackgroundColor());
+--		painter:DrawRectTexture(self:x(), self:y(), self:width(), self:height(), self:GetBackground());
+		self:paintNormalButton(painter);
 --	elseif(self.polygon_style == "normal") then
 --		self:paintNormalButton(painter);
 	elseif(self.polygon_style == "check") then
@@ -173,7 +174,7 @@ function Button:paintNormalButton(painter)
 			
 		--painter:SetPen("#242424");
 		painter:SetPen(pens.down.background);
-		painter:DrawRectTexture(x + 1, y + 1, self:width() - 2, self:height() - 2, "");
+		painter:DrawRectTexture(x, y, self:width() - 2, self:height() - 2, "");
 	elseif(self.checked) then
 		-- BackgroundChecked
 		--painter:SetPen("#000000");
