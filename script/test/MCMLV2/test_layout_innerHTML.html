@@ -4,7 +4,12 @@
     <script type="text/npl" refresh="false">
         <![CDATA[
 
-        local innerHTMLs = {["1"] = "文本",["2"] = "<h1>标题</h1>", ["3"] = "文本<img height='60' width='60' src='Textures/icon1.png' /><span style='background-color:red;'>春晓</span>"}
+        local innerHTMLs = {
+            ["1"] = "文本",
+            ["2"] = "<h1>标题</h1>", 
+            ["3"] = "文本<img height='60' width='60' src='Textures/icon1.png' /><span style='background-color:red;'>春晓</span>",
+            ["4"] = "<input type='text' style='width:60px;'/>", 
+        }
 
         function ChangeDivContent(value, mcmlnode)
             local nodes = Page:jquery("div#divChanged");
@@ -23,6 +28,8 @@
             <input type="radio" name="content" value="2" onclick="ChangeDivContent()" /><label>单节点(标题)</label>
             <br />
             <input type="radio" name="content" value="3" onclick="ChangeDivContent()" /><label>多节点(文本和图片)</label>
+            <br />
+            <input type="radio" name="content" value="4" onclick="ChangeDivContent()" /><label>按钮</label>
         </form>
         
         <!--<input name="button" type="button" value="改变div内容" style="margin:10px;font-weight:bold;" onclick="ChangeDivContent()" />-->

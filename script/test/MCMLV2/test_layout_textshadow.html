@@ -1,0 +1,23 @@
+﻿<!-- "script/test/MCMLv2/test_layout_textshadow.html" -->
+<html>
+<pe:mcml>
+    <script type="text/npl" refresh="false">
+        <![CDATA[
+        repeat_data = { {a=1}, {a=2} };
+        function GetDS()
+            return repeat_data;
+        end
+        ]]>
+    </script>
+    <div style="margin:10px;background-color:aquamarine;text-shadow:4px 4px red;">
+        <h1>标题</h1>11111
+    </div>
+    <div style="margin:10px;background-color:aquamarine;text-shadow:true;text-shadow-offset-x:14px;">
+        <h1>标题</h1>11111
+    </div>
+    <div name="div0" id="div0" style="background-color:aquamarine;margin:10px;text-shadow:4px 4px red;">
+        <input name="button" type="button" value="button" style="background-color:burlywood;color:aqua;font-weight:bold;color:blueviolet;" />
+        <input name="button" type="text" value="123455" />
+    </div>
+</pe:mcml>
+</html>

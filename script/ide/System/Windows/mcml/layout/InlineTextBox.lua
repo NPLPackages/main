@@ -142,8 +142,9 @@ function InlineTextBox:CreateAndAppendLabel(left, top, width, height, text, pare
 	_this:SetText(text);
 
 	local css = self:Renderer():Style();
-	_this:SetFont(css:Font():ToTable());
-	_this:SetColor(css:Color():ToString());
+	_this:ApplyCss(css)
+--	_this:SetFont(css:Font():ToTable());
+--	_this:SetColor(css:Color():ToString());
 	--_this:SetScale(self.scale);
 	_this:setGeometry(left, top, width, height);
 	--self.labels:add(_this);

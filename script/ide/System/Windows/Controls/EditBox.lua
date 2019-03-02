@@ -878,9 +878,7 @@ end
 function EditBox:ApplyCss(css)
 	EditBox._super.ApplyCss(self, css);
 	--self:SetAlignment(css:GetTextAlignment(0)); -- left align
---	if(css["caret-color"]) then
---		self:SetCursorColor(css["caret-color"]);
---	end
+	self:SetCursorColor(css:CaretColor():ToString());
 end
 
 function EditBox:keyPressEvent(event)

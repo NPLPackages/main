@@ -26,6 +26,8 @@ NPL.load("(gl)script/ide/System/Windows/mcml/style/StyleContentAlignmentData.lua
 NPL.load("(gl)script/ide/System/Windows/mcml/style/StyleSelfAlignmentData.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/style/OutlineValue.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/platform/LengthBox.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/style/ShadowData.lua");
+local ShadowData = commonlib.gettable("System.Windows.mcml.style.ShadowData");
 local LengthBox = commonlib.gettable("System.Windows.mcml.platform.LengthBox");
 local OutlineValue = commonlib.gettable("System.Windows.mcml.style.OutlineValue");
 local StyleSelfAlignmentData = commonlib.gettable("System.Windows.mcml.style.StyleSelfAlignmentData");
@@ -190,6 +192,8 @@ function ComputedStyle.InitialBorderRadius() end
 function ComputedStyle.InitialFontFamily()	return "System"; end
 function ComputedStyle.InitialFontSize() return 12; end
 function ComputedStyle.InitialFontWeight() return false; end
+
+function ComputedStyle.InitialTextShadow() return ShadowData:new(3, 3, 0, Color.CreateFromCssColor("#00000088")); end
 
 -- inherit
 local InheritedFlags = {};
@@ -788,6 +792,27 @@ function ComputedStyle:IsLeftToRightDirection() return self:Direction() == TextD
 function ComputedStyle:LineHeight() return self.inherited.line_height; end
 function ComputedStyle:WhiteSpace() return self.inherited_flags._white_space; end
 function ComputedStyle:TextShadow() return self.rareInheritedData.textShadow; end
+function ComputedStyle:TextShadowX() 
+	local text_shadow = self:TextShadow();
+	if(text_shadow) then
+		return text_shadow:X();
+	end
+	return 0;
+end
+function ComputedStyle:TextShadowY() 
+	local text_shadow = self:TextShadow();
+	if(text_shadow) then
+		return text_shadow:Y();
+	end
+	return 0;
+end
+function ComputedStyle:TextShadowColor() 
+	local text_shadow = self:TextShadow();
+	if(text_shadow) then
+		return text_shadow:Color();
+	end
+	return nil;
+end
 
 function ComputedStyle:OutlineOffset()
     if (self.m_background:Outline():Style() == ComputedStyleConstants.BorderStyleEnum.BNONE) then
@@ -1473,6 +1498,9 @@ function ComputedStyle:SetUnique() self.m_unique = true; end
 function ComputedStyle:SetOutlineOffset(v) self.m_background.m_outline.m_offset = v; end
 --void setTextShadow(PassOwnPtr<ShadowData>, bool add = false);
 function ComputedStyle:SetTextShadow(shadowData, add)
+	if(not shadowData) then
+		shadowData = ComputedStyle.InitialTextShadow();
+	end
 	add = if_else(add == nil, false, add);
     --ASSERT(!shadowData || (!shadowData->spread() && shadowData->style() == Normal));
 
@@ -1485,6 +1513,28 @@ function ComputedStyle:SetTextShadow(shadowData, add)
     --shadowData->setNext(rareData->textShadow.release());
     rareData.textShadow = shadowData;
 end
+
+function ComputedStyle:SetTextShadowX(x)
+	if(not self.rareInheritedData.textShadow) then
+		self.rareInheritedData.textShadow = ComputedStyle.InitialTextShadow();
+	end
+	self.rareInheritedData.textShadow.x = x;
+end
+
+function ComputedStyle:SetTextShadowY(y)
+	if(not self.rareInheritedData.textShadow) then
+		self.rareInheritedData.textShadow = ComputedStyle.InitialTextShadow();
+	end
+	self.rareInheritedData.textShadow.y = y;
+end
+
+function ComputedStyle:SetTextShadowColor(color)
+	if(not self.rareInheritedData.textShadow) then
+		self.rareInheritedData.textShadow = ComputedStyle.InitialTextShadow();
+	end
+	self.rareInheritedData.textShadow.color = color;
+end
+
 
 
 --bool RenderStyle::inheritedNotEqual(const RenderStyle* other) const

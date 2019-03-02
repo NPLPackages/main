@@ -1074,7 +1074,9 @@
     <Content Include="script\test\MCMLV2\test_layout.html" />
     <Content Include="script\test\MCMLV2\test_layout_background.html" />
     <Content Include="script\test\MCMLV2\test_layout_button.html" />
+    <Content Include="script\test\MCMLV2\test_layout_caretcolor.html" />
     <Content Include="script\test\MCMLV2\test_layout_gridview.html" />
+    <Content Include="script\test\MCMLV2\test_layout_httpimage.html" />
     <Content Include="script\test\MCMLV2\test_layout_if.html" />
     <Content Include="script\test\MCMLV2\test_layout_img.html" />
     <Content Include="script\test\MCMLV2\test_layout_innerHTML.html" />
@@ -1083,6 +1085,7 @@
     <Content Include="script\test\MCMLV2\test_layout_script.html" />
     <Content Include="script\test\MCMLV2\test_layout_textalign.html" />
     <Content Include="script\test\MCMLV2\test_layout_textarea.html" />
+    <Content Include="script\test\MCMLV2\test_layout_textshadow.html" />
     <Content Include="script\test\MCMLV2\test_layout_treeview.html" />
     <Content Include="script\test\MCMLV2\test_pe_textarea.html" />
     <Content Include="script\test\MCMLV2\test_layout_anonymous_block.html" />
@@ -1174,6 +1177,7 @@
     <None Include="script\ide\System\Windows\Controls\Primitives\SliderBase.lua" />
     <None Include="script\ide\System\Windows\Controls\ScrollAreaForPage.lua" />
     <None Include="script\ide\System\Windows\mcml\DocumentFragment.lua" />
+    <None Include="script\ide\System\Windows\mcml\ImageLoader.lua" />
     <None Include="script\ide\System\Windows\mcml\layout\LayoutImage.lua" />
     <None Include="script\ide\System\Windows\mcml\layout\LayoutOverflow.lua" />
     <None Include="script\ide\System\Windows\mcml\layout\LayoutReplaced.lua" />

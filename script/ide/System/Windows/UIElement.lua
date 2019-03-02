@@ -129,15 +129,29 @@ function UIElement:lessPriority(elem)
 	return self_priority < elem_priority;
 end
 
--- virtual: apply css style
-function UIElement:ApplyCss(css)
-	local background_image = css:BackgroundImage();
-	self:SetBackground(background_image);
-	if(background_image == nil or background_image == "") then
-		self:SetBackgroundColor(css:BackgroundColor():ToString());
-	else
+function UIElement:SetBackground(background) 
+	echo("UIElement:SetBackground")
+	self.Background = background;
+	echo(background)
+	if(background ~= nil and background ~= "") then
+		echo("UIElement:SetBackground SetBackgroundColor")
 		self:SetBackgroundColor(Color.white:ToString());
 	end
+end
+
+-- virtual: apply css style
+function UIElement:ApplyCss(css)
+	echo("UIElement:ApplyCss")
+	echo(self:GetField("Name","nil"))
+	self:SetBackgroundColor(css:BackgroundColor():ToString());
+	self:SetBackground(css:BackgroundImage());
+--	local background_image = css:BackgroundImage();
+--	self:SetBackground(background_image);
+--	if(background_image == nil or background_image == "") then
+--		self:SetBackgroundColor(css:BackgroundColor():ToString());
+--	else
+--		self:SetBackgroundColor(Color.white:ToString());
+--	end
 end
 
 -- Returns true if this object is a parent, (or grandparent and so on

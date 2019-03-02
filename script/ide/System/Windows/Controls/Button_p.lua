@@ -148,7 +148,7 @@ function Button:paintWithTexture(painter)
 end
 
 function Button:paintWithPolygon(painter)
-	if(self.polygon_style == "none" or self.polygon_style == "normal") then
+	if(self.polygon_style == "normal") then
 --		painter:SetPen(self:GetBackgroundColor());
 --		painter:DrawRectTexture(self:x(), self:y(), self:width(), self:height(), self:GetBackground());
 		self:paintNormalButton(painter);

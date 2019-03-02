@@ -42,6 +42,8 @@ NPL.load("(gl)script/ide/System/Windows/mcml/css/CSSStyleDeclaration.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyle.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutTreeBuilder.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyleConstants.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/ImageLoader.lua");
+local ImageLoader = commonlib.gettable("System.Windows.mcml.ImageLoader");
 local ComputedStyleConstants = commonlib.gettable("System.Windows.mcml.style.ComputedStyleConstants");
 local LayoutTreeBuilder = commonlib.gettable("System.Windows.mcml.layout.LayoutTreeBuilder");
 local LayoutObject = commonlib.gettable("System.Windows.mcml.layout.LayoutObject");
@@ -1382,9 +1384,14 @@ function PageElement:SetCssStyle(attrName, value)
 	end
 end
 
--- update the css attribute.
--- this function is called when the non-layout attribute changed, such as "background", "background-color","font-size", "color", etc.
-function PageElement:UpdateCssStyle(style)
+
+function PageElement:ApplyCss(style)
+	style = style or self:GetLayoutObject():Style();
+	ImageLoader.LoadHttpImage(style:BackgroundImage(), self);
+	ImageLoader.LoadHttpImage(style:BackgroundCheckedImage(), self);
+	ImageLoader.LoadHttpImage(style:BackgroundDownImage(), self);
+	ImageLoader.LoadHttpImage(style:BackgroundOverImage(), self);
+
 	if(self.control) then
 		self.control:ApplyCss(style);
 	end

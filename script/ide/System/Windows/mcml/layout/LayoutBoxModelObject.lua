@@ -558,8 +558,11 @@ function LayoutBoxModelObject:PaintFillLayerExtended(paintInfo, rect)
 		local x, y, w, h = rect:X(), rect:Y(), rect:Width(), rect:Height();
 		echo({x, y, w, h});
 		if(self:Style()) then
-			echo(self:Style():BackgroundImage());
-			control:ApplyCss(self:Style());
+			if(self:Node()) then
+				self:Node():ApplyCss(self:Style());
+			else
+				control:ApplyCss(self:Style());
+			end
 		end
 		control:setGeometry(x, y, w, h);
 	else

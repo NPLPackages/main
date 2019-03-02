@@ -93,12 +93,17 @@ function UITextElement:ApplyCss(css)
 --	if(css.color) then
 --		self:SetColor(css.color);
 --	end
-
---	local be_shadow,shadow_offset_x,shadow_offset_y,shadow_color = css:GetTextShadow();
---	if(be_shadow) then
---		self:SetTextShadow(be_shadow);
---		self:SetShadowOffsetX(shadow_offset_x);
---		self:SetShadowOffsetY(shadow_offset_y);
---		self:SetShadowColor(shadow_color);
---	end
+	
+	local text_shadow = css:TextShadow();
+	echo("UITextElement:ApplyCss")
+	echo(self:GetField("Name","nil"))
+	echo(text_shadow)
+	if(text_shadow) then
+		self:SetTextShadow(true);
+		self:SetShadowOffsetX(text_shadow:X());
+		self:SetShadowOffsetY(text_shadow:Y());
+		self:SetShadowColor(text_shadow:Color():ToString());
+	else
+		self:SetTextShadow(false);
+	end
 end

@@ -1673,9 +1673,7 @@ end
 function TextControl:ApplyCss(css)
 	TextControl._super.ApplyCss(self, css);
 	self:SetLineHeight(css:ComputedLineHeight());
---	if(css["caret-color"]) then
---		self:SetCursorColor(css["caret-color"]);
---	end
+	self:SetCursorColor(css:CaretColor():ToString());
 end
 
 function TextControl:updateGeometryIfNeeded()

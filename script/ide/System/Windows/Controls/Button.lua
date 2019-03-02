@@ -13,7 +13,6 @@ NPL.load("(gl)script/ide/System/Windows/Controls/Primitives/ButtonBase.lua");
 NPL.load("(gl)script/ide/System/Windows/Controls/Button_p.lua");
 local Button = commonlib.inherit(commonlib.gettable("System.Windows.Controls.Primitives.ButtonBase"), commonlib.gettable("System.Windows.Controls.Button"));
 Button:Property("Name", "Button");
-Button:Property({"Background", nil, auto = true});
 Button:Property({"BackgroundDown", nil, auto = true});
 Button:Property({"BackgroundChecked", nil, auto = true});
 Button:Property({"BackgroundOver", nil, auto = true});
@@ -25,7 +24,6 @@ Button:Property({"Size", 12, auto = true});
 function Button:ctor()
 	self.polygon_style = "normal";
 	self.polygon_styles = {
-		["none"] = nil,
 		["normal"] = nil,
 		["check"] = nil,
 		["narrow"] = nil,
@@ -47,7 +45,6 @@ function Button:init(parent)
 end
 
 local styles = {
-	["none"] = true,
 	["normal"] = true,
 	["check"] = true,
 	["narrow"] = true,
@@ -70,13 +67,6 @@ end
 function Button:mouseReleaseEvent(mouse_event)
 	-- self:ReleaseMouseCapture();
 	Button._super.mouseReleaseEvent(self, mouse_event);
-end
-
-function Button:SetBackgroundColor(color)
-	Button._super.SetBackgroundColor(self, color);
-	if(self.polygon_style == "normal") then
-		self:MultiplyBackgroundColor(color);
-	end
 end
 
 function Button:setChecked(checked)
@@ -114,6 +104,13 @@ function Button:ApplyCss(css)
 	self:SetBackgroundChecked(css:BackgroundCheckedImage());
 	self:SetBackgroundDown(css:BackgroundDownImage());
 	self:SetBackgroundOver(css:BackgroundOverImage());
+
+	local background = self:GetBackground();
+	local hasBackground = background ~= nil and background ~= "";
+
+	if(self.polygon_style == "normal" and not hasBackground) then
+		self:MultiplyBackgroundColor(self:GetBackgroundColor());
+	end
 
 --	self.BackgroundChecked = css.background_checked;
 --	self.BackgroundDown = css.background_down;

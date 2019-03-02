@@ -14,6 +14,8 @@ local CSSProperty = commonlib.gettable("System.Windows.mcml.css.CSSProperty");
 NPL.load("(gl)script/ide/System/Windows/mcml/platform/Length.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/style/Color.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyleConstants.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/style/ShadowData.lua");
+local ShadowData = commonlib.gettable("System.Windows.mcml.style.ShadowData");
 local ComputedStyleConstants = commonlib.gettable("System.Windows.mcml.style.ComputedStyleConstants");
 local Color = commonlib.gettable("System.Windows.mcml.style.Color");
 local Length = commonlib.gettable("System.Windows.mcml.platform.Length");
@@ -59,6 +61,8 @@ end
 
 local number_fields = {
 	["border-width"] = true,
+	["text-shadow-offset-x"] = true,
+	["text-shadow-offset-y"] = true,
 };
 
 local length_fields = {
@@ -94,7 +98,7 @@ local color_fields = {
 	["color"] = true,
 	["border-color"] = true,
 	["background-color"] = true,
-	--["shadow-color"] = true,
+	["shadow-color"] = true,
 	["caret-color"] = true,
 };
 
@@ -239,6 +243,14 @@ function CSSProperty:CreateValueFromCssString()
 	if(name == "font-size") then
 		local value = string.match(value, "%d+");
 		return tonumber(value);
+	end
+
+	if(name == "text-shadow") then
+		if(value == "true") then
+			return "initial";
+		else
+			return ShadowData.CreateFromCssTextShadow(value);
+		end
 	end
 
 	return value;

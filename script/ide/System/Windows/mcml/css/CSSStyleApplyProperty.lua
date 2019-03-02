@@ -222,7 +222,10 @@ function CSSStyleApplyProperty:init()
 	self:SetPropertyHandler("visibility", ApplyPropertyDefault:new():init(ComputedStyle.Visibility, ComputedStyle.SetVisibility, ComputedStyle.initialVisibility));
 
 
-	self:SetPropertyHandler("text-shadow", ApplyPropertyDefault:new():init(ComputedStyle.TextShadow, ComputedStyle.SetTextShadow));
+	self:SetPropertyHandler("text-shadow", ApplyPropertyDefault:new():init(ComputedStyle.TextShadow, ComputedStyle.SetTextShadow, ComputedStyle.InitialTextShadow));
+	self:SetPropertyHandler("text-shadow-offset-x", ApplyPropertyDefault:new():init(ComputedStyle.TextShadowX, ComputedStyle.SetTextShadowX));
+	self:SetPropertyHandler("text-shadow-offset-y", ApplyPropertyDefault:new():init(ComputedStyle.TextShadowY, ComputedStyle.SetTextShadowY));
+	self:SetPropertyHandler("shadow-color", ApplyPropertyDefault:new():init(ComputedStyle.TextShadowColor, ComputedStyle.SetTextShadowColor));
 	self:SetPropertyHandler("line-height", ApplyPropertyDefault:new():init(ComputedStyle.LineHeight, ComputedStyle.SetLineHeight, ComputedStyle.initialLineHeight));
 
 	self:SetPropertyHandler("appearance", ApplyPropertyDefault:new():init(ComputedStyle.Appearance, ComputedStyle.SetAppearance, ComputedStyle.initialAppearance));

@@ -26,12 +26,12 @@ function pe_editbox:CreateControl()
 	local _this = EditBox:new():init(parentElem);
 	self:SetControl(_this);
 
+	local type = self:GetAttributeWithCode("type", nil, true);
+	_this:setEncrypted(type == "password");
+
 	_this:SetText(self:GetAttributeWithCode("value", nil, true));
 	_this:SetEmptyText(self:GetAttributeWithCode("EmptyText", nil, true));
 	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
-
-	local type = self:GetAttributeWithCode("type", nil, true);
-	_this:setEncrypted(type == "password");
 
 	local beFocus = self:GetBool("autofocus");
 	if(beFocus) then

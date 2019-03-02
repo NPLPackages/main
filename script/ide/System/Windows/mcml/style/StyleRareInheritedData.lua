@@ -15,8 +15,6 @@ local StyleRareInheritedData = commonlib.gettable("System.Windows.mcml.style.Sty
 NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyle.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/style/ShadowData.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyleConstants.lua");
-NPL.load("(gl)script/ide/System/Windows/mcml/style/ShadowData.lua");
-local ShadowData = commonlib.gettable("System.Windows.mcml.style.ShadowData");
 local ComputedStyleConstants = commonlib.gettable("System.Windows.mcml.style.ComputedStyleConstants");
 local ShadowData = commonlib.gettable("System.Windows.mcml.style.ShadowData");
 local ComputedStyle = commonlib.gettable("System.Windows.mcml.style.ComputedStyle");
