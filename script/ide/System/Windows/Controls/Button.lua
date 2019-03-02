@@ -30,6 +30,7 @@ function Button:ctor()
 		["check"] = nil,
 		["narrow"] = nil,
 		["radio"] = nil,
+		["close"] = nil,
 	};
 	-- all direction value
 	self.directions = {
@@ -52,6 +53,7 @@ local styles = {
 	["check"] = true,
 	["narrow"] = true,
 	["radio"] = true,
+	["close"] = true,
 };
 
 function Button:SetPolygonStyle(style)

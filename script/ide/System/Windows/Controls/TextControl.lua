@@ -627,6 +627,9 @@ function TextControl:keyPressEvent(event)
 		if (not self:isReadOnly()) then
 			self:redo();
 		end
+	elseif(event:IsKeySequence("Search")) then
+		local selectedText = self:selectedText();
+		self.parent:Search(selectedText);
 	else
 		if(event:IsFunctionKey() or event.ctrl_pressed) then
 			unknown = true;
@@ -1408,6 +1411,50 @@ function TextControl:hasSelectedText()
 		return false;
 	end
 	return true;
+end
+
+function TextControl:searchNext(text)
+	local lineIndex = self.cursorLine;
+	local initPos = self.cursorPos + 1;
+	local lineUniStr = self:GetLineText(lineIndex)
+
+	local count = 0;
+
+	local sPos, ePos;
+	while(not sPos or not ePos) do
+		if(initPos > lineUniStr:length()) then
+			if(lineIndex == #self.items) then
+				lineIndex = 1;
+			else
+				lineIndex = lineIndex + 1;
+			end
+			lineUniStr = self:GetLineText(lineIndex);
+			initPos = 1;
+		end
+		if((self.cursorLine ~= #self.items and lineIndex == self.cursorLine + 1) or 
+			(self.cursorLine == #self.items and lineIndex == 1)) then
+			count = count + 1;
+			if(count > 1) then
+				break;
+			end
+		end
+
+		sPos, ePos = lineUniStr:findFirstOf(text, initPos);
+
+		initPos = lineUniStr:length() + 1;
+	end
+
+	if(lineIndex and sPos and ePos) then
+		local selStart = {line = lineIndex, pos = sPos - 1};
+		local selEnd = {line = lineIndex, pos = ePos};
+		self:setSelect(selStart, selEnd, selEnd, true);
+	end
+
+	self.parent:SearchResult(sPos ~= nil);
+end
+
+function TextControl:searchPrevious(text)
+
 end
 
 function TextControl:setSelect(selStart, selEnd, cursorPos, adjustCursor)

@@ -20,6 +20,8 @@ NPL.load("(gl)script/ide/System/Windows/Controls/ScrollBar.lua");
 NPL.load("(gl)script/ide/math/Point.lua");
 NPL.load("(gl)script/ide/System/Windows/Controls/TextControl.lua");
 NPL.load("(gl)script/ide/System/Windows/Controls/Button.lua");
+NPL.load("(gl)script/ide/System/Windows/Controls/SearchBox.lua");
+local SearchBox = commonlib.gettable("System.Windows.Controls.SearchBox");
 local Button = commonlib.gettable("System.Windows.Controls.Button");
 local TextControl = commonlib.gettable("System.Windows.Controls.TextControl");
 local Point = commonlib.gettable("mathlib.Point");
@@ -83,15 +85,54 @@ MultiLineEditbox:Signal("textChanged");
 
 
 function MultiLineEditbox:ctor()
+	self.searchbox = nil;
 --	self:setFocusPolicy(FocusPolicy.StrongFocus);
 --	self:setAttribute("WA_InputMethodEnabled");
 --	self:setMouseTracking(true);
 	self.clip = self.showLineNumber;
 end
 
+function MultiLineEditbox:dettachSearchBox()
+	if(self.searchbox.parent) then
+		self.searchbox:SetParent(nil);
+	end
+end
+
+function MultiLineEditbox:attachSearchBox()
+	if(not self.searchbox.parent) then
+		self.searchbox:SetParent(self);
+	end
+end
+
 function MultiLineEditbox:init(parent)
 	MultiLineEditbox._super.init(self, parent);
+	self.searchbox = SearchBox:new():init();
+	--self.searchbox:hide();
+	self.searchbox:Connect("closed",function()
+		self:dettachSearchBox();
+		self.viewport:setFocus("OtherFocusReason");
+	end)
+	self.searchbox:Connect("textChanged",function()
+		
+	end)
+	self.searchbox:Connect("moveDown",function(text)
+		self.viewport:searchNext(text);
+	end)
 	return self;
+end
+
+function MultiLineEditbox:Search(text)
+	local viewRect = self:ViewRegion()
+	local x = viewRect:x() + viewRect:width() - self.searchbox:calculateWidth();
+	local y = viewRect:y()
+	self:attachSearchBox();
+
+	self.searchbox:setPosition(x, y)
+	self.searchbox:setSearchContent(text);
+end
+
+function MultiLineEditbox:SearchResult(b)
+	self.searchbox:searchResult(b)
 end
 
 function MultiLineEditbox:ShowIMEButton(bShow)

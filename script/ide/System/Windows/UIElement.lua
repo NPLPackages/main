@@ -155,6 +155,9 @@ end
 
 -- the native window object at the root of parent.
 function UIElement:GetWindow()
+	if(not self.window and self.parent) then
+		return self.parent:GetWindow();
+	end
 	return self.window;
 end
 
@@ -427,7 +430,7 @@ function UIElement:update()
 end
 
 function UIElement:isActiveWindow()
-	return (self.window and self.window == Application:activeWindow());
+	return (self:GetWindow() and self:GetWindow() == Application:activeWindow());
 end
 
 function UIElement:focusPolicy()
