@@ -1149,6 +1149,7 @@
     <None Include="script\ide\System\Windows\Controls\MultiLineEditbox.lua" />
     <None Include="script\ide\System\Windows\Controls\Primitives\ScrollAreaBase.lua" />
     <None Include="script\ide\System\Windows\Controls\Primitives\SliderBase.lua" />
+    <None Include="script\ide\System\Windows\Controls\SearchBox.lua" />
     <None Include="script\ide\System\Windows\UITextElement.lua" />
     <None Include="script\ide\System\Windows\Controls\ProgressBar.lua" />
     <None Include="script\ide\System\Windows\Controls\ScrollArea.lua" />
