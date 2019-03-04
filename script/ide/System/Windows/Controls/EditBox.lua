@@ -980,7 +980,9 @@ function EditBox:keyPressEvent(event)
             self:del();
 		end
 	else
-		unknown = true;
+		if(event:IsFunctionKey() or event.ctrl_pressed) then
+			unknown = true;
+		end
 	end
 
 	if (unknown) then

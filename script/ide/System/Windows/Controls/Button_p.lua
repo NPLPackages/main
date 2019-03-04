@@ -476,10 +476,10 @@ function Button:paintCloseButton(painter)
 	if (self.down or self.menuOpen) then
 		-- BackgroundDown
 		--painter:SetPen("#000000");
-		painter:SetPen("#ffd700");
+		painter:SetPen("#808080");
 		painter:DrawRectTexture(self:x(), self:y(), self:width(), self:height(), "");
 	elseif(self:underMouse()) then
-		painter:SetPen("#ffff00");
+		painter:SetPen("#cccccc");
 		painter:DrawRectTexture(self:x(), self:y(), self:width(), self:height(), "");
 	end
 

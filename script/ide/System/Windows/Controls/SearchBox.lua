@@ -12,6 +12,8 @@ local SearchBox = commonlib.gettable("System.Windows.Controls.SearchBox");
 NPL.load("(gl)script/ide/System/Windows/UIElement.lua");
 NPL.load("(gl)script/ide/System/Windows/Controls/EditBox.lua");
 NPL.load("(gl)script/ide/System/Windows/Controls/Button.lua");
+NPL.load("(gl)script/ide/System/Scene/Overlays/ShapesDrawer.lua");
+local ShapesDrawer = commonlib.gettable("System.Scene.Overlays.ShapesDrawer");
 local Button = commonlib.gettable("System.Windows.Controls.Button");
 local EditBox = commonlib.gettable("System.Windows.Controls.EditBox");
 local SearchBox = commonlib.inherit(commonlib.gettable("System.Windows.UIElement"), commonlib.gettable("System.Windows.Controls.SearchBox"));
@@ -185,35 +187,17 @@ function SearchBox:searchResult(b)
 	self.inputbox:SetColor(color);
 end
 
+-- for performance reasons, use global variables
+local pen = {};
+
 function SearchBox:paintBorder(painter)
 	local borderWidth = self:GetBorderWidth();
-	painter:SetPen({width = borderWidth, color = self:GetBorderColor()});
+	
+	pen.width = borderWidth;
+	pen.color = self:GetBorderColor();
+	painter:SetPen(pen);
 
-	local x, y, w, h = self:x(), self:y(), self:width(), self:height();
-	local borderLines = {};
-	for i = 1, 8 do
-		borderLines[i] = borderLines[i] or {};
-		if(i == 1) then
-			borderLines[i][1] = x;
-			borderLines[i][2] = y;
-			borderLines[i][3] = 0;
-		elseif(i == 2 or i == 3) then
-			borderLines[i][1] = x + w;
-			borderLines[i][2] = y;
-			borderLines[i][3] = 0;
-		elseif(i == 4 or i == 5) then
-			borderLines[i][1] = x + w - borderWidth;
-			borderLines[i][2] = y + h;
-			borderLines[i][3] = 0;
-		elseif(i == 6 or i == 7) then
-			borderLines[i][1] = x;
-			borderLines[i][2] = y + h;
-			borderLines[i][3] = 0;
-		else
-			borderLines[i] = borderLines[1];
-		end
-	end
-	painter:DrawLineList(borderLines);
+	ShapesDrawer.DrawRect2DBorder(painter, self:x(), self:y(), self:width(), self:height())
 end
 
 function SearchBox:paintEvent(painter)

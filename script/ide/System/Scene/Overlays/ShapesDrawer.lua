@@ -438,3 +438,30 @@ function ShapesDrawer.DrawArrowHead(painter, cx,cy,cz, axis, radius, length, seg
 	ShapesDrawer.DrawCircle(painter, cx,cy,cz, radius, axis, true, segment, 0, two_pi);
 	ShapesDrawer.DrawCircle(painter, cx,cy,cz, radius, axis, true, segment, 0, two_pi, length);
 end
+
+local borderVertices = {{}, {}, {}, {}, {}, {}, {}, {},};
+borderVertices[8] = borderVertices[1]
+borderVertices[3] = borderVertices[2]
+borderVertices[5] = borderVertices[4]
+borderVertices[7] = borderVertices[6]
+
+function ShapesDrawer.DrawRect2DBorder(painter, x, y, width, height, zValue)
+	zValue = zValue or 0
+	borderVertices[1][1] = x;
+	borderVertices[1][2] = y;
+	borderVertices[1][3] = zValue;
+
+	borderVertices[2][1] = x + width;
+	borderVertices[2][2] = y;
+	borderVertices[2][3] = zValue;
+
+	borderVertices[4][1] = x + width;
+	borderVertices[4][2] = y + height;
+	borderVertices[4][3] = zValue;
+
+	borderVertices[6][1] = x;
+	borderVertices[6][2] = y + height;
+	borderVertices[6][3] = zValue;
+		
+	painter:DrawLineList(borderVertices, 4);
+end
