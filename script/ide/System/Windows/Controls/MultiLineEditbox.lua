@@ -92,7 +92,7 @@ function MultiLineEditbox:ctor()
 	self.clip = self.showLineNumber;
 end
 
-function MultiLineEditbox:dettachSearchBox()
+function MultiLineEditbox:detachSearchBox()
 	if(self.searchbox.parent) then
 		self.searchbox:SetParent(nil);
 	end
@@ -109,7 +109,7 @@ function MultiLineEditbox:init(parent)
 	self.searchbox = SearchBox:new():init();
 	--self.searchbox:hide();
 	self.searchbox:Connect("closed",function()
-		self:dettachSearchBox();
+		self:detachSearchBox();
 		self.viewport:setFocus("OtherFocusReason");
 	end)
 	self.searchbox:Connect("textChanged",function()
