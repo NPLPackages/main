@@ -153,7 +153,7 @@ function Binding.PosVec3ToString(fromNode, fromPropertyName, fromDefaultValue, t
 		return
 	elseif(newToValue and newToValue~=oldToValue) then
 		if(oldToValue) then
-			local x, y, z = oldToValue:match("^([%d%.]+)[,%s]+([%d%.]+)[,%s]+([%d%.]+)$");
+			local x, y, z = oldToValue:match("^(-?[%d%.]+)[,%s]+(-?[%d%.]+)[,%s]+(-?[%d%.]+)$");
 			if(x and y and z) then
 				x = tonumber(x);
 				y = tonumber(y);
@@ -187,7 +187,7 @@ function Binding.StringToPosVec3(fromNode, fromPropertyName, fromDefaultValue, t
 	local fromValue = GetValue(fromNode, fromPropertyName, fromDefaultValue);
 	local newToValue;
 	if(fromValue) then
-		local x, y, z = fromValue:match("^([%d%.]+)[,%s]+([%d%.]+)[,%s]+([%d%.]+)$");
+		local x, y, z = fromValue:match("^(-?[%d%.]+)[,%s]+(-?[%d%.]+)[,%s]+(-?[%d%.]+)$");
 		if(x and y and z) then
 			x = tonumber(x);
 			y = tonumber(y);
@@ -199,13 +199,13 @@ function Binding.StringToPosVec3(fromNode, fromPropertyName, fromDefaultValue, t
 			end
 			newToValue = {x,y,z};
 		else
-			return
+			return true;
 		end
 	end
-	local oldToValue = GetValue(toNode, toPropertyName);
+	local oldToValue = GetValue(toNode, toPropertyName, toDefaultValue);
 	if(fromValue == fromDefaultValue and not oldToValue and not toDefaultValue) then
 		-- preserve nil value if fromValue is not changed
-		return
+		return true;
 	elseif(newToValue and not commonlib.partialcompare(newToValue, oldToValue, tolerance)) then
 		SetValue(toNode, toPropertyName, newToValue);
 		return true;
