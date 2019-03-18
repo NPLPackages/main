@@ -215,14 +215,14 @@ function LayoutBox:Offset(offset_x, offset_y, beMovedControl)
 	self:Move(x,y,beMovedControl);
 end
 
--- frame_rect x or y changed
-function LayoutBox:LocationChanged()
-
-end
--- frame_rect width or heihgt changed
-function LayoutBox:SizeChanged()
-
-end
+---- frame_rect x or y changed
+--function LayoutBox:LocationChanged()
+--
+--end
+---- frame_rect width or heihgt changed
+--function LayoutBox:SizeChanged()
+--
+--end
 
 function LayoutBox:MarginTop()
 	return self.marginTop;
@@ -388,9 +388,9 @@ function LayoutBox:BorderBoundingBox()
 	return self:BorderBoxRect();
 end
 
-function LayoutBox:PaddingBoxRect()
-	return self:ClientLeft(), self:ClientTop(), self:ClientWidth(), self:ClientHeight();
-end
+--function LayoutBox:PaddingBoxRect()
+--	return Rect:new_from_pool(self:ClientLeft(), self:ClientTop(), self:ClientWidth(), self:ClientHeight());
+--end
 
 --bool RenderBox::includeVerticalScrollbarSize() const
 function LayoutBox:IncludeVerticalScrollbarSize()
@@ -457,9 +457,9 @@ function LayoutBox:ClientBoxRect()
 	return LayoutRect:new(self:ClientLeft(), self:ClientTop(), self:ClientWidth(), self:ClientHeight());
 end
 
-function LayoutBox:ClientSize()
-	return self:ClientWidth(), self:ClientHeight();
-end
+--function LayoutBox:ClientSize()
+--	return self:ClientWidth(), self:ClientHeight();
+--end
 
 function LayoutBox:OffsetWidth()
 	return self.frame_rect.w;
@@ -493,18 +493,18 @@ function LayoutBox:ContentLogicalHeight()
 	return height;
 end
 
-function LayoutBox:ContentSize()
-	return self:ContentWidth(), self:ContentHeight();
-end
+--function LayoutBox:ContentSize()
+--	return self:ContentWidth(), self:ContentHeight();
+--end
 
 -- return the left,top,width,height
 function LayoutBox:ContentBoxRect()
-	return self:BorderLeft() + self:PaddingLeft(), self:BorderTop() + self:PaddingTop(), self:ContentWidth(), self:ContentHeight();
+	return LayoutRect:new(self:BorderLeft() + self:PaddingLeft(), self:BorderTop() + self:PaddingTop(), self:ContentWidth(), self:ContentHeight());
 end
 
-function LayoutBox:ContentBoxOffset()
-	return self:BorderLeft() + self:PaddingLeft(), self:BorderTop() + self:PaddingTop();
-end
+--function LayoutBox:ContentBoxOffset()
+--	return self:BorderLeft() + self:PaddingLeft(), self:BorderTop() + self:PaddingTop();
+--end
 
 function LayoutBox:LogicalLeft()
 	return if_else(self:Style():IsHorizontalWritingMode(), self:X(), self:Y());
@@ -752,7 +752,11 @@ function LayoutBox:Layout()
 end
 
 function LayoutBox:ComputeLogicalWidth()
-	self:ComputeLogicalWidthInRegion();
+	if(self:Node() and self:Node():HasTagName("html")) then
+		self:SetLogicalWidth(self:Document():View():Width());
+	else
+		self:ComputeLogicalWidthInRegion();
+	end
 end
 
 --function LayoutBox:LengthIsIntrinsicOrAuto(length)
@@ -1756,6 +1760,12 @@ function LayoutBox:ComputeLogicalHeightUsing(h)
 end
 
 function LayoutBox:ComputeLogicalHeight()
+	if(self:Node() and self:Node():HasTagName("html")) then
+		self:SetLogicalHeight(self:Document():View():Height());
+		return;
+	end
+
+
 	if (self:IsTableCell() or (self:IsInline() and not self:IsReplaced())) then
         return;
 	end

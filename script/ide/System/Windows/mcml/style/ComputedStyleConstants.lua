@@ -557,3 +557,14 @@ ComputedStyleConstants.ControlPartEnum = EnumCreater.Transform({
 	"RelevancyLevelIndicatorPart", "ContinuousCapacityLevelIndicatorPart", "DiscreteCapacityLevelIndicatorPart", "RatingLevelIndicatorPart",
 	"TextAreaPart", "CapsLockIndicatorPart"
 });
+
+
+local StyleChangeTypeEnum = 
+{
+	["NoStyleChange"] = 0, 
+    ["InlineStyleChange"] = 1,
+    ["FullStyleChange"] = 2,
+    ["SyntheticStyleChange"] = 3,
+}
+
+ComputedStyleConstants.StyleChangeTypeEnum = StyleChangeTypeEnum;

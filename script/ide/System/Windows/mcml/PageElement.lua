@@ -75,15 +75,16 @@ local LOG = LOG;
 local NameNodeMap_ = {};
 local commonlib = commonlib.gettable("commonlib");
 
-local StyleChangeTypeEnum = 
-{
-	["NoStyleChange"] = 0, 
-    ["InlineStyleChange"] = 1,
-    ["FullStyleChange"] = 2,
-    ["SyntheticStyleChange"] = 3,
-}
-
-PageElement.StyleChangeTypeEnum = StyleChangeTypeEnum;
+local StyleChangeTypeEnum = ComputedStyleConstants.StyleChangeTypeEnum;
+--{
+--	["NoStyleChange"] = 0, 
+--    ["InlineStyleChange"] = 1,
+--    ["FullStyleChange"] = 2,
+--    ["SyntheticStyleChange"] = 3,
+--}
+--
+--PageElement.StyleChangeTypeEnum = StyleChangeTypeEnum;
+--echo("1111111111111111")
 
 local StyleChangeEnum = { 
 	["NoChange"] = 0,
@@ -104,6 +105,7 @@ local DefaultFlagValues = {
 	["HasClassFlag"] = false;
 	["IsAttachedFlag"] = false;
 	["ChildNeedsStyleRecalcFlag"] = false;
+	["InDocumentFlag"] = false;
 	["IsLinkFlag"] = false;
     ["IsActiveFlag"] = false;
     ["IsHoveredFlag"] = false;
@@ -132,6 +134,8 @@ function NodeFlags:Reset(mask)
 end
 
 function PageElement:ctor()
+	echo("PageElement:ctor")
+	self.m_document = nil;
 	self.isPageElement = true;
 
 	self.layout_object = nil;
@@ -157,6 +161,8 @@ end
 -- @param o: pure xml node table. 
 -- @return the input o is returned. 
 function PageElement:createFromXmlNode(o)
+	echo("PageElement:createFromXmlNode")
+--	echo(o)
 	o = self:new(o);
 	o:BeginParsingChildren();
 	o:createChildRecursive_helper();
@@ -353,6 +359,7 @@ end
 -- @param parentLayout: only for casual initial layout. 
 -- @return used_width, used_height
 function PageElement:LoadComponent(parentElem, parentLayout, styleItem)
+	echo("PageElement:LoadComponent")
 	-- apply models
 	self:ApplyPreValues();
 
@@ -417,12 +424,14 @@ function PageElement:CreateLayoutObject(arena, style)
 	return LayoutObject.CreateLayoutObject(self, style);
 end
 
+PageElement.CreateRenderer = PageElement.CreateLayoutObject;
+
 function PageElement:GetLayoutObject()
 	return self.layout_object;
 end
 
 function PageElement:Renderer()
-	return self.layout_object;
+	return self:GetLayoutObject();
 end
 
 function PageElement:SetLayoutObject(layout_object)
@@ -433,12 +442,17 @@ function PageElement:SetRenderer(renderer)
 	self.layout_object = renderer;
 end
 
+function PageElement:CreateRendererIfNeeded()
+	LayoutTreeBuilder:init(self):CreateLayoutObjectIfNeeded();
+end
+
 function PageElement:attachLayoutTree()
 	echo("PageElement:attachLayoutTree")
 	self:PrintNodeInfo()
 	--local computed_style = self:StyleForLayoutObject();
 	--local computed_style = if_else(self.style, self.style.computed_style, nil);
-	LayoutTreeBuilder:init(self):CreateLayoutObjectIfNeeded();
+	
+	self:CreateRendererIfNeeded();
 
 	local child = self.m_firstChild;
 	while(child) do
@@ -453,7 +467,9 @@ function PageElement:attachLayoutTree()
     self:ClearNeedsStyleRecalc();
 end
 
---PageElement.Attach = PageElement.attachLayoutTree;
+
+
+PageElement.Attach = PageElement.attachLayoutTree;
 
 function PageElement:reattachLayoutTree()
 	echo("PageElement:reattachLayoutTree")
@@ -465,7 +481,7 @@ function PageElement:reattachLayoutTree()
     self:attachLayoutTree();
 end
 
---PageElement.Reattach = PageElement.reattachLayoutTree;
+PageElement.Reattach = PageElement.reattachLayoutTree;
 
 function PageElement:detachLayoutTree()
 	echo("PageElement:detachLayoutTree")
@@ -503,7 +519,7 @@ function PageElement:detachLayoutTree()
     self:ClearFlag("InDetachFlag");	
 end
 
---PageElement.Detach = PageElement.detachLayoutTree;
+PageElement.Detach = PageElement.detachLayoutTree;
 
 -- private: redirector
 local function paintEventRedirectFunc(uiElement, painter)
@@ -1487,7 +1503,7 @@ function PageElement:StyleForLayoutObject()
 --		end
 --	end
 --	return self:CreateStyle(nil, parent_style);
-	return self:GetPageCtrl():StyleSelector():StyleForElement(self, nil, true);
+	return self:Document():StyleSelector():StyleForElement(self, nil, true);
 end
 
 --static inline void collectNodes(Node* node, NodeVector& nodes)
@@ -1986,7 +2002,9 @@ function PageElement:GetRoot()
 	return parent;
 end
 
-PageElement.Document = PageElement.GetRoot;
+function PageElement:Document()
+	return self:GetRoot();
+end
 
 -- Get the page control(PageCtrl) that loaded this mcml page. 
 function PageElement:GetPageCtrl()
@@ -3176,6 +3194,14 @@ function PageElement:ClearIsStyleAttributeValid()
 	self:ClearFlag("IsStyleAttributeValidFlag");
 end
 
+function PageElement:SetInDocument()
+	self:SetFlag("InDocumentFlag");
+end
+
+function PageElement:ClearInDocument()
+	self:ClearFlag("InDocumentFlag");
+end
+
 function PageElement:HasID() 
 	return self:GetFlag("HasIDFlag");
 end
@@ -3225,8 +3251,8 @@ function PageElement:InDetach()
 end
 
 function PageElement:PostLayoutRequestEvent()
-	if(self:GetPageCtrl()) then
-		self:GetPageCtrl():PostLayoutRequestEvent();
+	if(self:Document() and self:Document():View()) then
+		self:Document():View():PostLayoutRequestEvent();
 	end
 end
 
@@ -3411,3 +3437,38 @@ function PageElement:RemoveChildren()
 end
 
 PageElement.ClearAllChildren = PageElement.RemoveChildren;
+
+--bool inDocument() const 
+function PageElement:InDocument()
+    --ASSERT(m_document || !getFlag(InDocumentFlag));
+    return self:GetFlag("InDocumentFlag");
+end
+
+--void Node::insertedIntoDocument()
+function PageElement:InsertedIntoDocument()
+    self:SetInDocument();
+end
+
+--void Node::removedFromDocument()
+function PageElement:RemovedFromDocument()
+    self:ClearInDocument();
+end
+
+--inline bool Node::isDocumentNode() const
+function PageElement:IsDocumentNode()
+    return self == self.m_document;
+end
+
+--inline Element* firstElementChild(const ContainerNode* container)
+function PageElement:FirstElementChild(container)
+    --ASSERT_ARG(container, container);
+    local child = container:FirstChild();
+	return child;
+--    while (child and not child->isElementNode())
+--        child = child->nextSibling();
+--    return static_cast<Element*>(child);
+end
+
+function PageElement:IsFrameOwnerElement() 
+	return false; 
+end

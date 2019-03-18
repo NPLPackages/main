@@ -29,7 +29,9 @@ local LayoutRect = Rect;
 local FrameView = commonlib.inherit(commonlib.gettable("System.Windows.mcml.platform.ScrollView"), commonlib.gettable("System.Windows.mcml.page.FrameView"));
 
 function FrameView:ctor()
-	self.parent = nil;
+	self.m_frame = nil;
+
+	self.uiElement = nil;
 	self.page = nil;
 
 	-- the vector of "IntRect"(System.Windows.mcml.platform.graphics.IntRect)
@@ -53,14 +55,38 @@ function FrameView:ctor()
 
 	self.isTrackingRepaints = false;
 	self.trackedRepaintRects = commonlib.Array:new();
+
+	self.m_isPainting = false;
 end
 
-function FrameView:init()
+function FrameView:init(frame)
+	self.m_frame = frame;
+	if(self.m_frame) then
+		local page = self.m_frame:Page();
+		if(page) then
+			self.page = page;
+		end
+	end
+
 	self:reset();
 
 	self.size = LayoutSize:new();
 
 	return self;
+end
+
+--PassRefPtr<FrameView> FrameView::create(Frame* frame, const IntSize& initialSize)
+function FrameView.Create(frame, initialSize)
+    local view = FrameView:new():init(frame);
+	if(initialSize) then
+		view:SetFrameRect(LayoutRect:new(view:Location(), initialSize));
+	end
+    --view->show();
+    return view;
+end
+
+function FrameView:Frame()
+	return self.m_frame;
 end
 
 function FrameView:reset()
@@ -84,18 +110,17 @@ function FrameView:NeedsFullRepaint()
 	return self.doFullRepaint;
 end
 
--- initialize a top level layout manager for a given page object(parent).
+-- initialize a top level layout manager for a given page object(uiElement).
 function FrameView:SetPage(page, uiElement)
-	self.parent = uiElement;
+	self.uiElement = uiElement;
 	self.page = page;
 end
 
-function FrameView:RootLayout()
-	if(self.page and self.page.mcmlNode) then
-		--return self.page:GetLayoutObject();
-		return self.page.mcmlNode:GetLayoutObject();
+function FrameView:SetUIElement(uiElement)
+	self.uiElement = uiElement;
+	if(uiElement) then
+		uiElement.layout = self;
 	end
-	return nil;
 end
 
 function FrameView:BeginDeferredRepaints()
@@ -153,11 +178,34 @@ function FrameView:DoDeferredRepaints()
     self:UpdateDeferredRepaintDelay();
 end
 
+--static inline RenderView* rootRenderer(const FrameView* view)
+local function rootRenderer(view)
+	if(view:Frame()) then
+		return view:Frame():ContentRenderer()
+	end
+    return nil;
+end
+
 function FrameView:Layout()
 	echo("FrameView:Layout")
+	if(self.m_frame.m_ownerElement) then
+		self.m_frame.m_ownerElement:PrintNodeInfo();
+	else
+		echo("not m_ownerElement")
+	end
+	if(not self.page:LoadFinshed()) then
+		return;
+	end
+
 	if(self.inLayout) then
 		return;
 	end
+
+	if (self:IsPainting()) then
+        return;
+	end
+
+	local document = self.m_frame:Document();
 
 --	// Viewport-dependent media queries may cause us to need completely different style information.
 --    // Check that here.
@@ -166,22 +214,25 @@ function FrameView:Layout()
 --
 --    // Always ensure our style info is up-to-date.  This can happen in situations where
 --    // the layout beats any sort of style recalc update that needs to occur.
---    document->updateStyleIfNeeded();
-	if(self.page and self.page.mcmlNode) then
-		self.page.mcmlNode:UpdateStyleIfNeeded();
-	end
+	document:UpdateStyleIfNeeded();
 
 	--bool subtree = m_layoutRoot;
 	local subtree = if_else(self.layoutRoot, true, false);
 
-	local root = if_else(subtree, self.layoutRoot, self:RootLayout());
+	local root = self.layoutRoot;
+	if(not subtree) then
+		root = document:Renderer();
+	end
+
 	if(not root) then
 		return;
 	end
 
 	--m_doFullRepaint = !subtree && (m_firstLayout || toRenderView(root)->printing());
 	self.doFullRepaint = not subtree and self.firstLayout;
-
+	echo("FrameView:Layout 1")
+	echo(subtree)
+	echo(self.m_frameRect)
 	if(not subtree) then
 		if (self.firstLayout) then
 			self.firstLayout = false;
@@ -195,14 +246,14 @@ function FrameView:Layout()
 			self:RepaintContentRectangle(LayoutRect:new(0, 0, self.size:Width(), self.size:Height()));
 		end
 	end
-
+	echo("FrameView:Layout 2")
 	local layer = root:EnclosingLayer();
 
 	self.inLayout = true;
 	self:BeginDeferredRepaints();
 	root:Layout();
 	self:EndDeferredRepaints();
-	self.inLayout = false;
+	
 
 	self.layoutRoot = nil;
 
@@ -210,19 +261,22 @@ function FrameView:Layout()
 
 	layer:UpdateLayerPositions(if_else(hasLayerOffset, offsetFromRoot, nil), "CheckForRepaint");
 
+	local root = rootRenderer(self);
+    root:UpdateWidgetPositions();
+
+	self.inLayout = false;
+
 	self:RepaintIfNeeded();
 end
 
-----void ScrollView::paint(GraphicsContext* context, const IntRect& rect)
---function FrameView:Paint(context, rect)
---	local root = self:RootLayout();
---	local paintInfo = PaintInfo:new():init(context, rect, nil, nil, root);
---	local paintOffset = Point:new();
---	root:Paint(paintInfo, paintOffset);
---end
-
 function FrameView:RepaintIfNeeded()
 	echo("FrameView:RepaintIfNeeded()")
+
+	-- if it's sub frameview, the main frameview must be paint before.
+	if(self:Parent() and self:Parent():IsInLayout()) then
+		return;
+	end
+
 	if(not self.dirty) then
         return false;
 	end
@@ -242,7 +296,7 @@ function FrameView:activate()
 	if (self.activated) then
         return false;
 	end
-	if(self.page and self.parent) then
+	if(self.page and self.uiElement) then
 		self.activated = true;
 		self:Layout();
 	end
@@ -268,6 +322,10 @@ end
 function FrameView:widgetEvent(event)
 	local type = event:GetType();
 	if(type == "sizeEvent" or type == "LayoutRequestEvent") then
+		if(type == "sizeEvent") then
+			local uiElement = self.uiElement;
+			self:Resize(uiElement:width(), uiElement:height());
+		end
 		self:Layout();
 	end
 --	if(type == "sizeEvent") then
@@ -290,40 +348,12 @@ end
 
 -- If this item is a UI element, it is returned as a UI element; otherwise nil is returned. 
 function FrameView:widget()
-	return self.parent;
-end
-
-function FrameView:LayoutWidth()
-	if(self.parent) then
-		return self.parent:width();
-	end
-end
-
-function FrameView:LayoutHeight()
-	if(self.parent) then
-		return self.parent:height();
-	end
+	return self.uiElement;
 end
 
 function FrameView:GetUsedSize()
 	--TODO: fixed this function
 	return 0, 0;
-end
-
-function FrameView:VisibleWidth()
-	return self:VisibleContentRect():Width();
-end
-
-function FrameView:VisibleHeight()
-	return self:VisibleContentRect():Height();
-end
-
-function FrameView:VisibleContentRect(includeScrollbars)
-	includeScrollbars = if_else(includeScrollbars == nil, false, includeScrollbars);
-
-	-- TODO: fixed later;
-	local x ,y ,w, h = self.scrollOffset:Width(), self.scrollOffset:Height(), self:LayoutWidth(), self:LayoutHeight();
-	return Rect:new_from_pool(x ,y ,w, h);
 end
 
 function FrameView:AddDirtyArea(x, y, w, h)
@@ -444,13 +474,9 @@ function FrameView:RepaintContentRectangle(rect, immediate)
 --    ScrollView::repaintContentRectangle(r, immediate);
 end
 
---static inline RenderView* rootRenderer(const FrameView* view)
-local function rootRenderer(view)
-    return view:RootLayout();
-end
-
 --void FrameView::paintContents(GraphicsContext* p, const LayoutRect& rect)
 function FrameView:PaintContents(p, rect)
+	echo("FrameView:PaintContents")
 --	if (self:NeedsLayout()) then
 --        return;
 --	end
@@ -461,7 +487,7 @@ function FrameView:PaintContents(p, rect)
         return;
     end
 
-	self.isPainting = true;
+	self.m_isPainting = true;
 
     -- m_nodeToDraw is used to draw only one element (and its descendants)
     local eltRenderer;
@@ -475,5 +501,39 @@ function FrameView:PaintContents(p, rect)
 --    if (rootLayer->containsDirtyOverlayScrollbars())
 --        rootLayer->paintOverlayScrollbars(p, rect, m_paintBehavior, eltRenderer);
 
-    self.isPainting = false;
+    self.m_isPainting = false;
+end
+
+--bool FrameView::isPainting() const
+function FrameView:IsPainting()
+    return self.m_isPainting;
+end
+
+--bool FrameView::needsLayout() const
+function FrameView:NeedsLayout()
+    -- This can return true in cases where the document does not have a body yet.
+    -- Document::shouldScheduleLayout takes care of preventing us from scheduling
+    -- layout in that case.
+    if (not self.m_frame) then
+        return false;
+	end
+
+    local root = rootRenderer(self);
+	return root and root:NeedsLayout()
+--    return layoutPending()
+--        || (root && root->needsLayout())
+--        || m_layoutRoot
+--        || (m_deferSetNeedsLayouts && m_setNeedsLayoutWasDeferred);
+end
+
+function FrameView:SetNeedsLayout()
+--    if (m_deferSetNeedsLayouts) {
+--        m_setNeedsLayoutWasDeferred = true;
+--        return;
+--    }
+
+	local root = rootRenderer(self)
+    if (root) then
+        root:SetNeedsLayout(true);
+	end
 end

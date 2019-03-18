@@ -95,7 +95,7 @@ function mcml:LoadAllElements()
 	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_div.lua");
 	Elements.pe_div:RegisterAs("div", "pe:div", "NodeTemplate", "form");
 	Elements.pe_div:RegisterAs("h1", "h2", "h3", "h4");
-	Elements.pe_div:RegisterAs("p","DataNodePlaceholder");
+	Elements.pe_div:RegisterAs("html", "p", "DataNodePlaceholder");
 	Elements.pe_mcml:RegisterAs("pe:mcml");
 		NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_font.lua");
 		Elements.pe_font:RegisterAs("font");
@@ -157,6 +157,8 @@ function mcml:LoadAllElements()
 	Elements.pe_progressbar:RegisterAs("pe:progressbar", "progressbar");
 	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_iframe.lua");
 	Elements.pe_iframe:RegisterAs("iframe");
+	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/HTMLDocument.lua");
+	Elements.HTMLDocument:RegisterAs("document");
 	-- TODO: add all system defined page element here
 end
 

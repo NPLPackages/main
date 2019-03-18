@@ -220,8 +220,8 @@ function LayoutObject:GetControl()
 	if(self:IsAnonymous()) then
 		return self:GetAnonymousControl();
 	end
-	if(self.node) then
-		return self.node:GetControl();
+	if(self:Node()) then
+		return self:Node():GetControl();
 	end	
 end
 
@@ -238,8 +238,8 @@ function LayoutObject:GetOrCreateControl()
 	if(self:IsAnonymous()) then
 		return self:GetOrCreateAnonymousControl();
 	end
-	if(self.node) then
-		return self.node:GetOrCreateControl();
+	if(self:Node()) then
+		return self:Node():GetOrCreateControl();
 	end	
 end
 
@@ -383,13 +383,13 @@ function LayoutObject:LastChild()
     return nil;
 end
 
-function LayoutObject:isHidden()
-	return self.node:isHidden();
-end
-
-function LayoutObject:BeChanged()
-	return self.style:BeChanged();
-end
+--function LayoutObject:isHidden()
+--	return self.node:isHidden();
+--end
+--
+--function LayoutObject:BeChanged()
+--	return self.style:BeChanged();
+--end
 
 --function LayoutObject:CheckStyleChange()
 --	if(not self:BeChanged()) then
@@ -663,7 +663,7 @@ end
 function LayoutObject:IsLayoutInline()
 	return false;
 end
-function LayoutObject:IsLayoutPart()
+function LayoutObject:IsRenderPart()
 	return false;
 end
 function LayoutObject:IsLayoutRegion()
@@ -847,19 +847,19 @@ function LayoutObject:IsRoot()
 end
 
 function LayoutObject:IsBody()
-	return self.node and self.node.name == "body";
+	return self:Node() and self:Node():HasTagName("body");
 end
 
 function LayoutObject:IsHR()
-	return self.node and self.node.name == "hr";
+	return self:Node() and self:Node():HasTagName("hr");
 end
 
 function LayoutObject:IsLegend()
-	return self.node and self.node.name == "legend";
+	return self:Node() and self:Node():HasTagName("legend");
 end
 
 function LayoutObject:IsHTMLMarquee()
-	return self.node and self.node.name == "marquee";
+	return self:Node() and self:Node():HasTagName("marquee");
 end
 
 --@param obj: LayoutObject type
@@ -985,6 +985,18 @@ function LayoutObject:ToLayoutFrame()
 	end
 end
 LayoutObject.ToRenderFrame = LayoutObject.ToLayoutFrame
+
+function LayoutObject:ToRenderPart()
+	if(self:IsRenderPart()) then
+		return self;
+	end
+end
+
+function LayoutObject:ToRenderWidget()
+	if(self:IsWidget()) then
+		return self;
+	end
+end
 
 --function LayoutObject:AnonymousContainer(RenderObject* child)
 --        RenderObject* container = child;
@@ -1367,16 +1379,16 @@ function LayoutObject:Node()
 	return if_else(self.isAnonymous, nil, self.node);
 end
 
-function LayoutObject:Document() 
-	local node;
-	if(self.node) then
-		node = self.node;
-	elseif(self:Parent()) then
-		node = self:Parent():Node();
-	end
-	if(node) then
-		return node:Document();
-	end
+function LayoutObject:SetNode(node)
+	self.node = node;
+end
+
+function LayoutObject:Document()
+	return self.node:Document();
+end
+
+function LayoutObject:Frame() 
+	return self:Document():Frame();
 end
 
 function LayoutObject:Parent()
@@ -1384,23 +1396,16 @@ function LayoutObject:Parent()
 end
 
 function LayoutObject:View()
-	if(self:IsLayoutView()) then
-		return self;
-	end
-	local parent = self:Parent();
-	if(parent) then
-		return parent:View();
-	elseif(self:Document()) then
-		return self:Document():Renderer();
-	end
+	return self:Document():Renderer();
 end
 
 function LayoutObject:CheckForRepaintDuringLayout()
     -- FIXME: <https://bugs.webkit.org/show_bug.cgi?id=20885> It is probably safe to also require
     -- m_everHadLayout. Currently, only RenderBlock::layoutBlock() adds this condition. See also
     -- <https://bugs.webkit.org/show_bug.cgi?id=15129>.
-	local frameview = self:View():FrameView();
-    return not frameview:NeedsFullRepaint() and not self:HasLayer();
+--	local frameview = self:View():FrameView();
+--    return not frameview:NeedsFullRepaint() and not self:HasLayer();
+	return not self:Document():View():NeedsFullRepaint() and not self:HasLayer();
 end
 
 function LayoutObject:isRooted()
@@ -2178,7 +2183,7 @@ end
 
 function LayoutObject:PrintNodeInfo() 
 	echo(self:GetName())
-	if(self.node) then
+	if(self:Node()) then
 		echo(self.node.name);
 		if(self.node.attr and self.node.attr.name) then
 			echo(self.node.attr.name)

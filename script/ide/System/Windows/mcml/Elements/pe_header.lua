@@ -18,7 +18,7 @@ pe_header:Property({"class_name", "pe:header"});
 function pe_header:ctor()
 end
 
-function pe_header:LoadComponent(parentElem, parentLayout, styleItem)
-	local css = self:CreateStyle(mcml:GetStyleItem(self.name), styleItem);
-	pe_header._super.LoadComponent(self, parentElem, parentLayout, css);
-end
+--function pe_header:LoadComponent(parentElem, parentLayout, styleItem)
+--	local css = self:CreateStyle(mcml:GetStyleItem(self.name), styleItem);
+--	pe_header._super.LoadComponent(self, parentElem, parentLayout, css);
+--end

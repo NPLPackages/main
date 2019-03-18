@@ -12,6 +12,8 @@ local DocumentFragment = commonlib.gettable("System.Windows.mcml.DocumentFragmen
 NPL.load("(gl)script/ide/System/Windows/mcml/PageElement.lua");
 local DocumentFragment = commonlib.inherit(commonlib.gettable("System.Windows.mcml.PageElement"), commonlib.gettable("System.Windows.mcml.DocumentFragment"));
 
+DocumentFragment:Property("Name", "DocumentFragment");
+
 function DocumentFragment:ctor()
 	
 end

@@ -4231,7 +4231,7 @@ function LayoutBlock:CreateAnonymousBlock(isFlexibleBox)
 --        newBox = new (renderArena()) RenderDeprecatedFlexibleBox(document() /* anonymous box */);
     else
         newStyle:SetDisplay(DisplayEnum.BLOCK);
-        newBox = LayoutBlock:new():init();
+        newBox = LayoutBlock:new():init(self:Document());
     end
 	newBox:SetIsAnonymous(true);
 	--newBox:SetAnonymousControl(self:CreateAnonymousControl());

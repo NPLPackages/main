@@ -12,8 +12,8 @@ local style = CSSStyleDeclaration:new();
 ]]
 NPL.load("(gl)script/ide/System/Windows/mcml/css/StyleColor.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/css/CSSProperty.lua");
-NPL.load("(gl)script/ide/System/Windows/mcml/PageElement.lua");
-local PageElement = commonlib.gettable("System.Windows.mcml.PageElement");
+NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyleConstants.lua");
+local ComputedStyleConstants = commonlib.gettable("System.Windows.mcml.style.ComputedStyleConstants");
 local CSSProperty = commonlib.gettable("System.Windows.mcml.css.CSSProperty");
 local StyleColor = commonlib.gettable("System.Windows.mcml.css.StyleColor");
 
@@ -24,7 +24,7 @@ local string_lower = string.lower
 local string_match = string.match;
 local string_find = string.find;
 
-local StyleChangeTypeEnum = PageElement.StyleChangeTypeEnum;
+local StyleChangeTypeEnum = ComputedStyleConstants.StyleChangeTypeEnum;
 
 local CSSStyleDeclaration = commonlib.inherit(nil, commonlib.gettable("System.Windows.mcml.css.CSSStyleDeclaration"));
 

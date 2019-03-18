@@ -15,8 +15,6 @@ NPL.load("(gl)script/ide/System/Windows/Controls/ScrollAreaForPage.lua");
 local ScrollAreaForPage = commonlib.gettable("System.Windows.Controls.ScrollAreaForPage");
 local PageElement = commonlib.gettable("System.Windows.mcml.PageElement");
 
-local StyleChangeEnum = PageElement.StyleChangeEnum;
-
 local pe_div = commonlib.inherit(commonlib.gettable("System.Windows.mcml.PageElement"), commonlib.gettable("System.Windows.mcml.Elements.pe_div"));
 pe_div:Property({"class_name", "pe:div"});
 
@@ -24,11 +22,6 @@ function pe_div:ctor()
 	
 end
 
---function pe_div:CreateControl()
---	local parentElem = self:GetParentControl();
---	local _this = Rectangle:new():init(parentElem);
---	self:SetControl(_this);
---end
 function pe_div:CreateControl()
 echo("pe_div:CreateControl")
 echo(self.name)
@@ -254,98 +247,28 @@ function pe_div:OnClick()
 	return result;
 end
 
+NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutView.lua");
+local LayoutView = commonlib.gettable("System.Windows.mcml.layout.LayoutView");
 local pe_mcml = commonlib.inherit(commonlib.gettable("System.Windows.mcml.Elements.pe_div"), commonlib.gettable("System.Windows.mcml.Elements.pe_mcml"));
 pe_mcml:Property({"class_name", "pe:mcml"});
 
-local CompatibilityMode = 
-{
-	["QuirksMode"] = 1, 
-	["LimitedQuirksMode"] = 2, 
-	["NoQuirksMode"] = 3,
-}
-
 function pe_mcml:ctor()
-	self.m_usesFirstLineRules = false;
-	self.m_compatibilityMode = CompatibilityMode.NoQuirksMode;
-
-	self.m_inStyleRecalc = false;
-
-	self.frameView = nil;
+	
 end
 
-function pe_mcml:SetView(frameView)
-	self.frameView = frameView;
-end
-
-function pe_mcml:View()
-	return self.frameView;
-end
-
-function pe_mcml:CreateLayoutObject(arena, style)
-	return LayoutView:new():init(self, self.frameView);
-end
-
-function pe_mcml:UsesFirstLineRules() 
-	return self.m_usesFirstLineRules;
-end
-
-function pe_mcml:InNoQuirksMode()
-	return self.m_compatibilityMode == CompatibilityMode.NoQuirksMode; 
-end
-
-function pe_mcml:InQuirksMode()
-	return self.m_compatibilityMode == CompatibilityMode.QuirksMode;
-end
-
-function pe_mcml:DocumentElement()
-	return self;
-end
-
-function pe_mcml:RecalcStyle(change)
-	if(self.m_inStyleRecalc) then
-		return;
-	end
-
-	self.m_inStyleRecalc = true;
-
-	local frameView = self:View();
-    if (frameView) then
-        --frameView:PauseScheduledEvents();
-        frameView:BeginDeferredRepaints();
-    end
-
-	local node = self:FirstChild();
-	while(node) do
---        if (!n->isElementNode())
---            continue;
-        local element = node;
-        if (change >= StyleChangeEnum.Inherit or element:NeedsStyleRecalc() or element:ChildNeedsStyleRecalc()) then
-            element:RecalcStyle(change);
-		end
-
-		node = node:NextSibling();
-    end
-
-	self:ClearNeedsStyleRecalc();
-	self:ClearChildNeedsStyleRecalc();
---    unscheduleStyleRecalc();
-
-	self.m_inStyleRecalc = false;
-
-	if (frameView) then
-        --frameView->resumeScheduledEvents();
-        frameView:EndDeferredRepaints();
-    end
-end
-
-function pe_mcml:GetParentControl()
-	if(self.frameView) then
-		return self.frameView:widget();
-	end
-	return;
-end
-
-function pe_mcml:UpdateStyleIfNeeded()
-	--recalcStyle(NoChange);
-	self:RecalcStyle(StyleChangeEnum.NoChange);
-end
+--function pe_mcml:ParseAllMappedAttribute()
+--	local document = self:Document();
+--	local view = document:View();
+--	if(view) then
+--		local maxWidth, maxHeight = view:Width(), view:Height()
+--
+--		self.attr = self.attr or {};
+--		self.attr.style = self.attr.style or "";
+--
+--		self.attr.style = string.format("max-width:%dpx;max-height:%dpx;%s", maxWidth, maxHeight, self.attr.style);
+--		echo("self.attr.style");
+--		echo(self.attr.style)
+--	end
+--
+--	pe_mcml._super.ParseAllMappedAttribute(self);
+--end

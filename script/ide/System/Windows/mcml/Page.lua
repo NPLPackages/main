@@ -11,16 +11,10 @@ local page = Page:new();
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/System/Core/ToolBase.lua");
-NPL.load("(gl)script/ide/System/Windows/mcml/PageLayout.lua");
-NPL.load("(gl)script/ide/System/Windows/mcml/css/CSSStyleSelector.lua");
-NPL.load("(gl)script/ide/System/Windows/mcml/page/FrameView.lua");
-NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutView.lua");
-local LayoutView = commonlib.gettable("System.Windows.mcml.layout.LayoutView");
-local FrameView = commonlib.gettable("System.Windows.mcml.page.FrameView");
-local CSSStyleSelector = commonlib.gettable("System.Windows.mcml.css.CSSStyleSelector");
+NPL.load("(gl)script/ide/System/Windows/mcml/Elements/HTMLDocument.lua");
+local HTMLDocument = commonlib.gettable("System.Windows.mcml.Elements.HTMLDocument")
 local mcml = commonlib.gettable("System.Windows.mcml");
 local Elements = commonlib.gettable("System.Windows.mcml.Elements");
-local PageLayout = commonlib.gettable("System.Windows.mcml.PageLayout");
 
 local Page = commonlib.inherit(commonlib.gettable("System.Core.ToolBase"), commonlib.createtable("System.Windows.mcml.Page", {
 	name = nil,
@@ -72,15 +66,15 @@ function Page:ctor()
 	-- this will prevent recursive calls to self:Refresh(), which makes self:Refresh(0) pretty safe.
 	self.refresh_depth = 0;
 
+	self.m_mainFrame = nil;
+
 	self.hotkeyNodes = {};
 	self.tabIndexNodes = {};
 	self.currentTabNode = nil;
 
-	self.m_focusedNode = nil;
-    self.m_hoverNode = nil;
-    self.m_activeNode = nil;
-
-	self.styleSelector = nil;
+--	if(self.window) then
+--		self:Attach(self.window)
+--	end
 end
 
 -- Init control with a MCML treenode or page url. If a local version is found, it will be used regardless of whether it is expired or not.
@@ -91,6 +85,7 @@ end
 --@param cache_policy: cache policy object. if nil, default is used.
 --@param bRefresh: whether to refresh if url is already loaded before.
 function Page:Init(url, cache_policy, bRefresh)
+	echo("Page:Init")
 	if(url == nil or url=="") then
 		-- clear all
 		self.status = nil;
@@ -105,6 +100,9 @@ function Page:Init(url, cache_policy, bRefresh)
 		return
 	end
 
+	self:InitFrameView();
+
+	echo(url)
 	self.url = url;
 	-- downloading
 	self.status = 0;
@@ -123,8 +121,8 @@ function Page:Init(url, cache_policy, bRefresh)
 		local filename = string.gsub(url, "%?.*$", "")
 
 		local xmlRoot = ParaXML.LuaXML_ParseFile(filename);
-		echo("xmlRoot")
-		echo(xmlRoot)
+--		echo("xmlRoot")
+--		echo(xmlRoot)
 		if(type(xmlRoot)=="table" and table.getn(xmlRoot)>0) then
 			Page.OnPageDownloaded_CallBack(xmlRoot, nil, self)
 		else
@@ -709,6 +707,7 @@ end
 
 -- load the page from xml Node
 function Page:LoadFromXmlNode(xmlNode)
+	echo("Page:LoadFromXmlNode")
 	-- ready status
 	self.status=1;
 	self.style = nil;
@@ -718,12 +717,22 @@ function Page:LoadFromXmlNode(xmlNode)
 	self:OnRefresh();
 end
 
+function Page:LoadFinshed()
+	return self.status == 1;
+end
+
+function Page:InitFrameView()
+	self.m_mainFrame:Loader():Client():Load();
+end
+
 -- refresh the page UI. It will remove all previous UI and rebuild (render) from current MCML page data.
 -- it will call the OnLoad method.
 -- _Note_ One can override this method to owner draw this control.
 -- @param _parent: if nil, it will get using the self.name.
 -- @return: the parent container of page ctrl is returned.
 function Page:OnRefresh()
+	--self.m_mainFrame:Loader():Client():Load();
+
 	self.RefreshCountDown = nil;
 	local layout = self.layout;
 	if(not layout) then
@@ -743,8 +752,8 @@ function Page:OnRefresh()
 		-- call OnLoad
 		self:OnLoad();
 
-		-- create the mcml UI controls.
-		local width, height = uiElem:width(), uiElem:height();
+--		-- create the mcml UI controls.
+--		local width, height = uiElem:width(), uiElem:height();
 		-- secretely inject the "request_url" in it, so that we can make href using relative to site or url path.
 		self.mcmlNode:SetAttribute("request_url", self.url);
 		-- secretely put this page control object into page_ctrl field, so that we can refresh this page with a different url, such as in pe_a or form submit button.
@@ -767,48 +776,49 @@ end
 
 -- create all ui elements recursively using the layout.
 function Page:LoadComponent()
-	local layout = self.layout;
-	if(layout and self.mcmlNode) then
+	
 
-		local parentElem = layout:widget();	
-		if(parentElem) then
-			self.mcmlNode:LoadComponentIfNeeded(parentElem, layout, nil);
+	echo("Page:LoadComponent")
+	local o = {{name="html"}, name="document"};
+	local document = mcml:createFromXmlNode(o)
+	document:SetFrame(self.m_mainFrame)
+	local htmlNode = document:FirstChild();
+	htmlNode:AppendChild(self.mcmlNode);
+--	local document = HTMLDocument:new({name="document"}):init(self.m_mainFrame, self.url);
+--	document:AppendChild(self.mcmlNode);
 
-			echo("self.mcmlNode:print begin")
-			self.mcmlNode:print();
-			echo("self.mcmlNode:print end")
-			local layoutView = LayoutView:new():init(self.mcmlNode, layout);
-			layoutView:SetStyle(self.mcmlNode:StyleForLayoutObject());
-			self.mcmlNode:SetLayoutObject(layoutView);
-			self.mcmlNode:SetView(self.layout);
+	document:LoadComponentIfNeeded();
 
-			self.mcmlNode:attachLayoutTree();
-		end
+	
+	self.m_mainFrame:SetDocument(document);
 
-	end
-end
-
---function Page:SetLayoutObject(layout_object)
---	self.layout_object = layout_object;
---end
+--	local layout = self.layout;
+--	if(layout and self.mcmlNode) then
 --
---function Page:GetLayoutObject()
---	return self.layout_object;
---end
-
--- Get the page style object
-function Page:GetStyle()
-	if(not self.style) then
-		self.style = CSSStyleSelector:new();
-	end
-	return self.style;
-end
-
-function Page:StyleSelector()
-	if(not self.styleSelector) then
-		self.styleSelector = CSSStyleSelector:new();
-	end
-	return self.styleSelector;
+--		local parentElem = layout:widget();	
+--		if(parentElem) then
+--			self.mcmlNode:LoadComponentIfNeeded(parentElem, layout, nil);
+--			self.mcmlNode:SetView(self.layout);
+--
+--			echo("self.mcmlNode:print begin")
+--			self.mcmlNode:print();
+--			echo("self.mcmlNode:print end")
+--			if(self.window) then
+--				echo("self.window")
+--				local layoutView = LayoutView:new():init(self.mcmlNode, layout);
+--				layoutView:SetStyle(self.mcmlNode:StyleForLayoutObject());
+--				self.mcmlNode:SetLayoutObject(layoutView);
+--
+--				self.mcmlNode:attachLayoutTree();
+--			else
+--				echo("not self.window")
+--			end
+--			
+--
+--			
+--		end
+--
+--	end
 end
 
 -- create (instance) the page UI. It will create UI immediately after the page is downloaded. If page is local, it immediately load.
@@ -819,15 +829,15 @@ function Page:Create(name, _parent, alignment, left, top, width, height, bForceD
 end
 
 function Page:Attach(uiElement)
+	echo("Page:Attach")
 	if(uiElement) then
 		uiElement:deleteChildren();
 		if(uiElement.layout) then
 			uiElement.layout = nil;
 		end
 		self:Detach();
-		self.layout = FrameView:new():init();
-		self.layout:SetPage(self, uiElement);
-		uiElement.layout = self.layout;
+
+--		self.m_mainFrame:Loader():Client():Load();
 	end
 end
 
@@ -842,6 +852,9 @@ function Page:Detach()
 	end
 end
 
+function Page:SetLayout(layout)
+	self.layout = layout;
+end
 
 function Page:AddHotkeyNode(node, hotkey, func)
 	if(not func) then
@@ -950,20 +963,17 @@ function Page:HandlKeyPressEvent(key)
 	return false;
 end
 
-function Page:PostLayoutRequestEvent()
-	if(self.layout) then
-		self.layout:PostLayoutRequestEvent();
-	end
+--function Page:PostLayoutRequestEvent()
+--	if(self.layout) then
+--		self.layout:PostLayoutRequestEvent();
+--	end
+--end
+
+function Page:MainFrame()
+	return self.m_mainFrame;
 end
 
-function Page:FocusedNode()
-	return self.m_focusedNode;
-end
-
-function Page:HoverNode()
-	return self.m_hoverNode;
-end
-
-function Page:ActiveNode()
-	return self.m_activeNode;
+function Page:SetMainFrame(mainFrame)
+    --ASSERT(!m_mainFrame); // Should only be called during initialization
+    self.m_mainFrame = mainFrame;
 end

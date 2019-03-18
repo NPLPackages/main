@@ -1,0 +1,38 @@
+﻿<!-- "script/test/MCMLv2/test_layout_iframe.html" -->
+<html>
+<pe:mcml>
+    <!--<script type="text/npl" refresh="false">
+        <![CDATA[
+
+        function SetNodeProperty(node,key,value)
+            node:GetInlineStyleDecl():SetProperty(key,value);
+        end
+
+        function HideNode()
+            local nodes = Page:jquery("div#div2");
+            local node = nodes[1];
+            SetNodeProperty(node, "display", "none");
+        end
+
+        function ShowNode()
+            local nodes = Page:jquery("div#div2");
+            local node = nodes[1];
+            SetNodeProperty(node, "display", "");
+        end
+        ]]>
+    </script>
+    <div name="div0" id="div0" style="background-color:aquamarine;margin:10px;">
+        <input name="buttonBackground" id="buttonBackground" type="button" value="hide" style="margin:10px;" onclick="HideNode()"/>
+        <input name="buttonBackground" id="buttonBackground" type="button" value="show" style="margin:10px;" onclick="ShowNode()"/>
+    </div>
+    <div name="div1" id="div1" style="background-color:aquamarine;margin:10px;">
+        <input name="button" type="text" value="123455" />
+    </div>
+    <div name="div2" id="div2" style="background-color:aquamarine;margin:10px;display:none">
+        <input name="button" type="text" value="123455" />
+    </div>-->
+    <input name="button" type="text" value="123455" />
+    <iframe name="child_iframe" src="script/test/MCMLv2/test_layout_iframe_child.html"></iframe>
+    <!--<input name="button" type="text" value="123455" />-->
+</pe:mcml>
+</html>

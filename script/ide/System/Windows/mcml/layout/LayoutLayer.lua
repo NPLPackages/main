@@ -543,60 +543,6 @@ function LayoutLayer:DirtyZOrderLists()
 --#endif
 end
 
-function LayoutLayer:UpdateVisibilityStatus()
-    if (self.visibleDescendantStatusDirty) then
-        self.hasVisibleDescendant = false;
-		local child = self:FirstChild();
-		while(child) do
-			child:UpdateVisibilityStatus();        
-            if (child.hasVisibleContent or child.hasVisibleDescendant) then
-                self.hasVisibleDescendant = true;
-                break;
-            end
-			child = child:NextSibling();
-		end
-
-        self.visibleDescendantStatusDirty = false;
-    end
-
-    if (self.visibleContentStatusDirty) then
-        if (self:Renderer():Style():Visibility() == VisibilityEnum.VISIBLE) then
-            self.hasVisibleContent = true;
-        else
-            -- layer may be hidden but still have some visible content, check for this
-            self.hasVisibleContent = false;
-            r = self:Renderer():FirstChild();
-            while (r) do
-                if (r:Style():Visibility() == VisibilityEnum.VISIBLE and not r:HasLayer()) then
-                    self.hasVisibleContent = true;
-                    break;
-                end
-                if (r:FirstChild() and not r:HasLayer()) then
-                    r = r:FirstChild();
-                elseif (r:NextSibling()) then
-                    r = r:NextSibling();
-                else
-                    
-                    r = r:Parent();
-                    if (r == self:Renderer()) then
-                        r = nil;
-					end
-                    while (r and not r:NextSibling()) do
-						r = r:Parent();
-						if (r == self:Renderer()) then
-							r = nil;
-						end
-					end
-                    if (r) then
-                        r = r:NextSibling();
-					end
-                end
-            end
-        end    
-        self.visibleContentStatusDirty = false; 
-    end
-end
-
 --void RenderLayer::childVisibilityChanged(bool newVisibility) 
 function LayoutLayer:ChildVisibilityChanged(newVisibility) 
     if (self.hasVisibleDescendant == newVisibility or self.visibleDescendantStatusDirty) then
@@ -733,7 +679,8 @@ function LayoutLayer:init(renderer)
         self.visibleContentStatusDirty = false;
         self.hasVisibleContent = renderer:Style():Visibility() == VisibilityEnum.VISIBLE;
     end
-
+	echo("self.hasVisibleContent")
+	echo(self.hasVisibleContent)
 	return self;
 end
 
@@ -1077,6 +1024,8 @@ function LayoutLayer:ComputeRepaintRects(offsetFromRoot)
 end
 
 function LayoutLayer:SetHasVisibleContent(b)
+	echo("LayoutLayer:SetHasVisibleContent")
+	echo(b)
     if (self.hasVisibleContent == b and not self.visibleContentStatusDirty) then
         return;
 	end
@@ -1150,6 +1099,8 @@ function LayoutLayer:UpdateNormalFlowList()
 end
 
 function LayoutLayer:UpdateVisibilityStatus()
+	echo("LayoutLayer:UpdateVisibilityStatus")
+	self:Renderer():PrintNodeInfo()
     if (self.visibleDescendantStatusDirty) then
         self.hasVisibleDescendant = false;
 
@@ -1397,7 +1348,10 @@ function LayoutLayer:PaintLayer(rootLayer, p, paintDirtyRect, paintBehavior, pai
 	--echo(self.clipsRepaints)
 	echo({self.topLeft, self.layerSize, self.relativeOffset})
 	self:Renderer():PrintNodeInfo()
-	echo(damageRect)
+	echo(damageRect:Rect())
+	if(not damageRect) then
+		echo("damageRect is nil")
+	end
 	echo(layerBounds)
 	echo(self:RenderBoxLocation())
 	echo(clipRectToApply)
@@ -1420,6 +1374,7 @@ function LayoutLayer:PaintLayer(rootLayer, p, paintDirtyRect, paintBehavior, pai
 
 	-- We want to paint our layer, but only if we intersect the damage rect.
     local shouldPaint = self:IntersectsDamageRect(layerBounds, damageRect:Rect(), rootLayer) and self.hasVisibleContent and self:IsSelfPaintingLayer();
+	self:Renderer():PrintNodeInfo()
 	echo("shouldPaint")
 	echo(shouldPaint)
 	echo(self:IntersectsDamageRect(layerBounds, damageRect:Rect(), rootLayer))
@@ -1856,6 +1811,8 @@ function LayoutLayer:CalculateRects(rootLayer, region, paintDirtyRect, layerBoun
 			echo(backgroundRect)
         end
     end
+	echo("backgroundRect")
+	echo(backgroundRect)
 	return layerBounds, backgroundRect, foregroundRect, outlineRect;
 end
 

@@ -33,6 +33,7 @@ local CSSStyleDeclaration = commonlib.gettable("System.Windows.mcml.css.CSSStyle
 
 local OverflowEnum = ComputedStyleConstants.OverflowEnum;
 local PositionEnum = ComputedStyleConstants.PositionEnum;
+local DisplayEnum = ComputedStyleConstants.DisplayEnum;
 
 local MatchedStyleDeclaration = {};
 MatchedStyleDeclaration.__index = MatchedStyleDeclaration;
@@ -272,6 +273,58 @@ function CSSStyleSelector:InitForStyleResolve(e, parentStyle, pseudoID)
 --    m_ruleList = 0;
 --
 --    m_fontDirty = false;
+end
+
+function CSSStyleSelector.StyleForDocument(document)
+    --local frame = document:Frame();
+
+    local documentStyle = ComputedStyle.Create();
+    documentStyle:SetDisplay(DisplayEnum.BLOCK);
+--    documentStyle->setRTLOrdering(document->visuallyOrdered() ? VisualOrder : LogicalOrder);
+--    documentStyle->setZoom(frame ? frame->pageZoomFactor() : 1);
+--    documentStyle->setPageScaleTransform(document->page() ? document->page()->pageScaleFactor() : 1);
+--    documentStyle->setUserModify(document->inDesignMode() ? READ_WRITE : READ_ONLY);
+
+--    local docElement = document:DocumentElement();
+--    RenderObject* docElementRenderer = docElement ? docElement->renderer() : 0;
+--    if (docElementRenderer) {
+--        -- Use the direction and writing-mode of the body to set the
+--        -- viewport's direction and writing-mode unless the property is set on the document element.
+--        -- If there is no body, then use the document element.
+--        RenderObject* bodyRenderer = document->body() ? document->body()->renderer() : 0;
+--        if (bodyRenderer && !document->writingModeSetOnDocumentElement())
+--            documentStyle->setWritingMode(bodyRenderer->style()->writingMode());
+--        else
+--            documentStyle->setWritingMode(docElementRenderer->style()->writingMode());
+--        if (bodyRenderer && !document->directionSetOnDocumentElement())
+--            documentStyle->setDirection(bodyRenderer->style()->direction());
+--        else
+--            documentStyle->setDirection(docElementRenderer->style()->direction());
+--    }
+--
+--    FontDescription fontDescription;
+--    fontDescription.setUsePrinterFont(document->printing());
+--    if (Settings* settings = document->settings()) {
+--        fontDescription.setRenderingMode(settings->fontRenderingMode());
+--        if (document->printing() && !settings->shouldPrintBackgrounds())
+--            documentStyle->setForceBackgroundsToWhite(true);
+--        const AtomicString& stdfont = settings->standardFontFamily();
+--        if (!stdfont.isEmpty()) {
+--            fontDescription.setGenericFamily(FontDescription::StandardFamily);
+--            fontDescription.firstFamily().setFamily(stdfont);
+--            fontDescription.firstFamily().appendFamily(0);
+--        }
+--        fontDescription.setKeywordSize(CSSValueMedium - CSSValueXxSmall + 1);
+--        int size = CSSStyleSelector::fontSizeForKeyword(document, CSSValueMedium, false);
+--        fontDescription.setSpecifiedSize(size);
+--        bool useSVGZoomRules = document->isSVGDocument();
+--        fontDescription.setComputedSize(CSSStyleSelector::getComputedSizeFromSpecifiedSize(document, documentStyle.get(), fontDescription.isAbsoluteSize(), size, useSVGZoomRules));
+--    }
+--
+--    documentStyle->setFontDescription(fontDescription);
+--    documentStyle->font().update(0);
+
+    return documentStyle;
 end
 
 --PassRefPtr<RenderStyle> CSSStyleSelector::styleForElement(Element* element, RenderStyle* defaultParent, bool allowSharing, bool resolveForRootDefault)

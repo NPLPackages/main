@@ -1,6 +1,10 @@
 /*mcml is paracraft element*/
-div, p, form {
+html, div, p, form {
     display:block;
+}
+
+html {
+    overflow:auto;
 }
 
 p {
@@ -188,4 +192,8 @@ mcml, container, pager {
 
 pager {
     text-align:center;
+}
+
+iframe {
+    display:inline-block;
 }

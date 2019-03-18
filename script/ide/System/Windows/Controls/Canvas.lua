@@ -12,8 +12,8 @@ local Canvas = commonlib.gettable("System.Windows.Controls.Canvas");
 NPL.load("(gl)script/ide/System/Windows/UIElement.lua");
 local Canvas = commonlib.inherit(commonlib.gettable("System.Windows.UIElement"), commonlib.gettable("System.Windows.Controls.Canvas"));
 Canvas:Property("Name", "Canvas");
-Canvas:Property({"BackgroundColor", "#ffffff", auto=true});
-Canvas:Property({"Background", nil, auto=true});
+--Canvas:Property({"BackgroundColor", "#ffffff", auto=true});
+--Canvas:Property({"Background", nil, auto=true});
 
 function Canvas:ctor()
 end

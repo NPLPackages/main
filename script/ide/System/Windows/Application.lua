@@ -22,6 +22,10 @@ NPL.load("(gl)script/ide/System/Windows/mcml/Page.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/mcml.lua");
 NPL.load("(gl)script/ide/System/Windows/Mouse.lua");
 NPL.load("(gl)script/ide/System/Windows/MouseEvent.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/page/Frame.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/loader/FrameLoaderClient.lua");
+local FrameLoaderClient = commonlib.gettable("System.Windows.mcml.loader.FrameLoaderClient");
+local Frame = commonlib.gettable("System.Windows.mcml.page.Frame");
 local FocusPolicy = commonlib.gettable("System.Core.Namespace.FocusPolicy");
 local MouseEvent = commonlib.gettable("System.Windows.MouseEvent");
 local Event = commonlib.gettable("System.Core.Event");
@@ -727,7 +731,11 @@ end
 -- load components from a given mcml page or page url to uiElement.
 function Application.LoadComponent(uiElement, url)
 	if(uiElement) then
+		echo(uiElement.crect)
 		local page = Page:new({name = uiElement.name});
+		local loader = FrameLoaderClient:new():init(uiElement, page);
+		local mainFrame = Frame.Create(page, nil, loader);
+		loader:SetFrame(mainFrame);
 		page:Attach(uiElement);
 		page:Init(url);
 	end

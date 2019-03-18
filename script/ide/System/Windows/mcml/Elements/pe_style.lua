@@ -31,7 +31,7 @@ function pe_style:LoadComponent(parentElem, parentLayout, style)
 		return
 	end
 
-	local styleSelector = self:GetPageCtrl():StyleSelector();
+	local styleSelector = self:Document():StyleSelector();
 	if(not styleSelector) then
 		return;
 	end

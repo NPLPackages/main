@@ -60,10 +60,6 @@ function LayoutBR:CaretMaxOffset()
     return 1;
 end
 
-function LayoutBR:GetName()
-	return "LayoutBR";
-end
-
 function LayoutBR:Width(from, len, font, xPos, fallbackFonts, glyphOverflow)
 	return 0;
 end

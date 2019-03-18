@@ -1630,3 +1630,7 @@ function ComputedStyle.CreateAnonymousStyle(parentStyle)
 	newStyle:SetBackgroundImage(ComputedStyle.initialBackgroundImage());
     return newStyle;
 end
+
+function ComputedStyle.Create()
+	return ComputedStyle:new();
+end

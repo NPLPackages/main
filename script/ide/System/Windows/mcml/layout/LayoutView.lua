@@ -30,6 +30,8 @@ function LayoutView:ctor()
 	self.maximalOutlineSize = 0;
 
 	self.layoutStateDisableCount = 0
+
+	self.m_widgets = {};
 end
 
 function LayoutView:init(node, frameView)
@@ -119,6 +121,8 @@ end
 
 
 function LayoutView:Layout()
+	echo("LayoutView:Layout")
+	echo(self.frameView.m_frameRect)
 --    if (!document()->paginated())
 --        setPageLogicalHeight(0);
 
@@ -126,7 +130,7 @@ function LayoutView:Layout()
 --        m_minPreferredLogicalWidth = m_maxPreferredLogicalWidth = logicalWidth();
 
     -- Use calcWidth/Height to get the new width/height, since this will take the full page zoom factor into account.
-    local relayoutChildren = self:Width() ~= self:ViewWidth() or self:Height() ~= self:ViewHeight();
+    local relayoutChildren = not self.frameView or self:Width() ~= self:ViewWidth() or self:Height() ~= self:ViewHeight();
     if (relayoutChildren) then
         self:SetChildNeedsLayout(true, false);
 		local child = self:FirstChild();
@@ -285,4 +289,37 @@ function LayoutView:DocumentRect()
         --overflowRect = layer()->currentTransform().mapRect(overflowRect);
 	end
     return overflowRect;
+end
+
+--void RenderView::addWidget(RenderWidget* o)
+function LayoutView:AddWidget(o)
+    self.m_widgets[o] = true;
+end
+
+--void RenderView::removeWidget(RenderWidget* o)
+function LayoutView:RemoveWidget(o)
+    self.m_widgets[o] = false;
+end
+
+--void RenderView::updateWidgetPositions()
+function LayoutView:UpdateWidgetPositions()
+	echo("LayoutView:UpdateWidgetPositions")
+    -- updateWidgetPosition() can possibly cause layout to be re-entered (via plug-ins running
+    -- scripts in response to NPP_SetWindow, for example), so we need to keep the Widgets
+    -- alive during enumeration.    
+
+	for widget, _ in pairs(self.m_widgets) do
+		widget:UpdateWidgetPosition();
+	end
+
+--    Vector<RenderWidget*> renderWidgets;
+--    size_t size = getRetainedWidgets(renderWidgets);
+--    
+--    for (size_t i = 0; i < size; ++i)
+--        renderWidgets[i]->updateWidgetPosition();
+--
+--    for (size_t i = 0; i < size; ++i)
+--        renderWidgets[i]->widgetPositionsUpdated();
+--
+--    releaseWidgets(renderWidgets);
 end
