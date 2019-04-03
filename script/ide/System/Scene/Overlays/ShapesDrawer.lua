@@ -426,8 +426,13 @@ else
 	end
 end
 
--- ox, oy, oz, the offset pos relative to the bottom world position
-function ShapesDrawer.DrawSphereEdge(painter, radius, ox,oy,oz, wx, wy, wz)
+
+--[[
+	radius: circle radius
+	dx, dy, dz: circle facing direction
+	ox, oy, oz: after facing rotation, the circle offset
+]]
+function ShapesDrawer.DrawCircleEdge(painter, radius, dx, dy, dz, ox, oy, oz)
 	local two_pi = 3.14159265359 * 2;
 	fromAngle = 0;
 	toAngle = two_pi;
@@ -448,17 +453,9 @@ function ShapesDrawer.DrawSphereEdge(painter, radius, ox,oy,oz, wx, wy, wz)
 		local vector3d = commonlib.gettable("mathlib.vector3d");
 		local pointVec = vector3d:new(point);
 
-		-- offset is the center
-		local wx = wx + ox;
-		local wy = wy + oy;
-		local wz = wz + oz;
-
-		local camx,camy,camz = ParaCamera.GetPosition();
-		local toCam = {camx - wx, camy - wy, camz - wz}
-
-		local a = toCam[1];
-		local b = toCam[2];
-		local c = toCam[3];
+		local a = dx;
+		local b = dy;
+		local c = dz;
 
 		local sqrt_a2_b2_c2 = math.sqrt(a*a + b*b + c*c);
 		local sqrt_b2_c2 = math.sqrt(b*b + c*c);
@@ -475,17 +472,17 @@ function ShapesDrawer.DrawSphereEdge(painter, radius, ox,oy,oz, wx, wy, wz)
 		}
 
 		local mat_x_axis_rotate_alpha = {
-			1,          0,         0, 0,
+			1,          0,          0, 0,
 			0,  cos_alpha, -sin_alpha, 0,
-			0,  sin_alpha, cos_alpha, 0,
-			0,          0,         0, 1,
+			0,  sin_alpha,  cos_alpha, 0,
+			0,          0,          0, 1,
 		}
 
 		local mat_axis_translate_offset = {
 			1,  0,  0,  0,
 			0,  1,  0,  0,
 			0,  0,  1,  0,
-			ox, oy, oz,  1,
+			ox, oy, oz, 1,
 		}
 
 		pointVec:transform(mat_y_axis_rotate_negative_beta);
