@@ -249,14 +249,14 @@ if(ParaEngine.hasFFI) then
 			local sin_beta = a / sqrt_a2_b2_c2;
 			local cos_beta = sqrt_b2_c2 / sqrt_a2_b2_c2;
 
-			local mat_y_axis_rotate_negative_beta = {
+			local mat_y_axis_rotate_beta = {
 				cos_beta, 0, -sin_beta, 0,
 						0, 1,         0, 0,
 				sin_beta, 0,  cos_beta, 0,
 						0, 0,         0, 1,
 			}
 
-			local mat_x_axis_rotate_alpha = {
+			local mat_x_axis_rotate_negative_alpha = {
 				1,          0,          0, 0,
 				0,  cos_alpha, -sin_alpha, 0,
 				0,  sin_alpha,  cos_alpha, 0,
@@ -270,8 +270,8 @@ if(ParaEngine.hasFFI) then
 				ox, oy, oz, 1,
 			}
 
-			pointVec:transform(mat_y_axis_rotate_negative_beta);
-			pointVec:transform(mat_x_axis_rotate_alpha);
+			pointVec:transform(mat_y_axis_rotate_beta);
+			pointVec:transform(mat_x_axis_rotate_negative_alpha);
 			pointVec:transform(mat_axis_translate_offset);
 
 			return pointVec:get();
@@ -527,14 +527,14 @@ else
 			local sin_beta = a / sqrt_a2_b2_c2;
 			local cos_beta = sqrt_b2_c2 / sqrt_a2_b2_c2;
 
-			local mat_y_axis_rotate_negative_beta = {
+			local mat_y_axis_rotate_beta = {
 				cos_beta, 0, -sin_beta, 0,
 						0, 1,         0, 0,
 				sin_beta, 0,  cos_beta, 0,
 						0, 0,         0, 1,
 			}
 
-			local mat_x_axis_rotate_alpha = {
+			local mat_x_axis_rotate_negative_alpha = {
 				1,          0,          0, 0,
 				0,  cos_alpha, -sin_alpha, 0,
 				0,  sin_alpha,  cos_alpha, 0,
@@ -548,8 +548,8 @@ else
 				ox, oy, oz, 1,
 			}
 
-			pointVec:transform(mat_y_axis_rotate_negative_beta);
-			pointVec:transform(mat_x_axis_rotate_alpha);
+			pointVec:transform(mat_y_axis_rotate_beta);
+			pointVec:transform(mat_x_axis_rotate_negative_alpha);
 			pointVec:transform(mat_axis_translate_offset);
 
 			return pointVec:get();
