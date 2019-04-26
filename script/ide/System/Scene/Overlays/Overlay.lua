@@ -85,10 +85,19 @@ function Overlay:ctor()
 	self.localTransform = Matrix4:new():identity();
 end
 
+local function compare_zorder_less(left, right)
+	return (left.zorder or 0) <= (right.zorder or 0);
+end
+
 -- @param parent: if nil, we will create as root. 
 function Overlay:init(parent)
 	if(parent) then
+		local last = parent:GetChildren():last()
 		self:SetParent(parent);
+
+		if(last and not compare_zorder_less(last, self)) then
+			parent:SortChildren();
+		end
 	else
 		self:create_sys(nil);
 	end
@@ -161,10 +170,6 @@ end
 
 function Overlay:GetZOrder()
 	return self.zorder or 0;
-end
-
-local function compare_zorder_less(left, right)
-	return (left.zorder or 0) <= (right.zorder or 0);
 end
 
 function Overlay:SortChildren()
