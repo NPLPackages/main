@@ -25,3 +25,7 @@ function ScrollbarTheme:usesOverlayScrollbars()
 	return false;
 end
 
+function ScrollbarTheme:scrollbarZIndex()
+	return 900;
+end
+

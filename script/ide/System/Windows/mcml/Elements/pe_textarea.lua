@@ -52,44 +52,6 @@ function pe_textarea:CreateControl()
 	_this:setReadOnly(self:GetBool("ReadOnly",false));
 end
 
-function pe_textarea:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
---	css.float = css.float or true;
---
---	local margin_left, margin_top, margin_bottom, margin_right = 
---		(css["margin-left"] or css["margin"] or 0),(css["margin-top"] or css["margin"] or 0),
---		(css["margin-bottom"] or css["margin"] or 0),(css["margin-right"] or css["margin"] or 0);	
---
---	css.width = css.width or 60;
---	local lineheight = 20;
---	if(css["line-height"]) then
---		lineheight = tonumber(css["line-height"]);
---	end
---	local height = css.height;
---	if(not height) then
---		height = lineheight * self:GetNumber("rows",10);
---		css.height = height;
---	end
---	local _this = self.control;
---	if(not _this) then
---		_this = MultiLineEditbox:new():init(parentElem);
---		self:SetControl(_this);
---	else
---		_this:SetParent(parentElem);
---	end
-
---	_this:ShowLineNumber(self:GetBool("ShowLineNumber",false));
---	_this:SetEmptyText(self:GetAttributeWithCode("EmptyText", nil, true));
---	_this:SetLanguage(self:GetAttributeWithCode("language", nil, true));
---	if(not self:GetBool("InputMethodEnabled", true)) then
---		_this:SetInputMethodEnabled(false);
---	end
---
---	_this:ApplyCss(css);
---	_this:setReadOnly(self:GetBool("ReadOnly",false));
-
-	pe_textarea._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
-end
-
 function pe_textarea:OnAfterChildLayout(layout, left, top, right, bottom)
 	if(self.control) then
 		self.control:setGeometry(left, top, right-left, bottom-top);

@@ -26,8 +26,6 @@ function pe_button:CreateControl()
 	local _this = Button:new():init(parentElem);
 	self:SetControl(_this);
 
-
-
 	local polygonStyle = self:GetAttributeWithCode("polygonStyle", nil, true);
 	local direction = self:GetAttributeWithCode("direction", nil, true);
 	local type = self:GetAttributeWithCode("type", nil, true);
@@ -42,51 +40,6 @@ function pe_button:CreateControl()
 	self.buttonName = self:GetAttributeWithCode("name",nil,true); -- touch name
 
 	_this:Connect("clicked", self, self.OnClick, "UniqueConnection")
-end
-
---function pe_button:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
---	--css.float = css.float or true;
---
---	local polygonStyle = self:GetAttributeWithCode("polygonStyle", nil, true);
---	local direction = self:GetAttributeWithCode("direction", nil, true);
---	local _this = self.control;
---	if(not _this) then
---		_this = Button:new():init(parentElem);
---		_this:SetPolygonStyle(polygonStyle);
---		_this:SetDirection(direction);
---		self:SetControl(_this);
---	end
---	--_this:ApplyCss(css);
---	--_this:SetText(self:GetAttributeWithCode("value", nil, true));
---	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
---
---	local buttonName = self:GetAttributeWithCode("name",nil,true); -- touch name
---
---	_this:Connect("clicked", function()
---		self:OnClick(buttonName);
---	end)
---end
-
-function pe_button:OnBeforeChildLayout(layout)
-	if(self.control) then
-		local css = self:GetStyle();
-		local width, height;
-		if(not css.width) then
-			width = self.control:CalculateTextWidth();
-		end
-		if(not css.height) then
-			height = self.control:CalculateTextHeight();
-		end
-		if(width or height) then
-			layout:AddObject(width or 0, height or 0);
-		end
-	end
-end
-
-function pe_button:OnAfterChildLayout(layout, left, top, right, bottom)
-	if(self.control) then
-		self.control:setGeometry(left, top, right-left, bottom-top);
-	end
 end
 
 function pe_button:SetValue(value)
@@ -161,13 +114,3 @@ function pe_button:attachLayoutTree()
         self:Renderer():UpdateFromElement();
 	end
 end
-
---function pe_button:LoadComponentIfNeeded(parentElem, parentLayout, style_decl)
---	pe_button._super.LoadComponentIfNeeded(self, parentElem, parentLayout, style_decl);
---	if (self:Renderer()) then
---		echo("has render");
---        self:Renderer():UpdateFromElement();
---	else
---		echo("no render");
---	end
---end

@@ -1,4 +1,3 @@
-/*mcml is paracraft element*/
 html, div, p, form {
     display:block;
 }
@@ -36,41 +35,24 @@ h4 {
 }
 
 input, textarea, select, button {
-    /*margin: 0__qem;*/
     font-family: initial;
     font-weight: initial;
     font-size: initial;
     color: initial;
-    /*letter-spacing: normal;
-    word-spacing: normal;*/
     line-height: initial;
-    /*text-transform: none;
-    text-indent: 0;
-    text-shadow: none;*/
     display: inline-block;
-    /*text-align: start;*/
 }
 
 input {
-    /*-webkit-appearance: textfield;*/
     padding: 1px;
     background-color: white;
-    /*border: 2px inset;
-    -webkit-rtl-ordering: logical;
-    cursor: text;*/
 }
 
-/*input[type="button" i], input[type="submit" i], input[type="reset" i], input[type="file" i]::-webkit-file-upload-button, button {*/
 input[type="button"], button {
-    /*align-items: flex-start;
-    text-align: center;
-    cursor: default;
-    color: ButtonText;
-    padding: 2px 6px 3px 6px;
-    border: 2px outset ButtonFace;*/
+    margin: 2px;
     padding-top:2px;
     padding-right:6px;
-    padding-bottom:3px;
+    padding-bottom:2px;
     padding-left:6px;
     color: ButtonText;
     background-color: ButtonFace;
@@ -80,21 +62,14 @@ input[type="button"], button {
 input[type="radio"], input[type="checkbox"] {
     margin: 3px;
     padding: 0px;
-    /*background-color: initial;
-    border: initial;
-    cursor: default;*/
 }
 
 button {
     appearance: push-button;
-    /*-webkit-appearance: button;*/
 }
 
 input[type="button"], input[type="submit"], input[type="reset"] {
     appearance: push-button;
-    /*-webkit-appearance: push-button;*/
-    /*-webkit-user-select: none;
-    white-space: pre*/
 }
 
 input[type="button"], input[type="submit"], input[type="reset"], button {
@@ -118,25 +93,14 @@ input[type="narrow"] {
 input[type="text"], input[type="password"] {
     background-color: #cccccc;
     appearance: textfield;
-    padding: 1px;
-    margin:1px;
-    /*background-color: white;
-    border: 2px inset;
-    -webkit-rtl-ordering: logical;
-    cursor: text;*/
+    padding: 2px;
+    margin:2px;
 }
 
 textarea {
     appearance: textarea;
     background-color: #cccccc;
-    /*border: 1px solid;
-    -webkit-rtl-ordering: logical;
-    flex-direction: column;
-    resize: auto;
-    cursor: text;*/
     padding: 2px;
-    /*white-space: pre-wrap;
-    word-wrap: break-word;*/
 }
 
 treeview {
@@ -197,3 +161,29 @@ pager {
 iframe {
     display:inline-block;
 }
+
+select {
+    appearance: menulist;
+    margin: 2px;
+    border: 1px solid;
+    color: black;
+    background-color: white;
+}
+
+select[size] {
+    appearance: listbox;
+    border: 1px inset gray;
+    margin: 2px;
+}
+
+select[size="0"],
+select[size="1"] {
+    appearance: menulist;
+    border: 1px solid black;
+    white-space: pre;
+}
+
+sliderbar, progressbar {
+    display: inline-block;
+}
+

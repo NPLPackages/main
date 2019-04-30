@@ -76,15 +76,6 @@ local NameNodeMap_ = {};
 local commonlib = commonlib.gettable("commonlib");
 
 local StyleChangeTypeEnum = ComputedStyleConstants.StyleChangeTypeEnum;
---{
---	["NoStyleChange"] = 0, 
---    ["InlineStyleChange"] = 1,
---    ["FullStyleChange"] = 2,
---    ["SyntheticStyleChange"] = 3,
---}
---
---PageElement.StyleChangeTypeEnum = StyleChangeTypeEnum;
---echo("1111111111111111")
 
 local StyleChangeEnum = { 
 	["NoChange"] = 0,
@@ -134,7 +125,6 @@ function NodeFlags:Reset(mask)
 end
 
 function PageElement:ctor()
-	echo("PageElement:ctor")
 	self.m_document = nil;
 	self.isPageElement = true;
 
@@ -161,8 +151,6 @@ end
 -- @param o: pure xml node table. 
 -- @return the input o is returned. 
 function PageElement:createFromXmlNode(o)
-	echo("PageElement:createFromXmlNode")
---	echo(o)
 	o = self:new(o);
 	o:BeginParsingChildren();
 	o:createChildRecursive_helper();
@@ -329,8 +317,6 @@ function PageElement:CreateControl()
 end
 
 function PageElement:DestroyControl()
-	echo("PageElement:DestroyControl")
-	self:PrintNodeInfo();
 	if(self.control) then
 		self.control:Destroy();
 		self.control = nil;
@@ -338,19 +324,9 @@ function PageElement:DestroyControl()
 end
 
 function PageElement:LoadComponentIfNeeded(parentElem, parentLayout, style_decl)
-	echo("PageElement:LoadComponentIfNeeded begin")
-	self:PrintNodeInfo()
-	--self:CreateStyle(nil, style_decl);
-	
-	--self:CreateControlIfNeeded();
-
-	--self:attachLayoutTree();
-
 	if(self:NeedsLoadComponent(parentElem, parentLayout, style_decl)) then
 		self:LoadComponent(parentElem, parentLayout, style_decl);
 	end
-
-	echo("PageElement:LoadComponentIfNeeded end")
 end
 
 -- virtual function: load component recursively. 
@@ -359,7 +335,6 @@ end
 -- @param parentLayout: only for casual initial layout. 
 -- @return used_width, used_height
 function PageElement:LoadComponent(parentElem, parentLayout, styleItem)
-	echo("PageElement:LoadComponent")
 	-- apply models
 	self:ApplyPreValues();
 
@@ -402,9 +377,6 @@ function PageElement:LoadComponent(parentElem, parentLayout, styleItem)
 end
 
 function PageElement:ScrollTo(x, y)
-	echo("PageElement:ScrollTo")
-	self:PrintNodeInfo()
-	echo({x, y})
 	if(self.layout_object) then
 		self.layout_object:ScrollToWithNotify(x, y);
 	end
@@ -447,8 +419,6 @@ function PageElement:CreateRendererIfNeeded()
 end
 
 function PageElement:attachLayoutTree()
-	echo("PageElement:attachLayoutTree")
-	self:PrintNodeInfo()
 	--local computed_style = self:StyleForLayoutObject();
 	--local computed_style = if_else(self.style, self.style.computed_style, nil);
 	
@@ -472,8 +442,6 @@ end
 PageElement.Attach = PageElement.attachLayoutTree;
 
 function PageElement:reattachLayoutTree()
-	echo("PageElement:reattachLayoutTree")
-	self:PrintNodeInfo()
     if (self:Attached()) then
         self:detachLayoutTree();
 --		self:DestroyControl();
@@ -484,8 +452,6 @@ end
 PageElement.Reattach = PageElement.reattachLayoutTree;
 
 function PageElement:detachLayoutTree()
-	echo("PageElement:detachLayoutTree")
-	self:PrintNodeInfo()
 	local child = self.m_firstChild;
 	while(child) do
 		child:detachLayoutTree();
@@ -799,25 +765,12 @@ function PageElement:OnLoadComponentAfterChild(parentElem, parentLayout, css)
 end
 
 function PageElement:OnLoadChildrenComponent(parentElem, parentLayout, css)
-	echo("PageElement:OnLoadChildrenComponent")
-	self:PrintNodeInfo()
 	local childnode = self:FirstChild()
 	while(childnode) do
-		echo("for childnode")
-		self:PrintNodeInfo()
-		childnode:PrintNodeInfo()
-		echo(self:ChildNodeCount())
 		childnode:LoadComponentIfNeeded(parentElem, parentLayout, css);
 
 		childnode = childnode:NextSibling();
 	end
---	for childnode in self:next() do
---		echo("for childnode")
---		self:PrintNodeInfo()
---		childnode:PrintNodeInfo()
---		echo(self:ChildNodeCount())
---		childnode:LoadComponentIfNeeded(parentElem, parentLayout, css);
---	end
 end
 
 local reset_layout_attrs = {
@@ -1132,8 +1085,6 @@ end
 
 --void HTMLElement::setInnerHTML(const String& html, ExceptionCode& ec)
 function PageElement:SetInnerHTML(html)
-	echo("PageElement:SetInnerHTML")
-	echo(html)
 	local fragment = mcml:createFragmentFromSource(html);
     if (fragment) then
         replaceChildrenWithFragment(self, fragment);
@@ -1219,23 +1170,18 @@ function PageElement:SetControl(control)
 end
 
 function PageElement:GetParentControl()
-	echo("PageElement:GetParentControl")
-	self:PrintNodeInfo()
 	if(self:Renderer()) then
 		return self:Renderer():GetParentControl();
 	end
 	if(self:ParentNode()) then
 		return self:ParentNode():GetControl();
 	end
-	echo("ParentControl is nil")
 	return;
 end
 
 function PageElement:GetOrCreateControl(pageName)
 	local control = self:GetControl(pageName)
 	if(not control) then
-		echo("CreateControl")
-		self:PrintNodeInfo()
 		self:CreateControl();
 	end
 	return self.control;
@@ -1519,9 +1465,6 @@ end
 
 --static void collectTargetNodes(Node* node, NodeVector& nodes)
 local function collectTargetNodes(node, nodes)
-	echo("collectTargetNodes")
-	node:PrintNodeInfo()
-	echo(node:NodeType())
     if (node:NodeType() ~= "DOCUMENT_FRAGMENT_NODE") then
         nodes:append(node);
         return;
@@ -1651,9 +1594,6 @@ end
 
 function PageElement:AppendChild(newChild, refresh)
 	refresh = if_else(refresh == nil, true, refresh);
-	echo("PageElement:AppendChild")
-	self:PrintNodeInfo()
-
 	if(not newChild) then
 		return;
 	end
@@ -1728,10 +1668,8 @@ end
 
 --void ContainerNode::insertBeforeCommon(Node* nextChild, Node* newChild)
 function PageElement:InsertBeforeCommon(nextChild, newChild)
-	echo("PageElement:InsertBeforeCommon")
 	newChild.parent = self;
 	if(nextChild) then
-		echo("has nextChild")
 		local prev = nextChild:PreviousSibling();
 		nextChild:SetPreviousSibling(newChild);
 		if (prev) then
@@ -1742,9 +1680,7 @@ function PageElement:InsertBeforeCommon(nextChild, newChild)
 		
 		newChild:SetPreviousSibling(prev);
 		newChild:SetNextSibling(nextChild);
-		echo(self:GetChildCount())
 	else
-		echo("not has nextChild")
         if (self.m_lastChild) then
             newChild:SetPreviousSibling(self.m_lastChild);
             self.m_lastChild:SetNextSibling(newChild);
@@ -1830,8 +1766,6 @@ function PageElement:InsertBefore(newChild, refChild, refresh)
 	if(self:Attached() and refresh) then
 		self:PostLayoutRequestEvent();
 	end
-	--self:resetLayout();
-	echo("PageElement:InsertBefore end")
 	
 	return true;
 end
@@ -2284,11 +2218,7 @@ function PageElement:next(name)
 	return function ()
 		local node = current_node;
 		while(node) do
-			--node:PrintNodeInfo();
 			current_node = current_node:NextSibling();
---			if(current_node) then
---				current_node:PrintNodeInfo();
---			end
 			if(not name or (type(node) == "table" and name == node.name)) then
 				return node;
 			end
@@ -3357,10 +3287,7 @@ end
 -- regardless of read-only status or event exceptions, e.g.
 --void ContainerNode::removeChildren()
 function PageElement:RemoveChildren()
-	echo("PageElement:RemoveChildren")
-	self:PrintNodeInfo();
     if (not self.m_firstChild) then
-		echo("not self.m_firstChild")
         return;
 	end
 
@@ -3380,7 +3307,6 @@ function PageElement:RemoveChildren()
     --removedChildren.reserveInitialCapacity(childNodeCount());
 	local removedChildren = {};
 	local n = self.m_firstChild;
-	echo("while (n) do")
     while (n) do
 		
         local next = n:NextSibling();
@@ -3402,8 +3328,6 @@ function PageElement:RemoveChildren()
 
 		n = self.m_firstChild;
     end
-	echo("removedChildrenCount")
-	echo(removedChildrenCount)
     local removedChildrenCount = #removedChildren;
 
     -- Detach the nodes only after properly removed from the tree because

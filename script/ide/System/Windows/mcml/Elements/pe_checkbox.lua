@@ -21,7 +21,6 @@ function pe_checkbox:ctor()
 end
 
 function pe_checkbox:CreateControl()
-	echo("pe_checkbox:CreateControl")
 	local parentElem = self:GetParentControl();
 	local _this = Button:new():init(parentElem);
 	self:SetControl(_this);
@@ -35,9 +34,6 @@ function pe_checkbox:CreateControl()
 	_this:setCheckable(self:GetBool("enabled",true));
 
 	local checked = self:GetAttributeWithCode("checked", nil, true);
-	echo("checked")
-	echo(self.attr)
-	echo(checked)
 	if(checked) then
 		checked = if_else(checked == "true" or checked == "checked",true,false);
 		self:setChecked(checked);
@@ -47,42 +43,7 @@ function pe_checkbox:CreateControl()
 	_this:Connect("clicked", self, self.OnClick, "UniqueConnection");
 end
 
-function pe_checkbox:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
---	local default_css = mcml:GetStyleItem(self.class_name);
---	css.float = css.float or true;
---	css.width = css.width or default_css.iconSize;
---	css.height = css.height or default_css.iconSize;
---	css["background"] = self:GetAttributeWithCode("UncheckedBG", nil, true) or default_css["background"];
---	css["background_checked"] = self:GetAttributeWithCode("CheckedBG", nil, true) or default_css["background_checked"];
-	
---	local polygonStyle = self:GetAttributeWithCode("polygonStyle", nil, true);
---	local direction = self:GetAttributeWithCode("direction", nil, true);
---	local _this = self.control;
---	if(not _this) then
---		_this = Button:new():init(parentElem);
---		_this:SetPolygonStyle(polygonStyle or "check");
---		self:SetControl(_this);
---	end
---	
---	_this:ApplyCss(css);
---	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
---	_this:setCheckable(self:GetBool("enabled",true));
---
---	local checked = self:GetAttributeWithCode("checked", nil, true);
---	if(checked) then
---		_this:setChecked(true);
---	end
---	local buttonName = self:GetAttributeWithCode("name",nil,true);
---	_this:Connect("clicked", function()
---		self:OnClick(buttonName);
---	end)
-
-	pe_checkbox._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
-end
-
 function pe_checkbox:setChecked(checked)
-	echo("pe_checkbox:setChecked")
-	echo(checked)
 	if(self.control) then
 		self.control:setChecked(checked);
 	end
@@ -99,7 +60,6 @@ function pe_checkbox:getChecked()
 end
 
 function pe_checkbox:OnClick()
-	echo("pe_checkbox:OnClick")
 	local ctl = self:GetControl();
 	if(ctl and ctl:isCheckable()) then
 		local checked = not (ctl:isChecked());
@@ -116,12 +76,4 @@ function pe_checkbox:OnClick()
 		result = self:DoPageEvent(onclick, self:getChecked(), self);
 	end
 	return result;
-end
-
--- virtual function: 
--- after child node layout is updated
-function pe_checkbox:OnAfterChildLayout(layout, left, top, right, bottom)
-	if(self.control) then
-		self.control:setGeometry(left, top, right-left, bottom-top);
-	end
 end

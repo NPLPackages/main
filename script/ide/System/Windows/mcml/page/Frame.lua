@@ -93,10 +93,6 @@ function Frame:SetView(view)
 end
 
 function Frame:SetDocument(newDoc)
-	echo("Frame:SetDocument")
-	if(self.m_ownerElement) then
-		self.m_ownerElement:PrintNodeInfo();
-	end
 	self.m_doc = newDoc;
 
 	if (self.m_doc and not self.m_doc:Attached()) then

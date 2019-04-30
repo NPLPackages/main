@@ -34,7 +34,6 @@ end
 
 --Frame* SubframeLoader::loadSubframe(HTMLFrameOwnerElement* ownerElement, const KURL& url, const String& name, const String& referrer)
 function SubFrameLoader:LoadSubframe(ownerElement, url, name)
-	echo("SubFrameLoader:LoadSubframe")
     local frame = self.m_frame:Loader():Client():CreateSubFrame(url, name, ownerElement);
 
     if (not frame)  then
@@ -52,7 +51,6 @@ end
 
 --Frame* SubframeLoader::loadOrRedirectSubframe(HTMLFrameOwnerElement* ownerElement, const KURL& url, const AtomicString& frameName, bool lockHistory, bool lockBackForwardList)
 function SubFrameLoader:LoadOrRedirectSubframe(ownerElement, url, frameName)
-	echo("SubFrameLoader:LoadOrRedirectSubframe")
     local frame = ownerElement:ContentFrame();
 	if (not frame) then
 		frame = self:LoadSubframe(ownerElement, url, frameName);
@@ -67,7 +65,6 @@ end
 
 --bool SubframeLoader::requestFrame(HTMLFrameOwnerElement* ownerElement, const String& urlString, const AtomicString& frameName, bool lockHistory, bool lockBackForwardList)
 function SubFrameLoader:RequestFrame(ownerElement, urlString, frameName)
-	echo("SubFrameLoader:RequestFrame")
     local frame = self:LoadOrRedirectSubframe(ownerElement, url, frameName);
     if (not frame) then
         return false;

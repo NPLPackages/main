@@ -156,20 +156,15 @@ function LayoutTreeBuilder:ParentLayoutObject()
 end
 
 function LayoutTreeBuilder:CreateLayoutObjectIfNeeded()
-	echo("LayoutTreeBuilder:CreateLayoutObjectIfNeeded")
 	if(self:ShouldCreateLayoutObject()) then
 		self.style = self.style or self.node:StyleForLayoutObject();
 
 		local next_layout_object = self:NextLayoutObject();
 
 		local layout_object = self:CreateLayoutObject();
-		echo("LayoutTreeBuilder:CreateLayoutObjectIfNeeded")
-		layout_object:PrintNodeInfo()
 		local parent_layout_object = self:ParentLayoutObject();
-		parent_layout_object:PrintNodeInfo()
 		if(parent_layout_object and layout_object) then
 			local child = parent_layout_object:FirstChild();
-			
 			parent_layout_object:AddChild(layout_object, next_layout_object);
 		end
 
@@ -191,49 +186,5 @@ function LayoutTreeBuilder:CreateLayoutObject()
 	if(layout_object) then
 		layout_object:SetAnimatableStyle(style);
 	end
-
-
-
---    switch (style->display()) {
---        case NONE:
---            return 0;
---        case INLINE:
---            return new (arena) RenderInline(node);
---        case BLOCK:
---        case INLINE_BLOCK:
---        case RUN_IN:
---        case COMPACT:
---            // Only non-replaced block elements can become a region.
---            if (!style->regionThread().isEmpty() && doc->renderView())
---                return new (arena) RenderRegion(node, doc->renderView()->renderFlowThreadWithName(style->regionThread()));
---            return new (arena) RenderBlock(node);
---        case LIST_ITEM:
---            return new (arena) RenderListItem(node);
---        case TABLE:
---        case INLINE_TABLE:
---            return new (arena) RenderTable(node);
---        case TABLE_ROW_GROUP:
---        case TABLE_HEADER_GROUP:
---        case TABLE_FOOTER_GROUP:
---            return new (arena) RenderTableSection(node);
---        case TABLE_ROW:
---            return new (arena) RenderTableRow(node);
---        case TABLE_COLUMN_GROUP:
---        case TABLE_COLUMN:
---            return new (arena) RenderTableCol(node);
---        case TABLE_CELL:
---            return new (arena) RenderTableCell(node);
---        case TABLE_CAPTION:
---            return new (arena) RenderBlock(node);
---        case BOX:
---        case INLINE_BOX:
---            return new (arena) RenderDeprecatedFlexibleBox(node);
---#if ENABLE(CSS3_FLEXBOX)
---        case FLEXBOX:
---        case INLINE_FLEXBOX:
---            return new (arena) RenderFlexibleBox(node);
---#endif
---    }
---
 	return layout_object;
 end

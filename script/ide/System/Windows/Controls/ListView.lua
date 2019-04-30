@@ -14,14 +14,14 @@ test
 
 ------------------------------------------------------------
 ]]
-NPL.load("(gl)script/ide/System/Windows/UIElement.lua");
+NPL.load("(gl)script/ide/System/Windows/UITextElement.lua");
 local Rect = commonlib.gettable("mathlib.Rect");
 local UniString = commonlib.gettable("System.Core.UniString");
 local Application = commonlib.gettable("System.Windows.Application");
 local FocusPolicy = commonlib.gettable("System.Core.Namespace.FocusPolicy");
 local Point = commonlib.gettable("mathlib.Point");
 
-local ListView = commonlib.inherit(commonlib.gettable("System.Windows.UIElement"), commonlib.gettable("System.Windows.Controls.ListView"));
+local ListView = commonlib.inherit(commonlib.gettable("System.Windows.UITextElement"), commonlib.gettable("System.Windows.Controls.ListView"));
 ListView:Property("Name", "ListView");
 
 ListView:Property({"Background", "", auto=true});
@@ -41,6 +41,7 @@ ListView:Property({"m_maxLength", 65535, "getMaxLength", "setMaxLength", auto=tr
 ListView:Property({"lineWrap", nil, "GetLineWrap", "SetLineWrap", auto=true})
 ListView:Property({"lineHeight", 20, "GetLineHeight", "SetLineHeight", auto=true})
 ListView:Property({"SelectMultiple",false, auto=true})
+ListView:Property({"indent", 0, "Indent", "SetIndent", auto=true})
 
 --ListView:Signal("SizeChanged",function(width,height) end);
 --ListView:Signal("PositionChanged");
@@ -320,134 +321,6 @@ function ListView:SelectItem(index)
 	return beChanged;
 end
 
---function ListView:mouseMoveEvent(e)
---	if(e:button() == "left") then
---		local select = true;
---		local line = self:yToLine(e:pos():y());
---		local text = self:GetLineText(line);
---		local pos = self:xToPos(text, e:pos():x());
---		self:moveCursor(line, pos, select, true);
---
---		e:accept();
---	end
---end
---
---function ListView:keyPressEvent(event)
---	local keyname = event.keyname;
---	local mark = event.shift_pressed;
---	local unknown = false;
---	if(keyname == "DIK_RETURN") then
---		if(self:hasAcceptableInput()) then
---			--self:accepted(); -- emit
---			self:newLine(mark);
---		end
---	elseif(keyname == "DIK_BACKSPACE") then
---		if (not self.parent:isReadOnly()) then
---			if(event.ctrl_pressed) then
---				self:cursorWordBackward(true);
---				self:del();
---			else
---				self:backspace();
---			end
---		end
---	elseif(event:IsKeySequence("SelectAll")) then
---		self:selectAll();
---	elseif(event:IsKeySequence("Copy")) then
---		self:copy();
---	elseif(event:IsKeySequence("Paste")) then
---		if (not self.parent:isReadOnly()) then
---			self:paste("Clipboard");
---		end
---	elseif(event:IsKeySequence("Cut")) then
---		if (not self.parent:isReadOnly()) then
---			self:copy();
---			self:del();
---		end
---	elseif(keyname == "DIK_HOME") then
---		if(event.ctrl_pressed) then
---			self:DocHome(mark);
---		else
---			self:LineHome(mark);
---		end
---	elseif(keyname == "DIK_END") then
---		
---		if(event.ctrl_pressed) then
---			self:DocEnd(mark);
---		else
---			self:LineEnd(mark);
---		end
---	elseif(keyname == "DIK_PAGE_UP") then
---		self:PreviousPage(mark);
---	elseif(keyname == "DIK_PAGE_DOWN") then
---		self:NextPage(mark);
---	elseif (event:IsKeySequence("MoveToNextChar")) then
---		if (self:hasSelectedText()) then
---			self:moveCursor(self.m_selLineEnd, self.m_selPosEnd, false, true);
---        else
---            self:cursorForward(false, 1);
---        end
---	elseif (event:IsKeySequence("SelectNextChar")) then
---        self:cursorForward(true, 1);
---	elseif (event:IsKeySequence("MoveToPreviousChar")) then
---		if (self:hasSelectedText()) then
---            self:moveCursor(self.m_selLineStart, self.m_selPosStart, false, true);
---        else
---            self:cursorForward(false, -1);
---        end
---	elseif (event:IsKeySequence("SelectPreviousChar")) then
---        self:cursorForward(true, -1);
---
---	elseif (event:IsKeySequence("MoveToNextWord")) then
---        if (self.parent:echoMode() == "Normal") then
---            self:cursorWordForward(false);
---        elseif (not self.parent:isReadOnly()) then
---            self:End(false);
---		end
---    elseif (event:IsKeySequence("MoveToPreviousWord")) then
---        if (self.parent:echoMode() == "Normal") then
---            self:cursorWordBackward(false);
---        elseif (not self.parent:isReadOnly()) then
---            self:Home(false);
---        end
---    elseif (event:IsKeySequence("SelectNextWord")) then
---        if (self.parent:echoMode() == "Normal") then
---            self:cursorWordForward(true);
---        else
---            self:End(true);
---		end
---    elseif (event:IsKeySequence("SelectPreviousWord")) then
---        if (self.parent:echoMode() == "Normal") then
---            self:cursorWordBackward(true);
---        else
---            self:Home(true);
---		end
---	elseif (event:IsKeySequence("MoveToPreviousLine")) then
---		self:cursorLineForward(false)
---	elseif (event:IsKeySequence("MoveToNextLine")) then
---		self:cursorLineBackward(false);
---	elseif (event:IsKeySequence("SelectToPreviousLine")) then
---		self:cursorLineForward(true)
---	elseif (event:IsKeySequence("SelectToNextLine")) then
---		self:cursorLineBackward(true);
---	elseif (event:IsKeySequence("ScrollToPreviousLine")) then
---		self:ScrollLineForward()
---	elseif (event:IsKeySequence("ScrollToNextLine")) then
---		self:ScrollLineBackward();
---    elseif (event:IsKeySequence("Delete")) then
---        if (not self.parent:isReadOnly()) then
---            self:del();
---		end
---	else
---		unknown = true;
---	end
---
---	if (unknown) then
---        event:ignore();
---    else
---        event:accept();
---	end
---end
-
 function ListView:scrollX(offst_x)
 	local x = math.min(0,self:x() + offst_x);
 	self:setX(x, true);
@@ -685,7 +558,7 @@ function ListView:paintEvent(painter)
 				painter:SetFont(self:GetFont());
 				painter:SetPen(self:GetColor());
 				
-				painter:DrawTextScaled(self:x(), self:y() + offset_y, text, scale);
+				painter:DrawTextScaled(self:x() + self.indent, self:y() + offset_y, text, scale);
 			end	
 		end
 	end
@@ -695,3 +568,7 @@ function ListView:paintEvent(painter)
 	end
 end
 
+function ListView:ApplyCss(css)
+	ListView._super.ApplyCss(self, css);
+	self:SetLineHeight(css:ComputedLineHeight());
+end

@@ -30,17 +30,20 @@ window:Show("my_window", nil, "_mt", 0,0, 600, 600);
 test_Windows.windows = {window};
 ------------------------------------------------------------
 ]]
-NPL.load("(gl)script/ide/System/Windows/UIElement.lua");
-NPL.load("(gl)script/ide/System/Windows/Controls/ListBox.lua");
+NPL.load("(gl)script/ide/System/Windows/UIBorderElement.lua");
+NPL.load("(gl)script/ide/System/Core/UniString.lua");
 NPL.load("(gl)script/ide/System/Windows/Controls/EditBox.lua");
 NPL.load("(gl)script/ide/System/Windows/Controls/Button.lua");
-local ListBox = commonlib.gettable("System.Windows.Controls.ListBox");
+local UniString = commonlib.gettable("System.Core.UniString");
 local EditBox = commonlib.gettable("System.Windows.Controls.EditBox");
 --local Rect = commonlib.gettable("mathlib.Rect");
 local Button = commonlib.gettable("System.Windows.Controls.Button");
-local DropdownListbox = commonlib.inherit(commonlib.gettable("System.Windows.UIElement"), commonlib.gettable("System.Windows.Controls.DropdownListbox"));
+local FocusPolicy = commonlib.gettable("System.Core.Namespace.FocusPolicy");
+
+local DropdownListbox = commonlib.inherit(commonlib.gettable("System.Windows.UIBorderElement"), commonlib.gettable("System.Windows.Controls.DropdownListbox"));
 DropdownListbox:Property("Name", "DropdownListbox");
 
+DropdownListbox:Property({"BackgroundColor", "#cccccc", auto=true});
 DropdownListbox:Property({"maxVisibleItems", 10, "GetMaxVisibleItems", "SetMaxVisibleItems", auto=true});
 DropdownListbox:Property({"value", nil, "GetValue", "SetValue", auto=true});
 DropdownListbox:Property({"text", nil, "GetText"});
@@ -59,9 +62,11 @@ function DropdownListbox:ctor()
 	self.editbox = nil;
 	self.button = nil;
 	self.listbox = nil;
-	self.index = nil;
+	self.selectedIndex = nil;
 
 	self.needUpdateControl = true;
+
+	self.items = {};
 end
 
 function DropdownListbox:init(parent)
@@ -74,15 +79,28 @@ function DropdownListbox:init(parent)
 	return self;
 end
 
+function DropdownListbox:SelectedIndex()
+	return self.selectedIndex;
+end
+
 function DropdownListbox:selectItem(index)
-	if(self.listbox) then
-		self.listbox:selectItem(index);
+	if(self.selectedIndex == index) then
+		return;
 	end
+	self.selectedIndex = index;
+	if(self.items) then
+		self.text = self.items[index]["text"];
+		self.value = self.items[index]["value"] or self.text;
+	end
+--	if(self.listbox) then
+--		self.listbox:selectItem(index);
+--	end
 end
 
 function DropdownListbox:initEditBox()
 	self.editbox = EditBox:new():init(self);
-	--self.editbox:SetleftTextMargin(4);
+	self.editbox:setFocusPolicy(FocusPolicy.NoFocus);
+	self.editbox:SetBackgroundColor("#00000000");
 	self.editbox:setReadOnly(true);
 	self.editbox:Connect("editingFinished",function(event)
 		self:SetValue(value);
@@ -93,59 +111,73 @@ function DropdownListbox:GetValue()
 	return self.value;
 end
 
-function DropdownListbox:SetValue(value)
-	if(self.listbox) then
-		self.listbox:SetValue(value);
-	end
-end
+--function DropdownListbox:SetValue(value)
+--	for i = 1, #self.items do
+--		if(value == self.items[i]["value"]) then
+--			self:selectItem(i);
+--			break;
+--		end
+--	end
+--end
 
 function DropdownListbox:GetText()
 	return self.text;
 end
 
 function DropdownListbox:setGeometry(ax, ay, aw, ah)
-	local w = self:GetAdaptiveWidth();
-	w = if_else(aw > w, aw, w);
-	local h = ah;
-	if(self.listbox and not self.listbox:isHidden()) then
-		h = h + self:GetListBoxHeight();
-	end
-	DropdownListbox._super.setGeometry(self, ax, ay, w, h);
+	aw = aw or self:GetAdaptiveWidth();
+	ah = ah or self:GetAdaptiveHeight();
+	DropdownListbox._super.setGeometry(self, ax, ay, aw, ah);
 end
 
 function DropdownListbox:initButton()
 	self.button = Button:new():init(self);
+	self.button:setFocusPolicy(FocusPolicy.NoFocus);
 	self.button:SetPolygonStyle("narrow");
 	self.button:SetDirection("down");
 	self.button:SetBackgroundColor("#ff0000");
-	self.button:Connect("clicked", function (event)
-		if(self.listbox:isHidden()) then
-			self.listbox:show();
-		else
-			self.listbox:hide();
-		end
+	self.button:Connect("pressed", function ()
+		self:Click();
 	end)
 end
 
 function DropdownListbox:initListBox()
-	self.listbox = ListBox:new():init(self);
-	self.listbox:SetSize(self.maxVisibleItems);
+--	self.listbox = ListBox:new():init(self);
+--	self.listbox:SetZIndex(1);
+--	self.listbox:SetSize(self.maxVisibleItems);
+	self.listbox = self:GetWindow():PopupMenu();
 	self.listbox:Connect("clicked", function (index, value, text)
 		self.listbox:hide();
-		self.index = index;
+		self.selectedIndex = index;
 		self.value = value or text;
 		self.text = text;
 		self.editbox:SetText(text or "");
 	end)
-	self.listbox:hide();
+	--self.listbox:hide();
+end
+
+function DropdownListbox:Items()
+	return self.items;
 end
 
 function DropdownListbox:AddItem(item)
-	self.listbox:AddItem(item);
+	if(type(item) == "string") then
+		local uniText = UniString:new(item);
+		item = {
+			text = uniText,
+			selected = false,
+		}
+	end
+	self.items[#self.items + 1] = item;
+	self.needUpdateControl = true;
+	--self.listbox:AddItem(item);
 end
 
 function DropdownListbox:AddItems(items)
-	self.listbox:AddItems(items);
+	for i = 1,#items do
+		self:AddItem(items[i]);
+	end
+	--self.listbox:AddItems(items);
 end
 
 function DropdownListbox:SetMaxVisibleItems(value)
@@ -153,17 +185,16 @@ function DropdownListbox:SetMaxVisibleItems(value)
 		return;
 	end
 	self.maxVisibleItems = value;
-	self.listbox:SetSize(value);
+end
+
+function DropdownListbox:Click()
+	self.listbox:Open(self, "SelectPressedFocusReason");
 end
 
 function DropdownListbox:mousePressEvent(e)
 	if(e:button() == "left") then
 		if(self.editbox:isReadOnly() and self.editbox:rect():contains(e:pos())) then
-			if(self.listbox:isHidden()) then
-				self.listbox:show();
-			else
-				self.listbox:hide();
-			end
+			self:Click();
 			e:accept();			
 			return;
 		end
@@ -172,16 +203,25 @@ function DropdownListbox:mousePressEvent(e)
 end
 
 function DropdownListbox:GetAdaptiveWidth()
-	return self.listbox:GetMaxWidth() + self.ButtonWidth;
+	local items = self.items;
+	local font = self:GetFont();
+	local width = 0;
+	for i = 1, #items do
+		local text = items[i]["text"];
+		width = math.max(width, text:GetWidth(font));
+	end
+	return width + self:GetButtonWidth();
+	--return self.listbox:GetMaxWidth();
 end
 
 function DropdownListbox:GetAdaptiveHeight()
-	local size = self.listbox:Size();
-	if(size > self.maxVisibleItems) then
-		size = self.maxVisibleItems;
-	end
-
-	return self.EditHeight + self.listbox:GetItemHeight() * size;
+--	local size = self.listbox:Size();
+--	if(size > self.maxVisibleItems) then
+--		size = self.maxVisibleItems;
+--	end
+--
+--	return self.EditHeight + self.listbox:GetItemHeight() * size;
+	return self.EditHeight;
 end
 
 function DropdownListbox:GetPreferredSize()
@@ -198,24 +238,45 @@ end
 
 function DropdownListbox:UpdateControls()
 	if(self.needUpdateControl) then
-		local size = self.listbox:Size();
-		if(size > self.maxVisibleItems) then
-			size = self.maxVisibleItems;
+		if(not self.selectedIndex) then
+			self:selectItem(1);
 		end
 
-		local listbox_w, listbox_h = self:GetAdaptiveWidth(), self.listbox:GetItemHeight() * size;
-		self.listbox:setGeometry(0, self.EditHeight, listbox_w, listbox_h);
+		local textWidth = self:width() - self.ButtonWidth;
 
-		self.editbox:setGeometry(0, 0, listbox_w, self.EditHeight);
+		self.editbox:setGeometry(0, 0, textWidth, self:height());
+		self.editbox:SetText(self:GetText():GetText());
 
-		self:resize(listbox_w, self:height() + listbox_h);
-
-		self.button:setGeometry(self:width() - self.ButtonWidth, 0, self.ButtonWidth, self.EditHeight);
+		self.button:setGeometry(textWidth, 0, self.ButtonWidth, self:height());	
 	end
 	self.needUpdateControl = false;
 end
 
 function DropdownListbox:paintEvent(painter)
+	DropdownListbox._super.paintEvent(self, painter);
+
 	self:UpdateControls();
+
+	painter:SetPen(self:GetBackgroundColor());
+	painter:DrawRectTexture(self:x(), self:y(), self:width(), self:height(), self:GetBackground());
 end
 
+function DropdownListbox:SetTextMargin(left, top, right, bottom)
+	if(self.editbox) then
+		self.editbox:SetTextMargin(left, top, right, bottom);
+	end
+	if(self.listbox) then
+		self.listbox:SetTextMargin(left, top, right, bottom);
+	end
+end
+
+function DropdownListbox:ApplyCss(css)
+	DropdownListbox._super.ApplyCss(self, css);
+	if(self.listbox) then
+		self.listbox:ApplyCss(css);
+	end
+	if(self.editbox) then
+		self.editbox:ApplyCss(css);
+		self.editbox:SetBorders(nil);
+	end
+end

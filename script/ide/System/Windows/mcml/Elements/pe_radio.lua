@@ -45,43 +45,6 @@ function pe_radio:CreateControl()
 	_this:Connect("clicked", self, self.OnClick, "UniqueConnection");
 end
 
-function pe_radio:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
---	local default_css = mcml:GetStyleItem(self.class_name);
---	css.float = css.float or true;
---	css.width = css.width or default_css.iconSize;
---	css.height = css.height or default_css.iconSize;
---	css["background"] = self:GetAttributeWithCode("UncheckedBG", nil, true) or default_css["background"];
---	css["background_checked"] = self:GetAttributeWithCode("CheckedBG", nil, true) or default_css["background_checked"];
---
---	local polygonStyle = self:GetAttributeWithCode("polygonStyle", nil, true);
---
---	local _this = self.control;
---	if(not _this) then
---		_this = Button:new():init(parentElem);
---		_this:SetPolygonStyle(polygonStyle or "radio");
---		self:SetControl(_this);
---	else
---		_this:SetParent(parentElem);
---	end
---	
---	_this:setCheckable(true);
---	_this:ApplyCss(css);
---	_this:SetText(self:GetAttributeWithCode("Label", nil, true));
---	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
---
---	local checked = self:GetAttributeWithCode("checked", nil, true);
---	if(checked) then
---		checked = if_else(checked == "true" or checked == "checked",true,false);
---		_this:setChecked(checked);
---	end
---
---	self.groupName = self:GetAttribute("name") or "_defaultRadioGroup";
---	self.buttonName = self:GetAttributeWithCode("name",nil,true);
---	_this:Connect("clicked", self, self.OnClick, "UniqueConnection");
-
-	pe_radio._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
-end
-
 function pe_radio:setChecked(checked)
 	if(self.control) then
 		self.control:setChecked(checked);
@@ -148,12 +111,4 @@ function pe_radio:OnClick()
 	end
 
 	return result;
-end
-
--- virtual function: 
--- after child node layout is updated
-function pe_radio:OnAfterChildLayout(layout, left, top, right, bottom)
-	if(self.control) then
-		self.control:setGeometry(left, top, right-left, bottom-top);
-	end
 end

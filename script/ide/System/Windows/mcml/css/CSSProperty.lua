@@ -63,6 +63,7 @@ local number_fields = {
 	["border-width"] = true,
 	["text-shadow-offset-x"] = true,
 	["text-shadow-offset-y"] = true,
+	["z-index"] = true,
 };
 
 local length_fields = {
@@ -97,6 +98,10 @@ local length_fields = {
 local color_fields = {
 	["color"] = true,
 	["border-color"] = true,
+	["border-left-color"] = true,
+	["border-top-color"] = true,
+	["border-right-color"] = true,
+	["border-bottom-color"] = true,
 	["background-color"] = true,
 	["shadow-color"] = true,
 	["caret-color"] = true,
@@ -198,11 +203,12 @@ local enum_fields = {
 		["radio"] = "RadioPart",
 		["narrow"] = "NarrowPart",
 		["button"] = "ButtonPart",
-		["listbox"] = "ListboxPart",
 		["progress-bar"] = "ProgressBarPart",
 		["textfield"] = "TextFieldPart",
 		["textarea"] = "TextAreaPart",
 		["push-button"] = "PushButtonPart",
+		["menulist"] = "MenulistPart",
+		["listbox"] = "ListboxPart",
 	},enum = ComputedStyleConstants.ControlPartEnum},
 	["box-sizing"] = {map = {
 		["content-box"] = "CONTENT_BOX",
@@ -225,7 +231,7 @@ function CSSProperty:CreateValueFromCssString()
 		return value;
 	elseif(number_fields[name]) then
 		value = string.match(value, "([%+%-]?%d+[.]?%d*)");
-		return value;
+		return tonumber(value);
 	elseif(enum_fields[name]) then
 		local map = enum_fields[name].map;
 		local enum = enum_fields[name].enum;

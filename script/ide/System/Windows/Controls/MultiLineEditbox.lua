@@ -139,8 +139,6 @@ end
 function MultiLineEditbox:initViewport()
 	self.viewport = TextControl:new():init(self);
 	self.viewport:SetClip(true);
-	self.viewport:Connect("SizeChanged", self, "updateScrollStatus");
-	self.viewport:Connect("PositionChanged", self, "updateScrollValue");
 end
 
 function MultiLineEditbox:ShowLineNumber(value)
@@ -317,22 +315,11 @@ function MultiLineEditbox:GetRow()
 	return math.floor(self:ViewRegion():height()/self.viewport:GetLineHeight());
 end
 
-function MultiLineEditbox:updateScrollInfo()
-	local clip = self:ViewRegion();
-	--if(not self.hbar:isHidden()) then
-		self.hbar:setRange(0, self.viewport:GetRealWidth() - clip:width() - 1);
-		self.hbar:setStep(self.viewport:WordWidth(), clip:width());
-		self.hbar:SetValue(self.viewport:hValue());
-	--end
+function MultiLineEditbox:UpdateScrollbarValue()
+	if(not self.scrollbarValueDirty) then
+		return;
+	end
 
-	--if(not self.vbar:isHidden()) then
-		self.vbar:setRange(0, self.viewport:GetRow() - self:GetRow());
-		self.vbar:setStep(1, self:GetRow());
-		self.vbar:SetValue(self.viewport:vValue());
-	--end
-end
-
-function MultiLineEditbox:updateScrollValue()
 	if(not self.hbar:isHidden()) then
 		self.hscroll = self.viewport:hValue();
 		self.hbar:SetValue(self.hscroll);
@@ -342,54 +329,8 @@ function MultiLineEditbox:updateScrollValue()
 		self.vscroll = self.viewport:vValue();
 		self.vbar:SetValue(self.vscroll);
 	end
-end
 
-function MultiLineEditbox:updateScrollStatus(textbox_w, textbox_h)
-	local clip = self:ViewRegion();
-	if(textbox_w > clip:width()) then
-		--self.hbar:show();
-		self:horizontalScrollBarShow();
-	else
-		--self.hbar:hide();
-		self:horizontalScrollBarHide();
-	end
-
-	clip = self:ViewRegion();
-	if(textbox_h > clip:height()) then
-		--self.vbar:show();
-		self:verticalScrollBarShow();
-		clip = self:ViewRegion();
-		if(textbox_w > clip:width()) then
-			--self.hbar:show();
-			self:horizontalScrollBarShow();
-		else
-			--self.hbar:hide();
-			self:horizontalScrollBarHide();
-		end
-	else
-		--self.vbar:hide();
-		self:verticalScrollBarHide();
-	end
-
-	self:updateScrollInfo();
-end
-
-function MultiLineEditbox:updateScrollGeometry()
-	if(not self.hbar:isHidden()) then
-		if(self.vbar:isHidden()) then
-			self.hbar:setGeometry(0, self:height() - self.SliderSize, self:width(), self.SliderSize);
-		else
-			self.hbar:setGeometry(0, self:height() - self.SliderSize, self:width() - self.SliderSize, self.SliderSize);
-		end
-	end
-
-	if(not self.vbar:isHidden()) then
-		if(self.hbar:isHidden()) then
-			self.vbar:setGeometry(self:width() - self.SliderSize, 0, self.SliderSize, self:height());
-		else
-			self.vbar:setGeometry(self:width() - self.SliderSize, 0, self.SliderSize, self:height() - self.SliderSize);
-		end
-	end
+	self.scrollbarValueDirty = false;
 end
 
 -- text region. 
@@ -448,14 +389,6 @@ function MultiLineEditbox:ApplyCss(css)
 		self:setHorizontalScrollBarPolicy(overflowMap[overflow_x])
 		self:setVerticalScrollBarPolicy(overflowMap[overflow_y])
 	end
-
---	local font, font_size, font_scaling = css:GetFontSettings();
---	self:SetFont(font);
---	self:SetFontSize(font_size);
---	self:SetScale(font_scaling);
---	if(css.color) then
---		self:SetColor(css.color);
---	end
 end
 
 function MultiLineEditbox:LineNumberWidth()
@@ -482,6 +415,8 @@ function MultiLineEditbox:GetItemHeight()
 end
 
 function MultiLineEditbox:paintEvent(painter)
+	MultiLineEditbox._super.paintEvent(self, painter);
+
 	--self:updateScrollGeometry();
 	painter:SetPen(self:GetBackgroundColor());
 	painter:DrawRectTexture(self:x(), self:y(), self:width(), self:height(), self:GetBackground());

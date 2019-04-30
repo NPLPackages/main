@@ -70,9 +70,6 @@ end
 
 
 function InlineBox:init(obj, topLeft, logicalWidth, firstLine, constructed, dirty, extracted, isHorizontal, next, prev, parent)
-	echo("InlineBox:init");
-	echo(self:BoxName());
-	echo(topLeft);
 	self.renderer = obj;
 	if(topLeft) then
 		self.next = next;
@@ -94,20 +91,15 @@ function InlineBox:BoxName()
 end
 
 function InlineBox:Destroy(renderArena)
-	echo("InlineBox:Destroy")
-	echo(self:BoxName())
-	self:Renderer():PrintNodeInfo()
 	if(not self:IsInlineFlowBox() and not self:IsInlineTextBox())then
 --		if(self:Renderer():IsReplaced()) then
 --			local control = self:Renderer():GetControl();
 --			if(control) then
---				echo("control:SetParent nil")
 --				control:SetParent(nil)
 --			end
 --		end
 		local control = self:Renderer():GetControl();
 		if(control) then
-			echo("control:SetParent nil")
 			control:SetParent(nil)
 		end
 	end
@@ -127,9 +119,6 @@ function InlineBox:AdjustPositionForChildren(dx, dy)
 end
 
 function InlineBox:AdjustPosition(dx, dy)
-	echo("InlineBox:AdjustPosition");
-	echo(self:BoxName());
-	echo({dx, dy});
 	self.topLeft:Move(dx, dy);
 
     if (self.renderer:IsReplaced()) then
@@ -154,9 +143,6 @@ function InlineBox:AdjustBlockDirectionPositionForChildren(delta)
 end
 
 function InlineBox:AdjustBlockDirectionPosition(delta)
-	echo("InlineBox:AdjustBlockDirectionPosition");
-	echo(self:BoxName());
-	echo(delta);
     if (self:IsHorizontal()) then
         self:AdjustPosition(0, delta);
     else
@@ -368,9 +354,6 @@ end
 
 -- y() is the top side of the box in the containing block's coordinate system.
 function InlineBox:SetY(y)
-	echo("InlineBox:SetY");
-	echo(self:BoxName());
-	echo(y);
 	self.topLeft:SetY(y);
 end
 
@@ -450,10 +433,6 @@ end
 
 -- The logical width is our extent in the line's overall inline direction, i.e., width for horizontal text and height for vertical text.
 function InlineBox:SetLogicalWidth(w)
-	if(w == 81) then
-		echo("InlineBox:SetLogicalWidth")
-		echo(self:BoxName());
-	end
 	self.logicalWidth = w;
 end
 
@@ -566,8 +545,6 @@ end
 
 --void paint(PaintInfo&, const LayoutPoint&, LayoutUnit lineTop, LayoutUnit lineBottom)
 function InlineBox:Paint(paintInfo, paintOffset, lineTop, lineBottom)
-	echo("InlineBox:Paint");
-	self:Renderer():PrintNodeInfo();
 	--if (!paintInfo.shouldPaintWithinRoot(renderer()) || (paintInfo.phase != PaintPhaseForeground && paintInfo.phase != PaintPhaseSelection))
 	if (not paintInfo:ShouldPaintWithinRoot(self:Renderer())) then
         return;

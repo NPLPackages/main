@@ -199,17 +199,13 @@ function LayoutObject:InlineBoxWrapper()
 end
 
 function LayoutObject:GetParentControl()
-	echo("LayoutObject:GetParentControl")
-	self:PrintNodeInfo()
 	if(self:InlineBoxWrapper()) then
-		echo("self:InlineBoxWrapper")
 		local box = self:InlineBoxWrapper();
 		return box:Parent():GetControl()
 	end
 	if(self.parent) then
 		return self.parent:GetControl();
 	end
-	echo("ParentControl is nil")
 end
 
 function LayoutObject:GetAnonymousControl()
@@ -227,8 +223,6 @@ end
 
 function LayoutObject:GetOrCreateAnonymousControl()
 	if(self.anonymousControl == nil) then
-		echo("CreateAnonymousControl")
-		self:PrintNodeInfo()
 		self.anonymousControl = self:Parent():CreateAnonymousControl()
 	end
 	return self.anonymousControl;
@@ -293,8 +287,6 @@ function LayoutObject:SetParent(parent)
 end
 
 function LayoutObject:AddChild(newChild, beforeChild)
-	echo("LayoutObject:AddChild")
-	self:PrintNodeInfo()
 	local children = self:VirtualChildren();
     if (not children) then
         return;
@@ -347,9 +339,6 @@ function LayoutObject:AddChild(newChild, beforeChild)
 --        table->addChild(newChild);
     else
         -- Just add it...
-		echo("LayoutObject:AddChild insert")
-		self:PrintNodeInfo()
-		newChild:PrintNodeInfo()
 		children:InsertChildNode(self, newChild, beforeChild);
     end
 
@@ -1299,9 +1288,6 @@ function LayoutObject:ChildrenInline()
 end
 
 function LayoutObject:SetChildrenInline(value)
-	echo("LayoutObject:SetChildrenInline")
-	self:PrintNodeInfo()
-	echo(value)
 	self.childrenInline = value;
 end
 
@@ -1486,8 +1472,6 @@ function LayoutObject:ContainingBlock()
 end
 
 function LayoutObject:WillBeDestroyed()
-	echo("LayoutObject:WillBeDestroyed")
-	self:PrintNodeInfo()
 	-- Destroy any leftover anonymous children.
     local children = self:VirtualChildren();
     if (children) then
@@ -1551,8 +1535,6 @@ function LayoutObject:RemoveChild(oldChild)
 end
 
 function LayoutObject:Destroy()
-	echo("LayoutObject:Destroy")
-	self:PrintNodeInfo()
     self:WillBeDestroyed();
 	--TODO: fixed this function
     --self:ArenaDelete(renderArena(), this);
@@ -1560,11 +1542,9 @@ function LayoutObject:Destroy()
 	local control = self:GetControl();
 	if(control) then
 		control:SetParent(nil);
---		echo("control:Destroy()")
 --		if(self.node) then
 --			self.node:DestroyControl()
 --		else
---			self:PrintNodeInfo()
 --			control:Destroy()
 --		end
 	end
@@ -2038,20 +2018,11 @@ function LayoutObject:Repaint(immediate)
     local repaintContainer = self:ContainerForRepaint();
 	repaintContainer = repaintContainer or view;
 	local rect = self:ClippedOverflowRectForRepaint(repaintContainer);
-	echo("LayoutObject:Repaint")
-	self:PrintNodeInfo()
-	echo(self.frame_rect)
-	echo(rect)
     self:RepaintUsingContainer(repaintContainer, rect, immediate);
 end
 
 --void RenderObject::repaintUsingContainer(RenderBoxModelObject* repaintContainer, const LayoutRect& r, bool immediate)
 function LayoutObject:RepaintUsingContainer(repaintContainer, rect, immediate)
-	echo("LayoutObject:RepaintUsingContainer");
-	echo(rect)
-	if(repaintContainer) then
-		echo("repaintContainer")
-	end
     if (not repaintContainer) then
         self:View():RepaintViewRectangle(rect, immediate);
         return;
@@ -2216,8 +2187,6 @@ end
 
 --bool RenderObject::repaintAfterLayoutIfNeeded(RenderBoxModelObject* repaintContainer, const LayoutRect& oldBounds, const LayoutRect& oldOutlineBox, const LayoutRect* newBoundsPtr, const LayoutRect* newOutlineBoxRectPtr)
 function LayoutObject:RepaintAfterLayoutIfNeeded(repaintContainer, oldBounds, oldOutlineBox, newBoundsPtr, newOutlineBoxRectPtr)
-	echo("LayoutObject:RepaintAfterLayoutIfNeeded")
-	self:PrintNodeInfo();
     local view = self:View();
 --    if (v->printing())
 --        return false; // Don't repaint if we're printing.
@@ -2252,9 +2221,6 @@ function LayoutObject:RepaintAfterLayoutIfNeeded(repaintContainer, oldBounds, ol
     if (repaintContainer == nil) then
         repaintContainer = v;
 	end
-	echo({newBounds, oldBounds})
-	echo({newOutlineBox, oldOutlineBox})
-	echo(fullRepaint)
     if (fullRepaint) then
         self:RepaintUsingContainer(repaintContainer, oldBounds);
         if (newBounds ~= oldBounds) then

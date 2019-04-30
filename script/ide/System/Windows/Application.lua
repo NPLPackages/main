@@ -393,7 +393,7 @@ function Application:notify(receiver, event)
 					self.toolTipWakeUpTimer:Change(self.tooltipWalkupDelay, nil);
 				end
 			end
-		else
+		elseif(type == "mousePressEvent") then
 			self:giveFocusAccordingToFocusPolicy(w, event, event:pos());
 		end
 
@@ -503,7 +503,7 @@ function Application:setFocusWidget(focus, reason)
 		if (reason ~= "NoFocusReason") then
 			-- send events
 			if (prev) then
-				local focusOutEvent = FocusEvent:new():init("focusOutEvent", reason);
+				local focusOutEvent = FocusEvent:new():init("focusOutEvent", reason, focus);
 				self:sendEvent(prev, focusOutEvent);
 			end
 			if(focus and self.focus_widget == focus) then
@@ -731,7 +731,6 @@ end
 -- load components from a given mcml page or page url to uiElement.
 function Application.LoadComponent(uiElement, url)
 	if(uiElement) then
-		echo(uiElement.crect)
 		local page = Page:new({name = uiElement.name});
 		local loader = FrameLoaderClient:new():init(uiElement, page);
 		local mainFrame = Frame.Create(page, nil, loader);

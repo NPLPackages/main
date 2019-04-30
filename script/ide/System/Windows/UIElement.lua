@@ -80,7 +80,7 @@ UIElement:Property({"Background", nil, auto=true});
 UIElement:Property({"tooltip", nil, "GetTooltip", "SetTooltip", auto=true});
 UIElement:Property({"toolTipDuration", 5000, auto=true});
 
-UIElement:Property({"focus_policy", FocusPolicy.NoFocus, "focusPolicy", "setFocusPolicy"});
+UIElement:Property({"focus_policy", FocusPolicy.ClickFocus, "focusPolicy", "setFocusPolicy"});
 UIElement:Property({"mouseTracking", nil, "hasMouseTracking", "setMouseTracking"});
 UIElement:Property({"render_priority", 0, auto=true});
 
@@ -90,6 +90,8 @@ UIElement:Property({"selfClipRegion", nil, "GetSelfClipRegion", "SetSelfClipRegi
 UIElement:Property({"childrenClip", false, "IsChildrenClip", "SetChildrenClip", auto=true});
 UIElement:Property({"disabled", false, "isDisabled", "SetDisabled", auto=true});
 
+UIElement:Property({"zIndex", 0, "ZIndex", "SetZIndex", auto=true});
+
 -- number of posted events
 UIElement.postedEvents = 0;
 
@@ -97,6 +99,8 @@ function UIElement:ctor()
 	-- client rect
 	self.crect = Rect:new():init(0,0,0,0);
 	self._page_element = nil;
+
+	self.zIndexDirty = true;
 end
 
 -- init and return the object. 
@@ -123,6 +127,26 @@ function UIElement:SetParent(parent)
 	end
 end
 
+function UIElement:setParent_helper(parent)
+	if(parent == nil) then
+		self.zIndexDirty = true;
+	end
+	UIElement._super.setParent_helper(self, parent)
+	if(parent ~= nil) then
+		if(self:ZIndex() ~= 0) then
+			self.zIndexDirty = true;
+		end
+	end
+end
+
+function UIElement:SetZIndex(v)
+	if(self.zIndex == v) then
+		return;
+	end
+	self.zIndex = v;
+	self.zIndexDirty = true;
+end
+
 function UIElement:lessPriority(elem)
 	local self_priority = self:GetField("render_priority",nil);
 	local elem_priority = elem:GetField("render_priority",nil);
@@ -130,28 +154,17 @@ function UIElement:lessPriority(elem)
 end
 
 function UIElement:SetBackground(background) 
-	echo("UIElement:SetBackground")
 	self.Background = background;
-	echo(background)
 	if(background ~= nil and background ~= "") then
-		echo("UIElement:SetBackground SetBackgroundColor")
 		self:SetBackgroundColor(Color.white:ToString());
 	end
 end
 
 -- virtual: apply css style
 function UIElement:ApplyCss(css)
-	echo("UIElement:ApplyCss")
-	echo(self:GetField("Name","nil"))
 	self:SetBackgroundColor(css:BackgroundColor():ToString());
 	self:SetBackground(css:BackgroundImage());
---	local background_image = css:BackgroundImage();
---	self:SetBackground(background_image);
---	if(background_image == nil or background_image == "") then
---		self:SetBackgroundColor(css:BackgroundColor():ToString());
---	else
---		self:SetBackgroundColor(Color.white:ToString());
---	end
+	self:SetZIndex(css:ZIndex());
 end
 
 -- Returns true if this object is a parent, (or grandparent and so on
@@ -219,9 +232,9 @@ function UIElement:show_recursive()
 	--end
 
     -- activate our layout before we and our children become visible
-    if (self.layout) then
-        self.layout:activate();
-	end
+--    if (self.layout) then
+--        self.layout:activate();
+--	end
 
     self:show_helper();
 end
@@ -338,17 +351,18 @@ function UIElement:setVisible(visible)
 		-- remember that show was called explicitly
         self:setAttribute("WA_WState_ExplicitShowHide");
         -- we are no longer hidden
+		
         self:setAttribute("WA_WState_Hidden", false);
 
 		-- activate our layout before we and our children become visible
-        if (self.layout) then
-            self.layout:activate();
-		end
+--        if (self.layout) then
+--            self.layout:activate();
+--		end
 
 		if (not self:isWindow()) then
             local parent = self:parentWidget();
             while (parent and parent:isVisible() and parent.layout and not parent.in_show) do
-                parent.layout:activate();
+                --parent.layout:activate();
                 if (parent:isWindow()) then
                     break;
 				end
@@ -560,7 +574,6 @@ function UIElement:Render(painterContext)
 	-- make sure all widgets are recursively laid out properly
 	self:prepareToRender();
 
-	-- draw all widgets recursively
 	local offset = Point:new_from_pool(self:x(), self:y());
 	self:drawWidget(painterContext, offset);
 end
@@ -570,6 +583,22 @@ function UIElement:prepareToRender()
 		-- Make sure the widget is laid out correctly.
 		self:GetWindow():sendPendingSizeEvents(true, true);
 	end
+end
+
+function UIElement:SortChildrenByZIndexIfNeeded()
+	if(not self.zIndexDirty) then
+		return;
+	end
+
+	if(not self.children or self.children:empty()) then
+		return;
+	end
+
+	self.children:sort(function(a,b)
+		return a:ZIndex() < b:ZIndex();
+	end);
+
+	self.zIndexDirty = false;
 end
 
 -- draw with offset and its child recursively
@@ -594,6 +623,8 @@ function UIElement:drawWidget(painterContext, offset)
 
 	-- now draw all children if any
 	if(self.children and not self.children:empty()) then
+		self:SortChildrenByZIndexIfNeeded();
+
 		local widget_offset = Point:new_from_pool(self:x(), self:y());
 		--widget_offset:add(offset);
 
@@ -618,17 +649,8 @@ function UIElement:prepareToPaintEvent(event)
 	local func = self[event:GetHandlerFuncName()];
 	local needClip = self:needClipping();
 	if(needClip) then
-		--echo("UIElement:prepareToPaintEvent")
-		--echo(self:GetField("Name","no Name"))
---		if(self._page_element) then
---			self._page_element:PrintNodeInfo()
---		end
 		local clipRect = self:ClipRegion();
 		local rect = self:rect();
-		--echo(clipRect)
-		--echo(rect)
-		--echo(clipRect:contains(rect))
-		--echo(clipRect:isIntersected(self:rect()))
 		if(clipRect:contains(rect)) then
 			func(self, event);
 			return;
@@ -707,8 +729,6 @@ function UIElement:childAt(point)
 end
 
 function UIElement:childAt_helper(point)
-	--echo("UIElement:childAt_helper")
-	--echo(self:GetField("Name","nil"))
 	if(not self:isHidden() and self.children and not self.children:empty()) then
 		if (self:pointInsideRectAndMask(point)) then
 			return self:childAtRecursiveHelper(point);
@@ -719,45 +739,34 @@ end
 -- private: 
 -- @param p: point in local coordinate system. 
 function UIElement:childAtRecursiveHelper(p)
-	--echo("UIElement:childAtRecursiveHelper")
-	--echo(self:GetField("Name","nil"))
 	if(not self.children) then
-		--echo("111111111111111")
 		return
 	end
 	local child = self.children:last();
 	while (child) do
-		-- Map the point 'p' from parent coordinates to child coordinates.
-		local childPoint = p:clone_from_pool();
-		childPoint:sub(child.crect:topLeft());
+		if(not child:isHidden()) then
+			-- Map the point 'p' from parent coordinates to child coordinates.
+			local childPoint = p:clone_from_pool();
+			childPoint:sub(child.crect:topLeft());
 
-		-- Check if the point hits the child.
-		if (child:pointInsideRectAndMask(childPoint)) then
-			if(child.children and not child.children:empty()) then
-				-- Do the same for the child's descendants.
-				return child:childAtRecursiveHelper(childPoint) or child;
-			else
-				--echo("return child;")
-				--echo(child:GetField("Name","nil"))
-				return child;
+			-- Check if the point hits the child.
+			if (child:pointInsideRectAndMask(childPoint)) then
+				if(child.children and not child.children:empty()) then
+					-- Do the same for the child's descendants.
+					return child:childAtRecursiveHelper(childPoint) or child;
+				else
+					return child;
+				end
 			end
 		end
 		child = self.children:prev(child);
 	end
-	--echo("222222222222")
 end
 
 function UIElement:pointInsideRectAndMask(p)
-	--echo("UIElement:pointInsideRectAndMask")
-	--echo(self:GetField("Name","nil"))
-	--echo(self:rect())
-	--echo(p)
 	local posInClip = true;
 	if(self:needClipping()) then
 		local clip = self:ClipRegion();
-		--echo("self.clip")
-		--echo(clip)
-		--echo(p)
 		if(clip) then
 			posInClip = clip:contains(p);
 		end
@@ -1182,8 +1191,6 @@ function UIElement:ParentClipRegion()
 end
 
 function UIElement:SelfAndParentClipIntersection()
-	--echo("UIElement:SelfAndParentClipIntersection")
-	--echo(self:GetField("Name","no Name"))
 	local clipRegion, parentClipRegion;
 	if(self:IsClip()) then
 		clipRegion = self:GetSelfClipRegion();
@@ -1198,8 +1205,6 @@ function UIElement:SelfAndParentClipIntersection()
 		parentClipRegion:setX(parentClipRegion:x() - self:x());
 		parentClipRegion:setY(parentClipRegion:y() - self:y());
 	end
-	--echo(clipRegion)
-	--echo(parentClipRegion)
 	if(clipRegion) then
 		if(parentClipRegion) then
 			clipRegion = Rect.intersection(clipRegion, parentClipRegion);
@@ -1207,30 +1212,16 @@ function UIElement:SelfAndParentClipIntersection()
 	elseif(parentClipRegion) then
 		clipRegion = parentClipRegion;
 	end
-	--echo("UIElement:SelfAndParentClipIntersection end")
 	return clipRegion;
 end
 
 -- clip region. 
-function UIElement:ClipRegion()
-	--echo("UIElement:ClipRegion")
-	--echo(self:GetField("Name","no Name"))
---	if(self:IsClip()) then
---		return self:rect();
---	else
---		return self:ParentClipRegion();
---	end
-
-	
+function UIElement:ClipRegion()	
 	local clipRegion = self:SelfAndParentClipIntersection();
-	--echo(clipRegion)
 	local offsetX, offsetY = self:x(),self:y()
 	parent = self:GetParent();
 	while(parent) do
-		--echo("while(parent) do")
 		local parentClipRegion = parent:SelfAndParentClipIntersection();
-		--echo(parentClipRegion)
-		--echo(clipRegion)
 		if(parentClipRegion) then
 			parentClipRegion:setX(parentClipRegion:x() - offsetX);
 			parentClipRegion:setY(parentClipRegion:y() - offsetY);

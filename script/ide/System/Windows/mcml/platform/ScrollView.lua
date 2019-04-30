@@ -9,6 +9,7 @@ NPL.load("(gl)script/ide/System/Windows/mcml/platform/ScrollView.lua");
 local ScrollView = commonlib.gettable("System.Windows.mcml.platform.ScrollView");
 ------------------------------------------------------------
 ]]
+NPL.load("(gl)script/ide/System/Windows/mcml/platform/ScrollableArea.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/IntPoint.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/IntSize.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/IntRect.lua");
@@ -42,7 +43,6 @@ end
 
 --void Widget::setParent(ScrollView* view)
 function ScrollView:SetParent(view)
-	echo("ScrollView:SetParent")
 	self.m_parent = view;
 end
 
@@ -106,13 +106,10 @@ end
 
 --void ScrollView::repaintContentRectangle(const IntRect& rect, bool now)
 function ScrollView:RepaintContentRectangle(rect, now)
-	echo("ScrollView:RepaintContentRectangle")
-	echo(rect)
     local paintRect = rect:clone_from_pool();
     if (self:ClipsRepaints() and not self:PaintsEntireContents()) then
         paintRect:Intersect(self:VisibleContentRect());
 	end
-	echo(paintRect)
     if (paintRect:IsEmpty()) then
         return;
 	end
@@ -161,8 +158,6 @@ end
 
 --void Widget::setFrameRect(const IntRect& rect)
 function ScrollView:SetFrameRect(rect)
-	echo("ScrollView:SetFrameRect")
-	echo(rect)
     self.m_frameRect = rect;
 end
 

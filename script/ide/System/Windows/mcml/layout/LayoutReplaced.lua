@@ -47,7 +47,6 @@ function LayoutReplaced:CanHaveChildren()
 end
 
 function LayoutReplaced:Layout()
-	echo("LayoutReplaced:Layout()")
     --ASSERT(needsLayout());
     
     --LayoutRepainter repainter(*this, checkForRepaintDuringLayout());
@@ -69,9 +68,6 @@ end
 --void RenderBox::paintBoxDecorations(PaintInfo& paintInfo, const LayoutPoint& paintOffset)
 function LayoutReplaced:PaintBoxDecorations(paintInfo, paintOffset)
 	local rect = self.frame_rect:clone_from_pool();
-	echo("LayoutReplaced:PaintBoxDecorations")
-	echo(self.frame_rect)
-	echo(paintOffset)
 --	if(self:HasSelfPaintingLayer()) then
 --		rect:Move(paintOffset:X(), paintOffset:Y());
 --	end

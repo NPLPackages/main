@@ -139,3 +139,7 @@ function BorderData:BorderBottomWidth()
 	end
 	return self.m_bottom:Width();
 end
+
+function BorderData:Format()
+	return {self:Left():Format(), self:Top():Format(), self:Right():Format(), self:Bottom():Format()}
+end

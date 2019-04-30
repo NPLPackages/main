@@ -27,12 +27,20 @@ local FocusEvent = commonlib.inherit(commonlib.gettable("System.Core.Event"), co
 FocusEvent.event_type = "focusInEvent";
 
 function FocusEvent:ctor()
+	self.next = nil;
+	self.prev = nil;
 end
 
 -- event_type is "focusInEvent" or "focusOutEvent" or "focusAboutToChangeEvent" 
-function FocusEvent:init(event_type, reason)
+function FocusEvent:init(event_type, reason, widget)
 	FocusEvent._super.init(self, event_type);
 	self.reason = reason;
+	if(event_type ==  "focusInEvent") then
+		self.prev = widget;
+	elseif(event_type ==  "focusOutEvent") then
+		self.next = widget;
+	end
+
 	return self;
 end
 
@@ -42,6 +50,18 @@ end
 
 function FocusEvent:lostFocus() 
 	return self:GetType() == "focusOutEvent";
+end
+
+function FocusEvent:GetReason() 
+	return self.reason;
+end
+
+function FocusEvent:GetPrevOrNext() 
+	if(self:GetType() ==  "focusInEvent") then
+		return self.prev;
+	elseif(self:GetType() ==  "focusOutEvent") then
+		return self.next;
+	end
 end
 
 ------------------------------------------------

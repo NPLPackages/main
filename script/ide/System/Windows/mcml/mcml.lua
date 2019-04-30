@@ -95,8 +95,7 @@ function mcml:LoadAllElements()
 	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_div.lua");
 	Elements.pe_div:RegisterAs("div", "pe:div", "NodeTemplate", "form");
 	Elements.pe_div:RegisterAs("h1", "h2", "h3", "h4");
-	Elements.pe_div:RegisterAs("html", "p", "DataNodePlaceholder");
-	Elements.pe_mcml:RegisterAs("pe:mcml");
+	Elements.pe_div:RegisterAs("pe:mcml", "html", "p", "DataNodePlaceholder");
 		NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_font.lua");
 		Elements.pe_font:RegisterAs("font");
 		NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_span.lua");
@@ -188,17 +187,11 @@ local DocumentFragment = commonlib.gettable("System.Windows.mcml.DocumentFragmen
 
 function mcml:createFragmentFromSource(html)
 	self:StaticInit();
-	echo("mcml:createFragmentFromSource")
 	local fragment = nil;
     local htmlBuffer = "<fragment>"..html.."</fragment>";
 	local xmlRoot = ParaXML.LuaXML_ParseString(htmlBuffer);
-	echo(xmlRoot)
 	if(type(xmlRoot)=="table" and table.getn(xmlRoot)>0) then
 		fragment = DocumentFragment:createFromXmlNode(xmlRoot[1]);
-		--fragment = xmlRoot:FirstChild();
 	end
-	echo("fragment")
-	fragment:PrintNodeInfo()
-	echo(fragment:NodeType())
     return fragment;
 end

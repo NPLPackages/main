@@ -331,7 +331,7 @@ function Button:UpdateNarrowGeometry(recount)
 
 	local triangles = self.polygon_styles.narrow.triangles;
 
-	local centerX, centerY = self:x() + self:width()/2, self:y() + self:height()/2;
+	local centerX, centerY = self:x() + self:width()/2 + self:GetTextWidth(), self:y() + self:height()/2;
 	local centerLineLength = math.sqrt(3) * self:GetSize() / 2;
 
 	for direction, _ in pairs(self.directions) do

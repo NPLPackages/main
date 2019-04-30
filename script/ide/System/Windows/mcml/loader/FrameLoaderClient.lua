@@ -39,16 +39,10 @@ end
 
 --PassRefPtr<WebCore::Frame> FrameLoaderClient::createFrame(const WebCore::KURL& url, const WTF::String& name, WebCore::HTMLFrameOwnerElement* ownerElement, const WTF::String& referrer, bool allowsScrolling, int marginWidth, int marginHeight)
 function FrameLoaderClient:CreateSubFrame(url, name, ownerElement)
-	echo("FrameLoaderClient:CreateSubFrame")
-	ownerElement:PrintNodeInfo();
 	local page = ownerElement:FramePage();
     local loader = FrameLoaderClient:new():init(nil, page);
 	local childFrame = Frame.Create(page, ownerElement, loader);
 	loader:SetFrame(childFrame);
---	 m_frame->tree()->appendChild(childFrame);
---    childFrame->tree()->setName(name);
-    --childFrame->init();
-	--childFrame:Loader():Client():Load();
 
 	return childFrame
 end

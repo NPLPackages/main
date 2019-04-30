@@ -66,3 +66,10 @@ function BorderValue:IsVisible(checkStyle)
 	checkStyle = if_else(checkStyle == nil, true, checkStyle);
     return self:NonZero(checkStyle) and not self:IsTransparent() and (not checkStyle or self.m_style ~= ComputedStyleConstants.BorderStyleEnum.BHIDDEN);
 end
+
+function BorderValue:Format()
+	if(self:NonZero()) then
+		return {width = self.m_width, style = self.m_style, color = self.m_color:ToString()};
+	end
+	return nil;
+end

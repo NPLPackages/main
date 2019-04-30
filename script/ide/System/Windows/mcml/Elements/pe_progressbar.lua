@@ -16,42 +16,31 @@ local mcml = commonlib.gettable("System.Windows.mcml");
 local pe_progressbar = commonlib.inherit(commonlib.gettable("System.Windows.mcml.PageElement"), commonlib.gettable("System.Windows.mcml.Elements.pe_progressbar"));
 pe_progressbar:Property({"class_name", "pe:progressbar"});
 
-function pe_progressbar:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
-	local default_css = mcml:GetStyleItem(self.class_name);
-	css.float = css.float or true;
-	css.height = css.height or default_css.iconSize;
+function pe_progressbar:CreateControl()
+	local parentElem = self:GetParentControl();
+	local _this = ProgressBar:new():init(parentElem);
+	self:SetControl(_this);
 
-	self.min = tonumber(self:GetAttributeWithCode("Minimum", 0, true));
-	self.max = tonumber(self:GetAttributeWithCode("Maximum", 100, true));
-
-	local _this = self.control;
-	if(not _this) then
-		_this = ProgressBar:new():init(parentElem);
-		self:SetControl(_this);
-	else
-		_this:SetParent(parentElem);
-	end
 	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
 	_this:SetMin(self.min);
 	_this:SetMax(self.max);
 	_this:SetValue(tonumber(self:GetAttributeWithCode("Value", 0, true)));
 	_this:SetDirection(if_else(self:GetBool("is_vertical",false) == true, "vertical" , "horizontal"));
-	_this:SetSliderBackground(self:GetAttributeWithCode("blockimage", nil, true) or css["blockimage"]);
-	_this:SetGrooveBackground(self:GetAttributeWithCode("background", nil, true) or css["background"]);
+	--_this:SetSliderBackground(self:GetAttributeWithCode("blockimage", nil, true) or css["blockimage"]);
+	--_this:SetGrooveBackground(self:GetAttributeWithCode("background", nil, true) or css["background"]);
 	local step = self:GetAttributeWithCode("Step", 10, true);
 	_this:setStep(step, step * 10);
 
 	--local buttonName = self:GetAttributeWithCode("name"); -- touch name
 
 	_this:Connect("valueChanged", self, self.OnStep, "UniqueConnection")
-
-	pe_progressbar._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
 end
 
-function pe_progressbar:OnAfterChildLayout(layout, left, top, right, bottom)
-	if(self.control) then
-		self.control:setGeometry(left, top, right-left, bottom-top);
-	end
+function pe_progressbar:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
+	self.min = tonumber(self:GetAttributeWithCode("Minimum", 0, true));
+	self.max = tonumber(self:GetAttributeWithCode("Maximum", 100, true));
+
+	pe_progressbar._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
 end
 
 function pe_progressbar:SetValue(value)

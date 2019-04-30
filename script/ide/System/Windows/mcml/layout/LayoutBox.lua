@@ -144,9 +144,6 @@ function LayoutBox:Y()
 end
 
 function LayoutBox:SetX(x)
-	echo("LayoutBox:SetX")
-	self:PrintNodeInfo()
-	echo(x)
 	return self.frame_rect:SetX(x);
 end
 
@@ -412,7 +409,6 @@ function LayoutBox:VerticalScrollbarWidth()
 end
 
 function LayoutBox:HorizontalScrollbarHeight()
---	echo("LayoutBox:HorizontalScrollbarHeight")
 	if(self:IncludeHorizontalScrollbarSize()) then
 		return self:Layer():HorizontalScrollbarHeight()
 	end
@@ -436,8 +432,6 @@ function LayoutBox:ClientWidth()
 end
 
 function LayoutBox:ClientHeight()
-	echo("LayoutBox:ClientHeight")
-	echo({self:Height(), self:BorderTop(), self:BorderBottom(), self:HorizontalScrollbarHeight()})
 	return self:Height() - self:BorderTop() - self:BorderBottom() - self:HorizontalScrollbarHeight();
 end
 
@@ -559,9 +553,6 @@ function LayoutBox:SetLogicalLocation(location)
 end
 
 function LayoutBox:SetLogicalWidth(width)
-	echo("LayoutBox:SetLogicalWidth")
-	self:PrintNodeInfo()
-	echo(width)
 	if(self:Style():IsHorizontalWritingMode()) then
 		self:SetWidth(width);
 	else
@@ -585,10 +576,7 @@ function LayoutBox:SetLogicalSize(size)
 end
 
 function LayoutBox:ComputeBorderBoxLogicalWidth(width)
-	echo("LayoutBox:ComputeBorderBoxLogicalWidth")
-	echo(width)
 	local bordersPlusPadding = self:BorderAndPaddingLogicalWidth();
-	echo(bordersPlusPadding)
 	if (self:Style():BoxSizing() == BoxSizingEnum.CONTENT_BOX) then
         return width + bordersPlusPadding;
 	end
@@ -649,7 +637,6 @@ function LayoutBox:NeedsPreferredWidthsRecalculation()
 end
 
 function LayoutBox:MinPreferredLogicalWidth()
-	echo("LayoutBox:MinPreferredLogicalWidth()")
 	if (self:PreferredLogicalWidthsDirty()) then
         self:ComputePreferredLogicalWidths();
 	end
@@ -768,8 +755,6 @@ end
 
 -- @param widthType: can be "LogicalWidth","MinLogicalWidth","MaxLogicalWidth";
 function LayoutBox:ComputeLogicalWidthUsing(widthType, availableLogicalWidth)
-	echo("LayoutBox:ComputeLogicalWidthUsing")
-	echo({widthType, availableLogicalWidth})
     local logicalWidthResult = self:LogicalWidth();
     local logicalWidth;
     if (widthType == "LogicalWidth") then
@@ -779,8 +764,6 @@ function LayoutBox:ComputeLogicalWidthUsing(widthType, availableLogicalWidth)
     else
         logicalWidth = self:Style():LogicalMaxWidth();
 	end
-	echo(logicalWidth)
-	echo(logicalWidth:IsIntrinsicOrAuto())
 	if (logicalWidth:IsIntrinsicOrAuto()) then
         local marginStart = self:Style():MarginStart():CalcMinValue(availableLogicalWidth);
         local marginEnd = self:Style():MarginEnd():CalcMinValue(availableLogicalWidth);
@@ -846,7 +829,6 @@ function LayoutBox:SizesToIntrinsicLogicalWidth(widthType)
 end
 
 function LayoutBox:ComputeLogicalWidthInRegion(region, offsetFromLogicalTopOfFirstPage)
-	echo("LayoutBox:ComputeLogicalWidthInRegion")
 	if(self:IsPositioned()) then
 		self:ComputePositionedLogicalWidth(region, offsetFromLogicalTopOfFirstPage);
 	end
@@ -860,8 +842,6 @@ function LayoutBox:ComputeLogicalWidthInRegion(region, offsetFromLogicalTopOfFir
     local stretching = self:Parent():Style():BoxAlign() == BoxAlignmentEnum.BSTRETCH;
     local treatAsReplaced = self:ShouldComputeSizeAsReplaced() and (not inVerticalBox or not stretching);
 	local logicalWidthLength;
-	echo("treatAsReplaced")
-	echo(treatAsReplaced)
 	if(treatAsReplaced) then
 		logicalWidthLength = Length:new(self:ComputeReplacedLogicalWidth(), LengthTypeEnum.Fixed);
 	else
@@ -1552,7 +1532,7 @@ function LayoutBox:ComputeReplacedLogicalHeight()
 	return self:ComputeReplacedLogicalHeightRespectingMinMaxHeight(self:ComputeReplacedLogicalHeightUsing(self:Style():LogicalHeight()));
 end
 
-function LayoutBox:VailableLogicalHeightUsing(h)
+function LayoutBox:AvailableLogicalHeightUsing(h)
 	if (h:IsFixed()) then
         return self:ComputeContentBoxLogicalHeight(h:Value());
 	end
@@ -2237,17 +2217,12 @@ function LayoutBox:LogicalRightVisualOverflow()
 end
 
 function LayoutBox:ClippedOverflowRectForRepaint(repaintContainer)
-	echo("LayoutBox:ClippedOverflowRectForRepaint")
-	self:PrintNodeInfo()
     if (self:Style():Visibility() ~= VisibilityEnum.VISIBLE and not self:EnclosingLayer():HasVisibleContent()) then
         return LayoutRect:new();
 	end
 
     local rect = self:VisualOverflowRect();
-	echo(rect)
     local view = self:View();
-	echo(view:LayoutDelta())
-	echo(view:MaximalOutlineSize())
     if (view) then
         -- FIXME: layoutDelta needs to be applied in parts before/after transforms and
         -- repaint containers. https://bugs.webkit.org/show_bug.cgi?id=23308
@@ -2266,7 +2241,6 @@ function LayoutBox:ClippedOverflowRectForRepaint(repaintContainer)
             rect:Inflate(view:MaximalOutlineSize());
         end
     end
-    echo(rect)
     rect = self:ComputeRectForRepaint(repaintContainer, rect);
     return rect;
 end
@@ -2573,7 +2547,6 @@ function LayoutBox:AddOverflowFromChild(child, delta)
 	end
 	local childLayoutOverflowRect = child:LayoutOverflowRectForPropagation(self:Style());
     childLayoutOverflowRect:Move(delta);
---	echo("LayoutBox:AddOverflowFromChild")
     self:AddLayoutOverflow(childLayoutOverflowRect);
             
     -- Add in visual overflow from the child.  Even if the child clips its overflow, it may still
@@ -2589,8 +2562,6 @@ end
 
 --void RenderBox::addLayoutOverflow(const LayoutRect& rect)
 function LayoutBox:AddLayoutOverflow(rect)
---	echo("LayoutBox:AddLayoutOverflow begin")
---	echo(rect)
     local clientBox = self:ClientBoxRect();
     if (clientBox:Contains(rect) or rect:IsEmpty()) then
         return;
@@ -2621,12 +2592,9 @@ function LayoutBox:AddLayoutOverflow(rect)
             return;
 		end
     end
-
     if (not self.overflow) then
         self.overflow = LayoutOverflow:new():init(clientBox, self:BorderBoxRect());
 	end
---    echo("LayoutBox:AddLayoutOverflow end")
---	echo("self.overflow:AddLayoutOverflow")
     self.overflow:AddLayoutOverflow(overflowRect);
 end
 
@@ -3370,8 +3338,6 @@ end
 
 --LayoutRect RenderBox::overflowClipRect(const LayoutPoint& location, RenderRegion* region, OverlayScrollbarSizeRelevancy relevancy)
 function LayoutBox:OverflowClipRect(location, region, relevancy)
-	echo("LayoutBox:OverflowClipRect")
-	echo(location)
     -- FIXME: When overflow-clip (CSS3) is implemented, we'll obtain the property
     -- here.
     local clipRect = self:BorderBoxRectInRegion(region);
@@ -3382,14 +3348,11 @@ function LayoutBox:OverflowClipRect(location, region, relevancy)
     if (self:Layer()) then
         clipRect:Contract(self:Layer():VerticalScrollbarWidth(relevancy), self:Layer():HorizontalScrollbarHeight(relevancy));
 	end
-	echo(clipRect)
     return clipRect;
 end
 
 --LayoutRect RenderBox::clipRect(const LayoutPoint& location, RenderRegion* region)
 function LayoutBox:ClipRect(location, region)
-	echo("LayoutBox:ClipRect")
-	echo(location)
     local borderBoxRect = self:BorderBoxRectInRegion(region);
     local clipRect = LayoutRect:new(borderBoxRect:Location() + location, borderBoxRect:Size());
 

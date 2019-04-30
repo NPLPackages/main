@@ -16,18 +16,11 @@ local SliderBar = commonlib.gettable("System.Windows.Controls.SliderBar");
 local pe_sliderbar = commonlib.inherit(commonlib.gettable("System.Windows.mcml.PageElement"), commonlib.gettable("System.Windows.mcml.Elements.pe_sliderbar"));
 pe_sliderbar:Property({"class_name", "pe:sliderbar"});
 
-function pe_sliderbar:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
-	local default_css = mcml:GetStyleItem(self.class_name);
-	css.float = css.float or true;
-	css.height = css.height or default_css.iconSize;
+function pe_sliderbar:CreateControl()
+	local parentElem = self:GetParentControl();
+	local _this = SliderBar:new():init(parentElem);
+	self:SetControl(_this);
 
-	local _this = self.control;
-	if(not _this) then
-		_this = SliderBar:new():init(parentElem);
-		self:SetControl(_this);
-	else
-		_this:SetParent(parentElem);
-	end
 	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
 	_this:SetMin(self:GetAttributeWithCode("min", 1, true));
 	_this:SetMax(self:GetAttributeWithCode("max", 100, true));
@@ -38,21 +31,13 @@ function pe_sliderbar:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	_this:SetSliderBackground(self:GetAttributeWithCode("button_bg", nil, true));
 	_this:SetSliderWidth(self:GetNumber("button_width", nil));
 	_this:SetSliderHeight(self:GetNumber("button_height", nil));
-	_this:SetGrooveBackground(self:GetAttributeWithCode("background", nil, true) or css["background"]);
+	--_this:SetGrooveBackground(self:GetAttributeWithCode("background", nil, true) or css["background"]);
 	_this:SetGrooveWidth(self:GetNumber("background_width", nil));
 	_this:SetGrooveHeight(self:GetNumber("background_height", nil));
 
 	--local buttonName = self:GetAttributeWithCode("name"); -- touch name
 
 	_this:Connect("valueChanged", self, self.OnChange, "UniqueConnection")
-
-	pe_sliderbar._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
-end
-
-function pe_sliderbar:OnAfterChildLayout(layout, left, top, right, bottom)
-	if(self.control) then
-		self.control:setGeometry(left, top, right-left, bottom-top);
-	end
 end
 
 function pe_sliderbar:SetValue(value)

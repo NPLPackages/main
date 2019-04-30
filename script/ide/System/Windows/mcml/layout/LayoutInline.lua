@@ -89,7 +89,6 @@ function LayoutInline:UpdateAlwaysCreateLineBoxes(fullLayout)
         if (not fullLayout) then
             self:DirtyLineBoxes(false);
 		end
-			echo("self.alwaysCreateLineBoxes = true;");
         self.alwaysCreateLineBoxes = true;
     end
 end
@@ -268,7 +267,6 @@ function LayoutInline:CreateInlineFlowBox()
 end
 
 function LayoutInline:CreateAndAppendInlineFlowBox()
-	echo("LayoutInline:CreateAndAppendInlineFlowBox()");
     self:SetAlwaysCreateLineBoxes();
     local flowBox = self:CreateInlineFlowBox();
     self.lineBoxes:AppendLineBox(flowBox);

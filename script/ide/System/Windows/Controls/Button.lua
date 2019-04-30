@@ -20,6 +20,7 @@ Button:Property({"BackgroundOver", nil, auto = true});
 Button:Property({"direction", nil, nil, "SetDirection", auto=true});
 -- check and narrow size
 Button:Property({"Size", 12, auto = true});
+Button:Property({"TextWidth", 0, auto = true});
 
 function Button:ctor()
 	self.polygon_style = "normal";
@@ -81,6 +82,8 @@ function Button:setChecked(checked)
 end
 
 function Button:paintEvent(painter)
+	Button._super.paintEvent(self, painter)
+
 	self:paintBackground(painter);
 	
 	local x, y = self:x(), self:y();

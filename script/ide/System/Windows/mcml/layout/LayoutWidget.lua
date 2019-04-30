@@ -69,7 +69,6 @@ function LayoutWidget:SetWidget(widget)
 	if (widget == self.m_widget) then
         return;
 	end
-	echo("LayoutWidget:SetWidget")
 	if(self.m_widget) then
 		moveWidgetToParentSoon(self.m_widget, nil);
 		self:ClearWidget();
@@ -99,7 +98,6 @@ function LayoutWidget:GetName()
 end
 
 function LayoutWidget:Layout()
-	echo("LayoutWidget:Layout")
     --ASSERT(needsLayout());
 
     self:SetNeedsLayout(false);
@@ -107,8 +105,6 @@ end
 
 --bool RenderWidget::setWidgetGeometry(const IntRect& frame)
 function LayoutWidget:SetWidgetGeometry(frame)
-	echo("LayoutWidget:SetWidgetGeometry")
-	echo(frame)
     if (not self:Node()) then
         return false;
 	end
@@ -140,7 +136,6 @@ function LayoutWidget:UpdateWidgetPosition()
     if (not self.m_widget or not self:Node()) then -- Check the node in case destroy() has been called.
         return;
 	end
-	echo("LayoutWidget:UpdateWidgetPosition")
     local contentBox = self:ContentBoxRect();
 	local boundsChanged = self:SetWidgetGeometry(contentBox);
 
@@ -165,7 +160,6 @@ end
 
 --void RenderWidget::paint(PaintInfo& paintInfo, const LayoutPoint& paintOffset)
 function LayoutWidget:Paint(paintInfo, paintOffset)
-	echo("LayoutWidget:Paint")
 --    if (not self:ShouldPaint(paintInfo, paintOffset)) then
 --        return;
 --	end
@@ -184,11 +178,9 @@ function LayoutWidget:Paint(paintInfo, paintOffset)
 
 --    if ((paintInfo.phase == PaintPhaseOutline || paintInfo.phase == PaintPhaseSelfOutline) && hasOutline())
 --        paintOutline(paintInfo.context, LayoutRect(adjustedPaintOffset, size()));
-	echo("LayoutWidget:Paint 1")
     if (not self.m_frameView) then
         return;
 	end
-	echo("LayoutWidget:Pain 2")
 --#if PLATFORM(MAC)
 --    if (style()->highlight() != nullAtom && !paintInfo.context->paintingDisabled())
 --        paintCustomHighlight(paintOffset, style()->highlight(), true);
@@ -206,7 +198,6 @@ function LayoutWidget:Paint(paintInfo, paintOffset)
 --    }
 
     if (self.m_widget) then
-		echo("LayoutWidget:Paint 3")
         -- Tell the widget to paint now.  This is the only time the widget is allowed
         -- to paint itself.  That way it will composite properly with z-indexed layers.
         local widgetLocation = self.m_widget:FrameRect():Location();
@@ -220,8 +211,6 @@ function LayoutWidget:Paint(paintInfo, paintOffset)
 --            paintInfo.context->translate(widgetPaintOffset);
 --            paintRect.move(-widgetPaintOffset);
 --        }
-		echo("self.m_widget:Paint")
-		echo(paintRect)
         self.m_widget:Paint(nil, paintRect);
 
 --        if (!widgetPaintOffset.isZero())

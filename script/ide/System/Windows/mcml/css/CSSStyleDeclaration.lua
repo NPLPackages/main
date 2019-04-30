@@ -227,20 +227,32 @@ function CSSStyleDeclaration:AddString(style_code)
 	for name, value in string.gfind(style_code, "([%w%-]+)%s*:%s*([^;]*)[;]?") do
 		name = string_lower(name);
 		value = string_gsub(value, "%s*$", "");
-		local complex_name = complex_fields[name];
-		if(complex_name) then
-			self:AddComplexField(complex_name,value);
+		if(complex_fields[name]) then
+			self:AddComplexField(name, value);
 		else
 			self:AddItem(name,value);
 		end
 	end
 end
 
-function CSSStyleDeclaration:AddComplexField(names_code,values_code)
-	local names = commonlib.split(names_code, "%s");
+function CSSStyleDeclaration:ParseComplexFieldValues(name, value)
+	if(name == "border") then
+		if(value == "none") then
+			return {};
+		end
+	end
+	local values = commonlib.split(value, "%s");
+	return values;
+end
+
+function CSSStyleDeclaration:AddComplexField(names_code, values_code)
+	local names = commonlib.split(complex_fields[names_code], "%s");
 	local values = commonlib.split(values_code, "%s");
-	for i = 1, #names do
-		self:AddItem(names[i], values[i]);
+	--local values = self:ParseComplexFieldValues(names_code, values_code);
+	if(values) then
+		for i = 1, #names do
+			self:AddItem(names[i], values[i]);
+		end
 	end
 end
 

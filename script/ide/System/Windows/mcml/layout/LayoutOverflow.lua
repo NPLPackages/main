@@ -43,9 +43,6 @@ end
 
 --RenderOverflow(const LayoutRect& layoutRect, const LayoutRect& visualRect) 
 function LayoutOverflow:init(layoutRect, visualRect)
-	echo("LayoutOverflow:init")
-	echo("LayoutOverflow:LayoutOverflowChanged")
-	echo(layoutRect)
 	self.m_minYLayoutOverflow = layoutRect:Y();
 	self.m_maxYLayoutOverflow = layoutRect:MaxY();
 	self.m_minXLayoutOverflow = layoutRect:X();
@@ -147,9 +144,6 @@ function LayoutOverflow:Move(dx, dy)
 end
 
 function LayoutOverflow:AddLayoutOverflow(rect)
-	echo("LayoutOverflow:AddLayoutOverflow")
-	echo("LayoutOverflow:LayoutOverflowChanged")
-	echo(rect)
     self.m_minYLayoutOverflow = math_min(rect:Y(), self.m_minYLayoutOverflow);
     self.m_maxYLayoutOverflow = math_max(rect:MaxY(), self.m_maxYLayoutOverflow);
     self.m_minXLayoutOverflow = math_min(rect:X(), self.m_minXLayoutOverflow);
@@ -164,9 +158,6 @@ function LayoutOverflow:AddVisualOverflow(rect)
 end
 
 function LayoutOverflow:SetLayoutOverflow(rect)
-	echo("LayoutOverflow:SetLayoutOverflow")
-	echo("LayoutOverflow:LayoutOverflowChanged")
-	echo(rect)
     self.m_minYLayoutOverflow = rect:Y();
     self.m_maxYLayoutOverflow = rect:MaxY();
     self.m_minXLayoutOverflow = rect:X();
@@ -181,9 +172,6 @@ function LayoutOverflow:SetVisualOverflow(rect)
 end
 
 function LayoutOverflow:ResetLayoutOverflow(rect)
-	echo("LayoutOverflow:ResetLayoutOverflow")
-	echo("LayoutOverflow:LayoutOverflowChanged")
-	echo(rect)
     self.m_minYLayoutOverflow = rect:Y();
     self.m_maxYLayoutOverflow = rect:MaxY();
     self.m_minXLayoutOverflow = rect:X();

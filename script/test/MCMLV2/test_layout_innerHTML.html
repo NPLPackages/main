@@ -9,6 +9,7 @@
             ["2"] = "<h1>标题</h1>", 
             ["3"] = "文本<img height='60' width='60' src='Textures/icon1.png' /><span style='background-color:red;'>春晓</span>",
             ["4"] = "<input type='text' style='width:60px;'/>", 
+            ["5"] = "<iframe src="" />", 
         }
 
         function ChangeDivContent(value, mcmlnode)
@@ -30,6 +31,8 @@
             <input type="radio" name="content" value="3" onclick="ChangeDivContent()" /><label>多节点(文本和图片)</label>
             <br />
             <input type="radio" name="content" value="4" onclick="ChangeDivContent()" /><label>按钮</label>
+            <br />
+            <input type="radio" name="content" value="5" onclick="ChangeDivContent()" /><label>iframe</label>
         </form>
         
         <!--<input name="button" type="button" value="改变div内容" style="margin:10px;font-weight:bold;" onclick="ChangeDivContent()" />-->

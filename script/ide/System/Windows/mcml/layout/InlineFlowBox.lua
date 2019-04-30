@@ -253,7 +253,6 @@ function InlineFlowBox:RemoveLineBoxFromRenderObject()
 end
 
 function InlineFlowBox:DeleteLine(arena)
-	echo("InlineFlowBox:DeleteLine")
     local child = self:FirstChild();
     local next = nil;
     while (child) do
@@ -276,9 +275,6 @@ function InlineFlowBox:RendererLineBoxes()
 end
 
 function InlineFlowBox:Destroy(arena)
-	echo("InlineFlowBox:Destroy")
-	echo(self:BoxName())
-	self:Renderer():PrintNodeInfo()
 --    if (!m_knownToHaveNoOverflow && gTextBoxesWithOverflow) then
 --        gTextBoxesWithOverflow->remove(this);
 --	end
@@ -465,10 +461,6 @@ end
 
 --float InlineFlowBox::placeBoxesInInlineDirection(float logicalLeft, bool& needsWordSpacing, GlyphOverflowAndFallbackFontsMap& textBoxDataMap)
 function InlineFlowBox:PlaceBoxesInInlineDirection(logicalLeft, needsWordSpacing, textBoxDataMap)
-	echo("InlineFlowBox:PlaceBoxesInInlineDirection")
-	self:Renderer():PrintNodeInfo();
-	echo(logicalLeft)
-	echo(needsWordSpacing)
 	local originalLogicalLeft = logicalLeft;
 	-- Set our x position.
     self:SetLogicalLeft(logicalLeft);
@@ -484,8 +476,6 @@ function InlineFlowBox:PlaceBoxesInInlineDirection(logicalLeft, needsWordSpacing
 	local curr = self:FirstChild();
 	local isFirstChild = true;
 	while(curr) do
-		echo("while(curr) do")
-		echo(logicalLeft)
 		if (curr:Renderer():IsText()) then
             local text = curr;
             local rt = text:Renderer();
@@ -569,8 +559,6 @@ function InlineFlowBox:PlaceBoxesInInlineDirection(logicalLeft, needsWordSpacing
 	if(self:IsRootInlineBox()) then
 		logicalWidth = logicalWidth + originalLogicalLeft;
 	end
-	echo("InlineFlowBox:PlaceBoxesInInlineDirection end")
-	echo(logicalLeft - startLogicalLeft)
     self:SetLogicalWidth(logicalWidth);
     if (self:KnownToHaveNoOverflow() and (minLogicalLeft < startLogicalLeft or maxLogicalRight > logicalLeft)) then
         self:ClearKnownToHaveNoOverflow();
@@ -583,7 +571,6 @@ function InlineFlowBox:DescendantsHaveSameLineHeightAndBaseline()
 end
 
 function InlineFlowBox:ClearDescendantsHaveSameLineHeightAndBaseline()
-	echo("InlineFlowBox:ClearDescendantsHaveSameLineHeightAndBaseline");
     self.descendantsHaveSameLineHeightAndBaseline = false;
     if (self:Parent() and self:Parent():DescendantsHaveSameLineHeightAndBaseline()) then
         self:Parent():ClearDescendantsHaveSameLineHeightAndBaseline();
@@ -703,9 +690,6 @@ function InlineFlowBox:ComputeLogicalBoxHeights(rootBox, maxPositionTop, maxPosi
 			local descent = 0;
 			
 			ascent, descent, affectsAscent, affectsDescent = rootBox:AscentAndDescentForBox(curr, textBoxDataMap, ascent, descent, affectsAscent, affectsDescent);
-			echo("rootBox:AscentAndDescentForBox");
-			curr:Renderer():PrintNodeInfo();
-			echo({ascent, descent, affectsAscent, affectsDescent})
 			local boxHeight = ascent + descent;
 			if (curr:VerticalAlign() == VerticalAlignEnum.TOP) then
 				if (maxPositionTop < boxHeight) then
@@ -826,14 +810,10 @@ function InlineFlowBox:AscentAndDescentForBox(box, baselineType)
 end
 
 function InlineFlowBox:PlaceBoxesInBlockDirection(textBoxDataMap, baselineType)
-	echo("InlineFlowBox:PlaceBoxesInBlockDirection begin")
-	self:Renderer():PrintNodeInfo()
 	local maxAscent, maxDescent = 0, 0;
 	local ascentMap = {}
 	local curr = self:FirstChild();
 	while(curr) do
-		echo("while(curr) do")
-		curr:Renderer():PrintNodeInfo()
 		if (curr:Renderer():IsPositioned()) then
             -- Positioned placeholders don't affect calculations.
 		else
@@ -844,7 +824,6 @@ function InlineFlowBox:PlaceBoxesInBlockDirection(textBoxDataMap, baselineType)
 			else
 				ascent, descent = self:AscentAndDescentForBox(curr, baselineType)
 			end
-			echo({ascent,descent})
 			ascentMap[curr] = ascent
 			if(ascent > maxAscent) then
 				maxAscent = ascent
@@ -855,8 +834,6 @@ function InlineFlowBox:PlaceBoxesInBlockDirection(textBoxDataMap, baselineType)
 		end
 		curr = curr:NextOnLine();
 	end
-	echo("maxAscent, maxDescent")
-	echo({maxAscent, maxDescent})
 	local maxHeight = maxAscent + maxDescent;
 	local lineHeight;
 	if (self:IsRootInlineBox()) then
@@ -869,10 +846,6 @@ function InlineFlowBox:PlaceBoxesInBlockDirection(textBoxDataMap, baselineType)
 		maxAscent = maxAscent + (lineHeight - maxHeight) / 2;
 		maxDescent = lineHeight - maxAscent;
 	end
-	echo("InlineFlowBox:PlaceBoxesInBlockDirection Place")
-	self:Renderer():PrintNodeInfo()
-	echo({maxAscent, maxDescent})
-	echo({lineHeight,maxHeight})
 	local curr = self:FirstChild();
 	while(curr) do
 		if (curr:Renderer():IsPositioned()) then
@@ -880,10 +853,7 @@ function InlineFlowBox:PlaceBoxesInBlockDirection(textBoxDataMap, baselineType)
 		else
 			
 			local ascent = ascentMap[curr];
-			
-			echo("while(curr) do")
-			curr:Renderer():PrintNodeInfo()
-			echo(ascent)
+
 			curr:SetLogicalTop(maxAscent - ascent)
 
 			local newLogicalTop = curr:LogicalTop();
@@ -909,335 +879,11 @@ function InlineFlowBox:PlaceBoxesInBlockDirection(textBoxDataMap, baselineType)
 		end
 		curr = curr:NextOnLine();
 	end
-	echo("InlineFlowBox:PlaceBoxesInBlockDirection end")
 	return maxAscent, maxDescent;
 end
 
---function InlineFlowBox:PlaceBoxesInBlockDirection(top, maxHeight, maxAscent, strictMode, lineTop, lineBottom, setLineTop,
---													lineTopIncludingMargins, lineBottomIncludingMargins, hasAnnotationsBefore, hasAnnotationsAfter, baselineType)
---	local isRootBox = self:IsRootInlineBox();
---    if (isRootBox) then
---		self:SetLogicalTop(top)
---    end
---	local curr = self:FirstChild();
---	while(curr) do
---		if (curr:Renderer():IsPositioned()) then
---            -- Positioned placeholders don't affect calculations.
---		else
---			local inlineFlowBox = if_else(curr:IsInlineFlowBox(), curr, nil);
---			local childAffectsTopBottomPos = true;
---			if (curr:VerticalAlign() == VerticalAlignEnum.TOP) then
---				curr:SetLogicalTop(top);
---			elseif (curr:VerticalAlign() == VerticalAlignEnum.BOTTOM) then
---				curr:SetLogicalTop(top + maxHeight - curr:LineHeight());
---			else
---				local posAdjust = maxAscent - curr:BaselinePosition(baselineType);
---				curr:SetLogicalTop(curr:LogicalTop() + posAdjust);
---			end
---
---
---			local newLogicalTop = curr:LogicalTop();
---			local newLogicalTopIncludingMargins = newLogicalTop;
---			local boxHeight = curr:LogicalHeight();
---			local boxHeightIncludingMargins = boxHeight;
---			if (curr:IsText() or curr:IsInlineFlowBox()) then
---				local fontMetrics = curr:Renderer():Style(self.firstLine):FontMetrics();
---				newLogicalTop = newLogicalTop + curr:BaselinePosition(baselineType) - fontMetrics:ascent(baselineType);
---				if (curr:IsInlineFlowBox()) then
---					local boxObject = curr:Renderer():ToRenderBoxModelObject();
---					newLogicalTop = newLogicalTop - if_else(boxObject:Style(self.firstLine):IsHorizontalWritingMode(), boxObject:BorderTop() + boxObject:PaddingTop(), 
---									 boxObject:BorderRight() + boxObject:PaddingRight());
---				end
---				newLogicalTopIncludingMargins = newLogicalTop;
---			elseif (not curr:Renderer():IsBR()) then
---				local box = curr:Renderer();
---				newLogicalTopIncludingMargins = newLogicalTop;
---				local overSideMargin = if_else(curr:IsHorizontal(), box:MarginTop(), box:MarginRight());
---				local underSideMargin = if_else(curr:IsHorizontal(), box:MarginBottom(), box:MarginLeft());
---				newLogicalTop = newLogicalTop + overSideMargin;
---				boxHeightIncludingMargins = boxHeightIncludingMargins + overSideMargin + underSideMargin;
---			end
---
---			curr:SetLogicalTop(newLogicalTop);
---
---			if (childAffectsTopBottomPos) then
---				if (not setLineTop) then
---					setLineTop = true;
---					lineTop = newLogicalTop;
---					lineTopIncludingMargins = math.min(lineTop, newLogicalTopIncludingMargins);
---				else
---					lineTop = math.min(lineTop, newLogicalTop);
---					lineTopIncludingMargins = math.min(lineTop, math.min(lineTopIncludingMargins, newLogicalTopIncludingMargins));
---				end
---				lineBottom = math.max(lineBottom, newLogicalTop + boxHeight);
---				lineBottomIncludingMargins = math.max(lineBottom, math.max(lineBottomIncludingMargins, newLogicalTopIncludingMargins + boxHeightIncludingMargins));
---			end
---
---			-- Adjust boxes to use their real box y/height and not the logical height (as dictated by
---			-- line-height).
---			if (inlineFlowBox) then
---				lineTop, lineBottom, setLineTop, lineTopIncludingMargins, lineBottomIncludingMargins, hasAnnotationsBefore, hasAnnotationsAfter = inlineFlowBox:PlaceBoxesInBlockDirection(top, maxHeight, maxAscent, strictMode, 
---				lineTop, lineBottom, setLineTop, lineTopIncludingMargins, lineBottomIncludingMargins, hasAnnotationsBefore, hasAnnotationsAfter, baselineType);
---			end
---		end
---		curr = curr:NextOnLine();
---	end
---
---	if (isRootBox) then
---        if (strictMode or self:HasTextChildren() or (self:DescendantsHaveSameLineHeightAndBaseline() and self:HasTextDescendants())) then
---            if (not setLineTop) then
---                setLineTop = true;
---                lineTop = self:LogicalTop();
---                lineTopIncludingMargins = lineTop;
---            else
---                lineTop = math.min(lineTop, self:LogicalTop());
---                lineTopIncludingMargins = math.min(lineTop, lineTopIncludingMargins);
---            end
---            lineBottom = math.max(lineBottom, self:LogicalTop() + self:LogicalHeight());
---            lineBottomIncludingMargins = math.max(lineBottom, lineBottomIncludingMargins);
---        end
---        
---        if (self:Renderer():Style():IsFlippedLinesWritingMode()) then
---            self:FlipLinesInBlockDirection(lineTopIncludingMargins, lineBottomIncludingMargins);
---		end
---    end
---
---	return lineTop, lineBottom, setLineTop, lineTopIncludingMargins, lineBottomIncludingMargins, hasAnnotationsBefore, hasAnnotationsAfter;
---end
-
---[[
---void InlineFlowBox::placeBoxesInBlockDirection(LayoutUnit top, LayoutUnit maxHeight, LayoutUnit maxAscent, bool strictMode, LayoutUnit& lineTop, LayoutUnit& lineBottom, bool& setLineTop,
---                                               LayoutUnit& lineTopIncludingMargins, LayoutUnit& lineBottomIncludingMargins, bool& hasAnnotationsBefore, bool& hasAnnotationsAfter, FontBaseline baselineType)
-function InlineFlowBox:PlaceBoxesInBlockDirection(top, maxHeight, maxAscent, strictMode, lineTop, lineBottom, setLineTop,
-													lineTopIncludingMargins, lineBottomIncludingMargins, hasAnnotationsBefore, hasAnnotationsAfter, baselineType)
-	local isRootBox = self:IsRootInlineBox();
-	echo("InlineFlowBox:PlaceBoxesInBlockDirection");
-	echo(self:BoxName())
-	echo({self:LogicalLeft(), self:LogicalTop(), self:LogicalWidth(), self:LogicalHeight()});
-	echo({top, maxHeight, maxAscent, strictMode, lineTop, lineBottom, setLineTop,
-													lineTopIncludingMargins, lineBottomIncludingMargins, hasAnnotationsBefore, hasAnnotationsAfter, baselineType})
-    if (isRootBox) then
-        --const FontMetrics& fontMetrics = renderer()->style(m_firstLine)->fontMetrics();
-		local fontMetrics = self:Renderer():Style(self.firstLine):FontMetrics();
-		--local fontAscent = self:Renderer():Style():FontAscent(baselineType);
-		echo("fontMetrics:ascent(baselineType)");
-		echo(fontMetrics:ascent(baselineType))
-        --self:SetLogicalTop(top + maxAscent - fontMetrics:ascent(baselineType));
-		self:SetLogicalTop(top)
-    end
-	local adjustmentForChildrenWithSameLineHeightAndBaseline = 0;
-    if (self:DescendantsHaveSameLineHeightAndBaseline()) then
-		adjustmentForChildrenWithSameLineHeightAndBaseline = self:LogicalTop();
---		if (isRootBox) then
---			adjustmentForChildrenWithSameLineHeightAndBaseline = self:LogicalTop();
---		else
---			local fontMetrics = self:Renderer():Style(self.firstLine):FontMetrics();
---			adjustmentForChildrenWithSameLineHeightAndBaseline = maxAscent - fontMetrics:ascent(baselineType)
---		end
-        if (self:Parent()) then
-            adjustmentForChildrenWithSameLineHeightAndBaseline = adjustmentForChildrenWithSameLineHeightAndBaseline + (self:BoxModelObject():BorderBefore() + self:BoxModelObject():PaddingBefore());
-		end
-    end
-
-	local curr = self:FirstChild();
-	while(curr) do
-		echo("while(curr) do")
-		echo(curr:BoxName())
-		echo(curr:BaselinePosition(baselineType))
-		echo({curr:LogicalLeft(), curr:LogicalTop(), curr:LogicalWidth(), curr:LogicalHeight()});
-		if (curr:Renderer():IsPositioned()) then
-            -- Positioned placeholders don't affect calculations.
-		elseif (self:DescendantsHaveSameLineHeightAndBaseline()) then
-			echo("22222222222222222222222222222222");
-			echo(curr:IsLeaf());
-			--curr:SetLogicalTop(curr:LogicalTop() + top);
---			if(curr:IsText() and self:Parent() ~= nil and self:Parent():IsInlineFlowBox()) then
---				curr:AdjustBlockDirectionPosition(adjustmentForChildrenWithSameLineHeightAndBaseline - self:LogicalTop());
---			--elseif(not curr:Renderer():IsInline()) then
---			else
---				curr:AdjustBlockDirectionPosition(adjustmentForChildrenWithSameLineHeightAndBaseline);
---			end
-
---			if(curr:IsInlineTextBox()) then
---				curr:AdjustBlockDirectionPosition(adjustmentForChildrenWithSameLineHeightAndBaseline);
---			else
---				curr:AdjustBlockDirectionPosition(adjustmentForChildrenWithSameLineHeightAndBaseline - self:LogicalTop());
---			end
---			if(curr:IsInlineFlowBox()) then
---				curr._super.AdjustBlockDirectionPosition(curr, top);
---				adjustmentForChildrenWithSameLineHeightAndBaseline = adjustmentForChildrenWithSameLineHeightAndBaseline - top;
---			end
-			if(curr:IsInlineFlowBox()) then
-				curr:AdjustBlockDirectionPosition(maxAscent - curr:BaselinePosition(baselineType));
-			elseif(curr:IsInlineTextBox()) then
-				local fontMetrics = self:Renderer():Style(self.firstLine):FontMetrics();
-				curr:AdjustBlockDirectionPosition(maxAscent - fontMetrics:ascent(baselineType));
-			else
-				--curr:AdjustBlockDirectionPosition(maxAscent - curr:BaselinePosition(baselineType));
-			end
-			curr:AdjustBlockDirectionPosition(adjustmentForChildrenWithSameLineHeightAndBaseline);
-			--self:AdjustBlockDirectionPositionForChild(curr,adjustmentForChildrenWithSameLineHeightAndBaseline);
---			if(curr:IsLeaf()) then
---				curr:AdjustBlockDirectionPosition(adjustmentForChildrenWithSameLineHeightAndBaseline);
---			else
---				curr:AdjustBlockDirectionPosition(top);
---			end
-			--curr:AdjustBlockDirectionPositionForChildren(adjustmentForChildrenWithSameLineHeightAndBaseline - curr:LogicalTop());
-            
-            --continue;
-        else
-			echo("3333333333333333333333333333333333333333");
-			local inlineFlowBox = if_else(curr:IsInlineFlowBox(), curr, nil);
-			local childAffectsTopBottomPos = true;
-			if (curr:VerticalAlign() == VerticalAlignEnum.TOP) then
-				curr:SetLogicalTop(top);
-			elseif (curr:VerticalAlign() == VerticalAlignEnum.BOTTOM) then
-				curr:SetLogicalTop(top + maxHeight - curr:LineHeight());
-			else
-				if (not strictMode and inlineFlowBox ~= nil and not inlineFlowBox:HasTextChildren() and not curr:BoxModelObject():HasInlineDirectionBordersOrPadding()
-					and not (inlineFlowBox:DescendantsHaveSameLineHeightAndBaseline() and inlineFlowBox:HasTextDescendants())) then
-					childAffectsTopBottomPos = false;
-				end
-				
-				
-				local posAdjust = maxAscent - curr:BaselinePosition(baselineType);
---				if (curr:IsText()) then
---					local fontMetrics = curr:Renderer():Style(self.firstLine):FontMetrics();
---					posAdjust = maxAscent - fontMetrics:ascent(baselineType);
---					echo(fontMetrics:ascent(baselineType));
---				end
-
---				if (curr:IsInlineFlowBox()) then
---					echo(curr:Renderer():Style():ComputedLineHeight())
---					posAdjust = maxAscent - curr:Renderer():Style():ComputedLineHeight() / 2;
---				end
---				if(curr:IsText() and self:Parent() and self:Parent():IsInlineFlowBox()) then
---					curr:SetLogicalTop(curr:LogicalTop() + posAdjust);
---				else
---					curr:SetLogicalTop(curr:LogicalTop() + top + posAdjust);
---				end
-				echo("55555555555555555");
-				curr:SetLogicalTop(curr:LogicalTop() + top + posAdjust);
-			end
-        
-			local newLogicalTop = curr:LogicalTop();
-			local newLogicalTopIncludingMargins = newLogicalTop;
-			local boxHeight = curr:LogicalHeight();
-			local boxHeightIncludingMargins = boxHeight;
-			if (curr:IsText() or curr:IsInlineFlowBox()) then
-				--local fontAscent = curr:Renderer():Style():FontAscent(baselineType);
-				--const FontMetrics& fontMetrics = curr->renderer()->style(m_firstLine)->fontMetrics();
-				--newLogicalTop += curr->baselinePosition(baselineType) - fontMetrics.ascent(baselineType);
-				local fontMetrics = curr:Renderer():Style(self.firstLine):FontMetrics();
-				newLogicalTop = newLogicalTop + curr:BaselinePosition(baselineType) - fontMetrics:ascent(baselineType);
---				if(curr:IsText() and not self:IsRootInlineBox()) then
---					newLogicalTop = newLogicalTop - top;
---				end
-
---				if(curr:IsText()) then
---					if(self:IsRootInlineBox()) then
---						newLogicalTop = newLogicalTop + curr:BaselinePosition(baselineType) - fontMetrics:ascent(baselineType);
---					else
---						newLogicalTop = curr:BaselinePosition(baselineType) - fontMetrics:ascent(baselineType);
---					end
---					
---				end
-				--newLogicalTop = newLogicalTop + curr:BaselinePosition(baselineType) - fontMetrics:ascent(baselineType);
-				if (curr:IsInlineFlowBox()) then
-					local boxObject = curr:Renderer():ToRenderBoxModelObject();
-					newLogicalTop = newLogicalTop - if_else(boxObject:Style(self.firstLine):IsHorizontalWritingMode(), boxObject:BorderTop() + boxObject:PaddingTop(), 
-									 boxObject:BorderRight() + boxObject:PaddingRight());
-				end
-				newLogicalTopIncludingMargins = newLogicalTop;
-			elseif (not curr:Renderer():IsBR()) then
-				local box = curr:Renderer();
-				newLogicalTopIncludingMargins = newLogicalTop;
-				local overSideMargin = if_else(curr:IsHorizontal(), box:MarginTop(), box:MarginRight());
-				local underSideMargin = if_else(curr:IsHorizontal(), box:MarginBottom(), box:MarginLeft());
-				newLogicalTop = newLogicalTop + overSideMargin;
-				boxHeightIncludingMargins = boxHeightIncludingMargins + overSideMargin + underSideMargin;
-			end
-
-			curr:SetLogicalTop(newLogicalTop);
-
-			if (childAffectsTopBottomPos) then
-				if (curr:Renderer():IsRubyRun()) then
---					// Treat the leading on the first and last lines of ruby runs as not being part of the overall lineTop/lineBottom.
---					// Really this is a workaround hack for the fact that ruby should have been done as line layout and not done using
---					// inline-block.
---					if (!renderer()->style()->isFlippedLinesWritingMode())
---						hasAnnotationsBefore = true;
---					else
---						hasAnnotationsAfter = true;
---
---					RenderRubyRun* rubyRun = toRenderRubyRun(curr->renderer());
---					if (RenderRubyBase* rubyBase = rubyRun->rubyBase()) {
---						LayoutUnit bottomRubyBaseLeading = (curr->logicalHeight() - rubyBase->logicalBottom()) + rubyBase->logicalHeight() - (rubyBase->lastRootBox() ? rubyBase->lastRootBox()->lineBottom() : 0);
---						LayoutUnit topRubyBaseLeading = rubyBase->logicalTop() + (rubyBase->firstRootBox() ? rubyBase->firstRootBox()->lineTop() : 0);
---						newLogicalTop += !renderer()->style()->isFlippedLinesWritingMode() ? topRubyBaseLeading : bottomRubyBaseLeading;
---						boxHeight -= (topRubyBaseLeading + bottomRubyBaseLeading);
---					}
-				end
-				if (curr:IsInlineTextBox()) then
---					TextEmphasisPosition emphasisMarkPosition;
---					if (toInlineTextBox(curr)->getEmphasisMarkPosition(curr->renderer()->style(m_firstLine), emphasisMarkPosition)) {
---						bool emphasisMarkIsOver = emphasisMarkPosition == TextEmphasisPositionOver;
---						if (emphasisMarkIsOver != curr->renderer()->style(m_firstLine)->isFlippedLinesWritingMode())
---							hasAnnotationsBefore = true;
---						else
---							hasAnnotationsAfter = true;
---					}
-				end
-
-				if (not setLineTop) then
-					setLineTop = true;
-					lineTop = newLogicalTop;
-					lineTopIncludingMargins = math.min(lineTop, newLogicalTopIncludingMargins);
-				else
-					lineTop = math.min(lineTop, newLogicalTop);
-					lineTopIncludingMargins = math.min(lineTop, math.min(lineTopIncludingMargins, newLogicalTopIncludingMargins));
-				end
-				lineBottom = math.max(lineBottom, newLogicalTop + boxHeight);
-				lineBottomIncludingMargins = math.max(lineBottom, math.max(lineBottomIncludingMargins, newLogicalTopIncludingMargins + boxHeightIncludingMargins));
-			end
-
-			-- Adjust boxes to use their real box y/height and not the logical height (as dictated by
-			-- line-height).
-			if (inlineFlowBox) then
-				lineTop, lineBottom, setLineTop, lineTopIncludingMargins, lineBottomIncludingMargins, hasAnnotationsBefore, hasAnnotationsAfter = inlineFlowBox:PlaceBoxesInBlockDirection(top, maxHeight, maxAscent, strictMode, 
-				lineTop, lineBottom, setLineTop, lineTopIncludingMargins, lineBottomIncludingMargins, hasAnnotationsBefore, hasAnnotationsAfter, baselineType);
-			end
-		end
-
-		curr = curr:NextOnLine();
-	end
-
-	if (isRootBox) then
-        if (strictMode or self:HasTextChildren() or (self:DescendantsHaveSameLineHeightAndBaseline() and self:HasTextDescendants())) then
-            if (not setLineTop) then
-                setLineTop = true;
-                lineTop = self:LogicalTop();
-                lineTopIncludingMargins = lineTop;
-            else
-                lineTop = math.min(lineTop, self:LogicalTop());
-                lineTopIncludingMargins = math.min(lineTop, lineTopIncludingMargins);
-            end
-            lineBottom = math.max(lineBottom, self:LogicalTop() + self:LogicalHeight());
-            lineBottomIncludingMargins = math.max(lineBottom, lineBottomIncludingMargins);
-        end
-        
-        if (self:Renderer():Style():IsFlippedLinesWritingMode()) then
-            self:FlipLinesInBlockDirection(lineTopIncludingMargins, lineBottomIncludingMargins);
-		end
-    end
-
-	return lineTop, lineBottom, setLineTop, lineTopIncludingMargins, lineBottomIncludingMargins, hasAnnotationsBefore, hasAnnotationsAfter;
-end
---]]
-
 --void InlineFlowBox::flipLinesInBlockDirection(LayoutUnit lineTop, LayoutUnit lineBottom)
 function InlineFlowBox:FlipLinesInBlockDirection(lineTop, lineBottom)
-	echo("InlineFlowBox:FlipLinesInBlockDirection");
     -- Flip the box on the line such that the top is now relative to the lineBottom instead of the lineTop.
     self:SetLogicalTop(lineBottom - (self:LogicalTop() - lineTop) - self:LogicalHeight());
     
@@ -1345,19 +991,12 @@ function InlineFlowBox:PaintBoxDecorations(paintInfo, paintOffset)
 
 	-- Pixel snap background/border painting.
     local frameRect = self:RoundedFrameRect();
-	echo("frameRect")
-	echo(frameRect)
 	self:ConstrainToLineTopAndBottomIfNeeded(frameRect);
 
 	-- Move x/y to our coordinates.
     local localRect = frameRect:clone();
-	echo("localRect");
-	self:Renderer():PrintNodeInfo()
-	echo(localRect)
     localRect = self:FlipForWritingMode(localRect);
     --local adjustedPaintoffset = paintOffset + localRect:Location();
-	echo(localRect)
-	echo({self:IsRootInlineBox(), not self:Renderer():IsAnonymous(), self:Renderer():HasSelfPaintingLayer()})
 	local adjustedPaintoffset = localRect:Location();
 	--if(self:IsRootInlineBox() and not self:Renderer():IsAnonymous() and self:Renderer():HasSelfPaintingLayer()) then
 	if(self:IsRootInlineBox() and not self:Renderer():IsAnonymous() and self:Renderer():HasOverflowClip()) then
@@ -1381,7 +1020,6 @@ function InlineFlowBox:PaintFillLayers(paintInfo, rect)
 end
 
 function InlineFlowBox:GetControl()
-	echo("InlineFlowBox:GetControl()")
 	if(self.control) then
 		return self.control;
 	end
@@ -1389,7 +1027,6 @@ function InlineFlowBox:GetControl()
 end
 
 function InlineFlowBox:GetParentControl()
-	echo("InlineFlowBox:GetParentControl()")
 	if(self:Parent()) then
 		return self:Parent():GetControl()
 	end
@@ -1397,20 +1034,13 @@ function InlineFlowBox:GetParentControl()
 end
 
 function InlineFlowBox:PaintFillLayer(paintInfo, rect)
-	echo("InlineFlowBox:PaintFillLayer")
-	self:Renderer():PrintNodeInfo();
 	local control;
 	local control = self:GetParentControl();
-	if(control:PageElement()) then
-		control:PageElement():PrintNodeInfo();
-	end
 	if(control) then
 		local x, y, w, h = rect:X(), rect:Y(), rect:Width(), rect:Height();
-		echo({x, y, w, h});
 		if(self.control) then
 			self.control:setGeometry(x, y, w, h);
 		else
-			echo("Create Rectangle")
 			local _this = Rectangle:new():init(control);
 			_this:setGeometry(x, y, w, h);
 			local style = if_else(self:IsRootInlineBox(), ComputedStyle.CreateDefaultStyle(), self:Renderer():Style())
@@ -1424,11 +1054,6 @@ end
 --void paint(PaintInfo&, const LayoutPoint&, LayoutUnit lineTop, LayoutUnit lineBottom)
 function InlineFlowBox:Paint(paintInfo, paintOffset, lineTop, lineBottom)
 	local overflowRect = self:VisualOverflowRect(lineTop, lineBottom);
-	echo("InlineFlowBox:Paint");
-	echo(self:BoxName());
-	echo(overflowRect);
-	echo(self:RoundedFrameRect())
-	echo(paintOffset)
     --overflowRect.inflate(renderer()->maximalOutlineSize(paintInfo.phase));
     --flipForWritingMode(overflowRect);
     --overflowRect.moveBy(paintOffset);
@@ -1473,7 +1098,6 @@ end
 function InlineFlowBox:LayoutOverflowRect(lineTop, lineBottom)
 	
 	if (self.overflow) then
-		echo("InlineFlowBox:LayoutOverflowRect")
         return self.overflow:LayoutOverflowRect();
 	end
 	return self:FrameRectIncludingLineHeight(lineTop, lineBottom)

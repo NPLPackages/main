@@ -42,11 +42,9 @@ local pe_treeview = commonlib.inherit(commonlib.gettable("System.Windows.mcml.El
 pe_treeview:Property({"class_name", "pe:treeview"});
 
 function pe_treeview:ctor()
-	echo("pe_treeview:ctor")
 end
 
 function pe_treeview:CreateControl()
-	echo("pe_treeview:CreateControl")
 	local parentElem = self:GetParentControl();
 	local _this = TreeView:new():init(parentElem);
 	self:SetControl(_this);
@@ -68,63 +66,7 @@ function pe_treeview:CreateControl()
 
 end
 
---function pe_treeview:LoadComponent(parentElem, parentLayout, styleItem)
---	local _this = self.control;
---	if(not _this) then
---		_this = TreeView:new():init(parentElem);
-----		_this:setHorizontalScrollBarPolicy("AlwaysOff");
-----		_this:setVerticalScrollBarPolicy("AlwaysOff");
---		self:SetControl(_this);
---	else
---		_this:SetParent(parentElem);
---	end
---	PageElement.LoadComponent(self, _this.viewport, parentLayout, styleItem)
---end
-
 function pe_treeview:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
-	echo("pe_treeview:OnLoadComponentBeforeChild")
---	css:Merge(mcml:GetStyleItem(self.class_name));
---
---	local _this = self.control;
---
---	self.ItemOpenBG = self:GetString("ItemOpenBG") or css.ItemOpenBG;
---	self.ItemCloseBG = self:GetString("ItemCloseBG") or css.ItemCloseBG;
---	self.ItemToggleSize = self:GetNumber("ItemToggleSize") or css.ItemToggleSize;
---	self.DefaultNodeHeight = self:GetNumber("DefaultNodeHeight") or css.DefaultNodeHeight or 24;
---	self.ItemToggleRightSpacing = self:GetNumber("ItemToggleRightSpacing") or css.ItemToggleRightSpacing;
---	self.DefaultIndentation = self:GetNumber("DefaultIndentation") or css.DefaultIndentation;
---
---	--container_bg = css.background or self:GetString("background"), -- change to css background first
---	_this:SetDefaultNodeHeight(self.DefaultNodeHeight);
---	_this:SetDefaultIconSize(self:GetNumber("DefaultIconSize") or css.DefaultIconSize);
---	_this:SetShowIcon(self:GetBool("ShowIcon"));
---	_this:SetItemOpenBG(self.ItemOpenBG);
---	_this:SetItemCloseBG(self.ItemCloseBG); 
---	_this:SetItemToggleSize(self.ItemToggleSize);
---	_this:SetDefaultIndentation(self.DefaultIndentation);
---	_this:SetVerticalScrollBarOffsetX(self:GetNumber("VerticalScrollBarOffsetX") or css.VerticalScrollBarOffsetX);
---	_this:SetVerticalScrollBarStep(self:GetNumber("VerticalScrollBarStep") or css.VerticalScrollBarStep);
---	_this:SetVerticalScrollBarPageSize(self:GetNumber("VerticalScrollBarPageSize") or css.VerticalScrollBarPageSize);
---	_this:SetMouseOverBG(self:GetString("MouseOverBG") or css.MouseOverBG);
---	--_this:SetClickThrough(self:GetBool("ClickThrough"));
---	self.onclick = self:GetAttributeWithCode("OnClick", nil, true);
---
---	if(css["overflow-y"] and css["overflow-y"] == "hidden") then
---		_this:setVerticalScrollBarPolicy("AlwaysOff");
---	end
---
---	if(not css.background and not css.background2 and css["background-color"]~="#ffffff00") then
---		if(css["background-color"]) then
---			css.background = "Texture/whitedot.png";	
---		else
---			css["background-color"] = "#ffffff00";
---		end
---	end
---
---	if(self.control) then
---		self.control:ApplyCss(css);
---	end
-	
 	self.ItemOpenBG = self:GetString("ItemOpenBG");
 	self.ItemCloseBG = self:GetString("ItemCloseBG");
 	self.ItemToggleSize = self:GetNumber("ItemToggleSize");
@@ -135,7 +77,6 @@ function pe_treeview:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 
 	-- Extract from datasource if it is already provided in the input. 
 	local ds = self:GetAttributeWithCode("DataSourceID", nil, true);
-	echo(ds)
 	if(ds) then
 		self:SetDataSource(ds);
 	else
@@ -154,9 +95,7 @@ end
 
 function pe_treeview:OnLoadComponentAfterChild(parentElem, parentLayout, css)
 	local function setNodeMinHeightRecursive(node, ignores, recursives)
-		echo("setNodeMinHeightRecursive")
 		for childnode in node:next() do
-			childnode:PrintNodeInfo()
 			local setMinHeight = false;
 			if(ignores[childnode.name]) then
 				-- do nothing
@@ -212,7 +151,6 @@ function pe_treeview:Rebuild(parentElem)
 end
 
 function pe_treeview:SetDataSource(dataSource)
-	echo("pe_treeview:SetDataSource")
 	local pageCtrl = self:GetPageCtrl();
 	if(not pageCtrl) then return end
 	if(type(dataSource) == "string") then
@@ -221,7 +159,6 @@ function pe_treeview:SetDataSource(dataSource)
 	else
 		self.datasource = dataSource;
 	end
-	echo(self.datasource.name)
 end
 
 -- Public method: rebind (refresh) the data.
@@ -230,10 +167,8 @@ end
 -- such as <%=Eval("xpath")%> will return the xpath of the node
 -- @param bRefreshUI: true to refresh UI. otherwise node is updated but UI is not. 
 function pe_treeview:DataBind(bRefreshUI)
-	echo("pe_treeview:DataBind")
 	local templates_node = self:GetChild("NodeTemplates");
 	if(not templates_node or type(self.datasource)~="table") then
-		echo("not templates_node")
 		return 
 	end
 	-- build a fast map for look up. 
@@ -290,11 +225,6 @@ function pe_treeview:DataBind(bRefreshUI)
 		end
 
 		local function CreateTreeNode(inTable, parentNode)
-			echo("CreateTreeNode")
-			echo(inTable.name)
-			echo(inTable.attr)
-			echo(parentNode.name)
-			echo(parentNode.attr)
 			if(not inTable) then return end
 			if(type(inTable) == "table") then 	
 				local template_node = template_map[inTable.name]
@@ -328,7 +258,6 @@ function pe_treeview:DataBind(bRefreshUI)
 						tree_node:SetPreValue("this", inTable.attr);
 						parentNode:AppendChild(tree_node, false)
 --						if(needIndented(tree_node)) then
---							echo("if(needIndented(tree_node)) then")
 --							tree_node.attr = tree_node.attr or {};
 --							tree_node.attr.style = tree_node.attr.style or "";
 --							tree_node.attr.style = string.format("margin-left:%dpx;%s", self.DefaultIndentation, tree_node.attr.style)
@@ -360,22 +289,6 @@ function pe_treeview:DataBind(bRefreshUI)
 	end
 end
 
----- Clear all child nodes
---function pe_treeview:ClearAllChildren()
---	if(self.control and self.control.viewport) then
---		self.control.viewport:deleteChildren();
---	end
---	commonlib.resize(self, 0);
---end
-
-function pe_treeview:setRealSize(width, height)
-	if(self.control and self.control.viewport) then
-		width = width or self.control.viewport:width();
-		height = height or self.control.viewport:height();
-		self.control.viewport:setGeometry(0, 0, width, height);
-	end
-end
-
 function pe_treeview:AllowWheel(canWheel)
 	if(self.control) then
 		self.control:SetAllowWheel(canWheel);
@@ -393,32 +306,4 @@ function pe_treeview:scrollToChild(index)
 --		self.control:scrollToPos(nil, self.DefaultNodeHeight * (index - 1));
 --	end	
 	self:ScrollTo(nil, self.DefaultNodeHeight * (index - 1))
-end
-
-function pe_treeview:OnBeforeChildLayout(layout)
-	if(#self == 0) then
-		local myLayout = layout:new();
-		local css = self:GetStyle();
-		local width, height = layout:GetPreferredSize();
-		local padding_left, padding_top = css:padding_left(),css:padding_top();
-		myLayout:reset(padding_left,padding_top,width+padding_left, height+padding_top);
-		self.myLayout = myLayout;
-	end
-	return pe_treeview._super.OnBeforeChildLayout(self, layout);
-end
-
-function pe_treeview:UpdateChildLayout(layout)
-	if(not self.myLayout) then
-		self.myLayout = layout:clone();
-	end
-	pe_treeview._super.UpdateChildLayout(self, layout);
-	
-	local width, height = layout:GetUsedSize()
-	if(self.control) then
-		width = width + self.control:GetSliderSize();
-	end
-	layout:SetUsedSize(width, height);
-
-
-	--layout:AddObject(width, height);
 end

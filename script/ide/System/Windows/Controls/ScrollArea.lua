@@ -22,7 +22,6 @@ local ViewPort = commonlib.inherit(commonlib.gettable("System.Windows.Controls.C
 ViewPort:Property("Name", "ViewPort");
 
 function ViewPort:ctor()
-	echo("1111111111111111111111111111111111111111111111111111");
 	self.clip = true;
 end
 
@@ -58,14 +57,8 @@ function ViewPort:updatePos(hscroll, vscroll)
 end
 
 function ViewPort:paintEvent(painter)
-	echo("ViewPort:paintEvent");
 	local background = self:GetBackground();
 	local x, y = self:x(), self:y();
-	echo({x,y,self:width(), self:height()});
-	--if(background and background~="") then
---		painter:SetPen(self:GetBackgroundColor());
---		painter:DrawRectTexture(x, y, self:width(), self:height(), self:GetBackground());
-	--end
 end
 
 
@@ -186,8 +179,6 @@ function ScrollArea:ApplyCss(css)
 end
 
 function ScrollArea:paintEvent(painter)
-	echo("ScrollArea:paintEvent");
-	echo({self:x(), self:y(), self:width(), self:height()});
 	painter:SetPen(self:GetBackgroundColor());
 	painter:DrawRectTexture(self:x(), self:y(), self:width(), self:height(), self:GetBackground());
 end

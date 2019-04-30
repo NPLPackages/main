@@ -1,25 +1,48 @@
 ﻿<!-- "script/test/MCMLv2/test_layout.html" -->
 <html>
 <pe:mcml>
-    <pe:pager target="gvwTableTest" height="26" position="Bottom" style="text-align:center">
-        <form>
-            <input type="hidden" style="display:none;" name="target" value="gvwTableTest" />
+    <script type="text/npl" refresh="false">
+        <![CDATA[
 
-            <label style="color:#000066;">
-                <input onclick="System.Windows.mcml.Elements.pe_pager.OnPrePage" style="background:" type="button" polygonStyle="narrow" name="pre" direction="left" />
+        function OnChange(value, node)
+            echo(value)
+            local nodes = Page:jquery("input#sliderbarValue");
+            local node = nodes[1];
+            if(node) then
+                node:SetValue(value);
+            end
+        end
+        ]]>
+    </script>
+        <!--<style>
+            div {
+                border-style: solid;
+                border-width: 15px;
+                border-left-color: red;
+                border-top-color: black;
+                border-right-color: red;
+                border-bottom-color: black;
+            }
+        </style>-->
+        <!--<div name="div0" id="div0" style="background-color:aquamarine;width:1500px;height:1500px;">
+            <img name="img" id="img" src="Textures/icon1.png"/>
+        </div>-->
+        <div style="margin:20px;background-color:antiquewhite;height:400px;">
+            <sliderbar style="width:100px;height:30px;background-color:aquamarine" onchange="OnChange" background_height="20"/>
+            <input type="text" style="width:40px;margin-left:20px;" value="1" id="sliderbarValue" name="sliderbarValue" />
+            <br/>
+            <progressbar style="width:100px;height:30px;" Value="50"/>
+            <!--<h1 name="p_left" style="position:relative;top:20px;z-index:-1;">这个标题相对于其正常位置向左移动</h1>
+            <img name="img" id="img" src="Textures/icon1.png" width="60" height="60" style="position:relative;left:20px;"/>
+            <div name="p_left" style="position:relative;top:-25px;z-index:-2;">这个标题相对于其正常位置向左移动<br/>11111111111111111111111</div>-->
+            <!--1212121
+            <input type="button" value="button" />
+            <input type="text" />
+            <br/>
+            <input type="text" />
+            <br/>
+            <input type="button" value="button" />-->
+        </div>
 
-                Previous
-            </label>
-
-            <label name="page" style="margin-left:10px;margin-right:10px;">
-                1/1
-            </label>
-
-            <label style="color:#000066;">
-                Next
-                <input onclick="System.Windows.mcml.Elements.pe_pager.OnNextPage" style="background:" type="button" polygonStyle="narrow" name="next" direction="right" />
-            </label>
-        </form>
-    </pe:pager>
 </pe:mcml>
 </html>

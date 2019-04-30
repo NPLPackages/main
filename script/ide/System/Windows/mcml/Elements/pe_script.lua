@@ -108,7 +108,6 @@ end
 -- There is also a short cut <%="Any text or function here"%> which expands to <%document.write("Any text or function here")%>, 
 -- e.g. one can write <%="profile.xml?uid="+Eval("uid")%>
 function pe_script:LoadComponent(parentElem, parentLayout, style)
-	echo("pe_script:LoadComponent begin")
 	local bAllowRefresh = self:GetBool("refresh");
 	if(bAllowRefresh==false) then
 		-- Tricky: if IsInitialized contains code, we will always refresh code value. 
@@ -154,7 +153,6 @@ function pe_script:LoadComponent(parentElem, parentLayout, style)
 			code = string.gsub(code, "^=(.*)$", "document.write(%1)");
 		end
 	end
-	echo("pe_script:LoadComponent 0")
 	if(code~=nil and code~="") then
 		local pageCtrl = self:GetPageCtrl();
 		if(pageCtrl) then
@@ -190,13 +188,11 @@ function pe_script:LoadComponent(parentElem, parentLayout, style)
 			log("warning: inline <script> code in mcml page is ignored, because the page is not instantiated via PageCtrl. For security reasons, script code is ignored.\n");	
 		end	
 	end
-	echo("pe_script:LoadComponent 1")
 	-- load child node
 	local flushnode = self:GetChild("pe:flushnode");
 	if (flushnode) then
 		flushnode:LoadComponent(parentElem, parentLayout, style);
 	end
-	echo("pe_script:LoadComponent end")
 end
 
 function pe_script:UpdateLayout(parentLayout)
@@ -290,20 +286,12 @@ end
 -- code executed between pe_script.BeginCode() and pe_script.EndCode() can access to the "document" DOM object.
 -- @param self: if nil, it will ignore document.write inside the code. 
 function pe_script.EndCode(self)
-	echo("pe_script.EndCode begin")
 	if(document) then
 		-- flush and create content
 		local domNode = document:flush();
---		domNode:PrintNodeInfo()
---		echo(domNode:GetChildCount())
 		if(domNode~=nil) then
 			if(self) then
 				local nextNode = self:NextSibling();
---				for childnode in domNode:next() do
---					echo("for childnode")
---					childnode:PrintNodeInfo()
---					self:Parent():InsertBefore(childnode, nextNode, false);
---				end
 				self:Parent():InsertBefore(domNode, nextNode, false);
 			end
 
@@ -328,7 +316,6 @@ function pe_script.EndCode(self)
 		-- clear the document object
 		document = nil;
 	end	
-	echo("pe_script.EndCode end")
 end
 
 function pe_script:NeedsLoadComponent()

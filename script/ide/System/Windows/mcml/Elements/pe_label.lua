@@ -16,23 +16,6 @@ pe_label:Property({"class_name", "pe:label"});
 function pe_label:ctor()
 end
 
---function pe_label:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
---	css.float = css.float or true;
---
---	local _this = self.control;
---	if(not _this) then
---		_this = Label:new():init(parentElem);
---		self:SetControl(_this);
---	else
---		_this:SetParent(parentElem);
---	end
---	_this:ApplyCss(css);
---	_this:SetText(tostring(self:GetAttributeWithCode("value", nil, true)));
---	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
---
---	pe_label._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
---end
-
 -- get value: it is usually one of the editor tag, such as <input>
 function pe_label:GetValue()
 	return self:GetAttribute("value");
@@ -45,26 +28,3 @@ function pe_label:SetValue(value)
 		return self.control:SetText(value);
 	end
 end
-
-function pe_label:OnBeforeChildLayout(layout)
-	if(self.control) then
-		local css = self:GetStyle();
-		local width, height;
-		if(not css.width) then
-			width = self.control:CalculateTextWidth();
-		end
-		if(not css.height) then
-			height = self.control:CalculateTextHeight();
-		end
-		if(width or height) then
-			layout:AddObject(width or 0, height or 0);
-		end
-	end
-end
-
-function pe_label:OnAfterChildLayout(layout, left, top, right, bottom)
-	if(self.control) then
-		self.control:setGeometry(left, top, right-left, bottom-top);
-	end
-end
-

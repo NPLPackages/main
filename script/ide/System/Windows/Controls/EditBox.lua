@@ -44,7 +44,7 @@ EditBox:Property({"leftTextMargin", 0});
 EditBox:Property({"topTextMargin", 2});
 EditBox:Property({"rightTextMargin", 0});
 EditBox:Property({"bottomTextMargin", 2});
-EditBox:Property({"EmptyText", nil, "GetEmptyText", "SetEmptyText", auto=true});				  --*********************************************	 
+EditBox:Property({"EmptyText", nil, "GetEmptyText", "SetEmptyText", auto=true});	 
 
 EditBox:Signal("resetInputContext");
 EditBox:Signal("selectionChanged");
@@ -110,6 +110,9 @@ function EditBox:SetText(txt)
 end
 
 function EditBox:internalSetText(txt, pos, edited)
+--	if(type(txt) == "string") then
+--		txt = UniString:new(txt);
+--	end
 	self:resetInputContext();
 	local oldText = self.m_text;
 	self.m_text:SetText(UniString.left(txt, self.m_maxLength));
@@ -412,7 +415,9 @@ function EditBox:focusInEvent(event)
 	self:setCursorBlinkPeriod(Application:cursorFlashTime());
 	EditBox._super.focusInEvent(self, event)
 
-	self:PageElement():FocusInEvent();
+	if(self:PageElement()) then
+		self:PageElement():FocusInEvent();
+	end
 end
 
 -- virtual: 
@@ -423,7 +428,9 @@ function EditBox:focusOutEvent(event)
 
 	EditBox._super.focusOutEvent(self, event)
 
-	self:PageElement():FocusOutEvent();
+	if(self:PageElement()) then
+		self:PageElement():FocusOutEvent();
+	end
 end
 
 function EditBox:GetPasswordText()
@@ -438,6 +445,8 @@ function EditBox:naturalTextWidth()
 end
 
 function EditBox:paintEvent(painter)
+	EditBox._super.paintEvent(self, painter)
+
 	painter:SetPen(self:GetBackgroundColor());
 	painter:DrawRectTexture(self:x(), self:y(), self:width(), self:height(), self:GetBackground());
 

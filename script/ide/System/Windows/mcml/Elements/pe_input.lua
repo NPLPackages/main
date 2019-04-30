@@ -62,9 +62,3 @@ function pe_input:LoadComponent(parentElem, parentLayout, style)
 	end
 end
 
-function pe_input:UpdateLayout(parentLayout)
-	for childnode in self:next() do
-		childnode:UpdateLayout(parentLayout);
-	end
-end
-

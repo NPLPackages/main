@@ -92,16 +92,10 @@ function LayoutLineBoxList:Paint(renderer, paintInfo, paintOffset)
 	if (self:FirstLineBox() == nil) then
 		return;
 	end
-	echo("LayoutLineBoxList:Paint")
-	renderer:PrintNodeInfo()
-	echo("22222222")
-	echo(paintOffset)
-	echo(paintInfo:Rect())
 	local view = renderer:View();
     --bool usePrintRect = !v->printRect().isEmpty();
 	local usePrintRect = false;
     local outlineSize = renderer:MaximalOutlineSize();
-	echo(outlineSize)
     if (not self:AnyLineIntersectsRect(renderer, paintInfo:Rect(), paintOffset, usePrintRect, outlineSize)) then
         return;
 	end
@@ -113,11 +107,8 @@ function LayoutLineBoxList:Paint(renderer, paintInfo, paintOffset)
 
 	local curr = self:FirstLineBox();
 	while(curr) do
-		echo("LayoutLineBoxList:Paint while");
 		--if (self:LineIntersectsDirtyRect(renderer, curr, info, paintOffset)) then
 		if(true) then
-			echo("1111111111");
-			echo(curr:BoxName());
             local root = curr:Root();
 			local info = paintInfo:clone();
 			info:Rect():SetX(info:Rect():X() - curr:X())
@@ -131,7 +122,6 @@ end
 
 --bool RenderLineBoxList::anyLineIntersectsRect(RenderBoxModelObject* renderer, const LayoutRect& rect, const LayoutPoint& offset, bool usePrintRect, LayoutUnit outlineSize) const
 function LayoutLineBoxList:AnyLineIntersectsRect(renderer, rect, offset, usePrintRect, outlineSize)
-	echo("LayoutLineBoxList:AnyLineIntersectsRect")
 	usePrintRect = if_else(usePrintRect == nil, false, usePrintRect);
 	outlineSize = outlineSize or 0;
     -- We can check the first box and last box and avoid painting/hit testing if we don't
@@ -146,12 +136,8 @@ function LayoutLineBoxList:AnyLineIntersectsRect(renderer, rect, offset, usePrin
     local lastLineBottom = self:LastLineBox():LogicalBottomVisualOverflow(lastRootBox:LineBottom());
 --    if (usePrintRect && !lastLineBox()->parent())
 --        lastLineBottom = max(lastLineBottom, lastLineBox()->root()->lineBottom());
-	echo({firstLineTop, lastLineBottom})
     local logicalTop = firstLineTop - outlineSize;
     local logicalBottom = outlineSize + lastLineBottom;
-	echo("LayoutLineBoxList:AnyLineIntersectsRect")
-	echo(renderer.frame_rect)
-    echo({logicalTop, logicalBottom, rect, offset})
     return self:RangeIntersectsRect(renderer, logicalTop, logicalBottom, rect, offset);
 end
 
@@ -166,7 +152,6 @@ end
 
 --bool RenderLineBoxList::rangeIntersectsRect(RenderBoxModelObject* renderer, int logicalTop, int logicalBottom, const IntRect& rect, const IntPoint& offset) const
 function LayoutLineBoxList:RangeIntersectsRect(renderer, logicalTop, logicalBottom, rect, offset)
-	echo("LayoutLineBoxList:RangeIntersectsRect")
     local block;
     if (renderer:IsBox()) then
         block = renderer;
@@ -177,7 +162,6 @@ function LayoutLineBoxList:RangeIntersectsRect(renderer, logicalTop, logicalBott
     local physicalEnd = block:FlipForWritingMode(logicalBottom);
     local physicalExtent = math.abs(physicalEnd - physicalStart);
     physicalStart = math.min(physicalStart, physicalEnd);
-    echo({physicalStart, physicalExtent, offset})
     if (renderer:Style():IsHorizontalWritingMode()) then
         physicalStart = physicalStart + offset:Y();
         if (physicalStart >= rect:MaxY() or physicalStart + physicalExtent <= rect:Y()) then

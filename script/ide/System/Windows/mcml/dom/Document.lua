@@ -40,7 +40,6 @@ local function getDocId()
 end
 
 function Document:ctor()
-	echo("Document:ctor")
 	self.m_frame = nil;
 	self.m_url = nil;
 	self.m_createRenderers = true;
@@ -85,13 +84,10 @@ end
 
 --FrameView* Document::view() const
 function Document:View()
---	echo("Document:View")
 	if(self.m_frame) then
 		return self.m_frame:View();
 	end
---	echo("not self.m_frame")
 	return nil;
-    --return m_frame ? m_frame->view() : 0;
 end
 
 --Page* Document::page() const
@@ -224,32 +220,18 @@ function Document:SetActiveNode(newActiveNode)
 end
 
 function Document:GetParentControl()
-	echo("Document:GetParentControl")
 	if(self.m_frame:OwnerElement()) then
-		echo("self.m_frame:OwnerElement()")
-		self.m_frame:OwnerElement():PrintNodeInfo();
 		return self.m_frame:OwnerElement():GetControl();
 	end
 
 	if(self:View()) then
-		if(self:View():widget()) then
-			echo(self:View():widget():GetField("Name"))
-		else
-			echo("not self:View():widget()")
-		end
 		return self:View():widget();
 	end
 	return;
 end
 
 function Document:CreateControl()
-	echo("Document:CreateControl")
-	echo(self.name)
 	local parentElem = self:GetParentControl();
-	echo("parentElem")
-	if(not parentElem) then
-		echo("not parentElem")
-	end
 	local _this = Rectangle:new():init(parentElem);
 	self:SetControl(_this);
 end

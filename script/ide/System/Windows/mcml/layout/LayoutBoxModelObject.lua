@@ -351,20 +351,14 @@ function LayoutBoxModelObject:StyleWillChange(diff, newStyle)
 end
 
 function LayoutBoxModelObject:ScrollToWithNotify(x, y)
-	echo("LayoutBoxModelObject:ScrollToWithNotify")
 	if(self.layer) then
 		self.layer:ScrollToWithNotify(x, y)
-	else
-		echo("no self.layer")
 	end
 end
 
 function LayoutBoxModelObject:StyleDidChange(diff, oldStyle)
 	LayoutBoxModelObject._super.StyleDidChange(self, diff, oldStyle);
 	self:UpdateBoxModelInfoFromStyle();
-	echo("LayoutBoxModelObject:StyleDidChange")
-	self:PrintNodeInfo()
-	echo(self:RequiresLayer())
 	if (self:RequiresLayer()) then
         if (not self:Layer()) then
             if (s_wasFloating and self:IsFloating()) then
@@ -534,29 +528,21 @@ function LayoutBoxModelObject:NeedClip()
 end
 
 function LayoutBoxModelObject:PaintFillLayerExtended(paintInfo, rect)
-	echo("LayoutBoxModelObject:PaintFillLayerExtended");
-	self:PrintNodeInfo()
 	local control = self:GetOrCreateControl();
 	
 	if(control) then
 		if(control:GetParent() == nil) then
-			echo("control:SetParent")
 			local parent_control = self:GetParentControl();
 			if(parent_control) then
 				control:SetParent(parent_control)
-			else
-				echo("parent_control is nil")
 			end
 		end
 
 		local clip = self:NeedClip();
-		echo("clip")
-		echo(clip)
 		control:SetClip(clip)
 		--control:SetChildrenClip(clip)
 
 		local x, y, w, h = rect:X(), rect:Y(), rect:Width(), rect:Height();
-		echo({x, y, w, h});
 		if(self:Style()) then
 			if(self:Node()) then
 				self:Node():ApplyCss(self:Style());
@@ -565,7 +551,5 @@ function LayoutBoxModelObject:PaintFillLayerExtended(paintInfo, rect)
 			end
 		end
 		control:setGeometry(x, y, w, h);
-	else
-		echo("not control")
 	end
 end

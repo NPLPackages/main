@@ -25,35 +25,3 @@ function pe_scrollarea:CreateControl()
 	local _this = ScrollAreaForPage:new():init(parentElem);
 	self:SetControl(_this);
 end
-
---function pe_scrollarea:GetControl(pageName)
---	if(self.control) then
---		return self.control:ViewPort();
---	end
---	return pe_scrollarea._super.GetControl(self, pageName)
---end
-
---function pe_scrollarea:LoadComponent(parentElem, parentLayout, style)
---	local _this = self.control;
---	if(not _this) then
---		_this = ScrollAreaForPage:new():init(parentElem);
---		self:SetControl(_this);
---	else
---		_this:SetParent(parentElem);
---	end
---	PageElement.LoadComponent(self, _this.viewport, parentLayout, style);
---	_this:ApplyCss(self:GetStyle());
---end
-
-function pe_scrollarea:OnAfterChildLayout(layout, left, top, right, bottom)
-	local css = self:GetStyle();
-	local real_w, real_h = layout:GetRealSize();
-
-	if(self.control) then
-		self.control:setGeometry(left, top, right-left, bottom-top);
-		if(self.control.viewport) then
-			self.control.viewport:setGeometry(0, 0, real_w, real_h);
-		end
-		self.control:scrollToPos();
-	end
-end

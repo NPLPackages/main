@@ -75,7 +75,6 @@ function RootInlineBox:VirtualLogicalHeight()
 end
 
 function RootInlineBox:AdjustPosition(dx, dy)
-	echo("RootInlineBox:AdjustPosition");
 	RootInlineBox._super.AdjustPosition(self, dx, dy);
     local blockDirectionDelta = if_else(self:IsHorizontal(), dy, dx); -- The block direction delta is a LayoutUnit.
     self.lineTop = self.lineTop + blockDirectionDelta;
@@ -345,110 +344,6 @@ local function setAscentAndDescent(ascent, descent, newAscent, newDescent, ascen
 	return ascent, descent, ascentDescentSet;
 end
 
---void RootInlineBox::ascentAndDescentForBox(InlineBox* box, GlyphOverflowAndFallbackFontsMap& textBoxDataMap, LayoutUnit& ascent, LayoutUnit& descent,
---                                           bool& affectsAscent, bool& affectsDescent) const
---function RootInlineBox:AscentAndDescentForBox(box, textBoxDataMap, ascent, descent, affectsAscent, affectsDescent)
---echo("RootInlineBox:AscentAndDescentForBox")
---	local ascentDescentSet = false;
---
-----    -- Replaced boxes will return 0 for the line-height if line-box-contain says they are
-----    -- not to be included.
---    if (box:Renderer():IsReplaced()) then
---		local lineBoxContain = self:Renderer():Style(self.firstLine):LineBoxContain();
---        if (mathlib.bit.band(lineBoxContain, LineBoxContainEnum.LineBoxContainReplaced)) then
---			
---            ascent = box:BaselinePosition(self:BaselineType());
---            descent = box:LineHeight() - ascent;
---            
---            -- Replaced elements always affect both the ascent and descent.
---            affectsAscent = true;
---            affectsDescent = true;
---        end
---        return ascent, descent, affectsAscent, affectsDescent;
---    end
---
-----    Vector<const SimpleFontData*>* usedFonts = 0;
-----    GlyphOverflow* glyphOverflow = 0;
---	local usedFonts = nil;
---    local glyphOverflow = nil;
---    if (box:IsText() and textBoxDataMap) then
---		usedFonts = textBoxDataMap[box];
---        --GlyphOverflowAndFallbackFontsMap::iterator it = textBoxDataMap.find(toInlineTextBox(box));
---        --usedFonts = it == textBoxDataMap.end() ? 0 : &it->second.first;
---        --glyphOverflow = it == textBoxDataMap.end() ? 0 : &it->second.second;
---    end
---
---	local includeLeading = self:IncludeLeadingForBox(box);
---    local includeFont = self:IncludeFontForBox(box);
---    local setUsedFont = false;
---    local setUsedFontWithLeading = false;
---	if (usedFonts ~= nil and #usedFonts > 0 and (includeFont or (box:Renderer():Style(self.firstLine):LineHeight():IsNegative() and includeLeading))) then
---        --usedFonts->append(box->renderer()->style(m_firstLine)->font().primaryFont());
---		for i = 1, #usedFonts do
---			local fontMetrics = usedFonts[i]:FontMetrics();
---            local usedFontAscent = fontMetrics:ascent(self:BaselineType());
---            local usedFontDescent = fontMetrics:descent(self:BaselineType());
---            local halfLeading = math.floor((fontMetrics:lineSpacing() - fontMetrics:height())/2+0.5);
---            local usedFontAscentAndLeading = usedFontAscent + halfLeading;
---            local usedFontDescentAndLeading = fontMetrics:lineSpacing() - usedFontAscentAndLeading;
---            if (includeFont) then
---                ascent, descent, ascentDescentSet = setAscentAndDescent(ascent, descent, usedFontAscent, usedFontDescent, ascentDescentSet);
---                setUsedFont = true;
---            end
---            if (includeLeading) then
---                ascent, descent, ascentDescentSet = setAscentAndDescent(ascent, descent, usedFontAscentAndLeading, usedFontDescentAndLeading, ascentDescentSet);
---                setUsedFontWithLeading = true;
---            end
---            if (not affectsAscent) then
---                affectsAscent = usedFontAscent - box:LogicalTop() > 0;
---			end
---            if (not affectsDescent) then
---                affectsDescent = usedFontDescent + box:LogicalTop() > 0;
---			end
---		end
---    end
---	echo("includeLeading and not setUsedFontWithLeading");
---	echo({includeLeading, not setUsedFontWithLeading})
---	-- If leading is included for the box, then we compute that box.
---    if (includeLeading and not setUsedFontWithLeading) then
---        local ascentWithLeading = box:BaselinePosition(self:BaselineType());
---        local descentWithLeading = box:LineHeight() - ascentWithLeading;
---        ascent, descent, ascentDescentSet = setAscentAndDescent(ascent, descent, ascentWithLeading, descentWithLeading, ascentDescentSet);
---        
---        -- Examine the font box for inline flows and text boxes to see if any part of it is above the baseline.
---        -- If the top of our font box relative to the root box baseline is above the root box baseline, then
---        -- we are contributing to the maxAscent value. Descent is similar. If any part of our font box is below
---        -- the root box's baseline, then we contribute to the maxDescent value.
---        affectsAscent = (ascentWithLeading - box:LogicalTop()) > 0;
---        affectsDescent = (descentWithLeading + box:LogicalTop()) > 0; 
---    end
---	echo("self:IncludeFontForBox(box) and not setUsedFont");
---	echo({self:IncludeFontForBox(box), not setUsedFont})
---	if (self:IncludeFontForBox(box) and not setUsedFont) then
---        local fontAscent = box:Renderer():Style(self.firstLine):FontMetrics():ascent();
---        local fontDescent = box:Renderer():Style(self.firstLine):FontMetrics():descent();
---        ascent, descent, ascentDescentSet = setAscentAndDescent(ascent, descent, fontAscent, fontDescent, ascentDescentSet);
---        affectsAscent = fontAscent - box:LogicalTop() > 0;
---        affectsDescent = fontDescent + box:LogicalTop() > 0; 
---    end
---	echo("self:IncludeMarginForBox(box)");
---	echo(self:IncludeMarginForBox(box))
---	if (self:IncludeMarginForBox(box)) then
---        local ascentWithMargin = box:Renderer():Style(self.firstLine):FontMetrics():ascent();
---        local descentWithMargin = box:Renderer():Style(self.firstLine):FontMetrics():descent();
---        if (box:Parent() ~= nil and not box:Renderer():IsText()) then
---            ascentWithMargin = ascentWithMargin + box:BoxModelObject():BorderBefore() + box:BoxModelObject():PaddingBefore() + box:BoxModelObject():MarginBefore();
---            descentWithMargin = descentWithMargin + box:BoxModelObject():BorderAfter() + box:BoxModelObject():PaddingAfter() + box:BoxModelObject():MarginAfter();
---        end
---        ascent, descent, ascentDescentSet = setAscentAndDescent(ascent, descent, ascentWithMargin, descentWithMargin, ascentDescentSet);
---        
---        -- Treat like a replaced element, since we're using the margin box.
---        affectsAscent = true;
---        affectsDescent = true;
---    end
---	return ascent, descent, affectsAscent, affectsDescent;
---end
-
 --bool RootInlineBox::includeLeadingForBox(InlineBox* box) const
 function RootInlineBox:IncludeLeadingForBox(box)
     if (box:Renderer():IsReplaced() or (box:Renderer():IsText() and not box:IsText())) then
@@ -672,7 +567,6 @@ function RootInlineBox:PaddedLayoutOverflowRect(endPadding)
     if (endPadding == 0) then
         return lineLayoutOverflow;
 	end
-    
     -- FIXME: Audit whether to use pixel snapped values when not using integers for layout: https://bugs.webkit.org/show_bug.cgi?id=63656
     if (self:IsHorizontal()) then
         if (self:IsLeftToRightDirection()) then
@@ -687,7 +581,6 @@ function RootInlineBox:PaddedLayoutOverflowRect(endPadding)
             lineLayoutOverflow:ShiftYEdgeTo(math.min(lineLayoutOverflow:Y(), self:PixelSnappedLogicalLeft() - endPadding));
 		end
     end
-    
     return lineLayoutOverflow;
 end
 

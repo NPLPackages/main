@@ -187,12 +187,6 @@ local function rootRenderer(view)
 end
 
 function FrameView:Layout()
-	echo("FrameView:Layout")
-	if(self.m_frame.m_ownerElement) then
-		self.m_frame.m_ownerElement:PrintNodeInfo();
-	else
-		echo("not m_ownerElement")
-	end
 	if(not self.page:LoadFinshed()) then
 		return;
 	end
@@ -230,9 +224,6 @@ function FrameView:Layout()
 
 	--m_doFullRepaint = !subtree && (m_firstLayout || toRenderView(root)->printing());
 	self.doFullRepaint = not subtree and self.firstLayout;
-	echo("FrameView:Layout 1")
-	echo(subtree)
-	echo(self.m_frameRect)
 	if(not subtree) then
 		if (self.firstLayout) then
 			self.firstLayout = false;
@@ -246,7 +237,6 @@ function FrameView:Layout()
 			self:RepaintContentRectangle(LayoutRect:new(0, 0, self.size:Width(), self.size:Height()));
 		end
 	end
-	echo("FrameView:Layout 2")
 	local layer = root:EnclosingLayer();
 
 	self.inLayout = true;
@@ -270,8 +260,6 @@ function FrameView:Layout()
 end
 
 function FrameView:RepaintIfNeeded()
-	echo("FrameView:RepaintIfNeeded()")
-
 	-- if it's sub frameview, the main frameview must be paint before.
 	if(self:Parent() and self:Parent():IsInLayout()) then
 		return;
@@ -281,8 +269,6 @@ function FrameView:RepaintIfNeeded()
         return false;
 	end
     --layoutIfNeeded();
-	echo("FrameView:RepaintIfNeeded")
-	echo(self.dirtyArea)
 	self:Paint(nil, self.dirtyArea);
 
 
@@ -357,8 +343,6 @@ function FrameView:GetUsedSize()
 end
 
 function FrameView:AddDirtyArea(x, y, w, h)
-	echo("FrameView:AddDirtyArea")
-	echo({x, y, w, h})
     if (w > 0 and h > 0) then
         self.dirtyArea:Unite(Rect:new_from_pool(x, y, w, h));
         self.dirty = true;
@@ -394,8 +378,6 @@ local cRepaintRectUnionThreshold = 25;
 
 --void FrameView::repaintContentRectangle(const LayoutRect& r, bool immediate)
 function FrameView:RepaintContentRectangle(rect, immediate)
-	echo("FrameView:RepaintContentRectangle");
-	echo(rect)
 	immediate = if_else(immediate == nil, false, immediate);
     --ASSERT(!m_frame->ownerElement());
     
@@ -407,11 +389,8 @@ function FrameView:RepaintContentRectangle(rect, immediate)
 
 	local paintRect = rect:clone();
     if (self:ClipsRepaints() and not self:PaintsEntireContents()) then
-		echo("paintRect:Intersect")
-		echo(self:VisibleContentRect())
         paintRect:Intersect(self:VisibleContentRect());
 	end
-	echo(paintRect)
     if (paintRect:IsEmpty()) then
         return;
 	end
@@ -476,7 +455,6 @@ end
 
 --void FrameView::paintContents(GraphicsContext* p, const LayoutRect& rect)
 function FrameView:PaintContents(p, rect)
-	echo("FrameView:PaintContents")
 --	if (self:NeedsLayout()) then
 --        return;
 --	end

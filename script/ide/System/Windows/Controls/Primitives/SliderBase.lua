@@ -177,16 +177,6 @@ end
 
 function SliderBase:scrollByDelta(delta)
 	delta = -delta;
---	local offset = delta / 120;
---	local stepToScroll = math.floor(self.pageStep * offset + 0.5);
---	echo("stepToScroll")
---	echo(self.pageStep)
---	echo(stepToScroll)
---	if(stepToScroll == 0) then
---		stepToScroll = if_else(delta > 0, self.singleStep, -self.singleStep);
---	else
---		stepToScroll = math.max(-self.pageStep, math.min(self.pageStep, stepToScroll));
---	end
 	local stepToScroll = delta * self.scrollStep;
 	self:SetValue(self.value + stepToScroll, true);
 end

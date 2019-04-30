@@ -74,7 +74,7 @@ ListBox:Property({"SliderSize", 16, auto=true});
 
 --ListBox:Signal("resetInputContext");
 ListBox:Signal("selectionChanged");
-ListBox:Signal("clicked",function(index, text) end);
+ListBox:Signal("clicked",function(index, value, text) end);
 --ListBox:Signal("accepted");
 --ListBox:Signal("editingFinished");
 --ListBox:Signal("updateNeeded");
@@ -94,8 +94,6 @@ end
 
 function ListBox:initViewport()
 	self.viewport = ListView:new():init(self);
-	self.viewport:Connect("SizeChanged", self, "updateScrollStatus");
-	self.viewport:Connect("PositionChanged", self, "updateScrollValue");
 end
 
 function ListBox:selectItem(index)
@@ -149,6 +147,12 @@ end
 
 function ListBox:SetSize(num)
 	self:SetRow(num);
+end
+
+function ListBox:clear()
+	if(self.viewport) then
+		self.viewport:clear();
+	end
 end
 
 function ListBox:Size()
@@ -215,82 +219,24 @@ function ListBox:selectIndex()
 	end
 end
 
-function ListBox:updateScrollInfo()
-	local clip = self:ViewRegion();
-	--if(not self.hbar:isHidden()) then
-		self.hbar:setRange(0, self.viewport:GetRealWidth() - clip:width() - 1);
-		self.hbar:setStep(self.viewport:WordWidth(), clip:width());
-		self.hbar:SetValue(self.viewport:hValue());
-	--end
-
-	--if(not self.vbar:isHidden()) then
-		self.vbar:setRange(0, self.viewport:GetRow() - self:GetRow());
-		self.vbar:setStep(1, self:GetRow());
-		self.vbar:SetValue(self.viewport:vValue());
-	--end
-end
-
-function ListBox:updateScrollValue()
-	if(not self.hbar:isHidden()) then
-		self.hbar:SetValue(self.viewport:hValue());
-	end
-
-	if(not self.vbar:isHidden()) then
-		self.vbar:SetValue(self.viewport:vValue());
-	end
-end
-
-function ListBox:updateScrollStatus(textbox_w, textbox_h)
-	local clip = self:ViewRegion();
-	if(textbox_w > clip:width()) then
-		--self.hbar:show();
-		self:horizontalScrollBarShow();
-	else
-		--self.hbar:hide();
-		self:horizontalScrollBarHide();
-	end
-
-	clip = self:ViewRegion();
-	if(textbox_h > clip:height()) then
-		--self.vbar:show();
-		self:verticalScrollBarShow();
-		clip = self:ViewRegion();
-		if(textbox_w > clip:width()) then
-			--self.hbar:show();
-			self:horizontalScrollBarShow();
-		else
-			--self.hbar:hide();
-			self:horizontalScrollBarHide();
-		end
-	else
-		--self.vbar:hide();
-		self:verticalScrollBarHide();
-	end
-
-	self:updateScrollInfo();
-end
-
-function ListBox:updateScrollGeometry()
-	if(not self.hbar:isHidden()) then
-		if(self.vbar:isHidden()) then
-			self.hbar:setGeometry(0, self:height() - self.SliderSize, self:width(), self.SliderSize);
-		else
-			self.hbar:setGeometry(0, self:height() - self.SliderSize, self:width() - self.SliderSize, self.SliderSize);
-		end
-	end
-
-	if(not self.vbar:isHidden()) then
-		if(self.hbar:isHidden()) then
-			self.vbar:setGeometry(self:width() - self.SliderSize, 0, self.SliderSize, self:height());
-		else
-			self.vbar:setGeometry(self:width() - self.SliderSize, 0, self.SliderSize, self:height() - self.SliderSize);
-		end
-	end
-end
-
 function ListBox:paintEvent(painter)
-	self:updateScrollGeometry();
+	ListBox._super.paintEvent(self, painter);
+
 	painter:SetPen(self:GetBackgroundColor());
 	painter:DrawRectTexture(self:x(), self:y(), self:width(), self:height(), self:GetBackground());
 end
 
+function ListBox:ApplyCss(css)
+	ListBox._super.ApplyCss(self, css);
+	self:SetItemHeight(css:ComputedLineHeight());
+	if(self.viewport) then
+		self.viewport:ApplyCss(css);
+	end
+end
+
+function ListBox:SetTextMargin(left, top, right, bottom)
+	self.leftTextMargin = left or self.leftTextMargin;
+	self.topTextMargin = top or self.topTextMargin;
+	self.rightTextMargin = right or self.rightTextMargin;
+	self.bottomTextMargin = bottom or self.bottomTextMargin;
+end

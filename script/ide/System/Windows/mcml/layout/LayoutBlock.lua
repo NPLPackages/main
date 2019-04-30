@@ -874,7 +874,6 @@ function LayoutBlock:BeingDestroyed()
 end
 
 function LayoutBlock:ComputeInlinePreferredLogicalWidths()
-	echo("LayoutBlock:ComputeInlinePreferredLogicalWidths")
 	local inlineMax = 0;
     local inlineMin = 0;
 
@@ -1045,7 +1044,6 @@ function LayoutBlock:ComputeInlinePreferredLogicalWidths()
                 end
             elseif (child:IsText()) then
                 -- Case (3). Text.
-				echo("Case (3). Text.")
                 local t = child:ToRenderText();
 
                 if (t:IsWordBreak()) then
@@ -1056,7 +1054,6 @@ function LayoutBlock:ComputeInlinePreferredLogicalWidths()
 					if (t:Style():HasTextCombine() and t:IsCombineText()) then
 						--toRenderCombineText(t)->combineText();
 					end
-					echo("Case (3). Text. 0")
 					-- Determine if we have a breakable character.  Pass in
 					-- whether or not we should ignore any spaces at the front
 					-- of the string.  If those are going to be stripped out,
@@ -1068,7 +1065,6 @@ function LayoutBlock:ComputeInlinePreferredLogicalWidths()
 					local beginMax, endMax = 0, 0;
 					beginMin, beginWS, endMin, endWS, hasBreakableChar, hasBreak, beginMax, endMax, childMin, childMax, stripFrontSpaces = 
 						t:TrimmedPrefWidths(inlineMax, beginMin, beginWS, endMin, endWS, hasBreakableChar, hasBreak, beginMax, endMax, childMin, childMax, stripFrontSpaces);
-					echo("Case (3). Text. 1")
 					-- This text object will not be rendered, but it may still provide a breaking opportunity.
 					if (not hasBreak and childMax == 0) then
 						if (autoWrap and (beginWS or endWS)) then
@@ -1135,7 +1131,6 @@ function LayoutBlock:ComputeInlinePreferredLogicalWidths()
 					end
                 end
             end
-			echo("Case (3). Text. end")
 			if(not isContinue) then
 				-- Ignore spaces after a list marker.
 				if (child:IsListMarker()) then
@@ -1377,9 +1372,6 @@ end
 -- ApplyLayoutDeltaMode is enum, can be "ApplyLayoutDelta", "DoNotApplyLayoutDelta"
 --void RenderBlock::setLogicalTopForChild(RenderBox* child, LayoutUnit logicalTop, ApplyLayoutDeltaMode applyDelta)
 function LayoutBlock:SetLogicalLeftForChild(child, logicalLeft, applyDelta)
-	echo("LayoutBlock:SetLogicalLeftForChild")
-	child:PrintNodeInfo()
-	echo(logicalLeft)
 	applyDelta = if_else(applyDelta == nil, "DoNotApplyLayoutDelta", applyDelta);
 	if (self:IsHorizontalWritingMode()) then
 --        if (applyDelta == ApplyLayoutDelta)
@@ -1723,8 +1715,6 @@ function LayoutBlock:IsBlockFlow()
 end
 
 function LayoutBlock:LayoutBlock(relayoutChildren, pageLogicalHeight, layoutPass)
-	echo("LayoutBlock:LayoutBlock");
-	self:PrintNodeInfo()
 	pageLogicalHeight = pageLogicalHeight or 0;
 	layoutPass = layoutPass or "NormalLayoutPass";
 	if(not self:NeedsLayout()) then
@@ -1826,17 +1816,11 @@ function LayoutBlock:LayoutBlock(relayoutChildren, pageLogicalHeight, layoutPass
     if (not self:FirstChild() and not self:IsAnonymousBlock()) then
         self:SetChildrenInline(true);
 	end
-	echo("self:ChildrenInline()")
-	self:PrintNodeInfo()
-	echo(self:ChildrenInline())
     if (self:ChildrenInline()) then
         repaintLogicalTop, repaintLogicalBottom = self:LayoutInlineChildren(relayoutChildren, repaintLogicalTop, repaintLogicalBottom);
     else
         self:LayoutBlockChildren(relayoutChildren, maxFloatLogicalBottom);
 	end
-	echo("self:ChildrenInline() end")
-	self:PrintNodeInfo()
-	echo(self.frame_rect)
 	-- Expand our intrinsic height to encompass floats.
     local toAdd = self:BorderAfter() + self:PaddingAfter() + self:ScrollbarLogicalHeight();
     if (self:LowestFloatLogicalBottom() > (self:LogicalHeight() - toAdd) and self:ExpandsToEncloseOverhangingFloats()) then
@@ -1897,7 +1881,6 @@ function LayoutBlock:LayoutBlock(relayoutChildren, pageLogicalHeight, layoutPass
     -- Repaint with our new bounds if they are different from our old bounds.
     local didFullRepaint = repainter:RepaintAfterLayout();
     --if (!didFullRepaint && repaintLogicalTop != repaintLogicalBottom && (style()->visibility() == VISIBLE || enclosingLayer()->hasVisibleContent())) {
-	echo("11111111111111")
 	if(not didFullRepaint and repaintLogicalTop ~= repaintLogicalBottom and self:Style():Visibility() == VisibilityEnum.VISIBLE) then
         -- FIXME: We could tighten up the left and right invalidation points if we let layoutInlineChildren fill them in based off the particular lines
         -- it had to lay out.  We wouldn't need the hasOverflowClip() hack in that case either.
@@ -1939,9 +1922,6 @@ function LayoutBlock:LayoutBlock(relayoutChildren, pageLogicalHeight, layoutPass
 --                repaintRectangle(reflectedRect(repaintRect));
         end
     end
-	echo("LayoutBlock:LayoutBlock end")
-	self:PrintNodeInfo()
-	echo(self.frame_rect)
 	if (needAnotherLayoutPass and layoutPass == "NormalLayoutPass") then
         self:SetChildNeedsLayout(true, false);
         self:LayoutBlock(false, pageLogicalHeight, "PositionedFloatLayoutPass");
@@ -2332,7 +2312,6 @@ function LayoutBlock:MarkForPaginationRelayoutIfNeeded()
 	end
 
     if (self:View():LayoutState():PageLogicalHeightChanged() or (self:View():LayoutState():PageLogicalHeight() and self:View():LayoutState():PageLogicalOffset(self:LogicalTop()) ~= self:LageLogicalOffset())) then
-		self:PrintNodeInfo()
         self:SetChildNeedsLayout(true, false);
 	end
 end
@@ -2539,12 +2518,6 @@ function LayoutBlock:LayoutBlockChild(child, marginInfo, previousFloatLogicalBot
     if (childRenderBlock and childRenderBlock:ContainsFloats()) then
         maxFloatLogicalBottom = math.max(maxFloatLogicalBottom, self:AddOverhangingFloats(child, not childNeededLayout));
 	end
-	echo("self:View():AddLayoutDelta")
-	self:PrintNodeInfo()
-	child:PrintNodeInfo()
-	echo(self.frame_rect)
-	echo(child.frame_rect)
-	echo(oldRect)
     local childOffset = Size:new(child:X() - oldRect:X(), child:Y() - oldRect:Y());
     if (childOffset:Width() ~= 0 or childOffset:Height() ~= 0) then
         self:View():AddLayoutDelta(childOffset);
@@ -2978,7 +2951,6 @@ function LayoutBlock:ComputeOverflow(oldClientAfterEdge, recomputeFloats)
         else
             rectToApply = LayoutRect:new(clientRect:X(), clientRect:Y(), math.max(0, oldClientAfterEdge - clientRect:X()), 1);
 		end
-		echo("LayoutBlock:ComputeOverflow")
         self:AddLayoutOverflow(rectToApply);
     end
         
@@ -3831,16 +3803,11 @@ function LayoutBlock:LineHeight(firstLine, direction, linePositionMode)
 end
 
 function LayoutBlock:LastLineBoxBaseline()
-	echo("LayoutBlock:LastLineBoxBaseline")
-	self:PrintNodeInfo()
---	echo((not self:IsInline() or self:IsReplaced()) and not self:IsTable())
---	echo({self:IsInline(), self:IsReplaced(), self:IsTable()})
 	if (not self:IsBlockFlow() or (self:IsWritingModeRoot() and not self:IsRubyRun())) then
         return -1;
 	end
 
     local lineDirection = if_else(self:IsHorizontalWritingMode(), "HorizontalLine", "VerticalLine");
-	echo(self:ChildrenInline())
     if (self:ChildrenInline()) then
         if (not self:FirstLineBox() and self:HasLineIfEmpty()) then
             local fontMetrics = self:FirstLineStyle():FontMetrics();
@@ -3909,8 +3876,6 @@ function LayoutBlock:BaselinePosition(baselineType, firstLine, direction, linePo
 			or (self:IsWritingModeRoot() and not self:IsRubyRun());
         
         local baselinePos = if_else(ignoreBaseline, -1, self:LastLineBoxBaseline());
-		echo("ignoreBaseline, baselinePos")
-        echo({ignoreBaseline, baselinePos})
         local bottomOfContent = if_else(direction == "HorizontalLine", self:BorderTop() + self:PaddingTop() + self:ContentHeight(), self:BorderRight() + self:PaddingRight() + self:ContentWidth());
         if (baselinePos ~= -1 and baselinePos <= bottomOfContent) then
             return if_else(direction == "HorizontalLine", self:MarginTop() + baselinePos, self:MarginRight() + baselinePos);
@@ -3987,10 +3952,6 @@ end
 
 --void RenderBlock::paint(PaintInfo& paintInfo, const LayoutPoint& paintOffset)
 function LayoutBlock:Paint(paintInfo, paintOffset)
-	echo("LayoutBlock:Paint")
-	self:PrintNodeInfo()
-	echo(paintInfo:Rect())
-	echo(paintOffset)
 --	if(not self:ShouldPaint()) then
 --		self:DetachControl();	
 --		return;
@@ -4013,9 +3974,6 @@ end
 function LayoutBlock:PaintObject(paintInfo, paintOffset)
 	-- 1. paint background, borders etc
 	self:PaintBoxDecorations(paintInfo, paintOffset);
-	echo("LayoutBlock:PaintObject")
-	self:PrintNodeInfo()
-	echo(paintOffset)
 	-- Adjust our painting position if we're inside a scrolled layer (e.g., an overflow:auto div).
     --local scrolledOffset = paintOffset:clone();
 	local scrolledOffset = LayoutPoint:new();
@@ -4023,8 +3981,6 @@ function LayoutBlock:PaintObject(paintInfo, paintOffset)
         scrolledOffset:Move(-self:Layer():ScrolledContentOffset());
 		paintInfo:Rect():Move(self:Layer():ScrolledContentOffset());
 	end
-	echo("scrolledOffset")
-	echo(scrolledOffset)
 	-- 2. paint contents
 	self:PaintContents(paintInfo, scrolledOffset);
 	-- 4. paint floats.
@@ -4033,18 +3989,12 @@ end
 
 --void RenderBox::paintBoxDecorations(PaintInfo& paintInfo, const LayoutPoint& paintOffset)
 function LayoutBlock:PaintBoxDecorations(paintInfo, paintOffset)
-	echo("LayoutBlock:PaintBoxDecorations")
-	self:PrintNodeInfo()
-	echo(paintOffset)
-	echo(self:HasSelfPaintingLayer())
-	echo(self:IsRelativePositioned())
 	local rect = self.frame_rect:clone_from_pool();
 	--if(self:InlineBoxWrapper() == nil and self:Parent() and self:Parent():HasSelfPaintingLayer()) then
 	if(self:HasSelfPaintingLayer() or (self:InlineBoxWrapper() == nil and self:Parent() and self:Parent():HasOverflowClip())) then
 		rect:Move(paintOffset:X(), paintOffset:Y());		
 	end
 --	if(self:IsRelativePositioned()) then
---		echo(self:Layer():RelativePositionOffset())
 --		rect:Move(self:Layer():RelativePositionOffset());
 --	end
 	if(self:HasSelfPaintingLayer()) then
@@ -4060,11 +4010,9 @@ function LayoutBlock:PaintBoxDecorations(paintInfo, paintOffset)
 --	local control = self:GetControl();
 --	if(control) then
 --		local x, y, w, h = self:X(), self:Y(), self:Width(), self:Height();
---		echo({x, y, w, h});
 --		if(self:HasSelfPaintingLayer()) then
 --			x, y = x + paintOffset:X(), y + paintOffset:Y();
 --		end
---		echo({x, y, w, h});
 --		control:ApplyCss(self:Style());
 --		control:setGeometry(x, y, w, h);
 --	end
@@ -4072,52 +4020,25 @@ end
 
 --void RenderBlock::paintContents(PaintInfo& paintInfo, const LayoutPoint& paintOffset)
 function LayoutBlock:PaintContents(paintInfo, paintOffset)
-	echo("LayoutBlock:PaintContents")
-	self:PrintNodeInfo()
-	echo(self.frame_rect)
     -- Avoid painting descendants of the root element when stylesheets haven't loaded.  This eliminates FOUC.
     -- It's ok not to draw, because later on, when all the stylesheets do load, updateStyleSelector on the Document
     -- will do a full repaint().
 --    if (document()->didLayoutWithPendingStylesheets() && !isRenderView())
 --        return;
 
---    if (childrenInline())
---        m_lineBoxes.paint(this, paintInfo, paintOffset);
---    else
---        paintChildren(paintInfo, paintOffset);
-	echo(self:ChildrenInline())
 	if (self:ChildrenInline()) then
 		local childInfo = paintInfo:clone();
---		if(not self:HasSelfPaintingLayer()) then
---			childInfo:Rect():SetX(childInfo:Rect():X() - self:X())
---			childInfo:Rect():SetY(childInfo:Rect():Y() - self:Y())
---		end
---		if (self:HasOverflowClip()) then
---			childInfo:Rect():Move(-self:Layer():ScrolledContentOffset());
---		end
-		echo("222222222")
         self.lineBoxes:Paint(self, childInfo, paintOffset);
     else
---        local control = self:GetControl();
---		if(control) then
---			control:ApplyCss(self:Style():GetStyle());
---			control:setGeometry(self:X(), self:Y(), self:Width(), self:Height());
---		end
 		self:PaintChildren(paintInfo, paintOffset);
 	end
 end
 
 --void RenderBlock::paintChildren(PaintInfo& paintInfo, const LayoutPoint& paintOffset)
 function LayoutBlock:PaintChildren(paintInfo, paintOffset)
-	echo("LayoutBlock:PaintChildren")
-	self:PrintNodeInfo()
-	echo(paintOffset)
 	local child = self:FirstChild();
 	while(child) do
 		local childPoint = self:FlipForWritingModeForChild(child, paintOffset);
-		echo("while(child) do")
-		child:PrintNodeInfo()
-		echo(childPoint)
         if (not child:HasSelfPaintingLayer() and not child:IsFloating()) then
 			local childInfo = paintInfo:clone();
 			childInfo:UpdatePaintingRootForChildren(self);
@@ -4125,10 +4046,7 @@ function LayoutBlock:PaintChildren(paintInfo, paintOffset)
 			childInfo:Rect():SetY(childInfo:Rect():Y() - child:Y())
 
             child:Paint(childInfo, childPoint);
-		else
-			echo("not child:HasSelfPaintingLayer() and not child:IsFloating()")
 		end
-
 		child = child:NextSibling();
 	end
 end
@@ -4220,8 +4138,6 @@ end
 
 --RenderBlock* RenderBlock::createAnonymousBlock(bool isFlexibleBox) const
 function LayoutBlock:CreateAnonymousBlock(isFlexibleBox)
-	echo("LayoutBlock:CreateAnonymousBlock")
-	self:PrintNodeInfo()
 	isFlexibleBox = if_else(isFlexibleBox == nil, false, isFlexibleBox);
 	local newStyle = ComputedStyle.CreateAnonymousStyle(self:Style());
 
@@ -4389,7 +4305,6 @@ end
 
 --bool RenderBlock::positionNewFloats()
 function LayoutBlock:PositionNewFloats()
-	echo("LayoutBlock:PositionNewFloats")
     if (not self.floatingObjects) then
         return false;
 	end
@@ -4452,9 +4367,6 @@ function LayoutBlock:PositionNewFloats()
 			end
 
 			local floatLogicalLocation = self:ComputeLogicalLocationForFloat(floatingObject, logicalTop);
-			echo("childLogicalLeftMargin")
-			echo(floatLogicalLocation)
-			echo(childLogicalLeftMargin)
 			self:SetLogicalLeftForFloat(floatingObject, floatLogicalLocation:X());
 			self:SetLogicalLeftForChild(childBox, floatLogicalLocation:X() + childLogicalLeftMargin);
 			self:SetLogicalTopForChild(childBox, floatLogicalLocation:Y() + self:MarginBeforeForChild(childBox));
@@ -4932,9 +4844,6 @@ function LayoutBlock:RemoveChild(oldChild)
         -- box.  We can go ahead and pull the content right back up into our
         -- box.
         self:SetNeedsLayoutAndPrefWidthsRecalc();
-		echo("child:ChildrenInline")
-		child:PrintNodeInfo()
-		echo(child:ChildrenInline() or "is nil")
         self:SetChildrenInline(child:ChildrenInline());
         local anonBlock = self:Children():RemoveChildNode(self, child, child:HasLayer()):ToRenderBlock();
         anonBlock:MoveAllChildrenTo(self, child:HasLayer());

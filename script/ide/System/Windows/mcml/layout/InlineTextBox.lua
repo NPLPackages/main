@@ -101,8 +101,6 @@ function InlineTextBox:Truncation()
 end
 
 function InlineTextBox:Destroy(arena)
-	echo("InlineTextBox:Destroy")
-	echo(self:Text())
     if (not self.knownToHaveNoOverflow and gTextBoxesWithOverflow ~= nil) then
         gTextBoxesWithOverflow[self] = nil;
 	end
@@ -123,39 +121,24 @@ function InlineTextBox:SetCanHaveLeadingExpansion(canHaveLeadingExpansion)
 end
 
 function InlineTextBox:GetParentControl()
-	echo("InlineTextBox:GetParentControl")
 	if(self:Parent()) then
-		self:Parent():Renderer():PrintNodeInfo();
 		return self:Parent():GetControl();
 	end
-	echo("ParentControl is nil")
 end
 
 function InlineTextBox:CreateAndAppendLabel(left, top, width, height, text, parent)
-	echo("InlineTextBox:CreateAndAppendLabel");
-	if(parent:PageElement()) then
-		parent:PageElement():PrintNodeInfo();
-	end
-	echo(text)
-	echo({left, top, width, height});
 	local _this = Label:new():init(parent);
 	_this:SetText(text);
 
 	local css = self:Renderer():Style();
 	_this:ApplyCss(css)
---	_this:SetFont(css:Font():ToTable());
---	_this:SetColor(css:Color():ToString());
-	--_this:SetScale(self.scale);
 	_this:setGeometry(left, top, width, height);
-	--self.labels:add(_this);
 
 	return _this;
 end
 
 --void paint(PaintInfo&, const LayoutPoint&, LayoutUnit lineTop, LayoutUnit lineBottom)
 function InlineTextBox:Paint(paintInfo, paintOffset, lineTop, lineBottom)
-	echo("InlineTextBox:Paint");
-	echo(self:Text())
 --	if (isLineBreak() || !paintInfo.shouldPaintWithinRoot(renderer()) || renderer()->style()->visibility() != VISIBLE ||
 --        m_truncation == cFullTruncation || paintInfo.phase == PaintPhaseOutline || !m_len)
 --        return;
@@ -170,7 +153,6 @@ function InlineTextBox:Paint(paintInfo, paintOffset, lineTop, lineBottom)
 	local left, top, width ,height = self:LogicalLeftVisualOverflow(), self:LogicalTopVisualOverflow(), self.logicalWidth, self:LogicalHeight();
 --	left = left + if_else(self:IsHorizontal(), paintOffset:X(), paintOffset:Y());
 --	top = top + if_else(self:IsHorizontal(), paintOffset:Y(), paintOffset:X());
-	echo({left, top, width ,height})
 	if(self:Renderer() and self:Renderer():IsText()) then
 		if(self.control) then
 			self.control:setGeometry(left, top, width ,height);
@@ -180,8 +162,6 @@ function InlineTextBox:Paint(paintInfo, paintOffset, lineTop, lineBottom)
 			local control = self:GetParentControl();
 			if(control) then
 				self.control = self:CreateAndAppendLabel(left, top, width ,height, text, control);
-			else
-				echo("parent_control is nil")
 			end
 			
 		end

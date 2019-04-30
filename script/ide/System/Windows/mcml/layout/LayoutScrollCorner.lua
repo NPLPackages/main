@@ -12,6 +12,8 @@ local LayoutScrollCorner = commonlib.gettable("System.Windows.mcml.layout.Layout
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutBlock.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/IntRect.lua");
 NPL.load("(gl)script/ide/System/Windows/Controls/Canvas.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/platform/ScrollbarTheme.lua");
+local ScrollbarTheme = commonlib.gettable("System.Windows.mcml.platform.ScrollbarTheme");
 local Canvas = commonlib.gettable("System.Windows.Controls.Canvas");
 local Rect = commonlib.gettable("System.Windows.mcml.platform.graphics.IntRect");
 local LayoutScrollCorner = commonlib.inherit(commonlib.gettable("System.Windows.mcml.layout.LayoutBlock"), commonlib.gettable("System.Windows.mcml.layout.LayoutScrollCorner"));
@@ -69,6 +71,7 @@ function LayoutScrollCorner:GetOrCreateControl()
 		local scrollArea_control = self.scrollArea:Renderer():GetControl();
 		local corner = Canvas:new():init(scrollArea_control);
 		corner:SetBackgroundColor("#ffffffff")
+		corner:SetZIndex(ScrollbarTheme:theme():scrollbarZIndex());
 		self.control = corner;
 	end	
 	return self.control
@@ -76,9 +79,5 @@ end
 
 --void RenderReplaced::paint(PaintInfo& paintInfo, const LayoutPoint& paintOffset)
 function LayoutScrollCorner:Paint(paintInfo, paintOffset)
-	echo("LayoutScrollCorner:Paint")
-	echo(paintOffset)
-	echo(self.frame_rect)
-
 	self:PaintBoxDecorations(paintInfo, paintOffset);
 end

@@ -133,8 +133,6 @@ function LayoutScrollbar:SetProportion(visibleSize, totalSize)
     if (visibleSize == self.visibleSize and totalSize == self.totalSize) then
         return;
 	end
-	echo("LayoutScrollbar:SetProportion")
-	echo({visibleSize, totalSize})
     self.visibleSize = visibleSize;
     self.totalSize = totalSize;
 
@@ -156,9 +154,8 @@ function LayoutScrollbar:GetOrCreateControl()
 		local scrollableArea_control = self.scrollableArea:Renderer():GetControl();
 		local direction = directionMap[self.orientation];
 		local scrollbar = scrollableArea_control:CreateScrollbar(direction);
+		scrollbar:SetZIndex(self.theme:scrollbarZIndex());
 		scrollbar:Connect("valueChanged", function(value)
-			echo("valueChanged");
-			echo(value)
 			if(self.scrollableArea) then
 				if(self.orientation == "HorizontalScrollbar") then
 					self.scrollableArea:ScrollTo(value, nil)
@@ -177,8 +174,6 @@ function LayoutScrollbar:GetOrCreateControl()
 		--scrollbar:SetValue(self.visibleSize)
 		self.control = scrollbar;
 	end	
-	echo("LayoutScrollbar:GetControl")
-	echo({self.lineStep, self.pageStep, self.visibleSize, self.totalSize})
 	self.control:setRange(0, self.totalSize - self.visibleSize)
 	--self.control:setStep(self.lineStep, self.pageStep, LayoutScrollbar.PixelsPerScrollStep())
 	self.control:setStep(self.lineStep, self.pageStep, self.scrollStep)
@@ -187,12 +182,6 @@ end
 
 --void RenderReplaced::paint(PaintInfo& paintInfo, const LayoutPoint& paintOffset)
 function LayoutScrollbar:Paint(paintInfo, paintOffset)
-	echo("LayoutScrollbar:Paint")
-	echo(paintOffset)
-	echo(self.frame_rect)
-	echo(self.enabled)
-	echo({self.lineStep, self.pageStep, self.visibleSize, self.totalSize})
-
 	self:PaintBoxDecorations(paintInfo, paintOffset);
 	self:GetControl():SetDisabled(not self.enabled);
 end

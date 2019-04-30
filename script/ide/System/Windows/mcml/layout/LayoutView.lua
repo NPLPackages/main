@@ -121,8 +121,6 @@ end
 
 
 function LayoutView:Layout()
-	echo("LayoutView:Layout")
-	echo(self.frameView.m_frameRect)
 --    if (!document()->paginated())
 --        setPageLogicalHeight(0);
 
@@ -173,8 +171,6 @@ function LayoutView:LayoutDelta()
 end
 
 function LayoutView:AddLayoutDelta(delta) 
-	echo("LayoutView:AddLayoutDelta")
-	echo(delta)
     if (self.layoutState) then
         self.layoutState.layoutDelta = self.layoutState.layoutDelta + delta;
 	end
@@ -235,8 +231,6 @@ end
 function LayoutView:RepaintViewRectangle(ur, immediate)
 	-- parameter default value;
 	immediate = if_else(immediate == nil, false, immediate);
-	echo("LayoutView:RepaintViewRectangle")
-	echo(ur)
     if (not self:ShouldRepaint(ur)) then
         return;
 	end
@@ -303,7 +297,6 @@ end
 
 --void RenderView::updateWidgetPositions()
 function LayoutView:UpdateWidgetPositions()
-	echo("LayoutView:UpdateWidgetPositions")
     -- updateWidgetPosition() can possibly cause layout to be re-entered (via plug-ins running
     -- scripts in response to NPP_SetWindow, for example), so we need to keep the Widgets
     -- alive during enumeration.    

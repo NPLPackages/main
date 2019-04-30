@@ -1085,6 +1085,8 @@
     <Content Include="script\test\MCMLV2\test_layout_overflow.html" />
     <Content Include="script\test\MCMLV2\test_layout_repeat.html" />
     <Content Include="script\test\MCMLV2\test_layout_script.html" />
+    <Content Include="script\test\MCMLV2\test_layout_select.html" />
+    <Content Include="script\test\MCMLV2\test_layout_sliderbar_and_progressbar.html" />
     <Content Include="script\test\MCMLV2\test_layout_textalign.html" />
     <Content Include="script\test\MCMLV2\test_layout_textarea.html" />
     <Content Include="script\test\MCMLV2\test_layout_textshadow.html" />
@@ -1175,15 +1177,19 @@
     <None Include="script\ide\System\Windows\Controls\ListBox.lua" />
     <None Include="script\ide\System\Windows\Controls\ListView.lua" />
     <None Include="script\ide\System\Windows\Controls\MultiLineEditbox.lua" />
+    <None Include="script\ide\System\Windows\Controls\PopupMenu.lua" />
     <None Include="script\ide\System\Windows\Controls\Primitives\ScrollAreaBase.lua" />
     <None Include="script\ide\System\Windows\Controls\Primitives\SliderBase.lua" />
     <None Include="script\ide\System\Windows\Controls\ScrollAreaForPage.lua" />
     <None Include="script\ide\System\Windows\mcml\DocumentFragment.lua" />
     <None Include="script\ide\System\Windows\mcml\dom\Document.lua" />
     <None Include="script\ide\System\Windows\mcml\Elements\HTMLDocument.lua" />
+    <None Include="script\ide\System\Windows\mcml\Elements\pe_scrollarea.lua" />
     <None Include="script\ide\System\Windows\mcml\ImageLoader.lua" />
     <None Include="script\ide\System\Windows\mcml\layout\LayoutIFrame.lua" />
     <None Include="script\ide\System\Windows\mcml\layout\LayoutImage.lua" />
+    <None Include="script\ide\System\Windows\mcml\layout\LayoutListBox.lua" />
+    <None Include="script\ide\System\Windows\mcml\layout\LayoutMenuList.lua" />
     <None Include="script\ide\System\Windows\mcml\layout\LayoutOverflow.lua" />
     <None Include="script\ide\System\Windows\mcml\layout\LayoutPart.lua" />
     <None Include="script\ide\System\Windows\mcml\layout\LayoutReplaced.lua" />
@@ -1198,6 +1204,7 @@
     <None Include="script\ide\System\Windows\mcml\loader\SubFrameLoader.lua" />
     <None Include="script\ide\System\Windows\mcml\page\Frame.lua" />
     <None Include="script\ide\System\Windows\mcml\platform\ScrollbarTheme.lua" />
+    <None Include="script\ide\System\Windows\UIBorderElement.lua" />
     <None Include="script\ide\System\Windows\UITextElement.lua" />
     <None Include="script\ide\System\Windows\Controls\ProgressBar.lua" />
     <None Include="script\ide\System\Windows\Controls\ScrollArea.lua" />
@@ -1233,7 +1240,6 @@
     <None Include="script\ide\System\Windows\mcml\Elements\pe_pager.lua" />
     <None Include="script\ide\System\Windows\mcml\Elements\pe_progressbar.lua" />
     <None Include="script\ide\System\Windows\mcml\Elements\pe_radio.lua" />
-    <None Include="script\ide\System\Windows\mcml\Elements\pe_scrollarea.lua" />
     <None Include="script\ide\System\Windows\mcml\Elements\pe_select.lua" />
     <None Include="script\ide\System\Windows\mcml\Elements\pe_sliderbar.lua" />
     <None Include="script\ide\System\Windows\mcml\Elements\pe_textarea.lua" />

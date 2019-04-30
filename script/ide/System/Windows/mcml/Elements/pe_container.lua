@@ -22,50 +22,7 @@ function pe_container:ctor()
 end
 
 function pe_container:CreateControl()
-	echo("pe_container:CreateControl");
 	local parentElem = self:GetParentControl();
 	local _this = Canvas:new():init(parentElem);
 	self:SetControl(_this);
-end
-
---function pe_container:LoadComponent(parentElem, parentLayout, style)
---	local _this = self.control;
---	if(not _this) then
---		_this = Canvas:new():init(parentElem);
---		self:SetControl(_this);
---	else
---		_this:SetParent(parentElem);
---	end
---
---	PageElement.LoadComponent(self, _this, parentLayout, style);
---	_this:ApplyCss(self:GetStyle());
---end
-
---function pe_container:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
---	pe_container._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
---end
-
---function pe_container:OnLoadComponentAfterChild(parentElem, parentLayout, css)
---end
-
---function pe_container:OnBeforeChildLayout(layout)
---	if(#self ~= 0) then
---		local myLayout = layout:new();
---		local css = self:GetStyle();
---		local width, height = layout:GetPreferredSize();
---		local padding_left, padding_top = css:padding_left(),css:padding_top();
---		myLayout:reset(padding_left,padding_top,width+padding_left, height+padding_top);
---		self:UpdateChildLayout(myLayout);
---		width, height = myLayout:GetUsedSize();
---		width = width - padding_left;
---		height = height - padding_top;
---		layout:AddObject(width, height);
---	end
---	return true;
---end
-
-function pe_container:OnAfterChildLayout(layout, left, top, right, bottom)
-	if(self.control) then
-		self.control:setGeometry(left, top, right-left, bottom-top);
-	end
 end

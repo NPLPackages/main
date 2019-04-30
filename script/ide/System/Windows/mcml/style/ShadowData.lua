@@ -59,10 +59,7 @@ end
 
 --@param css: css text-shadow string, as "5px 5px 1px red"
 function ShadowData.CreateFromCssTextShadow(value)
-	echo("ShadowData.CreateFromCssTextShadow")
-	echo(value)
 	local x, y, blur, color = string.match(value,"(%d+)px (%d+)px ([^%s]+)%s?([^%s]*)");
-	echo({x, y, blur, color})
 	if(blur == "" and color == "") then
 		blur = 0;
 		color = "#00000088";
@@ -72,7 +69,6 @@ function ShadowData.CreateFromCssTextShadow(value)
 	else
 		blur = string.match(blur,"(%d+)px");
 	end
-	echo({x, y, blur, color})
 	color = Color.CreateFromCssColor(color);
 	return ShadowData:new(x, y, blur, color);
 end

@@ -187,8 +187,6 @@ end
 
 --function LayoutText:Width(unsigned from, unsigned len, const Font& f, float xPos, HashSet<const SimpleFontData*>* fallbackFonts, GlyphOverflow* glyphOverflow) const
 function LayoutText:Width(from, len, font, xPos, fallbackFonts, glyphOverflow)
-	echo("LayoutText:Width")
-	echo({self.text, from, len})
 	if(type(font) == "number" and type(xPos) == "boolean") then
 		if(from > self:TextLength()) then
 			return 0;
@@ -207,8 +205,6 @@ function LayoutText:Width(from, len, font, xPos, fallbackFonts, glyphOverflow)
 	end
 
     local w = self.text:GetWidth(font, from, len);
-	echo(font)
-	echo(w)
 --	if (&f == &style()->font()) {
 --        if (!style()->preserveNewline() && !from && len == textLength() && (!glyphOverflow || !glyphOverflow->computeBounds)) {
 --            if (fallbackFonts) {
@@ -421,7 +417,6 @@ end
 
 --void RenderText::computePreferredLogicalWidths(float leadWidth, HashSet<const SimpleFontData*>& fallbackFonts, GlyphOverflow& glyphOverflow)
 function LayoutText:ComputePreferredLogicalWidths(leadWidth, fallbackFonts, glyphOverflow)
-	echo("LayoutText:ComputePreferredLogicalWidths")
 	self.minWidth = 0;
     self.beginMinWidth = 0;
     self.endMinWidth = 0;
@@ -468,14 +463,9 @@ function LayoutText:ComputePreferredLogicalWidths(leadWidth, fallbackFonts, glyp
 
 	--for (int i = 0; i < len; i++) {
 	local i = 1;
-	echo("while(i <= len) do")
-	echo(len)
-	echo(txt)
 	while(i <= len) do
 --	for i = 1, len do
         local c = txt[i];
-		echo(i)
-		echo(c)
         local previousCharacterIsSpace = isSpace;
 
         local isNewline = false;
@@ -525,7 +515,6 @@ function LayoutText:ComputePreferredLogicalWidths(leadWidth, fallbackFonts, glyp
         else
 			local isBreakable;
 			isBreakable, nextBreakable = BreakLines.IsBreakable(breakIterator, i, nextBreakable, breakNBSP);
-			echo({isBreakable, nextBreakable})
 			local hasBreak = breakAll or isBreakable;
 			local betweenWords = true;
 			local j = i;
@@ -545,7 +534,6 @@ function LayoutText:ComputePreferredLogicalWidths(leadWidth, fallbackFonts, glyp
 					break;
 				end
 			end
-			echo({i,j})
 			local wordLen = j - i;
 			if (wordLen ~= 0) then
 				local isSpace = (j <= len) and isSpaceAccordingToStyle(c, self:Style());
@@ -639,7 +627,6 @@ function LayoutText:ComputePreferredLogicalWidths(leadWidth, fallbackFonts, glyp
 		end
 		i = i + 1;
     end
-	echo("end")
 --	if (firstGlyphLeftOverflow > 0)
 --        glyphOverflow.left = firstGlyphLeftOverflow;
 
@@ -788,8 +775,6 @@ end
 
 --void RenderText::setTextWithOffset(PassRefPtr<StringImpl> text, unsigned offset, unsigned len, bool force)
 function LayoutText:SetTextWithOffset(text, offset, len, force)
-	echo("LayoutText:SetTextWithOffset")
-	echo({text, offset, len, force})
 	force = if_else(force == nil, false, force);
     local oldLen = self:TextLength();
     local newLen = UniString:new(text):length();

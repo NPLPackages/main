@@ -1,0 +1,25 @@
+﻿<!-- "script/test/MCMLv2/test_layout.html" -->
+<html>
+<pe:mcml>
+    <script type="text/npl" refresh="false">
+        <![CDATA[
+
+        function OnChange(value, node)
+            echo(value)
+            local nodes = Page:jquery("input#sliderbarValue");
+            local node = nodes[1];
+            if(node) then
+                node:SetValue(value);
+            end
+        end
+        ]]>
+    </script>
+        <div style="margin:20px;background-color:antiquewhite;height:400px;">
+            <sliderbar style="width:100px;height:30px;" onchange="OnChange" />
+            <input type="text" style="width:40px;margin-left:20px;" value="1" id="sliderbarValue" name="sliderbarValue" />
+            <br/>
+            <progressbar style="width:100px;height:30px;" Value="50"/>
+        </div>
+
+</pe:mcml>
+</html>

@@ -161,10 +161,10 @@ function CSSStyleApplyProperty:init()
 	self:SetPropertyHandler("border-right-color", ApplyPropertyDefault:new():init(ComputedStyle.BorderRightColor, ComputedStyle.SetBorderRightColor, ComputedStyle.initialColor));
 	self:SetPropertyHandler("border-top-color", ApplyPropertyDefault:new():init(ComputedStyle.BorderTopColor, ComputedStyle.SetBorderTopColor, ComputedStyle.initialColor));
 
-	self:SetPropertyHandler("border-bottom-style", ApplyPropertyDefault:new():init(ComputedStyle.BorderBottomStyle, ComputedStyle.SetBorderBottomColor, ComputedStyle.initialBorderStyle));
-	self:SetPropertyHandler("border-left-style", ApplyPropertyDefault:new():init(ComputedStyle.BorderLeftStyle, ComputedStyle.SetBorderLeftColor, ComputedStyle.initialBorderStyle));
-	self:SetPropertyHandler("border-right-style", ApplyPropertyDefault:new():init(ComputedStyle.BorderRightStyle, ComputedStyle.SetBorderRightColor, ComputedStyle.initialBorderStyle));
-	self:SetPropertyHandler("border-top-style", ApplyPropertyDefault:new():init(ComputedStyle.BorderTopStyle, ComputedStyle.SetBorderTopColor, ComputedStyle.initialBorderStyle));
+	self:SetPropertyHandler("border-bottom-style", ApplyPropertyDefault:new():init(ComputedStyle.BorderBottomStyle, ComputedStyle.SetBorderBottomStyle, ComputedStyle.initialBorderStyle));
+	self:SetPropertyHandler("border-left-style", ApplyPropertyDefault:new():init(ComputedStyle.BorderLeftStyle, ComputedStyle.SetBorderLeftStyle, ComputedStyle.initialBorderStyle));
+	self:SetPropertyHandler("border-right-style", ApplyPropertyDefault:new():init(ComputedStyle.BorderRightStyle, ComputedStyle.SetBorderRightStyle, ComputedStyle.initialBorderStyle));
+	self:SetPropertyHandler("border-top-style", ApplyPropertyDefault:new():init(ComputedStyle.BorderTopStyle, ComputedStyle.SetBorderTopStyle, ComputedStyle.initialBorderStyle));
 
 	self:SetPropertyHandler("border-bottom-width", ApplyPropertyDefault:new():init(ComputedStyle.BorderBottomWidth, ComputedStyle.SetBorderBottomWidth, ComputedStyle.initialBorderWidth));
 	self:SetPropertyHandler("border-left-width", ApplyPropertyDefault:new():init(ComputedStyle.BorderLeftWidth, ComputedStyle.SetBorderLeftWidth, ComputedStyle.initialBorderWidth));
@@ -233,6 +233,8 @@ function CSSStyleApplyProperty:init()
 	--setPropertyHandler(CSSPropertyColor, new ApplyPropertyColor<InheritFromParent>(&RenderStyle::color, &RenderStyle::setColor,  &RenderStyle::setVisitedLinkColor, 0, RenderStyle::initialColor));
 
 	self:SetPropertyHandler("box-sizing", ApplyPropertyDefault:new():init(ComputedStyle.BoxSizing, ComputedStyle.SetBoxSizing, ComputedStyle.initialBoxSizing));
+
+	self:SetPropertyHandler("z-index", ApplyPropertyDefault:new():init(ComputedStyle.ZIndex, ComputedStyle.SetZIndex));
 	return self;
 end
 

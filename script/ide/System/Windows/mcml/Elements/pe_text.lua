@@ -37,10 +37,7 @@ function pe_text:createFromString(str)
 end
 
 function pe_text:GetTextTrimmed()
-	echo("pe_text:GetTextTrimmed")
-	echo(self.value)
 	local value = self.value or self:GetAttributeWithCode("value", nil, true);
-	echo(value)
 	if(value) then
 		value = string.gsub(value, "nbsp;", "");
 		value = string.gsub(value, "^[%s]+", "");
@@ -303,7 +300,6 @@ end
 
 --void CharacterData::setData(const String& data, ExceptionCode&)
 function pe_text:SetData(data)
-	echo("pe_text:SetData")
     if (self:Data() == data) then
         return;
 	end
@@ -328,12 +324,6 @@ end
 
 --void CharacterData::updateRenderer(unsigned offsetOfReplacedData, unsigned lengthOfReplacedData)
 function pe_text:UpdateRenderer(offsetOfReplacedData, lengthOfReplacedData)
-	echo("pe_text:UpdateRenderer")
-	echo(self.value)
-	echo(self:Attached())
-	if(self:Renderer()) then
-		self:Renderer():PrintNodeInfo();
-	end
     if ((not self:Renderer() or not self:RendererIsNeeded(self:Renderer():Style())) and self:Attached()) then
         self:reattachLayoutTree();
     elseif (self:Renderer()) then

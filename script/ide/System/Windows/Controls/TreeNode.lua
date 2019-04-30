@@ -178,5 +178,5 @@ end
 --end
 
 function TreeNode:paintEvent(painter)
-	
+	TreeNode._super.paintEvent(self, painter);
 end

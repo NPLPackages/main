@@ -53,7 +53,6 @@ function pe_treenode:ctor()
 end
 
 function pe_treenode:CreateControl()
-	echo("pe_treenode:CreateControl")
 	local parentElem = self:GetParentControl();
 	local _this = TreeNode:new():init(parentElem);
 	self:SetControl(_this);
@@ -62,35 +61,11 @@ function pe_treenode:CreateControl()
 	--_this:Connect("clicked", self, self.OnClick, "UniqueConnection");
 end
 
---function pe_treenode:LoadComponent(parentElem, parentLayout, styleItem)
-----	local _this = self.control;
-----	if(not _this) then
-----		_this = TreeNode:new():init(parentElem);
-----		self:SetControl(_this);
-----	else
-----		_this:SetParent(parentElem);
-----	end
-----	self.buttonName = self:GetAttributeWithCode("name",nil,true);
-----	_this:Connect("clicked", self, self.OnClick, "UniqueConnection");
---	PageElement.LoadComponent(self, _this, parentLayout, styleItem)
---end
-
 function addIndentionForNode(node, indention)
-	echo("addIndentionForNode")
-	node:PrintNodeInfo()
 	node.attr = node.attr or {};
 	node.attr.style = node.attr.style or "";
 	node.attr.style = string.format("margin-left:%dpx;%s", indention, node.attr.style)
 end
-
---function pe_treenode:InsertBefore(child, refChild)
---	local child = pe_treenode._super.InsertBefore(self, child, refChild, false)
---	if(self.node and self.node ~= child) then	
---		local treeview = self:GetParent("pe:treeview");
---		addIndentionForNode(child, treeview.DefaultIndentation);
---	end
---	return child;
---end
 
 -- draw tree node handler.
 -- return nil or the new height if current node height is not suitable, it will cause the node to be redrawn.
@@ -99,11 +74,6 @@ function pe_treenode:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	self.treeview = self:GetParent("pe:treeview");
 	self.ItemToggleSize = self:GetNumber("ItemToggleSize",nil,true);
 
-	--css:Merge(mcml:GetStyleItem(self.class_name));
-
-	--local _this = self.control;
-
-	--node.Name = self:GetAttributeWithCode("name");
 	self.DefaultIndentation = self.treeview.DefaultIndentation or 10;
 
 	self.text = self:GetAttributeWithCode("text",nil,true);
@@ -116,33 +86,6 @@ function pe_treenode:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 			self.NodeHeight = height_property:Value();
 		end
 	end
-	
---	_this:SetText(self:GetAttributeWithCode("text",nil,true));
---	_this:SetTooltip(self:GetAttributeWithCode("tooltip",nil,true));
---	_this:SetTextColor(css["color"]);
---	local font,_,scale = css:GetFontSettings();
---	_this:SetFont(font);
---	_this:SetScale(scale);
---	local icon = self:GetAttributeWithCode("icon",nil,true);
---	if(icon) then
---		_this:SetIcon(icon);
---	end
---
---	_this:SetNodeHeight(tonumber(self:GetAttributeWithCode("height"), nil, true) or css["height"]);
---
---	local indent = self:GetAttributeWithCode("indent",nil,true);
---	if(indent) then
---		_this:SetIndent(tonumber(indent));
---	end
---
---	_this:SetExpanded(self.expanded);
---
---	_this:SetSelected(self.selected);
---
---	_this:SetInvisible(self:GetAttributeWithCode("invisible") == "true");
---	_this:SetMouseOverBG(self:GetAttributeWithCode("MouseOverBG",nil,true));
---	_this:SetNormalBG(self:GetAttributeWithCode("NormalBG",nil,true));
---	_this:SetItemToggleSize(self:GetNumber("ItemToggleSize",nil,true));
 
 	for child in self:next() do
 		addIndentionForNode(child, self.treeview.DefaultIndentation);
@@ -150,54 +93,14 @@ function pe_treenode:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 
 	self:CreateNode();
 
---	_this:Connect("clicked", self, self.OnClick);
-
-	--attrBind = self:GetAttributeWithCode("AttributeBind");
-	-- search for render template, this is only set for static nodes. for databinded nodes, it is set during data binding. 
---	if(not self.render_template_node) then
---		local RenderTemplate = self:GetString("RenderTemplate");
---		if(RenderTemplate) then
---			local tmpNode = self:GetParent("pe:treeview");
---			if(tmpNode) then
---				local tmpNode = tmpNode:GetChild("NodeTemplates");
---				if(tmpNode) then
---					local tmpNode = tmpNode:GetChildWithAttribute("DataType", RenderTemplate);
---					if(tmpNode) then
---						self.render_template_node = tmpNode;
---					else
---						LOG.std("", "error", "pe:treeview", "unable to find data type %s", RenderTemplate)
---					end
---				end
---			end
---		end
---	end
-
 	pe_treenode._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
 end
 
 function pe_treenode:OnLoadComponentAfterChild(parentElem, parentLayout, css)
---	if(self.node and self.node.expandBtn and self.node.expandBtn.control) then
---		self.node.expandBtn.control:Connect("clicked", self, self.OnClick, "UniqueConnection");
---	end
-
---	if(self.control and self.expandBtn) then
---		self.control:Connect("clicked", self.expandBtn, self.expandBtn.OnClick);
---	end
-
---	if(self.label and self.label.name == "button" and self.label.control) then
---		self.label.control:Connect("clicked", self, self.OnClick)
---		self.label.control:SetBackground("Texture/Aries/Creator/Theme/GameCommonIcon_32bits.png;3 3 3 3:1 1 1 1");
---		self.label.control:SetColor("#000000");
---		if(self.expandBtn) then
---			self.label.control:Connect("clicked", self.expandBtn, self.expandBtn.OnClick)
---		end
---	end
-
 	self:setChildrenVisible(self.expanded);
 end
 
 function pe_treenode:CreateNode()
-	echo("pe_treenode:CreateNode")
 	local style = "";
 --	if(self.attr and self.attr.style) then
 --		style = self.attr.style;
@@ -246,7 +149,6 @@ function pe_treenode:CreateNode()
 		attr["checked"] = if_else(self.expanded, "true", "false");
 		node = mcml:createFromXmlNode({name="input", attr = attr});
 		node.onclickscript = function ()
-			echo("pe_treenode.OnClick")
 			pe_treenode.OnClick(self);
 		end
 		--self.node:AddChild(node);
@@ -323,36 +225,7 @@ function pe_treenode:GetLabelWidth()
 	return width;
 end
 
-function pe_treenode:UpdateChildLayout(layout)
-	local beOffset = false;
-	for childnode in self:next() do
-		--if(childnode == self.label or childnode == self.expandBtn) then
-		if(childnode == self.node) then
-			--do nothing
-		else
-			if(not beOffset) then
-				layout:OffsetPos(self.DefaultIndentation);
-				beOffset = true;
-			end
-		end
-
-		childnode:UpdateLayout(layout);
-	end
-	if(beOffset) then
-		layout:OffsetPos(-self.DefaultIndentation);
-	end
-end
-
--- virtual function: 
--- after child node layout is updated
-function pe_treenode:OnAfterChildLayout(layout, left, top, right, bottom)
-	if(self.control) then
-		self.control:setGeometry(left, top, right-left, bottom-top);
-	end
-end
-
 function pe_treenode:SwitchExpanded()
-	echo("pe_treenode:SwitchExpanded")
 	self.expanded = not self.expanded;
 	self.selected = not self.selected;
 	for childnode in self:next() do
@@ -370,8 +243,6 @@ function pe_treenode:SwitchExpanded()
 end
 
 function pe_treenode:setChildrenVisible(visible)
-	echo("pe_treenode:setChildrenVisible")
-	echo(self.expanded)
 	for childnode in self:next() do
 		--if(childnode == self.label or childnode == self.expandBtn) then
 		if(childnode == self.node) then
@@ -387,21 +258,13 @@ function pe_treenode:setChildrenVisible(visible)
 end
 
 function pe_treenode:OnClick()
-	echo("pe_treenode:OnClick")
-	echo(self:GetChildCount())
 	if(self:GetChildCount() > 1) then
 		self.expanded = not self.expanded;
 		self.selected = not self.selected;
 		self:setChildrenVisible(self.expanded);
-
---		if(self.node and self.node.expandBtn) then
---			self.node.expandBtn:setChecked(self.expanded);
---		end
 		
 		return;
 	end
-
-	--self.expandBtn
 
 	local bindingContext;
 	local onclick = self.onclickscript or self:GetString("onclick");

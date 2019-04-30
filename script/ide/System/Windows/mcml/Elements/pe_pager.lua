@@ -17,15 +17,6 @@ pe_pager:Property({"class_name", "pe:pager"});
 function pe_pager:ctor()
 end
 
---function pe_pager:createFromXmlNode(o)
---	o = pe_pager._super.createFromXmlNode(self, o);
---
---end
-
---function pe_pager:UpdateLayout(parentLayout)
---	parentLayout:NewLine();
---end
-
 -- create pager control for navigation
 function pe_pager:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	local prevButtonBackground = "";
@@ -205,8 +196,6 @@ end
 
 -- Public method: call this method whenever page index or page count changes.
 function pe_pager:UpdatePager(pageInstName, pageindex, pagecount)
-	echo("pe_pager:UpdatePager")
-	echo({pageindex, pagecount})
 	if(pageindex and pagecount) then
 		local bAutoHidePager = self:GetBool("AutoHidePager", false);
 		
@@ -261,10 +250,3 @@ function pe_pager:UpdatePager(pageInstName, pageindex, pagecount)
 --		end
 	end
 end
-
---function pe_pager:OnAfterChildLayout(layout, left, top, right, bottom)
---	
---	if(self.control) then
---		self.control:setGeometry(left, top, right-left, bottom-top);
---	end
---end

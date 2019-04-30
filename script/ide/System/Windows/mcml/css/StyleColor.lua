@@ -191,9 +191,7 @@ local function convertHSLTo16(color)
 
 	if(h and s and l) then
 		h,s,l = h%360,s/100,l/100;
-		--echo({h,s,l});
 		local r,g,b = Color.hsl2rgb(h,s,l);
-		--echo({r,g,b})
 		a = math.floor((a or 1.0)*255 + 0.5);
 		temp_color = string.format("#%02x%02x%02x%02x",r,g,b,a);
 	end

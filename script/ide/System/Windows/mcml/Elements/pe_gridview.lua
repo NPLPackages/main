@@ -27,7 +27,6 @@ function pe_gridview:ctor()
 end
 
 function pe_gridview:CreateControl()
-	echo("pe_gridview:CreateControl")
 	local parentElem = self:GetParentControl();
 	local _this = GridView:new():init(parentElem);
 	self:SetControl(_this);
@@ -52,16 +51,11 @@ function pe_gridview:LoadComponent(parentElem, parentLayout, styleItem)
 		self.attr.style = self.attr.style or "";
 		self.attr.style = string.format("overflow:auto;%s",self.attr.style)
 	end
-
 	
 	pe_gridview._super.LoadComponent(self, parentElem, parentLayout, styleItem)
 end
 
 function pe_gridview:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
-	--css:Merge(mcml:GetStyleItem(self.class_name));
-
-	--local _this = self.control;
-
 	self.ItemOpenBG = self:GetString("ItemOpenBG");
 	self.ItemCloseBG = self:GetString("ItemCloseBG");
 	self.ItemToggleSize = self:GetNumber("ItemToggleSize");
@@ -72,32 +66,8 @@ function pe_gridview:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	self.pagesize = tonumber(self:GetAttributeWithCode("pagesize", nil, true) or 10);
 
 	self.fitHeight = self:CountHeight();
-	echo("self.fitHeight")
-	echo(self.fitHeight)
-	
-
-	--container_bg = css.background or self:GetString("background"), -- change to css background first
---	_this:SetDefaultNodeHeight(self.DefaultNodeHeight or 24);
---	_this:SetDefaultIconSize(self:GetNumber("DefaultIconSize") or css.DefaultIconSize);
---	_this:SetShowIcon(self:GetBool("ShowIcon"));
---	_this:SetItemOpenBG(self.ItemOpenBG);
---	_this:SetItemCloseBG(self.ItemCloseBG); 
---	_this:SetItemToggleSize(self.ItemToggleSize);
---	_this:SetDefaultIndentation(self.DefaultIndentation);
---	_this:SetVerticalScrollBarOffsetX(self:GetNumber("VerticalScrollBarOffsetX") or css.VerticalScrollBarOffsetX);
---	_this:SetVerticalScrollBarStep(self:GetNumber("VerticalScrollBarStep") or css.VerticalScrollBarStep);
---	_this:SetVerticalScrollBarPageSize(self:GetNumber("VerticalScrollBarPageSize") or css.VerticalScrollBarPageSize);
---	_this:SetMouseOverBG(self:GetString("MouseOverBG") or css.MouseOverBG);
-	--_this:SetClickThrough(self:GetBool("ClickThrough"));
-
 
 	self:CreateTreeViewNode();
-	
-
-
-	--self.onclick = self:GetAttributeWithCode("OnClick", nil, true);
-
-	
 
 	-- Extract from datasource if it is already provided in the input. 
 	local ds = self:GetAttributeWithCode("DataSourceID", nil, true);
@@ -121,11 +91,6 @@ function pe_gridview:OnLoadComponentAfterChild(parentElem, parentLayout, css)
 end
 
 function pe_gridview:CountHeight()
---	local css = self:GetInlineStyleDecl();
---	local css_height = css:GetProperty("height");
---	if(not self.AllowPaging and css_height) then
---		return css_height;
---	end
 	if(not self.AllowPaging) then
 		return;
 	end
@@ -133,8 +98,6 @@ function pe_gridview:CountHeight()
 	local pagesize = tonumber(self:GetAttributeWithCode("pagesize", nil, true));
 	if(pagesize) then
 		local nodeHeight = self.DefaultNodeHeight;
-		echo("CountHeight")
-		echo({nodeHeight, self.cellPadding, pagesize})
 		if(self.cellPadding) then
 			--nodeHeight = nodeHeight + self.cellPadding * 2;
 			nodeHeight = nodeHeight + self.cellPadding;
@@ -410,8 +373,6 @@ function pe_gridview:DataBind(pageInstName)
 		if(type(nDataCount) == "number" and pagesize) then
 			self.pagecount = math.ceil(nDataCount/pagesize);
 		end
-		echo("nDataCount")
-		echo(nDataCount or "nDataCount is nil")
 		if(nDataCount==nil or nDataCount==0) then
 			-- if empty data, show empty templates if any. 
 			local EmptyTemplateNode;
@@ -545,7 +506,6 @@ end
 
 -- Public method: update pager text
 function pe_gridview:UpdatePageText()
-	echo("pe_gridview:UpdatePageText")
 	if(self.AllowPaging) then
 		for pagerNode in self:next("pe:pager") do
 			local pageindex = self:GetAttribute("pageindex");

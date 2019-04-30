@@ -47,47 +47,6 @@ function pe_img:CreateControl()
 	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
 end
 
-function pe_img:OnLoadComponentAfterChild(parentElem, parentLayout, css)
---	css.float = css.float or true;
---
---	local width = self:GetAttributeWithCode("width",nil, true) or css.width;
---	if(width) then
---		css.width = tonumber(width);
---	end
---	local height = self:GetAttributeWithCode("height",nil, true) or css.height;
---	if(height) then
---		css.height = tonumber(height);
---	end
---
---	local _this = self.control;
---	if(not _this) then
---		_this = Canvas:new():init(parentElem);
---		self:SetControl(_this);
---	end
---	
---	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
---	
---
---	local src = self:GetAttributeWithCode("src",nil,true);
---	if(src and src ~= "") then
---		-- tricky: this allows dynamic images to update itself, _this.background only handles static images with fixed size.
---		if(string.match(src, "[;:]")) then
---			css.background = self:GetAbsoluteURL(src);
---		else
---			css.background = self:GetAbsoluteURL(src);
---		end	
---	end
---
---	_this:ApplyCss(css);
-	--pe_img._super.OnLoadComponentAfterChild(self, parentElem, parentLayout, css);
-end
-
-function pe_img:OnAfterChildLayout(layout, left, top, right, bottom)
-	if(self.control) then
-		self.control:setGeometry(left, top, right-left, bottom-top);
-	end
-end
-
 function pe_img:CreateLayoutObject(arena, style)
 	return LayoutImage:new():init(self);
 end

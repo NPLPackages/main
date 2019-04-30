@@ -24,7 +24,8 @@
         --node:InsertChild(divNode);
         --divNode:InsertChild("11111");
         local newInlineNode = CreateNewNode({"111111",name="span",attr={style="background-color:red",name="span10"}});
-        local node1 = node:AppendChild(newInlineNode);
+        node:AppendChild(newInlineNode);
+        local node1 = newInlineNode;
         if(node1 == nil) then
             echo("node1 is nil");
         end
@@ -56,7 +57,8 @@
         --node:InsertChild(divNode);
         --divNode:InsertChild("11111");
         local newBlockNode = CreateNewNode({"111111",name="div",attr={style="background-color:red",name="div10"}});
-        local node1 = node:AppendChild(newBlockNode);
+        node:AppendChild(newBlockNode);
+        local node1 = newBlockNode;
         if(node1 == nil) then
             echo("node1 is nil");
         end
@@ -92,7 +94,8 @@
     }
 </style>
 <div name="div5" id="div5" style="margin:20px;background-color:aquamarine;font-size:14px;">
-    <span style="background-color:antiquewhite">222222</span>
+    <span style="background-color:antiquewhite">222222</span><input type="button" value="123"/>
+    <!--<iframe name="child_iframe" src="script/test/MCMLv2/test_layout_iframe_child.html"></iframe>-->
 </div>
 <div name="div6" id="div6" style="margin:20px;background-color:aquamarine;font-size:14px;">
     <span style="background-color:antiquewhite">222222</span>
@@ -105,6 +108,7 @@
 </div>
 <div name="div1" id="div1" style="margin:20px;background-color:aquamarine;font-size:14px;">
     <div style="background-color:antiquewhite">222222</div>
+    <!--<iframe name="child_iframe" src="script/test/MCMLv2/test_layout_iframe_child.html"></iframe>-->
 </div>
 <div name="div2" id="div2" style="margin:20px;background-color:aquamarine;font-size:14px;">
     <div style="background-color:antiquewhite">222222</div>
@@ -115,7 +119,9 @@
     <input name="button" type="button" value="插入block节点" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="InsertBlockNewNode()" />
     <input name="button" type="button" value="删除block节点" style="margin:10px;padding:10px;background-color:white;color:aqua;font-weight:bold;color:blueviolet;" onclick="RemoveBlockNode()" />
 </div>
-
+<div>
+    <iframe name="child_iframe" src="script/test/MCMLv2/test_layout_iframe_child.html"></iframe>
+</div>
 
 
 <!--<div name="div4" id="div4" style="margin:20px;width:100px;height:300px;background-color:aquamarine;font-size:14px;">

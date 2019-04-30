@@ -29,6 +29,8 @@ NPL.load("(gl)script/ide/System/Core/Event.lua");
 NPL.load("(gl)script/ide/math/Point.lua");
 NPL.load("(gl)script/ide/gui_helper.lua");
 NPL.load("(gl)script/ide/System/Core/SceneContextManager.lua");
+NPL.load("(gl)script/ide/System/Windows/Controls/PopupMenu.lua");
+local PopupMenu = commonlib.gettable("System.Windows.Controls.PopupMenu");
 local SceneContextManager = commonlib.gettable("System.Core.SceneContextManager");
 local Point = commonlib.gettable("mathlib.Point");
 local Event = commonlib.gettable("System.Core.Event");
@@ -54,6 +56,28 @@ function Window:ctor()
 	self.window = self;
 	self:setAttribute("WA_AlwaysShowToolTips", true);
 	self:setFocusPolicy(FocusPolicy.TabFocus);
+
+	self.popupMenu = nil;
+end
+
+function Window:PopupMenu()
+	if(not self.popupMenu) then
+		self.popupMenu = self:CreatePopupMenu();
+	end
+	return self.popupMenu;
+end
+
+local popupMenuZIndex = 999;
+
+function Window:GetPopupMenuZIndex()
+	return popupMenuZIndex;
+end
+
+function Window:CreatePopupMenu()
+	local popupMenu = PopupMenu:new():init(self);
+	popupMenu:SetZIndex(self:GetPopupMenuZIndex());
+	popupMenu:hide();
+	return popupMenu;
 end
 
 -- show and bind to a new ParaUI control object to receive events from. 
@@ -288,27 +312,14 @@ end
 -- @param event_type: "mousePressEvent", "mouseMoveEvent", "mouseWheelEvent", "mouseReleaseEvent"
 function Window:handleMouseEvent(event)
 	event:updateModifiers();
---	if("mouseWheelEvent" == event:GetType()) then
---		echo("mouseWheelEvent")
---		echo(event:pos())
---	end
 	-- which child should have it?
 	local widget = self:childAt(event:pos()) or self;
 	local mapped = event:pos();
---	if("mouseWheelEvent" == event:GetType()) then
---		echo("mouseWheelEvent widget")
---		
---		echo(widget:GetField("Name","nil"))
---	end
 	if(event:GetType() == "mousePressEvent") then
 		Application.qt_button_down = widget;
 	end
 
 	local receiver = Application:pickMouseReceiver(self, event:windowPos(), mapped, event:GetType(), event:buttons(), Application.qt_button_down, widget);
---	if("mouseWheelEvent" == event:GetType()) then
---		echo("mouseWheelEvent receiver")
---		echo(receiver:GetField("Name","nil"))
---	end
 	if(receiver~=self) then
 		event:localPos():set(receiver:mapFromGlobal(event:globalPos()));
 	end
@@ -541,6 +552,11 @@ function Window:setCompositionPoint_sys(p)
 	if(self.native_ui_obj and p and p[1]) then
 		self.native_ui_obj:SetField("CompositionPoint", p);
 	end
+end
+
+function Window:Reset()
+	self.popupMenu = nil;
+	self:deleteChildren();
 end
 
 function Window:paintEvent(painter)

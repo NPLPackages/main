@@ -22,10 +22,6 @@ function pe_br:createFromXmlNode(o)
 	return self:new(o);
 end
 
---function pe_br:UpdateLayout(parentLayout)
---	parentLayout:NewLine();
---end
-
 function pe_br:CreateLayoutObject(arena, style)
 	return LayoutBR:new():init(self);
 end

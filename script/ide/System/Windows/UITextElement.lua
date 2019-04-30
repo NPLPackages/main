@@ -10,11 +10,11 @@ local UITextElement = commonlib.gettable("System.Windows.UITextElement");
 ------------------------------------------------------------
 
 ]]
-NPL.load("(gl)script/ide/System/Windows/UIElement.lua");
+NPL.load("(gl)script/ide/System/Windows/UIBorderElement.lua");
 NPL.load("(gl)script/ide/math/Rect.lua");
 local Rect = commonlib.gettable("mathlib.Rect");
 
-local UITextElement = commonlib.inherit(commonlib.gettable("System.Windows.UIElement"), commonlib.gettable("System.Windows.UITextElement"));
+local UITextElement = commonlib.inherit(commonlib.gettable("System.Windows.UIBorderElement"), commonlib.gettable("System.Windows.UITextElement"));
 UITextElement:Property("Name", "UITextElement");
 
 UITextElement:Property({"text", nil, "GetText", "SetText", auto=true});
@@ -85,19 +85,8 @@ function UITextElement:ApplyCss(css)
 	UITextElement._super.ApplyCss(self, css);
 	self:SetFont(css:Font():ToString());
 	self:SetColor(css:Color():ToString());
---	local font, font_size, font_scaling = css:GetFontSettings();
---	self:SetFont(font);
---	self:SetFontSize(font_size);
---	self:SetFontScaling(font_scaling);
-	--self:SetAlignment(css:GetTextAlignment());
---	if(css.color) then
---		self:SetColor(css.color);
---	end
 	
 	local text_shadow = css:TextShadow();
-	echo("UITextElement:ApplyCss")
-	echo(self:GetField("Name","nil"))
-	echo(text_shadow)
 	if(text_shadow) then
 		self:SetTextShadow(true);
 		self:SetShadowOffsetX(text_shadow:X());

@@ -44,6 +44,8 @@ function Label:SetPaddings(padding_left, padding_top, padding_right, padding_bot
 end
 
 function Label:paintEvent(painter)
+	Label._super.paintEvent(self, painter)
+	
 	local x, y = self:x(), self:y();
 	local text = self:GetText();
 	if(text and text~="") then

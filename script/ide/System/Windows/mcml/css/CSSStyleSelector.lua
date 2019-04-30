@@ -197,7 +197,6 @@ function CSSStyleSelector:MatchRules(rule_set)
 	end
 
 	local tag = self.element:TagName();
-	echo(tag)
 	self:MatchRulesForList(rule_set:tagRules()[tag]);
 	self:MatchRulesForList(rule_set:universalRules());
 end
@@ -208,10 +207,6 @@ function CSSStyleSelector:AddMatchedDeclaration(decl, linkMatchType)
 end
 
 function CSSStyleSelector:MatchRulesForList(rule_list)
-	if(self.element.name == "pe:container") then
-		echo("CSSStyleSelector:checkSelector failed")
-		echo(rule_list)
-	end
 	if(rule_list) then
 		for i = 1,#rule_list do
 			local rule_data = rule_list[i];
@@ -329,8 +324,6 @@ end
 
 --PassRefPtr<RenderStyle> CSSStyleSelector::styleForElement(Element* element, RenderStyle* defaultParent, bool allowSharing, bool resolveForRootDefault)
 function CSSStyleSelector:StyleForElement(element, defaultParent, allowSharing, resolveForRootDefault)
-	echo("CSSStyleSelector:StyleForElement")
-	echo(element.name)
 	allowSharing = if_else(allowSharing == nil, true, allowSharing);
 	resolveForRootDefault = if_else(resolveForRootDefault == nil, false, resolveForRootDefault);
 
@@ -416,7 +409,7 @@ function CSSStyleSelector:AdjustRenderStyle(style, parentStyle, e)
 end
 
 
-function CSSStyleSelector:ApplyDeclaration(styleDeclaration)
+function CSSStyleSelector:ApplyDeclaration(styleDeclaration)	
 	for property in styleDeclaration:Next() do
 		self:ApplyProperty(property:Name(), property:CreateValueFromCssString());
 	end

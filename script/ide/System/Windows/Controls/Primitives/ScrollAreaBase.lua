@@ -9,7 +9,7 @@ NPL.load("(gl)script/ide/System/Windows/Controls/Primitives/ScrollAreaBase.lua")
 local ScrollAreaBase = commonlib.gettable("System.Windows.Controls.Primitives.ScrollAreaBase");
 ------------------------------------------------------------
 ]]
-NPL.load("(gl)script/ide/System/Windows/UIElement.lua");
+NPL.load("(gl)script/ide/System/Windows/UIBorderElement.lua");
 NPL.load("(gl)script/ide/math/Rect.lua");
 NPL.load("(gl)script/ide/System/Windows/Controls/ScrollBar.lua");
 NPL.load("(gl)script/ide/System/Windows/Controls/Canvas.lua");
@@ -18,7 +18,7 @@ local ScrollBar = commonlib.gettable("System.Windows.Controls.ScrollBar");
 local Rect = commonlib.gettable("mathlib.Rect");
 local Application = commonlib.gettable("System.Windows.Application");
 
-local ScrollAreaBase = commonlib.inherit(commonlib.gettable("System.Windows.UIElement"), commonlib.gettable("System.Windows.Controls.Primitives.ScrollAreaBase"));
+local ScrollAreaBase = commonlib.inherit(commonlib.gettable("System.Windows.UIBorderElement"), commonlib.gettable("System.Windows.Controls.Primitives.ScrollAreaBase"));
 ScrollAreaBase:Property("Name", "ScrollAreaBase");
 
 ScrollAreaBase:Property({"SliderSize", 16, auto=true});
@@ -36,6 +36,14 @@ function ScrollAreaBase:ctor()
 
 	self.viewport = nil;
 	self.needUpdate = true;
+
+	
+	self.scrollbarGeometryDirty = true;
+	self.scrollbarRangeDirty = true;
+	self.scrollbarValueDirty = true;
+
+	self.viewWidth = 0;
+	self.viewHeight = 0;
 end
 
 function ScrollAreaBase:init(parent)
@@ -43,7 +51,23 @@ function ScrollAreaBase:init(parent)
 
 	self:initScrollBar();
 	self:initViewport();
+	self:AddViewportEventListener();
 	return self;
+end
+
+-- virtual function
+function ScrollAreaBase:AddViewportEventListener()
+	if(self.viewport) then
+		self.viewport:Connect("SizeChanged", function (width, height)
+			self.scrollbarGeometryDirty = true;
+			self.scrollbarRangeDirty = true;
+			self.viewWidth = width;
+			self.viewHeight = height;
+		end);
+		self.viewport:Connect("PositionChanged", function()
+			self.scrollbarValueDirty = true;
+		end);
+	end
 end
 
 -- virtual function
@@ -122,7 +146,6 @@ function ScrollAreaBase:setScrollBarVisible(direction, policy, visible)
 	elseif(visible == nil) then
 		return;
 	end
-
 	if(visible) then
 		scrollbar:show();
 	else
@@ -214,15 +237,95 @@ function ScrollAreaBase:ViewRegion()
 	return Rect:new_from_pool(0, 0, w, h);
 end
 
-function ScrollAreaBase:updateScrollGeometry()
-	
+function ScrollAreaBase:updateScrollInfo()
+	local clip = self:ViewRegion();
+	self.hbar:setRange(0, self.viewport:GetRealWidth() - clip:width() - 1);
+	self.hbar:setStep(self.viewport:WordWidth(), clip:width());
+	self.hbar:SetValue(self.viewport:hValue());
+
+	self.vbar:setRange(0, self.viewport:GetRow() - self:GetRow());
+	self.vbar:setStep(1, self:GetRow());
+	self.vbar:SetValue(self.viewport:vValue());
 end
 
-function ScrollAreaBase:updateGeometryIfNeeded()
-	self:updateScrollGeometry();
+function ScrollAreaBase:updateScrollStatus(textbox_w, textbox_h)
+	local clip = self:ViewRegion();
+	if(textbox_w > clip:width()) then
+		self:horizontalScrollBarShow();
+	else
+		self:horizontalScrollBarHide();
+	end
+
+	clip = self:ViewRegion();
+	if(textbox_h > clip:height()) then
+		self:verticalScrollBarShow();
+		clip = self:ViewRegion();
+		if(textbox_w > clip:width()) then
+			self:horizontalScrollBarShow();
+		else
+			self:horizontalScrollBarHide();
+		end
+	else
+		self:verticalScrollBarHide();
+	end
+
+	self:updateScrollInfo();
+end
+
+function ScrollAreaBase:UpdateScrollbarGeometry()
+	if(not self.scrollbarGeometryDirty) then
+		return;
+	end
+	if(not self.hbar:isHidden()) then
+		if(self.vbar:isHidden()) then
+			self.hbar:setGeometry(0, self:height() - self.SliderSize, self:width(), self.SliderSize);
+		else
+			self.hbar:setGeometry(0, self:height() - self.SliderSize, self:width() - self.SliderSize, self.SliderSize);
+		end
+	end
+
+	if(not self.vbar:isHidden()) then
+		if(self.hbar:isHidden()) then
+			self.vbar:setGeometry(self:width() - self.SliderSize, 0, self.SliderSize, self:height());
+		else
+			self.vbar:setGeometry(self:width() - self.SliderSize, 0, self.SliderSize, self:height() - self.SliderSize);
+		end
+	end
+	self.scrollbarGeometryDirty = false;
+end
+
+function ScrollAreaBase:UpdateScrollbarRange()
+	if(not self.scrollbarRangeDirty) then
+		return;
+	end
+	self:updateScrollStatus(self.viewWidth, self.viewHeight);
+
+	self.scrollbarRangeDirty = false;
+end
+
+function ScrollAreaBase:UpdateScrollbarValue()
+	if(not self.scrollbarValueDirty) then
+		return;
+	end
+	if(not self.hbar:isHidden()) then
+		self.hbar:SetValue(self.viewport:hValue());
+	end
+
+	if(not self.vbar:isHidden()) then
+		self.vbar:SetValue(self.viewport:vValue());
+	end
+
+	self.scrollbarValueDirty = false;
+end
+
+function ScrollAreaBase:UpdateScrollbar()
+	self:UpdateScrollbarRange();
+	self:UpdateScrollbarValue();
+	self:UpdateScrollbarGeometry();
 end
 
 function ScrollAreaBase:paintEvent(painter)
-
+	ScrollAreaBase._super.paintEvent(self, painter);
+	self:UpdateScrollbar();
 end
 

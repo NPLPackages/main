@@ -13,7 +13,6 @@ NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutPart.lua");
 local LayoutIFrame = commonlib.inherit(commonlib.gettable("System.Windows.mcml.layout.LayoutPart"), commonlib.gettable("System.Windows.mcml.layout.LayoutIFrame"));
 
 function LayoutIFrame:ctor()
-	echo("LayoutIFrame:ctor")
 	self:SetInline(false);
 end
 
@@ -26,7 +25,6 @@ function LayoutIFrame:IsFrame()
 end
 
 function LayoutIFrame:Layout()
-	echo("LayoutIFrame:Layout")
     --ASSERT(needsLayout());
 
     LayoutIFrame._super.ComputeLogicalWidth(self);

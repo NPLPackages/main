@@ -85,7 +85,6 @@ end
 --@param cache_policy: cache policy object. if nil, default is used.
 --@param bRefresh: whether to refresh if url is already loaded before.
 function Page:Init(url, cache_policy, bRefresh)
-	echo("Page:Init")
 	if(url == nil or url=="") then
 		-- clear all
 		self.status = nil;
@@ -102,7 +101,6 @@ function Page:Init(url, cache_policy, bRefresh)
 
 	self:InitFrameView();
 
-	echo(url)
 	self.url = url;
 	-- downloading
 	self.status = 0;
@@ -121,8 +119,6 @@ function Page:Init(url, cache_policy, bRefresh)
 		local filename = string.gsub(url, "%?.*$", "")
 
 		local xmlRoot = ParaXML.LuaXML_ParseFile(filename);
---		echo("xmlRoot")
---		echo(xmlRoot)
 		if(type(xmlRoot)=="table" and table.getn(xmlRoot)>0) then
 			Page.OnPageDownloaded_CallBack(xmlRoot, nil, self)
 		else
@@ -707,7 +703,6 @@ end
 
 -- load the page from xml Node
 function Page:LoadFromXmlNode(xmlNode)
-	echo("Page:LoadFromXmlNode")
 	-- ready status
 	self.status=1;
 	self.style = nil;
@@ -776,49 +771,15 @@ end
 
 -- create all ui elements recursively using the layout.
 function Page:LoadComponent()
-	
-
-	echo("Page:LoadComponent")
 	local o = {{name="html"}, name="document"};
 	local document = mcml:createFromXmlNode(o)
 	document:SetFrame(self.m_mainFrame)
 	local htmlNode = document:FirstChild();
 	htmlNode:AppendChild(self.mcmlNode);
---	local document = HTMLDocument:new({name="document"}):init(self.m_mainFrame, self.url);
---	document:AppendChild(self.mcmlNode);
 
 	document:LoadComponentIfNeeded();
-
 	
 	self.m_mainFrame:SetDocument(document);
-
---	local layout = self.layout;
---	if(layout and self.mcmlNode) then
---
---		local parentElem = layout:widget();	
---		if(parentElem) then
---			self.mcmlNode:LoadComponentIfNeeded(parentElem, layout, nil);
---			self.mcmlNode:SetView(self.layout);
---
---			echo("self.mcmlNode:print begin")
---			self.mcmlNode:print();
---			echo("self.mcmlNode:print end")
---			if(self.window) then
---				echo("self.window")
---				local layoutView = LayoutView:new():init(self.mcmlNode, layout);
---				layoutView:SetStyle(self.mcmlNode:StyleForLayoutObject());
---				self.mcmlNode:SetLayoutObject(layoutView);
---
---				self.mcmlNode:attachLayoutTree();
---			else
---				echo("not self.window")
---			end
---			
---
---			
---		end
---
---	end
 end
 
 -- create (instance) the page UI. It will create UI immediately after the page is downloaded. If page is local, it immediately load.
@@ -829,9 +790,8 @@ function Page:Create(name, _parent, alignment, left, top, width, height, bForceD
 end
 
 function Page:Attach(uiElement)
-	echo("Page:Attach")
 	if(uiElement) then
-		uiElement:deleteChildren();
+		uiElement:Reset();
 		if(uiElement.layout) then
 			uiElement.layout = nil;
 		end
@@ -845,7 +805,7 @@ function Page:Detach()
 	if(self.layout) then
 		local uiElem = self.layout:widget();
 		if(uiElem) then
-			uiElem:deleteChildren();
+			uiElem:Reset();
 			uiElem.layout = nil;
 		end
 		self.layout = nil;
