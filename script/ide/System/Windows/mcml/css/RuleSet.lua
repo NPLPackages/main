@@ -60,7 +60,9 @@ function RuleSet:AddToRuleSet(key, map, rule_data)
 end
 
 function RuleSet:AddRulesFromSheet(stylesheet)
-	self:AddChildRules(stylesheet:ChildRules());
+	if(stylesheet) then
+		self:AddChildRules(stylesheet:ChildRules());
+	end
 end
 
 function RuleSet:AddChildRules(rules)

@@ -953,6 +953,7 @@
     <Content Include="script\ide\System\Windows\KeyEvent.lua" />
     <Content Include="script\ide\System\Windows\Layout.lua" />
     <Content Include="script\ide\System\Windows\LayoutItem.lua" />
+    <Content Include="script\ide\System\Windows\mcml\css\default_style.css" />
     <Content Include="script\ide\System\Windows\mcml\css\html.css" />
     <Content Include="script\ide\System\Windows\mcml\DOM.lua" />
     <Content Include="script\ide\System\Windows\mcml\Elements\pe_button.lua" />
