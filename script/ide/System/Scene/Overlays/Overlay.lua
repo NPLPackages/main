@@ -66,6 +66,7 @@ Overlay:Property({"enabled", true, "isEnabled", auto=true});
 Overlay:Property({"visible", true, "IsVisible", "SetVisible"});
 Overlay:Property({"EnableZPass", true});
 Overlay:Property({"ZPassOpacity", 0.2, "GetZPassOpacity", "SetZPassOpacity", auto=true});
+Overlay:Property({"zorder", nil, "GetZOrder", "SetZOrder"});
 Overlay:Property({"EnablePicking", true});
 -- this is usually the last system time tick that render function is called.
 Overlay:Property({"PickingRenderFrame", 0, auto=true});
@@ -84,10 +85,19 @@ function Overlay:ctor()
 	self.localTransform = Matrix4:new():identity();
 end
 
+local function compare_zorder_less(left, right)
+	return (left.zorder or 0) <= (right.zorder or 0);
+end
+
 -- @param parent: if nil, we will create as root. 
 function Overlay:init(parent)
 	if(parent) then
+		local last = parent:GetChildren():last()
 		self:SetParent(parent);
+
+		if(last and not compare_zorder_less(last, self)) then
+			parent:SortChildren();
+		end
 	else
 		self:create_sys(nil);
 	end
@@ -137,6 +147,33 @@ function Overlay:Tick()
 	if(self:IsUseCameraPos()) then
 		self:UpdateToCameraPosition();
 	end
+end
+
+-- the smaller, the earlier to render
+-- @param order: default to 0, set to -1 to force render first. 
+function Overlay:SetRenderOrder(order)
+	if(self.native_scene_obj) then
+		-- TRICKY: the C++ sorts by render_tech, instead of render_order, so we just set render_tech any way. 
+		self.native_scene_obj:SetField("render_tech", order)
+	end
+end
+
+-- zorder 
+function Overlay:SetZOrder(zorder)
+	if(self.zorder ~= zorder) then
+		self.zorder = zorder;
+		if(self.parent) then
+			self.parent:SortChildren();
+		end
+	end
+end
+
+function Overlay:GetZOrder()
+	return self.zorder or 0;
+end
+
+function Overlay:SortChildren()
+	self:GetChildren():sort(compare_zorder_less)
 end
 
 -- private: bind to native scene object.

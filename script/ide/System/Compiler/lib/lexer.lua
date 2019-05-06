@@ -37,6 +37,7 @@ local lexer = commonlib.inherit(nil, commonlib.gettable("System.Compiler.lib.lex
 lexer.alpha = { }
 lexer.sym = { }
 lexer.__index = lexer
+lexer.buff = {}
 
 local debugf = function() end
 --local debugf=printf
@@ -57,47 +58,6 @@ number_hex = "^0[xX]%x+()",
 word = "^([%a_][%w_]*)()"
 }
 
-----------------------------------------------------------------------
--- unescape a whole string, applying [unesc_digits] and
--- [unesc_letter] as many times as required.
-----------------------------------------------------------------------
-local function unescape_string(s)
-
-   -- Turn the digits of an escape sequence into the corresponding
-   -- character, e.g. [unesc_digits("123") == string.char(123)].
-	local function unesc_digits(backslashes, digits)
-		if #backslashes%2==0 then
-         -- Even number of backslashes, they escape each other, not the digits.
-         -- Return them so that unesc_letter() can treaat them
-			return backslashes..digits
-		else
-         -- Remove the odd backslash, which escapes the number sequence.
-         -- The rest will be returned and parsed by unesc_letter()
-			backslashes = backslashes:sub(1, -2)
-		end
-		local k, j, i = digits:reverse():byte(1, 3)
-		local z = string.byte "0"
-		local code =(k or z) + 10 * (j or z) + 100 * (i or z) - 111 * z
-		if code > 255 then 
-			error("Illegal escape sequence '\\"..digits.."' in string: ASCII codes must be in [0..255]") 
-		end
-		return backslashes .. string.char(code)
-	end
-
-   -- Take a letter [x], and returns the character represented by the 
-   -- sequence ['\\'..x], e.g. [unesc_letter "n" == "\n"].
-	local function unesc_letter(x)
-		local t = { 
-		a = "\a", b = "\b", f = "\f",
-		n = "\n", r = "\r", t = "\t", v = "\v",
-		["\\"] = "\\",["'"] = "'",['"'] = '"',["\n"] = "\n" }
-		return t[x] or error([[Unknown escape sequence '\]]..x..[[']])
-	end
-
-	return s
-	:gsub("(\\+)([0-9][0-9]?[0-9]?)", unesc_digits)
-	:gsub("\\(%D)", unesc_letter)
-end
 
 lexer.extractors = {
 "skip_whitespaces_and_comments",
@@ -221,33 +181,86 @@ function lexer:skip_whitespaces_and_comments()
 	-- return
 end
 
-----------------------------------------------------------------------
--- extract a '...' or "..." short string
-----------------------------------------------------------------------
+
+function lexer:current()
+	return self.src:sub(self.i, self.i);
+end
+
+function lexer:save(c, l)
+	self.buff[l] = c;
+	return l+1;
+end
+
+function lexer:save_and_next(l)
+	l = self:save(self:current(), l)
+	self:next_()
+	return l;
+end
+
+-- simple next token
+function lexer:next_(l)
+	self.i = self.i + (l or 1);
+end
+
+local t2 = { 
+	a = "\a", b = "\b", f = "\f",
+	n = "\n", r = "\r", t = "\t", v = "\v",
+}
+
+-- fixed by LiXizhi: following is compatible with C++ code's read_string() method
 function lexer:extract_short_string()
-    -- [k] is the first unread char, [self.i] points to [k] in [self.src]
-	local j, k = self.i, self.src:sub(self.i, self.i)
-	if k~="'" and k~='"' then return end
-	local i = self.i + 1
-	local j = i
-	while true do
-      -- k = opening char: either simple-quote or double-quote
-      -- i = index of beginning-of-string
-      -- x = next "interesting" character
-      -- j = position after interesting char
-      -- y = char just after x
-		local x, y
-		x, j, y = self.src:match("([\\\r\n"..k.."])()(.?)", j)
-		if x == '\\' then j = j + 1  -- don't parse escaped char
-		elseif x == k then break -- unescaped end of string
-		else -- eof or '\r' or '\n' reached before end of string
-			assert(not x or x=="\r" or x=="\n")
-			error "Unterminated string"
+	local l = 1;
+	self.buff = {}
+	local del = self:current(); -- delimiter
+	if del~="'" and del~='"' then return end
+	self:next_()
+	while (true) do
+		local c = self:current();
+		if(c == del) then
+			break;
+		elseif(not c or c=="") then
+			return error("unexpected ending of file when parsing a short string");
+		end
+		if(c == '\n' or c == '\r') then
+			-- lua 5.1 syntax fix 
+			l = self:save('\0', l);  -- avoid warning
+		elseif(c == '\\') then
+			self:next_();  -- do not save the '\'
+			local c = self:current();
+			  
+			if(t2[c]) then
+				l = self:save(t2[c], l); 
+				self:next_(); 
+			elseif(c == '\n' or c == '\r') then
+				-- lua 5.1 syntax fix
+				l = self:save('\n', l); 
+				self:next_(); 
+			else
+				local c = self:current();
+				if(c == "x") then
+					-- /x[hexNumber]
+					self:next_();
+					local num = self.src:sub(self.i, self.i+1);
+					num = num:match("%x+");
+					if(num) then
+						l = self:save(string.char(tonumber(num, 16)), l)
+						self:next_(#num);
+					end
+				elseif ( not c:match("%d")) then
+					l = self:save_and_next(l);  -- handles \\, \", \', and \? 
+				else -- \xxx
+					local num = self.src:sub(self.i, self.i+2);
+					num = num:match("%d+");
+					l = self:save(string.char(tonumber(num)), l)
+					self:next_(#num);
+				end
+			end
+		else
+			l = self:save_and_next(l);
 		end
 	end
-	self.i = j
-
-	return "String", unescape_string(self.src:sub(i, j-2))
+	self:next_();  -- skip delimiter
+	return "String", table.concat(self.buff);
 end
 
 ----------------------------------------------------------------------
@@ -369,18 +382,6 @@ function lexer:next(n)
 	
 	return a or eof_token
 end
-
-----------------------------------------------------------------------
--- Returns an object which saves the stream's current state.
-----------------------------------------------------------------------
--- FIXME there are more fields than that to save
-function lexer:save() return { self.i; table.cat(self.peeked) } end
-
-----------------------------------------------------------------------
--- Restore the stream's state, as saved by method [save].
-----------------------------------------------------------------------
--- FIXME there are more fields than that to restore
-function lexer:restore(s) self.i = s[1]; self.peeked = s[2] end
 
 ----------------------------------------------------------------------
 -- Resynchronize: cancel any token in self.peeked, by emptying the

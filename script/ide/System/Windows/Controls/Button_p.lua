@@ -160,6 +160,8 @@ function Button:paintWithPolygon(painter)
 		self:paintNarrowButton(painter);
 	elseif(self.polygon_style == "radio") then
 		self:paintRadioButton(painter);
+	elseif(self.polygon_style == "close") then
+		self:paintCloseButton(painter);
 	end
 end
 
@@ -263,6 +265,7 @@ end
 function Button:CountPolygon(recount)
 	self:UpdateNarrowGeometry(recount);
 	self:UpdateCheckboxGeometry(recount);
+	self:UpdateCloseBtnGeometry(recount);
 end
 
 function Button:emitPositionChanged()
@@ -419,19 +422,62 @@ function Button:UpdateNarrowGeometry(recount)
 	end
 end
 
+-- count the close button cross line
+function Button:UpdateCloseBtnGeometry(recount)
+	if(self.polygon_style ~= "close") then
+		return;
+	end
+
+	self.polygon_styles.close = self.polygon_styles.close or {["lines"] = nil};
+
+	if(self.polygon_styles.close.lines) then
+		if(not recount) then
+			return;
+		end
+	else
+		self.polygon_styles.close.lines = {};
+	end
+
+	local lines = self.polygon_styles.close.lines;
+
+	local size = self:GetSize();
+	size = math.min(size, math.min(self:width(), self:height()));
+	local x, y, w, h = self:x() + self:width()/2, self:y() + self:height()/2, size, size;
+
+	for i = 1, 4 do
+		lines[i] = lines[i] or {};
+		if(i == 1) then
+			lines[i][1] = math.ceil(x - size/2);
+			lines[i][2] = math.ceil(y - size/2);
+			lines[i][3] = 0;
+		elseif(i == 2) then
+			lines[i][1] = math.ceil(x + size/2);
+			lines[i][2] = math.ceil(y + size/2);
+			lines[i][3] = 0;
+		elseif(i == 3) then
+			lines[i][1] = math.ceil(x - size/2);
+			lines[i][2] = math.ceil(y + size/2);
+			lines[i][3] = 0;
+		else
+			lines[i][1] = math.ceil(x + size/2);
+			lines[i][2] = math.ceil(y - size/2);
+			lines[i][3] = 0;
+		end
+	end
+end
+
 function Button:paintRadioButton(painter)
 	local size = self:GetSize();
 	size = math.min(size, math.min(self:width(), self:height()));
 	local radius = math.ceil(size/2);
 	local x, y = self:x() + self:width()/2, self:y() + self:height()/2;
 	
-	painter:Translate(x,y);
+	painter:Translate(x, y);
 	painter:SetPen("#b5b5b5");
 	painter:DrawCircle(0,0,0,radius,"z", true);
 
 	painter:SetPen("#dedede");
 	painter:DrawCircle(0,0,0,radius-2,"z",true);
-
 
 	if(self.down or self.menuOpen or self.checked) then
 		painter:SetPen("#666666");
@@ -443,5 +489,26 @@ function Button:paintRadioButton(painter)
 		painter:SetPen("#ffffff33");
 		painter:DrawCircle(0,0,0,radius,"z");
 	end
-	painter:Translate(-x,-y);
+
+	painter:Translate(-x, -y);
+end
+
+function Button:paintCloseButton(painter)
+	self:UpdateCloseBtnGeometry();
+
+	if (self.down or self.menuOpen) then
+		-- BackgroundDown
+		--painter:SetPen("#000000");
+		painter:SetPen("#808080");
+		painter:DrawRectTexture(self:x(), self:y(), self:width(), self:height(), "");
+	elseif(self:underMouse()) then
+		painter:SetPen("#cccccc");
+		painter:DrawRectTexture(self:x(), self:y(), self:width(), self:height(), "");
+	end
+
+	local lines = self.polygon_styles.close.lines;
+	--painter:SetPen({width = 2, color = "#000000"});
+	painter:SetPen("#000000")
+	painter:DrawLineList(lines);
+
 end

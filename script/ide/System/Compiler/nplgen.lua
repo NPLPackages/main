@@ -1,49 +1,56 @@
---------------------------------------------------------------------------------
--- NPL code generator
--- Borrowed from Metalua project
--- Rewrite in pure lua/npl
--- Edited By: Zhiyuan
--- Date: 2016-12-11
---------------------------------------------------------------------------------
+--[[ NPL code generator
+Edited By: Zhiyuan, LiXizhi
+Borrowed from Metalua project
+Date: 2016-12-11
+Desc: Rewrite in pure lua/npl
+-------------------------------
+NPL.load("(gl)script/ide/System/Compiler/nplgen.lua");
+local nplgen = commonlib.gettable("System.Compiler.nplgen")
+local gen = nplgen:new()
+gen:SetIgnoreNewLine(true)
+echo(gen:run(ast))
+-------------------------------
+]]
 NPL.load("(gl)script/ide/System/Compiler/lib/util.lua");
 local util = commonlib.gettable("System.Compiler.lib.util")
 local nplgen = commonlib.inherit(nil, commonlib.gettable("System.Compiler.nplgen"))
 
-local M = { }
-M.__index = M
+function nplgen:ctor()
+	self._acc = { }; -- Accumulates pieces of source as strings
+	self.current_indent = 0; -- Current level of line indentation
+	self.indent_step = "    "; -- Indentation symbol, normally spaces or '\t'
+	self.current_line = 1;  -- Current line number
+	self.ignore_newline = false; -- ignore multiple new lines when generating code. 
+end
 
-nplgen.ast_to_str = function(x) return M.run(x) end
---------------------------------------------------------------------------------
--- Instanciate a new AST->source synthetizer
---------------------------------------------------------------------------------
-function M.new()
-	local self = {
-	_acc = { }, -- Accumulates pieces of source as strings
-	current_indent = 0, -- Current level of line indentation
-	indent_step = "    ", -- Indentation symbol, normally spaces or '\t'
-	current_line = 1 -- Current line number
-	}
-	return setmetatable(self, M)
+function nplgen:SetIgnoreNewLine(bIgnore)
+	self.ignore_newline = bIgnore;
+end
+
+-- static function: prefer using nplgen.run
+function nplgen.ast_to_str(x) 
+	return nplgen.run(x) 
 end
 
 --------------------------------------------------------------------------------
 -- Run a synthetizer on the `ast' arg and return the source as a string.
--- Can also be used as a static method `M.run (ast)'; in this case,
+-- Can also be used as a static method `nplgen.run (ast)'; in this case,
 -- a temporary Metizer is instanciated on the fly.
 --------------------------------------------------------------------------------
-function M:run(ast)
+function nplgen:run(ast)
 	if not ast then
-		self, ast = M.new(), self
+		self, ast = nplgen:new(), self
 	end
 	self._acc = { }
 	self:node(ast)
-	return table.concat(self._acc)
+	local code = table.concat(self._acc)
+	return code;
 end
 
 --------------------------------------------------------------------------------
 -- Accumulate a piece of source file in the synthetizer.
 --------------------------------------------------------------------------------
-function M:acc(x)
+function nplgen:acc(x)
 	if x then table.insert(self._acc, x) end
 end
 
@@ -52,7 +59,7 @@ end
 -- Jumps an extra line if indentation is 0, so that
 -- toplevel definitions are separated by an extra empty line.
 --------------------------------------------------------------------------------
-function M:nl()
+function nplgen:nl()
 	if self.current_indent == 0 then self:acc "\n" end
 	self:acc("\n" .. self.indent_step:rep(self.current_indent))
 end
@@ -60,7 +67,7 @@ end
 --------------------------------------------------------------------------------
 -- Increase indentation and accumulate a new line.
 --------------------------------------------------------------------------------
-function M:nlindent()
+function nplgen:nlindent()
 	self.current_indent = self.current_indent + 1
 	self:nl()
 end
@@ -68,7 +75,7 @@ end
 --------------------------------------------------------------------------------
 -- Decrease indentation and accumulate a new line.
 --------------------------------------------------------------------------------
-function M:nldedent()
+function nplgen:nldedent()
 	self.current_indent = self.current_indent - 1
 	self:acc("\n" .. self.indent_step:rep(self.current_indent))
 end
@@ -76,24 +83,38 @@ end
 --------------------------------------------------------------------------------
 -- Go to the line.
 --------------------------------------------------------------------------------
-function M:goHead(node)
+function nplgen:goHead(node)
 	local dst_line = 0
 	if node.lineinfo and node.lineinfo.first then
 		dst_line = node.lineinfo.first[1]
 	end
-	for i = self.current_line, dst_line - 1 do
-		self:acc("\n")
+	if(self.ignore_newline) then
+		if(self.current_line >= dst_line - 1) then
+			self:acc("\n")
+		end
+	else
+
+		for i = self.current_line, dst_line - 1 do
+			self:acc("\n")
+		end
 	end
 	self.current_line = dst_line
 end
 
-function M:goTail(node)
+function nplgen:goTail(node)
 	local dst_line = 0
 	if node.lineinfo and node.lineinfo.last then
 		dst_line = node.lineinfo.last[1]
 	end
-	for i = self.current_line, dst_line - 1 do
-		self:acc("\n")
+
+	if(self.ignore_newline) then
+		if(self.current_line >= dst_line - 1) then
+			self:acc("\n")
+		end
+	else
+		for i = self.current_line, dst_line - 1 do
+			self:acc("\n")
+		end
 	end
 	self.current_line = dst_line
 end
@@ -106,7 +127,7 @@ local keywords = util.table_transpose {
 "end", "false", "for", "function", "if",
 "in", "local", "nil", "not", "or",
 "repeat", "return", "then", "true", "until",
-"while" }
+"while", "goto" }
 
 --------------------------------------------------------------------------------
 -- Return true iff string `id' is a legal identifier name.
@@ -114,6 +135,7 @@ local keywords = util.table_transpose {
 local function is_ident(id)
 	return id:match "^[%a_][%w_]*$" 
 end
+
 
 --------------------------------------------------------------------------------
 -- Return true iff ast represents a legal function name for
@@ -171,8 +193,8 @@ lt = " < ", le = " <= ",["and"] = " and ",
 -- If something can't be converted to normal sources, it's
 -- instead dumped as a `-{ ... }' splice in the source accumulator.
 --------------------------------------------------------------------------------
-function M:node(node)
-	assert(self~=M and self._acc)
+function nplgen:node(node)
+	assert(self~=nplgen and self._acc)
 	if not node.tag then -- tagless block.
 		self:list(node, " ") -- space as line sperator
 	else
@@ -180,7 +202,7 @@ function M:node(node)
         if node.tag == 'Keyword' then   -- Handle Keyword as string
             f = node[1]
         else
-            f = M[node.tag]
+            f = nplgen[node.tag]
         end
 		if type(f) == "function" then -- Delegate to tag method.
 			f(self, node, unpack(node))
@@ -203,7 +225,7 @@ end
 -- first element of list to be converted, so that we can skip the begining
 -- of a list. 
 --------------------------------------------------------------------------------
-function M:list(list, sep, start)
+function nplgen:list(list, sep, start)
 	for i = start or 1, # list do
 		self:node(list[i])
 		--print("in List")
@@ -241,7 +263,7 @@ end
 --
 --------------------------------------------------------------------------------
 
-function M:Do(node)
+function nplgen:Do(node)
 	self:goHead(node)
 	self:acc "do"
 	self:acc " "
@@ -251,7 +273,21 @@ function M:Do(node)
 	self:acc "end"
 end
 
-function M:Set(node)
+function nplgen:Set(node)
+	do
+		-- ``... = ...'', no syntax sugar --
+		local lhs = node[1]
+		local rhs = node[2]
+		self:goHead(node)
+		self:list(lhs, ", ")
+		self:acc " = "
+		self:goTail(node)
+		self:list(rhs, ", ")
+		return
+	end
+	-- Note by Xizhi: following code is wrong for "a[1] = function() end"
+
+
 	-- ``function foo:bar(...) ... end'' --
 	if type(node[1][1]) == 'table'
 	and node[1][1].tag == 'Index' 
@@ -313,7 +349,7 @@ function M:Set(node)
 	end
 end
 
-function M:While(node, cond, body)
+function nplgen:While(node, cond, body)
 	self:goHead(node)
 	self:acc "while "
 	self:node(cond)
@@ -325,7 +361,7 @@ function M:While(node, cond, body)
 	self:acc "end"
 end
 
-function M:Repeat(node, body, cond)
+function nplgen:Repeat(node, body, cond)
 	self:goHead(node)
 	self:acc "repeat"
 	self:acc " "
@@ -335,7 +371,7 @@ function M:Repeat(node, body, cond)
 	self:node(cond)
 end
 
-function M:If(node)
+function nplgen:If(node)
 	self:goHead(node)
 	for i = 1, #node - 1, 2 do
 		-- for each ``if/then'' and ``elseif/then'' pair --
@@ -358,7 +394,7 @@ function M:If(node)
 	self:acc "end"
 end
 
-function M:Fornum(node, var, first, last)
+function nplgen:Fornum(node, var, first, last)
 	local body = node[#node]
 	self:goHead(node)
 	self:acc "for "
@@ -379,7 +415,7 @@ function M:Fornum(node, var, first, last)
 	self:acc "end"
 end
 
-function M:Forin(node, vars, generators, body)
+function nplgen:Forin(node, vars, generators, body)
 	self:goHead(node)
 	self:acc "for "
 	self:list(vars, ", ")
@@ -393,7 +429,7 @@ function M:Forin(node, vars, generators, body)
 	self:acc "end"
 end
 
-function M:Local(node, lhs, rhs)
+function nplgen:Local(node, lhs, rhs)
 	self:goHead(node)
 	--	if next (lhs) then
 	self:acc "local "
@@ -405,7 +441,7 @@ function M:Local(node, lhs, rhs)
 --  end
 end
 
-function M:Localrec(node, lhs, rhs)
+function nplgen:Localrec(node, lhs, rhs)
 	if node[1][1].tag == 'Id' 
 	and node[2][1].tag == 'Function' then
 		-- ``local function name() ... end'' --
@@ -433,7 +469,7 @@ function M:Localrec(node, lhs, rhs)
 	end
 end
 
-function M:Call(node, f)
+function nplgen:Call(node, f)
 	-- Set parentheses all the time
 	local parens = true
 	-- single string or table literal arg ==> no need for parentheses. --
@@ -443,13 +479,13 @@ function M:Call(node, f)
 	--end
 	self:goHead(node)
 	self:node(f)
-	self:acc(parens and " (" or " ")
+	self:acc(parens and "(" or " ")
 	self:list(node, ", ", 2) -- skip `f'.
 	--self:goTail (node)
 	self:acc(parens and ")")
 end
 
-function M:Invoke(node, f, method)
+function nplgen:Invoke(node, f, method)
 	-- single string or table literal arg ==> no need for parentheses. --
 	local parens
 	
@@ -461,34 +497,34 @@ function M:Invoke(node, f, method)
 	self:node(f)
 	self:acc ":"
 	self:acc(method[1])
-	self:acc(parens and " (" or " ")
+	self:acc(parens and "(" or " ")
 	self:list(node, ", ", 3) -- Skip args #1 and #2, object and method name.
 	self:acc(parens and ")")
 end
 
-function M:Return(node)
+function nplgen:Return(node)
 	self:goHead(node)
 	self:acc "return "
 	self:list(node, ", ")
 end
 
-M.Break = "break"
-M.Nil = "nil"
-M.False = "false"
-M.True = "true"
-M.Dots = "..."
+nplgen.Break = "break"
+nplgen.Nil = "nil"
+nplgen.False = "false"
+nplgen.True = "true"
+nplgen.Dots = "..."
 
-function M:Number(node, n)
+function nplgen:Number(node, n)
 	self:acc(tostring(n))
 end
 
-function M:String(node, str)
+function nplgen:String(node, str)
 	-- format "%q" prints '\n' in an umpractical way IMO,
 	-- so this is fixed with the :gsub( ) call.
 	self:acc(string.format("%q", str):gsub("\\\n", "\\n"))
 end
 
-function M:Function(node, params, body)
+function nplgen:Function(node, params, body)
 	self:goHead(node)
 	self:acc "function ("
 	self:list(params, ", ")
@@ -500,7 +536,7 @@ function M:Function(node, params, body)
 	self:acc "end"
 end
 
-function M:Table(node)
+function nplgen:Table(node)
 	if not node[1] then self:acc "{ }" else
 		self:acc "{"
 		self:acc " "
@@ -508,7 +544,7 @@ function M:Table(node)
 		for i, elem in ipairs(node) do
 			if elem.tag == 'Pair' 
 			and elem[1].tag == 'String' 
-			and is_ident(elem[1][1]) then
+			and is_ident(elem[1][1]) and not keywords[elem[1][1]] then
 				---- ``key = value''. --
 				local key = elem[1][1]
 				local value = elem[2]
@@ -541,7 +577,7 @@ function M:Table(node)
 	end
 end
 
-function M:Op(node, op, a, b)
+function nplgen:Op(node, op, a, b)
 	-- Transform ``not (a == b)'' into ``a ~= b''. --
 	if node[1] == "not"
 	and node[2].tag == 'Op'
@@ -601,13 +637,13 @@ function M:Op(node, op, a, b)
 	end
 end
 
-function M:Paren(node, content)
+function nplgen:Paren(node, content)
 	self:acc "("
 	self:node(content)
 	self:acc ")"
 end
 
-function M:Index(node, table, key)
+function nplgen:Index(node, table, key)
 	local paren_table
 	-- Check precedence, see if parens are needed around the table --
 	
@@ -621,7 +657,7 @@ function M:Index(node, table, key)
 	self:node(table)
 	self:acc(paren_table and ")")
 	
-	if key.tag == 'String' and is_ident(key[1]) then
+	if key.tag == 'String' and is_ident(key[1]) and not keywords[key[1]] then
 		-- ``table.key''. --
 		self:acc "."
 		self:acc(key[1])
@@ -633,7 +669,7 @@ function M:Index(node, table, key)
 	end
 end
 
-function M:Id(node, name)
+function nplgen:Id(node, name)
 	if is_ident(name) then
 		self:acc(name)
 	end 

@@ -19,6 +19,14 @@ local function GetCode()
     local text = file:GetText();
     file:close();
     return text;
+  elseif(not filename:match(":")) then
+	-- also try absolute path in case file is in world zip file
+	local file = ParaIO.open(ParaIO.GetCurDirectory(0)..filename, "r");
+	if(file:IsValid()) then
+		local text = file:GetText();
+		file:close();
+		return text;
+	end
   end
 end
 if(is_ajax()) then

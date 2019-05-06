@@ -41,7 +41,7 @@ function SimpleEase:SetEase(value)
 			value = 0;
 		end
 		value = tonumber(value);
-		if ( value <-1 ) then
+		if ( value < -1 ) then
 			value = -1;
 		end
 		if ( value >1 ) then

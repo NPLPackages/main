@@ -224,6 +224,84 @@ if(ParaEngine.hasFFI) then
 			painter:DrawLineList(triangles, segment);
 		end
 	end
+
+	--[[
+		radius: circle radius
+		dx, dy, dz: circle facing direction
+		ox, oy, oz: after facing rotation, the circle offset
+	]]
+	function ShapesDrawer.DrawCircleEdge(painter, radius, dx, dy, dz, ox, oy, oz)
+		segment = math.min(40, math.floor(radius * two_pi * 5));
+
+		local function ZRotateToCamera(point)
+			NPL.load("(gl)script/ide/math/vector.lua");
+			local vector3d = commonlib.gettable("mathlib.vector3d");
+			local pointVec = vector3d:new(point);
+
+			local a = dx;
+			local b = dy;
+			local c = dz;
+
+			local sqrt_a2_b2_c2 = math.sqrt(a*a + b*b + c*c);
+			local sqrt_b2_c2 = math.sqrt(b*b + c*c);
+			local sin_alpha = b / sqrt_b2_c2;
+			local cos_alpha = c / sqrt_b2_c2;
+			local sin_beta = a / sqrt_a2_b2_c2;
+			local cos_beta = sqrt_b2_c2 / sqrt_a2_b2_c2;
+
+			local mat_y_axis_rotate_beta = {
+				cos_beta, 0, -sin_beta, 0,
+						0, 1,         0, 0,
+				sin_beta, 0,  cos_beta, 0,
+						0, 0,         0, 1,
+			}
+
+			local mat_x_axis_rotate_negative_alpha = {
+				1,          0,          0, 0,
+				0,  cos_alpha, -sin_alpha, 0,
+				0,  sin_alpha,  cos_alpha, 0,
+				0,          0,          0, 1,
+			}
+
+			local mat_axis_translate_offset = {
+				1,  0,  0,  0,
+				0,  1,  0,  0,
+				0,  0,  1,  0,
+				ox, oy, oz, 1,
+			}
+
+			pointVec:transform(mat_y_axis_rotate_beta);
+			pointVec:transform(mat_x_axis_rotate_negative_alpha);
+			pointVec:transform(mat_axis_translate_offset);
+
+			return pointVec:get();
+		end
+
+		local fromAngle = 0;
+		local delta_angle = two_pi / segment;
+
+		local last_x, last_y = math.cos(fromAngle)*radius, math.sin(fromAngle)*radius;
+		local nIndex = 0;
+		local triangles = triangles_cache;
+		for i=1, segment do
+			local angle = fromAngle+delta_angle*i;	
+			local x, y = math.cos(angle)*radius, math.sin(angle)*radius;
+			local v1 = GetVertice(nIndex);
+			local v2 = GetVertice(nIndex+1);
+			-- a circle in plane x-0-y
+			local p1 = {};
+			local p2 = {};
+			p1[1], p1[2], p1[3] = last_x, last_y, 0;
+			p2[1], p2[2], p2[3] = x, y, 0;
+			-- rotate z axis pointing to camera
+			v1.x, v1.y, v1.z = ZRotateToCamera(p1);
+			v2.x, v2.y, v2.z = ZRotateToCamera(p2);
+
+			nIndex = nIndex + 2;
+			last_x, last_y = x, y;
+		end
+		painter:DrawLineList(triangles, segment);
+	end
 else
 	local cube_template = {
 		{-1, -1, -1},	{-1, 1, -1},	{1, 1, -1},	{1, -1, -1},
@@ -424,8 +502,85 @@ else
 			painter:DrawLineList(triangles, segment);
 		end
 	end
-end
 
+	--[[
+		radius: circle radius
+		dx, dy, dz: circle facing direction
+		ox, oy, oz: after facing rotation, the circle offset
+	]]
+	function ShapesDrawer.DrawCircleEdge(painter, radius, dx, dy, dz, ox, oy, oz)
+		segment = math.min(40, math.floor(radius * two_pi * 5));
+
+		local function ZRotateToCamera(point)
+			NPL.load("(gl)script/ide/math/vector.lua");
+			local vector3d = commonlib.gettable("mathlib.vector3d");
+			local pointVec = vector3d:new(point);
+
+			local a = dx;
+			local b = dy;
+			local c = dz;
+
+			local sqrt_a2_b2_c2 = math.sqrt(a*a + b*b + c*c);
+			local sqrt_b2_c2 = math.sqrt(b*b + c*c);
+			local sin_alpha = b / sqrt_b2_c2;
+			local cos_alpha = c / sqrt_b2_c2;
+			local sin_beta = a / sqrt_a2_b2_c2;
+			local cos_beta = sqrt_b2_c2 / sqrt_a2_b2_c2;
+
+			local mat_y_axis_rotate_beta = {
+				cos_beta, 0, -sin_beta, 0,
+						0, 1,         0, 0,
+				sin_beta, 0,  cos_beta, 0,
+						0, 0,         0, 1,
+			}
+
+			local mat_x_axis_rotate_negative_alpha = {
+				1,          0,          0, 0,
+				0,  cos_alpha, -sin_alpha, 0,
+				0,  sin_alpha,  cos_alpha, 0,
+				0,          0,          0, 1,
+			}
+
+			local mat_axis_translate_offset = {
+				1,  0,  0,  0,
+				0,  1,  0,  0,
+				0,  0,  1,  0,
+				ox, oy, oz, 1,
+			}
+
+			pointVec:transform(mat_y_axis_rotate_beta);
+			pointVec:transform(mat_x_axis_rotate_negative_alpha);
+			pointVec:transform(mat_axis_translate_offset);
+
+			return pointVec:get();
+		end
+
+		local fromAngle = 0;
+		local delta_angle = two_pi / segment;
+
+		local last_x, last_y = math.cos(fromAngle)*radius, math.sin(fromAngle)*radius;
+		local nIndex = 1;
+		local triangles = {};
+		for i=1, segment do
+			local angle = fromAngle+delta_angle*i;	
+			local x, y = math.cos(angle)*radius, math.sin(angle)*radius;
+			local v1 = GetVertice(triangles, nIndex);
+			local v2 = GetVertice(triangles, nIndex+1);
+			-- a circle in plane x-0-y
+			local p1 = {};
+			local p2 = {};
+			p1[1], p1[2], p1[3] = last_x, last_y, 0;
+			p2[1], p2[2], p2[3] = x, y, 0;
+			-- rotate z axis pointing to camera
+			v1[1], v1[2], v1[3] = ZRotateToCamera(p1);
+			v2[1], v2[2], v2[3] = ZRotateToCamera(p2);
+
+			nIndex = nIndex + 2;
+			last_x, last_y = x, y;
+		end
+		painter:DrawLineList(triangles, segment);
+	end
+end
 
 
 -- draw arrow head 
@@ -437,4 +592,31 @@ function ShapesDrawer.DrawArrowHead(painter, cx,cy,cz, axis, radius, length, seg
 	length = length or radius*2.5;
 	ShapesDrawer.DrawCircle(painter, cx,cy,cz, radius, axis, true, segment, 0, two_pi);
 	ShapesDrawer.DrawCircle(painter, cx,cy,cz, radius, axis, true, segment, 0, two_pi, length);
+end
+
+local borderVertices = {{}, {}, {}, {}, {}, {}, {}, {},};
+borderVertices[8] = borderVertices[1]
+borderVertices[3] = borderVertices[2]
+borderVertices[5] = borderVertices[4]
+borderVertices[7] = borderVertices[6]
+
+function ShapesDrawer.DrawRect2DBorder(painter, x, y, width, height, zValue)
+	zValue = zValue or 0
+	borderVertices[1][1] = x;
+	borderVertices[1][2] = y;
+	borderVertices[1][3] = zValue;
+
+	borderVertices[2][1] = x + width;
+	borderVertices[2][2] = y;
+	borderVertices[2][3] = zValue;
+
+	borderVertices[4][1] = x + width;
+	borderVertices[4][2] = y + height;
+	borderVertices[4][3] = zValue;
+
+	borderVertices[6][1] = x;
+	borderVertices[6][2] = y + height;
+	borderVertices[6][3] = zValue;
+		
+	painter:DrawLineList(borderVertices, 4);
 end

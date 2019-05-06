@@ -23,6 +23,7 @@ manip:SetPosition(x,y,z);
 NPL.load("(gl)script/ide/System/Scene/Manipulators/Manipulator.lua");
 NPL.load("(gl)script/ide/math/Plane.lua");
 NPL.load("(gl)script/ide/math/Quaternion.lua");
+local math3d = commonlib.gettable("mathlib.math3d");
 local Quaternion = commonlib.gettable("mathlib.Quaternion");
 local Color = commonlib.gettable("System.Core.Color");
 local Plane = commonlib.gettable("mathlib.Plane");
@@ -47,6 +48,10 @@ RotateManip:Property({"RollEnabled", true, "IsRollEnabled", "SetRollEnabled", au
 RotateManip:Property({"RealTimeUpdate", true, "IsRealTimeUpdate", "SetRealTimeUpdate", auto=true});
 -- whether to show last yaw/pitch/roll angles 
 RotateManip:Property({"ShowLastAngles", false, "IsShowLastAngles", "SetShowLastAngles", auto=true});
+-- whether to show the current vector value in YawPitchRollMode
+RotateManip:Property({"ShowVector", false, "IsShowVector", "SetShowVector", auto=true});
+-- initial vector to apply Yaw Pitch Roll
+RotateManip:Property({"InitialVector", {1,0,0}, "GetInitialVector", "SetInitialVector", auto=true});
 
 function RotateManip:ctor()
 	self.names = {};
@@ -307,6 +312,7 @@ function RotateManip:paintEvent(painter)
 		y_name = self:GetNextPickingName();
 		z_name = self:GetNextPickingName();
 	end
+	local name = self:GetActivePickingName();
 
 	local radius = self.radius;
 
@@ -337,6 +343,22 @@ function RotateManip:paintEvent(painter)
 			end
 			ShapesDrawer.DrawCircle(painter, 0,0,0, radius, "z", true, nil, from, to);
 		end
+	end
+	if(self:IsShowVector() and not isDrawingPickable) then
+		local last_yaw = self:GetField("yaw", 0);
+		local last_pitch = self:GetField("pitch", 0);
+		local last_roll = self:GetField("roll", 0);
+		local v = self:GetInitialVector();
+		if(self:IsYawEnabled()) then
+			self:SetColorAndName(painter, self.yColor);
+		elseif(self:IsPitchEnabled()) then
+			self:SetColorAndName(painter, self.xColor);
+		else
+			self:SetColorAndName(painter, self.zColor);
+		end
+		local r = radius*1.2;
+		local x2,y2,z2 = math3d.vec3Rotate(v[1]*r, v[2]*r, v[3]*r, last_pitch, last_yaw, last_roll)
+		ShapesDrawer.DrawLine(painter, 0,0,0, x2,y2,z2);
 	end
 
 	if(self:IsPitchEnabled()) then
@@ -372,7 +394,7 @@ function RotateManip:paintEvent(painter)
 			if(not self.selectedAxis) then
 				self:SetColorAndName(painter, self.zColor, z_name);
 			else
-				self:SetColorAndName(painter, Color.ChangeOpacity(self.zColor, 32), y_name);
+				self:SetColorAndName(painter, Color.ChangeOpacity(self.zColor, 32), z_name);
 			end
 		end
 		local from, to = self:caculateFrontCircleAngleRange("z");

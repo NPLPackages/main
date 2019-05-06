@@ -522,9 +522,11 @@ function TextControl:keyPressEvent(event)
 	local mark = event.shift_pressed;
 	local unknown = false;
 	if(keyname == "DIK_RETURN") then
-		if(self:hasAcceptableInput()) then
-			--self:accepted(); -- emit
-			self:newLine(mark);
+		if(not self:isReadOnly()) then
+			if(self:hasAcceptableInput()) then
+				--self:accepted(); -- emit
+				self:newLine(mark);
+			end
 		end
 	elseif(keyname == "DIK_BACKSPACE") then
 		if (not self:isReadOnly()) then
@@ -632,6 +634,9 @@ function TextControl:keyPressEvent(event)
 		if (not self:isReadOnly()) then
 			self:redo();
 		end
+	elseif(event:IsKeySequence("Search")) then
+		local selectedText = self:selectedText();
+		self.parent:Search(selectedText);
 	else
 		if(event:IsFunctionKey() or event.ctrl_pressed) then
 			unknown = true;
@@ -1415,6 +1420,50 @@ function TextControl:hasSelectedText()
 	return true;
 end
 
+function TextControl:searchNext(text)
+	local lineIndex = self.cursorLine;
+	local initPos = self.cursorPos + 1;
+	local lineUniStr = self:GetLineText(lineIndex)
+
+	local count = 0;
+
+	local sPos, ePos;
+	while(not sPos or not ePos) do
+		if(initPos > lineUniStr:length()) then
+			if(lineIndex == #self.items) then
+				lineIndex = 1;
+			else
+				lineIndex = lineIndex + 1;
+			end
+			lineUniStr = self:GetLineText(lineIndex);
+			initPos = 1;
+		end
+		if((self.cursorLine ~= #self.items and lineIndex == self.cursorLine + 1) or 
+			(self.cursorLine == #self.items and lineIndex == 1)) then
+			count = count + 1;
+			if(count > 1) then
+				break;
+			end
+		end
+
+		sPos, ePos = lineUniStr:findFirstOf(text, initPos);
+
+		initPos = lineUniStr:length() + 1;
+	end
+
+	if(lineIndex and sPos and ePos) then
+		local selStart = {line = lineIndex, pos = sPos - 1};
+		local selEnd = {line = lineIndex, pos = ePos};
+		self:setSelect(selStart, selEnd, selEnd, true);
+	end
+
+	self.parent:SearchResult(sPos ~= nil);
+end
+
+function TextControl:searchPrevious(text)
+
+end
+
 function TextControl:setSelect(selStart, selEnd, cursorPos, adjustCursor)
 	local startCursorPos, endCursorPos;
 	if(cursorPos.line == selStart.line and cursorPos.pos == selStart.pos) then
@@ -1502,7 +1551,7 @@ function TextControl:cursorToX(text)
 		if(self:GetCurrentLine()) then
 			text = self:GetCurrentLine().text;
 		else
-			text = Unistring:new();
+			text = UniString:new();
 		end
 	end
 	--local text = text or self:GetCurrentLine().text;
@@ -1689,7 +1738,8 @@ function TextControl:paintEvent(painter)
 	local clipRegion = self:ClipRegion();
 	self.from_line = math.max(1, 1 + math.floor((-(self:y() - self.parent:ViewRegionOffsetY())) / self.lineHeight)); 
 	self.to_line = math.min(self.items:size(), 1 + math.ceil((-self:y() + clipRegion:height()) / self.lineHeight));
-	if(not self:isReadOnly() and (self:isAlwaysShowCurLineBackground() or (self.cursorVisible and self:hasFocus() and not self:isReadOnly()))) then
+	
+	if(not self:isReadOnly() and (self:isAlwaysShowCurLineBackground() or (self.cursorVisible and self:hasFocus()))) then
 		-- the curor line backgroud
 		local curline_x, curline_y = 0, (self.cursorLine - 1) * self.lineHeight;
 		painter:SetPen(self:GetCurLineBackgroundColor());
@@ -1824,7 +1874,8 @@ function TextControl:paintEvent(painter)
 		end
 	end
 
-	if(self.cursorVisible and self:hasFocus() and not self:isReadOnly()) then
+	-- draw cursor even for readonly mode, since we will allow selection and copy paste
+	if(self.cursorVisible and self:hasFocus()) then
 		-- draw cursor
 		if(self.m_blinkPeriod==0 or self.m_blinkStatus) then
 			local cursor_x = self:cursorToX();

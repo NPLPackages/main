@@ -698,7 +698,9 @@ end
 function mcml.baseNode:GetAbsoluteURL(url)
 	if(not url or url=="") then return url end
 	-- it will replace %NAME% with their values before processing next. 
-	url = paraworld.TranslateURL(url);
+	if(paraworld and paraworld.TranslateURL) then
+		url = paraworld.TranslateURL(url);
+	end
 	
 	if(string_find(url, "^([%w]*)://"))then
 		-- already absolute path

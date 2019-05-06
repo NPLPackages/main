@@ -141,6 +141,58 @@ function UniString:empty()
 	return self.text == "";
 end
 
+function UniString:findFirstOf(str, initPos)
+	initPos = initPos or 1;
+	local beExist = false
+	local text = self.text;
+	local _start, _end = string.find(text, str)
+	if(not _start) then
+		return nil, nil;
+	elseif(initPos == 1) then
+		beExist = true;
+	end
+	local startPos, endPos;
+	local i, uniPos = 1, 1;
+	while true do
+		if(not beExist and uniPos >= initPos) then
+			_start, _end = string.find(text, str, i)
+			if(not _start) then
+				break;
+			else
+				beExist = true;
+			end
+		end
+        local curByte = string.byte(text, i)
+        local byteCount = 1
+        if curByte > 239 then
+            byteCount = 4  -- 4×Ö½Ú×Ö·û
+        elseif curByte > 223 then
+            byteCount = 3  -- ºº×Ö
+        elseif curByte > 128 then
+            byteCount = 2  -- Ë«×Ö½Ú×Ö·û
+        else
+            byteCount = 1  -- µ¥×Ö½Ú×Ö·û
+        end
+		if(uniPos >= initPos) then
+			if(i == _start) then
+				startPos = uniPos;
+			end
+			if((byteCount == 1 and i == _end) or i + byteCount - 1 == _end) then
+				endPos = uniPos;
+				break;
+			end
+		end
+		
+        i = i + byteCount;
+        uniPos = uniPos + 1;
+        if i > #text then
+            break;
+        end
+    end
+
+	return startPos, endPos;
+end
+
 -- index start from 1. same as string.sub() in lua
 -- return a new UniString() object.
 function UniString:sub(from, to)

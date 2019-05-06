@@ -209,12 +209,14 @@ function _guihelper.MessageBox(content,MsgBoxClick_CallBack, buttons, icon, mcml
 	end
 	
 	local width, height = 370, 250;
-	if(System and System.options and System.options.IsMobilePlatform and System.options.mc) then
-		width, height = 590, 320;
-	end
+	
 	if(type(mcmlTemplate) ~= "string") then
 		mcmlTemplate = _guihelper.defaultMsgBoxMCMLTemplate;
 	end	
+	if(not Map3DSystem or not Map3DSystem.mcml) then
+		NPL.load("(gl)script/kids/3DMapSystemApp/mcml/mcml.lua");
+		NPL.load("(gl)script/kids/3DMapSystemApp/mcml/PageCtrl.lua");
+	end
 	templates[mcmlTemplate] = templates[mcmlTemplate] or Map3DSystem.mcml.PageCtrl:new({url=mcmlTemplate});
 	local pageCtrl = templates[mcmlTemplate];
 	_guihelper.values.content = content;
@@ -229,11 +231,7 @@ function _guihelper.MessageBox(content,MsgBoxClick_CallBack, buttons, icon, mcml
 	_guihelper.values.buttons = buttons;
 	_guihelper.values.icon = icon;
 	_guihelper.values.IsInitialized = false; -- tricky: this causes the content to be evaluated only once. 
-	if(Map3DSystem.options.IsMobilePlatform) then
-		pageCtrl:Create("IDE_HELPER_MSGBOX_PANEL", _this, "_ct",-width/2,-height/2,width, height);
-	else
-		pageCtrl:Create("IDE_HELPER_MSGBOX_PANEL", _this, "_ct",-width/2,-height/2-50,width+80, height);
-	end
+	pageCtrl:Create("IDE_HELPER_MSGBOX_PANEL", _this, "_ct",-width/2,-height/2-50,width+80, height);
 	
 	_guihelper.values.IsInitialized = true; -- tricky: this causes the content to be evaluated only once. 
 	

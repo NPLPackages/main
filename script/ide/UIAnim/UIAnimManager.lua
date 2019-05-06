@@ -5,7 +5,6 @@ Date: 2007/9/30
 Use Lib:
 -------------------------------------------------------
 NPL.load("(gl)script/ide/UIAnim/UIAnimManager.lua");
-UIAnimManager.Init();
 -------------------------------------------------------
 ]]
 local format = format;
@@ -21,6 +20,10 @@ local UIAnimationPool = {};
 local UI_timer;
 -- start the animation framework and start the timer
 function UIAnimManager.Init()
+	if(UIAnimManager.inited) then
+		return
+	end
+	UIAnimManager.inited = true;
 	NPL.load("(gl)script/ide/timer.lua");
 	UI_timer = UI_timer or commonlib.Timer:new({callbackFunc = UIAnimManager.DoAnimation});
 	-- call every frame move
@@ -86,6 +89,8 @@ function UIAnimManager.PlayUIAnimationSequence(obj, fileName, ID, bLooping)
 		LOG.std(nil, "warn", "UIAnimManager",  "warning: %s sub animation sequence not found in %s: ", tostring(ID), fileName);
 		return;
 	end
+
+	UIAnimManager.Init();
 
 	local animationID = anim_seq.AnimationID;
 	local seq = anim_seq.Seq;
@@ -584,6 +589,7 @@ end
 -- NOTE: one can call this funciton multiple times to append animation block to the previous ones
 function UIAnimManager.PlayDirectUIAnimation(block)
 	if(block.PathString ~= nil) then
+		UIAnimManager.Init()
 		local anim_queue = UIDirectAnimationPool[block.PathString];
 		if(not anim_queue) then
 			anim_queue = {};
@@ -770,6 +776,7 @@ function UIAnimManager.PlayCustomAnimation(time, callbackFunc, id, period)
 			id = next_anim_id;
 		end
 		New_CustomAnimationPool[id] = {durationTime = time, callbackFunc = callbackFunc, period = period};
+		UIAnimManager.Init()
 	end
 end
 

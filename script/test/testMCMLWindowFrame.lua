@@ -6,11 +6,11 @@ Date: 2016/11/25
 use the lib:
 ------------------------------------------------------------
 NPL.load("(gl)script/test/testMCMLWindowFrame.lua");
-local TEST = commonlib.gettable("TEST");
+local TEST = commonlib.gettable("test.mcmlWindowFrame");
 TEST.show();
 ------------------------------------------------------------
 ]]
-local TEST = commonlib.gettable("TEST");
+local TEST = commonlib.gettable("test.mcmlWindowFrame");
 
 function TEST.show()
 	System.App.Commands.Call("File.MCMLWindowFrame", {
@@ -18,7 +18,7 @@ function TEST.show()
 			name = "test", 
 			DestroyOnClose = true,
 			style = CommonCtrl.WindowFrame.ContainerStyle,
-			allowDrag = false,
+			allowDrag = true,
 			isShowTitleBar = false,
 			bShow = true,
 			zorder = 1000,
@@ -49,4 +49,22 @@ function TEST.testReposition()
 end
 
 
-
+function TEST.DraggingWindow()
+	System.App.Commands.Call("File.MCMLWindowFrame", {
+			url = "script/test/testMCMLWindowFrame.html",
+			name = "test", 
+			DestroyOnClose = true,
+			style = CommonCtrl.WindowFrame.ContainerStyle,
+			allowDrag = true,
+			isShowTitleBar = false,
+			bShow = true,
+			click_through = false, 
+			directPosition = true,
+			cancelShowAnimation = true,
+			align = "_ct",
+			x = 0,
+			y = 0,
+			width = 500,
+			height = 100,
+		});
+end

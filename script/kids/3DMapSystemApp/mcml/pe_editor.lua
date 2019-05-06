@@ -411,6 +411,11 @@ function pe_editor.create(rootName, mcmlNode, bindingContext, _parent, left, top
 		_parent:SetScript("ondragend",  function(uiobj)
 			Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, onDragEnd_callback, btnName, mcmlNode, uiobj)
 		end)
+
+		local onDragEnd_callback = mcmlNode:GetAttributeWithCode("ondragmove");
+		_parent:SetScript("ondragmove",  function(uiobj)
+			Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, onDragEnd_callback, btnName, mcmlNode, uiobj)
+		end)
 	end
 end
 
@@ -1305,6 +1310,8 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 	if(rows>1 or mcmlNode.name=="textarea") then
 		-- multiline editbox
 		NPL.load("(gl)script/ide/MultiLineEditbox.lua");
+		local bReadOnly = mcmlNode:GetAttributeWithCode("ReadOnly", nil, true)
+		bReadOnly = (bReadOnly== true or bReadOnly=="true");
 		local ctl = CommonCtrl.MultiLineEditbox:new{
 			name = instName,
 			alignment = "_lt",
@@ -1314,7 +1321,7 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 			parent = _parent,
 			DefaultNodeHeight = lineheight,
 			fontsize = mcmlNode:GetNumber("fontsize"),
-			ReadOnly = mcmlNode:GetBool("ReadOnly"),
+			ReadOnly = bReadOnly,
 			ShowLineNumber = mcmlNode:GetBool("ShowLineNumber"),
 			SingleLineEdit = mcmlNode:GetBool("SingleLineEdit"),
 			VerticalScrollBarStep = mcmlNode:GetNumber("VerticalScrollBarStep"),

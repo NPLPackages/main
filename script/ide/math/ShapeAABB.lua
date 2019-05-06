@@ -405,3 +405,31 @@ function ShapeAABB:CalculateZOffset(aabb, dz, epsilon)
         return dz;
     end
 end
+
+-- calculate the smallest offset in all three axis
+-- @return dx, dy, dz, bCollided
+function ShapeAABB:CalculateOffset(aabb, epsilon)
+	local self_minX, self_minY, self_minZ = self:GetMinValues();
+	local self_maxX, self_maxY, self_maxZ = self:GetMaxValues();
+	local aabb_minX, aabb_minY, aabb_minZ = aabb:GetMinValues();
+	local aabb_maxX, aabb_maxY, aabb_maxZ = aabb:GetMaxValues();
+	
+	epsilon = epsilon or 0.0000001;	
+    if (aabb_maxY > self_minY+epsilon and aabb_minY < self_maxY-epsilon) then
+		if (aabb_maxZ > self_minZ+epsilon and aabb_minZ < self_maxZ-epsilon) then
+			if (aabb_maxX > self_minX+epsilon and aabb_minX < self_maxX-epsilon) then
+				local dx1 = self_minX - aabb_maxX;
+				local dx2 = self_maxX - aabb_minX;
+				local dx = math_abs(dx1) < math_abs(dx2) and dx1 or dx2
+				local dy1 = self_minY - aabb_maxY;
+				local dy2 = self_maxY - aabb_minY;
+				local dy = math_abs(dy1) < math_abs(dy2) and dy1 or dy2
+				local dz1 = self_minZ - aabb_maxZ;
+				local dz2 = self_maxZ - aabb_minZ;
+				local dz = math_abs(dz1) < math_abs(dz2) and dz1 or dz2
+				return dx, dy, dz, true;
+			end
+		end
+	end
+	return 0,0,0, false;
+end

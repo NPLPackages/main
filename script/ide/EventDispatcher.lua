@@ -163,7 +163,6 @@ function EventSystem:HasEventListener(type, func, funcHolder)
 		else
 			local sinks = self.event_pools[type];
 			if(sinks) then
-				local index, handler;
 				for index, handler in ipairs(sinks) do
 					if(handler.func == func and handler.funcHolder == funcHolder ) then
 						return true
@@ -172,6 +171,19 @@ function EventSystem:HasEventListener(type, func, funcHolder)
 			end
 		end
 	end
+end
+
+function EventSystem:GetEventListenerCount(type)
+	local count = 0;
+	if(type)then 
+		if(self.event_pools[type])then 
+			local sinks = self.event_pools[type];
+			if(sinks) then
+				count = #sinks;
+			end
+		end
+	end
+	return count;
 end
 
 -- dispatch the event. 

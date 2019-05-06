@@ -473,11 +473,11 @@ function AnimBlock:InterpolateLinearTable(range, fromT, toT, isAngleData)
 				else
 					thisT[name] = self:InterpolateLinearAngle(range, value, toT[name] or value);
 				end
-			elseif(dataType == "string") then
-				thisT[name] = value;
 			elseif(dataType == "table") then
 				local isAngleData = name:match("^rot")~=nil;
 				thisT[name] = self:InterpolateLinearTable(range, value, toT[name] or value, isAngleData)
+			else
+				thisT[name] = value;
 			end
 		end
 
@@ -789,7 +789,7 @@ function AnimBlock:RemoveKeysInTimeRange(fromTime, toTime)
 		local to_index = self:GetNextKeyIndex(1, toTime) or 1;
 		time = self.times[index];
 		if(not time) then
-			
+			-- TODO: not implemented yet
 		end
 	end
 end
@@ -1008,4 +1008,46 @@ function AnimBlock:BuildBasicAnimTable()
 	
 	NPL.load("(gl)script/ide/commonlib.lua");
 	local NewTable = commonlib.LoadTableFromFile("script/UIAnimation/Test_UIAnimFile.lua.table");
+end
+
+-- paste all key frames between [fromTime, toTime] to time
+function AnimBlock:PasteKeyFramesInRange(pasteAtTime, fromTime, toTime)
+	local from_index = self:GetNextKeyIndex(1, fromTime) or 1;
+	local time = self.times[from_index];
+	if(time and fromTime > time) then
+		from_index = from_index + 1;
+		time = self.times[from_index];
+	end
+	if(time and fromTime<=time and time<=toTime) then
+		local to_index = self:GetNextKeyIndex(1, toTime) or 1;
+		time = self.times[to_index];
+		if(time) then
+			local times = {}
+			local data = {}
+			for i = from_index, to_index do
+				times[#times+1] = self.times[i]
+				data[#data+1] = commonlib.clone(self.data[i])
+			end
+			
+			local pasteAt_index = self:GetNextKeyIndex(1, pasteAtTime) or 1;
+			time = self.times[pasteAt_index];
+			if(time < pasteAtTime) then
+				pasteAt_index = pasteAt_index + 1;
+			end
+			local pasteEndTime = pasteAtTime + toTime - fromTime;
+			local offsetTime = pasteAtTime - fromTime;
+			for i = 1, #times do
+				time = self.times[pasteAt_index];	
+				if(not time or (time<=pasteEndTime)) then
+					self.times[pasteAt_index] = times[i] + offsetTime;
+					self.data[pasteAt_index] = data[i]
+				else
+					commonlib.insertArrayItem(self.times, pasteAt_index, times[i] + offsetTime);
+					commonlib.insertArrayItem(self.data, pasteAt_index, data[i]);
+				end
+				pasteAt_index = pasteAt_index + 1;
+			end
+			self:SetRangeByIndex(1, 1, #(self.times));	
+		end
+	end
 end

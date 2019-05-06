@@ -1180,6 +1180,7 @@
     <None Include="script\ide\System\Windows\Controls\PopupMenu.lua" />
     <None Include="script\ide\System\Windows\Controls\Primitives\ScrollAreaBase.lua" />
     <None Include="script\ide\System\Windows\Controls\Primitives\SliderBase.lua" />
+    <None Include="script\ide\System\Windows\Controls\SearchBox.lua" />
     <None Include="script\ide\System\Windows\Controls\ScrollAreaForPage.lua" />
     <None Include="script\ide\System\Windows\mcml\DocumentFragment.lua" />
     <None Include="script\ide\System\Windows\mcml\dom\Document.lua" />

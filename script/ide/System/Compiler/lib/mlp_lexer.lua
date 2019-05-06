@@ -24,7 +24,7 @@ local util = commonlib.gettable("System.Compiler.lib.util")
 local mlp_lexer = lexer:clone()
 
 local keywords = {
-    "and", "break", "do", "else", "elseif",
+    "and", "break", "do", "else", "elseif", "goto",
     "end", "false", "for", "function", "if",
     "in", "local", "nil", "not", "or", "repeat",
     "return", "then", "true", "until", "while",

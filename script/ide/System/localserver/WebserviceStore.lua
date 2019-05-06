@@ -109,7 +109,7 @@ function WebserviceStore:CallWebserviceEx(Cache_policy, url, msg, REST_policy, c
 				end
 			end
 			if(not Cache_policy:IsExpired(entry.payload.creation_date)) then
-				commonlib.log("Unexpired local version is used for %s\n", requestUrl)
+				LOG.std(nil, "info", "URLResourceStore", "Unexpired local version is used for %s", requestUrl);
 				return true;
 			end
 		end

@@ -154,11 +154,16 @@ function commonlib.serialize_in_length(o, nMaxLength)
 	elseif obj_type == "table" then
 		local str = "{"
 		nMaxLength = nMaxLength - 3;
+		local nIndex = 1;
+		
 		for k,v in pairs(o) do
 			local valueStr
 			if(type(k) == "string" and k:match("^%a[%w_]*$")) then
 				-- identifier without quotation marks.
 				valueStr = k.."=";
+			elseif(nIndex == k) then
+				valueStr = "";
+				nIndex = nIndex + 1;
 			else
 				valueStr = ("[")..commonlib.serialize_in_length(k, nMaxLength).."]=";
 			end
@@ -232,7 +237,6 @@ local function serialize_compact2(o)
 		end
 	elseif obj_type == "table" then
 		local str = "{"
-		local k,v;
 		local nIndex = 1;
 		for k,v in pairs(o) do
 			if(type(k) == "string") then

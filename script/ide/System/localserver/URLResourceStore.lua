@@ -92,7 +92,7 @@ function URLResourceStore:GetURL(Cache_policy, url, callbackFunc, callbackContex
 				end
 			end	
 			if(not bIsExpired) then
-				commonlib.log("Unexpired local version is used for %s\n", url)
+				LOG.std(nil, "info", "URLResourceStore", "Unexpired local version is used for %s", url);
 				return true;
 			end
 		end

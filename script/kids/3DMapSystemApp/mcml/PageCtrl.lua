@@ -121,7 +121,9 @@ function PageCtrl:Init(url, cache_policy, bRefresh)
 		PageCtrl.OnPageDownloaded_CallBack(url, nil, self)
 		return
 	end
-	url = paraworld.TranslateURL(url);
+	if(paraworld and paraworld.TranslateURL) then
+		url = paraworld.TranslateURL(url);
+	end
 	self.url = url;
 	-- downloading
 	self.status = 0; 

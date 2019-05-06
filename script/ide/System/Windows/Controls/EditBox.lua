@@ -49,11 +49,12 @@ EditBox:Property({"EmptyText", nil, "GetEmptyText", "SetEmptyText", auto=true});
 EditBox:Signal("resetInputContext");
 EditBox:Signal("selectionChanged");
 EditBox:Signal("cursorPositionChanged", function(oldPos, newPos) end);
-EditBox:Signal("textChanged");
+EditBox:Signal("textChanged", function(text) end);
 EditBox:Signal("textEdited");
 EditBox:Signal("accepted");
 EditBox:Signal("editingFinished");
 EditBox:Signal("updateNeeded");
+EditBox:Signal("escape");
 
 -- private
 EditBox.m_modifiedState = 0;
@@ -902,6 +903,8 @@ function EditBox:keyPressEvent(event)
 			self:accepted(); -- emit
 			self:editingFinished(); -- emit
 		end
+	elseif(keyname == "DIK_ESCAPE") then
+		self:escape();
 	elseif(keyname == "DIK_BACKSPACE") then
 		if (not self:isReadOnly()) then
 			if(event.ctrl_pressed) then
@@ -986,7 +989,9 @@ function EditBox:keyPressEvent(event)
             self:del();
 		end
 	else
-		unknown = true;
+		if(event:IsFunctionKey() or event.ctrl_pressed) then
+			unknown = true;
+		end
 	end
 
 	if (unknown) then

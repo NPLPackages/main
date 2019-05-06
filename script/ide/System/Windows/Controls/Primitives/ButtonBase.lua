@@ -51,11 +51,7 @@ end
 
 -- virtual: 
 function ButtonBase:mousePressEvent(e)
-	if (e:button() ~= "left") then
-        e:ignore();
-        return;
-    end
-    if (self:hitButton(e:pos())) then
+	if (self:hitButton(e:pos())) then
         self:setDown(true);
         self.isPressed = true;
         self:repaint(); 
@@ -82,7 +78,7 @@ end
 
 -- virtual: 
 function ButtonBase:mouseMoveEvent(e)
-	if (not (e:button() == "left") or not self.isPressed) then
+	if (not self.isPressed) then
         e:ignore();
         return;
     end
@@ -103,11 +99,6 @@ end
 -- virtual: 
 function ButtonBase:mouseReleaseEvent(e)
 	self.isPressed = false;
-
-    if (e:button() ~= "left") then
-        e:ignore();
-        return;
-    end
 
     if (not self.down) then
         self:refresh();

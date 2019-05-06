@@ -94,7 +94,7 @@ function Encoding.EncodeHTMLInnerText(s)
 end
 
 function Encoding.HasXMLEscapeChar(s)
-	if(string.match(s, "[&'<>\"\n]")) then
+	if(s and string.match(s, "[&'<>\"\n]")) then
 		return true;
 	end
 end

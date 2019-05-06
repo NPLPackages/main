@@ -8,16 +8,47 @@
     <pe:mcml>
         <script refresh="false" type="text/npl" src="testMCMLWindowFrame.lua">
             <![CDATA[
-                local TEST = commonlib.gettable("TEST");
+                local TEST = commonlib.gettable("test.mcmlWindowFrame");
                 TEST.init();
+
+                function close()
+                    Page:CloseWindow();
+                end
 
                 function onclick()
                     _guihelper.MessageBox("clicked!")
                 end
+    
+                function testShowHide()
+                    Page:GetWindow():GetWindowFrame():SetVisible(false);
+
+                    commonlib.TimerManager.SetTimeout(function()  
+                        Page:GetWindow():GetWindowFrame():SetVisible(true);    
+                    end, 1000)
+                end
+                function ondragmove()
+                    local x, y, width, height = Page:FindControl("dragContainer"):GetAbsPosition();
+                    Page:SetValue("x", tostring(x))
+                    Page:SetValue("y", tostring(y))
+
+                    local wnd = Page:GetWindow():GetWindowFrame():GetWindowUIObject();
+                    if(wnd) then
+                        wnd:Reposition("_lt", x, y, width, height)
+                    end
+                end
+
+                function ondragend()
+                    -- onclick()
+                end
             ]]>
         </script>
         <input type="button" value="Reposition" onclick="TEST.testReposition"/>
-        <pe:container style="width:500px;height:100px;" onclick="onclick">
+        <input type="button" value="ShowHide" onclick="testShowHide"/>
+        <input type="button" value="close" onclick="close"/>
+        
+        <pe:container name="dragContainer" style="width:500px;height:100px;" candrag="true" onclick="onclick" ondragmove="ondragmove" ondragend="ondragend">
+            this is draggable and clickable
+            x: <pe:label name="x" style="width:30px;"></pe:label> y: <pe:label name="y" style="width:30px;"></pe:label>
         </pe:container>
     </pe:mcml>
 </body>

@@ -464,6 +464,7 @@ function PluginLoader:LoadPluginImp(modname, main_filename)
 	local module_class = self:FindPluginClass(module_classname);
 	if(module_class and self:GetPluginManager():IsModLoaded(module_class)) then
 		LOG.std(nil, "warn", "Modules", "mod: %s ignored, because another module_class %s already exist", modname, module_classname); 
+		return true;
 	else
 		NPL.load(main_filename);
 		module_class = self:FindPluginClass(module_classname);

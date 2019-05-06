@@ -162,8 +162,8 @@ function test_Windows:TestMCMLPage(url)
 	local Window = commonlib.gettable("System.Windows.Window")
 	local window = Window:new();
 	window:Show({
-		url=url or "script/ide/System/test/test_mcml_page.html", 
-		alignment="_lt", left = 0, top = 0, width = 800, height = 400,
+		url=url or "script/test/MCMLv2/test_layout.html", 
+		alignment="_lt", left = 0, top = 0, width = 400, height = 400,
 	});
 	-- keep a reference for refresh
 	--test.window = window;

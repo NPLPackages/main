@@ -20,6 +20,9 @@ for i=1, 10 do
 	System.os.runAsync("echo hello", function(err, result)   echo(result)  end);
 end
 echo("waiting run async reply ...")
+-- get environment variable with return values
+local path = System.os.run("echo %BOOST_ROOT%");
+echo(path)
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/commonlib.lua");

@@ -117,10 +117,6 @@ function Map3DSystem.reset(bPerserveUI)
 	ParaScene.Reset();
 	if(not bPerserveUI) then
 		ParaUI.ResetUI();
-		
-		if(UIAnimManager and UIAnimManager.Init) then
-			UIAnimManager.Init();
-		end	
 	end	
 	ParaAsset.GarbageCollect();
 	ParaGlobal.SetGameStatus("disable");

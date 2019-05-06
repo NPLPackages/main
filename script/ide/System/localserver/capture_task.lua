@@ -209,6 +209,7 @@ end
 -- @param request_id: request id 
 -- @param index: url index in the request
 function System.localserver.ProcessFile_result(request_id, index)
+	local msg = msg;
 	--log(request_id..", "..index..commonlib.serialize(msg))
 	
 	local task = TaskManager:GetTask(request_id);
@@ -265,12 +266,9 @@ function System.localserver.ProcessFile_result(request_id, index)
 			}),
 		};
 		
-		if(msg.ContentType and string.find(msg.ContentType, "text/html")) then
-			-- this is an HTTP web page. we will save the headers as well. 
-			new_item.payload.headers = msg.Headers;
-			-- new_item.payload.status_code = msg.StatusCode;
-			new_item.payload.status_line = msg.StatusDescription;
-		else
+		if(msg.rcode == 200 and msg.header) then
+			new_item.payload.headers = msg.header;
+			new_item.payload.status_code = msg.rcode;
 		end
 		
 		success = task.store_:PutItem(new_item);
@@ -388,7 +386,7 @@ function CaptureTask:Run(index)
 				
 				-- we will first download to the temp folder.It may resume from last download
 				-- get rid of query string ? and separator section #
-				local file_url = string.gsub(url, "[%?#].*$", "");
+				local file_url = url; -- string.gsub(url, "[%?#].*$", "");
 				ParaIO.CreateDirectory("temp/tempdownloads/");
 				local filename = string.format("temp/tempdownloads/%d-%d.dat", self.capture_request_.id, i);
 				-- delete dest file to prevent multi-section download
