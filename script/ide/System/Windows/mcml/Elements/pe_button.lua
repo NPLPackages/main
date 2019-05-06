@@ -35,11 +35,11 @@ function pe_button:CreateControl()
 	_this:SetPolygonStyle(polygonStyle);
 	_this:SetDirection(direction);
 
-	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
-
 	self.buttonName = self:GetAttributeWithCode("name",nil,true); -- touch name
 
 	_this:Connect("clicked", self, self.OnClick, "UniqueConnection")
+
+	pe_button._super.CreateControl(self);
 end
 
 function pe_button:SetValue(value)

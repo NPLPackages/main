@@ -31,7 +31,6 @@ function pe_radio:CreateControl()
 	_this:SetPolygonStyle(polygonStyle or "radio");
 	_this:SetDirection(direction);
 
-	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
 	_this:setCheckable(self:GetBool("enabled",true));
 
 	local checked = self:GetAttributeWithCode("checked", nil, true);
@@ -43,6 +42,8 @@ function pe_radio:CreateControl()
 	self.groupName = self:GetAttribute("name") or "_defaultRadioGroup";
 	self.buttonName = self:GetAttributeWithCode("name",nil,true);
 	_this:Connect("clicked", self, self.OnClick, "UniqueConnection");
+
+	pe_radio._super.CreateControl(self);
 end
 
 function pe_radio:setChecked(checked)

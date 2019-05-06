@@ -59,6 +59,8 @@ function pe_treenode:CreateControl()
 
 	self.buttonName = self:GetAttributeWithCode("name",nil,true);
 	--_this:Connect("clicked", self, self.OnClick, "UniqueConnection");
+
+	pe_treenode._super.CreateControl(self);
 end
 
 function addIndentionForNode(node, indention)

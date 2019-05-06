@@ -19,12 +19,6 @@ pe_img:Property({"class_name", "pe:img"});
 function pe_img:ctor()
 end
 
-function pe_img:CreateControl()
-	local parentElem = self:GetParentControl();
-	local _this = Canvas:new():init(parentElem);
-	self:SetControl(_this);
-end
-
 function pe_img:ParseMappedAttribute(attrName, value)
 	if(attrName == "src" or attrName == "width" or attrName == "height") then
 		local propertyKey, propertyValue;
@@ -44,7 +38,7 @@ function pe_img:CreateControl()
 	local _this = Canvas:new():init(parentElem);
 	self:SetControl(_this);
 
-	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
+	pe_img._super.CreateControl(self);
 end
 
 function pe_img:CreateLayoutObject(arena, style)

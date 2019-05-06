@@ -36,6 +36,8 @@ function pe_iframe:CreateControl()
 	local parentElem = self:GetParentControl();
 	local _this = Rectangle:new():init(parentElem);
 	self:SetControl(_this);
+
+	pe_iframe._super.CreateControl(self);
 end
 
 function pe_iframe:SetControl(control)

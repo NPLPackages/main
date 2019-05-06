@@ -25,4 +25,6 @@ function pe_container:CreateControl()
 	local parentElem = self:GetParentControl();
 	local _this = Canvas:new():init(parentElem);
 	self:SetControl(_this);
+
+	pe_container._super.CreateControl(self);
 end

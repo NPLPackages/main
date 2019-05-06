@@ -3396,3 +3396,10 @@ end
 function PageElement:IsFrameOwnerElement() 
 	return false; 
 end
+
+function PageElement:CreateControl()
+	local _this = self:GetControl();
+	if(_this) then
+		_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
+	end
+end

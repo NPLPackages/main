@@ -234,4 +234,6 @@ function Document:CreateControl()
 	local parentElem = self:GetParentControl();
 	local _this = Rectangle:new():init(parentElem);
 	self:SetControl(_this);
+
+	Document._super.CreateControl(self);
 end

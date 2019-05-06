@@ -42,6 +42,8 @@ function pe_gridview:CreateControl()
 	_this:SetVerticalScrollBarStep(self:GetNumber("VerticalScrollBarStep"));
 	_this:SetVerticalScrollBarPageSize(self:GetNumber("VerticalScrollBarPageSize"));
 	_this:SetMouseOverBG(self:GetString("MouseOverBG"));
+
+	pe_gridview._super.CreateControl(self);
 end
 
 function pe_gridview:LoadComponent(parentElem, parentLayout, styleItem)

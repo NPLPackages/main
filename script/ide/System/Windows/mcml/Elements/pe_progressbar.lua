@@ -21,7 +21,6 @@ function pe_progressbar:CreateControl()
 	local _this = ProgressBar:new():init(parentElem);
 	self:SetControl(_this);
 
-	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
 	_this:SetMin(self.min);
 	_this:SetMax(self.max);
 	_this:SetValue(tonumber(self:GetAttributeWithCode("Value", 0, true)));
@@ -34,6 +33,8 @@ function pe_progressbar:CreateControl()
 	--local buttonName = self:GetAttributeWithCode("name"); -- touch name
 
 	_this:Connect("valueChanged", self, self.OnStep, "UniqueConnection")
+
+	pe_progressbar._super.CreateControl(self);
 end
 
 function pe_progressbar:OnLoadComponentBeforeChild(parentElem, parentLayout, css)

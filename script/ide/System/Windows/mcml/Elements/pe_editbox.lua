@@ -31,7 +31,6 @@ function pe_editbox:CreateControl()
 
 	_this:SetText(self:GetAttributeWithCode("value", nil, true));
 	_this:SetEmptyText(self:GetAttributeWithCode("EmptyText", nil, true));
-	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
 
 	local beFocus = self:GetBool("autofocus");
 	if(beFocus) then
@@ -39,6 +38,8 @@ function pe_editbox:CreateControl()
 	end
 
 	_this:Connect("textChanged", self, self.OnTextChanged)
+
+	pe_editbox._super.CreateControl(self);
 end
 
 

@@ -64,6 +64,7 @@ function pe_treeview:CreateControl()
 	_this:SetVerticalScrollBarPageSize(self:GetNumber("VerticalScrollBarPageSize"));
 	_this:SetMouseOverBG(self:GetString("MouseOverBG"));
 
+	pe_treeview._super.CreateControl(self);
 end
 
 function pe_treeview:OnLoadComponentBeforeChild(parentElem, parentLayout, css)

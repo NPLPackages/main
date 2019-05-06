@@ -21,7 +21,6 @@ function pe_sliderbar:CreateControl()
 	local _this = SliderBar:new():init(parentElem);
 	self:SetControl(_this);
 
-	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
 	_this:SetMin(self:GetAttributeWithCode("min", 1, true));
 	_this:SetMax(self:GetAttributeWithCode("max", 100, true));
 	_this:SetValue(self:GetAttributeWithCode("value", 0, true));
@@ -38,6 +37,8 @@ function pe_sliderbar:CreateControl()
 	--local buttonName = self:GetAttributeWithCode("name"); -- touch name
 
 	_this:Connect("valueChanged", self, self.OnChange, "UniqueConnection")
+
+	pe_sliderbar._super.CreateControl(self);
 end
 
 function pe_sliderbar:SetValue(value)

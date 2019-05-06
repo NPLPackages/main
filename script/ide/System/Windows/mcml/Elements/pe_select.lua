@@ -77,9 +77,9 @@ function pe_select:CreateControl()
 
 	self:DataBind();
 
-	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
-
 	_this:Connect("onselect", self, self.OnSelect, "UniqueConnection")
+
+	pe_select._super.CreateControl(self);
 end
 
 function pe_select:OnLoadComponentBeforeChild(parentElem, parentLayout, css)

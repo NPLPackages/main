@@ -30,7 +30,6 @@ function pe_checkbox:CreateControl()
 	_this:SetPolygonStyle(polygonStyle or "check");
 	_this:SetDirection(direction);
 
-	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
 	_this:setCheckable(self:GetBool("enabled",true));
 
 	local checked = self:GetAttributeWithCode("checked", nil, true);
@@ -41,6 +40,8 @@ function pe_checkbox:CreateControl()
 
 	self.buttonName = self:GetAttributeWithCode("name",nil,true);
 	_this:Connect("clicked", self, self.OnClick, "UniqueConnection");
+
+	pe_checkbox._super.CreateControl(self);
 end
 
 function pe_checkbox:setChecked(checked)

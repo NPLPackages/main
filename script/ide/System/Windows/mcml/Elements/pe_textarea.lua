@@ -50,6 +50,8 @@ function pe_textarea:CreateControl()
 	end
 
 	_this:setReadOnly(self:GetBool("ReadOnly",false));
+
+	pe_textarea._super.CreateControl(self);
 end
 
 function pe_textarea:OnAfterChildLayout(layout, left, top, right, bottom)
