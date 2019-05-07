@@ -39,6 +39,14 @@ function os.GetPlatform()
 	return os.platform;
 end
 
+-- return true if it is 64 bits system. 
+function os.Is64BitsSystem()
+	if(os.Is64BitsSystem_ == nil) then
+		os.Is64BitsSystem_ = ParaEngine.GetAttributeObject():GetField("Is64BitsSystem", false);
+	end
+	return os.Is64BitsSystem_;
+end
+
 -- get command line argument
 -- @param name: argument name
 -- @param default_value: default value

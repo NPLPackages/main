@@ -87,7 +87,6 @@ Inside Columns node, use embedded script block with Eval() or XPath() method to 
 | VerticalScrollBarWidth | |
 | RememberLastPage | true to remember last opened page during page refresh |
 | AllowPaging | true to allow paging |
-| ClickThrough | whether mouse event will leak to 3d scene. default to false  |
 | PagerTemplate.AutoHidePager | boolean. |
 | FitHeight | if true, the height of the control will best contain the data nodes. css.min-height can also be specified. |
 
