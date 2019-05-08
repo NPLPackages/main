@@ -860,7 +860,7 @@ function PageElement:ParseMappedAttribute(attrName, value)
         self:ClassAttributeChanged(value);
 		self:SetNeedsStyleRecalc();
     --else if (attr->name() == styleAttr) {
-	elseif(attrName == "style") then
+	elseif(attrName == "style" and type(value) == "string") then
         self:StyleAttributeChanged(value);
 		self:SetNeedsStyleRecalc();
 	elseif(attrName == "display") then
