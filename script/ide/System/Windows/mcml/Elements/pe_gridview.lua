@@ -26,24 +26,27 @@ function pe_gridview:ctor()
 	self.bottomPager= nil;
 end
 
+function pe_gridview:ControlClass()
+	return GridView;
+end
+
 function pe_gridview:CreateControl()
-	local parentElem = self:GetParentControl();
-	local _this = GridView:new():init(parentElem);
-	self:SetControl(_this);
-
-	_this:SetDefaultNodeHeight(self.DefaultNodeHeight or 24);
-	_this:SetDefaultIconSize(self:GetNumber("DefaultIconSize"));
-	_this:SetShowIcon(self:GetBool("ShowIcon"));
-	_this:SetItemOpenBG(self.ItemOpenBG);
-	_this:SetItemCloseBG(self.ItemCloseBG); 
-	_this:SetItemToggleSize(self.ItemToggleSize);
-	_this:SetDefaultIndentation(self.DefaultIndentation);
-	_this:SetVerticalScrollBarOffsetX(self:GetNumber("VerticalScrollBarOffsetX"));
-	_this:SetVerticalScrollBarStep(self:GetNumber("VerticalScrollBarStep"));
-	_this:SetVerticalScrollBarPageSize(self:GetNumber("VerticalScrollBarPageSize"));
-	_this:SetMouseOverBG(self:GetString("MouseOverBG"));
-
 	pe_gridview._super.CreateControl(self);
+
+	local _this = self:GetControl();
+	if(_this) then
+		_this:SetDefaultNodeHeight(self.DefaultNodeHeight or 24);
+		_this:SetDefaultIconSize(self:GetNumber("DefaultIconSize"));
+		_this:SetShowIcon(self:GetBool("ShowIcon"));
+		_this:SetItemOpenBG(self.ItemOpenBG);
+		_this:SetItemCloseBG(self.ItemCloseBG); 
+		_this:SetItemToggleSize(self.ItemToggleSize);
+		_this:SetDefaultIndentation(self.DefaultIndentation);
+		_this:SetVerticalScrollBarOffsetX(self:GetNumber("VerticalScrollBarOffsetX"));
+		_this:SetVerticalScrollBarStep(self:GetNumber("VerticalScrollBarStep"));
+		_this:SetVerticalScrollBarPageSize(self:GetNumber("VerticalScrollBarPageSize"));
+		_this:SetMouseOverBG(self:GetString("MouseOverBG"));
+	end
 end
 
 function pe_gridview:LoadComponent(parentElem, parentLayout, styleItem)

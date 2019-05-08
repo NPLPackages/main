@@ -65,11 +65,11 @@ function LayoutObjectChildList:RemoveChildNode(owner, oldChild, fullRemove)
     -- disappears gets repainted properly.
     if (not owner:DocumentBeingDestroyed() and fullRemove and oldChild.everHadLayout) then
         oldChild:SetNeedsLayoutAndPrefWidthsRecalc();
-        if (oldChild:IsBody()) then
-            owner:View():Repaint();
-        else
-            oldChild:Repaint();
-		end
+--        if (oldChild:IsBody()) then
+--            owner:View():Repaint();
+--        else
+--            oldChild:Repaint();
+--		end
     end
 
     -- If we have a line box wrapper, delete it.

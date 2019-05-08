@@ -21,36 +21,39 @@ function pe_button:ctor()
 	self:SetTabIndex(0);
 end
 
+function pe_button:ControlClass()
+	return Button;
+end
+
 function pe_button:CreateControl()
-	local parentElem = self:GetParentControl();
-	local _this = Button:new():init(parentElem);
-	self:SetControl(_this);
-
-	local polygonStyle = self:GetAttributeWithCode("polygonStyle", nil, true);
-	local direction = self:GetAttributeWithCode("direction", nil, true);
-	local type = self:GetAttributeWithCode("type", nil, true);
-	if(type == "narrow") then
-		polygonStyle = polygonStyle or "narrow";
-	end
-	_this:SetPolygonStyle(polygonStyle);
-	_this:SetDirection(direction);
-
-	self.buttonName = self:GetAttributeWithCode("name",nil,true); -- touch name
-
-	_this:Connect("clicked", self, self.OnClick, "UniqueConnection")
-
 	pe_button._super.CreateControl(self);
+
+	local _this = self:GetControl();
+	if(_this) then
+		local polygonStyle = self:GetAttributeWithCode("polygonStyle", nil, true);
+		local direction = self:GetAttributeWithCode("direction", nil, true);
+		local type = self:GetAttributeWithCode("type", nil, true);
+		if(type == "narrow") then
+			polygonStyle = polygonStyle or "narrow";
+		end
+		_this:SetPolygonStyle(polygonStyle);
+		_this:SetDirection(direction);
+
+		self.buttonName = self:GetAttributeWithCode("name",nil,true); -- touch name
+		_this:Connect("clicked", self, self.OnClick, "UniqueConnection")
+	end
 end
 
 function pe_button:SetValue(value)
 	self:SetAttribute("value", value);
-	if(self.control) then
-		self.control:setText(value);
+	if (self:Renderer()) then
+        self:Renderer():SetText(value);
 	end
+	self:SetNeedsStyleRecalc();
 end
 
 function pe_button:GetValue()
-	return self:GetAttribute("value");
+	return self:GetAttributeWithCode("value");
 end
 
 function pe_button:OnClick()

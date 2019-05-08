@@ -739,11 +739,12 @@ function LayoutBox:Layout()
 end
 
 function LayoutBox:ComputeLogicalWidth()
-	if(self:Node() and self:Node():HasTagName("html")) then
-		self:SetLogicalWidth(self:Document():View():Width());
-	else
-		self:ComputeLogicalWidthInRegion();
-	end
+--	if(self:Node() and self:Node():HasTagName("html")) then
+--		self:SetLogicalWidth(self:Document():View():Width());
+--	else
+--		self:ComputeLogicalWidthInRegion();
+--	end
+	self:ComputeLogicalWidthInRegion();
 end
 
 --function LayoutBox:LengthIsIntrinsicOrAuto(length)
@@ -1740,10 +1741,10 @@ function LayoutBox:ComputeLogicalHeightUsing(h)
 end
 
 function LayoutBox:ComputeLogicalHeight()
-	if(self:Node() and self:Node():HasTagName("html")) then
-		self:SetLogicalHeight(self:Document():View():Height());
-		return;
-	end
+--	if(self:Node() and self:Node():HasTagName("html")) then
+--		self:SetLogicalHeight(self:Document():View():Height());
+--		return;
+--	end
 
 
 	if (self:IsTableCell() or (self:IsInline() and not self:IsReplaced())) then

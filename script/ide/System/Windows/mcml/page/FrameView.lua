@@ -309,10 +309,15 @@ function FrameView:widgetEvent(event)
 	local type = event:GetType();
 	if(type == "sizeEvent" or type == "LayoutRequestEvent") then
 		if(type == "sizeEvent") then
+			local usedWidth, usedHeight = self:GetUsedSize();
 			local uiElement = self.uiElement;
 			self:Resize(uiElement:width(), uiElement:height());
+			if(usedWidth == 0 or usedHeight == 0 or self:Width() < usedWidth or self:Height() < usedHeight) then
+				self:Layout();
+			end
+		else
+			self:Layout();	
 		end
-		self:Layout();
 	end
 --	if(type == "sizeEvent") then
 --		if (self.activated) then
@@ -339,6 +344,11 @@ end
 
 function FrameView:GetUsedSize()
 	--TODO: fixed this function
+	local root = rootRenderer(self);
+	if(root and root:FirstChild()) then
+		local htmlRender = root:FirstChild();
+		return htmlRender:Width(), htmlRender:Height();
+	end
 	return 0, 0;
 end
 

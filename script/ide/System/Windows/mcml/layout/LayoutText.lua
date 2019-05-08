@@ -448,7 +448,7 @@ function LayoutText:ComputePreferredLogicalWidths(leadWidth, fallbackFonts, glyp
     local isSpace = false;
     local firstWord = true;
     local firstLine = true;
-    local nextBreakable = -1;
+	local nextBreakableWrapper = {["value"] = -1};
     local lastWordBoundary = 1;
 
     -- Non-zero only when kerning is enabled, in which case we measure words with their trailing
@@ -513,9 +513,7 @@ function LayoutText:ComputePreferredLogicalWidths(leadWidth, fallbackFonts, glyp
             lastWordBoundary = i + 1;
             --continue;
         else
-			local isBreakable;
-			isBreakable, nextBreakable = BreakLines.IsBreakable(breakIterator, i, nextBreakable, breakNBSP);
-			local hasBreak = breakAll or isBreakable;
+			local hasBreak = breakAll or BreakLines.IsBreakable(breakIterator, i, nextBreakableWrapper, breakNBSP);
 			local betweenWords = true;
 			local j = i;
 			while (c ~= "\n" and not isSpaceAccordingToStyle(c, self:Style()) and c ~= "\t" and string.byte(c,1) ~= softHyphen) do
@@ -525,8 +523,7 @@ function LayoutText:ComputePreferredLogicalWidths(leadWidth, fallbackFonts, glyp
 				end
 				c = txt[j];
 
-				isBreakable, nextBreakable = BreakLines.IsBreakable(breakIterator, j, nextBreakable, breakNBSP);
-				if (isBreakable) then
+				if (BreakLines.IsBreakable(breakIterator, j, nextBreakableWrapper, breakNBSP)) then
 					break;
 				end
 				if (breakAll) then
@@ -583,7 +580,7 @@ function LayoutText:ComputePreferredLogicalWidths(leadWidth, fallbackFonts, glyp
 				end
 				currMinWidth = 0;
 
-				i = i + wordLen;
+				i = i + wordLen - 1;
 			else
 				-- Nowrap can never be broken, so don't bother setting the
 				-- breakable character boolean. Pre can only be broken if we encounter a newline.

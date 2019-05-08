@@ -16,25 +16,28 @@ local mcml = commonlib.gettable("System.Windows.mcml");
 local pe_progressbar = commonlib.inherit(commonlib.gettable("System.Windows.mcml.PageElement"), commonlib.gettable("System.Windows.mcml.Elements.pe_progressbar"));
 pe_progressbar:Property({"class_name", "pe:progressbar"});
 
+function pe_progressbar:ControlClass()
+	return ProgressBar;
+end
+
 function pe_progressbar:CreateControl()
-	local parentElem = self:GetParentControl();
-	local _this = ProgressBar:new():init(parentElem);
-	self:SetControl(_this);
-
-	_this:SetMin(self.min);
-	_this:SetMax(self.max);
-	_this:SetValue(tonumber(self:GetAttributeWithCode("Value", 0, true)));
-	_this:SetDirection(if_else(self:GetBool("is_vertical",false) == true, "vertical" , "horizontal"));
-	--_this:SetSliderBackground(self:GetAttributeWithCode("blockimage", nil, true) or css["blockimage"]);
-	--_this:SetGrooveBackground(self:GetAttributeWithCode("background", nil, true) or css["background"]);
-	local step = self:GetAttributeWithCode("Step", 10, true);
-	_this:setStep(step, step * 10);
-
-	--local buttonName = self:GetAttributeWithCode("name"); -- touch name
-
-	_this:Connect("valueChanged", self, self.OnStep, "UniqueConnection")
-
 	pe_progressbar._super.CreateControl(self);
+
+	local _this = self:GetControl();
+	if(_this) then
+		_this:SetMin(self.min);
+		_this:SetMax(self.max);
+		_this:SetValue(tonumber(self:GetAttributeWithCode("Value", 0, true)));
+		_this:SetDirection(if_else(self:GetBool("is_vertical",false) == true, "vertical" , "horizontal"));
+		--_this:SetSliderBackground(self:GetAttributeWithCode("blockimage", nil, true) or css["blockimage"]);
+		--_this:SetGrooveBackground(self:GetAttributeWithCode("background", nil, true) or css["background"]);
+		local step = self:GetAttributeWithCode("Step", 10, true);
+		_this:setStep(step, step * 10);
+
+		--local buttonName = self:GetAttributeWithCode("name"); -- touch name
+
+		_this:Connect("valueChanged", self, self.OnStep, "UniqueConnection")
+	end
 end
 
 function pe_progressbar:OnLoadComponentBeforeChild(parentElem, parentLayout, css)

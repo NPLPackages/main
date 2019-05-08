@@ -37,26 +37,23 @@ function pe_textarea:ParseMappedAttribute(attrName, value)
 	end
 end
 
-function pe_textarea:CreateControl()
-	local parentElem = self:GetParentControl();
-	local _this = MultiLineEditbox:new():init(parentElem);
-	self:SetControl(_this);
-
-	_this:ShowLineNumber(self:GetBool("ShowLineNumber",false));
-	_this:SetEmptyText(self:GetAttributeWithCode("EmptyText", nil, true));
-	_this:SetLanguage(self:GetAttributeWithCode("language", nil, true));
-	if(not self:GetBool("InputMethodEnabled", true)) then
-		_this:SetInputMethodEnabled(false);
-	end
-
-	_this:setReadOnly(self:GetBool("ReadOnly",false));
-
-	pe_textarea._super.CreateControl(self);
+function pe_textarea:ControlClass()
+	return MultiLineEditbox;
 end
 
-function pe_textarea:OnAfterChildLayout(layout, left, top, right, bottom)
-	if(self.control) then
-		self.control:setGeometry(left, top, right-left, bottom-top);
+function pe_textarea:CreateControl()
+	pe_textarea._super.CreateControl(self);
+
+	local _this = self:GetControl();
+	if(_this) then
+		_this:ShowLineNumber(self:GetBool("ShowLineNumber",false));
+		_this:SetEmptyText(self:GetAttributeWithCode("EmptyText", nil, true));
+		_this:SetLanguage(self:GetAttributeWithCode("language", nil, true));
+		if(not self:GetBool("InputMethodEnabled", true)) then
+			_this:SetInputMethodEnabled(false);
+		end
+
+		_this:setReadOnly(self:GetBool("ReadOnly",false));
 	end
 end
 

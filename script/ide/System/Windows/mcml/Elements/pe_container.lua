@@ -21,10 +21,6 @@ pe_container:Property({"class_name", "pe:container"});
 function pe_container:ctor()
 end
 
-function pe_container:CreateControl()
-	local parentElem = self:GetParentControl();
-	local _this = Canvas:new():init(parentElem);
-	self:SetControl(_this);
-
-	pe_container._super.CreateControl(self);
+function pe_container:ControlClass()
+	return Canvas;
 end

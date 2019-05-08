@@ -44,10 +44,12 @@ local function nextBreakablePosition(lazyBreakIterator, pos, treatNoBreakSpaceAs
     return len;
 end
 
-function BreakLines.IsBreakable(lazyBreakIterator, pos, nextBreakable, breakNBSP)
+function BreakLines.IsBreakable(lazyBreakIterator, pos, nextBreakableWrapper, breakNBSP)
 	breakNBSP = if_else(breakNBSP == nil, false, breakNBSP);
+	local nextBreakable = nextBreakableWrapper.value;
 	if (pos > nextBreakable) then
         nextBreakable = nextBreakablePosition(lazyBreakIterator, pos, breakNBSP);
 	end
-    return pos == nextBreakable, nextBreakable;
+	nextBreakableWrapper.value = nextBreakable
+    return pos == nextBreakable;
 end

@@ -15,27 +15,18 @@ local Identicon = commonlib.gettable("System.Windows.Controls.Identicon");
 local pe_identicon = commonlib.inherit(commonlib.gettable("System.Windows.mcml.PageElement"), commonlib.gettable("System.Windows.mcml.Elements.pe_identicon"));
 pe_identicon:Property({"class_name", "pe:identicon"});
 
-function pe_identicon:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
-	css.float = css.float or true;
-	local _this = self.control;
-	if(not _this) then
-		_this = Identicon:new():init(parentElem);
-		self:SetControl(_this);
-	else
-		_this:SetParent(parentElem);
-	end
-	_this:ApplyCss(css);
-	_this:SetText(self:GetAttributeWithCode("value", nil, true));
-
-	pe_identicon._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
+function pe_identicon:ControlClass()
+	return Identicon;
 end
 
-function pe_identicon:OnAfterChildLayout(layout, left, top, right, bottom)
-	if(self.control) then
-		self.control:setGeometry(left, top, right-left, bottom-top);
+function pe_identicon:CreateControl()
+	pe_identicon._super.CreateControl(self);
+
+	local _this = self:GetControl();
+	if(_this) then
+		_this:SetText(self:GetAttributeWithCode("value", nil, true));
 	end
 end
-
 
 function pe_identicon:SetValue(value)
 	self:SetAttribute("value", value);

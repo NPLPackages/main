@@ -16,9 +16,9 @@ pe_font:Property({"class_name", "pe:font"});
 function pe_font:ctor()
 end
 
-function pe_font:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
-	css.color = self:GetAttribute("color") or css.color;
-	css.float = true;
-	return pe_font._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
-end
+--function pe_font:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
+--	css.color = self:GetAttribute("color") or css.color;
+--	css.float = true;
+--	return pe_font._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
+--end
 

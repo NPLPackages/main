@@ -62,24 +62,23 @@ function pe_select:CreateLayoutObject(arena, style)
 	return LayoutListBox:new():init(self, style);
 end
 
-function pe_select:CreateControl()
+function pe_select:ControlClass()
 	local rows = self.m_size;
-
-	local parentElem = self:GetParentControl();
-	local _this;
-
 	if(rows == 1) then
-		_this = DropdownListbox:new():init(parentElem);
-	else
-		_this = ListBox:new():init(parentElem);
+		return DropdownListbox;
 	end
-	self:SetControl(_this);
+	return ListBox;
+end
 
-	self:DataBind();
-
-	_this:Connect("onselect", self, self.OnSelect, "UniqueConnection")
-
+function pe_select:CreateControl()
 	pe_select._super.CreateControl(self);
+
+	local _this = self:GetControl();
+	if(_this) then
+		self:DataBind();
+
+		_this:Connect("onselect", self, self.OnSelect, "UniqueConnection")
+	end
 end
 
 function pe_select:OnLoadComponentBeforeChild(parentElem, parentLayout, css)

@@ -476,7 +476,7 @@ function LineBreaker:NextLineBreak(resolver, lineInfo, lineBreakIteratorInfo, la
 			end
 
 			local extraWidth = 0;
-
+			local nextBreakableWrapper = {};
 			while(current.pos <= t:TextLength()) do
 				local previousCharacterIsSpace = currentCharacterIsSpace;
 				local previousCharacterIsWS = currentCharacterIsWS;
@@ -503,9 +503,11 @@ function LineBreaker:NextLineBreak(resolver, lineInfo, lineBreakIteratorInfo, la
 
 --				local betweenWords = c == "\n" or (currWS ~= "PRE" and not atStart and isBreakable(lineBreakIteratorInfo.second, current.m_pos, current.m_nextBreakablePosition, breakNBSP)
 --                    and (self:Style:Hyphens() ~= "HyphensNone" or (current:PreviousInSameNode() ~= "softHyphen")));
-				local isBreakable;
-				isBreakable, current.nextBreakablePosition = BreakLines.IsBreakable(lineBreakIteratorInfo.second, current.pos, current.nextBreakablePosition, breakNBSP);
-				local betweenWords = c_str == "\n" or (currWS ~= WhiteSpaceEnum.PRE and not atStart and isBreakable);
+--				local isBreakable;
+--				isBreakable, current.nextBreakablePosition = BreakLines.IsBreakable(lineBreakIteratorInfo.second, current.pos, current.nextBreakablePosition, breakNBSP);
+				nextBreakableWrapper.value = current.nextBreakablePosition;
+				local betweenWords = c_str == "\n" or (currWS ~= WhiteSpaceEnum.PRE and not atStart and BreakLines.IsBreakable(lineBreakIteratorInfo.second, current.pos, nextBreakableWrapper, breakNBSP));
+				current.nextBreakablePosition = nextBreakableWrapper.value;
 				if((betweenWords or midWordBreak) and ignoringSpaces and currentCharacterIsSpace) then
 					-- Just keep ignoring these spaces.
 					--continue;

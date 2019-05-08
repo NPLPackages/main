@@ -22,12 +22,8 @@ function pe_div:ctor()
 	
 end
 
-function pe_div:CreateControl()
-	local parentElem = self:GetParentControl();
-	local _this = ScrollAreaForPage:new():init(parentElem);
-	self:SetControl(_this);
-
-	pe_div._super.CreateControl(self);
+function pe_div:ControlClass()
+	return ScrollAreaForPage;
 end
 
 function pe_div:OnClick()

@@ -21,25 +21,28 @@ function pe_editbox:ctor()
 	self:SetTabIndex(0);
 end
 
+function pe_editbox:ControlClass()
+	return EditBox;
+end
+
 function pe_editbox:CreateControl()
-	local parentElem = self:GetParentControl();
-	local _this = EditBox:new():init(parentElem);
-	self:SetControl(_this);
-
-	local type = self:GetAttributeWithCode("type", nil, true);
-	_this:setEncrypted(type == "password");
-
-	_this:SetText(self:GetAttributeWithCode("value", nil, true));
-	_this:SetEmptyText(self:GetAttributeWithCode("EmptyText", nil, true));
-
-	local beFocus = self:GetBool("autofocus");
-	if(beFocus) then
-		_this:setFocus("autofocus");
-	end
-
-	_this:Connect("textChanged", self, self.OnTextChanged)
-
 	pe_editbox._super.CreateControl(self);
+
+	local _this = self:GetControl();
+	if(_this) then
+		local type = self:GetAttributeWithCode("type", nil, true);
+		_this:setEncrypted(type == "password");
+
+		_this:SetText(self:GetAttributeWithCode("value", nil, true));
+		_this:SetEmptyText(self:GetAttributeWithCode("EmptyText", nil, true));
+
+		local beFocus = self:GetBool("autofocus");
+		if(beFocus) then
+			_this:setFocus("autofocus");
+		end
+
+		_this:Connect("textChanged", self, self.OnTextChanged)
+	end
 end
 
 

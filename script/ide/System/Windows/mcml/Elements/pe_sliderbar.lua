@@ -16,29 +16,32 @@ local SliderBar = commonlib.gettable("System.Windows.Controls.SliderBar");
 local pe_sliderbar = commonlib.inherit(commonlib.gettable("System.Windows.mcml.PageElement"), commonlib.gettable("System.Windows.mcml.Elements.pe_sliderbar"));
 pe_sliderbar:Property({"class_name", "pe:sliderbar"});
 
+function pe_sliderbar:ControlClass()
+	return SliderBar;
+end
+
 function pe_sliderbar:CreateControl()
-	local parentElem = self:GetParentControl();
-	local _this = SliderBar:new():init(parentElem);
-	self:SetControl(_this);
-
-	_this:SetMin(self:GetAttributeWithCode("min", 1, true));
-	_this:SetMax(self:GetAttributeWithCode("max", 100, true));
-	_this:SetValue(self:GetAttributeWithCode("value", 0, true));
-	local min_step = self:GetAttributeWithCode("min_step", 1, true);
-	_this:SetDirection(self:GetAttributeWithCode("direction", nil, true));
-	_this:setStep(min_step, min_step * 10);
-	_this:SetSliderBackground(self:GetAttributeWithCode("button_bg", nil, true));
-	_this:SetSliderWidth(self:GetNumber("button_width", nil));
-	_this:SetSliderHeight(self:GetNumber("button_height", nil));
-	--_this:SetGrooveBackground(self:GetAttributeWithCode("background", nil, true) or css["background"]);
-	_this:SetGrooveWidth(self:GetNumber("background_width", nil));
-	_this:SetGrooveHeight(self:GetNumber("background_height", nil));
-
-	--local buttonName = self:GetAttributeWithCode("name"); -- touch name
-
-	_this:Connect("valueChanged", self, self.OnChange, "UniqueConnection")
-
 	pe_sliderbar._super.CreateControl(self);
+
+	local _this = self:GetControl();
+	if(_this) then
+		_this:SetMin(self:GetAttributeWithCode("min", 1, true));
+		_this:SetMax(self:GetAttributeWithCode("max", 100, true));
+		_this:SetValue(self:GetAttributeWithCode("value", 0, true));
+		local min_step = self:GetAttributeWithCode("min_step", 1, true);
+		_this:SetDirection(self:GetAttributeWithCode("direction", nil, true));
+		_this:setStep(min_step, min_step * 10);
+		_this:SetSliderBackground(self:GetAttributeWithCode("button_bg", nil, true));
+		_this:SetSliderWidth(self:GetNumber("button_width", nil));
+		_this:SetSliderHeight(self:GetNumber("button_height", nil));
+		--_this:SetGrooveBackground(self:GetAttributeWithCode("background", nil, true) or css["background"]);
+		_this:SetGrooveWidth(self:GetNumber("background_width", nil));
+		_this:SetGrooveHeight(self:GetNumber("background_height", nil));
+
+		--local buttonName = self:GetAttributeWithCode("name"); -- touch name
+
+		_this:Connect("valueChanged", self, self.OnChange, "UniqueConnection")
+	end
 end
 
 function pe_sliderbar:SetValue(value)

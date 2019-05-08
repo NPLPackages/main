@@ -21,29 +21,32 @@ function pe_radio:ctor()
 	self:SetTabIndex(0);
 end
 
+function pe_radio:ControlClass()
+	return Button;
+end
+
 function pe_radio:CreateControl()
-	local parentElem = self:GetParentControl();
-	local _this = Button:new():init(parentElem);
-	self:SetControl(_this);
-
-	local polygonStyle = self:GetAttributeWithCode("polygonStyle", nil, true);
-	local direction = self:GetAttributeWithCode("direction", nil, true);
-	_this:SetPolygonStyle(polygonStyle or "radio");
-	_this:SetDirection(direction);
-
-	_this:setCheckable(self:GetBool("enabled",true));
-
-	local checked = self:GetAttributeWithCode("checked", nil, true);
-	if(checked) then
-		checked = if_else(checked == "true" or checked == "checked",true,false);
-		self:setChecked(checked);
-	end
-
-	self.groupName = self:GetAttribute("name") or "_defaultRadioGroup";
-	self.buttonName = self:GetAttributeWithCode("name",nil,true);
-	_this:Connect("clicked", self, self.OnClick, "UniqueConnection");
-
 	pe_radio._super.CreateControl(self);
+
+	local _this = self:GetControl();
+	if(_this) then
+		local polygonStyle = self:GetAttributeWithCode("polygonStyle", nil, true);
+		local direction = self:GetAttributeWithCode("direction", nil, true);
+		_this:SetPolygonStyle(polygonStyle or "radio");
+		_this:SetDirection(direction);
+
+		_this:setCheckable(self:GetBool("enabled",true));
+
+		local checked = self:GetAttributeWithCode("checked", nil, true);
+		if(checked) then
+			checked = if_else(checked == "true" or checked == "checked",true,false);
+			self:setChecked(checked);
+		end
+
+		self.groupName = self:GetAttribute("name") or "_defaultRadioGroup";
+		self.buttonName = self:GetAttributeWithCode("name",nil,true);
+		_this:Connect("clicked", self, self.OnClick, "UniqueConnection");
+	end
 end
 
 function pe_radio:setChecked(checked)

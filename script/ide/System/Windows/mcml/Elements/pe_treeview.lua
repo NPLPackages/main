@@ -44,27 +44,30 @@ pe_treeview:Property({"class_name", "pe:treeview"});
 function pe_treeview:ctor()
 end
 
+function pe_treeview:ControlClass()
+	return TreeView;
+end
+
 function pe_treeview:CreateControl()
-	local parentElem = self:GetParentControl();
-	local _this = TreeView:new():init(parentElem);
-	self:SetControl(_this);
-
-	--_this:setHorizontalScrollBarPolicy("AlwaysOff");
-
-	--container_bg = css.background or self:GetString("background"), -- change to css background first
-	_this:SetDefaultNodeHeight(self.DefaultNodeHeight);
-	_this:SetDefaultIconSize(self:GetNumber("DefaultIconSize"));
-	_this:SetShowIcon(self:GetBool("ShowIcon"));
-	_this:SetItemOpenBG(self.ItemOpenBG);
-	_this:SetItemCloseBG(self.ItemCloseBG); 
-	_this:SetItemToggleSize(self.ItemToggleSize);
-	_this:SetDefaultIndentation(self.DefaultIndentation);
-	_this:SetVerticalScrollBarOffsetX(self:GetNumber("VerticalScrollBarOffsetX"));
-	_this:SetVerticalScrollBarStep(self:GetNumber("VerticalScrollBarStep"));
-	_this:SetVerticalScrollBarPageSize(self:GetNumber("VerticalScrollBarPageSize"));
-	_this:SetMouseOverBG(self:GetString("MouseOverBG"));
-
 	pe_treeview._super.CreateControl(self);
+
+	local _this = self:GetControl();
+	if(_this) then
+		--_this:setHorizontalScrollBarPolicy("AlwaysOff");
+
+		--container_bg = css.background or self:GetString("background"), -- change to css background first
+		_this:SetDefaultNodeHeight(self.DefaultNodeHeight);
+		_this:SetDefaultIconSize(self:GetNumber("DefaultIconSize"));
+		_this:SetShowIcon(self:GetBool("ShowIcon"));
+		_this:SetItemOpenBG(self.ItemOpenBG);
+		_this:SetItemCloseBG(self.ItemCloseBG); 
+		_this:SetItemToggleSize(self.ItemToggleSize);
+		_this:SetDefaultIndentation(self.DefaultIndentation);
+		_this:SetVerticalScrollBarOffsetX(self:GetNumber("VerticalScrollBarOffsetX"));
+		_this:SetVerticalScrollBarStep(self:GetNumber("VerticalScrollBarStep"));
+		_this:SetVerticalScrollBarPageSize(self:GetNumber("VerticalScrollBarPageSize"));
+		_this:SetMouseOverBG(self:GetString("MouseOverBG"));
+	end
 end
 
 function pe_treeview:OnLoadComponentBeforeChild(parentElem, parentLayout, css)

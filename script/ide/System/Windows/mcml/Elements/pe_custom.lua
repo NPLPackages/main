@@ -28,22 +28,20 @@ pe_custom:Property({"class_name", "pe:custom"});
 function pe_custom:ctor()
 end
 
-function pe_custom:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
-	-- class src file
-	self:LoadScriptFile(self:GetAttribute("src"));
-	-- class namespace
+function pe_custom:ControlClass()
 	local classns = self:GetAttribute("classns");
 	if(classns) then
 		local class_def = commonlib.getfield(classns);
 		if(class_def and class_def.new) then
-			local _this = self.control;
-			if(not _this) then
-				_this = class_def:new():init(parentElem);
-				self:SetControl(_this);
-			end
-			_this:ApplyCss(self:GetStyle());
+			return class_def;
 		end
 	end
+	return nil;
+end
+
+function pe_custom:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
+	-- class src file
+	self:LoadScriptFile(self:GetAttribute("src"));
 
 	pe_custom._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
 end

@@ -32,12 +32,8 @@ function pe_iframe:createFromXmlNode(o)
 	return self:new(o);
 end
 
-function pe_iframe:CreateControl()
-	local parentElem = self:GetParentControl();
-	local _this = Rectangle:new():init(parentElem);
-	self:SetControl(_this);
-
-	pe_iframe._super.CreateControl(self);
+function pe_iframe:ControlClass()
+	return Rectangle;
 end
 
 function pe_iframe:SetControl(control)

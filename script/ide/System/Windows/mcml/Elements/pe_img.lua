@@ -33,12 +33,8 @@ function pe_img:ParseMappedAttribute(attrName, value)
 	end
 end
 
-function pe_img:CreateControl()
-	local parentElem = self:GetParentControl();
-	local _this = Canvas:new():init(parentElem);
-	self:SetControl(_this);
-
-	pe_img._super.CreateControl(self);
+function pe_img:ControlClass()
+	return Canvas;
 end
 
 function pe_img:CreateLayoutObject(arena, style)

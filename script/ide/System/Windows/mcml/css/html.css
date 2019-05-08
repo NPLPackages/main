@@ -1,4 +1,4 @@
-html, div, p, form {
+html, mcml, div {
     display:block;
 }
 
@@ -150,7 +150,7 @@ DataNodePlaceholder, bindingblock {
     display: block;
 }
 
-mcml, container, pager {
+p, container, pager, form {
     display:block;
 }
 
@@ -183,7 +183,7 @@ select[size="1"] {
     white-space: pre;
 }
 
-sliderbar, progressbar {
+sliderbar, progressbar, identicon, custom {
     display: inline-block;
 }
 

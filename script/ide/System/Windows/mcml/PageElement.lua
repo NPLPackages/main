@@ -3039,7 +3039,13 @@ function PageElement:RecalcStyle(change)
 
 		self:SetRenderStyle(newStyle);
 
-		change = ch;
+		if (change ~= StyleChangeTypeEnum.Force) then
+			if (self:StyleChangeType() >= StyleChangeTypeEnum.FullStyleChange) then
+                change = StyleChangeTypeEnum.Force;
+            else
+                change = ch;
+			end
+		end
 	end
 	local node = self:FirstChild();
 	while(node) do
@@ -3398,8 +3404,12 @@ function PageElement:IsFrameOwnerElement()
 end
 
 function PageElement:CreateControl()
-	local _this = self:GetControl();
-	if(_this) then
+	local class_def = self:ControlClass();
+	if(class_def) then
+		local parentElem = self:GetParentControl();
+		local _this = class_def:new():init(parentElem);
+		self:SetControl(_this);
+
 		_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
 	end
 end

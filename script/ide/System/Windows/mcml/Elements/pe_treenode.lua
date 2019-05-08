@@ -52,15 +52,14 @@ function pe_treenode:ctor()
 	
 end
 
+function pe_treenode:ControlClass()
+	return TreeNode;
+end
+
 function pe_treenode:CreateControl()
-	local parentElem = self:GetParentControl();
-	local _this = TreeNode:new():init(parentElem);
-	self:SetControl(_this);
+	pe_treenode._super.CreateControl(self);
 
 	self.buttonName = self:GetAttributeWithCode("name",nil,true);
-	--_this:Connect("clicked", self, self.OnClick, "UniqueConnection");
-
-	pe_treenode._super.CreateControl(self);
 end
 
 function addIndentionForNode(node, indention)

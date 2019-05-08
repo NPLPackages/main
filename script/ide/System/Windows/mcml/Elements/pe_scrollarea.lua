@@ -20,10 +20,6 @@ pe_scrollarea:Property({"class_name", "pe:scrollarea"});
 function pe_scrollarea:ctor()
 end
 
-function pe_scrollarea:CreateControl()
-	local parentElem = self:GetParentControl();
-	local _this = ScrollAreaForPage:new():init(parentElem);
-	self:SetControl(_this);
-
-	pe_scrollarea._super.CreateControl(self);
+function pe_scrollarea:ControlClass()
+	return ScrollAreaForPage;
 end

@@ -1316,6 +1316,7 @@ function LayoutObject:SetNeedsLayout(needsLayout, markParents)
 end
 
 function LayoutObject:SetPreferredLogicalWidthsDirty(dirty, markParents)
+	markParents = if_else(markParents == nil, true, markParents);
 	local alreadyDirty = self.preferredLogicalWidthsDirty;
     self.preferredLogicalWidthsDirty = dirty;
     if (dirty and not alreadyDirty and markParents and (self:IsText() or (self:Style():Position() ~= PositionEnum.FixedPosition and self:Style():Position() ~= PositionEnum.AbsolutePosition))) then
@@ -1370,7 +1371,12 @@ function LayoutObject:SetNode(node)
 end
 
 function LayoutObject:Document()
-	return self.node:Document();
+	if(self.node) then
+		return self.node:Document();
+	end
+	if(self:IsAnonymous()) then
+		return self:Parent():Document();
+	end
 end
 
 function LayoutObject:Frame() 
