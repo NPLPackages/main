@@ -108,6 +108,8 @@ end
 -- There is also a short cut <%="Any text or function here"%> which expands to <%document.write("Any text or function here")%>, 
 -- e.g. one can write <%="profile.xml?uid="+Eval("uid")%>
 function pe_script:LoadComponent(parentElem, parentLayout, style)
+	self:ApplyPreValues();
+
 	local bAllowRefresh = self:GetBool("refresh");
 	if(bAllowRefresh==false) then
 		-- Tricky: if IsInitialized contains code, we will always refresh code value. 
@@ -116,6 +118,7 @@ function pe_script:LoadComponent(parentElem, parentLayout, style)
 			if (flushnode) then
 				flushnode:LoadComponent(parentElem, parentLayout, style);
 			end
+			self:UnapplyPreValues();
 			return;
 		else
 			self:SetAttributeIfNotCode("IsInitialized", true);
@@ -193,6 +196,7 @@ function pe_script:LoadComponent(parentElem, parentLayout, style)
 	if (flushnode) then
 		flushnode:LoadComponent(parentElem, parentLayout, style);
 	end
+	self:UnapplyPreValues();
 end
 
 function pe_script:UpdateLayout(parentLayout)
