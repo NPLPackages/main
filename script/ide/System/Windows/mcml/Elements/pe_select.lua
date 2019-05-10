@@ -46,7 +46,7 @@ end
 
 function pe_select:ParseMappedAttribute(attrName, value)
 	if(attrName == "size") then
-		self.m_size = value or 1;
+		self.m_size = tonumber(value) or 1;
 	end
 	return pe_select._super.ParseMappedAttribute(self, attrName, value)
 end
