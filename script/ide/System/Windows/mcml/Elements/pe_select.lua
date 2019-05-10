@@ -46,12 +46,9 @@ end
 
 function pe_select:ParseMappedAttribute(attrName, value)
 	if(attrName == "size") then
-		self.m_size = self:GetNumber("size", 1);
---		local oldSize = self.m_size;
---		local size =  self:GetNumber("size", 1);
-	else
-		pe_select._super.ParseMappedAttribute(self, attrName, value)
+		self.m_size = value or 1;
 	end
+	return pe_select._super.ParseMappedAttribute(self, attrName, value)
 end
 
 --RenderObject* HTMLSelectElement::createRenderer(RenderArena* arena, RenderStyle*)

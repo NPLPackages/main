@@ -36,8 +36,6 @@ function pe_style:LoadComponent(parentElem, parentLayout, style)
 		return;
 	end
 
-	self.isLoaded = true;
-
 	-- nil or "text/mcss"
 	local scriptType = self:GetString("type") or "text/css";
 	local type = string.match(scriptType,"[^/]+/([^/]+)");

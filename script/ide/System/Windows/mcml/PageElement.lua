@@ -43,6 +43,8 @@ NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyle.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutTreeBuilder.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyleConstants.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/ImageLoader.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/dom/ElementData.lua");
+local ElementData = commonlib.gettable("System.Windows.mcml.dom.ElementData");
 local ImageLoader = commonlib.gettable("System.Windows.mcml.ImageLoader");
 local ComputedStyleConstants = commonlib.gettable("System.Windows.mcml.style.ComputedStyleConstants");
 local LayoutTreeBuilder = commonlib.gettable("System.Windows.mcml.layout.LayoutTreeBuilder");
@@ -60,7 +62,6 @@ local PageElement = commonlib.inherit(commonlib.gettable("System.Core.ToolBase")
 PageElement:Property("Name", "PageElement");
 PageElement:Property({"class_name", nil});
 PageElement:Property({"tab_index", -1, "TabIndex", "SetTabIndex", auto=true});
-PageElement:Property({"classNames", nil, "GetClassNames", "SetClassNames", auto=true});
 local pairs = pairs
 local ipairs = ipairs
 local tostring = tostring
@@ -144,6 +145,10 @@ function PageElement:ctor()
 	self.m_attributeMap = {};
 
 	self.m_nodeFlags = NodeFlags:new();
+
+	self.m_elementData = ElementData:new():init(self);
+
+	self.isLoaded = false;
 end
 
 -- virtual public function: create a page element (and recursively all its children) according to input xmlNode o.
@@ -325,7 +330,9 @@ end
 
 function PageElement:LoadComponentIfNeeded(parentElem, parentLayout, style_decl)
 	if(self:NeedsLoadComponent(parentElem, parentLayout, style_decl)) then
+		self.isLoaded = false;
 		self:LoadComponent(parentElem, parentLayout, style_decl);
+		self.isLoaded = true;
 	end
 end
 
@@ -341,7 +348,6 @@ function PageElement:LoadComponent(parentElem, parentLayout, styleItem)
 	-- process any variables that is taking place. 
 	self:ProcessVariables();
 
-	--self:checkAttributes();
 	self:ParseAllMappedAttribute();
 	
 	if(self:GetAttribute("trans")) then
@@ -349,11 +355,6 @@ function PageElement:LoadComponent(parentElem, parentLayout, styleItem)
 		-- unless any of the child attribute disables or specifies a different lang
 		self:TranslateMe();
 	end
-	--local css = self:GetStyle();
-
-	--self:attachLayoutTree();
-
-	--css.background = css.background or self:GetAttribute("background", nil);
 
 	self:OnLoadComponentBeforeChild(parentElem, parentLayout, css);
 
@@ -374,6 +375,10 @@ function PageElement:LoadComponent(parentElem, parentLayout, styleItem)
 		Elements.pe_script.EndCode(rootName, self, bindingContext, _parent, left, top, width, height,style, parentLayout);
 	end
 	self:UnapplyPreValues();
+end
+
+function PageElement:IsLoaded()
+	return self.isLoaded;
 end
 
 function PageElement:ScrollTo(x, y)
@@ -780,6 +785,11 @@ local reset_layout_attrs = {
 
 -- set the value of an attribute of this node. This function is rarely used. 
 function PageElement:SetAttribute(attrName, value, notifyChanged)
+	if(self:IsLoaded()) then
+		self:SetParsedAttributeValue(attrName, value);
+		return;
+	end
+
 	notifyChanged = if_else(notifyChanged==nil, true, notifyChanged)
 	self.attr = self.attr or {};
 	if(self.attr[attrName] ~= value) then
@@ -813,21 +823,11 @@ function PageElement:AttributeMap()
 	return self.m_attributeMap;
 end
 
-function PageElement:AddAttributeCSSProperty(attrName, key, value)
-	local attributeMap = self:AttributeMap();
-	if(value == nil or value == "") then
-		if(attributeMap[attrName]) then
-			attributeMap[attrName] = nil;
-		end
-		self:SetNeedsStyleRecalc();
-		return;
+function PageElement:AttributeStyleDecl()
+	if(self:GetElementData()) then
+		return self:GetElementData():AttributeStyleDecl();
 	end
-	local attrStyleDecl = attributeMap[attrName];
-	if(attrStyleDecl == nil) then
-		attributeMap[attrName] = CSSStyleDeclaration:new():init(self);
-		attrStyleDecl = attributeMap[attrName];
-	end
-	attrStyleDecl:SetProperty(key, value);
+	return nil;
 end
 
 function PageElement:ParseAllMappedAttribute()
@@ -846,12 +846,19 @@ function PageElement:ParseAllMappedAttribute()
 	end
 end
 
+function PageElement:GetElementData()
+	return self.m_elementData;
+end
+
 function PageElement:AttributeChanged(attrName, value)
-	self:ParseMappedAttribute(attrName, value);
+	local cssKey, cssValue = self:ParseMappedAttribute(attrName, value);
+	if(self:GetElementData()) then
+		self:GetElementData():SetAttributeValue(attrName, value, cssKey, cssValue);
+	end
 end
 
 function PageElement:ParseMappedAttribute(attrName, value)
-	--if (isIdAttributeName(attr->name()))
+	local cssKey, cssValue;
 	if (attrName == "id") then
         self:IdAttributeChanged(value);
 		self:SetNeedsStyleRecalc();
@@ -864,13 +871,19 @@ function PageElement:ParseMappedAttribute(attrName, value)
         self:StyleAttributeChanged(value);
 		self:SetNeedsStyleRecalc();
 	elseif(attrName == "display") then
-		self:AddAttributeCSSProperty("display", "display", if_else(value=="none", "none", nil));
+		cssKey, cssValue = "display", if_else(value=="none", "none", nil);
+		--self:AddAttributeCSSProperty("display", "display", if_else(value=="none", "none", nil));
     end
-
+	return cssKey, cssValue;
 end
 
 function PageElement:IdAttributeChanged(value)
 	local hasID = value and value ~= "";
+	if(hasID) then
+		self:SetID(value);
+	else
+		self:SetID(nil);
+	end
 	self:SetHasID(hasID);
 end
 
@@ -894,6 +907,42 @@ function PageElement:StyleAttributeChanged(value)
 	self:SetIsStyleAttributeValid();
 end
 
+function PageElement:GetID()
+	if(self:GetElementData()) then
+		return self:GetElementData():GetID();	
+	end
+end
+
+function PageElement:SetID(id)
+	if(self:GetElementData()) then
+		self:GetElementData():SetID(id);		
+	end
+end
+
+function PageElement:GetClassNames()
+	if(self:GetElementData()) then
+		return self:GetElementData():GetClassNames();		
+	end
+end
+
+function PageElement:SetClassNames(classNames)
+	if(self:GetElementData()) then
+		self:GetElementData():SetClassNames(classNames);		
+	end
+end
+
+function PageElement:HasClassNames(classNames)
+	local classes = self:GetClassNames();
+	local classArray = commonlib.split(classNames, "%s");
+	for i = 1, #classArray do
+		local class = classArray[i];
+		if(not classes[class]) then
+			return false;
+		end
+	end
+	return true;
+end
+
 -- set the attribute if attribute is not code. 
 function PageElement:SetAttributeIfNotCode(attrName, value, notifyChanged)
 	self.attr = self.attr or {};
@@ -910,6 +959,9 @@ end
 
 -- get the value of an attribute of this node as its original format (usually string)
 function PageElement:GetAttribute(attrName,defaultValue)
+	if(self:IsLoaded()) then
+		return self:GetParsedAttributeValue(attrName,defaultValue)
+	end
 	if(self.attr and self.attr[attrName]) then
 		return self.attr[attrName];
 	end
@@ -939,6 +991,9 @@ end
 -- @param bNoOverwrite: default to nil. if true, the code will be reevaluated the next time this is called, otherwise the evaluated value will be saved and returned the next time this is called. 
 -- e.g. attrName='<%="string"+Eval("index")}%>' attrName1='<%={fieldname="table"}%>'
 function PageElement:GetAttributeWithCode(attrName,defaultValue, bNoOverwrite)
+	if(self:IsLoaded()) then
+		return self:GetParsedAttributeValue(attrName,defaultValue)
+	end
 	if(self.attr) then
 		local value = self.attr[attrName];
 		if(type(value) == "string") then
@@ -960,23 +1015,11 @@ function PageElement:GetAttributeWithCode(attrName,defaultValue, bNoOverwrite)
 	return defaultValue;
 end
 
-function PageElement:checkAttributes()
-	if(self.attr) then
-		for name, value in pairs(self.attr) do
-			if(type(value) == "string") then
-				local code = string_match(value, "^[<%%]%%(=.*)%%[%%>]$")
-				if(code) then
-					value = Elements.pe_script.DoPageCode(code, self:GetPageCtrl());
-					self.attr[name] = value;
-				end
-			end
-		end
-	end
-end
-
-
 -- get an attribute as string
 function PageElement:GetString(attrName,defaultValue)
+	if(self:IsLoaded()) then
+		return self:GetParsedAttributeValueToString(attrName,defaultValue)
+	end
 	if(self.attr and self.attr[attrName]) then
 		return self.attr[attrName];
 	end
@@ -985,6 +1028,9 @@ end
 
 -- get an attribute as number
 function PageElement:GetNumber(attrName,defaultValue)
+	if(self:IsLoaded()) then
+		return self:GetParsedAttributeValueToNumber(attrName,defaultValue)
+	end
 	if(self.attr and self.attr[attrName]) then
 		return tonumber(self.attr[attrName]);
 	end
@@ -993,6 +1039,9 @@ end
 
 -- get an attribute as integer
 function PageElement:GetInt(attrName, defaultValue)
+	if(self:IsLoaded()) then
+		return self:GetParsedAttributeValueToInt(attrName,defaultValue)
+	end
 	if(self.attr and self.attr[attrName]) then
 		return math.floor(tonumber(self.attr[attrName]));
 	end
@@ -1002,6 +1051,9 @@ end
 
 -- get an attribute as boolean
 function PageElement:GetBool(attrName, defaultValue)
+	if(self:IsLoaded()) then
+		return self:GetParsedAttributeValueToBool(attrName,defaultValue)
+	end
 	if(self.attr and self.attr[attrName]) then
 		local v = string_lower(tostring(self.attr[attrName]));
 		if(v == "false") then
@@ -1844,10 +1896,10 @@ end
 
 function PageElement:ParseClassNames(value)
 	local classes = commonlib.split(value,"%s");
-	if(self.class_name) then
-		classes = classes or {};
-		classes[#classes+1] = self.class_name;
-	end
+--	if(self.class_name) then
+--		classes = classes or {};
+--		classes[#classes+1] = self.class_name;
+--	end
 	if(classes) then
 		local classNames = {};
 		for i = 1,#classes do
@@ -2182,7 +2234,7 @@ end
 function PageElement:SearchChildByAttribute(name, value)
 	for node in self:next() do
 		if(type(node)=="table") then
-			if(value == node:GetAttributeWithCode(name, nil, true) or (node.buttonName and node.buttonName == value)) then
+			if(value == node:GetAttributeWithCode(name, nil, true)) then
 				return node;
 			else
 				node = node:SearchChildByAttribute(name, value);
@@ -2360,8 +2412,8 @@ function PageElement:GetAllChildWithNameIDClass(name, id, class, output)
 	for node in self:next() do
 		if(type(node) == "table") then
 			if( (not name or name == node.name) and
-				(not id or id == node:GetAttribute("name")) and
-				(not class or class==node:GetAttribute("class")) ) then
+				(not id or id == node:GetID()) and
+				(not class or self:HasClassNames(class)) ) then
 				output = output or {};
 				table.insert(output, node);
 			else
@@ -3410,6 +3462,61 @@ function PageElement:CreateControl()
 		local _this = class_def:new():init(parentElem);
 		self:SetControl(_this);
 
-		_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
+		_this:SetTooltip(self:GetAttribute("tooltip"));
 	end
+end
+
+-- get the value of an attribute of this node as its original format (usually string)
+function PageElement:GetParsedAttributeValue(attrName, defaultValue)
+	if(self:GetElementData()) then
+		return self:GetElementData():GetAttributeValue(attrName) or defaultValue;
+	end
+	return defaultValue;
+end
+
+-- set the value of an attribute of this node. This function is rarely used. 
+function PageElement:SetParsedAttributeValue(attrName, value)
+	self:AttributeChanged(attrName, value);
+end
+
+-- get an attribute as string
+function PageElement:GetParsedAttributeValueToString(attrName, defaultValue)
+	local value = self:GetParsedAttributeValue(attrName, defaultValue)
+	if(value) then
+		return tostring(value);
+	end
+	return defaultValue;
+end
+
+-- get an attribute as number
+function PageElement:GetParsedAttributeValueToNumber(attrName,defaultValue)
+	local value = self:GetParsedAttributeValue(attrName, defaultValue)
+	if(value) then
+		return tonumber(value);
+	end
+	return defaultValue;
+end
+
+-- get an attribute as integer
+function PageElement:GetParsedAttributeValueToInt(attrName, defaultValue)
+	local value = self:GetParsedAttributeValue(attrName, defaultValue)
+	if(value) then
+		return math.floor(tonumber(value));
+	end
+	return defaultValue;
+end
+
+
+-- get an attribute as boolean
+function PageElement:GetParsedAttributeValueToBool(attrName, defaultValue)
+	local value = self:GetParsedAttributeValue(attrName, defaultValue)
+	if(value) then
+		local v = string_lower(tostring(value));
+		if(v == "false") then
+			return false
+		elseif(v == "true") then
+			return true
+		end
+	end
+	return defaultValue;
 end

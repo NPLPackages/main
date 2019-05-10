@@ -113,6 +113,9 @@ function LayoutButton:SetText(str)
             self.m_buttonText = nil;
         end
     else
+		if(type(str) ~= "table") then
+			str = tostring(str);
+		end
         if (self.m_buttonText) then
             self.m_buttonText:SetText(str);
         else

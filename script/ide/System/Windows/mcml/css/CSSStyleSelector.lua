@@ -159,9 +159,9 @@ function CSSStyleSelector:MatchAllRules(result)
 	self:MatchUARules(result);
 	self:MatchAuthorRules(result);
 
-	local attributeMap = self.element:AttributeMap();
-	for attrName, styleDecl in pairs(attributeMap) do
-		self:AddMatchedDeclaration(styleDecl);
+	local attributeStyleDecl = self.element:AttributeStyleDecl();
+	if(attributeStyleDecl) then
+		self:AddMatchedDeclaration(attributeStyleDecl);
 	end
 
 	local inlineDecl = self.element:InlineStyleDecl();
@@ -183,7 +183,7 @@ function CSSStyleSelector:MatchRules(rule_set)
 	if(not rule_set) then
 		return;
 	end
-	local id = self.element:GetAttributeWithCode("id",nil,true);
+	local id = self.element:GetID();
 	if(id) then
 		self:MatchRulesForList(rule_set:idRules()[id]);
 	end

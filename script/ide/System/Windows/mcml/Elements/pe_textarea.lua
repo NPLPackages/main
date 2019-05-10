@@ -32,9 +32,8 @@ function pe_textarea:ParseMappedAttribute(attrName, value)
 		self.m_rows = tonumber(value) or self.m_rows;
 	elseif(attrName == "cols") then
 		self.m_cols = tonumber(value) or self.m_cols;
-	else
-		pe_textarea._super.ParseMappedAttribute(self, attrName, value)
 	end
+	return pe_textarea._super.ParseMappedAttribute(self, attrName, value)
 end
 
 function pe_textarea:ControlClass()

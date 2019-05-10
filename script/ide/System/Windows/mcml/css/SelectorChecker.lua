@@ -56,7 +56,7 @@ function SelectorChecker:fastCheckRightmostSelector(selector, pageElement)
 	elseif(matchtype == CSSSelector.MatchType.kTag) then
 		return pageElement:TagName() == value;
 	elseif(matchtype == CSSSelector.MatchType.kId) then
-		local id = pageElement:GetAttributeWithCode("id",nil,true);
+		local id = pageElement:GetID();
 		return id == value;
 	elseif(matchtype == CSSSelector.MatchType.kClass) then
 		local classNames = pageElement:GetClassNames();

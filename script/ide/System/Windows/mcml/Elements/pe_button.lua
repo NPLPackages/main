@@ -18,7 +18,15 @@ local pe_button = commonlib.inherit(commonlib.gettable("System.Windows.mcml.Page
 pe_button:Property({"class_name", "pe:button"});
 
 function pe_button:ctor()
+	self.value = ""
 	self:SetTabIndex(0);
+end
+
+function pe_button:ParseMappedAttribute(attrName, value)
+	if(attrName == "value") then
+		self.value = value;
+	end
+	return pe_button._super.ParseMappedAttribute(self, attrName, value)
 end
 
 function pe_button:ControlClass()
@@ -45,7 +53,10 @@ function pe_button:CreateControl()
 end
 
 function pe_button:SetValue(value)
-	self:SetAttribute("value", value);
+	if(self.value == value) then
+		return;
+	end
+	self.value = value;
 	if (self:Renderer()) then
         self:Renderer():SetText(value);
 	end
@@ -53,7 +64,7 @@ function pe_button:SetValue(value)
 end
 
 function pe_button:GetValue()
-	return self:GetAttributeWithCode("value");
+	return self.value;
 end
 
 function pe_button:OnClick()
@@ -81,7 +92,7 @@ function pe_button:OnClick()
 		else
 			-- user clicks the button, yet without form info
 			-- the callback function format is function(buttonName, self) end
-			result = self:DoPageEvent(onclick, self.buttonName, self)
+			result = self:DoPageEvent(onclick, self:GetAttribute("name"), self)
 		end
 	end
 	if(onclick_for) then

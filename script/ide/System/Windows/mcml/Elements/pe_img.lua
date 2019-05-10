@@ -21,16 +21,15 @@ end
 
 function pe_img:ParseMappedAttribute(attrName, value)
 	if(attrName == "src" or attrName == "width" or attrName == "height") then
-		local propertyKey, propertyValue;
+		local cssKey, cssValue;
 		if(attrName == "src") then
-			propertyKey, propertyValue = "background", self:GetAbsoluteURL(value);
+			cssKey, cssValue = "background", self:GetAbsoluteURL(value);
 		elseif(attrName == "width" or attrName == "height") then
-			propertyKey, propertyValue = attrName, value.."px";
+			cssKey, cssValue = attrName, value.."px";
 		end
-		self:AddAttributeCSSProperty(attrName, propertyKey, propertyValue);
-	else
-		pe_img._super.ParseMappedAttribute(self, attrName, value)
+		return cssKey, cssValue;
 	end
+	return pe_img._super.ParseMappedAttribute(self, attrName, value)
 end
 
 function pe_img:ControlClass()
