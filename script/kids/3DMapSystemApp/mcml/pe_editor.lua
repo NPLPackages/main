@@ -1404,9 +1404,9 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 		if(mcmlNode:GetBool("autofocus")) then
 			_this:Focus();
 		end
-		
-		if(mcmlNode:GetString("tooltip")) then
-			_this.tooltip = mcmlNode:GetString("tooltip")
+		local tooltip = mcmlNode:GetAttributeWithCode("tooltip")
+		if(tooltip) then
+			_this.tooltip = tooltip;
 		end
 
 		local spacing = mcmlNode:GetNumber("spacing")
