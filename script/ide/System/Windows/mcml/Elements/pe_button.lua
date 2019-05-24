@@ -18,16 +18,16 @@ local pe_button = commonlib.inherit(commonlib.gettable("System.Windows.mcml.Page
 pe_button:Property({"class_name", "pe:button"});
 
 function pe_button:ctor()
-	self.value = ""
+--	self.value = ""
 	self:SetTabIndex(0);
 end
 
-function pe_button:ParseMappedAttribute(attrName, value)
-	if(attrName == "value") then
-		self.value = value;
-	end
-	return pe_button._super.ParseMappedAttribute(self, attrName, value)
-end
+--function pe_button:ParseMappedAttribute(attrName, value)
+--	if(attrName == "value") then
+--		self.value = value;
+--	end
+--	return pe_button._super.ParseMappedAttribute(self, attrName, value)
+--end
 
 function pe_button:ControlClass()
 	return Button;
@@ -52,19 +52,27 @@ function pe_button:CreateControl()
 	end
 end
 
-function pe_button:SetValue(value)
-	if(self.value == value) then
+function pe_button:SetAttribute(attrName, value, notifyChanged)
+	if(attrName == "value") then
+		if(self:GetAttributeWithCode("value",nil,true) == value) then
+			return;
+		end
+		pe_button._super.SetAttribute(self, attrName, value, notifyChanged)
+		if (self:Renderer()) then
+			self:Renderer():SetText(value);
+			self:SetNeedsStyleRecalc();
+		end
 		return;
 	end
-	self.value = value;
-	if (self:Renderer()) then
-        self:Renderer():SetText(value);
-	end
-	self:SetNeedsStyleRecalc();
+	pe_button._super.SetAttribute(self, attrName, value, notifyChanged)
+end
+
+function pe_button:SetValue(value)
+	self:SetAttribute("value", value);
 end
 
 function pe_button:GetValue()
-	return self.value;
+	return self:GetAttributeWithCode("value",nil,true);
 end
 
 function pe_button:OnClick()

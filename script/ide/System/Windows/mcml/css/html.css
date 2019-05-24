@@ -2,9 +2,9 @@ html, mcml, div {
     display:block;
 }
 
-html {
+/*html {
     overflow:auto;
-}
+}*/
 
 p {
     margin-top:12px;

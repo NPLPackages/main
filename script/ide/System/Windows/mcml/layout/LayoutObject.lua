@@ -203,6 +203,10 @@ function LayoutObject:GetParentControl()
 		local box = self:InlineBoxWrapper();
 		return box:Parent():GetControl()
 	end
+	if(self:IsPositioned() and self:HasLayer() and self:Layer():EnclosingPositionedAncestor()) then
+		local positionedParent = self:Layer():EnclosingPositionedAncestor():Renderer();
+		return positionedParent:GetControl();
+	end
 	if(self.parent) then
 		return self.parent:GetControl();
 	end

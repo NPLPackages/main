@@ -933,6 +933,9 @@ end
 
 function PageElement:HasClassNames(classNames)
 	local classes = self:GetClassNames();
+	if(not classes) then
+		return false;
+	end
 	local classArray = commonlib.split(classNames, "%s");
 	for i = 1, #classArray do
 		local class = classArray[i];
@@ -2298,6 +2301,9 @@ end
 local jquery_metatable = {
 	-- each invocation will create additional tables and closures, hence the performance is not supper good. 
 	__index = function(t, k)
+		if #t == 0 then
+			return;
+		end
 		if(type(k) == "string") then
 			local func = {};
 			setmetatable(func, {
@@ -2307,6 +2313,7 @@ local jquery_metatable = {
 					local output;
 					local i, node
 					for i, node in ipairs(t) do
+						type(node[k])
 						if(type(node[k]) == "function")then
 							output = node[k](node, ...);
 						end
@@ -2350,8 +2357,9 @@ function PageElement:jquery(pattern, param1)
 			if(pattern) then
 				class_name = pattern:match("%.([^#%.]+)");
 			end
-			self:GetAllChildWithNameIDClass(tag_name, id, class_name, output);
-		
+			if(tag_name or id or class_name) then
+				self:GetAllChildWithNameIDClass(tag_name, id, class_name, output);
+			end
 		end
 		setmetatable(output, jquery_metatable)
 		return output;
@@ -2413,7 +2421,7 @@ function PageElement:GetAllChildWithNameIDClass(name, id, class, output)
 		if(type(node) == "table") then
 			if( (not name or name == node.name) and
 				(not id or id == node:GetID()) and
-				(not class or self:HasClassNames(class)) ) then
+				(not class or node:HasClassNames(class)) ) then
 				output = output or {};
 				table.insert(output, node);
 			else

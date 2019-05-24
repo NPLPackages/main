@@ -113,7 +113,7 @@ function Button:isUsingPolygon()
 	return value;
 end
 
-function Button:paintBackground(painter)
+function Button:PaintBackground(painter)
 	if(self:isUsingPolygon()) then
 		self:paintWithPolygon(painter);
 	else

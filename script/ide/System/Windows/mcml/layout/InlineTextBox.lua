@@ -13,6 +13,8 @@ NPL.load("(gl)script/ide/System/Windows/mcml/layout/InlineBox.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/IntRect.lua");
 NPL.load("(gl)script/ide/System/Windows/Controls/Label.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyleConstants.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/layout/PaintPhase.lua");
+local PaintPhase = commonlib.gettable("System.Windows.mcml.layout.PaintPhase");
 local ComputedStyleConstants = commonlib.gettable("System.Windows.mcml.style.ComputedStyleConstants");
 local Label = commonlib.gettable("System.Windows.Controls.Label");
 local Rect = commonlib.gettable("System.Windows.mcml.platform.graphics.IntRect");
@@ -142,7 +144,9 @@ function InlineTextBox:Paint(paintInfo, paintOffset, lineTop, lineBottom)
 --	if (isLineBreak() || !paintInfo.shouldPaintWithinRoot(renderer()) || renderer()->style()->visibility() != VISIBLE ||
 --        m_truncation == cFullTruncation || paintInfo.phase == PaintPhaseOutline || !m_len)
 --        return;
-	if(self:IsLineBreak() or not paintInfo:ShouldPaintWithinRoot(self:Renderer()) or self:Renderer():Style():Visibility() ~= VisibilityEnum.VISIBLE) then
+	if(self:IsLineBreak() or not paintInfo:ShouldPaintWithinRoot(self:Renderer()) or 
+		self:Renderer():Style():Visibility() ~= VisibilityEnum.VISIBLE or 
+		paintInfo.phase == PaintPhase.PaintPhaseOutline or self.len == 0) then
 		return;
 	end
 --	local logicalLeftSide = self:LogicalLeftVisualOverflow();
@@ -163,7 +167,9 @@ function InlineTextBox:Paint(paintInfo, paintOffset, lineTop, lineBottom)
 			if(control) then
 				self.control = self:CreateAndAppendLabel(left, top, width ,height, text, control);
 			end
-			
+		end
+		if(self.control) then
+			self.control:UpdateZOrder();
 		end
 	end
 end

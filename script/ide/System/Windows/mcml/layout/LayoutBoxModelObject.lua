@@ -539,8 +539,9 @@ function LayoutBoxModelObject:PaintFillLayerExtended(paintInfo, rect)
 		end
 
 		local clip = self:NeedClip();
-		control:SetClip(clip)
-		--control:SetChildrenClip(clip)
+		--control:SetClip(clip)
+		control:SetChildrenClip(clip)
+		control:UpdateZOrder();
 
 		local x, y, w, h = rect:X(), rect:Y(), rect:Width(), rect:Height();
 		if(self:Style()) then

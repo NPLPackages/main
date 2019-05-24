@@ -90,7 +90,7 @@ UIElement:Property({"selfClipRegion", nil, "GetSelfClipRegion", "SetSelfClipRegi
 UIElement:Property({"childrenClip", false, "IsChildrenClip", "SetChildrenClip", auto=true});
 UIElement:Property({"disabled", false, "isDisabled", "SetDisabled", auto=true});
 
-UIElement:Property({"zIndex", 0, "ZIndex", "SetZIndex", auto=true});
+UIElement:Property({"zorder", 0, "ZOrder", "SetZOrder", auto=true});
 
 -- number of posted events
 UIElement.postedEvents = 0;
@@ -100,7 +100,24 @@ function UIElement:ctor()
 	self.crect = Rect:new():init(0,0,0,0);
 	self._page_element = nil;
 
-	self.zIndexDirty = true;
+	self.zOrderDirty = true;
+	self.baseOrder = 0;
+end
+
+function UIElement:resetBaseOrder()
+	self.baseOrder = 0;
+end
+
+function UIElement:UpdateZOrder()
+	local parent = self:GetParent();
+	if(parent) then
+--		echo("UIElement:UpdateZOrder")
+--		self:PrintInfo();
+--		echo(parent.baseOrder)
+		parent.baseOrder = parent.baseOrder + 1;
+		self:SetZOrder(parent.baseOrder);
+		--echo(self.zorder)
+	end
 end
 
 -- init and return the object. 
@@ -127,24 +144,25 @@ function UIElement:SetParent(parent)
 	end
 end
 
-function UIElement:setParent_helper(parent)
-	if(parent == nil) then
-		self.zIndexDirty = true;
-	end
-	UIElement._super.setParent_helper(self, parent)
-	if(parent ~= nil) then
-		if(self:ZIndex() ~= 0) then
-			self.zIndexDirty = true;
-		end
-	end
-end
+--function UIElement:setParent_helper(parent)
+--	if(parent == nil) then
+--		self.zOrderDirty = true;
+--	end
+--	UIElement._super.setParent_helper(self, parent)
+--	if(parent ~= nil) then
+--		self.zOrderDirty = true;
+--	end
+--end
 
-function UIElement:SetZIndex(v)
-	if(self.zIndex == v) then
+function UIElement:SetZOrder(v)
+	if(self.zorder == v) then
 		return;
 	end
-	self.zIndex = v;
-	self.zIndexDirty = true;
+	self.zorder = v;
+	local parent = self:GetParent();
+	if(parent) then
+		parent.zOrderDirty = true;
+	end
 end
 
 function UIElement:lessPriority(elem)
@@ -164,7 +182,6 @@ end
 function UIElement:ApplyCss(css)
 	self:SetBackgroundColor(css:BackgroundColor():ToString());
 	self:SetBackground(css:BackgroundImage());
-	self:SetZIndex(css:ZIndex());
 end
 
 -- Returns true if this object is a parent, (or grandparent and so on
@@ -585,20 +602,26 @@ function UIElement:prepareToRender()
 	end
 end
 
-function UIElement:SortChildrenByZIndexIfNeeded()
-	if(not self.zIndexDirty) then
+function UIElement:PrintInfo()
+	echo(self:GetField("Name"))
+	if(self:PageElement()) then
+		self:PageElement():PrintNodeInfo();
+	end
+end
+
+function UIElement:SortChildrenByZOrderIfNeeded()
+	if(not self.zOrderDirty) then
 		return;
 	end
-
 	if(not self.children or self.children:empty()) then
 		return;
 	end
 
 	self.children:sort(function(a,b)
-		return a:ZIndex() < b:ZIndex();
+		return a:ZOrder() < b:ZOrder();
 	end);
-
-	self.zIndexDirty = false;
+	self:resetBaseOrder();
+	self.zOrderDirty = false;
 end
 
 -- draw with offset and its child recursively
@@ -623,7 +646,7 @@ function UIElement:drawWidget(painterContext, offset)
 
 	-- now draw all children if any
 	if(self.children and not self.children:empty()) then
-		self:SortChildrenByZIndexIfNeeded();
+		self:SortChildrenByZOrderIfNeeded();
 
 		local widget_offset = Point:new_from_pool(self:x(), self:y());
 		--widget_offset:add(offset);
@@ -852,7 +875,7 @@ end
 -- client rect. left, top is always 0,0.
 -- @note: the returned rect is temporary, do not keep for long. 
 function UIElement:rect()
-	return Rect:new_from_pool(0,0, self.crect:width(), self.crect:height());
+	return Rect:new_from_pool(0, 0, self.crect:width(), self.crect:height());
 end
 
 -- return left top point
@@ -1190,18 +1213,22 @@ function UIElement:ParentClipRegion()
 	end
 end
 
+function UIElement:ContentRect()
+	return Rect:new_from_pool(0, 0, self:width(), self:height());
+end
+
 function UIElement:SelfAndParentClipIntersection()
 	local clipRegion, parentClipRegion;
 	if(self:IsClip()) then
 		clipRegion = self:GetSelfClipRegion();
 		if(clipRegion == nil) then
-			clipRegion = self:rect();
+			clipRegion = self:ContentRect();
 		else
 			clipRegion = clipRegion:clone_from_pool();
 		end
 	end
 	if(self:GetParent() and self:GetParent():IsChildrenClip()) then
-		parentClipRegion = self:GetParent():rect();
+		parentClipRegion = self:GetParent():ContentRect();
 		parentClipRegion:setX(parentClipRegion:x() - self:x());
 		parentClipRegion:setY(parentClipRegion:y() - self:y());
 	end

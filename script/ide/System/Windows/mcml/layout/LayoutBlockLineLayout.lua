@@ -1178,34 +1178,35 @@ function LineWidth:ApplyOverhang(rubyRun, startRenderer, endRenderer)
 end
 
 function LineWidth:FitBelowFloats()
-	--TODO: fixed this function
---    ASSERT(!m_committedWidth);
---    ASSERT(!fitsOnLine());
---
---    int floatLogicalBottom;
---    int lastFloatLogicalBottom = m_block->logicalHeight();
---    float newLineWidth = m_availableWidth;
---    float newLineLeft = m_left;
---    float newLineRight = m_right;
---    while (true) {
---        floatLogicalBottom = m_block->nextFloatLogicalBottomBelow(lastFloatLogicalBottom);
---        if (floatLogicalBottom <= lastFloatLogicalBottom)
---            break;
---
---        newLineLeft = m_block->logicalLeftOffsetForLine(floatLogicalBottom, m_isFirstLine);
---        newLineRight = m_block->logicalRightOffsetForLine(floatLogicalBottom, m_isFirstLine);
---        newLineWidth = max(0.0f, newLineRight - newLineLeft);
---        lastFloatLogicalBottom = floatLogicalBottom;
---        if (newLineWidth >= m_uncommittedWidth)
---            break;
---    }
---
---    if (newLineWidth > m_availableWidth) {
---        m_block->setLogicalHeight(lastFloatLogicalBottom);
---        m_availableWidth = newLineWidth + m_overhangWidth;
---        m_left = newLineLeft;
---        m_right = newLineRight;
---    }
+    -- ASSERT(!m_committedWidth);
+    -- ASSERT(!fitsOnLine());
+
+    local floatLogicalBottom;
+    local lastFloatLogicalBottom = self.block:LogicalHeight();
+    local newLineWidth = self.availableWidth;
+    local newLineLeft = self.left;
+    local newLineRight = self.right;
+    while (true) do
+        floatLogicalBottom = self.block:NextFloatLogicalBottomBelow(lastFloatLogicalBottom);
+        if (floatLogicalBottom <= lastFloatLogicalBottom) then
+            break;
+		end
+
+        newLineLeft = self.block:LogicalLeftOffsetForLine(floatLogicalBottom, self.isFirstLine);
+        newLineRight = self.block:LogicalRightOffsetForLine(floatLogicalBottom, self.isFirstLine);
+        newLineWidth = math.max(0, newLineRight - newLineLeft);
+        lastFloatLogicalBottom = floatLogicalBottom;
+        if (newLineWidth >= self.uncommittedWidth) then
+            break;
+		end
+    end
+
+    if (newLineWidth > self.availableWidth) then
+        self.block:SetLogicalHeight(lastFloatLogicalBottom);
+        self.availableWidth = newLineWidth + self.overhangWidth;
+        self.left = newLineLeft;
+        self.right = newLineRight;
+    end
 end
 
 function LineWidth:ComputeAvailableWidthFromLeftAndRight()

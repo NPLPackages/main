@@ -9,6 +9,8 @@ NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutLineBoxList.lua");
 local LayoutLineBoxList = commonlib.gettable("System.Windows.mcml.layout.LayoutLineBoxList");
 ------------------------------------------------------------
 ]]
+NPL.load("(gl)script/ide/System/Windows/mcml/layout/PaintPhase.lua");
+local PaintPhase = commonlib.gettable("System.Windows.mcml.layout.PaintPhase");
 local LayoutLineBoxList = commonlib.inherit(nil, commonlib.gettable("System.Windows.mcml.layout.LayoutLineBoxList"));
 
 function LayoutLineBoxList:ctor()
@@ -89,6 +91,13 @@ end
 
 --void RenderLineBoxList::paint(RenderBoxModelObject* renderer, PaintInfo& paintInfo, const LayoutPoint& paintOffset) const
 function LayoutLineBoxList:Paint(renderer, paintInfo, paintOffset)
+	-- Only paint during the foreground/selection phases.
+    if (paintInfo.phase ~= PaintPhase.PaintPhaseForeground and paintInfo.phase ~= PaintPhase.PaintPhaseSelection and paintInfo.phase ~= PaintPhase.PaintPhaseOutline 
+        and paintInfo.phase ~= PaintPhase.PaintPhaseSelfOutline and paintInfo.phase ~= PaintPhase.PaintPhaseChildOutlines and paintInfo.phase ~= PaintPhase.PaintPhaseTextClip
+        and paintInfo.phase ~= PaintPhase.PaintPhaseMask) then
+        return;
+	end
+
 	if (self:FirstLineBox() == nil) then
 		return;
 	end

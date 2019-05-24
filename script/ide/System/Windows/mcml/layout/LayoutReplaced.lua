@@ -13,6 +13,8 @@ NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutBox.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutRepainter.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/IntSize.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyleConstants.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/layout/PaintPhase.lua");
+local PaintPhase = commonlib.gettable("System.Windows.mcml.layout.PaintPhase");
 local ComputedStyleConstants = commonlib.gettable("System.Windows.mcml.style.ComputedStyleConstants");
 local IntSize = commonlib.gettable("System.Windows.mcml.platform.graphics.IntSize");
 local LayoutRepainter = commonlib.gettable("System.Windows.mcml.layout.LayoutRepainter");
@@ -76,7 +78,9 @@ end
 
 --void RenderReplaced::paint(PaintInfo& paintInfo, const LayoutPoint& paintOffset)
 function LayoutReplaced:Paint(paintInfo, paintOffset)
-	self:PaintBoxDecorations(paintInfo, paintOffset);
+	if(paintInfo.phase == PaintPhase.PaintPhaseForeground or paintInfo.phase == PaintPhase.PaintPhaseSelection) then
+		self:PaintBoxDecorations(paintInfo, paintOffset);
+	end
 end
 
 --IntSize RenderReplaced::intrinsicSize() const
@@ -95,9 +99,10 @@ end
 
 --bool RenderReplaced::shouldPaint(PaintInfo& paintInfo, const LayoutPoint& paintOffset)
 function LayoutReplaced:ShouldPaint(paintInfo, paintOffset)
---    if (paintInfo.phase != PaintPhaseForeground && paintInfo.phase != PaintPhaseOutline && paintInfo.phase != PaintPhaseSelfOutline 
---            && paintInfo.phase != PaintPhaseSelection && paintInfo.phase != PaintPhaseMask)
---        return false;
+    if (paintInfo.phase ~= PaintPhase.PaintPhaseForeground and paintInfo.phase ~= PaintPhase.PaintPhaseOutline and paintInfo.phase ~= PaintPhase.PaintPhaseSelfOutline 
+            and paintInfo.phase ~= PaintPhase.PaintPhaseSelection and paintInfo.phase ~= PaintPhase.PaintPhaseMask) then
+        return false;
+	end
 
     if (not paintInfo:ShouldPaintWithinRoot(self)) then
         return false;

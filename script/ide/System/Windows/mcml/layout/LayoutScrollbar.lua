@@ -154,7 +154,7 @@ function LayoutScrollbar:GetOrCreateControl()
 		local scrollableArea_control = self.scrollableArea:Renderer():GetControl();
 		local direction = directionMap[self.orientation];
 		local scrollbar = scrollableArea_control:CreateScrollbar(direction);
-		scrollbar:SetZIndex(self.theme:scrollbarZIndex());
+		--scrollbar:SetZIndex(self.theme:scrollbarZIndex());
 		scrollbar:Connect("valueChanged", function(value)
 			if(self.scrollableArea) then
 				if(self.orientation == "HorizontalScrollbar") then

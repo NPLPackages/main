@@ -9,7 +9,7 @@ NPL.load("(gl)script/ide/System/Windows/Controls/Primitives/ScrollAreaBase.lua")
 local ScrollAreaBase = commonlib.gettable("System.Windows.Controls.Primitives.ScrollAreaBase");
 ------------------------------------------------------------
 ]]
-NPL.load("(gl)script/ide/System/Windows/UIBorderElement.lua");
+NPL.load("(gl)script/ide/System/Windows/UIStyleElement.lua");
 NPL.load("(gl)script/ide/math/Rect.lua");
 NPL.load("(gl)script/ide/System/Windows/Controls/ScrollBar.lua");
 NPL.load("(gl)script/ide/System/Windows/Controls/Canvas.lua");
@@ -18,7 +18,7 @@ local ScrollBar = commonlib.gettable("System.Windows.Controls.ScrollBar");
 local Rect = commonlib.gettable("mathlib.Rect");
 local Application = commonlib.gettable("System.Windows.Application");
 
-local ScrollAreaBase = commonlib.inherit(commonlib.gettable("System.Windows.UIBorderElement"), commonlib.gettable("System.Windows.Controls.Primitives.ScrollAreaBase"));
+local ScrollAreaBase = commonlib.inherit(commonlib.gettable("System.Windows.UIStyleElement"), commonlib.gettable("System.Windows.Controls.Primitives.ScrollAreaBase"));
 ScrollAreaBase:Property("Name", "ScrollAreaBase");
 
 ScrollAreaBase:Property({"SliderSize", 16, auto=true});

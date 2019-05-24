@@ -11,6 +11,8 @@ local LayoutWidget = commonlib.gettable("System.Windows.mcml.layout.LayoutWidget
 ]]
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutReplaced.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/IntPoint.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/layout/PaintPhase.lua");
+local PaintPhase = commonlib.gettable("System.Windows.mcml.layout.PaintPhase");
 local LayoutPoint = commonlib.gettable("System.Windows.mcml.platform.graphics.IntPoint");
 local LayoutWidget = commonlib.inherit(commonlib.gettable("System.Windows.mcml.layout.LayoutReplaced"), commonlib.gettable("System.Windows.mcml.layout.LayoutWidget"));
 
@@ -166,7 +168,9 @@ function LayoutWidget:Paint(paintInfo, paintOffset)
     --local adjustedPaintOffset = paintOffset + self:Location();
 	local adjustedPaintOffset = paintOffset
 
-	self:PaintBoxDecorations(paintInfo, adjustedPaintOffset);
+	if(paintInfo.phase == PaintPhase.PaintPhaseForeground or paintInfo.phase == PaintPhase.PaintPhaseSelection) then
+		self:PaintBoxDecorations(paintInfo, adjustedPaintOffset);
+	end
 
 --    if (hasBoxDecorations() && (paintInfo.phase == PaintPhaseForeground || paintInfo.phase == PaintPhaseSelection))
 --        paintBoxDecorations(paintInfo, adjustedPaintOffset);
@@ -178,7 +182,7 @@ function LayoutWidget:Paint(paintInfo, paintOffset)
 
 --    if ((paintInfo.phase == PaintPhaseOutline || paintInfo.phase == PaintPhaseSelfOutline) && hasOutline())
 --        paintOutline(paintInfo.context, LayoutRect(adjustedPaintOffset, size()));
-    if (not self.m_frameView) then
+    if (not self.m_frameView or paintInfo.phase ~= PaintPhase.PaintPhaseForeground) then
         return;
 	end
 --#if PLATFORM(MAC)
@@ -211,7 +215,7 @@ function LayoutWidget:Paint(paintInfo, paintOffset)
 --            paintInfo.context->translate(widgetPaintOffset);
 --            paintRect.move(-widgetPaintOffset);
 --        }
-        self.m_widget:Paint(nil, paintRect);
+        self.m_widget:Paint(paintInfo.context, paintRect);
 
 --        if (!widgetPaintOffset.isZero())
 --            paintInfo.context->translate(-widgetPaintOffset);

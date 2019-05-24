@@ -9,14 +9,14 @@ NPL.load("(gl)script/ide/System/Windows/Controls/Primitives/ScrollAreaForPage.lu
 local ScrollAreaForPage = commonlib.gettable("System.Windows.Controls.ScrollAreaForPage");
 ------------------------------------------------------------
 ]]
-NPL.load("(gl)script/ide/System/Windows/UIBorderElement.lua");
+NPL.load("(gl)script/ide/System/Windows/UIStyleElement.lua");
 NPL.load("(gl)script/ide/math/Rect.lua");
 NPL.load("(gl)script/ide/System/Windows/Controls/ScrollBar.lua");
 local ScrollBar = commonlib.gettable("System.Windows.Controls.ScrollBar");
 local Rect = commonlib.gettable("mathlib.Rect");
 local Application = commonlib.gettable("System.Windows.Application");
 
-local ScrollAreaForPage = commonlib.inherit(commonlib.gettable("System.Windows.UIBorderElement"), commonlib.gettable("System.Windows.Controls.ScrollAreaForPage"));
+local ScrollAreaForPage = commonlib.inherit(commonlib.gettable("System.Windows.UIStyleElement"), commonlib.gettable("System.Windows.Controls.ScrollAreaForPage"));
 ScrollAreaForPage:Property("Name", "ScrollAreaForPage");
 
 ScrollAreaForPage:Property({"AllowWheel", true, auto=true});
@@ -118,8 +118,5 @@ end
 
 function ScrollAreaForPage:paintEvent(painter)
 	ScrollAreaForPage._super.paintEvent(self, painter);
-
-	painter:SetPen(self:GetBackgroundColor());
-	painter:DrawRectTexture(self:x(), self:y(), self:width(), self:height(), self:GetBackground());
 end
 

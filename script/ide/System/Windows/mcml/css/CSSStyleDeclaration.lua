@@ -225,7 +225,7 @@ end
 function CSSStyleDeclaration:AddString(style_code)
 	-- replace ";" with "#" in the complex image url, likes as 
 	-- "background:url(Textures/login_bg.png;200 200 800 800);" to "background:url(Textures/login_bg.png#200 200 800 800);"
-	style_code = string.gsub(style_code, "(url%([^;]*);?([^;]*%))", "%1#%2");
+	style_code = string.gsub(style_code, "(url%([^;]*);([^;]*%))", "%1#%2");
 
 	local name, value;
 	for name, value in string.gfind(style_code, "([%w%-]+)%s*:%s*([^;]*)[;]?") do

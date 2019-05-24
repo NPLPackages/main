@@ -14,6 +14,8 @@ NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/IntPoint.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/IntRect.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/platform/graphics/IntSize.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyleConstants.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/layout/PaintPhase.lua");
+local PaintPhase = commonlib.gettable("System.Windows.mcml.layout.PaintPhase");
 local ComputedStyleConstants = commonlib.gettable("System.Windows.mcml.style.ComputedStyleConstants");
 local IntSize = commonlib.gettable("System.Windows.mcml.platform.graphics.IntSize");
 local IntRect = commonlib.gettable("System.Windows.mcml.platform.graphics.IntRect");
@@ -546,7 +548,7 @@ end
 --void paint(PaintInfo&, const LayoutPoint&, LayoutUnit lineTop, LayoutUnit lineBottom)
 function InlineBox:Paint(paintInfo, paintOffset, lineTop, lineBottom)
 	--if (!paintInfo.shouldPaintWithinRoot(renderer()) || (paintInfo.phase != PaintPhaseForeground && paintInfo.phase != PaintPhaseSelection))
-	if (not paintInfo:ShouldPaintWithinRoot(self:Renderer())) then
+	if (not paintInfo:ShouldPaintWithinRoot(self:Renderer()) or (paintInfo.phase ~= PaintPhase.PaintPhaseForeground and paintInfo.phase ~= PaintPhase.PaintPhaseSelection)) then
         return;
 	end
 
@@ -571,11 +573,23 @@ function InlineBox:Paint(paintInfo, paintOffset, lineTop, lineBottom)
 --        info.phase = PaintPhaseOutline;
 --        renderer()->paint(info, childPoint);
 --    }
+	local preservePhase = paintInfo.phase == PaintPhase.PaintPhaseSelection or paintInfo.phase == PaintPhase.PaintPhaseTextClip;
 	local info = paintInfo:clone();
+	info.phase = if_else(preservePhase, paintInfo.phase, PaintPhase.PaintPhaseBlockBackground);
 	info:Rect():SetX(info:Rect():X() - self:Renderer():X())
 	info:Rect():SetY(info:Rect():Y() - self:Renderer():Y())
 	local childPoint = paintOffset;
 	self:Renderer():Paint(info, childPoint);
+	if (not preservePhase) then
+		info.phase = PaintPhase.PaintPhaseChildBlockBackgrounds;
+        self:Renderer():Paint(info, childPoint);
+        info.phase = PaintPhase.PaintPhaseFloat;
+        self:Renderer():Paint(info, childPoint);
+        info.phase = PaintPhase.PaintPhaseForeground;
+        self:Renderer():Paint(info, childPoint);
+--        info.phase = PaintPhase.PaintPhaseOutline;
+--        renderer()->paint(info, childPoint);
+	end
 end
 
 function InlineBox:DirtyLineBoxes()
@@ -610,5 +624,19 @@ function InlineBox:AttachLine()
     self.extracted = false;
     if (self.renderer:IsBox()) then
         self.renderer:ToRenderBox():SetInlineBoxWrapper(self);
+	end
+end
+
+--FloatPoint InlineBox::locationIncludingFlipping()
+function InlineBox:LocationIncludingFlipping()
+    if (not self:Renderer():Style():IsFlippedBlocksWritingMode()) then
+        return Point:new(self:X(), self:Y());
+	end
+	--RenderBlock* block = root()->block();
+    local block = self:Root():Block();
+    if (block:Style():IsHorizontalWritingMode()) then
+        return Point:new(self:X(), block:Height() - self:Height() - self:Y());
+    else
+        return Point:new(block:Width() - self:Width() - self:X(), self:Y());
 	end
 end

@@ -57,8 +57,7 @@ function ViewPort:updatePos(hscroll, vscroll)
 end
 
 function ViewPort:paintEvent(painter)
-	local background = self:GetBackground();
-	local x, y = self:x(), self:y();
+
 end
 
 
@@ -178,8 +177,8 @@ function ScrollArea:ApplyCss(css)
 	end
 end
 
-function ScrollArea:paintEvent(painter)
-	painter:SetPen(self:GetBackgroundColor());
-	painter:DrawRectTexture(self:x(), self:y(), self:width(), self:height(), self:GetBackground());
-end
+--function ScrollArea:paintEvent(painter)
+--	painter:SetPen(self:GetBackgroundColor());
+--	painter:DrawRectTexture(self:x(), self:y(), self:width(), self:height(), self:GetBackground());
+--end
 

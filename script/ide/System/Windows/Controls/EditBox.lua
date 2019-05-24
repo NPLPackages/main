@@ -448,9 +448,6 @@ end
 function EditBox:paintEvent(painter)
 	EditBox._super.paintEvent(self, painter)
 
-	painter:SetPen(self:GetBackgroundColor());
-	painter:DrawRectTexture(self:x(), self:y(), self:width(), self:height(), self:GetBackground());
-
 	local r = self:adjustedContentsRect();
 	local lineRect = Rect:new_from_pool(r:x() + self.horizontalMargin, r:y(), r:width() - 2*self.horizontalMargin, r:height());
 

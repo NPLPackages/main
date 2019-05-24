@@ -473,10 +473,6 @@ function ToolBase:setParent_helper(parent)
     if (parent) then
 		local children = parent:GetChildren();
 		children:add(self);
-	else
-		if(self._page_element) then
-			self._page_element:PrintNodeInfo()
-		end
 	end
 end
 

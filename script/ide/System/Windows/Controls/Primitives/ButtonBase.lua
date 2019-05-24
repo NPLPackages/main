@@ -209,9 +209,9 @@ function ButtonBase:getText()
     return self.text;
 end
 
-function ButtonBase:paintEvent(painter)
-	
-end
+--function ButtonBase:paintEvent(painter)
+--	
+--end
 
 -- virtual: apply css style
 function ButtonBase:ApplyCss(css)

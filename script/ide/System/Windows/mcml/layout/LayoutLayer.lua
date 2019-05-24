@@ -18,6 +18,10 @@ NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyleConstants.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutScrollbar.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/platform/ScrollbarTheme.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutScrollCorner.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/layout/PaintPhase.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyle.lua");
+local ComputedStyle = commonlib.gettable("System.Windows.mcml.style.ComputedStyle");
+local PaintPhase = commonlib.gettable("System.Windows.mcml.layout.PaintPhase");
 local LayoutScrollCorner = commonlib.gettable("System.Windows.mcml.layout.LayoutScrollCorner");
 local ScrollbarTheme = commonlib.gettable("System.Windows.mcml.platform.ScrollbarTheme");
 local LayoutScrollbar = commonlib.gettable("System.Windows.mcml.layout.LayoutScrollbar");
@@ -519,10 +523,12 @@ end
 
 function LayoutLayer:DirtyZOrderLists()
     if (self.posZOrderList) then
-        self.posZOrderList:clear();
+        --self.posZOrderList:clear();
+		self.posZOrderList = nil;
 	end
     if (self.negZOrderList) then
-        self.negZOrderList:clear();
+        --self.negZOrderList:clear();
+		self.negZOrderList = nil;
 	end
     self.zOrderListsDirty = true;
 
@@ -598,8 +604,6 @@ function LayoutLayer:AddChild(child, beforeChild)
     if (child.hasVisibleContent or child.hasVisibleDescendant) then
         self:ChildVisibilityChanged(true);
 	end
-    
-
 
 --#if USE(ACCELERATED_COMPOSITING)
 --    compositor()->layerWasAdded(this, child);
@@ -678,7 +682,6 @@ function LayoutLayer:InsertOnlyThisLayer()
         -- We need to connect ourselves when our renderer() has a parent.
         -- Find our enclosingLayer and add ourselves.
         local parentLayer = self:Renderer():Parent():EnclosingLayer();
-
         --ASSERT(parentLayer);
         local beforeChild = if_else(parentLayer:ReflectionLayer() ~= self, self:Renderer():Parent():FindNextLayer(parentLayer, self:Renderer()), nil);
         parentLayer:AddChild(self, beforeChild);
@@ -780,6 +783,11 @@ function LayoutLayer:UpdateLayerPositions(offsetFromRoot, flags)
 	end
 
 	self.needsFullRepaint = false;
+	-- Go ahead and update the reflection's position and size.
+    if (self.reflection) then
+        self.reflection:Layout();
+	end
+
 	local child = self:FirstChild();
 	while(child) do
 		child:UpdateLayerPositions(offsetFromRoot, flags);
@@ -890,11 +898,12 @@ function LayoutLayer:StyleChanged(diff, oldStyle)
     end
     
     if (not self:HasReflection() and self.reflection) then
-        --self:RemoveReflection();
+        self:RemoveReflection();
     elseif (self:HasReflection()) then
---        if (!m_reflection)
---            createReflection();
---        updateReflectionStyle();
+        if (not self.reflection) then
+            self:CreateReflection();
+		end
+        self:UpdateReflectionStyle();
     end
     
     if (self:ScrollsOverflow()) then
@@ -1141,7 +1150,7 @@ function LayoutLayer:CollectLayers(posBuffer, negBuffer)
 
         -- Create the buffer if it doesn't exist yet.
         if (not buffer) then
-            buffer = commonlib.vector:new();
+            buffer = {};
 			if(self:ZIndex() >= 0) then
 				posBuffer = buffer;
 			else
@@ -1149,7 +1158,9 @@ function LayoutLayer:CollectLayers(posBuffer, negBuffer)
 			end
 		end
         -- Append ourselves at the end of the appropriate buffer.
-        buffer:append(self);
+		buffer[#buffer + 1] = self;
+		self.index = #buffer;
+        --buffer:append(self);
     end
 
     -- Recur into our children to collect more layers, but only if we don't establish
@@ -1168,29 +1179,35 @@ function LayoutLayer:CollectLayers(posBuffer, negBuffer)
 	return posBuffer, negBuffer;
 end
 
+local function compareZIndex(a, b)
+	if a:ZIndex() == b:ZIndex() then
+		return a.index < b.index;
+	end
+	return a:ZIndex() < b:ZIndex()
+end
+
 --void RenderLayer::updateZOrderLists()
 function LayoutLayer:UpdateZOrderLists()
     if (not self:IsStackingContext() or not self.zOrderListsDirty) then
         return;
 	end
 	local child = self:FirstChild();
+	
 	while(child) do
 		if (not self.reflection or self:ReflectionLayer() ~= child) then
             self.posZOrderList, self.negZOrderList = child:CollectLayers(self.posZOrderList, self.negZOrderList);
 		end
-
 		child = child:NextSibling();
 	end
-
     -- Sort the two lists.
     if (self.posZOrderList) then
         --std::stable_sort(m_posZOrderList->begin(), m_posZOrderList->end(), compareZIndex);
-		table.sort(self.posZOrderList,function(a,b) return a:ZIndex() < b:ZIndex() end )
+		table.sort(self.posZOrderList, compareZIndex)
 	end
 
     if (self.negZOrderList) then
         --std::stable_sort(m_negZOrderList->begin(), m_negZOrderList->end(), compareZIndex);
-		table.sort(self.negZOrderList,function(a,b) return a:ZIndex() < b:ZIndex() end )
+		table.sort(self.negZOrderList, compareZIndex)
 	end
 
     self.zOrderListsDirty = false;
@@ -1282,6 +1299,13 @@ function LayoutLayer:PaintLayer(rootLayer, p, paintDirtyRect, paintBehavior, pai
 	local localPaintFlags = nil;
 
 	-- Paint the reflection first if we have one and needed.
+	if (self.reflection and not self.paintingInsideReflection) then
+        -- Mark that we are now inside replica painting.
+        self.paintingInsideReflection = true;
+		-- reflectionLayer()->paintLayer(rootLayer, p, paintDirtyRect, paintBehavior, paintingRoot, region, overlapTestRequests, localPaintFlags | PaintLayerPaintingReflection);
+        self:ReflectionLayer():PaintLayer(rootLayer, p, paintDirtyRect, paintBehavior, paintingRoot, region, overlapTestRequests);
+        self.paintingInsideReflection = false;
+    end
 
 	-- Calculate the clip rects we should use.
     local layerBounds = LayoutRect:new();
@@ -1295,6 +1319,9 @@ function LayoutLayer:PaintLayer(rootLayer, p, paintDirtyRect, paintBehavior, pai
 	-- Ensure our lists are up-to-date.
     self:UpdateLayerListsIfNeeded();
 
+	local forceBlackText = false;
+	local selectionOnly = false;
+
 	-- If this layer's renderer is a child of the paintingRoot, we render unconditionally, which
     -- is done by passing a nil paintingRoot down to our renderer (as if no paintingRoot was ever set).
     -- Else, our renderer tree may or may not contain the painting root, so we pass that root along
@@ -1303,7 +1330,6 @@ function LayoutLayer:PaintLayer(rootLayer, p, paintDirtyRect, paintBehavior, pai
     if (paintingRoot and not self:Renderer():IsDescendantOf(paintingRoot)) then
         paintingRootForRenderer = paintingRoot;
 	end
-
 
 	-- We want to paint our layer, but only if we intersect the damage rect.
     local shouldPaint = self:IntersectsDamageRect(layerBounds, damageRect:Rect(), rootLayer) and self.hasVisibleContent and self:IsSelfPaintingLayer();
@@ -1318,9 +1344,8 @@ function LayoutLayer:PaintLayer(rootLayer, p, paintDirtyRect, paintBehavior, pai
         -- Paint our background first, before painting any child layers.
         -- Establish the clip used to paint our background.
         self:ClipToRect(rootLayer, p, paintDirtyRect, damageRect, "DoNotIncludeSelfForBorderRadius"); -- Background painting will handle clipping to self.
-
         -- Paint the background.
-        local paintInfo = PaintInfo:new():init(p, damageRect:Rect(), "PaintPhaseBlockBackground", false, paintingRootForRenderer, region);
+        local paintInfo = PaintInfo:new():init(p, damageRect:Rect(), PaintPhase.PaintPhaseBlockBackground, false, paintingRootForRenderer, region);
         self:Renderer():Paint(paintInfo, paintOffset);
 
 --        // Restore the clip.
@@ -1335,13 +1360,35 @@ function LayoutLayer:PaintLayer(rootLayer, p, paintDirtyRect, paintBehavior, pai
 
 	-- Now walk the sorted list of children with negative z-indices.
     self:PaintList(self.negZOrderList, rootLayer, p, paintDirtyRect, paintBehavior, paintingRoot, region, overlapTestRequests, localPaintFlags);
-
 	-- Now establish the appropriate clip and paint our child RenderObjects.
-	-- now in mcmlv2 we don't distinguish the backround and the foreground, content of the control;
+    if (shouldPaint and not clipRectToApply:IsEmpty()) then
+        -- Begin transparency layers lazily now that we know we have to paint something.
+--        if (haveTransparency)
+--            beginTransparencyLayers(p, rootLayer, paintBehavior);
+
+        -- Set up the clip used when painting our children.
+        self:ClipToRect(rootLayer, p, paintDirtyRect, clipRectToApply);
+        local paintInfo = PaintInfo:new():init(p, clipRectToApply:Rect(), 
+                            if_else(selectionOnly, PaintPhase.PaintPhaseSelection, PaintPhase.PaintPhaseChildBlockBackgrounds),
+                            forceBlackText, paintingRootForRenderer, region);
+        self:Renderer():Paint(paintInfo, paintOffset);
+        if(not selectionOnly) then
+            paintInfo.phase = PaintPhase.PaintPhaseFloat;
+            self:Renderer():Paint(paintInfo, paintOffset);
+            paintInfo.phase = PaintPhase.PaintPhaseForeground;
+            paintInfo.overlapTestRequests = overlapTestRequests;
+            self:Renderer():Paint(paintInfo, paintOffset);
+--            paintInfo.phase = PaintPhase.PaintPhaseChildOutlines;
+--            renderer()->paint(paintInfo, paintOffset);
+        end
+
+--        // Now restore our clip.
+--        restoreClip(p, paintDirtyRect, clipRectToApply);
+    end
+    
 
 	-- Paint any child layers that have overflow.
     self:PaintList(self.normalFlowList, rootLayer, p, paintDirtyRect, paintBehavior, paintingRoot, region, overlapTestRequests, localPaintFlags);
-    
     -- Now walk the sorted list of children with positive z-indices.
     self:PaintList(self.posZOrderList, rootLayer, p, paintDirtyRect, paintBehavior, paintingRoot, region, overlapTestRequests, localPaintFlags);
 end
@@ -1355,8 +1402,8 @@ function LayoutLayer:PaintList(list, rootLayer, p, paintDirtyRect, paintBehavior
     if (not list) then
         return;
 	end
-	for i = 1, list:size() do
-		local childLayer = list:get(i);
+	for i = 1,#list do
+		local childLayer = list[i];
         if (not childLayer:IsPaginated()) then
 			--local location = childLayer:RenderBoxLocation()
 			--local location = childLayer:Location()
@@ -1515,6 +1562,10 @@ function LayoutLayer:BackgroundClipRect(rootLayer, region, temporaryClipRects, r
     return backgroundRect;
 end
 
+function LayoutLayer:HasTransform()
+	return self:Renderer():HasTransform();
+end
+
 --static inline bool isPositionedContainer(RenderLayer* layer)
 local function isPositionedContainer(layer)
     local o = layer:Renderer();
@@ -1648,7 +1699,6 @@ function LayoutLayer:CalculateRects(rootLayer, region, paintDirtyRect, layerBoun
 	end
 	--backgroundRect = ClipRect:new(paintDirtyRect);
     foregroundRect = backgroundRect:clone();
-	foregroundRect:Rect():SetLocation(LayoutPoint:new());
     outlineRect = backgroundRect:clone();
     
     local offset = LayoutPoint:new();
@@ -2445,7 +2495,23 @@ function LayoutLayer:ClippingRoot()
     return nil;
 end
 
----- Returns the foreground clip rect of the layer in the document's coordinate space.
---LayoutRect childrenClipRect() const; 
----- Returns the background clip rect of the layer in the document's coordinate space.
---LayoutRect selfClipRect() const; 
+function LayoutLayer:CreateReflection()
+    --ASSERT(!m_reflection);
+    self.reflection = RenderReplica:new():init(self:Renderer():Document());
+    self.reflection:SetParent(self:Renderer()); -- We create a 1-way connection.
+end
+
+function LayoutLayer:RemoveReflection()
+    if (not self.reflection:DocumentBeingDestroyed()) then
+        self.reflection:RemoveLayers(self);
+	end
+    self.reflection:SetParent(nil);
+    self.reflection:Destroy();
+    self.reflection = nil;
+end
+
+function LayoutLayer:UpdateReflectionStyle()
+    local newStyle = ComputedStyle.Create();
+    newStyle:InheritFrom(self:Renderer():Style());
+	self.reflection:SetStyle(newStyle);
+end

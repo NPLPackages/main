@@ -214,6 +214,12 @@ local enum_fields = {
 		["content-box"] = "CONTENT_BOX",
 		["border-box"] = "BORDER_BOX",
 	}, enum = ComputedStyleConstants.BoxSizingEnum},
+	["clear"] = {map = {
+		["none"] = "CNONE",
+		["left"] = "CLEFT",
+		["right"] = "CRIGHT",
+		["both"] = "CBOTH",
+	}, enum = ComputedStyleConstants.ClearEnum},
 }
 
 function CSSProperty:CreateValueFromCssString()

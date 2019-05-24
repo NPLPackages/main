@@ -71,7 +71,7 @@ function LayoutScrollCorner:GetOrCreateControl()
 		local scrollArea_control = self.scrollArea:Renderer():GetControl();
 		local corner = Canvas:new():init(scrollArea_control);
 		corner:SetBackgroundColor("#ffffffff")
-		corner:SetZIndex(ScrollbarTheme:theme():scrollbarZIndex());
+		--corner:SetZIndex(ScrollbarTheme:theme():scrollbarZIndex());
 		self.control = corner;
 	end	
 	return self.control

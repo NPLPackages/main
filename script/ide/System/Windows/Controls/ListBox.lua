@@ -221,9 +221,6 @@ end
 
 function ListBox:paintEvent(painter)
 	ListBox._super.paintEvent(self, painter);
-
-	painter:SetPen(self:GetBackgroundColor());
-	painter:DrawRectTexture(self:x(), self:y(), self:width(), self:height(), self:GetBackground());
 end
 
 function ListBox:ApplyCss(css)

@@ -134,7 +134,7 @@ function SelectorChecker:isFastCheckableMatch(selector)
 	if (matchtype == CSSSelector.MatchType.kAttributeSet or matchtype == CSSSelector.MatchType.kAttributeExact) then
         return true;
 	end
-    return matchtype == matchtype == CSSSelector.MatchType.kUnknown or matchtype == CSSSelector.MatchType.kId or matchtype == CSSSelector.MatchType.kClass or matchtype == CSSSelector.MatchType.kTag;
+    return matchtype == CSSSelector.MatchType.kUnknown or matchtype == CSSSelector.MatchType.kId or matchtype == CSSSelector.MatchType.kClass or matchtype == CSSSelector.MatchType.kTag;
 end
 
 --inline bool SelectorChecker::tagMatches(const Element* element, const CSSSelector* selector)

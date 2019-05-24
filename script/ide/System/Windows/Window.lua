@@ -67,15 +67,15 @@ function Window:PopupMenu()
 	return self.popupMenu;
 end
 
-local popupMenuZIndex = 999;
+local popupMenuZOrder = 999;
 
-function Window:GetPopupMenuZIndex()
-	return popupMenuZIndex;
+function Window:GetPopupMenuZOrder()
+	return popupMenuZOrder;
 end
 
 function Window:CreatePopupMenu()
 	local popupMenu = PopupMenu:new():init(self);
-	popupMenu:SetZIndex(self:GetPopupMenuZIndex());
+	popupMenu:SetZOrder(self:GetPopupMenuZOrder());
 	popupMenu:hide();
 	return popupMenu;
 end

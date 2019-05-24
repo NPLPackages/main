@@ -18,7 +18,6 @@ function PaintInfo:ctor()
 	-- unused
 	self.context = nil;
 	self.rect = IntRect:new();
-	-- unused
 	self.phase = nil;
 	-- unused
 	self.forceBlackText = nil;

@@ -55,10 +55,12 @@ function Label:paintEvent(painter)
 	end
 end
 
+function Label:PaintBoxDecorations(painter)
+
+end
+
 -- virtual: apply css style
 function Label:ApplyCss(css)
 	Label._super.ApplyCss(self, css);
-	--self:SetAlignment(css:GetTextAlignment());
-	--self:SetPaddings(css:paddings());
 end
 

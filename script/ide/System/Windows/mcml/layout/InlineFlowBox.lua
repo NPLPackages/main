@@ -15,6 +15,8 @@ NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyleConstants.lua");
 NPL.load("(gl)script/ide/System/Windows/Shapes/Rectangle.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutOverflow.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/style/ComputedStyle.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/layout/PaintPhase.lua");
+local PaintPhase = commonlib.gettable("System.Windows.mcml.layout.PaintPhase");
 local ComputedStyle = commonlib.gettable("System.Windows.mcml.style.ComputedStyle");
 local LayoutOverflow = commonlib.gettable("System.Windows.mcml.layout.LayoutOverflow");
 local Rectangle = commonlib.gettable("System.Windows.Shapes.Rectangle");
@@ -1061,20 +1063,33 @@ function InlineFlowBox:Paint(paintInfo, paintOffset, lineTop, lineBottom)
 --    if (!paintInfo.rect.intersects(overflowRect))
 --        return;
 
+	if (paintInfo.phase ~= PaintPhase.PaintPhaseChildOutlines and 
+		paintInfo.phase ~= PaintPhase.PaintPhaseOutline and 
+		paintInfo.phase ~= PaintPhase.PaintPhaseSelfOutline and
+		paintInfo.phase ~= PaintPhase.PaintPhaseMask) then
+		self:PaintBoxDecorations(paintInfo, paintOffset);
+	end
 
-	self:PaintBoxDecorations(paintInfo, paintOffset);
+	if (paintInfo.phase == PaintPhase.PaintPhaseMask) then
+        return;
+	end
 
+	local paintPhase = if_else(paintInfo.phase == PaintPhase.PaintPhaseChildOutlines, PaintPhase.PaintPhaseOutline, paintInfo.phase);
 	--PaintInfo childInfo(paintInfo);
-	local childInfo = paintInfo;
+	local childInfo = paintInfo:clone();
+	childInfo.phase = paintPhase;
+	childInfo:UpdatePaintingRootForChildren(self:Renderer());
 
 	-- Paint our children.
-	local curr = self:FirstChild();
-	while(curr) do
-		if (curr:Renderer():IsText() or not curr:BoxModelObject():HasSelfPaintingLayer()) then
-            curr:Paint(childInfo, paintOffset, lineTop, lineBottom);
-		end
+	if (paintPhase ~= PaintPhase.PaintPhaseSelfOutline) then
+		local curr = self:FirstChild();
+		while(curr) do
+			if (curr:Renderer():IsText() or not curr:BoxModelObject():HasSelfPaintingLayer()) then
+				curr:Paint(childInfo, paintOffset, lineTop, lineBottom);
+			end
 
-		curr = curr:NextOnLine();
+			curr = curr:NextOnLine();
+		end
 	end
 end
 

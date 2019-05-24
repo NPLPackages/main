@@ -458,10 +458,6 @@ end
 function MultiLineEditbox:paintEvent(painter)
 	MultiLineEditbox._super.paintEvent(self, painter);
 
-	--self:updateScrollGeometry();
-	painter:SetPen(self:GetBackgroundColor());
-	painter:DrawRectTexture(self:x(), self:y(), self:width(), self:height(), self:GetBackground());
-
 	if(self.showLineNumber) then
 		painter:SetPen(self:GetLineNumberBackgroundColor());
 		painter:DrawRectTexture(self:x(), self:y() + self.topTextMargin, self:LineNumberWidth(), self:height()- self.topTextMargin - self.bottomTextMargin, self:GetLineNumberBackground());

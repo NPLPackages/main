@@ -1732,6 +1732,10 @@ function TextControl:updateGeometryIfNeeded()
 	end
 end
 
+function TextControl:PaintBoxDecorations(painter)
+
+end
+
 function TextControl:paintEvent(painter)
 	TextControl._super.paintEvent(self, painter)
 

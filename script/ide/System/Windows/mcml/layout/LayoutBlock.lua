@@ -27,6 +27,8 @@ NPL.load("(gl)script/ide/System/Windows/mcml/platform/PODInterval.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/platform/PODIntervalTree.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutRepainter.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/layout/LayoutTheme.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/layout/PaintPhase.lua");
+local PaintPhase = commonlib.gettable("System.Windows.mcml.layout.PaintPhase");
 local LayoutTheme = commonlib.gettable("System.Windows.mcml.layout.LayoutTheme");
 local LayoutRepainter = commonlib.gettable("System.Windows.mcml.layout.LayoutRepainter");
 local PODIntervalTree = commonlib.gettable("System.Windows.mcml.platform.PODIntervalTree");
@@ -2321,7 +2323,51 @@ function LayoutBlock:ClearFloatsIfNeeded(child, marginInfo, oldTopPosMargin, old
     if (heightIncrease == 0) then
         return yPos;
 	end
-	--TODO: fixed this function
+	if (child:IsSelfCollapsingBlock()) then
+        -- For self-collapsing blocks that clear, they can still collapse their
+        -- margins with following siblings.  Reset the current margins to represent
+        -- the self-collapsing block's margins only.
+        -- CSS2.1 states:
+        -- "An element that has had clearance applied to it never collapses its top margin with its parent block's bottom margin.
+        -- Therefore if we are at the bottom of the block, let's go ahead and reset margins to only include the
+        -- self-collapsing block's bottom margin.
+        local atBottomOfBlock = true;
+		local curr = child:NextSiblingBox();
+		while(curr and atBottomOfBlock) do
+			if (not curr:IsFloatingOrPositioned()) then
+                atBottomOfBlock = false;
+			end
+			curr = curr:NextSiblingBox();
+		end
+        
+        local childMargins = self:MarginValuesForChild(child);
+        if (atBottomOfBlock) then
+            marginInfo:SetPositiveMargin(childMargins:PositiveMarginAfter());
+            marginInfo:SetNegativeMargin(childMargins:NegativeMarginAfter());
+        else
+            marginInfo:SetPositiveMargin(math.max(childMargins:PositiveMarginBefore(), childMargins:PositiveMarginAfter()));
+            marginInfo:SetNegativeMargin(math.max(childMargins:NegativeMarginBefore(), childMargins:NegativeMarginAfter()));
+        end
+        
+        -- Adjust our height such that we are ready to be collapsed with subsequent siblings (or the bottom
+        -- of the parent block).
+        self:SetLogicalHeight(child:Y() - math.max(0, marginInfo:Margin()));
+    else
+        -- Increase our height by the amount we had to clear.
+        self:SetLogicalHeight(self:Height() + heightIncrease);
+    end
+
+	if (marginInfo:CanCollapseWithMarginBefore()) then
+		-- We can no longer collapse with the top of the block since a clear
+		-- occurred.  The empty blocks collapse into the cleared block.
+		-- FIXME: This isn't quite correct.  Need clarification for what to do
+		-- if the height the cleared block is offset by is smaller than the
+		-- margins involved.
+		self:SetMaxMarginBeforeValues(oldTopPosMargin, oldTopNegMargin);
+		marginInfo:SetAtBeforeSideOfBlock(false);
+	end
+    
+    return yPos + heightIncrease;
 end
 
 --LayoutUnit RenderBlock::addOverhangingFloats(RenderBlock* child, bool makeChildPaintOtherFloats)
@@ -3958,6 +4004,7 @@ function LayoutBlock:Paint(paintInfo, paintOffset)
 --	end
 --	self:AttachControl();
     --local adjustedPaintOffset = paintOffset + self:Location();
+	local phase = paintInfo.phase;
 	local adjustedPaintOffset = paintOffset;
 	self:PaintObject(paintInfo, adjustedPaintOffset)
 
@@ -3965,15 +4012,27 @@ function LayoutBlock:Paint(paintInfo, paintOffset)
     -- z-index.  We paint after we painted the background/border, so that the scrollbars will
     -- sit above the background/border.
 	--if (hasOverflowClip() && style()->visibility() == VISIBLE && (phase == PaintPhaseBlockBackground || phase == PaintPhaseChildBlockBackground) && paintInfo.shouldPaintWithinRoot(this))
-    if (self:HasOverflowClip() and self:Style():Visibility() == VisibilityEnum.VISIBLE and paintInfo:ShouldPaintWithinRoot(self)) then
+    if (self:HasOverflowClip() and 
+		self:Style():Visibility() == VisibilityEnum.VISIBLE and 
+		(phase == PaintPhase.PaintPhaseBlockBackground or phase == PaintPhase.PaintPhaseChildBlockBackground) and 
+		paintInfo:ShouldPaintWithinRoot(self)) then
         self:Layer():PaintOverflowControls(paintInfo.context, adjustedPaintOffset, paintInfo.rect);
 	end
 end
 
 --void RenderBlock::paintObject(PaintInfo& paintInfo, const LayoutPoint& paintOffset)
 function LayoutBlock:PaintObject(paintInfo, paintOffset)
+	local paintPhase = paintInfo.phase;
 	-- 1. paint background, borders etc
-	self:PaintBoxDecorations(paintInfo, paintOffset);
+	if ((paintPhase == PaintPhase.PaintPhaseBlockBackground or paintPhase == PaintPhase.PaintPhaseChildBlockBackground) and self:Style():Visibility() == VisibilityEnum.VISIBLE) then
+		self:PaintBoxDecorations(paintInfo, paintOffset);
+	end
+
+	-- We're done.  We don't bother painting any children.
+    if (paintPhase == PaintPhase.PaintPhaseBlockBackground) then
+        return;
+	end
+
 	-- Adjust our painting position if we're inside a scrolled layer (e.g., an overflow:auto div).
     --local scrolledOffset = paintOffset:clone();
 	local scrolledOffset = LayoutPoint:new();
@@ -3982,9 +4041,13 @@ function LayoutBlock:PaintObject(paintInfo, paintOffset)
 		paintInfo:Rect():Move(self:Layer():ScrolledContentOffset());
 	end
 	-- 2. paint contents
-	self:PaintContents(paintInfo, scrolledOffset);
+	if (paintPhase ~= PaintPhase.PaintPhaseSelfOutline) then
+		self:PaintContents(paintInfo, scrolledOffset);
+	end
 	-- 4. paint floats.
-	self:PaintFloats(paintInfo, scrolledOffset)
+	if (paintPhase == PaintPhase.PaintPhaseFloat or paintPhase == PaintPhase.PaintPhaseSelection or paintPhase == PaintPhase.PaintPhaseTextClip) then
+		self:PaintFloats(paintInfo, scrolledOffset)
+	end
 end
 
 --void RenderBox::paintBoxDecorations(PaintInfo& paintInfo, const LayoutPoint& paintOffset)
@@ -4036,11 +4099,20 @@ end
 
 --void RenderBlock::paintChildren(PaintInfo& paintInfo, const LayoutPoint& paintOffset)
 function LayoutBlock:PaintChildren(paintInfo, paintOffset)
+	local newPhase = if_else(paintInfo.phase == PaintPhase.PaintPhaseChildOutlines, PaintPhase.PaintPhaseOutline, paintInfo.phase);
+    newPhase = if_else(newPhase == PaintPhase.PaintPhaseChildBlockBackgrounds, PaintPhase.PaintPhaseChildBlockBackground, newPhase);
+
+--	-- We don't paint our own background, but we do let the kids paint their backgrounds.
+--    local info = paintInfo:clone();
+--    info.phase = newPhase;
+--    info:UpdatePaintingRootForChildren(self);
+
 	local child = self:FirstChild();
 	while(child) do
 		local childPoint = self:FlipForWritingModeForChild(child, paintOffset);
         if (not child:HasSelfPaintingLayer() and not child:IsFloating()) then
 			local childInfo = paintInfo:clone();
+			childInfo.phase = newPhase;
 			childInfo:UpdatePaintingRootForChildren(self);
 			childInfo:Rect():SetX(childInfo:Rect():X() - child:X())
 			childInfo:Rect():SetY(childInfo:Rect():Y() - child:Y())
@@ -4097,13 +4169,26 @@ function LayoutBlock:PaintFloats(paintInfo, paintOffset, preservePhase)
 	while(it) do
 		local floatingObject = it();
 		if(floatingObject.shouldPaint and (not floatingObject.renderer:HasSelfPaintingLayer())) then
+			local currentPaintInfo = paintInfo:clone();
+            currentPaintInfo.phase = if_else(preservePhase, paintInfo.phase, PaintPhase.PaintPhaseBlockBackground);
+
 			local point_x = paintOffset:X() + self:XPositionForFloatIncludingMargin(floatingObject) - floatingObject:Renderer():X();
 			local point_y = paintOffset:Y() + self:YPositionForFloatIncludingMargin(floatingObject) - floatingObject:Renderer():Y();
 			local childPoint = self:FlipFloatForWritingModeForChild(floatingObject, LayoutPoint:new(point_x, point_y));
 
 --			floatingObject.renderer:SetX(floatingObject:FrameRect():X());
 --			floatingObject.renderer:SetY(floatingObject:FrameRect():Y());
-			floatingObject.renderer:Paint(paintInfo, childPoint);
+			floatingObject.renderer:Paint(currentPaintInfo, childPoint);
+			if(not preservePhase) then
+				currentPaintInfo.phase = PaintPhase.PaintPhaseChildBlockBackgrounds;
+                floatingObject.renderer:Paint(currentPaintInfo, childPoint);
+                currentPaintInfo.phase = PaintPhase.PaintPhaseFloat;
+                floatingObject.renderer:Paint(currentPaintInfo, childPoint);
+                currentPaintInfo.phase = PaintPhase.PaintPhaseForeground;
+                floatingObject.renderer:Paint(currentPaintInfo, childPoint);
+--                currentPaintInfo.phase = PaintPhaseOutline;
+--                r->m_renderer->paint(currentPaintInfo, childPoint);
+			end
 		end
 		it = floatingObjectSet:next(it);
 	end

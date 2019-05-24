@@ -10,11 +10,11 @@ local UITextElement = commonlib.gettable("System.Windows.UITextElement");
 ------------------------------------------------------------
 
 ]]
-NPL.load("(gl)script/ide/System/Windows/UIBorderElement.lua");
+NPL.load("(gl)script/ide/System/Windows/UIStyleElement.lua");
 NPL.load("(gl)script/ide/math/Rect.lua");
 local Rect = commonlib.gettable("mathlib.Rect");
 
-local UITextElement = commonlib.inherit(commonlib.gettable("System.Windows.UIBorderElement"), commonlib.gettable("System.Windows.UITextElement"));
+local UITextElement = commonlib.inherit(commonlib.gettable("System.Windows.UIStyleElement"), commonlib.gettable("System.Windows.UITextElement"));
 UITextElement:Property("Name", "UITextElement");
 
 UITextElement:Property({"text", nil, "GetText", "SetText", auto=true});

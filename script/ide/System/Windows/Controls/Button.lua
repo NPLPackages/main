@@ -86,7 +86,7 @@ end
 function Button:paintEvent(painter)
 	Button._super.paintEvent(self, painter)
 
-	self:paintBackground(painter);
+	--self:paintBackground(painter);
 	
 	local x, y = self:x(), self:y();
 	local text = self:GetText();

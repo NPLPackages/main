@@ -233,6 +233,7 @@ function CSSStyleApplyProperty:init()
 	--setPropertyHandler(CSSPropertyColor, new ApplyPropertyColor<InheritFromParent>(&RenderStyle::color, &RenderStyle::setColor,  &RenderStyle::setVisitedLinkColor, 0, RenderStyle::initialColor));
 
 	self:SetPropertyHandler("box-sizing", ApplyPropertyDefault:new():init(ComputedStyle.BoxSizing, ComputedStyle.SetBoxSizing, ComputedStyle.initialBoxSizing));
+	self:SetPropertyHandler("clear", ApplyPropertyDefault:new():init(ComputedStyle.Clear, ComputedStyle.SetClear, ComputedStyle.initialClear));
 
 	self:SetPropertyHandler("z-index", ApplyPropertyDefault:new():init(ComputedStyle.ZIndex, ComputedStyle.SetZIndex));
 	return self;

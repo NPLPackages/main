@@ -2307,7 +2307,7 @@ function LayoutBox:ComputeRectForRepaint(repaintContainer, rect, fixed)
     elseif (position == PositionEnum.FixedPosition) then
         fixed = true;
 	end
-    if (position == PositionEnum.AbsolutePosition and o:IsRelPositioned() and o:IsRenderInline()) then
+    if (position == PositionEnum.AbsolutePosition and o:IsRelPositioned() and o:IsLayoutInline()) then
         topLeft = topLeft + o:ToRenderInline():RelativePositionedInlineOffset(self);
     elseif (position == PositionEnum.RelativePosition and self:Layer()) then
         -- Apply the relative position offset when invalidating a rectangle.  The layer
@@ -3433,4 +3433,9 @@ function LayoutBox:ClearRenderBoxRegionInfo()
 --        return;
 --
 --    flowThread->removeRenderBoxRegionInfo(this);
+end
+
+--virtual bool isSelfCollapsingBlock() const { return false; }
+function LayoutBox:IsSelfCollapsingBlock()
+	return false;
 end

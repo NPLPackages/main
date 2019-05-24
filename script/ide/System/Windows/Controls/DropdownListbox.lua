@@ -30,7 +30,7 @@ window:Show("my_window", nil, "_mt", 0,0, 600, 600);
 test_Windows.windows = {window};
 ------------------------------------------------------------
 ]]
-NPL.load("(gl)script/ide/System/Windows/UIBorderElement.lua");
+NPL.load("(gl)script/ide/System/Windows/UIStyleElement.lua");
 NPL.load("(gl)script/ide/System/Core/UniString.lua");
 NPL.load("(gl)script/ide/System/Windows/Controls/EditBox.lua");
 NPL.load("(gl)script/ide/System/Windows/Controls/Button.lua");
@@ -40,7 +40,7 @@ local EditBox = commonlib.gettable("System.Windows.Controls.EditBox");
 local Button = commonlib.gettable("System.Windows.Controls.Button");
 local FocusPolicy = commonlib.gettable("System.Core.Namespace.FocusPolicy");
 
-local DropdownListbox = commonlib.inherit(commonlib.gettable("System.Windows.UIBorderElement"), commonlib.gettable("System.Windows.Controls.DropdownListbox"));
+local DropdownListbox = commonlib.inherit(commonlib.gettable("System.Windows.UIStyleElement"), commonlib.gettable("System.Windows.Controls.DropdownListbox"));
 DropdownListbox:Property("Name", "DropdownListbox");
 
 DropdownListbox:Property({"BackgroundColor", "#cccccc", auto=true});
@@ -143,7 +143,6 @@ end
 
 function DropdownListbox:initListBox()
 --	self.listbox = ListBox:new():init(self);
---	self.listbox:SetZIndex(1);
 --	self.listbox:SetSize(self.maxVisibleItems);
 	self.listbox = self:GetWindow():PopupMenu();
 	self.listbox:Connect("clicked", function (index, value, text)
@@ -253,12 +252,8 @@ function DropdownListbox:UpdateControls()
 end
 
 function DropdownListbox:paintEvent(painter)
-	DropdownListbox._super.paintEvent(self, painter);
-
 	self:UpdateControls();
-
-	painter:SetPen(self:GetBackgroundColor());
-	painter:DrawRectTexture(self:x(), self:y(), self:width(), self:height(), self:GetBackground());
+	DropdownListbox._super.paintEvent(self, painter);
 end
 
 function DropdownListbox:SetTextMargin(left, top, right, bottom)

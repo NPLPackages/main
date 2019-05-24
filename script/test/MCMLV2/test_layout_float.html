@@ -1,11 +1,17 @@
 ﻿<!-- "script/test/MCMLV2/test_layout_float.html" -->
 <html>
 <pe:mcml>
+    <h1>float测试</h1>
     <div name="div1" id="div1" style="margin:20px;width:100px;height:300px;background-color:aquamarine;">
         <div name="floatRight" style="width:20px;height:20px;background-color:green;float:right;" ></div>
-        <div name="floatLeft" style="width:20px;height:60px;background-color:green;float:left;" ></div>
-        <!--<span style="">111 222 333 444 555 666 777 88888 999</span>aaa bbb ccc-->
-        
+        <div name="floatLeft" style="width:20px;height:60px;background-color:red;float:left;" ></div>
+        <span style="">111 222 333 444 555 666 777 88888 999</span>aaa bbb ccc
+    </div>
+    <h1>clear测试</h1>
+    <div name="divOuter" style="margin:20px;background-color:antiquewhite;">
+        <div name="divFloat1" style="background-color:green;height:30px;width:160px;float:left;">div2</div>
+        <div name="divFloat2" style="background-color:blue;height:30px;width:130px;float:right;">div4</div>
+        <div name="divClear" style="clear:both;"></div>
     </div>
 </pe:mcml>
 </html>
