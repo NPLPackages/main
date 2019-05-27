@@ -86,7 +86,7 @@ function Overlay:ctor()
 end
 
 local function compare_zorder_less(left, right)
-	return (left.zorder or 0) <= (right.zorder or 0);
+	return (left.zorder or 0) < (right.zorder or 0);
 end
 
 -- @param parent: if nil, we will create as root. 
