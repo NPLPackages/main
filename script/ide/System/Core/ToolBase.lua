@@ -267,7 +267,7 @@ function ToolBase.Connect(sender, signal, receiver, slot, connection_type)
 		return;
 	end
 	
-	if(type(slot) == "string") then
+	if(type(slot) == "string" and receiver) then
 		slot = receiver[slot];
 	end
 	if(type(slot)~="function") then
