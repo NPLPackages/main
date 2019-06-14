@@ -27,12 +27,14 @@ function os.GetPlatform()
 			return "ios";
 		elseif(platform == 2) then
 			return "android";
-		elseif(platform == 14) then
-			return "winrt";
 		elseif(platform == 5) then
 			return "linux";
+		elseif(platform == 8) then
+			return "mac";
 		elseif(platform == 13) then
 			return "wp8";
+		elseif(platform == 14) then
+			return "winrt";
 		elseif(platform == 0) then
 			return "unknown";
 		end

@@ -336,10 +336,26 @@ function Map3DSystem.App.WebBrowser.OnExec(app, commandName, params)
 				absPath = ParaIO.GetCurDirectory(0)..params.filepath;
 			end
 			absPath = commonlib.Files.ToCanonicalFilePath(absPath);
-			
+
 			if(absPath~=nil) then
+				local platform = os.GetPlatform();
+
+				if platform == 'android' or platform == 'ios' then
+					return false;
+				end
+
 				if(not params.silentmode) then
-					_guihelper.MessageBox(string.format(L"您确定要使用Windows浏览器打开文件 %s?", commonlib.Encoding.DefaultToUtf8(absPath)), function()
+					local notice = ''
+
+					if platform == 'win32' then
+						notice = string.format(L"您确定要使用Windows浏览器打开文件 %s?", commonlib.Encoding.DefaultToUtf8(absPath))
+					elseif platform == 'mac' then
+						notice = string.format(L"您确定要使用Finder打开文件 %s?", commonlib.Encoding.DefaultToUtf8(absPath))
+					else
+						notice = string.format(L"您确定要使用文件浏览器打开文件 %s?", commonlib.Encoding.DefaultToUtf8(absPath))
+					end
+
+					_guihelper.MessageBox(notice, function()
 						ParaGlobal.ShellExecute("open", "explorer.exe", absPath, "", 1); 
 					end);
 				else
