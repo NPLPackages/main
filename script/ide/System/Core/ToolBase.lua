@@ -260,7 +260,6 @@ function ToolBase.Connect(sender, signal, receiver, slot, connection_type)
 	if(not slot and type(receiver) == "function") then
 		slot = receiver;
 		receiver = nil;
-		connection_type = nil;
 	end
 	if(not signal) then
 		LOG.std(nil, "warn", "ToolBase:Connect", "invalid null parameter");
