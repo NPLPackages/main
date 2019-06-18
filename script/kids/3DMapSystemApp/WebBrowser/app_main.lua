@@ -338,7 +338,8 @@ function Map3DSystem.App.WebBrowser.OnExec(app, commandName, params)
 			absPath = commonlib.Files.ToCanonicalFilePath(absPath);
 
 			if(absPath~=nil) then
-				local platform = os.GetPlatform();
+				NPL.load("(gl)script/ide/System/os/os.lua");
+				local platform = System.os.GetPlatform();
 
 				if platform == 'android' or platform == 'ios' then
 					return false;
