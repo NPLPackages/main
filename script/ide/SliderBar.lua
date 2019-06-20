@@ -71,6 +71,8 @@ local SliderBar = {
 	tooltip = nil,
 	-- onchange event, it can be nil, a string to be executed or a function of type void ()(value)
 	onchange = nil,
+	-- onclick event on the dragger button. 
+	onclick = nil,
 	onMouseDownEvent = nil,
 	-- function(isDragging) end
 	onMouseUpEvent = nil,
@@ -401,6 +403,7 @@ function SliderBar:OnMouseDown(x, y)
 				self.last_mouse_x_offset = math.floor((x + self.button_width/2) - mouse_x);
 				self.last_mouse_y_offset = math.floor((y + self.button_height/2) - mouse_y);
 				self.last_mouse_x, self.last_mouse_y = mouse_x,mouse_y;
+				self:OnClickButton();
 				return;
 			end	
 		end
@@ -508,7 +511,7 @@ function SliderBar:OnTextValue()
 	end	
 end
 
--- called when the check button is pressed.
+-- called when the value is changed
 function SliderBar:OnChange()
 	-- call the event handler if any
 	if(self.onchange~=nil)then
@@ -516,6 +519,18 @@ function SliderBar:OnChange()
 			NPL.DoString(self.onchange);
 		else
 			self.onchange(self.value);
+		end
+	end
+end	
+
+-- called when the button is clicked
+function SliderBar:OnClickButton()
+	-- call the event handler if any
+	if(self.onclick~=nil)then
+		if(type(self.onclick) == "string") then
+			NPL.DoString(self.onclick);
+		else
+			self.onclick(self.value);
 		end
 	end
 end	

@@ -237,6 +237,7 @@ One can use SetUIValue and GetUIValue to modify the current value.
 
 *events* 
 | onchange | onchange event, it can be nil, a string to be executed or a function of type void ()(value) |
+| onclick | click the slider button event |
 
 *sample code*
 <verbatim> 
@@ -1346,6 +1347,12 @@ function pe_sliderbar.create(rootName, mcmlNode, bindingContext, _parent, left, 
 	if(onchange)then
 		ctl.onchange = function (value)
 			mcml_controls.OnPageEvent(mcmlNode, onchange, value);
+		end
+	end
+	local onclick = mcmlNode:GetString("onclick");
+	if(onclick)then
+		ctl.onclick = function (value)
+			mcml_controls.OnPageEvent(mcmlNode, onclick, value);
 		end
 	end
 	
