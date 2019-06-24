@@ -50,12 +50,22 @@ function SerialPort:send(data)
 	NPL.activate("script/serialport.cpp", send_msg)
 end
 
+-- virtual function:
+function SerialPort:OnReceive(data)
+	file:receivedData(msg.data); --signal data
+end
+
 -- static function: for handling all incoming messages
 function System.os.OnSerialPortReceive()
 	local msg =  msg;
 	if(msg.filename) then
 		local file = allfiles[msg.filename]
-		file:receivedData(msg.data); --signal data
+		if(file) then
+			file:OnReceive(data)
+		else
+			LOG.std(nil, "warn", "serial port", "no callback found for %s", msg.filename);
+			ParaScene.UnregisterEvent(string.format("_%s_serialport", msg.filename));
+		end
 	end
 end
 
