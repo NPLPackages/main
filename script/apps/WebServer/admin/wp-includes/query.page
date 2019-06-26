@@ -41,6 +41,22 @@ function WP_Query:parse_query(query)
 			self.m_is_front_page = true;
 		end
 		
+        -- enable a js route path to a *.page for web client
+        -- getting the second name in pagename splitted by '/' as a page name
+        -- pagename such as : router/console/b/c
+        --                    console.page as a rendering content
+        --                    b/c as a route rule for web client
+		if(pagename:match("^router/")) then
+            local output = {};
+	        for name in string.gfind(pagename, "([^/]+)") do
+                table.insert(output,name);
+	        end
+            local len = #output;
+            if(len > 1)then
+                pagename = output[2];
+			    self.m_pagename = pagename;
+            end
+        end
 		-- ordinary page: check for page existance 
 		local page_path = WP_CONTENT_DIR.."/pages/"..pagename..".page";
 		if(file_exists(page_path)) then
