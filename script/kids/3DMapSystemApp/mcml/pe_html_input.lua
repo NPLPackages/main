@@ -796,15 +796,18 @@ function pe_select.create(rootName, mcmlNode, bindingContext, _parent, left, top
 		
 	local left, top, width, height = parentLayout:GetPreferredRect();
 	width, height  = width-left-margin_left-margin_right, (css.lineheight or 20)*rows;
+
 	if(css.width and css.width<width) then
 		width = css.width
 	end
+
 	if(css.height) then
 		height = css.height;
 	end	
-	left=left+margin_left;
-	top=top+margin_top
-	
+
+	left = left + margin_left;
+	top = top + margin_top
+
 	local instName = mcmlNode:GetInstanceName(rootName);
 	
 	local ds = mcmlNode:GetAttributeWithCode("DataSource",nil,true);
@@ -818,12 +821,15 @@ function pe_select.create(rootName, mcmlNode, bindingContext, _parent, left, top
 	end
 
 	local onremove = mcmlNode:GetAttributeWithCode("onremove", nil, true);
+	local emptyText = mcmlNode:GetAttributeWithCode("EmptyText", "", true);
 
 	if(rows==1) then
 		local items = {};
 		local selected_text;
+
 		-- search options
 		local childnode;
+
 		-- width of the longest item text 
 		local preferredWidth=0;
 		for childnode in mcmlNode:next("option") do
@@ -833,15 +839,18 @@ function pe_select.create(rootName, mcmlNode, bindingContext, _parent, left, top
 			end
 			
 			local value = childnode:GetString("value");
-			local width = _guihelper.GetTextWidth(text)
-			if(preferredWidth < width) then
+			local width = _guihelper.GetTextWidth(text);
+
+			if (preferredWidth < width) then
 				preferredWidth = width;
 			end
 			
 			if(childnode:GetAttribute("selected")) then
 				selected_text = text;
 			end
+
 			table.insert(items, text);
+
 			if(text~=value) then
 				if(not items.values) then
 					items.values = {};
@@ -849,7 +858,9 @@ function pe_select.create(rootName, mcmlNode, bindingContext, _parent, left, top
 				items.values[text] = value;
 			end
 		end
+
 		preferredWidth = preferredWidth + 20 + 5;
+
 		if(mcmlNode:GetNumber("width") or css.width) then
 			width =  mcmlNode:GetNumber("width") or css.width;
 		elseif(preferredWidth<width) then
@@ -877,6 +888,7 @@ function pe_select.create(rootName, mcmlNode, bindingContext, _parent, left, top
 			AllowUserEdit = mcmlNode:GetBool("AllowUserEdit"),
 			IsReadonly = mcmlNode:GetBool("IsReadonly"),
 			onremove = onremove,
+			emptyText = emptyText,
 		};
 		ctl:Show();
 		mcmlNode.control = ctl;
