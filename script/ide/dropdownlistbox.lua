@@ -287,7 +287,7 @@ function dropdownlistbox:RefillListBox(width, height)
 
 					_itemUI:SetScript("onmouseenter", function()
 						_remove.visible = true;
-						_itemUI.background = 'textures/worldshare_32bits.png;288 22 15 14';
+						_itemUI.background = 'textures/worldshare_32bits.png;289 22 14 14';
 					end)
 					
 					_itemUI:SetScript("onmouseleave", function()
