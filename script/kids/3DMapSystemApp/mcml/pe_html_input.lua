@@ -787,7 +787,7 @@ pe_select.listbox_bg = pe_select.listbox_bg or nil;
 -- the dropdownlistbox control takes up 20 pixels in height
 function pe_select.create(rootName, mcmlNode, bindingContext, _parent, left, top, width, height, style, parentLayout)
 	local name = mcmlNode:GetString("name");
-	local rows =  mcmlNode:GetNumber("size") or 1;
+	local rows = mcmlNode:GetNumber("size") or 1;
 
 	local css = mcmlNode:GetStyle(Map3DSystem.mcml_controls.pe_html.css["input-select"]);
 	local margin_left, margin_top, margin_bottom, margin_right = 
@@ -796,15 +796,18 @@ function pe_select.create(rootName, mcmlNode, bindingContext, _parent, left, top
 		
 	local left, top, width, height = parentLayout:GetPreferredRect();
 	width, height  = width-left-margin_left-margin_right, (css.lineheight or 20)*rows;
+
 	if(css.width and css.width<width) then
 		width = css.width
 	end
+
 	if(css.height) then
 		height = css.height;
 	end	
-	left=left+margin_left;
-	top=top+margin_top
-	
+
+	left = left + margin_left;
+	top = top + margin_top
+
 	local instName = mcmlNode:GetInstanceName(rootName);
 	
 	local ds = mcmlNode:GetAttributeWithCode("DataSource",nil,true);
@@ -817,11 +820,16 @@ function pe_select.create(rootName, mcmlNode, bindingContext, _parent, left, top
 		pe_select.DataBind(mcmlNode, rootName, false);
 	end
 
-	if(rows==1) then
+	local onremove = mcmlNode:GetAttributeWithCode("onremove", nil, true);
+	local emptyText = mcmlNode:GetAttributeWithCode("EmptyText", "", true);
+
+	if rows == 1 then
 		local items = {};
 		local selected_text;
+
 		-- search options
 		local childnode;
+
 		-- width of the longest item text 
 		local preferredWidth=0;
 		for childnode in mcmlNode:next("option") do
@@ -831,15 +839,18 @@ function pe_select.create(rootName, mcmlNode, bindingContext, _parent, left, top
 			end
 			
 			local value = childnode:GetString("value");
-			local width = _guihelper.GetTextWidth(text)
-			if(preferredWidth < width) then
+			local width = _guihelper.GetTextWidth(text);
+
+			if (preferredWidth < width) then
 				preferredWidth = width;
 			end
 			
 			if(childnode:GetAttribute("selected")) then
 				selected_text = text;
 			end
+
 			table.insert(items, text);
+
 			if(text~=value) then
 				if(not items.values) then
 					items.values = {};
@@ -847,21 +858,24 @@ function pe_select.create(rootName, mcmlNode, bindingContext, _parent, left, top
 				items.values[text] = value;
 			end
 		end
+
 		preferredWidth = preferredWidth + 20 + 5;
+
 		if(mcmlNode:GetNumber("width") or css.width) then
 			width =  mcmlNode:GetNumber("width") or css.width;
 		elseif(preferredWidth<width) then
 			width = preferredWidth;
 		end
-		
+
 		NPL.load("(gl)script/ide/dropdownlistbox.lua");
 		local ctl = CommonCtrl.dropdownlistbox:new{
 			name = instName,
 			alignment = "_lt",
-			left=left, top=top,
+			left=left,
+			top=top,
 			width = width,
 			height = height,
-			dropdownheight = math.min(math.max((height-2)*table.getn(items), (height-2)*3), 300),
+			dropdownheight = math.min(math.max((height - 2) * table.getn(items), (height - 2) * 3), 300),
 			parent = _parent,
 			editbox_bg = pe_select.editbox_bg,
 			dropdownbutton_bg = pe_select.dropdownBtn_bg,
@@ -873,6 +887,8 @@ function pe_select.create(rootName, mcmlNode, bindingContext, _parent, left, top
 			text = selected_text,
 			AllowUserEdit = mcmlNode:GetBool("AllowUserEdit"),
 			IsReadonly = mcmlNode:GetBool("IsReadonly"),
+			onremove = onremove,
+			emptyText = emptyText,
 		};
 		ctl:Show();
 		mcmlNode.control = ctl;

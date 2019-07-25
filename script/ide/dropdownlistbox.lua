@@ -69,11 +69,13 @@ local dropdownlistbox = {
 	listbox_id = -1,
 	button_id = -1,
 	editbox_id = -1,
+	onremove = nil,
+	emptyText = "",
 }
 CommonCtrl.dropdownlistbox = dropdownlistbox;
 
 -- constructor
-function dropdownlistbox:new (o)
+function dropdownlistbox:new(o)
 	o = o or {}   -- create object if user does not provide one
 	setmetatable(o, self)
 	self.__index = self
@@ -81,7 +83,7 @@ function dropdownlistbox:new (o)
 end
 
 -- Destroy the UI control
-function dropdownlistbox:Destroy ()
+function dropdownlistbox:Destroy()
 	if(self.id) then
 		ParaUI.Destroy(self.id);
 	end
@@ -90,14 +92,14 @@ end
 
 --@param bShow: boolean to show or hide. if nil, it will toggle current setting. 
 function dropdownlistbox:Show(bShow)
-	local _this,_parent;
-	
+	local _this, _parent;
+
 	if(self.id) then
 		_this=ParaUI.GetUIObject(self.id);
 	end
-	if( (not _this or not _this:IsValid()) and bShow ~= false) then
-	
-		_this=ParaUI.CreateUIObject("container",self.name,self.alignment,self.left,self.top,self.width,self.height);
+
+	if (not _this or not _this:IsValid()) and bShow ~= false then
+		_this = ParaUI.CreateUIObject("container",self.name,self.alignment,self.left,self.top,self.width,self.height);
 		self.id = _this.id
 		if(self.container_bg~=nil) then
 			_this.background=self.container_bg;
@@ -105,42 +107,61 @@ function dropdownlistbox:Show(bShow)
 			_this.background="Texture/whitedot.png;0 0 0 0";
 		end	
 		_parent = _this;
-		
+
 		if(self.parent==nil) then
 			_this:AttachToRoot();
 		else
 			self.parent:AddChild(_this);
 		end
 		CommonCtrl.AddControl(self.name, self);
-		
+
 		-- create the editbox
-		local left, top, width, height = 0,0, 124, 32
-		_this=ParaUI.CreateUIObject("imeeditbox","s", "_mt",0,0,self.buttonwidth,self.height);
+		local left, top, width, height = 0, 0, self.buttonwidth or 124, self.height or 32;
+		_this = ParaUI.CreateUIObject("imeeditbox", "s", "_mt", 0, 0, width, height);
+		_this:GetAttributeObject():SetField("EmptyText", self.emptyText);
 		_parent:AddChild(_this);
+
 		self.editbox_id = _this.id;
-		_this.text=self.text;
-		if(not self.AllowUserEdit) then
+		_this.text = self.text;
+
+		if not self.AllowUserEdit then
 			_this.enabled = false;
 		end
+
 		_this:SetScript("onchange", function()
 			dropdownlistbox.OnTextChange(self);
 		end)
-		if(self.editbox_bg~=nil) then
-			_this.background=self.editbox_bg;
-		end	
+
+		if self.editbox_bg~=nil then
+			_this.background = self.editbox_bg;
+		end
+
 		-- create the dropdown button
-		_this=ParaUI.CreateUIObject("button","s","_rt",-self.buttonwidth+(self.buttonwidth - (self.dropdownbutton_width or self.buttonwidth))*0.5,(self.height - (self.dropdownbutton_height or self.height))*0.5,self.dropdownbutton_width or self.buttonwidth, self.dropdownbutton_height or self.height);
+		_this = ParaUI.CreateUIObject(
+			"button",
+			"s",
+			"_rt",
+			-width + (width - (self.dropdownbutton_width or width)) * 0.5,
+			(height - (self.dropdownbutton_height or height)) * 0.5,
+			self.dropdownbutton_width or width, self.dropdownbutton_height or height
+		);
+
 		_parent:AddChild(_this);
+
 		self.button_id = _this.id;
+
 		_this:SetScript("onclick", function()
 			dropdownlistbox.OnClickDropDownButton(self);
 		end);
-		local dropdownbutton_bg = self.dropdownbutton_bg_filter(self.dropdownbutton_bg, self.dropdownbutton_width or self.buttonwidth, self.dropdownbutton_height or self.height);
-		if(dropdownbutton_bg and dropdownbutton_bg~="") then
+
+		local dropdownbutton_bg = self.dropdownbutton_bg_filter(self.dropdownbutton_bg, self.dropdownbutton_width or width, self.dropdownbutton_height or height);
+
+		if dropdownbutton_bg and dropdownbutton_bg ~= "" then
 			_this.background = dropdownbutton_bg;
 		else
 			_this.text = "▼";
 		end	
+
 		if(self.IsReadonly) then
 			_this.enabled = false;
 		end
@@ -235,15 +256,82 @@ function dropdownlistbox:RefreshListBox()
 end
 
 -- refill the listbox content using the items.
-function dropdownlistbox:RefillListBox()
-	local _this = ParaUI.GetUIObject(self.listbox_id);
+function dropdownlistbox:RefillListBox(width, height)
+	local _this
+
+	if self.onremove then
+		_this = ParaUI.GetUIObject(self.listbox_cont_id);
+	else
+		_this = ParaUI.GetUIObject(self.listbox_id);
+	end
+
 	if(_this:IsValid())then 
 		_this:RemoveAll();
-		
 		if(self.items) then
 			local index,value;
 			for index, value in ipairs(self.items) do
-				_this:AddTextItem(tostring(value));
+				if self.onremove then
+					local _itemUI = ParaUI.CreateUIObject("container", "item", "_lt", 0, (height / #self.items) * (index - 1), width, height / #self.items);
+					_itemUI.background = "Texture/whitedot.png"
+
+					local _text = ParaUI.CreateUIObject("text", "textitem" .. index, "_lt", 5, 6, width, height / #self.items);
+					_text.text = tostring(value);
+					_text.font = "System;12;bold;false;"
+					_text.shadow = false;
+					_itemUI:AddChild(_text)
+
+					local _remove = ParaUI.CreateUIObject("container", "removeitem" .. index, "_rt", -20, 11, 9, 8);
+					_remove.background = "Texture/Aries/Common/Frame_Close_32bits.png; 4 4 9 8";
+					_remove.shadow = false;
+					_remove.visible = false;
+
+					_itemUI:SetScript("onmouseenter", function()
+						_remove.visible = true;
+						_guihelper.SetUIColor(_itemUI, "233 233 233")
+					end)
+
+					_itemUI:SetScript("onmouseleave", function()
+						_remove.visible = false;
+						_guihelper.SetUIColor(_itemUI, "255 255 255")
+					end)
+
+					_itemUI:SetScript("onmouseup", function()
+						-- change editbox text with the selection text
+						local editbox = ParaUI.GetUIObject(self.editbox_id);
+						if(editbox:IsValid()) then
+							-- use some formatting if any.
+							if(not self.FuncTextFormat) then
+								editbox.text = tostring(value);
+							else
+								editbox.text = self.FuncTextFormat(tostring(value));
+							end
+
+							-- call the event handler if any
+							if(self.onselect ~= nil)then
+								if(type(self.onselect) == "string") then
+									NPL.DoString(self.onselect);
+								else
+									self.onselect(self.name, self:GetValue());
+								end
+							end
+						end
+
+						ParaUI.Destroy(self.listbox_cont_id);
+					end)
+
+					_remove:SetScript("onmousedown", function()
+						if type(self.onremove) == 'function' then
+							self.onremove(value)
+						end
+
+						ParaUI.Destroy(self.listbox_cont_id);
+					end)
+					_itemUI:AddChild(_remove)
+
+					_this:AddChild(_itemUI)
+				else
+					_this:AddTextItem(tostring(value));
+				end
 			end
 		end	
 	end
@@ -253,53 +341,63 @@ end
 function dropdownlistbox.OnClickDropDownButton(self)
 	-- calculate the position of drop down list box from the current position of the control
 	local _this = ParaUI.GetUIObject(self.id);
+
 	if(_this:IsValid() == false) then
 		return;
 	end
-	
+
 	local _, _, screenWidth, screenHeight = ParaUI.GetUIObject("root"):GetAbsPosition();
-	local left,top, width, height = _this:GetAbsPosition();
+	local left, top, width, height = _this:GetAbsPosition();
+
 	-- make the listbox appear at the right position
-	if((top+height+self.dropdownheight)>screenHeight) then
+	if (top + height + self.dropdownheight) > screenHeight then
 		-- float up display if there is no enough space for drop down display. 
-		top = top-self.dropdownheight;
-		if(top<0) then top = 0 end
+		top = top - self.dropdownheight;
+		if top < 0 then top = 0 end
 	else
 		-- drop down display
-		top = top+height;
+		top = top + height;
 	end
-	
+
 	-- TODO: if there are few items in the list, there is no need to display the full drop down height.
-	height = self.dropdownheight; 
-	
-	
+	height = self.dropdownheight;
+
 	local _this = ParaUI.GetUIObject(self.listbox_cont_id);
-	if(_this:IsValid() == false) then
+
+	if _this:IsValid() == false then
 		local _parent;
+
 		-- create the list box and its container if it has not yet been created before.
-		_this=ParaUI.CreateUIObject("container","s","_lt",left,top,width,height);
+		_this = ParaUI.CreateUIObject("container", "s", "_lt", left, top, width, height);
 		_this.background = self.listbox_container_bg;
 		_this.zorder = 10000;
 		_this:AttachToRoot();
+
 		self.listbox_cont_id = _this.id;
+
 		_this:SetScript("onmouseup", function()
 			dropdownlistbox.OnMouseUpListBoxCont(self);
 		end);
-		_this.visible=false;
+		_this.visible = false;
 		_parent = _this;
-		
-		_this=ParaUI.CreateUIObject("listbox","s","_fi",0,0,0,0);
-		if(self.listbox_bg~=nil) then
-			_this.background=self.listbox_bg;
-		end	
-		_parent:AddChild(_this);
-		self.listbox_id = _this.id;
-		_this:SetScript("onselect", function()
-			dropdownlistbox.OnSelectListBox(self);
-		end)
-		
+
+		if not self.onremove then
+			_this = ParaUI.CreateUIObject("listbox","s","_fi",0,0,0,0);
+			
+			if(self.listbox_bg~=nil) then
+				_this.background=self.listbox_bg;
+			end	
+			
+			_parent:AddChild(_this);
+			self.listbox_id = _this.id;
+
+			_this:SetScript("onselect", function()
+				dropdownlistbox.OnSelectListBox(self);
+			end)
+		end
+
 		-- refresh on first use
-		self:RefillListBox();
+		self:RefillListBox(width, height);
 		
 		_this = _parent;
 	else
@@ -307,20 +405,25 @@ function dropdownlistbox.OnClickDropDownButton(self)
 		_this.y = top;
 		_this.width = width;
 	end
-	
+
 	_this.visible = not _this.visible;
-	
-	if(_this.visible) then
+
+	if _this.visible then
 		_this:BringToFront();
 		_this:SetTopLevel(true);
-		
-		if(KidsUI~=nil) then
-			KidsUI.PushState({name = "dropdownlistbox_listbox_cont", OnEscKey = function()
-				dropdownlistbox.OnMouseUpListBoxCont(self);
-			end});
+
+		if KidsUI ~= nil then
+			KidsUI.PushState(
+				{
+					name = "dropdownlistbox_listbox_cont",
+					OnEscKey = function()
+						dropdownlistbox.OnMouseUpListBoxCont(self);
+					end
+				}
+			);
 		end
 	else
-		if(KidsUI~=nil) then
+		if KidsUI ~= nil then
 			KidsUI.PopState("dropdownlistbox_listbox_cont");
 		end
 	end
