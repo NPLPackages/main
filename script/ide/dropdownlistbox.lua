@@ -272,7 +272,7 @@ function dropdownlistbox:RefillListBox(width, height)
 			for index, value in ipairs(self.items) do
 				if self.onremove then
 					local _itemUI = ParaUI.CreateUIObject("container", "item", "_lt", 0, (height / #self.items) * (index - 1), width, height / #self.items);
-					_itemUI.background = ""
+					_itemUI.background = "Texture/whitedot.png"
 
 					local _text = ParaUI.CreateUIObject("text", "textitem" .. index, "_lt", 5, 6, width, height / #self.items);
 					_text.text = tostring(value);
@@ -280,23 +280,23 @@ function dropdownlistbox:RefillListBox(width, height)
 					_text.shadow = false;
 					_itemUI:AddChild(_text)
 
-					local _remove = ParaUI.CreateUIObject("container", "removeitem" .. index, "_rt", -20, 10, 10, 10);
-					_remove.background = "textures/worldshare_32bits.png;234 53 10 10";
+					local _remove = ParaUI.CreateUIObject("container", "removeitem" .. index, "_rt", -20, 11, 9, 8);
+					_remove.background = "Texture/Aries/Common/Frame_Close_32bits.png; 4 4 9 8";
 					_remove.shadow = false;
 					_remove.visible = false;
 
 					_itemUI:SetScript("onmouseenter", function()
 						_remove.visible = true;
-						_itemUI.background = 'textures/worldshare_32bits.png;289 22 14 14';
+						_guihelper.SetUIColor(_itemUI, "233 233 233")
 					end)
-					
+
 					_itemUI:SetScript("onmouseleave", function()
 						_remove.visible = false;
-						_itemUI.background = ""
+						_guihelper.SetUIColor(_itemUI, "255 255 255")
 					end)
 
 					_itemUI:SetScript("onmouseup", function()
-						-- change editbox text with the selection text	
+						-- change editbox text with the selection text
 						local editbox = ParaUI.GetUIObject(self.editbox_id);
 						if(editbox:IsValid()) then
 							-- use some formatting if any.
@@ -321,7 +321,7 @@ function dropdownlistbox:RefillListBox(width, height)
 
 					_remove:SetScript("onmousedown", function()
 						if type(self.onremove) == 'function' then
-							self.onremove()
+							self.onremove(value)
 						end
 
 						ParaUI.Destroy(self.listbox_cont_id);

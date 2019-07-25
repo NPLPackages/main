@@ -823,7 +823,7 @@ function pe_select.create(rootName, mcmlNode, bindingContext, _parent, left, top
 	local onremove = mcmlNode:GetAttributeWithCode("onremove", nil, true);
 	local emptyText = mcmlNode:GetAttributeWithCode("EmptyText", "", true);
 
-	if(rows==1) then
+	if rows == 1 then
 		local items = {};
 		local selected_text;
 
