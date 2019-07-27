@@ -252,6 +252,8 @@ function TextControl:GetText()
 		text = text..lineText;
 		if(i ~= #self.items) then
 			text = text.."\r\n";
+		elseif(i > 1 and lineText == "") then
+			text = text.."\r\n";
 		end
 	end
 	return text;
@@ -1689,24 +1691,42 @@ end
 
 function TextControl:LanguageFormat(lineItem)
 	if(self.language and lineItem.changed) then
-		if(tostring(uniStr) == "") then
-			return;
-		end
-
 		self.syntaxAnalyzer = self.syntaxAnalyzer or SyntaxAnalysis.CreateAnalyzer(self.language);
 		if(not self.syntaxAnalyzer) then
 			return;
 		end
 
 		lineItem.highlightBlocks = {};
+		
 		local uniStr = lineItem.text;
 		for token in self.syntaxAnalyzer:GetToken(uniStr) do
 			if(token.type) then
+				-- we will add non-token to highlight blocks as well. 
+				local count = #(lineItem.highlightBlocks);
+				if(count == 0) then
+					if(token.spos > 1) then
+						self:AddHighLightBlock(lineItem, 1, token.spos);
+					end
+				else
+					local lastItem = lineItem.highlightBlocks[count];
+					if((lastItem.end_pos + 1) < token.spos) then
+						self:AddHighLightBlock(lineItem, lastItem.end_pos + 1, token.spos-1);
+					end
+				end
+
 				local font = self:GetFont();
 				if(token.bold) then
 					font = string.gsub(font,"(%a+;%d+;)(%a+)","%1bold")
 				end
 				self:AddHighLightBlock(lineItem, token.spos, token.epos, font, token.color, nil);
+			end
+		end
+		local count = #(lineItem.highlightBlocks);
+		if(count > 0) then
+			local lastItem = lineItem.highlightBlocks[count];
+			local length = uniStr:length();
+			if(lastItem.end_pos < length) then
+				self:AddHighLightBlock(lineItem, lastItem.end_pos+1, length);
 			end
 		end
 		lineItem.changed = false;
@@ -1813,38 +1833,24 @@ function TextControl:paintEvent(painter)
 			local item = self.items:get(i);	
 			local text = item.text;
 			local total_width = 0;
-			local sub_text;
 			local next_block;
 
 			self:LanguageFormat(item);
 
 			if(item.highlightBlocks and next(item.highlightBlocks)) then
 				-- this line have highlight blocks;				
-				if(item.highlightBlocks[1].begin_pos > 1 ) then
-					sub_text = text:substr(1 , item.highlightBlocks[1].begin_pos - 1);
-					total_width = self:CalculateTextWidth(sub_text, self:GetFont());
-					self:DrawTextScaledWithPosition(painter, self:x(), self:y() + self.lineHeight * (i - 1), sub_text);
-				end
-				
-				local next_pos;
 				for j = 1, #item.highlightBlocks do
 					local block = item.highlightBlocks[j];						
-						
-					sub_text = text:substr(block.begin_pos , block.end_pos);
-					self:DrawTextScaledWithPosition(painter, self:x() + total_width, self:y() + self.lineHeight * (i - 1), sub_text, block.font, block.color, block.scale);
-					total_width = total_width +  self:CalculateTextWidth(sub_text, block.font);
-
-					if(j < #item.highlightBlocks) then
-						next_block = item.highlightBlocks[j+1];
-						sub_text = text:substr(block.end_pos + 1 , next_block.begin_pos - 1);
-						self:DrawTextScaledWithPosition(painter, self:x() + total_width, self:y() + self.lineHeight * (i - 1), sub_text);
-						total_width = total_width +  self:CalculateTextWidth(sub_text, self:GetFont());
-					elseif(j == #item.highlightBlocks) then
-						if(block.end_pos < text:length()) then
-							sub_text = text:substr(block.end_pos + 1 , text:length());													
-							self:DrawTextScaledWithPosition(painter, self:x() + total_width, self:y() + self.lineHeight * (i - 1), sub_text);
-						end
+					if(not block.text) then
+						--  cache text on first draw
+						block.text = text:substr(block.begin_pos, block.end_pos);
 					end
+					if(not block.width) then
+						--  cache text width on first draw
+						block.width = self:CalculateTextWidth(block.text, block.font);
+					end
+					self:DrawTextScaledWithPosition(painter, self:x() + total_width, self:y() + self.lineHeight * (i - 1), block.text, block.font, block.color, block.scale);
+					total_width = total_width +  block.width;
 				end							
 			else
 				self:DrawTextScaledWithPosition(painter, self:x(), self:y() + self.lineHeight * (i - 1), item.text:GetText());
