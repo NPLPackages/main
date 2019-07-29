@@ -1546,10 +1546,9 @@ function TextControl:cursorToX(text)
 		if(self:GetCurrentLine()) then
 			text = self:GetCurrentLine().text;
 		else
-			text = UniString:new();
+			return 0;
 		end
 	end
-	--local text = text or self:GetCurrentLine().text;
 	local x = text:cursorToX(self.cursorPos, self:GetFont());
 	return math.floor(x + 0.5);
 end
@@ -1668,7 +1667,7 @@ function TextControl:updateGeometry()
 			self:setHeight(clip:height());
 		else
 			if(self:y() == 0) then
-				-- µÚÒ»´ÎäÖÈ¾Ê±µ÷Õû´¹Ö±Î»ÖÃ
+				-- ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½È¾Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö±Î»ï¿½ï¿½
 				self:scrollY(clip:y() - self:y());
 			end
 			self:setHeight(self:GetRealHeight());
@@ -1832,7 +1831,6 @@ function TextControl:paintEvent(painter)
 		for i = self.from_line, self.to_line do
 			local item = self.items:get(i);	
 			local text = item.text;
-			local total_width = 0;
 			local next_block;
 
 			self:LanguageFormat(item);
@@ -1845,12 +1843,19 @@ function TextControl:paintEvent(painter)
 						--  cache text on first draw
 						block.text = text:substr(block.begin_pos, block.end_pos);
 					end
-					if(not block.width) then
-						--  cache text width on first draw
-						block.width = self:CalculateTextWidth(block.text, block.font);
+					if(not block.x) then
+						-- cache text width on first draw
+						-- tricky: it is important to calculate by all heading text instead of adding all text width together
+						-- since there could be rounding errors on MaxOS for special chars like "".
+						-- and in XtoCursor function, we also assume text position is calculated in this way.
+						if(block.begin_pos > 1) then
+							local leftText = text:substr(1, block.begin_pos - 1);
+							block.x = self:CalculateTextWidth(leftText, self:GetFont());
+						else
+							block.x = 0;
+						end
 					end
-					self:DrawTextScaledWithPosition(painter, self:x() + total_width, self:y() + self.lineHeight * (i - 1), block.text, block.font, block.color, block.scale);
-					total_width = total_width +  block.width;
+					self:DrawTextScaledWithPosition(painter, self:x() + block.x, self:y() + self.lineHeight * (i - 1), block.text, block.font, block.color, block.scale);
 				end							
 			else
 				self:DrawTextScaledWithPosition(painter, self:x(), self:y() + self.lineHeight * (i - 1), item.text:GetText());
