@@ -44,6 +44,17 @@ function Encoding.Utf16ToUtf8(text)
 	return text and ParaMisc.UTF16ToUTF8(text)
 end
 
+-- this may not be reliable, but works in most cases. It will convert to default and then back.
+function Encoding.DetectTextIsUtf8Encoding(text)
+	local defaultText = Encoding.Utf8ToDefault(text);
+	if(defaultText == text) then
+		return true;
+	elseif(Encoding.DefaultToUtf8(defaultText) == text) then
+		return true;
+	else
+		return false;
+	end
+end
 
 -- sort commar separated vector (CSV) string alphabetically
 -- @param fields: string such as "C,B,A", or a table containing string arrays such as {"C", "B", "A"}
