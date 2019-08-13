@@ -38,6 +38,30 @@ function ZipFile:close()
 	end
 end
 
+-- just in case the zip file contains utf8 file names, we will add default encoding alias
+-- so that open file will work with both file encodings in zip archive
+function ZipFile:addUtf8ToDefaultAlias()
+	if(self.zip_archive) then
+		-- search just in a given zip archive file
+		local filesOut = {};
+		-- ":.", any regular expression after : is supported. `.` match to all strings. 
+		commonlib.Files.Find(filesOut, "", 0, 10000, ":.", self.filename);
+		for i = 1,#filesOut do
+			local item = filesOut[i];
+			if(item.filesize > 0) then
+				local defaultEncodingFilename = commonlib.Encoding.Utf8ToDefault(item.filename)
+				if(defaultEncodingFilename ~= item.filename) then
+					if(commonlib.Encoding.DefaultToUtf8(defaultEncodingFilename) == item.filename) then
+						-- this item may be utf8 coded and not in ansi code page, we will add an alias
+						self.zip_archive:SetField("AddAliasFrom", defaultEncodingFilename)
+						self.zip_archive:SetField("AddAliasTo", item.filename)
+					end
+				end
+			end
+		end
+	end
+end
+
 -- @param destinationFolder: default to zip file's parent folder + [filename]/
 -- return the number of file unziped
 function ZipFile:unzip(destinationFolder)
@@ -71,7 +95,22 @@ function ZipFile:unzip(destinationFolder)
 				-- get binary data
 				local binData = file:GetText(0, -1);
 				-- dump the first few characters in the file
-				local destFileName = destinationFolder..item.filename;
+				local destFileName;
+
+				-- tricky: we do not know which encoding the filename in the zip archive is,
+				-- so we will assume it is utf8, we will convert it to default and then back to utf8.
+				-- if the file does not change, it might be utf8. 
+				local defaultEncodingFilename = commonlib.Encoding.Utf8ToDefault(item.filename)
+				if(defaultEncodingFilename == item.filename) then
+					destFileName = destinationFolder..item.filename;
+				else
+					if(commonlib.Encoding.DefaultToUtf8(defaultEncodingFilename) == item.filename) then
+						destFileName = destinationFolder..defaultEncodingFilename;
+					else
+						destFileName = destinationFolder..item.filename;
+					end
+				end
+
 				local outFile = ParaIO.open(destFileName, "w")
 				if(outFile:IsValid()) then
 					outFile:WriteString(binData, #binData);
