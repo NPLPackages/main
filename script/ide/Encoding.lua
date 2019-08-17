@@ -104,6 +104,16 @@ function Encoding.EncodeHTMLInnerText(s)
 	return s;
 end
 
+function Encoding.EncodeHTMLInnerTextWithSpace(s)
+	local s = tostring(s);
+	if(not s)then return end
+	s = string_gsub(s, "&", "&amp;");
+	s = string_gsub(s, "<", "&lt;");
+	s = string_gsub(s, ">", "&gt;");
+	s = string_gsub(s, "  ", " &#x20;");
+	return s;
+end
+
 function Encoding.HasXMLEscapeChar(s)
 	if(s and string.match(s, "[&'<>\"\n]")) then
 		return true;

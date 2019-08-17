@@ -97,7 +97,7 @@ function commonlib.Lua2XmlString(input, bBeautify, sortByKey)
 	local function OutputNode(inTable)
 		if(not inTable) then return end
 		if(type(inTable) == "string") then 
-			table.insert(output, Encoding.EncodeHTMLInnerText(inTable))
+			table.insert(output, Encoding.EncodeHTMLInnerTextWithSpace(inTable))
 		elseif(type(inTable) == "table") then 	
 			local nodeXML;
 			if(inTable.name) then
