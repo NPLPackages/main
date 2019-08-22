@@ -110,7 +110,9 @@ function Encoding.EncodeHTMLInnerTextWithSpace(s)
 	s = string_gsub(s, "&", "&amp;");
 	s = string_gsub(s, "<", "&lt;");
 	s = string_gsub(s, ">", "&gt;");
-	s = string_gsub(s, "  ", " &#x20;");
+	s = string_gsub(s, "  ", " &#32;");
+	-- s = string_gsub(s, "\r", "&#13;");
+	s = string_gsub(s, "\n", "&#10;");
 	return s;
 end
 

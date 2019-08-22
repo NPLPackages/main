@@ -94,9 +94,11 @@ function Window:RefreshUrlComponent()
 	end
 end
 
--- @param params: {url="", alignment, x,y,width, height, allowDrag,zorder, enable_esc_key, DestroyOnClose, parent}
+-- @param params: {url="", alignment, x,y,width, height, allowDrag,zorder, enable_esc_key, DestroyOnClose, parent, pageGlobalTable}
 function Window:ShowWithParams(params)
 	self.name = params.name;
+	self.pageGlobalTable = params.pageGlobalTable;
+
 	-- load component if url has changed
 	if(self.url ~= params.url) then
 		self.url = params.url;

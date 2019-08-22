@@ -1022,6 +1022,7 @@ function UIElement:topLevelWidget()
 	return self:GetWindow();
 end
 
+-- @return mcml page object if valid
 function UIElement:LoadComponent(url)
 	return Application.LoadComponent(self, url);	
 end

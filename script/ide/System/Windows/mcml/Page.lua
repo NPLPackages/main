@@ -663,9 +663,17 @@ function Page:GetPageScope()
 			meta = {}
 			setmetatable (self._PAGESCRIPT, meta)
 		end
-		meta.__index = _G
+		meta.__index = self:GetPageGlobalTable() or _G;
 	end
 	return self._PAGESCRIPT;
+end
+
+function Page:SetPageGlobalTable(globals)
+	self.globals = globals;
+end
+
+function Page:GetPageGlobalTable()
+	return self.globals;
 end
 
 --------------------------------------

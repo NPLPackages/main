@@ -705,11 +705,17 @@ end
 
 -- static function:
 -- load components from a given mcml page or page url to uiElement.
+-- @return mcml page object if valid
 function Application.LoadComponent(uiElement, url)
 	if(uiElement) then
 		local page = Page:new({name = uiElement.name});
+		if(uiElement.pageGlobalTable) then
+			page:SetPageGlobalTable(uiElement.pageGlobalTable);
+		end
 		page:Attach(uiElement);
 		page:Init(url);
+		
+		return page;
 	end
 end
 
