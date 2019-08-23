@@ -94,7 +94,18 @@ function Window:RefreshUrlComponent()
 	end
 end
 
+-- @return mcml page object if valid
+function Window:LoadComponent(url)
+	local page = Window._super.LoadComponent(self, url);	
+	if(page and self.pageGlobalTable) then
+		-- force creating page scope
+		page:GetPageScope();
+	end
+	return page;
+end
+
 -- @param params: {url="", alignment, x,y,width, height, allowDrag,zorder, enable_esc_key, DestroyOnClose, parent, pageGlobalTable}
+-- pageGlobalTable can be a custom page environment table, if nil, it will be the global _G. 
 function Window:ShowWithParams(params)
 	self.name = params.name;
 	self.pageGlobalTable = params.pageGlobalTable;
