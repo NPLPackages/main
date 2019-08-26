@@ -156,3 +156,39 @@ function Viewport:SetHeight(nValue)
 		self:sizeChanged();
 	end
 end
+
+-- create get the UI container object that is the same size of the view port.
+function Viewport:GetUIObject(bCreateIfNotExist)
+	if(self.uiobject_id) then
+		local _this = ParaUI.GetUIObject(self.uiobject_id);
+		if(_this:IsValid()) then
+			return _this;
+		end
+	end
+	if(bCreateIfNotExist) then
+		local name = "ViewportUI"..tostring(self.name or self.id)
+		local _this = ParaUI.GetUIObject(name);
+		if(not _this:IsValid()) then
+			local ViewportManager = commonlib.gettable("System.Scene.Viewports.ViewportManager");
+			local viewport = ViewportManager:GetSceneViewport();
+			local margin_right = math.floor(viewport:GetMarginRight() / Screen:GetUIScaling()[1]);
+			local margin_bottom = math.floor(viewport:GetMarginBottom() / Screen:GetUIScaling()[2])
+			_this = ParaUI.CreateUIObject("container", name, "_fi", 0,0,margin_right, margin_bottom);
+			_this.background = ""
+			_this:SetField("ClickThrough", true);
+			
+			_this.zorder = -3;
+			_this:AttachToRoot();
+			
+			self:Connect("sizeChanged", nil, function()
+				local _this = ParaUI.GetUIObject(name);
+				local margin_right = math.floor(viewport:GetMarginRight() / Screen:GetUIScaling()[1]);
+				local margin_bottom = math.floor(viewport:GetMarginBottom() / Screen:GetUIScaling()[2])
+				_this.height = margin_bottom;
+				_this.width = margin_right;
+			end)
+		end
+		self.uiobject_id = _this.id;
+		return _this;
+	end
+end
