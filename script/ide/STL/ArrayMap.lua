@@ -149,7 +149,9 @@ function ArrayMap:remove(key)
 		if(idx == #(self.key_array)) then
 			self.key_array[idx] = nil;
 		else
-			self.key_array[idx] = self.key_array[#self.key_array];
+			local lastKey = self.key_array[#self.key_array];
+			self.key_index_map[lastKey] = idx;
+			self.key_array[idx] = lastKey;
 			self.key_array[#self.key_array] = nil;
 		end
 	end
@@ -195,7 +197,7 @@ function ArrayMap:ksort(compare_func)
 end
 
 
--- return iteractor of key, value pairs in current array order
+-- return iterator of key, value pairs in current array order
 function ArrayMap:pairs()
 	local idx = 1;
 	local key_map = self.key_map;
