@@ -46,11 +46,12 @@ function pe_repeat:ctor()
 end
 
 function pe_repeat:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
-	if(self.isCompiled) then
-		return;
+	if(not self.isTemplateCompiled) then
+		self.isTemplateCompiled = true;
+		self:MoveChildrenToTemplate();	
+	else
+		self:ClearAllChildren();
 	end
-	self.isCompiled = true;
-	self:MoveChildrenToTemplate();
 
 	local arrayValues, name, value;
 	local value = self:GetAttributeWithCode("value", nil, true);
