@@ -28,6 +28,12 @@ function pe_text:createFromString(str)
 	return self:new({name="text", value = str});
 end
 
+function pe_text:clone()
+	local o = pe_text._super.clone(self)
+	o.value = self.value;
+	return o;
+end
+
 function pe_text:GetTextTrimmed()
 	local value = self.value or self:GetAttributeWithCode("value", nil, true);
 	if(value) then
