@@ -111,13 +111,13 @@ function Encoding.EncodeHTMLInnerTextWithSpace(s)
 	s = string_gsub(s, "<", "&lt;");
 	s = string_gsub(s, ">", "&gt;");
 	s = string_gsub(s, "  ", " &#32;");
-	-- s = string_gsub(s, "\r", "&#13;");
+	s = string_gsub(s, "\r", "&#13;");
 	s = string_gsub(s, "\n", "&#10;");
 	return s;
 end
 
 function Encoding.HasXMLEscapeChar(s)
-	if(s and string.match(s, "[&'<>\"\n]")) then
+	if(s and string.match(s, "[&'<>\"\r\n]")) then
 		return true;
 	end
 end

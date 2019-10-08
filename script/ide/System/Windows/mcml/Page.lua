@@ -746,7 +746,9 @@ function Page:OnRefresh()
 		-- secretely put this page control object into page_ctrl field, so that we can refresh this page with a different url, such as in pe_a or form submit button.
 		self.mcmlNode:SetAttribute("page_ctrl", self);
 
+		self.layout:invalidate();
 		self:LoadComponent();
+		self.layout:activate();
 
 		self.used_width, self.used_height = layout:GetUsedSize();
 
