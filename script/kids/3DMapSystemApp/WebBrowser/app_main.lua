@@ -346,19 +346,19 @@ function Map3DSystem.App.WebBrowser.OnExec(app, commandName, params)
 				end
 
 				if(not params.silentmode) then
-					local notice = ''
-
 					if platform == 'win32' then
-						notice = string.format(L"您确定要使用Windows浏览器打开文件 %s?", commonlib.Encoding.DefaultToUtf8(absPath))
+						_guihelper.MessageBox(string.format(L"您确定要使用Windows浏览器打开文件 %s?", commonlib.Encoding.DefaultToUtf8(absPath)), function()
+							ParaGlobal.ShellExecute("open", "explorer.exe", absPath, "", 1); 
+						end);
 					elseif platform == 'mac' then
-						notice = string.format(L"您确定要使用Finder打开文件 %s?", commonlib.Encoding.DefaultToUtf8(absPath))
+						_guihelper.MessageBox(string.format(L"路径：%s 已经复制到剪切板，请在Finder中打开", absPath), function()
+							ParaMisc.CopyTextToClipboard(absPath);
+						end);
 					else
-						notice = string.format(L"您确定要使用文件浏览器打开文件 %s?", commonlib.Encoding.DefaultToUtf8(absPath))
+						_guihelper.MessageBox(string.format(L"您确定要使用文件浏览器打开文件 %s?", commonlib.Encoding.DefaultToUtf8(absPath)), function()
+							ParaGlobal.ShellExecute("open", "explorer.exe", absPath, "", 1); 
+						end);
 					end
-
-					_guihelper.MessageBox(notice, function()
-						ParaGlobal.ShellExecute("open", "explorer.exe", absPath, "", 1); 
-					end);
 				else
 					ParaGlobal.ShellExecute("open", "explorer.exe", absPath, "", 1); 
 				end	

@@ -23,17 +23,23 @@ function WebView:ctor()
 	self._wv = nil;
 end
 
-function WebView:init(x, y, w, h)
+function WebView:init(x, y, w, h, bSub)
 	x = x or 0;
 	y = y or 0;
-	
+
 	if (not w or not h) then
+		-- // TODO: fix get screen resolution.
 		local frame_size = ParaEngine.GetAttributeObject():GetField("ScreenResolution");
 		w = frame_size[1];
 		h = frame_size[2];
 	end
-	
-	self._wv = NativeWebView and NativeWebView.createWebView(x, y, w, h);
+
+	if bSub then
+		self._wv = NativeWebView and NativeWebView.createSubViewView(x, y, w, h);
+	else
+		self._wv = NativeWebView and NativeWebView.createWebView(x, y, w, h);
+	end
+
 	self._att = self._wv and self._wv:GetAttributeObject();
 	
 	return self;
@@ -75,3 +81,18 @@ function WebView:HideViewWhenClickBack(bHide)
 	end
 end
 
+function WebView:move(x, y)
+	if not self._wv then
+		return false
+	end
+
+	self._att:SetField("move", {x, y})
+end
+
+function WebView:bringToTop()
+	if not self._wv then
+		return false
+	end
+
+	self._att:CallField("bringToTop")
+end
