@@ -255,16 +255,17 @@ end
 
 NPL.load("(gl)script/ide/System/localserver/factory.lua");
 ParaAsset.RemoteTexture_cache_policy = System.localserver.CachePolicy:new("access plus 1 hour");
---[[ 
-An internal ResourceStore (local server) called "_default_" is used to serve http textures. 
-An internal time is also used so that we can sequence downloader threads. 
-]]
+-- An internal ResourceStore (local server) called "_default_" is used to serve http textures. 
+-- An internal time is also used so that we can sequence downloader threads. 
+-- @param cache_policy: please note for http object, cache-control: max-age is always added to the cache_policy
+-- by default cache_policy is 1 hour plus cache-control max-age. 
 function ParaAsset.GetRemoteTexture(url, cache_policy, callback)
 	local ls = System.localserver.CreateStore();
 	if(not ls) then
 		log("error: failed creating local server resource store \n")
 		return
 	end
+	-- please note for http object, cache-control: max-age is always added to the cache_policy
 	ls:GetFile(cache_policy or ParaAsset.RemoteTexture_cache_policy, url, callback or ParaAsset.GetRemoteTexture_callback);
 end
 
