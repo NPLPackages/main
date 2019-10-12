@@ -8,7 +8,6 @@ use the lib:
 ------------------------------------------------------------
 NPL.load("(gl)script/ide/System/Windows/mcml/css/StyleColor.lua");
 local StyleColor = commonlib.gettable("System.Windows.mcml.css.StyleColor");
-StyleColor.loadPresetColor();
 echo(StyleColor.ConvertTo16("#ff000080"));
 echo(StyleColor.ConvertTo16("#ff0000"));
 echo(StyleColor.ConvertTo16("#fff"));
@@ -198,6 +197,11 @@ local function convertHSLTo16(color)
 		temp_color = string.format("#%02x%02x%02x%02x",r,g,b,a);
 	end
 	return temp_color;
+end
+
+-- this will convert 'red' to '#ff0000'
+function StyleColor.GetColorString(color)
+	return presetColors[color] or color
 end
 
 function StyleColor.ConvertTo16(color)

@@ -30,6 +30,24 @@ local painter = PainterContext; -- just for NPLDoc, since most PainterContext is
 
 PainterContext.event_type = "paintEvent";
 local ParaPainter = ParaPainter;
+-- static : composition mode. default is usually SourceBlend
+painter.CompositionMode = {
+	SourceBlend= 0,
+	SourceOver= 1,
+	DestinationOver = 2,
+	Clear = 3,
+	Source = 4,
+	Destination = 5,
+	SourceIn = 6,
+	DestinationIn = 7,
+	SourceOut = 8,
+	DestinationOut = 9,
+	SourceAtop = 10,
+	DestinationAtop = 11,
+	Xor = 12,
+	Plus = 13,
+	PlusSourceBlend = 14
+}
 
 function painter:ctor()
 end
@@ -73,23 +91,9 @@ function painter:Restore()
 	ParaPainter.Restore();
 end
 
---[[
-CompositionMode_SourceBlend= 0,
-CompositionMode_SourceOver= 1,
-CompositionMode_DestinationOver = 2,
-CompositionMode_Clear = 3,
-CompositionMode_Source = 4,
-CompositionMode_Destination = 5,
-CompositionMode_SourceIn,
-CompositionMode_DestinationIn,
-CompositionMode_SourceOut,
-CompositionMode_DestinationOut,
-CompositionMode_SourceAtop,
-CompositionMode_DestinationAtop,
-CompositionMode_Xor,
-CompositionMode_Plus,
-CompositionMode_PlusSourceBlend,
-]]
+-- @param mode: number from self.CompositionMode
+-- self.CompositionMode.SourceBlend = 0
+-- self.CompositionMode.SourceOver = 1
 function painter:SetCompositionMode(mode)
 	ParaPainter.SetCompositionMode(mode);
 end
