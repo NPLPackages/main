@@ -34,6 +34,9 @@ MyTool:Property({"Visible"});
 MyTool:Property({"BackgroundColor", "#cccccc", auto=true});
 MyTool:Property({"down", nil, "isDown", "setDown"});
 MyTool:Property({"size", type="double"});
+-- with strict=true, self.width will always call getWidth or setWidth function, 
+-- however it has a slight performance penalty to the overall __index and __newindex 
+MyTool:Property({"width", 1, "getWidth", "setWidth", strict=true});
 
 -- define signal
 MyTool:Signal("XXXChanged", function(only_for_doc)  end);
@@ -62,10 +65,6 @@ ToolBase:Property({"Name", "ToolBase", auto=true});
 ToolBase.signal_connections = nil;
 -- all incoming connections to this receiver. mapping from ConnectionSynapse to true. 
 ToolBase.senders = nil;
-
-function ToolBase:ctor()
-	
-end
 
 function ToolBase:Destroy()
 	self.wasDeleted = true;

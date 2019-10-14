@@ -128,6 +128,7 @@ function commonlib.inherit(baseClass, new_class, ctor)
 	end
 	
 	local new_class = new_class or {}
+	-- new_class.__metatable will be used instead of this one at the time of new() method
     local class_mt = { __index = new_class }
 
 	-- this ensures that the base class new function is also called. 
@@ -140,11 +141,11 @@ function commonlib.inherit(baseClass, new_class, ctor)
 				baseClass:new(o);
 			end	
         end
-        setmetatable( o, class_mt )
+        setmetatable( o, rawget(new_class, "__metatable") or class_mt)
         
 		-- please note inside ctor function, parent class virtual functions are not available,since meta table of parent is not set yet. 
 		local ctor = rawget(new_class, "ctor");
-		if(type(ctor) == "function") then
+		if(ctor) then
 			ctor(o);
 		end
 		

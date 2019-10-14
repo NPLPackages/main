@@ -81,7 +81,7 @@ end
 ------------------------------------------------
 local ToolBase = commonlib.gettable("System.Core.ToolBase");
 
--- @param property: {name="visible", auto=true, private_name=nil, set="setVisible", get="isVisible", default=nil, sig=nil, type="bool", desc=nil, }
+-- @param property: {name="visible", auto=true, private_name=nil, set="setVisible", get="isVisible", default=nil, sig=nil, type="bool", desc=nil, strict=nil}
 -- or shortcut {"visible", false, "isVisible", "setVisible"}
 -- auto: if true, we will create setter and getter function automatically
 local function InstallProperty_helper(class_def, property)
@@ -145,26 +145,55 @@ local function InstallProperty_helper(class_def, property)
 	if(property.auto) then
 		setterName = setterName or ("Set"..name);
 		getterName = getterName or ("Get"..name);
+
 		-- create setting and getter automatically
 		-- setter name like self:SetValue(value), one may override
-		if(signal_name) then
-			class_def[setterName] = function(self, value)
-				if(self[private_name] ~= value) then
-					self[private_name] = value;
-					-- fire signal
-					self:Activate(signal_name, value);
+			
+		if(property.strict) then
+			if(signal_name) then
+				class_def[setterName] = function(self, value)
+					if(self[private_name] ~= value) then
+						rawset(self, private_name, value);
+						-- fire signal
+						self:Activate(signal_name, value);
+					end
+				end
+			else
+				class_def[setterName] = function(self, value)
+					if(self[private_name] ~= value) then
+						rawset(self, private_name, value);
+					end
+				end
+			end
+			-- getter name like self:GetValue(), one may override
+			class_def[getterName] = function(self)
+				local v = rawget(self, private_name)
+				if(v ~= nil) then
+					return v;
+				else
+					return class_def[private_name];
 				end
 			end
 		else
-			class_def[setterName] = function(self, value)
-				if(self[private_name] ~= value) then
-					self[private_name] = value;
+			if(signal_name) then
+				class_def[setterName] = function(self, value)
+					if(self[private_name] ~= value) then
+						self[private_name] = value;
+						-- fire signal
+						self:Activate(signal_name, value);
+					end
+				end
+			else
+				class_def[setterName] = function(self, value)
+					if(self[private_name] ~= value) then
+						self[private_name] = value;
+					end
 				end
 			end
-		end
-		-- getter name like self:GetValue(), one may override
-		class_def[getterName] = function(self)
-			return self[private_name];
+			-- getter name like self:GetValue(), one may override
+			class_def[getterName] = function(self)
+				return self[private_name];
+			end
 		end
 	end
 	-- add property to property fields of class_def. 
@@ -233,6 +262,53 @@ function ToolBase.AddField(class_def, name, property)
 		Classes:Add(class_def);
 	end
 	propertyFields:add(name, property);
+	if(property.strict) then
+		
+		local strictFields = rawget(class_def, "_strictfields");
+		if(not strictFields) then
+			strictFields = commonlib.ArrayMap:new();
+			if(class_def._strictfields) then
+				-- duplicate parent property
+				for key, property in class_def._strictfields:pairs() do
+					strictFields:add(key, property);
+				end
+			end
+			class_def._strictfields = strictFields;
+			-- modify meta table
+			
+			if(not class_def.__metatable) then
+				local meta_table = {};
+				meta_table.__index = function(self, key)
+					local property = strictFields[key];
+					if(property) then
+						local func = property.get and class_def[property.get];
+						if(func) then
+							return func(self);
+						end
+					else
+						return rawget(self, key) or class_def[key];
+					end
+				end
+				meta_table.__newindex = function(self, key, value)
+					local property = strictFields[key];
+					if(property) then
+						local func = property.set and class_def[property.set];
+						if(func) then
+							func(self, value);
+						end
+					else
+						return rawset(self, key, value);
+					end
+				end
+				-- tricky: __metatable is used to tell inherit method that class_def should use its own metatable 
+				-- instead of the default {__index = class_def}
+				class_def.__metatable = meta_table;
+			else
+				log(format("error: can not install strict property `%s` to class `%s`, because it already has a user defined metatable\n", name, class_def.Name or ""))
+			end
+		end
+		strictFields:add(name, property);
+	end
 end
 
 function ToolBase:IsValid()
