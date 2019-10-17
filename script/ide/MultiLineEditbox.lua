@@ -68,6 +68,9 @@ local MultiLineEditbox = commonlib.inherit(commonlib.gettable("CommonCtrl.TreeVi
 	-- called when user right click on the text. function(self, lineNode) or string. 
 	-- Use CommonCtrl.MultiLineEditbox.OnContextMenuDefault for common copy and paste.  
 	OnContextMenu = nil, 
+	-- called when user mouse over a given word, function(self, word, line:Unistring, from, to). 
+	-- this is only implemented for bUseSystemControl==true. 
+	OnMouseOverWordChange = nil, 
 	-- nil or the syntax highlighting map. Use CommonCtrl.MultiLineEditbox.syntax_map_NPL
 	syntax_map = nil,
 	-- "npl" syntax highlighting
@@ -161,6 +164,9 @@ function MultiLineEditbox:Show(bShow)
 			self.window:Connect("SizeChanged", nil, function()
 				self.ctrlEditbox:setGeometry(0, 0, self.window:width(), self.window:height());	
 			end)
+			if(self.OnMouseOverWordChange) then
+				self.ctrlEditbox:Connect("mouseOverWordChanged", self, self.OnMouseOverWordChange, "UniqueConnection");
+			end
 		end
 		if(bShow == nil) then
 			bShow = not self.window:isVisible();

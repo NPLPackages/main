@@ -603,7 +603,7 @@ function UIElement:setMouseTracking(enable)
 end
 
 function UIElement:hasMouseTracking()
-	self:testAttribute("WA_MouseTracking");
+	return self:testAttribute("WA_MouseTracking");
 end
 
 -- virtual: 
@@ -1025,14 +1025,6 @@ end
 -- @return mcml page object if valid
 function UIElement:LoadComponent(url)
 	return Application.LoadComponent(self, url);	
-end
-
-function UIElement:setMouseTracking(enable)
-	self:setAttribute("WA_MouseTracking", enable);
-end
-
-function UIElement:hasMouseTracking()
-	self:testAttribute("WA_MouseTracking");
 end
 
 function UIElement:GetTooltip()

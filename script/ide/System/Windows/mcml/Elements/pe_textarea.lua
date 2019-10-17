@@ -26,14 +26,14 @@ function pe_textarea:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 		(css["margin-left"] or css["margin"] or 0),(css["margin-top"] or css["margin"] or 0),
 		(css["margin-bottom"] or css["margin"] or 0),(css["margin-right"] or css["margin"] or 0);	
 
-	css.width = css.width or 60;
 	local lineheight = 20;
 	if(css["line-height"]) then
 		lineheight = tonumber(css["line-height"]);
 	end
 	local height = css.height;
 	if(not height) then
-		height = lineheight * self:GetNumber("rows",10);
+		local rows = tonumber(self:GetAttributeWithCode("rows", 10, true));
+		height = lineheight * rows;
 		css.height = height;
 	end
 	local _this = self.control;
@@ -53,7 +53,10 @@ function pe_textarea:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 
 	_this:ApplyCss(css);
 	_this:setReadOnly(self:GetBool("ReadOnly",false));
-
+	local text = self:GetAttributeWithCode("value", nil, true)
+	if(text) then
+		_this:SetText(text);
+	end
 	pe_textarea._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
 end
 

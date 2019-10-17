@@ -48,6 +48,8 @@ TextControl:Property({"language", nil, "Language", "SetLanguage", auto=true})
 
 --TextControl:Signal("SizeChanged",function(width,height) end);
 --TextControl:Signal("PositionChanged");
+TextControl:Signal("mouseOverWordChanged");
+
 
 local TAB_CHAR = "    ";
 local tab_len = string.len(TAB_CHAR);
@@ -477,11 +479,26 @@ function TextControl:mousePressEvent(e)
 		end
 		e:accept();
 		self:docPos();
+		self.isLeftMouseDown = true;
+	end
+end
+
+function TextControl:mouseReleaseEvent()
+	self.isLeftMouseDown = false;
+end
+
+
+-- @param word: word can be nil or text
+-- @from lineText: UniString class object
+function TextControl:setMouseOverWord(word, lineText, fromPos, toPos)
+	if(self.lastMouseOverWord ~= word) then
+		self.lastMouseOverWord = word;
+		self:mouseOverWordChanged(word, lineText, fromPos, toPos);
 	end
 end
 
 function TextControl:mouseMoveEvent(e)
-	if(e:button() == "left") then
+	if(e:button() == "left" and self.isLeftMouseDown) then
 		local select = true;
 		local line = self:yToLine(e:pos():y());
 		local text = self:GetLineText(line);
@@ -489,7 +506,26 @@ function TextControl:mouseMoveEvent(e)
 		self:moveCursor(line, pos, select, true);
 
 		e:accept();
+	else
+		local line = self:yToLine(e:pos():y());
+		local text = self:GetLineText(line);
+		if(text) then
+			local pos = self:xToPos(text, e:pos():x());
+			if(pos and pos>=0) then
+				local from,to = text:wordPosition(pos);
+				if(from and from < to) then
+					local word = text:substr(from+1, to);
+					self:setMouseOverWord(word, text, from, to)
+					return
+				end
+			end
+		end
+		self:setMouseOverWord(nil)
 	end
+end
+
+function TextControl:mouseLeaveEvent(event)
+	self:setMouseOverWord(nil)
 end
 
 function TextControl:inputMethodEvent(event)

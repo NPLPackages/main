@@ -78,6 +78,8 @@ MultiLineEditbox:Property({"isAlwaysShowIMEButton", nil})
 MultiLineEditbox:Signal("selectionChanged");
 MultiLineEditbox:Signal("cursorPositionChanged", function(oldLine, newLine, oldPos, newPos) end);
 MultiLineEditbox:Signal("textChanged");
+MultiLineEditbox:Signal("mouseOverWordChanged");
+
 --MultiLineEditbox:Signal("accepted");
 --MultiLineEditbox:Signal("editingFinished");
 --MultiLineEditbox:Signal("updateNeeded");
@@ -180,6 +182,7 @@ function MultiLineEditbox:initViewport()
 	self.viewport:SetClip(true);
 	self.viewport:Connect("SizeChanged", self, "updateScrollStatus");
 	self.viewport:Connect("PositionChanged", self, "updateScrollValue");
+	self.viewport:Connect("mouseOverWordChanged", self, "mouseOverWordChanged");
 end
 
 function MultiLineEditbox:ShowLineNumber(value)

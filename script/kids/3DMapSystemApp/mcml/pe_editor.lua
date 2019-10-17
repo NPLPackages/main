@@ -84,6 +84,7 @@ if it is "_mcmlblank", it will be opened in a new popup mcml window.
 | css.lineheight | line height for multiline text. |
 | spacing	| for text or button control.  |
 | UseSystemControl | true to use advanced multiple line edit box in new system control |
+| OnMouseOverWordChange | called when user mouse over a given word, function(word, line:Unistring, from, to). this is only implemented for bUseSystemControl==true.  |
 | InputMethodEnabled | only valid when UseSystemControl is true. default to true |
 use the lib:
 -------------------------------------------------------
@@ -1345,6 +1346,13 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 		if(onchange)then
 			ctl.onchange = function()
 				Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, onchange, name, mcmlNode);
+			end
+		end
+
+		local OnMouseOverWordChange = mcmlNode:GetString("OnMouseOverWordChange");
+		if(OnMouseOverWordChange)then
+			ctl.OnMouseOverWordChange = function(self, word, line, from, to)
+				Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, OnMouseOverWordChange, word, line, from, to);
 			end
 		end
 
