@@ -135,6 +135,7 @@ function Window:ShowWithParams(params)
 			self:SetAlignment(alignment);
 			nativeWnd:Reposition(alignment, left or 0, top or 0, width or self:width(), height or self:height());
 			local x, y, width, height = nativeWnd:GetAbsPosition();
+			self.screen_x, self.screen_y = x, y;
 
 			-- update geometry
 			self:setGeometry(x, y, width, height);

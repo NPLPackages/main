@@ -49,6 +49,10 @@ TextControl:Property({"language", nil, "Language", "SetLanguage", auto=true})
 --TextControl:Signal("SizeChanged",function(width,height) end);
 --TextControl:Signal("PositionChanged");
 TextControl:Signal("mouseOverWordChanged");
+-- user input some char or string
+TextControl:Signal("userTyped", function(txtCtrl, str) end);
+TextControl:Signal("keyPressed", function(txtCtrl, event) end);
+
 
 
 local TAB_CHAR = "    ";
@@ -511,7 +515,7 @@ function TextControl:mouseMoveEvent(e)
 		local text = self:GetLineText(line);
 		if(text) then
 			local pos = self:xToPos(text, e:pos():x());
-			if(pos and pos>=0) then
+			if(pos and pos>=0 and pos < text:length()) then
 				local from,to = text:wordPosition(pos);
 				if(from and from < to) then
 					local word = text:substr(from+1, to);
@@ -545,13 +549,17 @@ function TextControl:inputMethodEvent(event)
 
 	--self:InsertTextAddToCommand(commitString, nil, nil, true);
 	self:InsertTextInCursorPos(commitString);
-	
+	self:userTyped(self, commitString);
 end
 
 function TextControl:keyPressEvent(event)
 	local keyname = event.keyname;
 	local mark = event.shift_pressed;
 	local unknown = false;
+	self:keyPressed(self, event); -- signal
+	if(event:isAccepted()) then
+		return;
+	end
 	if(keyname == "DIK_RETURN") then
 		if(not self:isReadOnly()) then
 			if(self:hasAcceptableInput()) then
@@ -1773,6 +1781,12 @@ function TextControl:ApplyCss(css)
 	if(css["caret-color"]) then
 		self:SetCursorColor(css["caret-color"]);
 	end
+end
+
+function TextControl:GetCursorPositionInClient()
+	local cursor_x = self:cursorToX();
+	local cursor_y = (self.cursorLine - 1) * self.lineHeight;
+	return cursor_x, cursor_y
 end
 
 function TextControl:paintEvent(painter)
