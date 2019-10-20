@@ -440,8 +440,8 @@ end
 			begin_pos = self:wordBeginPosition(oldPos);
 			end_pos = oldPos;
 		else
-			begin_pos = self:wordBeginPosition(oldPos);
-			end_pos = self:wordEndPosition(oldPos);
+			begin_pos = self:atWordSeparator(oldPos-1) and oldPos or self:wordBeginPosition(oldPos);
+			end_pos = self:atWordSeparator(oldPos) and oldPos or self:wordEndPosition(oldPos);
 		end
 	end	
 	return begin_pos,end_pos;

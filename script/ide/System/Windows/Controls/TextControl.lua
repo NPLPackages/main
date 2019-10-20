@@ -511,16 +511,18 @@ function TextControl:mouseMoveEvent(e)
 
 		e:accept();
 	else
-		local line = self:yToLine(e:pos():y());
-		local text = self:GetLineText(line);
-		if(text) then
-			local pos = self:xToPos(text, e:pos():x());
-			if(pos and pos>=0 and pos < text:length()) then
-				local from,to = text:wordPosition(pos);
-				if(from and from < to) then
-					local word = text:substr(from+1, to);
-					self:setMouseOverWord(word, text, from, to)
-					return
+		local line = math.ceil(e:pos():y()/self.lineHeight);
+		if(line>=1 and line<=(#self.items)) then
+			local text = self:GetLineText(line);
+			if(text) then
+				local pos = self:xToPos(text, e:pos():x());
+				if(pos and pos>=0 and pos < text:length()) then
+					local from,to = text:wordPosition(pos);
+					if(from and from < to) then
+						local word = text:substr(from+1, to);
+						self:setMouseOverWord(word, text, from, to)
+						return
+					end
 				end
 			end
 		end
@@ -1575,8 +1577,8 @@ end
 
 function TextControl:yToLine(y)
 	local line = math.ceil(y/self.lineHeight);
-	line = if_else(line > #self.items, #self.items, line);
-	line = if_else(line > 1, line, 1);
+	line = (line > #self.items) and #self.items or line;
+	line = (line > 1) and line or 1;
 	return line;
 end
 
