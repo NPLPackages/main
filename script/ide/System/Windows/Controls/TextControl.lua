@@ -1394,19 +1394,24 @@ function TextControl:lineInternalRemove(line, pos, count)
 	end
 end
 
+-- @param line: if nil, it means the current line. 
+-- return nil or spaces string
+function TextControl:GetHeadingSpaces(line)
+	local text = self:GetLineText(line or self.cursorLine);
+	if(text) then
+		text = tostring(text);
+		return text:match("^([ \t]+)");
+	end
+end
+
 function TextControl:newLine(mark)
 	local newLineText = "\r\n";
 
 	-- add heading spaces of the current line to the newline
-	local text = self:GetLineText(self.cursorLine);
-	if(text) then
-		text = tostring(text);
-		local headingSpaces = text:match("^([ \t]+)");
-		if(headingSpaces) then
-			newLineText = newLineText..headingSpaces;
-		end
+	local headingSpaces = self:GetHeadingSpaces(self.cursorLine)
+	if(headingSpaces) then
+		newLineText = newLineText..headingSpaces;
 	end
-
 	self:InsertTextInCursorPos(newLineText);
 end
 
