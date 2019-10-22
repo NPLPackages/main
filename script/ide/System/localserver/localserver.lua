@@ -162,7 +162,7 @@ end
 function localserver:GetServer(server)
 	if(not self.is_initialized_) then 	return false end
 	local web_db = self:GetDB();
-	return web_db:FindServer(server_id_, server)
+	return web_db:FindServer(self.server_id_, server)
 end
 
 -- clone from input local_server
@@ -176,7 +176,7 @@ function localserver:Clone(local_server)
 	return true;
 end
 
--- Retrieves from the DB the server info for this instance using dentifier domain/name/required_cookie/serverType.
+-- Retrieves from the DB the server info for this instance using identifier domain/name/required_cookie/serverType.
 -- @return ServerInfo returned or nil if not found. 
 function localserver:FindServer(security_origin,name,required_cookie, serverType) 
 	if(not name or not required_cookie) then return  end
