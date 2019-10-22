@@ -55,8 +55,10 @@ end
 --  and other info by entry.payload:GetHeader(System.localserver.HttpConstants.kXXX);
 -- @param callbackProgressFunc: this is an optional function that is called whenever a fraction of a url is downloaded
 -- the format is function(msg, callbackContext or url), where msg is {DownloadState=""|"complete"|"terminated"|"duplicated_call", totalFileSize=number, currentFileSize=number, PercentDone=number}
+-- @param expiredFileCallback: if there is an existing expired file, we will call this function. 
+-- Please note callbackFunc may be called afterwards when unexpired version is fetched. 
 -- @return return true if it is fetching data or data is already available. false if url is already being downloaded by the previous call.
-function ResourceStore:GetFile(Cache_policy, urls, callbackFunc, callbackContext, callbackProgressFunc) 
+function ResourceStore:GetFile(Cache_policy, urls, callbackFunc, callbackContext, callbackProgressFunc, expiredFileCallback) 
 	Cache_policy = Cache_policy or self.Cache_policy;
 	
 	if (type(urls)=="string") then
@@ -73,19 +75,24 @@ function ResourceStore:GetFile(Cache_policy, urls, callbackFunc, callbackContext
 			local entry = self:GetItem(url);
 			if(entry) then
 				local expireTime = (entry.payload:GetCacheMaxAge() or 0) + entry.payload.creation_date;
-				if(not Cache_policy:IsExpired(expireTime) and (not entry.payload.cached_filepath or ParaIO.DoesFileExist(entry.payload.cached_filepath, false))) then
+
+				if(Cache_policy:IsExpired(expireTime)) then
+					if(expiredFileCallback and (entry.payload.cached_filepath and ParaIO.DoesFileExist(entry.payload.cached_filepath, false)))  then
+						entry.IsFromCache = true;
+						LOG.std(nil, "info", "ResourceStore", "Expired local version is firstly used for %s", url);
+						expiredFileCallback(entry, callbackContext)
+					end
+				elseif((not entry.payload.cached_filepath or ParaIO.DoesFileExist(entry.payload.cached_filepath, false))) then
 					commonlib.removeArrayItem(urls, i);
+					i = i - 1;
 					LOG.std(nil, "info", "ResourceStore", "Unexpired local version is used for %s", url);
 					if(callbackFunc) then
 						entry.IsFromCache = true;
 						callbackFunc(entry, callbackContext)
 					end
-				else
-					i=i+1;
 				end
-			else
-				i=i+1;
 			end
+			i = i + 1;
 			url = urls[i];
 		end	
 		if(table.getn(urls)==0) then

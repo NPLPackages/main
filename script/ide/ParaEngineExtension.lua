@@ -259,14 +259,18 @@ ParaAsset.RemoteTexture_cache_policy = System.localserver.CachePolicy:new("acces
 -- An internal time is also used so that we can sequence downloader threads. 
 -- @param cache_policy: please note for http object, cache-control: max-age is always added to the cache_policy
 -- by default cache_policy is 1 hour plus cache-control max-age. 
-function ParaAsset.GetRemoteTexture(url, cache_policy, callback)
+function ParaAsset.GetRemoteTexture(url, cache_policy, callback, expiredCallback)
 	local ls = System.localserver.CreateStore();
 	if(not ls) then
 		log("error: failed creating local server resource store \n")
 		return
 	end
 	-- please note for http object, cache-control: max-age is always added to the cache_policy
-	ls:GetFile(cache_policy or ParaAsset.RemoteTexture_cache_policy, url, callback or ParaAsset.GetRemoteTexture_callback);
+	if(callback) then
+		ls:GetFile(cache_policy or ParaAsset.RemoteTexture_cache_policy, url, callback, nil, nil, expiredCallback);
+	else
+		ls:GetFile(cache_policy or ParaAsset.RemoteTexture_cache_policy, url, ParaAsset.GetRemoteTexture_callback, nil, nil, ParaAsset.GetRemoteTexture_callback);
+	end
 end
 
 function ParaAsset.GetRemoteTexture_callback(entry)
