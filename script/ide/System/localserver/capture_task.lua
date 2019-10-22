@@ -214,7 +214,7 @@ function System.localserver.ProcessFile_result(request_id, index)
 	
 	local task = TaskManager:GetTask(request_id);
 	if(not task) then
-		log(string.format("warning: task request_id : %d not found in task manager.\n", request_id))
+		log(string.format("warning: file task request_id : %d not found in task manager.\n", request_id))
 		return nil
 	end
 	local url = task:GetUrl(index);
