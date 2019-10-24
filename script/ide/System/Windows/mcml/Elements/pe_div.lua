@@ -42,14 +42,12 @@ function pe_div:LoadComponent(parentElem, parentLayout, style)
 		end
 	end
 
-
 	local _this = self.control;
 	if(not _this) then
 		if(onclick_for or onclick or tooltip or ontouch) then
 			_this = Button:new():init(parentElem);
 			_this:SetPolygonStyle("none");
-			self.buttonName = self:GetAttributeWithCode("name",nil,true);
-			_this:Connect("clicked", self, self.OnClick, "UniqueConnection");
+			self.isButton = true;
 		else
 			_this = Rectangle:new():init(parentElem);
 		end
@@ -63,36 +61,10 @@ function pe_div:LoadComponent(parentElem, parentLayout, style)
 end
 
 function pe_div:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
---	local ignore_onclick, ignore_tooltip, ignore_background;
---	local onclick, ontouch;
---	local onclick_for;
---	if(not ignore_onclick) then
---		onclick = self:GetString("onclick");
---		if(onclick == "") then
---			onclick = nil;
---		end
---		onclick_for = self:GetString("for");
---		if(onclick_for == "") then
---			onclick_for = nil;
---		end
---		ontouch = self:GetString("ontouch");
---		if(ontouch == "") then
---			ontouch = nil;
---		end
---	end
---	local tooltip
---	if(not ignore_tooltip) then
---		tooltip = self:GetAttributeWithCode("tooltip",nil,true);
---		if(tooltip == "") then
---			tooltip = nil;
---		end
---	end
-
---	if(css["background-color"] and not ignore_background) then
---		if(not background and not css.background2) then
---			background = "Texture/whitedot.png";
---		end
---	end
+	if(self.isButton) then
+		self.buttonName = self:GetAttributeWithCode("name",nil,true);
+		parentElem:Connect("clicked", self, self.OnClick, "UniqueConnection");
+	end
 
 	if(not css.background and not css.background2 and css["background-color"]~="#ffffff00") then
 		if(css["background-color"]) then
@@ -107,59 +79,6 @@ function pe_div:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 		_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
 		_this:ApplyCss(css);
 	end
-
-
---	if(onclick_for or onclick or tooltip or ontouch) then
---		-- if there is onclick event, the inner nodes will not be interactive.
---		local _this = self.control;
---		if(not _this) then
---			_this = Button:new():init(parentElem);
---			self:SetControl(_this);
---			--self.control._page_element = self;
---		end
---		echo("div button");
---		_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
---		_this:ApplyCss(css);
---		_this:Connect("clicked", self, self.OnClick)
---
---		if(css.background and css.background~="") then
---			if(css["background-rotation"]) then
---				_this:SetRotation(tonumber(css["background-rotation"]));
---			end
---			if(css["background-repeat"] == "repeat") then
---				_this:SetRotation("UVWrappingEnabled", true);
---			end
---		end
---		local zorder = self:GetNumber("zorder");
---		if(zorder) then
---			_this.zorder = zorder;
---		end
---	else
---		local _this = self.control;
---		if(not _this) then
---			_this = Rectangle:new():init(parentElem);
---			_this:SetBackground("Texture/Aries/Creator/Theme/GameCommonIcon_32bits.png;3 3 3 3:1 1 1 1");
---			self:SetControl(_this);
---		end
---		if(css.background) then
---			_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
---			_this:ApplyCss(css);
---			if(css.background and css.background~="") then
---				if(css["background-rotation"]) then
---					_this:SetRotation(tonumber(css["background-rotation"]));
---				end
---				if(css["background-repeat"] == "repeat") then
---					_this:SetRotation("UVWrappingEnabled", true);
---				end
---			end
---			local zorder = self:GetNumber("zorder");
---			if(zorder) then
---				_this.zorder = zorder;
---			end
---		else
---			_this:SetBackgroundColor();
---		end
---	end
 
 	pe_div._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)	
 end

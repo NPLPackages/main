@@ -45,10 +45,10 @@ local down = {
 function Button:initNormalPens()
 	self.polygon_styles.normal = {
 		["pens"] = {
-			["normal"] = normal,
-			["check"] = check,
-			["over"] = over,
-			["down"] = down,
+			["normal"] = commonlib.copy(normal),
+			["check"] = commonlib.copy(check),
+			["over"] = commonlib.copy(over),
+			["down"] = commonlib.copy(down),
 		}
 	};
 end

@@ -77,7 +77,8 @@ UIElement:Property({"BackgroundColor", "#cccccc", auto=true});
 UIElement:Property({"Background", nil, auto=true});
 UIElement:Property({"tooltip", nil, "GetTooltip", "SetTooltip", auto=true});
 UIElement:Property({"toolTipDuration", 5000, auto=true});
-
+-- transform = {rotate=radian, scale={x,y}, origin={x,y}}
+UIElement:Property({"transform", nil, auto=true});
 UIElement:Property({"focus_policy", FocusPolicy.NoFocus, "focusPolicy", "setFocusPolicy"});
 UIElement:Property({"mouseTracking", nil, "hasMouseTracking", "setMouseTracking"});
 UIElement:Property({"render_priority", 0, auto=true});
@@ -544,7 +545,7 @@ function UIElement:Render(painterContext)
 
 	-- draw all widgets recursively
 	local offset = Point:new_from_pool(self:x(), self:y());
-	self:drawWidget(painterContext, offset);
+	self:drawWidget(painterContext, offset, self.transform);
 end
 
 function UIElement:prepareToRender()
@@ -554,9 +555,30 @@ function UIElement:prepareToRender()
 	end
 end
 
+function UIElement:applyRenderTransform(painterContext, transform)
+	if(transform) then
+		painterContext:Save()
+			
+		if(transform.origin) then
+			painterContext:Translate(-transform.origin[1], -transform.origin[2]);
+		end
+		if(transform.rotate) then
+			
+			painterContext:Rotate(transform.rotate);
+		end
+		if(transform.scale) then
+			painterContext:Scale(transform.scale[1], transform.scale[2]);
+		end
+		if(transform.origin) then
+			painterContext:Translate(transform.origin[1], transform.origin[2]);
+		end
+	end
+end
+
+
 -- draw with offset and its child recursively
 -- @param offset: Point of offset. 
-function UIElement:drawWidget(painterContext, offset)
+function UIElement:drawWidget(painterContext, offset, transform)
 	if (not self:updatesEnabled() or self:isHidden()) then
 		return;
 	end
@@ -570,6 +592,7 @@ function UIElement:drawWidget(painterContext, offset)
 	else
 		self:setAttribute("WA_WState_InPaintEvent", true);
 		-- actually send the paint event
+		self:applyRenderTransform(painterContext, transform)
 		Application:sendSpontaneousEvent(self, painterContext);
 		self:setAttribute("WA_WState_InPaintEvent", false);	
 	end
@@ -587,6 +610,9 @@ function UIElement:drawWidget(painterContext, offset)
 			child = children:next(child);
 		end
 		painterContext:Translate(-widget_offset:x(), -widget_offset:y());
+	end
+	if(transform) then
+		painterContext:Restore()
 	end
 end
 
@@ -1042,7 +1068,12 @@ function UIElement:toolTipEvent(event)
 	if (self.tooltip and self.tooltip~="") then
         Tooltip:showText(nil, self.tooltip, self, nil, self.toolTipDuration);
     else
-        event:ignore();
+		local parent = self:parentWidget();
+		if(parent) then
+			parent:toolTipEvent(event)
+		else
+			event:ignore();	
+		end
 	end
 end
 

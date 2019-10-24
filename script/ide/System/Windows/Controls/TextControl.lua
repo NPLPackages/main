@@ -567,6 +567,7 @@ function TextControl:keyPressEvent(event)
 			if(self:hasAcceptableInput()) then
 				--self:accepted(); -- emit
 				self:newLine(mark);
+				self:userTyped(self);
 			end
 		end
 	elseif(keyname == "DIK_BACKSPACE") then
@@ -577,9 +578,11 @@ function TextControl:keyPressEvent(event)
 			else
 				self:backspace();
 			end
+			self:userTyped(self);
 		end
 	elseif(keyname == "DIK_TAB") then
 		self:ProcessTab(mark);
+		self:userTyped(self);
 	elseif(event:IsKeySequence("SelectAll")) then
 		self:selectAll();
 	elseif(event:IsKeySequence("Copy")) then
@@ -587,11 +590,13 @@ function TextControl:keyPressEvent(event)
 	elseif(event:IsKeySequence("Paste")) then
 		if (not self:isReadOnly()) then
 			self:paste("Clipboard");
+			self:userTyped(self);
 		end
 	elseif(event:IsKeySequence("Cut")) then
 		if (not self:isReadOnly()) then
 			self:copy();
 			self:del(true);
+			self:userTyped(self);
 		end
 	elseif(keyname == "DIK_HOME") then
 		if(event.ctrl_pressed) then
@@ -666,14 +671,17 @@ function TextControl:keyPressEvent(event)
     elseif (event:IsKeySequence("Delete")) then
         if (not self:isReadOnly()) then
             self:del();
+			self:userTyped(self);
 		end
 	elseif(event:IsKeySequence("Undo")) then
 		if (not self:isReadOnly()) then
 			self:undo();
+			self:userTyped(self);
 		end
 	elseif(event:IsKeySequence("Redo")) then
 		if (not self:isReadOnly()) then
 			self:redo();
+			self:userTyped(self);
 		end
 	elseif(event:IsKeySequence("Search")) then
 		local selectedText = self:selectedText();
