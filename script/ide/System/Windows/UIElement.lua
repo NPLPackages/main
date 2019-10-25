@@ -77,7 +77,7 @@ UIElement:Property({"BackgroundColor", "#cccccc", auto=true});
 UIElement:Property({"Background", nil, auto=true});
 UIElement:Property({"tooltip", nil, "GetTooltip", "SetTooltip", auto=true});
 UIElement:Property({"toolTipDuration", 5000, auto=true});
--- transform = {rotate=radian, scale={x,y}, origin={x,y}}
+-- transform = {rotate=degree, scale={x,y}, origin={x,y}}
 UIElement:Property({"transform", nil, auto=true});
 UIElement:Property({"focus_policy", FocusPolicy.NoFocus, "focusPolicy", "setFocusPolicy"});
 UIElement:Property({"mouseTracking", nil, "hasMouseTracking", "setMouseTracking"});
@@ -132,6 +132,12 @@ function UIElement:ApplyCss(css)
 	end	
 	if(css.background) then
 		self:SetBackground(css.background);
+	end
+	if(css.transform) then
+		self.transform = {rotate = css.transform.rotate, scale = css.transform.scale};
+		if(css["transform-origin"]) then
+			self.transform.origin = css["transform-origin"];
+		end
 	end
 end
 
@@ -545,7 +551,7 @@ function UIElement:Render(painterContext)
 
 	-- draw all widgets recursively
 	local offset = Point:new_from_pool(self:x(), self:y());
-	self:drawWidget(painterContext, offset, self.transform);
+	self:drawWidget(painterContext, offset);
 end
 
 function UIElement:prepareToRender()
@@ -558,27 +564,25 @@ end
 function UIElement:applyRenderTransform(painterContext, transform)
 	if(transform) then
 		painterContext:Save()
-			
+		local x, y = self:x(), self:y();
 		if(transform.origin) then
-			painterContext:Translate(-transform.origin[1], -transform.origin[2]);
+			x = x + (transform.origin[1] or 0)
+			y = y + (transform.origin[2] or 0);
 		end
+		painterContext:Translate(x, y);
 		if(transform.rotate) then
-			
 			painterContext:Rotate(transform.rotate);
 		end
 		if(transform.scale) then
 			painterContext:Scale(transform.scale[1], transform.scale[2]);
 		end
-		if(transform.origin) then
-			painterContext:Translate(transform.origin[1], transform.origin[2]);
-		end
+		painterContext:Translate(-x, -y);
 	end
 end
 
-
 -- draw with offset and its child recursively
 -- @param offset: Point of offset. 
-function UIElement:drawWidget(painterContext, offset, transform)
+function UIElement:drawWidget(painterContext, offset)
 	if (not self:updatesEnabled() or self:isHidden()) then
 		return;
 	end
@@ -592,7 +596,9 @@ function UIElement:drawWidget(painterContext, offset, transform)
 	else
 		self:setAttribute("WA_WState_InPaintEvent", true);
 		-- actually send the paint event
-		self:applyRenderTransform(painterContext, transform)
+		if(self.transform) then
+			self:applyRenderTransform(painterContext, self.transform)
+		end
 		Application:sendSpontaneousEvent(self, painterContext);
 		self:setAttribute("WA_WState_InPaintEvent", false);	
 	end
@@ -611,7 +617,7 @@ function UIElement:drawWidget(painterContext, offset, transform)
 		end
 		painterContext:Translate(-widget_offset:x(), -widget_offset:y());
 	end
-	if(transform) then
+	if(self.transform) then
 		painterContext:Restore()
 	end
 end

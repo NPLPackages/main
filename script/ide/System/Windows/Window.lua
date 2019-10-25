@@ -46,6 +46,7 @@ Window:Property("Name", "Window");
 Window:Property({"AutoClearBackground", true, nil, "SetAutoClearBackground"});
 Window:Property({"CanDrag", false, auto=true});
 Window:Property({"Alignment", "_lt", auto=true});
+Window:Property({"zorder", nil, "GetZOrder", "SetZOrder", auto=true});
 Window:Property({"InputMethodEnabled", true, "IsInputMethodEnabled", "SetInputMethodEnabled", auto=true});
 
 Window:Signal("urlChanged", function(url) end)
@@ -60,7 +61,7 @@ end
 -- @param name_or_params: name or params {}
 -- @param parent: if nil, it is the root GUI object. 
 -- @param left,top, width, height: if nil, we will render at full size of parent.  
-function Window:Show(name_or_params, parent, alignment, left, top, width, height)
+function Window:Show(name_or_params, parent, alignment, left, top, width, height, zorder)
 	local params;
 	if(type(name_or_params) == "table") then
 		params = name_or_params;
@@ -73,6 +74,7 @@ function Window:Show(name_or_params, parent, alignment, left, top, width, height
 			top = top,
 			width = width,
 			height = height,
+			zorder = zorder,
 		};
 	end
 	return self:ShowWithParams(params);
@@ -102,6 +104,20 @@ function Window:LoadComponent(url)
 		page:GetPageScope();
 	end
 	return page;
+end
+
+function Window:GetZOrder()
+	return self.zorder
+end
+
+function Window:SetZOrder(zorder)
+	if(self.zorder~=zorder) then
+		self.zorder = zorder;
+		local nativeWnd = self:GetNativeWindow();
+		if(nativeWnd) then
+			nativeWnd.zorder = zorder;
+		end
+	end
 end
 
 -- @param params: {url="", alignment, x,y,width, height, allowDrag,zorder, enable_esc_key, DestroyOnClose, parent, pageGlobalTable}
@@ -150,6 +166,7 @@ function Window:ShowWithParams(params)
 
 			if(params.zorder) then
 				nativeWnd.zorder = params.zorder;
+				self.zorder = params.zorder;
 			end
 		end
 	end

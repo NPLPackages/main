@@ -153,6 +153,11 @@ local complex_fields = {
 	["border"] = "border-width border-style border-color",
 };
 
+local transform_fields = {
+	["transform"] = true,
+	["transform-origin"] = true,
+};
+
 function StyleItem.AddRemoteTextureLocalPath(url, path)
 	remoteTextrue[url] = path;
 end
@@ -205,6 +210,34 @@ function StyleItem:AddItem(name,value)
 		end
 	elseif(color_fields[name]) then
 		value = StyleColor.ConvertTo16(value);
+	elseif(transform_fields[name]) then
+		if(name == "transform") then
+			local transform = self.transform
+			local degree = value:match("^%s*rotate%(%s*(%-?%d+)")
+			if(degree) then
+				transform = transform or {};
+				transform.rotate = tonumber(degree);
+			else
+				local scaleX, scaleY = value:match("^%s*scale%(%s*(%d+)[%s,]*(%d+)")
+				if(scaleX and scaleY) then
+					transform = transform or {};
+					transform.scale = {tonumber(scaleX), tonumber(scaleY)};
+				end
+			end
+			value = transform;
+		elseif(name == "transform-origin") then
+			-- transform-origin: 0 0
+			local values = {}
+			for v in value:gmatch("%-?%d+") do
+				values[#values+1] = tonumber(v);
+			end
+			if(values[1]) then
+				values[2] = values[2] or 0;
+				value = values;
+			else
+				value = nil;
+			end
+		end
 	elseif(string_match(name, "^background[2]?$") or name == "background-image") then
 		value = string_gsub(value, "url%((.*)%)", "%1");
 		value = string_gsub(value, "#", ";");
