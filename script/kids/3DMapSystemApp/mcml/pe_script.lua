@@ -79,10 +79,6 @@ if(not Map3DSystem.mcml_controls) then Map3DSystem.mcml_controls = {} end
 -- pe:script and html script node
 -----------------------------------
 local pe_script = commonlib.gettable("Map3DSystem.mcml_controls.pe_script");
-
-
--- the following code is appended before the actual code to prevent global function defined in inline script to pollute the global environment. 
-pe_script.prepare_page_env = "setfenv (1, Map3DSystem.mcml_controls.pe_script._PAGESCRIPT);";
 			
 -- Code within this element is executed immediately when the page is loaded, if it is not in a function.
 -- if it references an external script. The script should be on disk, otherwise it will be ignored. 
@@ -169,23 +165,18 @@ function pe_script.create(rootName, mcmlNode, bindingContext, _parent, left, top
 			if(not mcmlNode.code_code__) then
 				-- Do code in local environment
 				local url = mcmlNode:GetRequestURL() or "unknown inline MCML script";
-				local cache_code = true;
-				if(not cache_code) then
-					NPL.DoString(pe_script.prepare_page_env..code, url);
+				mcmlNode.code_code__ = code_original;
+				local errormsg;
+				code_func, errormsg = loadstring(code, url);
+				if(not code_func) then
+					LOG.std(nil, "error", "pe_script", "<Runtime error> syntax error while loading code in url:%s\n%s", url, tostring(errormsg));
 				else
-					mcmlNode.code_code__ = code_original;
-					local errormsg;
-					code_func, errormsg = loadstring(code, url);
-					if(not code_func) then
-						LOG.std(nil, "error", "pe_script", "<Runtime error> syntax error while loading code in url:%s\n%s", url, tostring(errormsg));
-					else
-						mcmlNode.code_func__ = code_func;
-					end
+					mcmlNode.code_func__ = code_func;
 				end
 			end
 
 			if(code_func) then
-				setfenv (code_func, pe_script._PAGESCRIPT);
+				setfenv(code_func, pe_script._PAGESCRIPT);
 				code_func();
 			end
 
@@ -211,12 +202,13 @@ function pe_script.DoPageCode(code, pageCtrl)
 		pe_script.SetPageScope(pageCtrl);
 		
 		-- we used the loadstring from lua, maybe a more secure function is better. 
-		local file_func, errmsg = loadstring(pe_script.prepare_page_env..code);
+		local file_func, errmsg = loadstring(code);
 		if(file_func) then
+			setfenv(file_func, pe_script._PAGESCRIPT);
 			return file_func();
 		else
 			LOG.std(nil, "error", "pe_script", "<Runtime Error>failed to do page code in page%s. error msg:%s", tostring(pageCtrl.url), tostring(errmsg))
-			echo(pe_script.prepare_page_env..code);
+			echo(code);
 			return nil;
 		end
 	end
