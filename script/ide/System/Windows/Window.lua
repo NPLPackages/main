@@ -120,6 +120,11 @@ function Window:SetZOrder(zorder)
 	end
 end
 
+-- virtual function
+function Window:FilterImage(filename)
+	return filename;
+end
+
 -- @param params: {url="", alignment, x,y,width, height, allowDrag,zorder, enable_esc_key, DestroyOnClose, parent, pageGlobalTable}
 -- pageGlobalTable can be a custom page environment table, if nil, it will be the global _G. 
 function Window:ShowWithParams(params)

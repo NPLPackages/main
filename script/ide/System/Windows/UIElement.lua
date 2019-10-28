@@ -131,7 +131,12 @@ function UIElement:ApplyCss(css)
 		self:SetBackgroundColor(css["background-color"]);
 	end	
 	if(css.background) then
-		self:SetBackground(css.background);
+		local wnd = self:GetWindow()
+		if(wnd) then
+			self:SetBackground(wnd:FilterImage(css.background));
+		else
+			self:SetBackground(css.background);
+		end
 	end
 	if(css.transform) then
 		self.transform = {rotate = css.transform.rotate, scale = css.transform.scale};
