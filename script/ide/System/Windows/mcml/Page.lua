@@ -236,7 +236,7 @@ function Page:GetParentUIObject()
 end
 
 -- close the containing window
--- @param bDestroy: if true, it will destroy the window, otherwise it will just hide it.
+-- @param bDestroy: if true or nil, it will destroy the window, otherwise it will just hide it.
 function Page:CloseWindow(bDestroy)
 	local wnd = self:GetWindow();
 	if(wnd) then

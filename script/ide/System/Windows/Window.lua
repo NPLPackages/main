@@ -48,8 +48,12 @@ Window:Property({"CanDrag", false, auto=true});
 Window:Property({"Alignment", "_lt", auto=true});
 Window:Property({"zorder", nil, "GetZOrder", "SetZOrder", auto=true});
 Window:Property({"InputMethodEnabled", true, "IsInputMethodEnabled", "SetInputMethodEnabled", auto=true});
+Window:Property({"DestroyOnClose", true,  "IsDestroyOnClose", "SetDestroyOnClose", auto=true});
+
 
 Window:Signal("urlChanged", function(url) end)
+Window:Signal("windowClosed", function() end)
+
 
 function Window:ctor()
 	self.window = self;
@@ -175,10 +179,10 @@ function Window:ShowWithParams(params)
 			end
 		end
 	end
-	
+	self:SetDestroyOnClose(params.DestroyOnClose)
 	if(params.enable_esc_key) then
 		self.esc_state = self.esc_state or {name = "McmlEscKey", OnEscKey = function()  
-			self:CloseWindow(params.DestroyOnClose~=false);
+			self:CloseWindow();
 		end}
 		System.PushState(self.esc_state);
 	end
@@ -187,9 +191,12 @@ function Window:ShowWithParams(params)
 	self:show();
 end
 
--- @param bDestroy: if true, it will destroy the window, otherwise it will just hide it.
+-- @param bDestroy: if true or nil, it will destroy the window, otherwise it will just hide it.
 function Window:CloseWindow(bDestroy)
-	if(not bDestroy) then
+	if(bDestroy == nil) then
+		bDestroy = self:IsDestroyOnClose();
+	end
+	if(bDestroy == false) then
 		self:hide();
 	else
 		self:destroy();
@@ -197,6 +204,7 @@ function Window:CloseWindow(bDestroy)
 	if(self.esc_state) then
 		System.PopState(self.esc_state);
 	end
+	self:windowClosed();
 end
 
 function Window:GetNativeWindow()
