@@ -13,6 +13,8 @@ local page = Page:new();
 NPL.load("(gl)script/ide/System/Core/ToolBase.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/PageLayout.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/Style.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/BindingContext.lua");
+local BindingContext = commonlib.gettable("System.Windows.mcml.BindingContext");
 local Style = commonlib.gettable("System.Windows.mcml.Style");
 local mcml = commonlib.gettable("System.Windows.mcml");
 local Elements = commonlib.gettable("System.Windows.mcml.Elements");
@@ -427,20 +429,10 @@ function Page:FindUIControl(name)
 	end
 end
 
--- Get bindingtext in the page by its name.
--- a page will automatically create a binding context for each <pe:editor> and <form> node.
--- @return : binding context is returned or nil. bindContext.values contains the data source for the databinding controls.
-function Page:GetBindingContext(name)
-	local node = self:GetNode(name)
-	if(node) then
-		local instName = node:GetInstanceName(self.name);
-		local bindingContext = Map3DSystem.mcml_controls.pe_editor.GetBinding(instName);
-		if(bindingContext) then
-			-- bindingContext:UpdateControlsToData();
-			-- bindingContext.values
-		end
-		return bindingContext;
-	end
+-- Get bindingtext context
+function Page:GetBindingContext()
+	self.bindingContext = self.bindingContext or BindingContext:new():Init(self);
+	return self.bindingContext;
 end
 
 -- get the root node. it may return nil if page is not finished yet.
@@ -711,6 +703,9 @@ end
 -- create all ui elements recursively using the layout.
 function Page:LoadComponent()
 	local layout = self.layout;
+	if(self.bindingContext) then
+		self.bindingContext:Clear();
+	end
 	if(layout and self.mcmlNode) then
 		local parentElem = layout:widget();
 		if(parentElem) then

@@ -505,6 +505,10 @@ end
 
 -- handle ondraw callback from system ParaUI object. 
 function Window:handleRender()
+	local page = self:Page();
+	if(page and page.bindingContext) then
+		page.bindingContext:ApplyGetters();
+	end
 	self.isRepaintScheduled = false;
 	self:Render(self.painterContext);
 end

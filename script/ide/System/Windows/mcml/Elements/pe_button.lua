@@ -44,6 +44,29 @@ function pe_button:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	_this:SetText(self:GetAttributeWithCode("value", nil, true));
 	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
 
+	-- support binding property like getter="value;tooltip", setter="value:setValue;tooltip:item.tooltip"
+	local getter = self:GetAttribute("getter")
+	if(getter) then
+		local page = self:GetPageCtrl();
+		if(page) then
+			local bindingContext = page:GetBindingContext();
+			for property in getter:gmatch("[^;,]+") do
+				local name, code = property:match("^(%w+):?%s*(.*)$")
+				if(name == "value") then
+					local func, errmsg = self:GetAttributeFunction("value");
+					if(func) then
+						bindingContext:AddGetter(_this, "SetText", func)
+					end
+				elseif(name == "tooltip") then
+					local func, errmsg = self:GetAttributeFunction("tooltip");
+					if(func) then
+						bindingContext:AddGetter(_this, "SetTooltip", func)
+					end
+				end
+			end
+		end
+	end
+
 	self.buttonName = self:GetAttributeWithCode("name",nil,true); -- touch name
 
 	_this:Connect("clicked", self, self.OnClick, "UniqueConnection")

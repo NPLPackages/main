@@ -196,13 +196,9 @@ function pe_script:UpdateLayout(parentLayout)
 	end
 end
 
--- Execute code in page scoping and return the result of the code.
--- @param code: string to do, 
--- please note: page document object is not available in code
--- There is also a short cut ="Any text or function here", which expands to return ("Any text or function here"), 
--- e.g. one can call pe_script.DoPageCode("=\"profile.xml?uid=\"+Eval(\"uid\")") as short cut for pe_script.DoPageCode("return (\"profile.xml?uid=\"+Eval(\"uid\"))")
--- @return: code result is returned. 
-function pe_script.DoPageCode(code, pageCtrl)
+
+-- @return func, errmsg : if there is error, func is nil, errmsg contains error
+function pe_script.GetPageCodeFunc(code, pageCtrl)
 	if(code and pageCtrl) then
 		if(string.byte(code, 1) == 61) then
 			-- if the first one is '='(61)
@@ -214,12 +210,27 @@ function pe_script.DoPageCode(code, pageCtrl)
 		local file_func, errmsg = loadstring(code);
 		if(file_func) then
 			setfenv(file_func, pe_script._PAGESCRIPT);
-			return file_func();
+			return file_func;
 		else
-			LOG.std(nil, "error", "pe_script", "<Runtime Error>failed to do page code in page%s. error msg:%s", tostring(pageCtrl.url), tostring(errmsg))
-			echo(code);
-			return nil;
+			return nil, errmsg;
 		end
+	end
+end
+
+-- Execute code in page scoping and return the result of the code.
+-- @param code: string to do, 
+-- please note: page document object is not available in code
+-- There is also a short cut ="Any text or function here", which expands to return ("Any text or function here"), 
+-- e.g. one can call pe_script.DoPageCode("=\"profile.xml?uid=\"+Eval(\"uid\")") as short cut for pe_script.DoPageCode("return (\"profile.xml?uid=\"+Eval(\"uid\"))")
+-- @return: code result is returned. 
+function pe_script.DoPageCode(code, pageCtrl)
+	local file_func, errmsg = pe_script.GetPageCodeFunc(code, pageCtrl)
+	if(file_func) then
+		return file_func();
+	else
+		LOG.std(nil, "error", "pe_script", "<Runtime Error>failed to do page code in page%s. error msg:%s", tostring(pageCtrl.url), tostring(errmsg))
+		echo(code);
+		return nil;
 	end
 end
 
