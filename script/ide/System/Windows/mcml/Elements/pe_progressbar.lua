@@ -38,14 +38,22 @@ function pe_progressbar:OnLoadComponentBeforeChild(parentElem, parentLayout, css
 	_this:SetDirection(if_else(self:GetBool("is_vertical",false) == true, "vertical" , "horizontal"));
 	_this:SetSliderBackground(self:GetAttributeWithCode("blockimage", nil, true) or css["blockimage"]);
 	_this:SetGrooveBackground(self:GetAttributeWithCode("background", nil, true) or css["background"]);
-	local step = self:GetAttributeWithCode("Step", 10, true);
+	local step = tonumber(self:GetAttributeWithCode("Step", 10, true));
 	_this:setStep(step, step * 10);
 
 	--local buttonName = self:GetAttributeWithCode("name"); -- touch name
 
 	_this:Connect("valueChanged", self, self.OnStep, "UniqueConnection")
 
+	self:UpdateGetters();
+
 	pe_progressbar._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
+end
+
+function pe_progressbar:OnAddGetter(name, func, bindingContext)
+	if(name == "value") then
+		bindingContext:AddGetter(self.control, "SetValue", func)
+	end
 end
 
 function pe_progressbar:OnAfterChildLayout(layout, left, top, right, bottom)
@@ -68,7 +76,11 @@ function pe_progressbar:GetValue()
 end
 
 function pe_progressbar:OnStep(value)
-	local ctl = self:GetControl();
+	local code, bindingContext = self:GetSetter("value")
+	if(code) then
+		bindingContext:SetValue(code, value)
+	end
+
 	local result;
 	local onstep = self:GetString("onstep");
 	if(onstep == "")then

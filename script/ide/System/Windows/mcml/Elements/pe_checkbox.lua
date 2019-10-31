@@ -45,27 +45,36 @@ function pe_checkbox:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 
 	local checked = self:GetAttributeWithCode("checked", nil, true);
 	if(checked) then
-		checked = if_else(checked == "true" or checked == "checked",true,false);
+		checked = (checked == "true" or checked == "checked" or checked == true);
 		self:setChecked(checked);
 	end
+
+	self:UpdateGetters();
+
 	self.buttonName = self:GetAttributeWithCode("name",nil,true);
 	_this:Connect("clicked", self, self.OnClick, "UniqueConnection");
 
 	pe_checkbox._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
 end
 
+function pe_checkbox:OnAddGetter(name, func, bindingContext)
+	if(name == "checked") then
+		bindingContext:AddGetter(self.control, "setChecked", func)
+	elseif(name == "tooltip") then
+		bindingContext:AddGetter(self.control, "SetTooltip", func)
+	end
+end
+
 function pe_checkbox:setChecked(checked)
 	if(self.control) then
 		self.control:setChecked(checked);
 	end
-	checked = if_else(checked, "true", "false");
-	self:SetAttribute("checked", checked);
 end
 
 function pe_checkbox:getChecked()
 	local checked = self:GetAttributeWithCode("checked", nil, true);
 	if(checked) then
-		checked = if_else(checked == "true" or checked == "checked",true,false);
+		checked = (checked == "true" or checked == "checked" or checked == true);
 	end
 	return checked;
 end
@@ -75,7 +84,12 @@ function pe_checkbox:OnClick()
 	if(ctl and ctl:isCheckable()) then
 		local checked = not (ctl:isChecked());
 		ctl:setChecked(checked);
-		self:SetAttribute("checked", if_else(checked, "true", "false"));
+		
+		-- data binding
+		local code, bindingContext = self:GetSetter("checked")
+		if(code) then
+			bindingContext:SetValue(code, checked)
+		end
 	end
 	local result;
 	local onclick = self.onclickscript or self:GetString("onclick");

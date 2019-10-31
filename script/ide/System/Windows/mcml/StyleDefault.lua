@@ -75,6 +75,9 @@ local items = {
 	["pe:sliderbar"]={
 		height = 20,
 	},
+	["pe:progressbar"]={
+		height = 20,
+	},
 }
 
 function StyleDefault:ctor()

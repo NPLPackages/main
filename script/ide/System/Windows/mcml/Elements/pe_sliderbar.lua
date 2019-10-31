@@ -29,10 +29,10 @@ function pe_sliderbar:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 		_this:SetParent(parentElem);
 	end
 	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
-	_this:SetMin(self:GetAttributeWithCode("min", 1, true));
-	_this:SetMax(self:GetAttributeWithCode("max", 100, true));
-	_this:SetValue(self:GetAttributeWithCode("value", 0, true));
-	local min_step = self:GetAttributeWithCode("min_step", 1, true);
+	_this:SetMin(tonumber(self:GetAttributeWithCode("min", 1, true)));
+	_this:SetMax(tonumber(self:GetAttributeWithCode("max", 100, true)));
+	_this:SetValue(tonumber(self:GetAttributeWithCode("value", 0, true)));
+	local min_step = tonumber(self:GetAttributeWithCode("min_step", 1, true));
 	_this:SetDirection(self:GetAttributeWithCode("direction", nil, true));
 	_this:setStep(min_step, min_step * 10);
 	_this:SetSliderBackground(self:GetAttributeWithCode("button_bg", nil, true));
@@ -46,8 +46,17 @@ function pe_sliderbar:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 
 	_this:Connect("valueChanged", self, self.OnChange, "UniqueConnection")
 
+	self:UpdateGetters();
+
 	pe_sliderbar._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
 end
+
+function pe_sliderbar:OnAddGetter(name, func, bindingContext)
+	if(name == "value") then
+		bindingContext:AddGetter(self.control, "SetValue", func)
+	end
+end
+
 
 function pe_sliderbar:OnAfterChildLayout(layout, left, top, right, bottom)
 	if(self.control) then
@@ -69,7 +78,11 @@ function pe_sliderbar:GetValue()
 end
 
 function pe_sliderbar:OnChange(value)
-	local ctl = self:GetControl();
+	local code, bindingContext = self:GetSetter("value")
+	if(code) then
+		bindingContext:SetValue(code, value)
+	end
+
 	local result;
 	local onchange = self:GetString("onchange");
 	if(onchange == "")then

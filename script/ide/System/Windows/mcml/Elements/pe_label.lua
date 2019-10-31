@@ -32,31 +32,19 @@ function pe_label:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	_this:SetText(tostring(self:GetAttributeWithCode("value", nil, true) or ""));
 	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
 
-	-- support binding property like getter="value;tooltip", setter="value:setValue;tooltip:item.tooltip"
-	local getter = self:GetAttribute("getter")
-	if(getter) then
-		local page = self:GetPageCtrl();
-		if(page) then
-			local bindingContext = page:GetBindingContext();
-			for property in getter:gmatch("[^;,]+") do
-				local name, code = property:match("^(%w+):?%s*(.*)$")
-				if(name == "value") then
-					local func, errmsg = self:GetAttributeFunction("value");
-					if(func) then
-						bindingContext:AddGetter(_this, "SetText", func)
-					end
-				elseif(name == "tooltip") then
-					local func, errmsg = self:GetAttributeFunction("tooltip");
-					if(func) then
-						bindingContext:AddGetter(_this, "SetTooltip", func)
-					end
-				end
-			end
-		end
-	end
+	self:UpdateGetters();
 
 	pe_label._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
 end
+
+function pe_label:OnAddGetter(name, func, bindingContext)
+	if(name == "value") then
+		bindingContext:AddGetter(self.control, "SetText", func)
+	elseif(name == "tooltip") then
+		bindingContext:AddGetter(self.control, "SetTooltip", func)
+	end
+end
+
 
 -- get value: it is usually one of the editor tag, such as <input>
 function pe_label:GetValue()

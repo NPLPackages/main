@@ -80,6 +80,10 @@ function Button:SetBackgroundColor(color)
 end
 
 function Button:setChecked(checked)
+	if (not self.checkable or self.checked == checked) then
+		return;
+	end
+
 	Button._super.setChecked(self, checked)
 	if(self.polygon_style == "narrow") then
 		if(self.checked) then

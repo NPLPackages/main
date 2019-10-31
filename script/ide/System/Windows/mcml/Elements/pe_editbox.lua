@@ -28,7 +28,6 @@ function pe_editbox:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 		self:SetControl(_this);
 	else
 		_this:SetParent(parentElem);
-		_this:Disconnect("textChanged")
 	end
 
 	_this:SetText(self:GetAttributeWithCode("value", nil, true));
@@ -40,53 +39,19 @@ function pe_editbox:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	local type = self:GetAttributeWithCode("type", nil, true);
 	_this:setEncrypted(type == "password");
 
-	_this:Connect("textChanged", self, self.OnTextChanged)
+	_this:Connect("textChanged", self, self.OnTextChanged, "UniqueConnection")
 
-
-	-- support binding property like getter="value;tooltip", setter="value:setValue;tooltip:item.tooltip"
-	local getter = self:GetAttribute("getter")
-	if(getter) then
-		local page = self:GetPageCtrl();
-		if(page) then
-			local bindingContext = page:GetBindingContext();
-			for property in getter:gmatch("[^;,]+") do
-				local name, code = property:match("^(%w+):?%s*(.*)$")
-				if(name == "value") then
-					local func, errmsg = self:GetAttributeFunction("value");
-					if(func) then
-						bindingContext:AddGetter(_this, "SetText", func)
-					end
-				elseif(name == "tooltip") then
-					local func, errmsg = self:GetAttributeFunction("tooltip");
-					if(func) then
-						bindingContext:AddGetter(_this, "SetTooltip", func)
-					end
-				end
-			end
-		end
-	end
-	local setter = self:GetAttribute("setter")
-	if(setter) then
-		local page = self:GetPageCtrl();
-		if(page) then
-			local bindingContext = page:GetBindingContext();
-			for property in setter:gmatch("[^;,]+") do
-				local name, code = property:match("^(%w+):?%s*(.*)$")
-				if(code and code~="") then
-					if(name == "value") then
-						local func, errmsg = self:GetAttributeFunction("value");
-						if(func) then
-							_this:Connect("textChanged", function(value)
-								bindingContext:SetValue(code, value)
-							end)
-						end
-					end
-				end
-			end
-		end
-	end
+	self:UpdateGetters();
 
 	pe_editbox._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
+end
+
+function pe_editbox:OnAddGetter(name, func, bindingContext)
+	if(name == "value") then
+		bindingContext:AddGetter(self.control, "SetText", func)
+	elseif(name == "tooltip") then
+		bindingContext:AddGetter(self.control, "SetTooltip", func)
+	end
 end
 
 
@@ -110,6 +75,11 @@ function pe_editbox:OnLoadComponentAfterChild(parentElem, parentLayout, css)
 end
 
 function pe_editbox:OnTextChanged(actualText)
+	local code, bindingContext = self:GetSetter("value")
+	if(code) then
+		bindingContext:SetValue(code, actualText)
+	end
+
 	local onchange = self:GetString("onchange");
 	if(onchange) then
 		local result = self:DoPageEvent(onchange, actualText, self);

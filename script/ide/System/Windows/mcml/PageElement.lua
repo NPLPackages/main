@@ -1882,3 +1882,47 @@ function PageElement:NextTabNode(node)
 		return node:NextTabNode();
 	end
 end
+
+-- @return code, bindingContext;
+function PageElement:GetSetter(propertyName)
+	local setter = self:GetAttribute("setter")
+	if(setter) then
+		local page = self:GetPageCtrl();
+		if(page) then
+			for property in setter:gmatch("[^;,]+") do
+				local name, code = property:match("^(%w+):?%s*(.*)$")
+				if(code and code~="") then
+					if(name == propertyName) then
+						return code, page:GetBindingContext();
+					end
+				end
+			end
+		end
+	end
+end
+
+-- support binding property like getter="checked;tooltip", setter="checked:setFunc"
+function PageElement:UpdateGetters()
+	local getter = self:GetAttribute("getter")
+	if(getter) then
+		local page = self:GetPageCtrl();
+		if(page) then
+			local bindingContext = page:GetBindingContext();
+			for property in getter:gmatch("[^;,]+") do
+				local name, code = property:match("^(%w+):?%s*(.*)$")
+				local func, errmsg = self:GetAttributeFunction(name);
+				if(func) then
+					self:OnAddGetter(name, func, bindingContext)
+				end
+			end
+		end
+	end
+end
+
+-- virtual function: when getter is specified
+function PageElement:OnAddGetter(name, func, bindingContext)
+--	if(name == "visible") then
+--		bindingContext:AddGetter(self.control, "setVisible", func)
+--	end
+end
+

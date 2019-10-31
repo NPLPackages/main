@@ -71,6 +71,9 @@ end
 
 
 function SliderBase:SetValue(value, emitSingal)
+	if(value == self.value) then
+		return;
+	end
 	value = self:bound(value);
 	if(value == self.value) then
 		return;
