@@ -41,7 +41,7 @@ function pe_button:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 		_this:SetParent(parentElem);
 	end
 	_this:ApplyCss(css);
-	_this:SetText(self:GetAttributeWithCode("value", nil, true));
+	_this:SetText(tostring(self:GetAttributeWithCode("value", nil, true) or ""));
 	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
 
 	-- support binding property like getter="value;tooltip", setter="value:setValue;tooltip:item.tooltip"
