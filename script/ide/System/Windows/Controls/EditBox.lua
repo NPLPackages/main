@@ -107,7 +107,9 @@ end
 -- history, moves the cursor to the end of the line and resets the
 -- modified property to false. The text is not validated when inserted with setText().
 function EditBox:SetText(txt)
-	self:internalSetText(txt or "", -1, false);
+	if(txt ~= self:GetText()) then
+		self:internalSetText(txt or "", -1, false);
+	end
 end
 
 function EditBox:internalSetText(txt, pos, edited)

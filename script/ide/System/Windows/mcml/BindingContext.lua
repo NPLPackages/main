@@ -26,6 +26,11 @@ function BindingContext:Clear()
 	self.setter = {};
 end
 
+-- get the environment table of the binding context
+function BindingContext:GetPageScope()
+	return self.page:GetPageScope()
+end
+
 function BindingContext:AddGetter(uiElement, funcName, getterFunc)
 	self.getter[uiElement] = self.getter[uiElement] or {};
 	self.getter[uiElement][funcName] = getterFunc;
@@ -42,3 +47,15 @@ function BindingContext:ApplyGetters()
 		end
 	end
 end
+
+-- @param setterName: should be the name of the function or the value itself. such as "setValue" or "item.data"
+function BindingContext:SetValue(setterName, value)
+	local env = self:GetPageScope()
+	local setter = commonlib.getfield(setterName, env);
+	if(type(setter) == "function") then
+		setter(value)
+	else
+		commonlib.setfield(setterName, value, env);
+	end
+end
+
