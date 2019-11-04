@@ -26,6 +26,15 @@ function BindingContext:Clear()
 	self.setter = {};
 end
 
+function BindingContext:GetPage()
+	return self.page;
+end
+
+function BindingContext:GetWindow()
+	if(self.page) then
+	end
+end
+
 -- get the environment table of the binding context
 function BindingContext:GetPageScope()
 	return self.page:GetPageScope()

@@ -49,7 +49,28 @@ function pe_img:OnLoadComponentAfterChild(parentElem, parentLayout, css)
 	end
 
 	_this:ApplyCss(css);
+
+	self:UpdateGetters();
+
 	--pe_img._super.OnLoadComponentAfterChild(self, parentElem, parentLayout, css);
+end
+
+function pe_img:OnAddGetter(name, func, bindingContext)
+	if(name == "src") then
+		local page = bindingContext:GetPage()
+		if(page) then
+			bindingContext:AddGetter(self.control, "SetBackground", function()
+				local filename = func();
+				local wnd = page:GetWindow()
+				if(wnd) then
+					filename = wnd:FilterImage(filename);
+				end
+				return filename;
+			end)
+		end
+	elseif(name == "tooltip") then
+		bindingContext:AddGetter(self.control, "SetTooltip", func)
+	end
 end
 
 function pe_img:OnAfterChildLayout(layout, left, top, right, bottom)
