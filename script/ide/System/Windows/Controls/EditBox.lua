@@ -898,6 +898,7 @@ function EditBox:keyPressEvent(event)
 		end
 	elseif(keyname == "DIK_ESCAPE") then
 		self:escape();
+		unknown = true;
 	elseif(keyname == "DIK_BACKSPACE") then
 		if (not self:isReadOnly()) then
 			if(event.ctrl_pressed) then

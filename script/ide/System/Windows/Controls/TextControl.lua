@@ -686,6 +686,8 @@ function TextControl:keyPressEvent(event)
 	elseif(event:IsKeySequence("Search")) then
 		local selectedText = self:selectedText();
 		self.parent:Search(selectedText);
+	elseif(keyname == "DIK_ESCAPE") then
+		unknown = true;
 	else
 		if(event:IsFunctionKey() or event.ctrl_pressed) then
 			unknown = true;
