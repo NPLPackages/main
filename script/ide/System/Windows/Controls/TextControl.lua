@@ -468,6 +468,14 @@ function TextControl:mousePressEvent(e)
 		local line = self:yToLine(e:pos():y());
 		local text = self:GetLineText(line);
 		local pos = self:xToPos(text, e:pos():x());
+		if(self:IsAutoTabToSpaces()) then
+			if(text) then
+				local firstWordPos = text:getFirstWordPosition()
+				if(firstWordPos > pos) then
+					pos = firstWordPos;
+				end
+			end
+		end
 		local mark = e.shift_pressed;
 		self:moveCursor(line,pos,mark,true);
 

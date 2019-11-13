@@ -137,11 +137,11 @@ function UniString:empty()
 	return self.text == "";
 end
 
-function UniString:findFirstOf(str, initPos)
+function UniString:findFirstOf(str, initPos, bUseRegularExpression)
 	initPos = initPos or 1;
 	local beExist = false
 	local text = self.text;
-	local _start, _end = string.find(text, str)
+	local _start, _end = string.find(text, str, nil, not bUseRegularExpression)
 	if(not _start) then
 		return nil, nil;
 	elseif(initPos == 1) then
@@ -151,7 +151,7 @@ function UniString:findFirstOf(str, initPos)
 	local i, uniPos = 1, 1;
 	while true do
 		if(not beExist and uniPos >= initPos) then
-			_start, _end = string.find(text, str, i)
+			_start, _end = string.find(text, str, i, not bUseRegularExpression)
 			if(not _start) then
 				break;
 			else

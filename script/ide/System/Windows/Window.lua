@@ -196,6 +196,12 @@ function Window:CloseWindow(bDestroy)
 	if(bDestroy == nil) then
 		bDestroy = self:IsDestroyOnClose();
 	end
+	if(self:isActiveWindow()) then
+		local wnd = self:GetNativeWindow()
+		if(wnd) then
+			wnd:LostFocus()
+		end
+	end
 	if(bDestroy == false) then
 		self:hide();
 	else
