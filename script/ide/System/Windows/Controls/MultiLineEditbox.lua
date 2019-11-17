@@ -118,7 +118,7 @@ function MultiLineEditbox:init(parent)
 		
 	end)
 	self.searchbox:Connect("moveDown",function(text)
-		self.viewport:searchNext(text);
+		self:SearchNext(text)
 	end)
 	return self;
 end
@@ -131,6 +131,14 @@ function MultiLineEditbox:Search(text)
 
 	self.searchbox:setPosition(x, y)
 	self.searchbox:setSearchContent(text);
+end
+
+-- @param text: if nil, it means the current search box text
+function MultiLineEditbox:SearchNext(text)
+	if(not text) then
+		text = self.searchbox:getSearchContent()
+	end
+	self.viewport:searchNext(text);
 end
 
 function MultiLineEditbox:SearchResult(b)

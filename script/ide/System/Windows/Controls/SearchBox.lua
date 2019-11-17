@@ -74,7 +74,7 @@ function SearchBox:init(parent)
 		self:emitClosed();
 	end)
 	self.inputbox:Connect("editingFinished",function()
-		self:moveDown(self.inputbox:GetText());
+		self:moveDown(self:getSearchContent());
 	end)
 	self.closebtn = Button:new():init(self);
 	self.closebtn:SetPolygonStyle("close");
@@ -98,6 +98,10 @@ function SearchBox:setSearchContent(text)
 	end
 	self.inputbox:selectAll();
 	self.inputbox:setFocus("OtherFocusReason");
+end
+
+function SearchBox:getSearchContent()
+	return self.inputbox and self.inputbox:GetText();
 end
 
 function SearchBox:updateChildrenPosition()
@@ -208,3 +212,9 @@ function SearchBox:paintEvent(painter)
 end
 
 
+function SearchBox:keyPressEvent(event)
+	if(event.keyname == "DIK_F3") then
+		event:accept();
+		self:moveDown(self:getSearchContent());
+	end
+end

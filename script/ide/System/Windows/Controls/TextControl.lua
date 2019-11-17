@@ -694,6 +694,8 @@ function TextControl:keyPressEvent(event)
 	elseif(event:IsKeySequence("Search")) then
 		local selectedText = self:selectedText();
 		self.parent:Search(selectedText);
+	elseif(keyname == "DIK_F3") then
+		self.parent:SearchNext();
 	elseif(keyname == "DIK_ESCAPE") then
 		unknown = true;
 	else
@@ -709,8 +711,8 @@ function TextControl:keyPressEvent(event)
 	end
 end
 
-function TextControl:ProcessTab(mark)
-	if(mark) then
+function TextControl:ProcessTab(bIsShiftPressed)
+	if(bIsShiftPressed) then
 		if (self:hasSelectedText() and self.m_selLineStart ~= self.m_selLineEnd) then
 			-- if multiple lines are selected, we will add tab in front of all selected lines
 			self:separate();
@@ -718,7 +720,7 @@ function TextControl:ProcessTab(mark)
 				local text = self:GetLineText(i);
 				if(text) then
 					local pos = math.min(tab_len, text:getFirstWordPosition());
-					self:RemoveTextAddToCommand(i, 0, i, pos, true);
+					self:RemoveTextAddToCommand(i, 0, i, pos);
 				end
 			end
 			return
@@ -740,7 +742,7 @@ function TextControl:ProcessTab(mark)
 			-- if multiple lines are selected, we will add tab in front of all selected lines
 			self:separate();
 			for i=self.m_selLineStart, self.m_selLineEnd do 
-				self:InsertTextAddToCommand(TAB_CHAR, i, 0, true);
+				self:InsertTextAddToCommand(TAB_CHAR, i, 0);
 			end
 			return
 		end
@@ -906,8 +908,10 @@ function TextControl:cursorLineForward(mark)
 	local line = self.cursorLine;
 	if(line > 1) then
 		line = line - 1;
-		local len = self:GetLineText(line):length();
+		local text = self:GetLineText(line)
+		local len = text:length();
 		pos = math.min(len, pos);
+		pos = math.max(pos, text:getFirstWordPosition());
 	end
 	self:moveCursor(line,pos,mark,true);	
 end
