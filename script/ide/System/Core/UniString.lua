@@ -159,6 +159,9 @@ function UniString:findFirstOf(str, initPos, bUseRegularExpression)
 			end
 		end
         local curByte = string.byte(text, i)
+		if(not curByte) then
+			break;
+		end
         local byteCount = 1
         if curByte > 239 then
             byteCount = 4  -- 4×Ö½Ú×Ö·û

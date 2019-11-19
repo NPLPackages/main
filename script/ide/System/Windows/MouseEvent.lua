@@ -40,6 +40,8 @@ end
 local firstPressPositionX = 0;
 local secondPressPositionX = 0;
 local thirdPressPositionX = 0;
+
+-- private function: use self.isDoubleClick instead
 function MouseEvent:isDoubleAndTripleClick()
 	if(self:button() == "left" and self.event_type == "mousePressEvent") then
 		thirdPressPositionX = self.global_pos:x() 
@@ -48,6 +50,7 @@ function MouseEvent:isDoubleAndTripleClick()
 	end
 end			
 
+-- private function: use self.isDoubleClick instead
 function MouseEvent:isDoublePress()
 	if(firstPressPositionX == secondPressPositionX and ParaGlobal.timeGetTime() - MouseEvent.left_click_info.first_click_time < 250) then
 		MouseEvent.left_click_info.event_type = self.event_type;
@@ -60,6 +63,7 @@ function MouseEvent:isDoublePress()
 	return false;
 end
 
+-- private function: use self.isTripleClick instead
 function MouseEvent:isTriplePress()
 	if(thirdPressPositionX == secondPressPositionX and ParaGlobal.timeGetTime() - MouseEvent.left_click_info.second_click_time < 250) then
 		return true;

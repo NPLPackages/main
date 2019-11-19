@@ -596,12 +596,15 @@ function Application:dispatchMouseEnterLeave(enter, leave, globalPos)
 		end
 	end
 	if(not enterList:empty()) then
-		local windowPos = enterList:first():GetWindow():mapFromGlobal(globalPos);
-		for i = 1, #enterList do
-			w = enterList[i];
-			local localPos = w:mapFromGlobal(globalPos);
-			local enterEvent = MouseEnterEvent:new():init(localPos, windowPos, globalPos);
-			self:sendEvent(w, enterEvent);
+		local window = enterList:first():GetWindow();
+		if(window) then
+			local windowPos = window:mapFromGlobal(globalPos);
+			for i = 1, #enterList do
+				w = enterList[i];
+				local localPos = w:mapFromGlobal(globalPos);
+				local enterEvent = MouseEnterEvent:new():init(localPos, windowPos, globalPos);
+				self:sendEvent(w, enterEvent);
+			end
 		end
 	end
 end
