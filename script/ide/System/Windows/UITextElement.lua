@@ -80,13 +80,29 @@ function UITextElement:DrawTextScaledEx2(painter, x, y, width, height, text, ali
 	painter:DrawTextScaledEx(x, y, width, height, text, alignment, scale);
 end
 
+function UITextElement:SetFont(font)
+	self.Font = font;
+end
+
+function UITextElement:SetFontSize(size)
+	size = size or 12;
+	self.FontSize = size;
+	if(self.Font) then
+		self.Font = self.Font:gsub("%d+", tostring(size));
+	else
+		self.Font = string.format("System;%d;norm", size);
+	end
+end
+
+function UITextElement:SetFontScaling(scaling)
+	self.FontScaling = scaling;
+end
+
 -- virtual: apply css style
 function UITextElement:ApplyCss(css)
 	UITextElement._super.ApplyCss(self, css);
-	local font, font_size, font_scaling = css:GetFontSettings();
-	self:SetFont(font);
-	self:SetFontSize(font_size);
-	self:SetFontScaling(font_scaling);
+	self.Font, self.FontSize, self.FontScaling = css:GetFontSettings();
+	
 	--self:SetAlignment(css:GetTextAlignment());
 	if(css.color) then
 		self:SetColor(css.color);

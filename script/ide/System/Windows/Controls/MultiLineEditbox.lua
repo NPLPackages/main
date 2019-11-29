@@ -483,13 +483,6 @@ function MultiLineEditbox:ApplyCss(css)
 	if(self.viewport) then
 		self.viewport:ApplyCss(css);
 	end
---	local font, font_size, font_scaling = css:GetFontSettings();
---	self:SetFont(font);
---	self:SetFontSize(font_size);
---	self:SetScale(font_scaling);
---	if(css.color) then
---		self:SetColor(css.color);
---	end
 end
 
 function MultiLineEditbox:LineNumberWidth()
