@@ -242,6 +242,23 @@ function Color.ToValue(color)
 	return color;
 end
 
+-- @param color: DWORD
+-- @return string like "#ffffff", if alpha is not 0, we will output like "#000000ff"
+function Color.FromValueToStr(color)
+	if(type(color) == "number") then
+		local a = rshift(band(color, 0xFF000000), 24);
+		local r = rshift(band(color, 0x00FF0000), 16);
+		local g = rshift(band(color, 0x0000FF00), 8);
+		local b = band(color, 0x000000FF);
+		if(a == 0) then
+			color = string.format("#%02x%02x%02x", r, g, b);
+		else
+			color = string.format("#%02x%02x%02x%02x", r, g, b, 1);
+		end
+	end
+	return color;
+end
+
 -- change the opacity of the input color to given value and return the result color as DWORD. 
 -- @param color: either 0xffffff, or string like "#ff0000"
 -- @param opacity: [0-255], if nil, default to 255. 
