@@ -751,7 +751,9 @@ function BonesManip:UpdateModel()
 	if(self.animInstance) then
 		self.animInstance:CallField("UpdateModel");
 		for i, bone in ipairs(self.bones) do
-			bone:Update();
+			if(bone:IsEditable()) then
+				bone:Update();
+			end
 		end
 		-- following may not need to be called every frame. 
 		local trans = self.obj_attr:GetField("LocalTransform", self.localTransform);
