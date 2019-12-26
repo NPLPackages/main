@@ -786,9 +786,8 @@ pe_select.listbox_bg = pe_select.listbox_bg or nil;
 -- increment left by the width of this control. control width is sized according to text length. 
 -- the dropdownlistbox control takes up 20 pixels in height
 function pe_select.create(rootName, mcmlNode, bindingContext, _parent, left, top, width, height, style, parentLayout)
-	local name = mcmlNode:GetString("name");
+	local name  = mcmlNode:GetAttributeWithCode("name",nil,true);
 	local rows = mcmlNode:GetNumber("size") or 1;
-
 	local css = mcmlNode:GetStyle(Map3DSystem.mcml_controls.pe_html.css["input-select"]);
 	local margin_left, margin_top, margin_bottom, margin_right = 
 		(css["margin-left"] or css["margin"] or 0),(css["margin-top"] or css["margin"] or 0),
