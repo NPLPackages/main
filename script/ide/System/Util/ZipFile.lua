@@ -64,10 +64,11 @@ end
 
 -- @param destinationFolder: default to zip file's parent folder + [filename]/
 -- return the number of file unziped
-function ZipFile:unzip(destinationFolder)
+function ZipFile:unzip(destinationFolder,maxCnt)
 	if(not self.zip_archive) then
 		return;
 	end
+    maxCnt = maxCnt or 10000;
 	if(not destinationFolder) then
 		local parentFolder, filename = self.filename:match("^(.-)([^/\\]+)$");
 		if(filename) then
@@ -83,7 +84,7 @@ function ZipFile:unzip(destinationFolder)
 	-- search just in a given zip archive file
 	local filesOut = {};
 	-- ":.", any regular expression after : is supported. `.` match to all strings. 
-	commonlib.Files.Find(filesOut, "", 0, 10000, ":.", self.filename);
+	commonlib.Files.Find(filesOut, "", 0, maxCnt, ":.", self.filename);
 
 	local fileCount = 0;
 	-- print all files in zip file
