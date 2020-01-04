@@ -83,9 +83,9 @@ function Filters:add_filter( tag, function_to_add, priority)
 		self.wp_filter[tag] = commonlib.ArrayMap:new();
 	end
 	if(not self.wp_filter[tag][priority]) then
-		self.wp_filter[tag][priority] = {};
+		self.wp_filter[tag][priority] = commonlib.UnorderedArraySet:new();
 	end
-	self.wp_filter[tag][priority][function_to_add] = function_to_add;
+	self.wp_filter[tag][priority]:add(function_to_add);
 	self.merged_filters[tag] = nil;
 	return true;
 end
@@ -118,11 +118,9 @@ function Filters:remove_filter( tag, function_to_remove, priority)
 	priority = priority or 10;
 	
 	if(self.wp_filter[tag] and self.wp_filter[tag][priority]) then
-		local r = self.wp_filter[tag][priority][function_to_remove];
-
-		if ( r ) then
-			self.wp_filter[tag][priority][function_to_remove] = nil;
-			if ( not next( self.wp_filter[tag][priority] ) ) then
+		if ( self.wp_filter[tag][priority]:contains(function_to_remove) ) then
+			self.wp_filter[tag][priority]:removeByValue(function_to_remove);
+			if ( self.wp_filter[tag][priority]:empty() ) then
 				self.wp_filter[tag][priority] = nil;
 			end
 			if ( self.wp_filter[tag]:empty() ) then
@@ -130,7 +128,7 @@ function Filters:remove_filter( tag, function_to_remove, priority)
 			end
 			self.merged_filters[tag] = nil;
 		end
-		return r;
+		return function_to_remove;
 	end
 end
 
@@ -203,7 +201,7 @@ function Filters:apply_filters( tag, value, ... )
 	end
 
 	for priority, funcs in self.wp_filter[tag]:pairs() do
-		for _, func in pairs(funcs) do
+		for _, func in ipairs(funcs) do
 			value = call_user_func(func, value, ...);	
 		end
 	end
