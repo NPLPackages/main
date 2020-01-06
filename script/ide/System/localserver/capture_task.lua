@@ -390,13 +390,28 @@ function CaptureTask:Run(index)
 				ParaIO.CreateDirectory("temp/tempdownloads/");
 				local filename = string.format("temp/tempdownloads/%d-%d.dat", self.capture_request_.id, i);
 				-- delete dest file to prevent multi-section download
-				ParaIO.DeleteFile(filename); 
+				ParaIO.DeleteFile(filename);
+				
+				local token = Mod.WorldShare.Store:Get('user/token')
+
 				-- download to temp directory. 
-				NPL.AsyncDownload(file_url, filename, string.format("System.localserver.ProcessFile_result(%d, %d)", self.capture_request_.id, i), tostring(self.capture_request_.id));
+				NPL.AsyncDownload(
+					{ url = file_url, headers = { Authorization = format("Bearer %s", token) } },
+					filename,
+					string.format("System.localserver.ProcessFile_result(%d, %d)", self.capture_request_.id, i),
+					tostring(self.capture_request_.id)
+				);
 			end	
 		elseif(self.capture_request_.type== 1) then
+			local token = Mod.WorldShare.Store:Get('user/token')
+
 			-- URL request
-			NPL.AppendURLRequest(url, format("(%s)System.localserver.ProcessURLRequest_result(%d, %d)", npl_thread_name, self.capture_request_.id, i), nil, "r");
+			NPL.AppendURLRequest(
+				{ url = url, headers = { Authorization = format("Bearer %s", token) } },
+				format("(%s)System.localserver.ProcessURLRequest_result(%d, %d)", npl_thread_name, self.capture_request_.id, i),
+				nil,
+				"r"
+			);
 		elseif(self.capture_request_.type== 2) then
 			-- FILE download request
 		end	
