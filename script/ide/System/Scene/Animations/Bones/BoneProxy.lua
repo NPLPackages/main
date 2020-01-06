@@ -58,7 +58,27 @@ function Bone:init(attr, allbones)
 
 	self.display_name = self.name; -- format("%d %s", self.boneIndex, self.name);
 	self.bones = allbones;
+
+	self:ReadBonePropertiesFromName()
+
 	return self;
+end
+
+-- self.name could be "L_arm_xxx {min=-90, max=90, hidden=true, motorId=5, motorOffset=90}"
+function Bone:ReadBonePropertiesFromName()
+	local display_name, properties = self.name:match("^(.*)%s*(%{[^%}]+%})");
+	if(properties) then
+		self.display_name = display_name;
+		self.properties = NPL.LoadTableFromString(properties);
+		if(self:GetBoneProperty("hidden")) then
+			self.isEditable = false;
+		end
+	end
+end
+
+-- @param name: like "min", "max", "hidden"
+function Bone:GetBoneProperty(name)
+	return self.properties and self.properties[name]
 end
 
 -- some pivot bones(transform only bone) are exported via FBX, but should NOT be editable.
