@@ -47,7 +47,8 @@ end
 
 -- retrieve all url files using the local server. 
 -- @param Cache_policy: nil or System.localserver.CachePolicy
--- @param urls: url string or an array of urls. It will be retrieved one after another.
+-- @param urls: url string or an array of urls. It will be retrieved one after another. 
+-- it can also be {url=string, headers=table} or array of it.
 -- @param callbackFunc: the call back function(entry, callbackContext or url) end will be called for each url in input urls.
 -- @param callbackContext: this is an optional parameter that is passed to callbackFunc
 --  where the entry is a table of {entry, payload, IsFromCache}. Normally, one can access the disk file 
@@ -63,6 +64,8 @@ function ResourceStore:GetFile(Cache_policy, urls, callbackFunc, callbackContext
 	
 	if (type(urls)=="string") then
 		urls = {urls};
+	elseif (type(urls)=="table" and not urls[1] and urls.url) then
+		urls = {urls};
 	end
 	--
 	-- First, check if the url is in the local server database, if so, serve immediately from local store
@@ -72,6 +75,9 @@ function ResourceStore:GetFile(Cache_policy, urls, callbackFunc, callbackContext
 		local i = 1; 
 		local url = urls[i];
 		while url do
+			if(type(url) == "table") then
+				url = url.url;
+			end
 			local entry = self:GetItem(url);
 			if(entry) then
 				local expireTime = (entry.payload:GetCacheMaxAge() or 0) + entry.payload.creation_date;

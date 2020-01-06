@@ -118,12 +118,16 @@ function System.localserver.ProcessURLRequest_result(request_id, index)
 	
 	local success;
 	if(msg.code~=0 or msg.rcode~=200)  then
+		if(type(url) == "table") then
+			url = url.url;
+		end
 		commonlib.log("warning: cannot connect %s code=%s, rcode=%s.\n", url, tostring(msg.code), tostring(msg.rcode))
 
 		-- if fetching failed, we will return the local server version (even if it is expired). 
 		-- if there is no local server version either, the HTTP msg is returned.
 		local ls = System.localserver.CreateStore(nil, 3);
 		if(ls) then
+			
 			local entry = ls:GetItem(url);
 			if(entry) then
 				commonlib.log("however, a local version is found and returned\n")
@@ -135,6 +139,9 @@ function System.localserver.ProcessURLRequest_result(request_id, index)
 		task:NotifyUrlComplete(index, msg);
 	else
 		-- new item is successfully fetched.
+		if(type(url) == "table") then
+			url = url.url;
+		end
 		local new_item = {
 			entry = WebCacheDB.EntryInfo:new({
 				url = url,
@@ -228,6 +235,10 @@ function System.localserver.ProcessFile_result(request_id, index)
 		-- finished download
 		TaskManager.urls[url] = nil;
 		
+		if(type(url) == "table") then
+			url = url.url;
+		end
+
 		local dataDir = task.store_:GetDataDir();
 		local DestFile;
 		if(dataDir) then

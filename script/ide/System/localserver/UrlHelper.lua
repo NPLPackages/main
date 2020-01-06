@@ -75,14 +75,14 @@ end
 
 -- return true if the url is for a web service. 
 function UrlHelper.IsWebSerivce(url)
-	if(url and string.find(url, "%.asmx")) then
+	if(type(url) == "string" and string.find(url, "%.asmx")) then
 		return true
 	end
 end
 
 -- return true if the url is for a web page request, such as RSS feed, HTML, xml, or http REST call. 
 function UrlHelper.IsWebPage(url)
-	if(url) then
+	if(type(url) == "string") then
 		if(string.find(url, "%.html?")) then
 			return true
 		end
@@ -92,7 +92,7 @@ end
 
 -- return true if the url is for a file request, such as zip, jpg, png, etc 
 function UrlHelper.IsFileUrl(url)
-	if(url) then
+	if(type(url) == "string") then
 		if(string.find(url, "%.zip") or string.find(url, "%.jpg") or string.find(url, "%.png")) then
 			return true
 		end
