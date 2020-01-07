@@ -292,6 +292,28 @@ function BonesManip:ShowRotateManipForBone(bone)
 		NPL.load("(gl)script/ide/System/Scene/Manipulators/RotateManip.lua");
 		local RotateManip = commonlib.gettable("System.Scene.Manipulators.RotateManip");
 		self.curManip = RotateManip:new():init(self);
+		
+		local rotAxis = bone:GetRotationAxis()
+		if(rotAxis) then
+			if(not rotAxis:match("x")) then
+				self.curManip:SetPitchEnabled(false)
+			end
+			if(not rotAxis:match("y")) then
+				self.curManip:SetYawEnabled(false)
+			end
+			if(not rotAxis:match("z")) then
+				self.curManip:SetRollEnabled(false)
+			end
+			--[[ we are using delta angles, so following is not necessary
+			if(bone:GetMinAngle()) then
+				self.curManip:SetMinRotAngle(bone:GetMinAngle());
+			end
+			if(bone:GetMaxAngle()) then
+				self.curManip:SetMaxRotAngle(bone:GetMaxAngle());
+			end
+			]]
+		end
+
 		self:UpdateManipRadius(self.curManip);
 		self.curManip:Connect("valueChanged", self, self.OnChangeBoneRotation)
 		self.curManip:Connect("modifyBegun", self, self.BeginModify)
@@ -395,10 +417,27 @@ end
 
 function BonesManip:OnChangeBoneRotation()
 	if(self.selectedBone) then
+		local bone = self.selectedBone;
 		local deltaRot = self.curManip:GetRotation();
-		local newRot = self.selectedBone:GetLastRotation() * deltaRot;
-		self:SetNewBoneRotation(self.selectedBone, newRot)
-		self:UpdateChildBoneTransforms(self.selectedBone);
+		local newRot = bone:GetLastRotation() * deltaRot;
+
+		
+		if(bone:GetMinAngle() or bone:GetMaxAngle()) then
+			local angle, axis = newRot:ToAngleAxis()
+			local newAngle = angle;
+			if(bone:GetMinAngle()) then
+				newAngle = math.max(newAngle, bone:GetMinAngle())
+			end
+			if(bone:GetMaxAngle()) then
+				newAngle = math.min(newAngle, bone:GetMaxAngle())
+			end
+			if(newAngle ~= angle) then
+				newRot:FromAngleAxis(newAngle, axis)
+			end
+		end
+
+		self:SetNewBoneRotation(bone, newRot)
+		self:UpdateChildBoneTransforms(bone);
 		self:SetModified();
 	end
 end

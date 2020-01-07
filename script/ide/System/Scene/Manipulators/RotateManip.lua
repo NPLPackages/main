@@ -52,6 +52,10 @@ RotateManip:Property({"ShowLastAngles", false, "IsShowLastAngles", "SetShowLastA
 RotateManip:Property({"ShowVector", false, "IsShowVector", "SetShowVector", auto=true});
 -- initial vector to apply Yaw Pitch Roll
 RotateManip:Property({"InitialVector", {1,0,0}, "GetInitialVector", "SetInitialVector", auto=true});
+-- min rot angle, such as -pi
+RotateManip:Property({"MinRotAngle", nil, "GetMinRotAngle", "SetMinRotAngle", auto=true});
+-- max rot angle, such as pi
+RotateManip:Property({"MaxRotAngle", nil, "GetMaxRotAngle", "SetMaxRotAngle", auto=true});
 
 function RotateManip:ctor()
 	self.names = {};
@@ -177,6 +181,7 @@ function RotateManip:mouseMoveEvent(event)
 			if(sinAngle<0) then
 				angle = - angle;
 			end
+
 			if(not self.FromAngle) then
 				self.FromAngle = angle;
 				self.ToAngle = angle;
@@ -215,6 +220,19 @@ function RotateManip:GrabValues()
 	self:EndUpdate();
 end
 
+function RotateManip:NormalizeAngle(angle)
+	angle = mathlib.ToStandardAngle(angle);
+	if(self:GetMinRotAngle()) then
+		angle = math.max(angle, self:GetMinRotAngle())
+	end
+	if(self:GetMaxRotAngle()) then
+		angle = math.min(angle, self:GetMaxRotAngle())
+	end
+	return angle;
+end
+
+			
+
 function RotateManip:GrabValuesImp()
 	if(self.FromAngle and self.ToAngle) then
 		local from, to = self.FromAngle, self.ToAngle;
@@ -238,13 +256,13 @@ end
 
 function RotateManip:SetNewYawPitchRoll(yaw, pitch, roll)
 	if(yaw) then
-		self:SetField("yaw", mathlib.ToStandardAngle(yaw));
+		self:SetField("yaw", self:NormalizeAngle(yaw));
 	end
 	if(pitch) then
-		self:SetField("pitch", mathlib.ToStandardAngle(pitch));
+		self:SetField("pitch", self:NormalizeAngle(pitch));
 	end
 	if(roll) then
-		self:SetField("roll", mathlib.ToStandardAngle(roll));
+		self:SetField("roll", self:NormalizeAngle(roll));
 	end
 end
 

@@ -64,7 +64,8 @@ function Bone:init(attr, allbones)
 	return self;
 end
 
--- self.name could be "L_arm_xxx {min=-90, max=90, hidden=true, motorId=5, motorOffset=90}"
+-- self.name could be "L_arm_xxx {min=-1.57, max=1.57, rotAxis="xyz", hidden=true, servoId=5, servoOffset=1.57}"
+-- NOTE:here angle unit is radian
 function Bone:ReadBonePropertiesFromName()
 	local display_name, properties = self.name:match("^(.*)%s*(%{[^%}]+%})");
 	if(properties) then
@@ -79,6 +80,19 @@ end
 -- @param name: like "min", "max", "hidden"
 function Bone:GetBoneProperty(name)
 	return self.properties and self.properties[name]
+end
+
+-- nil or string of "xyz", "x", etc. 
+function Bone:GetRotationAxis()
+	return self:GetBoneProperty("rotAxis")
+end
+
+function Bone:GetMinAngle()
+	return self:GetBoneProperty("min")
+end
+
+function Bone:GetMaxAngle()
+	return self:GetBoneProperty("max")
 end
 
 -- some pivot bones(transform only bone) are exported via FBX, but should NOT be editable.
