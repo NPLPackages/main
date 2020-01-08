@@ -64,7 +64,7 @@ function Bone:init(attr, allbones)
 	return self;
 end
 
--- self.name could be "L_arm_xxx {min=-1.57, max=1.57, rotAxis="xyz", hidden=true, servoId=5, servoOffset=1.57}"
+-- self.name could be "L_arm_xxx {min=-1.57, max=1.57, rotAxis="xyz", hidden=true, servoId=5, servoOffset=1.57, servoScale = 1, tag = "", }"
 -- NOTE:here angle unit is radian
 function Bone:ReadBonePropertiesFromName()
 	local display_name, properties = self.name:match("^(.*)%s*(%{[^%}]+%})");
