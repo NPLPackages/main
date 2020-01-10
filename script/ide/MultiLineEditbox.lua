@@ -71,6 +71,9 @@ local MultiLineEditbox = commonlib.inherit(commonlib.gettable("CommonCtrl.TreeVi
 	-- called when user mouse over a given word, function(self, word, line:Unistring, from, to). 
 	-- this is only implemented for bUseSystemControl==true. 
 	OnMouseOverWordChange = nil, 
+	-- called when user right click on a word, function(self, event). 
+	-- this is only implemented for bUseSystemControl==true. 
+	OnRightClick = nil,
 	-- nil or the syntax highlighting map. Use CommonCtrl.MultiLineEditbox.syntax_map_NPL
 	syntax_map = nil,
 	-- "npl" syntax highlighting
@@ -166,6 +169,9 @@ function MultiLineEditbox:Show(bShow)
 			end)
 			if(self.OnMouseOverWordChange) then
 				self.ctrlEditbox:Connect("mouseOverWordChanged", self, self.OnMouseOverWordChange, "UniqueConnection");
+			end
+			if(self.OnRightClick) then
+				self.ctrlEditbox:Connect("rightClicked", self, self.OnRightClick, "UniqueConnection");
 			end
 		end
 		if(bShow == nil) then

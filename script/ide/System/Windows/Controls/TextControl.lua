@@ -52,6 +52,7 @@ TextControl:Signal("mouseOverWordChanged");
 -- user input some char or string
 TextControl:Signal("userTyped", function(txtCtrl, str) end);
 TextControl:Signal("keyPressed", function(txtCtrl, event) end);
+TextControl:Signal("rightClicked", function(txtCtrl, event) end);
 
 
 
@@ -495,8 +496,11 @@ function TextControl:mousePressEvent(e)
 	end
 end
 
-function TextControl:mouseReleaseEvent()
+function TextControl:mouseReleaseEvent(event)
 	self.isLeftMouseDown = false;
+	if(event:button() == "right") then
+		self:rightClicked(event);
+	end
 end
 
 
@@ -505,8 +509,14 @@ end
 function TextControl:setMouseOverWord(word, lineText, fromPos, toPos)
 	if(self.lastMouseOverWord ~= word) then
 		self.lastMouseOverWord = word;
+		self.lastMouseOverInfo = {word=word, lineText=lineText, fromPos=fromPos, toPos=toPos};
 		self:mouseOverWordChanged(word, lineText, fromPos, toPos);
 	end
+end
+
+-- return table of {word, lineText, fromPos, toPos} where word may be nil
+function TextControl:getMouseOverWordInfo()
+	return self.lastMouseOverInfo;
 end
 
 function TextControl:mouseMoveEvent(e)

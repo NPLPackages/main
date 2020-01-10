@@ -79,6 +79,8 @@ MultiLineEditbox:Signal("selectionChanged");
 MultiLineEditbox:Signal("cursorPositionChanged", function(oldLine, newLine, oldPos, newPos) end);
 MultiLineEditbox:Signal("textChanged");
 MultiLineEditbox:Signal("mouseOverWordChanged");
+MultiLineEditbox:Signal("rightClicked");
+
 
 --MultiLineEditbox:Signal("accepted");
 --MultiLineEditbox:Signal("editingFinished");
@@ -191,6 +193,7 @@ function MultiLineEditbox:initViewport()
 	self.viewport:Connect("SizeChanged", self, "updateScrollStatus");
 	self.viewport:Connect("PositionChanged", self, "updateScrollValue");
 	self.viewport:Connect("mouseOverWordChanged", self, "mouseOverWordChanged");
+	self.viewport:Connect("rightClicked", self, "rightClicked");
 end
 
 function MultiLineEditbox:ShowLineNumber(value)

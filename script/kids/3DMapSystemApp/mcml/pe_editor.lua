@@ -85,6 +85,7 @@ if it is "_mcmlblank", it will be opened in a new popup mcml window.
 | spacing	| for text or button control.  |
 | UseSystemControl | true to use advanced multiple line edit box in new system control |
 | OnMouseOverWordChange | called when user mouse over a given word, function(word, line:Unistring, from, to). this is only implemented for bUseSystemControl==true.  |
+| OnRightClick | called when user right click on text, function(event). this is only implemented for bUseSystemControl==true.  |
 | InputMethodEnabled | only valid when UseSystemControl is true. default to true |
 use the lib:
 -------------------------------------------------------
@@ -1353,6 +1354,12 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 		if(OnMouseOverWordChange)then
 			ctl.OnMouseOverWordChange = function(self, word, line, from, to)
 				Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, OnMouseOverWordChange, word, line, from, to);
+			end
+		end
+		local OnRightClick = mcmlNode:GetString("OnRightClick");
+		if(OnRightClick)then
+			ctl.OnRightClick = function(self, event)
+				Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, OnRightClick, event);
 			end
 		end
 
