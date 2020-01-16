@@ -3,11 +3,11 @@ Title: BonesManip
 Author(s): LiXizhi@yeah.net
 Date: 2015/9/11
 Desc: Due to their complexity, inverse kinematics (IK) problems are often solved with iterative solutions. 
-While iterative solutions can handle different IK poblems with a single algorithm, 
+While iterative solutions can handle different IK problems with a single algorithm, 
 they can also become computationally expensive. If a specific IK problem needs to be computed often, 
 it is worth considering an analytic solution.
 
-If we limit the problem to a two bone chain in a two-dimensions, we can derive the anaytic solution 
+If we limit the problem to a two bone chain in two-dimensions, we can derive the analytic solution 
 without much complexity. This will generally be more efficient than its iterative alternatives. 
 While this specific case lends itself to a 2D world, it can also be used in 3D as long as the 
 kinematic chain's motion is limited to a single plane.
