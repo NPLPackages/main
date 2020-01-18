@@ -64,7 +64,7 @@ function Bone:init(attr, allbones)
 	return self;
 end
 
--- self.name could be "L_arm_xxx {min=-1.57, max=1.57, rotAxis="xyz", hidden=true, servoId=5, servoOffset=1.57, servoScale = 1, tag = "", }"
+-- self.name could be "L_arm_xxx {IK = 2, min=-1.57, max=1.57, rotAxis="xyz", hidden=true, servoId=5, servoOffset=1.57, servoScale = 1, tag = "", }"
 -- NOTE:here angle unit is radian
 function Bone:ReadBonePropertiesFromName()
 	local display_name, properties = self.name:match("^(.*)%s*(%{[^%}]+%})");
@@ -87,6 +87,9 @@ function Bone:GetRotationAxis()
 	return self:GetBoneProperty("rotAxis")
 end
 
+function Bone:GetIK()
+	return self:GetBoneProperty("IK")
+end
 function Bone:GetMinAngle()
 	return self:GetBoneProperty("min")
 end
@@ -468,6 +471,15 @@ local Known_IKHandleBones = {L_Hand = true, R_Hand=true, L_Foot=true, R_Foot=tru
 -- if the bone is a well known IK handle, such as hand and foot. or its name contains "_IK"
 function Bone:HasIKHandle()
 	return Known_IKHandleBones[self.name] or self.name:match("_IK")~=nil;
+end
+
+function Bone:GetIKNumber()
+	local num = self.name:match("_IK(%d+)");
+	if (num) then
+		return tonumber(num);
+	else
+		return 0;
+	end
 end
 
 -- the start bone in two bone IK chain

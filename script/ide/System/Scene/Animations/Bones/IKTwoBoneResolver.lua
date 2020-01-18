@@ -24,6 +24,7 @@ IK Solvers:
 References:
 	Maya SDK's free sample: ik2Bsolver/ik2Bsolver.cpp, and Rotate Plane IK solver
 	web article: Analytic Two-Bone IK in 2D
+	web article: Cyclic Coordinate Descent in 2D
 
 use the lib:
 ------------------------------------------------------------
@@ -226,4 +227,60 @@ function IKTwoBoneResolver:solveOneBoneIK(startJointPos, effectorPos, handlePos)
 	-- quaternion for rotating the effector onto the handle
 	local qEH = Quaternion:new():FromVectorToVector(vectorE, vectorH);
 	return qEH;
+end
+
+-- (http://www.ryanjuckett.com/programming/cyclic-coordinate-descent-in-2d/)
+function IKTwoBoneResolver:solveIK_CCD(bones, effectorPos, handlePos, defaultPoleVector)
+	local boneCount = #bones;
+	local qResults = {};
+	for i = 1, boneCount do
+		qResults[i] = Quaternion:new();
+	end
+
+	local currentEffector = effectorPos:clone();
+	for calculate = 1, 100 do
+		for i = 1, boneCount do
+			local curBone = bones[i];
+			local midJointPos = curBone:GetLastPivot();
+			local vector1 = currentEffector - midJointPos;
+			local vector2 = handlePos - midJointPos;
+			local length1 = vector1:length();
+			local length2 = vector2:length();
+
+			local vectorAngle12 = vector1:angle(vector2);
+			local vectorCross12 = (vector1 * vector2):normalize();
+			if (vectorCross12:length2() < 0.000001) then
+				vectorCross12 = (defaultPoleVector * vector1):normalize();
+			end
+
+			if (curBone:GetMinAngle() and vectorAngle12 < curBone:GetMinAngle()) then
+				vectorAngle12 = curBone:GetMinAngle();
+			elseif (curBone:GetMaxAngle() and vectorAngle12 > curBone:GetMaxAngle()) then
+				vectorAngle12 = curBone:GetMaxAngle();
+			end
+			
+			local canRotate = true;
+			local rotAxis = curBone:GetRotationAxis();
+			if (rotAxis) then
+				if ((not rotAxis:match("x")) and vectorCross12:isParallel(vector3d:new(1, 0, 0))) then
+					canRotate = false;
+				elseif ((not rotAxis:match("y")) and vectorCross12:isParallel(vector3d:new(0, 1, 0))) then
+					canRotate = false;
+				elseif ((not rotAxis:match("z")) and vectorCross12:isParallel(vector3d:new(0, 0, 1))) then
+					canRotate = false;
+				end
+			end
+
+			if (canRotate) then
+				local q12 = qResults[i]:FromAngleAxis(vectorAngle12, vectorCross12);
+				vector1:rotateByQuatInplace(q12);
+				currentEffector = midJointPos + vector1;
+				local vectorH = handlePos - currentEffector;
+				if (vectorH:length2() < 0.01) then
+					return qResults;
+				end
+			end
+		end
+	end
+	return qResults;
 end

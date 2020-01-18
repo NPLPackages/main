@@ -344,49 +344,87 @@ end
 function BonesManip:OnBoneIKHandlePosChanged()
 	if(self.selectedBone) then
 		if(self.selectedBone:HasIKHandle()) then
-			-- using two bone IK resolver
-			local lineScaling = self:GetLineScale();
-			local endBone = self.selectedBone:GetIKEffectorBone();
-			local offset_pos = vector3d:new(self.curManip:GetField("position"));
-			local midBone = self.selectedBone:GetIKMidBone();
-			if(midBone and offset_pos:length()>=0.000001) then
-				local startBone = self.selectedBone:GetIKStartBone();
-				if(startBone) then
-					local startJointPos = startBone:GetPivot();
-					local midJointPos = midBone:GetLastPivot();
-					local effectorPos = endBone:GetLastPivot(); 
+			local numIK = self.selectedBone:GetIKNumber()
+			if (numIK > 0) then
+				-- using CCD IK resolver
+				local lineScaling = self:GetLineScale();
+				local offset_pos = vector3d:new(self.curManip:GetField("position"));
+				local endBone = self.selectedBone:GetIKEffectorBone();
+				local bones = {};
+				local midBone = endBone:GetParent();
+				for i = 1, numIK do
+					if (midBone) then
+						if (midBone:IsEditable()) then
+							table.insert(bones, midBone);
+						end
+						midBone = midBone:GetParent();
+					else
+						break;
+					end
+				end
+
+				if (#bones > 1 and offset_pos:length() >= 0.000001) then
+					local effectorPos = endBone:GetLastPivot();
 					local handlePos = endBone:GetLastPivot() + offset_pos*lineScaling;
 					-- local poleVector = vector3d:new(1,0,0);
 					local poleVector = endBone:GetLastPoleVector();
-					local twistValue = 0;
-				
-					local qStart, qMid = IKTwoBoneResolver:solveTwoBoneIK(startJointPos, midJointPos, effectorPos, handlePos, poleVector, twistValue);
-					--echo({"1111",
-						--qStart:tostringAngleAxis(),
-						--qMid:tostringAngleAxis(),
-						--"$",
-						--startJointPos:tostring(),
-						--midJointPos:tostring(),
-						--effectorPos:tostring(),
-						--"$",
-						--handlePos:tostring(),
-					--})
+					local qResults = IKTwoBoneResolver:solveIK_CCD(bones, effectorPos, handlePos, poleVector);
 
-					qStart:TransformAxisByMatrix(startBone:GetLastPivotRotMatrix():inverse());
-					qMid:TransformAxisByMatrix(midBone:GetLastPivotRotMatrix():inverse());
-
-					--echo({"2222",
-						--qStart:tostringAngleAxis(),
-						--qMid:tostringAngleAxis(),
-						--startBone:GetLastRotation():tostringAngleAxis(),
-						--midBone:GetLastRotation():tostringAngleAxis(),
-						--poleVector:tostring(),
-					--})
-
-					self:SetNewBoneRotation(startBone, startBone:GetLastRotation() * qStart);
-					self:SetNewBoneRotation(midBone, midBone:GetLastRotation() * qMid);
-					self:UpdateChildBoneTransforms(midBone);
+					for i = #qResults, 1, -1 do
+						local midBone = bones[i];
+						qResults[i]:TransformAxisByMatrix(midBone:GetLastPivotRotMatrix():inverse());
+						self:SetNewBoneRotation(midBone, midBone:GetLastRotation() * qResults[i]);
+					end
+					for i = #qResults, 2, -1 do
+						self:UpdateChildBoneTransforms(bones[i]);
+					end
 					self:SetModified();
+				end
+			else
+				-- using two bone IK resolver
+				local lineScaling = self:GetLineScale();
+				local endBone = self.selectedBone:GetIKEffectorBone();
+				local offset_pos = vector3d:new(self.curManip:GetField("position"));
+				local midBone = self.selectedBone:GetIKMidBone();
+				if(midBone and offset_pos:length()>=0.000001) then
+					local startBone = self.selectedBone:GetIKStartBone();
+					if(startBone) then
+						local startJointPos = startBone:GetPivot();
+						local midJointPos = midBone:GetLastPivot();
+						local effectorPos = endBone:GetLastPivot(); 
+						local handlePos = endBone:GetLastPivot() + offset_pos*lineScaling;
+						-- local poleVector = vector3d:new(1,0,0);
+						local poleVector = endBone:GetLastPoleVector();
+						local twistValue = 0;
+					
+						local qStart, qMid = IKTwoBoneResolver:solveTwoBoneIK(startJointPos, midJointPos, effectorPos, handlePos, poleVector, twistValue);
+						--echo({"1111",
+							--qStart:tostringAngleAxis(),
+							--qMid:tostringAngleAxis(),
+							--"$",
+							--startJointPos:tostring(),
+							--midJointPos:tostring(),
+							--effectorPos:tostring(),
+							--"$",
+							--handlePos:tostring(),
+						--})
+
+						qStart:TransformAxisByMatrix(startBone:GetLastPivotRotMatrix():inverse());
+						qMid:TransformAxisByMatrix(midBone:GetLastPivotRotMatrix():inverse());
+
+						--echo({"2222",
+							--qStart:tostringAngleAxis(),
+							--qMid:tostringAngleAxis(),
+							--startBone:GetLastRotation():tostringAngleAxis(),
+							--midBone:GetLastRotation():tostringAngleAxis(),
+							--poleVector:tostring(),
+						--})
+
+						self:SetNewBoneRotation(startBone, startBone:GetLastRotation() * qStart);
+						self:SetNewBoneRotation(midBone, midBone:GetLastRotation() * qMid);
+						self:UpdateChildBoneTransforms(midBone);
+						self:SetModified();
+					end
 				end
 			end
 		else
@@ -951,24 +989,58 @@ function BonesManip:paintEvent(painter)
 	end
 
 	if(self.selectedBone and self.selectedBone:HasIKHandle() and self:GetIKHandleBone() == self.selectedBone and not isDrawingPickable) then
-		-- draw the IK chain and pole vector for two bone IK
-		local endBone = self.selectedBone;
-		local endPivot = endBone:GetPivot();
-		local midBone = endBone:GetParent();
-		if(midBone) then
-			local midPivot = midBone:GetPivot();
-			local startBone = midBone:GetParent();
-			if(startBone) then
-				local startPivot = startBone:GetPivot();
+		local numIK = self.selectedBone:GetIKNumber();
+		if (numIK > 0) then
+			-- draw the IK chain and pole vector for CCD IK
+			local endBone = self.selectedBone;
+			local endPivot = endBone:GetPivot();
+			local midBone = endBone:GetParent()
+			if (midBone) then
+				local midPivot = midBone:GetPivot();
 				self:SetColorAndName(painter, self.IKHandleColor);
 				ShapesDrawer.DrawLine(painter, endPivot[1],endPivot[2],endPivot[3], midPivot[1],midPivot[2],midPivot[3]);
-				ShapesDrawer.DrawLine(painter, startPivot[1],startPivot[2],startPivot[3], midPivot[1],midPivot[2],midPivot[3]);
+
+				local startBone = midBone:GetParent();
+				for i = 1, numIK - 1 do
+					if (startBone) then
+						if (startBone:IsEditable()) then
+							local startPivot = startBone:GetPivot();
+							ShapesDrawer.DrawLine(painter, startPivot[1],startPivot[2],startPivot[3], midPivot[1],midPivot[2],midPivot[3]);
+							midPivot = startPivot;
+						end
+						startBone = startBone:GetParent();
+					else
+						break;
+					end	
+				end
+				local startPivot = midPivot;
 				ShapesDrawer.DrawLine(painter, endPivot[1],endPivot[2],endPivot[3], startPivot[1],startPivot[2],startPivot[3]);
 				-- draw pole vector
 				self:SetColorAndName(painter, self.PoleVectorColor);
 				local poleVector = endBone:GetPoleVector()*0.3;
 				poleVector:add(startPivot);
 				ShapesDrawer.DrawLine(painter, startPivot[1],startPivot[2],startPivot[3], poleVector[1],poleVector[2],poleVector[3]);
+			end
+		else
+			-- draw the IK chain and pole vector for two bone IK
+			local endBone = self.selectedBone;
+			local endPivot = endBone:GetPivot();
+			local midBone = endBone:GetParent();
+			if(midBone) then
+				local midPivot = midBone:GetPivot();
+				local startBone = midBone:GetParent();
+				if(startBone) then
+					local startPivot = startBone:GetPivot();
+					self:SetColorAndName(painter, self.IKHandleColor);
+					ShapesDrawer.DrawLine(painter, endPivot[1],endPivot[2],endPivot[3], midPivot[1],midPivot[2],midPivot[3]);
+					ShapesDrawer.DrawLine(painter, startPivot[1],startPivot[2],startPivot[3], midPivot[1],midPivot[2],midPivot[3]);
+					ShapesDrawer.DrawLine(painter, endPivot[1],endPivot[2],endPivot[3], startPivot[1],startPivot[2],startPivot[3]);
+					-- draw pole vector
+					self:SetColorAndName(painter, self.PoleVectorColor);
+					local poleVector = endBone:GetPoleVector()*0.3;
+					poleVector:add(startPivot);
+					ShapesDrawer.DrawLine(painter, startPivot[1],startPivot[2],startPivot[3], poleVector[1],poleVector[2],poleVector[3]);
+				end
 			end
 		end
 	end
