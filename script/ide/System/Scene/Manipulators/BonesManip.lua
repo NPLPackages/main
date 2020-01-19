@@ -352,15 +352,11 @@ function BonesManip:OnBoneIKHandlePosChanged()
 				local endBone = self.selectedBone:GetIKEffectorBone();
 				local bones = {};
 				local midBone = endBone:GetParent();
-				for i = 1, numIK do
-					if (midBone) then
-						if (midBone:IsEditable()) then
-							table.insert(bones, midBone);
-						end
-						midBone = midBone:GetParent();
-					else
-						break;
+				while ((#bones) < numIK and midBone) do
+					if (midBone:IsEditable()) then
+						table.insert(bones, midBone);
 					end
+					midBone = midBone:GetParent();
 				end
 
 				if (#bones > 1 and offset_pos:length() >= 0.000001) then
@@ -386,8 +382,22 @@ function BonesManip:OnBoneIKHandlePosChanged()
 				local endBone = self.selectedBone:GetIKEffectorBone();
 				local offset_pos = vector3d:new(self.curManip:GetField("position"));
 				local midBone = self.selectedBone:GetIKMidBone();
+				while (midBone) do
+					if (midBone:IsEditable()) then
+						break;
+					else
+						midBone = midBone:GetParent();
+					end
+				end
 				if(midBone and offset_pos:length()>=0.000001) then
-					local startBone = self.selectedBone:GetIKStartBone();
+					local startBone = midBone:GetParent();
+					while (startBone) do
+						if (startBone:IsEditable()) then
+							break;
+						else
+							startBone = startBone:GetParent();
+						end
+					end
 					if(startBone) then
 						local startJointPos = startBone:GetPivot();
 						local midJointPos = midBone:GetLastPivot();
@@ -913,15 +923,28 @@ function BonesManip:paintEvent(painter)
 			local pickWithParent = false; -- picking with parent or children
 			if(pickWithParent) then
 				local parentBone = bone:GetParent();
-				if(parentBone) then
+				if(parentBone and parentBone:IsEditable()) then
 					local parentPivot = parentBone:GetPivot();
 					ShapesDrawer.DrawLine(painter, pivot[1],pivot[2],pivot[3], parentPivot[1],parentPivot[2],parentPivot[3]);
 				end
 			else
-				for i, childBone in ipairs(bones) do
-					if(childBone:GetParent() == bone) then
-						local childPivot = childBone:GetPivot();	
-						ShapesDrawer.DrawLine(painter, pivot[1],pivot[2],pivot[3], childPivot[1],childPivot[2],childPivot[3]);
+				local stackBones = {};
+				stackBones[1] = bone;
+				local top = 1;
+				while (top > 0) do
+					local curBone = stackBones[top];
+					top = top - 1;
+					for i, childBone in ipairs(bones) do
+						if(childBone:GetParent() == curBone) then
+							if(childBone:IsEditable()) then
+								local childPivot = childBone:GetPivot();	
+								ShapesDrawer.DrawLine(painter, pivot[1],pivot[2],pivot[3], childPivot[1],childPivot[2],childPivot[3]);
+								break;
+							else
+								top = top + 1;
+								stackBones[top] = childBone;
+							end
+						end
 					end
 				end
 			end
@@ -994,24 +1017,29 @@ function BonesManip:paintEvent(painter)
 			-- draw the IK chain and pole vector for CCD IK
 			local endBone = self.selectedBone;
 			local endPivot = endBone:GetPivot();
-			local midBone = endBone:GetParent()
+			local midBone = endBone:GetParent();
+			while (midBone) do
+				if (midBone:IsEditable()) then
+					break;
+				else
+					midBone = midBone:GetParent();
+				end
+			end
 			if (midBone) then
 				local midPivot = midBone:GetPivot();
 				self:SetColorAndName(painter, self.IKHandleColor);
 				ShapesDrawer.DrawLine(painter, endPivot[1],endPivot[2],endPivot[3], midPivot[1],midPivot[2],midPivot[3]);
 
 				local startBone = midBone:GetParent();
-				for i = 1, numIK - 1 do
-					if (startBone) then
-						if (startBone:IsEditable()) then
-							local startPivot = startBone:GetPivot();
-							ShapesDrawer.DrawLine(painter, startPivot[1],startPivot[2],startPivot[3], midPivot[1],midPivot[2],midPivot[3]);
-							midPivot = startPivot;
-						end
-						startBone = startBone:GetParent();
-					else
-						break;
-					end	
+				local i = 1;
+				while (i < numIK and startBone) do
+					if (startBone:IsEditable()) then
+						local startPivot = startBone:GetPivot();
+						ShapesDrawer.DrawLine(painter, startPivot[1],startPivot[2],startPivot[3], midPivot[1],midPivot[2],midPivot[3]);
+						midPivot = startPivot;
+						i = i + 1;
+					end
+					startBone = startBone:GetParent();
 				end
 				local startPivot = midPivot;
 				ShapesDrawer.DrawLine(painter, endPivot[1],endPivot[2],endPivot[3], startPivot[1],startPivot[2],startPivot[3]);
@@ -1026,9 +1054,23 @@ function BonesManip:paintEvent(painter)
 			local endBone = self.selectedBone;
 			local endPivot = endBone:GetPivot();
 			local midBone = endBone:GetParent();
+			while (midBone) do
+				if (midBone:IsEditable()) then
+					break;
+				else
+					midBone = midBone:GetParent();
+				end
+			end
 			if(midBone) then
 				local midPivot = midBone:GetPivot();
 				local startBone = midBone:GetParent();
+				while (startBone) do
+					if (startBone:IsEditable()) then
+						break;
+					else
+						startBone = startBone:GetParent();
+					end
+				end
 				if(startBone) then
 					local startPivot = startBone:GetPivot();
 					self:SetColorAndName(painter, self.IKHandleColor);

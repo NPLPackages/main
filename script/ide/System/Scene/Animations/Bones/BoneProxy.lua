@@ -470,13 +470,12 @@ local Known_IKHandleBones = {L_Hand = true, R_Hand=true, L_Foot=true, R_Foot=tru
 
 -- if the bone is a well known IK handle, such as hand and foot. or its name contains "_IK"
 function Bone:HasIKHandle()
-	return Known_IKHandleBones[self.name] or self.name:match("_IK")~=nil;
+	return Known_IKHandleBones[self.name] or self.name:match("_IK")~=nil or self:GetIK() ~= nil;
 end
 
 function Bone:GetIKNumber()
-	local num = self.name:match("_IK(%d+)");
-	if (num) then
-		return tonumber(num);
+	if (self:GetIK()) then
+		return self:GetIK()
 	else
 		return 0;
 	end
