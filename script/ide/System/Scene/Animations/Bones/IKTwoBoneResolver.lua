@@ -233,91 +233,96 @@ IKTwoBoneResolver.axisX = vector3d:new(1, 0, 0);
 IKTwoBoneResolver.axisY = vector3d:new(0, 1, 0);
 IKTwoBoneResolver.axisZ = vector3d:new(0, 0, 1);
 
-function IKTwoBoneResolver:constraintRotAxis(bones, qResults)
-	for i = 1, #bones do
-		local curBone = bones[i];
-		local result = qResults[i];
-		local rotAxis = curBone:GetRotationAxis();
-		if (rotAxis) then
-			local rotX = rotAxis:match("x") ~= nil;
-			local rotY = rotAxis:match("y") ~= nil;
-			local rotZ = rotAxis:match("z") ~= nil;
-			local yaw, roll, pitch = result:ToEulerAngles();
-			if (not rotAxis:match("x")) then
-				pitch = 0;	
-			end
-			if (not rotAxis:match("y")) then
-				yaw = 0;	
-			end
-			if (not rotAxis:match("z")) then
-				roll = 0;	
-			end
-			qResults[i] = Quaternion:new():FromEulerAngles(yaw, roll, pitch);
+function IKTwoBoneResolver:constraintRotAxis(bone, qResult)
+	local rotAxis = bone:GetRotationAxis();
+	if (rotAxis) then
+		local yaw, roll, pitch = qResult:ToEulerAngles();
+		if (not rotAxis:match("x")) then
+			pitch = 0;	
 		end
+		if (not rotAxis:match("y")) then
+			yaw = 0;	
+		end
+		if (not rotAxis:match("z")) then
+			roll = 0;	
+		end
+		qResult = Quaternion:new():FromEulerAngles(yaw, roll, pitch);
 	end
+	return qResult;
 end
 
 -- (http://www.ryanjuckett.com/programming/cyclic-coordinate-descent-in-2d/)
 function IKTwoBoneResolver:solveIK_CCD(bones, effectorPos, handlePos, defaultPoleVector)
 	local boneCount = #bones;
-	local angles = {}
+	local midPositions = {};
 	local qResults = {};
+	local oldAngles = {};
 	for i = 1, boneCount do
 		qResults[i] = Quaternion:new();
-		angles[i] = 0;
+		midPositions[i] = bones[i]:GetLastPivot();
+		oldAngles[i] = bones[i]:GetRotation():ToAngleAxis();
 	end
 
+	local maxDistSq = (handlePos - effectorPos):length2();
+
+	local modifiedBones = false;
+	local q12 = Quaternion:new();
 	local currentEffector = effectorPos:clone();
-	for calculate = 1, 100 do
+	for count = 1, 100 do
 		for i = 1, boneCount do
-			local curBone = bones[i];
-			local midJointPos = curBone:GetLastPivot();
+			local midJointPos = midPositions[i];
 			local vector1 = currentEffector - midJointPos;
 			local vector2 = handlePos - midJointPos;
 			local length1 = vector1:length();
-			local length2 = vector2:length();
 
 			local vectorAngle12 = vector1:angle(vector2);
+			if (length1 <= 0.0001) then
+				vectorAngle12 = 0;
+			end
+
+			local curAngle = qResults[i]:ToAngleAxis();
+			local boneAngle = oldAngles[i];
+			local minAngle, maxAngle = bones[i]:GetMinAngle(), bones[i]:GetMaxAngle();
+			if (minAngle and (curAngle + vectorAngle12 + boneAngle) < minAngle) then
+				vectorAngle12 = 0;
+			end
+			if (maxAngle and (curAngle + vectorAngle12 + boneAngle) > maxAngle) then
+				vectorAngle12 = 0;
+			end
+
 			local vectorCross12 = (vector1 * vector2):normalize();
 			if (vectorCross12:length2() < 0.000001) then
 				vectorCross12 = (defaultPoleVector * vector1):normalize();
 			end
 
-			local curAngle = curBone:GetRotation():ToAngleAxis();
-			local minAngle, maxAngle = curBone:GetMinAngle(), curBone:GetMaxAngle();
-			if (minAngle and curAngle + vectorAngle12 + angles[i] < minAngle) then
-				vectorAngle12 = 0;
-			end
-			if (maxAngle and curAngle + vectorAngle12 + angles[i] > maxAngle) then
-				vectorAngle12 = 0;
+			q12:FromAngleAxis(vectorAngle12, vectorCross12);
+			q12 = IKTwoBoneResolver:constraintRotAxis(bones[i], q12);
+			vector1:rotateByQuatInplace(q12);
+			currentEffector = midJointPos + vector1;
+
+			qResults[i]:multiplyInplace(q12);
+
+			local vectorH = handlePos - currentEffector;
+			if (vectorH:length2() < 0.01) then
+				return qResults;
 			end
 
-			local canRotate = true;
-			local rotAxis = curBone:GetRotationAxis();
-			if (rotAxis) then
-				if ((not rotAxis:match("x")) and vectorCross12:isParallel(IKTwoBoneResolver.axisX)) then
-					canRotate = false;
-				elseif ((not rotAxis:match("y")) and vectorCross12:isParallel(IKTwoBoneResolver.axisY)) then
-					canRotate = false;
-				elseif ((not rotAxis:match("z")) and vectorCross12:isParallel(IKTwoBoneResolver.axisZ)) then
-					canRotate = false;
+			if (i > 1) then
+				for j = 1, i-1 do
+					vector1 = midPositions[i-j] - midJointPos;
+					vector1:rotateByQuatInplace(q12);
+					midPositions[i-j] = midJointPos + vector1;
 				end
 			end
 
-			if (canRotate) then
-				angles[i] = angles[i] + vectorAngle12;
-				local q12 = Quaternion:new():FromAngleAxis(vectorAngle12, vectorCross12);
-				vector1:rotateByQuatInplace(q12);
-				qResults[i]:FromAngleAxis(angles[i], vectorCross12);
-				currentEffector = midJointPos + vector1;
-				local vectorH = handlePos - currentEffector;
-				if (vectorH:length2() < 1) then
-					IKTwoBoneResolver:constraintRotAxis(bones, qResults);
-					return qResults;
-				end
+			if ((not modifiedBones) and math.abs(vectorAngle12) * length1 > 0.00001) then
+				modifiedBones = true;
 			end
 		end
+
+		if (not modifiedBones) then
+			return;
+		end
 	end
-	IKTwoBoneResolver:constraintRotAxis(bones, qResults);
-	return qResults;
+	return;
 end

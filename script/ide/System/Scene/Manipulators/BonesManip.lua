@@ -365,16 +365,17 @@ function BonesManip:OnBoneIKHandlePosChanged()
 					-- local poleVector = vector3d:new(1,0,0);
 					local poleVector = endBone:GetLastPoleVector();
 					local qResults = IKTwoBoneResolver:solveIK_CCD(bones, effectorPos, handlePos, poleVector);
-
-					for i = #qResults, 1, -1 do
-						local midBone = bones[i];
-						qResults[i]:TransformAxisByMatrix(midBone:GetLastPivotRotMatrix():inverse());
-						self:SetNewBoneRotation(midBone, midBone:GetLastRotation() * qResults[i]);
+					if(qResults) then
+						for i = #qResults, 1, -1 do
+							local midBone = bones[i];
+							qResults[i]:TransformAxisByMatrix(midBone:GetLastPivotRotMatrix():inverse());
+							self:SetNewBoneRotation(midBone, midBone:GetLastRotation() * qResults[i]);
+						end
+						for i = #qResults, 2, -1 do
+							self:UpdateChildBoneTransforms(bones[i]);
+						end
+						self:SetModified();
 					end
-					for i = #qResults, 2, -1 do
-						self:UpdateChildBoneTransforms(bones[i]);
-					end
-					self:SetModified();
 				end
 			else
 				-- using two bone IK resolver
