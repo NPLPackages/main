@@ -58,16 +58,18 @@ function Bone:init(attr, allbones)
 
 	self.display_name = self.name; -- format("%d %s", self.boneIndex, self.name);
 	self.bones = allbones;
-
-	self:ReadBonePropertiesFromName()
+	local tag = attr:GetField("Tag", "");
+	if(tag and tag ~= "") then
+		self:ReadBonePropertiesFromTag(tag);
+	end
 
 	return self;
 end
 
--- self.name could be "L_arm_xxx {IK = 2, min=-1.57, max=1.57, rotAxis="xyz", hidden=true, servoId=5, servoOffset=1.57, servoScale = 1, tag = "", }"
+-- @param tag: could be "{IK = 2, min=-1.57, max=1.57, rotAxis="xyz", hidden=true, servoId=5, servoOffset=1.57, servoScale = 1, tag = "", }"
 -- NOTE:here angle unit is radian
-function Bone:ReadBonePropertiesFromName()
-	local display_name, properties = self.name:match("^(.*)%s*(%{[^%}]+%})");
+function Bone:ReadBonePropertiesFromTag(tag)
+	local display_name, properties = tag:match("^(.*)%s*(%{[^%}]+%})");
 	if(properties) then
 		self.display_name = display_name;
 		self.properties = NPL.LoadTableFromString(properties);
@@ -82,6 +84,17 @@ function Bone:GetBoneProperty(name)
 	return self.properties and self.properties[name]
 end
 
+function Bone:SetBoneProperty(name, value)
+	self.properties = self.properties or {};
+	self.properties[name] = value;
+end
+
+
+-- return nil or a table containing key, value pairs
+function Bone:GetProperties()
+	return self.properties;
+end
+
 -- nil or string of "xyz", "x", etc. 
 function Bone:GetRotationAxis()
 	return self:GetBoneProperty("rotAxis")
@@ -90,6 +103,12 @@ end
 function Bone:GetIK()
 	return self:GetBoneProperty("IK")
 end
+
+function Bone:SetIK(nNumber)
+	self:SetBoneProperty("IK", nNumber)
+end
+
+
 function Bone:GetMinAngle()
 	return self:GetBoneProperty("min")
 end
@@ -389,7 +408,10 @@ function Bone:SaveLastValuesForIKChain(depth)
 	if(depth>0) then
 		local parent = self:GetParent();
 		if(parent) then
-			parent:SaveLastValuesForIKChain(depth-1);
+			if (parent:IsEditable()) then
+				depth = depth - 1
+			end
+			parent:SaveLastValuesForIKChain(depth);
 		end
 	end
 end
@@ -474,11 +496,7 @@ function Bone:HasIKHandle()
 end
 
 function Bone:GetIKNumber()
-	if (self:GetIK()) then
-		return self:GetIK()
-	else
-		return 0;
-	end
+	return self:GetIK() or 0;
 end
 
 -- the start bone in two bone IK chain

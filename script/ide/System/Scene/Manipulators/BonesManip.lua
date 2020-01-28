@@ -10,6 +10,7 @@ Desc: BonesManip is manipulator for 3D rotation.
 	-/+ key to navigate through bone chain. 
 	[ and ] key to change manipulator scaling. 
 	K key to add new key frame for current selected variable or IK chain. 
+	shift + [-/+] key to change IK bone number when in IK mode.
 
 Virtual functions:
 	mousePressEvent(event)
@@ -358,7 +359,6 @@ function BonesManip:OnBoneIKHandlePosChanged()
 					end
 					midBone = midBone:GetParent();
 				end
-
 				if (#bones > 1 and offset_pos:length() >= 0.000001) then
 					local effectorPos = endBone:GetLastPivot();
 					local handlePos = endBone:GetLastPivot() + offset_pos*lineScaling;
@@ -369,16 +369,13 @@ function BonesManip:OnBoneIKHandlePosChanged()
 						for i = #qResults, 1, -1 do
 							local midBone = bones[i];
 							qResults[i]:TransformAxisByMatrix(midBone:GetLastPivotRotMatrix():inverse());
-							self:SetNewBoneRotation(midBone, midBone:GetLastRotation() * qResults[i]);
-						end
-						for i = #qResults, 2, -1 do
-							self:UpdateChildBoneTransforms(bones[i]);
+							self:SetNewBoneRotation(midBone, self:ApplyBoneRotConstraint(midBone, midBone:GetLastRotation() * qResults[i]));
 						end
 						self:SetModified();
 					end
 				end
 			else
-				-- using two bone IK resolver
+				-- using analytical one/two bone IK resolver
 				local lineScaling = self:GetLineScale();
 				local endBone = self.selectedBone:GetIKEffectorBone();
 				local offset_pos = vector3d:new(self.curManip:GetField("position"));
@@ -431,8 +428,8 @@ function BonesManip:OnBoneIKHandlePosChanged()
 							--poleVector:tostring(),
 						--})
 
-						self:SetNewBoneRotation(startBone, startBone:GetLastRotation() * qStart);
-						self:SetNewBoneRotation(midBone, midBone:GetLastRotation() * qMid);
+						self:SetNewBoneRotation(startBone, self:ApplyBoneRotConstraint(startBone, startBone:GetLastRotation() * qStart));
+						self:SetNewBoneRotation(midBone, self:ApplyBoneRotConstraint(midBone, midBone:GetLastRotation() * qMid));
 						self:UpdateChildBoneTransforms(midBone);
 						self:SetModified();
 					end
@@ -462,6 +459,38 @@ function BonesManip:RecalculateAnimInstance()
 	if(self.animInstance) then
 		self.animInstance:CallField("UpdateModel");
 	end
+end
+
+-- it will apply newRot in place with bone contraint
+function BonesManip:ApplyBoneRotConstraint(bone, newRot)
+	local rotAxis = bone:GetRotationAxis();
+	if (rotAxis) then
+		local yaw, roll, pitch = newRot:ToEulerAngles();
+		if (not rotAxis:match("x")) then
+			pitch = 0;	
+		end
+		if (not rotAxis:match("y")) then
+			yaw = 0;	
+		end
+		if (not rotAxis:match("z")) then
+			roll = 0;	
+		end
+		newRot:FromEulerAngles(yaw, roll, pitch);
+	end
+	if(bone:GetMinAngle() or bone:GetMaxAngle()) then
+		local angle, axis = newRot:ToAngleAxis()
+		local newAngle = angle;
+		if(bone:GetMinAngle()) then
+			newAngle = math.max(newAngle, bone:GetMinAngle())
+		end
+		if(bone:GetMaxAngle()) then
+			newAngle = math.min(newAngle, bone:GetMaxAngle())
+		end
+		if(newAngle ~= angle) then
+			newRot:FromAngleAxis(newAngle, axis)
+		end
+	end
+	return newRot;
 end
 
 function BonesManip:OnChangeBoneRotation()
@@ -717,7 +746,11 @@ function BonesManip:mousePressEvent(event)
 			elseif(self.curManip:GetName() == "TranslateManip") then
 				self.curManip:SetField("position", {0,0,0});
 				-- save last values for two bone IK chains
-				self.selectedBone:SaveLastValuesForIKChain(2);
+				local numIK = self.selectedBone:GetIKNumber()
+				if (not numIK or numIK <= 0) then
+					numIK = 2;
+				end
+				self.selectedBone:SaveLastValuesForIKChain(numIK);
 				-- save last translation
 				self.selectedBone:SaveLastTranslation();
 			elseif(self.curManip:GetName() == "ScaleManip") then
@@ -790,25 +823,43 @@ function BonesManip:keyPressEvent(event)
 			event:accept();
 		elseif(keyname == "DIK_ADD" or keyname == "DIK_EQUALS") then
 			-- select first child bone
-			local childBone = self.selectedBone:GetChildAt(1);
-			while(childBone) do
-				if(childBone:IsEditable()) then
-					self:SelectBonesByPickName(childBone.pickName);
-					break;
-				else
-					childBone = childBone:GetChildAt(1);
+			if(event.shift_pressed and (self:GetHandleMode() == "IK")) then
+				-- in IK mode, we can use shift + [+|-] to change IK number
+				local ik = self.selectedBone:GetIK() or 1;
+				ik = ik + 1
+				ik = math.min(ik, 10)
+				ik = math.max(ik, 1)
+				self.selectedBone:SetIK(ik);
+			else
+				local childBone = self.selectedBone:GetChildAt(1);
+				while(childBone) do
+					if(childBone:IsEditable()) then
+						self:SelectBonesByPickName(childBone.pickName);
+						break;
+					else
+						childBone = childBone:GetChildAt(1);
+					end
 				end
 			end
 			event:accept();
 		elseif(keyname == "DIK_SUBTRACT" or keyname == "DIK_MINUS") then
 			-- select parent bone
-			local parentBone = self.selectedBone:GetParent();
-			while(parentBone) do
-				if(parentBone:IsEditable()) then
-					self:SelectBonesByPickName(parentBone.pickName);
-					break;
-				else
-					parentBone = parentBone:GetParent();
+			if(event.shift_pressed and (self:GetHandleMode() == "IK")) then
+				-- in IK mode, we can use shift + [+|-] to change IK number
+				local ik = self.selectedBone:GetIK() or 1;
+				ik = ik - 1
+				ik = math.min(ik, 10)
+				ik = math.max(ik, 1)
+				self.selectedBone:SetIK(ik);
+			else
+				local parentBone = self.selectedBone:GetParent();
+				while(parentBone) do
+					if(parentBone:IsEditable()) then
+						self:SelectBonesByPickName(parentBone.pickName);
+						break;
+					else
+						parentBone = parentBone:GetParent();
+					end
 				end
 			end
 			event:accept();

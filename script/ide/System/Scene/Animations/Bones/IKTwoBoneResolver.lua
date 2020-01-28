@@ -233,24 +233,6 @@ IKTwoBoneResolver.axisX = vector3d:new(1, 0, 0);
 IKTwoBoneResolver.axisY = vector3d:new(0, 1, 0);
 IKTwoBoneResolver.axisZ = vector3d:new(0, 0, 1);
 
-function IKTwoBoneResolver:constraintRotAxis(bone, qResult)
-	local rotAxis = bone:GetRotationAxis();
-	if (rotAxis) then
-		local yaw, roll, pitch = qResult:ToEulerAngles();
-		if (not rotAxis:match("x")) then
-			pitch = 0;	
-		end
-		if (not rotAxis:match("y")) then
-			yaw = 0;	
-		end
-		if (not rotAxis:match("z")) then
-			roll = 0;	
-		end
-		qResult = Quaternion:new():FromEulerAngles(yaw, roll, pitch);
-	end
-	return qResult;
-end
-
 -- (http://www.ryanjuckett.com/programming/cyclic-coordinate-descent-in-2d/)
 function IKTwoBoneResolver:solveIK_CCD(bones, effectorPos, handlePos, defaultPoleVector)
 	local boneCount = #bones;
@@ -282,21 +264,14 @@ function IKTwoBoneResolver:solveIK_CCD(bones, effectorPos, handlePos, defaultPol
 
 			local curAngle = qResults[i]:ToAngleAxis();
 			local boneAngle = oldAngles[i];
-			local minAngle, maxAngle = bones[i]:GetMinAngle(), bones[i]:GetMaxAngle();
-			if (minAngle and (curAngle + vectorAngle12 + boneAngle) < minAngle) then
-				vectorAngle12 = 0;
-			end
-			if (maxAngle and (curAngle + vectorAngle12 + boneAngle) > maxAngle) then
-				vectorAngle12 = 0;
-			end
-
+			
 			local vectorCross12 = (vector1 * vector2):normalize();
 			if (vectorCross12:length2() < 0.000001) then
 				vectorCross12 = (defaultPoleVector * vector1):normalize();
 			end
 
 			q12:FromAngleAxis(vectorAngle12, vectorCross12);
-			q12 = IKTwoBoneResolver:constraintRotAxis(bones[i], q12);
+			
 			vector1:rotateByQuatInplace(q12);
 			currentEffector = midJointPos + vector1;
 
