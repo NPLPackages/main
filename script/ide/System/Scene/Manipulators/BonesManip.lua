@@ -980,22 +980,11 @@ function BonesManip:paintEvent(painter)
 					ShapesDrawer.DrawLine(painter, pivot[1],pivot[2],pivot[3], parentPivot[1],parentPivot[2],parentPivot[3]);
 				end
 			else
-				local stackBones = {};
-				stackBones[1] = bone;
-				local top = 1;
-				while (top > 0) do
-					local curBone = stackBones[top];
-					top = top - 1;
-					for i, childBone in ipairs(bones) do
-						if(childBone:GetParent() == curBone) then
-							if(childBone:IsEditable()) then
-								local childPivot = childBone:GetPivot();	
-								ShapesDrawer.DrawLine(painter, pivot[1],pivot[2],pivot[3], childPivot[1],childPivot[2],childPivot[3]);
-								break;
-							else
-								top = top + 1;
-								stackBones[top] = childBone;
-							end
+				for i, childBone in ipairs(bones) do
+					if(childBone:IsEditable()) then
+						if(childBone:GetEditableParent() == bone) then
+							local childPivot = childBone:GetPivot();	
+							ShapesDrawer.DrawLine(painter, pivot[1],pivot[2],pivot[3], childPivot[1],childPivot[2],childPivot[3]);
 						end
 					end
 				end

@@ -161,6 +161,17 @@ function Bone:GetDisplayName()
 	return self.display_name or "unknown";
 end
 
+-- return nil or the first editable parent bone
+function Bone:GetEditableParent()
+	local parent = self:GetParent();
+	if(parent and not parent:IsEditable()) then
+		repeat 
+			parent = parent:GetParent();
+		until (not parent or parent:IsEditable())
+	end
+	return parent;
+end
+
 -- get current bone pivot
 function Bone:GetPivot(bRefresh)
 	if(bRefresh) then
