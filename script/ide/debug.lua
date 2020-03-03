@@ -178,3 +178,8 @@ function commonlib.assert(self, condition, message, a1, a2, a3, a4, a5, a6, a7, 
 	end
 	return condition
 end
+
+-- when this NPL runtime states has an error, this callbackFunc(errorMsg) will be called. 
+function commonlib.debug.SetNPLRuntimeErrorCallback(callbackFunc)
+	__npl_error_callback = callbackFunc;
+end
