@@ -113,6 +113,7 @@ function os.GetPCStats()
 		end
 		pc_stats.ps = att:GetField("PixelShaderVersion", 0);
 		pc_stats.vs = att:GetField("VertexShaderVersion", 0);
+		pc_stats.memory = pc_stats.memory or 4086;
 
 		-- uncomment to test low shader 
 		--pc_stats.ps = 1;
