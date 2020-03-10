@@ -1438,6 +1438,12 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 		if(mcmlNode:GetString("onactivate")) then
 			_this:SetScript("onactivate", pe_editor_text.onactivate, mcmlNode, instName, bindingContext, name);
 		end
+		if(mcmlNode:GetString("onfocusin")) then
+			_this:SetScript("onfocusin", pe_editor_text.onfocusin, mcmlNode, instName, bindingContext, name);
+		end
+		if(mcmlNode:GetString("onfocusout")) then
+			_this:SetScript("onfocusout", pe_editor_text.onfocusout, mcmlNode, instName, bindingContext, name);
+		end
 
 		local CaretColor = mcmlNode:GetString("CaretColor") or css.CaretColor;
 		if(CaretColor) then
@@ -1517,6 +1523,25 @@ function pe_editor_text.onmodify(uiobj, mcmlNode, instName, bindingContext, name
 	Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, onmodify, name, mcmlNode,uiobj);
 end
 
+-- this is the onfocusin handler. 
+function pe_editor_text.onfocusin(uiobj, mcmlNode, instName, bindingContext, name)
+	if(not mcmlNode or not uiobj) then
+		return
+	end
+	local onfocusin = mcmlNode:GetString("onfocusin");
+	-- the callback function format is function(name, mcmlNode) end
+	Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, onfocusin, name, mcmlNode, uiobj);
+end
+
+-- this is the onfocusout handler. 
+function pe_editor_text.onfocusout(uiobj, mcmlNode, instName, bindingContext, name)
+	if(not mcmlNode or not uiobj) then
+		return
+	end
+	local onfocusout = mcmlNode:GetString("onfocusout");
+	-- the callback function format is function(name, mcmlNode) end
+	Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, onfocusout, name, mcmlNode, uiobj);
+end
 
 -- get the MCML value on the node
 function pe_editor_text.GetValue(mcmlNode)
