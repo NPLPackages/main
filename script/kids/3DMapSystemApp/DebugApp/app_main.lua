@@ -387,8 +387,9 @@ function Map3DSystem.App.Debug.OnKeyDownProc(nCode, appName, msg)
 			local Dock = commonlib.gettable("MyCompany.Aries.Desktop.Dock");
 			local commandName = KeySettings.GetFunc(combine_key);
 			if(commandName and Dock.FireCmd)then
-				Dock.FireCmd(commandName)
-				return;
+				if(Dock.FireCmd(commandName)~=false) then
+					return;
+				end
 			end
 		end
 
