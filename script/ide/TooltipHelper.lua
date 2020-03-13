@@ -221,8 +221,8 @@ function TooltipHelper.Reposition(container, params, x, y, used_width, used_heig
 	end
 	-- ensure that the tip container is always in window screen.
 	x, y = x or params.position_x, y or params.position_y;
-	used_width = used_width or params.width;
-	used_height = used_height or params.height;
+	used_width = used_width or params.width or 0;
+	used_height = used_height or params.height or 0;
 	screen_padding_bottom = screen_padding_bottom or params.screen_padding_bottom
 
 	local _, _, resWidth, resHeight = ParaUI.GetUIObject("root"):GetAbsPosition();
