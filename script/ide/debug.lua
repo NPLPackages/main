@@ -17,6 +17,8 @@ local ShowDebugStringKeys = {count=1};
 local string_format = string.format
 
 commonlib.debug = commonlib.debug or {};
+-- default debug stack trace level when there is an error
+traceLevel = 0;
 
 -- dump webservice result to log file, it will dump str (if not nil) followed by the msg struct content.
 -- @param str: nil or any name
@@ -182,4 +184,26 @@ end
 -- when this NPL runtime states has an error, this callbackFunc(errorMsg) will be called. 
 function commonlib.debug.SetNPLRuntimeErrorCallback(callbackFunc)
 	__npl_error_callback = callbackFunc;
+end
+
+-- this is the default error function in lua_pcall
+_npl_traceback = function(errorMsg)
+	if(traceLevel > 0) then
+		local stackInfo = commonlib.debugstack(3, traceLevel, 1)
+		if(stackInfo) then
+			errorMsg = format("%s\nstack:%s\n", errorMsg or "", stackInfo);
+		end
+	end
+	return errorMsg;
+end
+
+-- @param level: if 0 it will not generate any stack trace when there is an error. 
+-- if greater than 1, it will generate debug stack trace when there is a runtime or syntax error
+function commonlib.debug.SetNPLRuntimeDebugTraceLevel(level)
+	level = level or 0;
+	
+	if(level ~= traceLevel) then
+		traceLevel = level
+		__rts__:SetField("DebugTraceLevel", level);
+	end
 end

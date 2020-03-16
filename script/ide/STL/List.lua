@@ -203,6 +203,9 @@ end
 -- @param item: item must be table. The table fields item.prev and item.next are reserved for list data keeping. 
 -- @return the next item of the remove item. 
 function List:remove(item)
+	if(not item) then
+		return
+	end
 	self.nSize = self.nSize - 1;
 	local next = item.next;
 	local prev = item.prev;
