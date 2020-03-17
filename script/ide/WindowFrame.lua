@@ -1932,8 +1932,10 @@ end
 --		it's up to the message processor to define its behavior(Destroy() or Show(false))
 function WindowFrame.OnClickClose(appName, wndName)
 	NPL.load("(gl)script/ide/os.lua");
-	local _wnd = WindowFrame.WndSet[appName][wndName].wnd;
-	_wnd:SendMessage(wndName, CommonCtrl.os.MSGTYPE.WM_CLOSE);
+	local _wnd = WindowFrame.WndSet[appName] and WindowFrame.WndSet[appName][wndName] and WindowFrame.WndSet[appName][wndName].wnd;
+	if(_wnd) then
+		_wnd:SendMessage(wndName, CommonCtrl.os.MSGTYPE.WM_CLOSE);
+	end
 end
 
 WindowFrame.DefaultStyle = {
