@@ -778,20 +778,24 @@ function AnimBlock:RemoveKeyFrame(key_time)
 end
 
 -- remove all keys in the [fromTime, toTime]
+-- @param fromTime: default to 0
+-- @param toTime: if nil, it is end of time. 
 function AnimBlock:RemoveKeysInTimeRange(fromTime, toTime)
-	local from_index = self:GetNextKeyIndex(1, fromTime) or 1;
-	local time = self.times[index];
-	if(time) then
-		if(time == fromTime) then
-		elseif(time<fromTime) then
-			from_index = from_index + 1;
-		end
-		local to_index = self:GetNextKeyIndex(1, toTime) or 1;
-		time = self.times[index];
-		if(not time) then
-			-- TODO: not implemented yet
+	fromTime = fromTime or 0;
+	local nCount = 0;
+	while(true) do
+		local index = self:GetNextKeyIndex(1, fromTime) or 1;
+		local time = self.times[index];
+		if(time and time >= (fromTime or time) and time <= (toTime or time)) then
+			commonlib.removeArrayItem(self.times, index);
+			commonlib.removeArrayItem(self.data, index);
+			self:SetRangeByIndex(1, 1, #(self.times));	
+			nCount = nCount + 1;
+		else
+			break;
 		end
 	end
+	return nCount > 0;
 end
 -- return the last data in the animation. 
 function AnimBlock:GetLastData()
