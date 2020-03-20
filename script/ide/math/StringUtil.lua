@@ -41,3 +41,10 @@ function StringUtil.LongestCommonSubstring(str1, str2)
 	return maxlen;
 end
 
+function StringUtil.join(ary, separator)
+	return table.concat(ary, separator);
+end
+
+function StringUtil.trim(str)
+	return str and str:gsub("^%s+",""):gsub("%s+$","");
+end;

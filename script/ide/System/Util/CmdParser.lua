@@ -75,6 +75,20 @@ function CmdParser.ParseString(cmd_text)
 	return nil, cmd_text;
 end
 
+-- it could be string without spaces, or it could be "file name with space"
+function CmdParser.ParseFilename(cmd_text)
+	local str, cmd_text_remain = cmd_text:match("^%s*([^%s\"=]+)%s*(.*)$");
+	if(cmd_text_remain) then
+		return str, cmd_text_remain;
+	else
+		local str, cmd_text_remain = cmd_text:match("^%s*\"([^\"=]+)\"%s*(.*)$");
+		if(cmd_text_remain) then
+			return str, cmd_text_remain;
+		end
+	end
+	return nil, cmd_text;
+end
+
 -- parse any word value without white space. 
 function CmdParser.ParseWord(cmd_text)
 	local str, cmd_text_remain = cmd_text:match("^%s*(%w+)%s*(.*)$");
