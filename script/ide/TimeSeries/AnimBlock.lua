@@ -157,7 +157,7 @@ function  AnimBlock:GetKeys_Iter(anim, TimeFrom, TimeTo)
 	end
 end
 
--- private: return the index of the first key whose time is larger than or equal to time. 
+-- private: return the index of the first key whose time is smaller than or equal to time. 
 -- function may return nil if no suitable index is found. 
 function  AnimBlock:GetNextKeyIndex(anim, time)
 	local rangesCount = #(self.ranges);
@@ -780,12 +780,18 @@ end
 -- remove all keys in the [fromTime, toTime]
 -- @param fromTime: default to 0
 -- @param toTime: if nil, it is end of time. 
+-- @return total number of keys removed
 function AnimBlock:RemoveKeysInTimeRange(fromTime, toTime)
 	fromTime = fromTime or 0;
 	local nCount = 0;
-	while(true) do
+	while((#(self.data)) > 0) do
 		local index = self:GetNextKeyIndex(1, fromTime) or 1;
 		local time = self.times[index];
+		-- tricky: this skipped smaller key since GetNextKeyIndex() returns the first equal or smaller ones
+		while(time and time<fromTime) do
+			index = index + 1;
+			time = self.times[index];
+		end
 		if(time and time >= (fromTime or time) and time <= (toTime or time)) then
 			commonlib.removeArrayItem(self.times, index);
 			commonlib.removeArrayItem(self.data, index);
