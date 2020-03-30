@@ -100,8 +100,10 @@ function pe_name.create(rootName, mcmlNode, bindingContext, _parent, left, top, 
 		-- get current user ID as the nid
 		nid = Map3DSystem.App.profiles.ProfileManager.GetNID();
 	end
-	nid = tonumber(nid);
-	if(nid == nil or nid=="")  then return end
+	if(nid ~= "localuser") then
+		nid = tonumber(nid);
+		if(nid == nil or nid=="")  then return end
+	end
 	
 	-- Show only the user's first name. (default value is false) 
 	local firstnameonly = mcmlNode:GetBool("firstnameonly");
@@ -145,6 +147,9 @@ function pe_name.create(rootName, mcmlNode, bindingContext, _parent, left, top, 
 		if(user_info) then
 			name = user_info.nickname;
 		end
+	end
+	if(nid == "localuser") then
+		name = "我"
 	end
 
 	--自定义name的显示
