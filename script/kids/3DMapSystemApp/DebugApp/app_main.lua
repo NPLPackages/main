@@ -226,7 +226,7 @@ function Map3DSystem.App.Debug.OnExec(app, commandName, params)
 	elseif(commandName == "Help.ToggleReportAndBoundingBox") then			
 		-- toggle report/bounding box
 		ParaScene.GetAttributeObject():SetField("ShowBoundingBox", not ParaScene.GetAttributeObject():GetField("ShowBoundingBox", false));
-		ParaScene.GetAttributeObject():SetField("GenerateReport", not ParaScene.GetAttributeObject():GetField("GenerateReport", false));
+		--ParaScene.GetAttributeObject():SetField("GenerateReport", not ParaScene.GetAttributeObject():GetField("GenerateReport", false));
 	elseif(commandName == "Help.TogglePhysicsDebugDraw") then
 		local nLastMode = ParaScene.GetAttributeObject():GetField("PhysicsDebugDrawMode", 0)
 		if(nLastMode == 0) then 
