@@ -998,16 +998,29 @@ end
 function UIElement:mapFromGlobal(pos)
     local x, y = pos:x(), pos:y();
     local w = self;
-    while (w) do
+--    while (w) do
+--		if(w:isWindow()) then
+--			return w:mapFromGlobal(Point:new_from_pool(x, y));
+--		else
+--			x = x - w.crect:x();
+--			y = y - w.crect:y();
+--			w = w:parentWidget();
+--		end
+--    end
+--  return Point:new_from_pool(x, y);
+	local toWndX, toWndY = 0, 0;
+	while (w) do
 		if(w:isWindow()) then
-			return w:mapFromGlobal(Point:new_from_pool(x, y));
+			local pt = w:mapFromGlobal(Point:new_from_pool(x, y));
+			pt:sub(toWndX, toWndY)
+			return pt;
 		else
-			x = x - w.crect:x();
-			y = y - w.crect:y();
+			toWndX = toWndX + w.crect:x()
+			toWndY = toWndY + w.crect:y()
 			w = w:parentWidget();
 		end
     end
-    return Point:new_from_pool(x, y);
+    return Point:new_from_pool(x - toWndX, y - toWndY);
 end
 
 -- Translates the widget coordinate \a pos to a coordinate in the parent widget.

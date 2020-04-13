@@ -179,7 +179,9 @@ function Viewport:GetUIObject(bCreateIfNotExist)
 			
 			_this.zorder = -3;
 			_this:AttachToRoot();
-			
+			_this:SetScript("onsize", function()
+				self:sizeChanged();
+			end);
 			self:Connect("sizeChanged", nil, function()
 				local _this = ParaUI.GetUIObject(name);
 				local margin_right = math.floor(viewport:GetMarginRight() / Screen:GetUIScaling()[1]);

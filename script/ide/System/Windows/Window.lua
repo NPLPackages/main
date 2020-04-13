@@ -47,6 +47,7 @@ Window:Property({"AutoClearBackground", true, nil, "SetAutoClearBackground"});
 Window:Property({"CanDrag", false, auto=true});
 Window:Property({"Alignment", "_lt", auto=true});
 Window:Property({"zorder", nil, "GetZOrder", "SetZOrder", auto=true});
+Window:Property({"uiScaling", nil, "GetUIScaling", "SetUIScaling"});
 Window:Property({"InputMethodEnabled", true, "IsInputMethodEnabled", "SetInputMethodEnabled", auto=true});
 Window:Property({"DestroyOnClose", true,  "IsDestroyOnClose", "SetDestroyOnClose", auto=true});
 
@@ -157,6 +158,7 @@ function Window:ShowWithParams(params)
 			end
 			-- reposition/attach to parent
 			local left, top, width, height, alignment = params.left, params.top, params.width, params.height, params.alignment or "_lt";
+			self.showParams = {left = left or 0, top = top or 0, width = width or self:width(), height=height or self:height(), alignment = alignment}
 			self:SetAlignment(alignment);
 			nativeWnd:Reposition(alignment, left or 0, top or 0, width or self:width(), height or self:height());
 			local x, y, width, height = nativeWnd:GetAbsPosition();
@@ -388,7 +390,10 @@ end
 function Window:UpdateGeometry_Sys()
 	local x, y, width, height = self.native_ui_obj:GetAbsPosition();
 	self.screen_x, self.screen_y = x, y;
-
+	local scaling = self:GetUIScaling();
+	if(scaling~=1) then
+		width, height = math.floor(width/scaling + 0.5), math.floor(height/scaling + 0.5)
+	end
 	if(self:width() ~= width or self:height() ~= height) then
 		self:setGeometry(self.screen_x, self.screen_y, width, height);
 	end
@@ -412,6 +417,10 @@ function Window:setGeometry_sys(ax, ay, aw, ah)
 			if(not isMove) then
 				if(self:GetAlignment() == "_lt") then
 					-- ignore resizing the native window if the alignment type is not left top. 
+					local scaling = self:GetUIScaling();
+					if(scaling~=1) then
+						aw, ah = math.floor(aw*scaling + 0.5), math.floor(ah*scaling + 0.5)
+					end
 					self.native_ui_obj:SetSize(aw, ah);
 				end
 			end
@@ -432,6 +441,10 @@ function Window:setGeometry_sys(ax, ay, aw, ah)
 			self.screen_y=ay;
 			-- always use left top alignment when dragging a window with other alignment types. 
 			self:SetAlignment("_lt");
+			local scaling = self:GetUIScaling();
+			if(scaling~=1) then
+				aw, ah = math.floor(aw*scaling + 0.5), math.floor(ah*scaling + 0.5)
+			end
 			self.native_ui_obj:Reposition("_lt", ax, ay, aw, ah);
 		
 			-- generate size event
@@ -566,19 +579,41 @@ end
 
 -- virtual called when native window is destroyed. 
 function Window:windowDestroyEvent()
-	
 end
 
 -- convert to global position
 -- @return the returned Point is temporary, do not hold it for long
 function Window:mapToGlobal(pos)
-    return Point:new_from_pool(self.screen_x + pos:x(), self.screen_y + pos:y());
+	if((self.uiScaling or 1) == 1) then
+		return Point:new_from_pool(self.screen_x + pos:x(), self.screen_y + pos:y());
+	else
+		return Point:new_from_pool(self.screen_x + math.floor(pos:x()*self.uiScaling+0.5), self.screen_y + math.floor(pos:y()*self.uiScaling+0.5));
+	end
 end
 
 -- convert from global to local pos. 
 -- @return the returned Point is temporary, do not hold it for long
 function Window:mapFromGlobal(pos)
-	return Point:new_from_pool(-self.screen_x + pos:x(), -self.screen_y + pos:y());
+	if((self.uiScaling or 1) == 1) then
+		return Point:new_from_pool(-self.screen_x + pos:x(), -self.screen_y + pos:y());
+	else
+		return Point:new_from_pool(math.floor((-self.screen_x + pos:x())/self.uiScaling+0.5), math.floor((-self.screen_y + pos:y())/self.uiScaling+0.5));
+	end
+end
+
+function Window:SetUIScaling(scale)
+	scale = scale or 1;
+	self.uiScaling = scale;
+	if(scale == 1) then
+		self.transform = nil
+	else
+		self.transform = self.transform or {};
+		self.transform.scale = {scale, scale};
+	end
+end
+
+function Window:GetUIScaling()
+	return self.uiScaling or 1;
 end
 
 function Window:setCompositionPoint_sys(p)
