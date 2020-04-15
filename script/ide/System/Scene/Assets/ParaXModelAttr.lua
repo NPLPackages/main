@@ -577,3 +577,43 @@ function ParaXModelAttr:SaveToDisk(filename)
 		LOG.std(nil, "info", "ParaXModel", "file saved to %s", filename);
 	end
 end 
+
+-- save ParaXModel to gltf(glb) file. 
+-- @param filename: such as "temp/temp.glb"
+function ParaXModelAttr:SaveToGltf(filename)
+	local function IsTexturesLoaded()
+		for i = 1, self:GetObjectNum().nTextures do
+			local tex = self:GetTexture(i - 1);
+			if (not tex:GetField("IsLoaded", false)) then
+				return false;
+			end
+		end
+		return true;
+	end
+	local function IsTexturesValid()
+		for i = 1, self:GetObjectNum().nTextures do
+			local tex = self:GetTexture(i - 1);
+			if (not tex:GetField("IsValid", false)) then
+				return false;
+			end
+		end
+		return true;
+	end
+	if(self.attr and filename) then
+		if (IsTexturesLoaded()) then
+			self.attr:SetField("SaveToGltf",filename);
+			LOG.std(nil, "info", "ParaXModel", "file saved to %s", filename);
+		else
+			local mytimer = commonlib.Timer:new({callbackFunc = function(timer)
+				if(IsTexturesLoaded()) then
+					timer:Change();
+					self.attr:SetField("SaveToGltf",filename);
+					LOG.std(nil, "info", "ParaXModel", "file saved to %s", filename);
+				elseif(not IsTexturesValid()) then
+					timer:Change();
+				end
+			end})
+			mytimer:Change(0, 300);
+		end
+	end
+end

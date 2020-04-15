@@ -16,6 +16,7 @@ if(is_ajax()) then
         local output = {success = false};
 		local fileitem = request:get("json");
         if(fileitem and fileitem.text) then
+			src = commonlib.Encoding.Utf8ToDefault(src)
 			local dir = src:gsub("[^/\\]*$", "")
 			ParaIO.CreateDirectory(dir);
             local file = ParaIO.open(src, "w");
