@@ -603,12 +603,14 @@ function ParaXModelAttr:SaveToGltf(filename)
 		if (IsTexturesLoaded()) then
 			self.attr:SetField("SaveToGltf",filename);
 			LOG.std(nil, "info", "ParaXModel", "file saved to %s", filename);
+			return true;
 		else
 			local mytimer = commonlib.Timer:new({callbackFunc = function(timer)
 				if(IsTexturesLoaded()) then
 					timer:Change();
 					self.attr:SetField("SaveToGltf",filename);
 					LOG.std(nil, "info", "ParaXModel", "file saved to %s", filename);
+					return true;
 				elseif(not IsTexturesValid()) then
 					timer:Change();
 				end
