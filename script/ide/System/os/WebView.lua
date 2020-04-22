@@ -89,6 +89,14 @@ function WebView:move(x, y)
 	self._att:SetField("move", {x, y})
 end
 
+function WebView:resize(width, height)
+	if not self._wv then
+		return false
+	end
+
+	self._att:SetField("resize", {width, height})
+end
+
 function WebView:bringToTop()
 	if not self._wv then
 		return false
