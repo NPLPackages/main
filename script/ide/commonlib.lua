@@ -277,6 +277,9 @@ function commonlib.ResetModelAsset(_obj, assetfilename)
 		obj:SetFacing(facing);
 		obj:SetScale(scale);
 		obj:SetRotation(quat);
+		if(_obj:CheckAttribute(128)) then
+			obj:SetAttribute(128, true);
+		end
 		ParaScene.Attach(obj);
 		return obj;
 	else
