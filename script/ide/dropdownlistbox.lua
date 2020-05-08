@@ -271,10 +271,16 @@ function dropdownlistbox:RefillListBox(width, height)
 			local index,value;
 			for index, value in ipairs(self.items) do
 				if self.onremove then
-					local _itemUI = ParaUI.CreateUIObject("container", "item", "_lt", 0, (height / #self.items) * (index - 1), width, height / #self.items);
+					local buttonHeight = 25;
+
+					if buttonHeight * index > height then
+						break;
+					end
+
+					local _itemUI = ParaUI.CreateUIObject("container", "item", "_lt", 1 , buttonHeight * (index - 1), width - 2, buttonHeight);
 					_itemUI.background = "Texture/whitedot.png"
 
-					local _text = ParaUI.CreateUIObject("text", "textitem" .. index, "_lt", 5, 6, width, height / #self.items);
+					local _text = ParaUI.CreateUIObject("text", "textitem" .. index, "_lt", 5, 6, width, buttonHeight);
 					_text.text = tostring(value);
 					_text.font = "System;12;bold;false;"
 					_text.shadow = false;
