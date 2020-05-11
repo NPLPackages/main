@@ -39,6 +39,10 @@ _guihelper.MessageBox("Custom icon",nil, _guihelper.MessageBoxButtons.OK, "Textu
 _guihelper.MessageBox("rotating icon", nil, nil, {src="Texture/Aquarius/Common/Waiting_32bits.png; 0 0 24 24", animstyle=39}, "script/ide/styles/ThinFrameMessageBox.html");
 
 _guihelper.MessageBox("<div style='color:#0000ff'>MCML code here</div>",nil, _guihelper.MessageBoxButtons.YesNoCancel)
+
+_guihelper.MessageBox("Hello ParaEngine!", function(res)
+end, _guihelper.MessageBoxButtons.OKCancel_CustomLabel,nil,nil,nil,nil,{ ok = L"立即购买", cancel = L"再想想", title = L"提示", });
+
 ------------------------------------------------------
 ]]
 
@@ -83,6 +87,8 @@ _guihelper.MessageBoxButtons = {
 	-- The message box contains no buttons at all. This is useful when displaying system generated message sequence
 	-- Used in Aquarius login procedure
 	Nothing = 7,
+
+	OKCancel_CustomLabel = 8,
 };
 
 -- Specifies identifiers to indicate the return value of a dialog box. 
@@ -169,9 +175,11 @@ display a message box based on MCML template.
 @param buttons: [optional] type of _guihelper.MessageBoxButtons
 @param icon: [optional] type of _guihelper.MessageBoxIcon. Some mcmlTemplate also support image path string, or a table {src, animstyle, }
 @param mcmlTemplate: if nil, it default to "script/ide/styles/DefaultMessageBox.html"
+@param options: custom button label
 @return true if created. or nil if there is a previous MessageBox that has not been closed. 
+
 ]]
-function _guihelper.MessageBox(content,MsgBoxClick_CallBack, buttons, icon, mcmlTemplate, isNotTopLevel, zorder)
+function _guihelper.MessageBox(content,MsgBoxClick_CallBack, buttons, icon, mcmlTemplate, isNotTopLevel, zorder, options)
 	if(not content) then
 		_guihelper.CloseMessageBox();
 		return true;
@@ -230,6 +238,7 @@ function _guihelper.MessageBox(content,MsgBoxClick_CallBack, buttons, icon, mcml
 	_guihelper.MsgBoxClick_CallBack = MsgBoxClick_CallBack;
 	_guihelper.values.buttons = buttons;
 	_guihelper.values.icon = icon;
+	_guihelper.values.options = options or {};
 	_guihelper.values.IsInitialized = false; -- tricky: this causes the content to be evaluated only once. 
 	pageCtrl:Create("IDE_HELPER_MSGBOX_PANEL", _this, "_ct",-width/2,-height/2-50,width+80, height);
 	
