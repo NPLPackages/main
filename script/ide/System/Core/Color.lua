@@ -141,7 +141,6 @@ end
 function Color.ColorStr_TO_DWORD(color)
 	if(string.find(color, "#")~=nil) then
 		local dwColor = 0;
-		local r,g,b,a;
 		color = string.gsub(string.gsub(color, "#", ""), "(%x%x)", function (h)
 			dwColor = dwColor*256 + tonumber(h, 16);
 		end);
@@ -150,6 +149,38 @@ function Color.ColorStr_TO_DWORD(color)
 		color = tonumber(color);
 	end
 	return 0;
+end
+
+-- @return r,g,b,a in [0,1] range
+function Color.ColorStr_TO_RGBAfloat(color)
+	if(string.find(color, "#")~=nil) then
+		local dwColor = 0;
+		local r,g,b,a;
+		color = string.gsub(string.gsub(color, "#", ""), "(%x%x)", function (h)
+			h = tonumber(h, 16) / 255;
+			if(not r) then
+				r = h
+			elseif(not g) then
+				g = h
+			elseif(not b) then
+				b = h
+			elseif(not a) then
+				r,g,b,a = g, b, h, r
+			end
+		end);
+		return r, g, b, a;
+	end
+	return 0,0,0;
+end
+
+-- @param r,g,b,a in [0,1] range
+-- @return #ffffff or #ffffff00
+function Color.RGBAfloat_TO_ColorStr(r,g,b,a)
+	if(not a) then
+		color = string.format("#%02x%02x%02x", math.floor(r*255+0.5), math.floor(g*255+0.5), math.floor(b*255+0.5));
+	else
+		color = string.format("#%02x%02x%02x%02x", math.floor(r*255+0.5), math.floor(g*255+0.5), math.floor(b*255+0.5), math.floor(a*255+0.5));
+	end
 end
 
 -- @param r, g, b, a: each in [0,255]
