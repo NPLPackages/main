@@ -177,9 +177,9 @@ end
 -- @return #ffffff or #ffffff00
 function Color.RGBAfloat_TO_ColorStr(r,g,b,a)
 	if(not a) then
-		color = string.format("#%02x%02x%02x", math.floor(r*255+0.5), math.floor(g*255+0.5), math.floor(b*255+0.5));
+		return string.format("#%02x%02x%02x", math.floor(r*255+0.5), math.floor(g*255+0.5), math.floor(b*255+0.5));
 	else
-		color = string.format("#%02x%02x%02x%02x", math.floor(r*255+0.5), math.floor(g*255+0.5), math.floor(b*255+0.5), math.floor(a*255+0.5));
+		return string.format("#%02x%02x%02x%02x", math.floor(r*255+0.5), math.floor(g*255+0.5), math.floor(b*255+0.5), math.floor(a*255+0.5));
 	end
 end
 
