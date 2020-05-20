@@ -63,7 +63,7 @@ function StringUtil.FindTextInLine(code, text, bExactMatch)
 			local lineNumber = 1;
 			local lastEnter;
 			while(nFromIndex) do
-				local from = code:find(text, nFromIndex)
+				local from = code:find(text, nFromIndex, true)
 				if(from) then
 					local line = "";
 					if(from > 2) then
