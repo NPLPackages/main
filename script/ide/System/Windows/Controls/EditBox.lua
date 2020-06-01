@@ -593,6 +593,7 @@ function EditBox:mousePressEvent(e)
 	   		self:moveCursor(end_pos, true);				  
 		end
 		e:accept();
+		self.isLeftMouseDown = true;
 	end
 end
 
@@ -601,13 +602,14 @@ function EditBox:mouseMoveEvent(e)
 		e:ignore();
 		return;
 	end
-	if(e:button() == "left") then
+	if(self.isLeftMouseDown) then
 		local select = true;
 		self:moveCursor(self:xToPos(e:pos():x()), select);
 	end
 end
 
 function EditBox:mouseReleaseEvent(e)
+	self.isLeftMouseDown = false;
 end
 
 -- Returns true if the given text str is valid for any validator
