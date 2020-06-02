@@ -43,6 +43,8 @@ _guihelper.MessageBox("<div style='color:#0000ff'>MCML code here</div>",nil, _gu
 _guihelper.MessageBox("Hello ParaEngine!", function(res)
 end, _guihelper.MessageBoxButtons.OKCancel_CustomLabel,nil,nil,nil,nil,{ ok = L"立即购买", cancel = L"再想想", title = L"提示", });
 
+
+_guihelper.MessageBox("Hello ParaEngine!",nil,nil,nil,nil,nil,nil,{ title = L"温馨提示", });
 ------------------------------------------------------
 ]]
 
