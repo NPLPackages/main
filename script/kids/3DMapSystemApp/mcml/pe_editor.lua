@@ -1415,7 +1415,7 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 		end
 		mcmlNode.uiobject_id = _this.id;
 
-		if(System.options.IsMobilePlatform and css and (css["font-family"] or css["font-size"] or css["font-weight"]))then
+		if(css and (css["font-family"] or css["font-size"] or css["font-weight"]))then
 			local font_family = css["font-family"] or "System";
 			-- this is tricky. we convert font size to integer, and we will use scale if font size is either too big or too small. 
 			local font_size = math.floor(tonumber(css["font-size"] or 12));
