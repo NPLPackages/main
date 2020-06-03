@@ -42,6 +42,24 @@ function os.GetPlatform()
 	return os.platform;
 end
 
+-- return true if is mobile device
+function os.IsMobilePlatform()
+	if (os.GetPlatform() == "ios" or os.GetPlatform() == "android") then
+		return true;
+	else
+		return false;
+	end
+end
+
+-- return true if touch mode
+function os.IsTouchMode()
+	if (os.GetPlatform() == "ios" or os.GetPlatform() == "android") then
+		return true;
+	else
+		return false;
+	end
+end
+
 -- return true if it is 64 bits system. 
 function os.Is64BitsSystem()
 	if(os.Is64BitsSystem_ == nil) then
