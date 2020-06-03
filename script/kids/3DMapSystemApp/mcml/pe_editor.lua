@@ -1397,6 +1397,19 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 			_this.background = css.background;
 			_parent:AddChild(_this);
 		end	
+
+		if (System.os.GetPlatform() == "ios" or System.os.GetPlatform() == "android") then
+			local screenLeft, screenTop, screenWidth, screenHeight = ParaUI.GetUIObject("root"):GetAbsPosition();
+			local cLeft, cTop, cWidth, cHeight = _this:GetAbsPosition();
+			local moveViewWhenAttackWithIME = false
+	
+			if ((cTop + cHeight) > (screenHeight / 2)) then
+				moveViewWhenAttackWithIME = true
+			end
+	
+			_this:SetField("MoveViewWhenAttackWithIME", moveViewWhenAttackWithIME);
+		end
+
 		if(_this and mcmlNode:GetBool("ReadOnly")) then
 			_this.enabled = false;
 		end
