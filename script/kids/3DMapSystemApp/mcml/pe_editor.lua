@@ -1432,20 +1432,23 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 				alignFormat = 0;
 			end
 		end
-		if(css["text-singleline"] ~= "false") then
+		if(css["text-singleline"] == "true") then
 			alignFormat = alignFormat + 32;
 		else
 			if(css["text-wordbreak"] == "true") then
 				alignFormat = alignFormat + 16;
 			end
 		end
-		if(css["text-noclip"] ~= "false") then
+		if(css["text-noclip"] == "true") then
 			alignFormat = alignFormat + 256;
 		end
-		if(css["text-valign"] ~= "top") then
+		if(css["text-valign"] == "center") then
 			alignFormat = alignFormat + 4;
 		end
-		_guihelper.SetUIFontFormat(_this, alignFormat);
+		if(alignFormat~=0) then
+			_guihelper.SetUIFontFormat(_this, alignFormat);
+		end
+		
 		
 		local empty_text = mcmlNode:GetAttributeWithCode("EmptyText");
 		if(empty_text and empty_text~="") then
