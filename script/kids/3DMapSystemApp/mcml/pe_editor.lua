@@ -1423,6 +1423,29 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 			local font = string.format("%s;%d;%s", font_family, font_size, font_weight);
 			_this.font = font;
 		end
+
+		local alignFormat = 0;
+		if(css["text-align"]) then
+			if(css["text-align"] == "right") then
+				alignFormat = 2;
+			elseif(css["text-align"] == "left") then
+				alignFormat = 0;
+			end
+		end
+		if(css["text-singleline"] ~= "false") then
+			alignFormat = alignFormat + 32;
+		else
+			if(css["text-wordbreak"] == "true") then
+				alignFormat = alignFormat + 16;
+			end
+		end
+		if(css["text-noclip"] ~= "false") then
+			alignFormat = alignFormat + 256;
+		end
+		if(css["text-valign"] ~= "top") then
+			alignFormat = alignFormat + 4;
+		end
+		_guihelper.SetUIFontFormat(_this, alignFormat);
 		
 		local empty_text = mcmlNode:GetAttributeWithCode("EmptyText");
 		if(empty_text and empty_text~="") then
