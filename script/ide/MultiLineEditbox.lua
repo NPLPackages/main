@@ -79,7 +79,8 @@ local MultiLineEditbox = commonlib.inherit(commonlib.gettable("CommonCtrl.TreeVi
 	-- "npl" syntax highlighting
 	language = nil, 
 	onkeyup = nil,
-	
+	-- function to be called when text changed
+	onchange = nil, 
 	AutoHorizontalScrollBar=false;
 	HorizontalScrollBarHeight=20,
 	-- whether to use the new advanced system control. This is recommended for multiline editing experience. 
@@ -161,6 +162,10 @@ function MultiLineEditbox:Show(bShow)
 			if(self.ReadOnly) then
 				self.ctrlEditbox:setReadOnly(true);
 			end
+			if(type(self.onchange) == "function") then
+				self.ctrlEditbox:Connect("textChanged", self, self.onchange, "UniqueConnection");
+			end
+
 			if(not self.InputMethodEnabled) then
 				self.ctrlEditbox:SetInputMethodEnabled(false);
 			end
