@@ -918,7 +918,7 @@ end
 
 -- get style item
 function PageElement:GetStyle()
-	return self.style;
+	return self.style or self:CreateStyle();
 end
 
 -- apply any css classnames in class attribute
