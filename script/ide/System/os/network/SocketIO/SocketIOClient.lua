@@ -115,13 +115,9 @@ function SocketIOClient:BuildURL(url, transport, session_id, moreQuery)
     
     parsed_url.query = table.concat(query, "&")
     if(moreQuery)then
-        commonlib.echo("============moreQuery");
-        commonlib.echo(moreQuery);
         local s = "";
         for k,v in pairs(moreQuery) do
             s = string.format("%s&%s=%s",s, k,tostring(v));
-            commonlib.echo("============v");
-            commonlib.echo({k,v,s});
         end
         parsed_url.query = parsed_url.query .. s;
     end
@@ -134,8 +130,7 @@ end
 -- 3. send "upgrade" msg to server
 function SocketIOClient:Connect_Polling(url,moreQuery)
     local polling_url = self:BuildURL(url, "polling", nil, moreQuery);
-    commonlib.echo("============polling_url");
-    commonlib.echo(polling_url);
+	LOG.std("", "info", "SocketIOClient", "polling_url:%s", polling_url);
     System.os.GetUrl({
         url = polling_url, 
         headers = {
@@ -146,8 +141,6 @@ function SocketIOClient:Connect_Polling(url,moreQuery)
             LOG.std("", "error", "SocketIOClient", "polling failed:%s %s", err, commonlib.serialize(msg));
             return
         end	
-        commonlib.echo("==========data");	
-        commonlib.echo(data);	
         -- "96:0{\"sid\":\"V9BrbdhptLDBYlkFAAAQ\",\"upgrades\":[\"websocket\"],\"pingInterval\":25000,\"pingTimeout\":5000}2:40"
         local value = string.match(data,"%d:%d{(.+)}")
         if(not value)then
@@ -172,9 +165,7 @@ function SocketIOClient:Connect(url,sid,moreQuery)
     local protocol,host,port,uri = tools.parse_url(url);
     port = port or 80;
     local key = tools.generate_key();
-    commonlib.echo("============__Connect");
-    commonlib.echo(url);
-    commonlib.echo({protocol,host,port,uri});
+	LOG.std("", "info", "SocketIOClient", "Connect:%s", url);
     local token;
     if(moreQuery)then
         token = moreQuery.token;
@@ -188,8 +179,6 @@ function SocketIOClient:Connect(url,sid,moreQuery)
             uri = uri,
             token = token,
     })
-    commonlib.echo("============req");
-    commonlib.echo(req);
     self.key = key;
     self.state = "CONNECTING";
 
@@ -269,7 +258,6 @@ function SocketIOClient:HandleOpen()
     self:KeepAlive();
 
     self:DispatchEvent({type = "OnOpen" });
-    commonlib.echo("============fire OnOpen");
 end
 function SocketIOClient:KeepAlive()
     if(not self.timer)then
@@ -293,8 +281,7 @@ function SocketIOClient:IsConnected()
     return self.state == "OPEN";
 end
 local function activate()
-    commonlib.echo("==========SocketIOClient msg");
-    commonlib.echo(msg);
+	LOG.std("", "debug", "SocketIOClient OnMsg", msg);
     local nid = msg.nid;
     if(not nid)then
 		LOG.std("", "error", "SocketIOClient", "activate nid is nil");
@@ -308,15 +295,8 @@ local function activate()
     -- waitting for handshake
     if(client.state == "CONNECTING")then
         local headers = handshake.http_headers(response)
-        commonlib.echo("==========headers");
-        commonlib.echo(headers);
-        commonlib.echo("==========waitting for handshake");
-        commonlib.echo(client.key);
-        commonlib.echo(headers["sec-websocket-accept"]);
-
+		LOG.std("", "info", "SocketIOClient", "waitting for handshake:%s", client.key);
         local expected_accept = handshake.sec_websocket_accept(client.key)
-        commonlib.echo("===========expected_accept");
-        commonlib.echo(expected_accept);
         if (headers["sec-websocket-accept"] ~= expected_accept) then
             client.state = "CLOSED"
             return
