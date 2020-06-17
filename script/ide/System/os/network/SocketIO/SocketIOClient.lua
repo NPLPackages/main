@@ -281,7 +281,7 @@ function SocketIOClient:IsConnected()
     return self.state == "OPEN";
 end
 local function activate()
-	LOG.std("", "debug", "SocketIOClient OnMsg", msg);
+	--LOG.std("", "debug", "SocketIOClient OnMsg", msg);
     local nid = msg.nid;
     if(not nid)then
 		LOG.std("", "error", "SocketIOClient", "activate nid is nil");

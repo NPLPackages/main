@@ -190,3 +190,10 @@ function mathlib.NextPowerOf2(x)
 	x = bor(x, rshift(x,16));
 	return x + 1;
 end
+
+local MAX_VALUE = math.huge
+local MIN_VALUE = -math.huge
+-- @return x if x is not NAN or INF. (not a number such as 1/0) 
+function mathlib.validateNumber(x)
+	return (x==x and x~=MAX_VALUE and x~=MIN_VALUE) and x or 0;
+end
