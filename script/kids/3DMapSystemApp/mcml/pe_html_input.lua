@@ -187,7 +187,7 @@ end
 function pe_input.GetUIValue(mcmlNode, pageInstName)
 	local type = mcmlNode:GetString("type");
 	if(type == nil or type == "text") then
-		if(mcmlNode:GetBool("SkipAutoBadWordFilter")) then
+		if(mcmlNode:GetBool("SkipAutoBadWordFilter") or mcmlNode:GetBool("UseSystemControl")) then
 			return Map3DSystem.mcml_controls.pe_editor_text.GetUIValue(mcmlNode, pageInstName);
 		else
 			-- bad word filter for Aries project
