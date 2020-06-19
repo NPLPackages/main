@@ -335,6 +335,7 @@ local function GetSingletonTipsStack()
 				font = "System;20;norm",
 				font_size = 20,
 				spacing = 4,
+				zorder = 10,
 			};
 		else
 			tips_stack_ = CommonCtrl.TipsStack:new{
@@ -346,6 +347,7 @@ local function GetSingletonTipsStack()
 				height = 400,
 				font = "System;14",
 				spacing = 4,
+				zorder = 10,
 			};
 		end
 		return tips_stack_;
@@ -381,7 +383,7 @@ container:GetAttributeObject():SetField("ClickThrough", true);
 container.background="";
 container:AttachToRoot();
 local id = container.id;
-local page = "script/apps/Aries/Team/TeamChatPage.html?chat=가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가";
+local page = "script/apps/Aries/Team/TeamChatPage.html?chat=text";
 BubbleHelper.Show(id,page,100,100,230,80,10000,true)
 --]]
 -----------------------
@@ -572,10 +574,6 @@ local function get_day_of_week(dd, mm, yy)
 --return: true if today is holiday
 function HolidayHelper.IsHoliday(date,is_teen)
 	local self = HolidayHelper;
-	--행쾨경迦老훰槨角솝휑
-	--if(is_teen or System.options.version == "teen")then
-		--return true;
-	--end
 	if(not self.isloaded)then
 		local path = "config/Aries/Others/holiday.xml";
 		if(is_teen)then

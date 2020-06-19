@@ -71,7 +71,9 @@ end
 function Bone:ReadBonePropertiesFromTag(tag)
 	local display_name, properties = tag:match("^(.*)%s*(%{[^%}]+%})");
 	if(properties) then
-		self.display_name = display_name;
+		if (string.len(display_name) > 0) then
+			self.display_name = display_name;
+		end
 		self.properties = NPL.LoadTableFromString(properties);
 		if(self:GetBoneProperty("hidden")) then
 			self.isEditable = false;
