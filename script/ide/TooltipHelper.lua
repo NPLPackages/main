@@ -335,6 +335,7 @@ local function GetSingletonTipsStack()
 				font = "System;20;norm",
 				font_size = 20,
 				spacing = 4,
+				zorder = 10,
 			};
 		else
 			tips_stack_ = CommonCtrl.TipsStack:new{
@@ -346,6 +347,7 @@ local function GetSingletonTipsStack()
 				height = 400,
 				font = "System;14",
 				spacing = 4,
+				zorder = 10,
 			};
 		end
 		return tips_stack_;
@@ -381,7 +383,7 @@ container:GetAttributeObject():SetField("ClickThrough", true);
 container.background="";
 container:AttachToRoot();
 local id = container.id;
-local page = "script/apps/Aries/Team/TeamChatPage.html?chat=°¡°¡°¡°¡°¡°¡°¡°¡°¡°¡°¡°¡°¡°¡°¡°¡°¡°¡°¡°¡°¡°¡°¡°¡°¡°¡°¡°¡°¡°¡°¡°¡°¡°¡°¡°¡";
+local page = "script/apps/Aries/Team/TeamChatPage.html?chat=ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
 BubbleHelper.Show(id,page,100,100,230,80,10000,true)
 --]]
 -----------------------
@@ -572,7 +574,7 @@ local function get_day_of_week(dd, mm, yy)
 --return: true if today is holiday
 function HolidayHelper.IsHoliday(date,is_teen)
 	local self = HolidayHelper;
-	--ÇàÄê°æÊ¼ÖÕÈÏÎªÊÇ¼ÙÈÕ
+	--ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½Îªï¿½Ç¼ï¿½ï¿½ï¿½
 	--if(is_teen or System.options.version == "teen")then
 		--return true;
 	--end
