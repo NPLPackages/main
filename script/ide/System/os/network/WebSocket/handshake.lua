@@ -37,7 +37,7 @@ local http_headers = function(request)
     elseif line == '\r\n' then
       empty_line = true
     else
-      assert(false,line..'('..#line..')')
+      --assert(false,line..'('..#line..')')
     end
   end
   return headers,request:match('\r\n\r\n(.*)')

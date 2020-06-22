@@ -292,13 +292,17 @@ local function activate()
         return
     end
     local response = msg[1];
+    
     -- waitting for handshake
     if(client.state == "CONNECTING")then
         local headers = handshake.http_headers(response)
 		LOG.std("", "info", "SocketIOClient", "waitting for handshake:%s", client.key);
         local expected_accept = handshake.sec_websocket_accept(client.key)
         if (headers["sec-websocket-accept"] ~= expected_accept) then
-            client.state = "CLOSED"
+            -- handshake failed
+	        LOG.std("", "error", "SocketIOClient", "handshake failed");
+	        LOG.std("", "info", "SocketIOClient response", response);
+            client:HandleClose(nid)
             return
         end
         client:HandleOpen();
