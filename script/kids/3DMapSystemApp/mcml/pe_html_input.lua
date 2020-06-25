@@ -688,7 +688,7 @@ function pe_editor_checkbox.create(rootName, mcmlNode, bindingContext, _parent, 
 	_this:SetScript("onclick", pe_editor_checkbox.onclick, mcmlNode, bindingContext, name);
 	
 	if(mcmlNode:GetString("tooltip")) then
-		_this.tooltip = mcmlNode:GetString("tooltip")
+		_this.tooltip = mcmlNode:GetAttributeWithCode("tooltip")
 	end
 	
 	if(IsEnabled~=nil) then
