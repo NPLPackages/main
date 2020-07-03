@@ -542,8 +542,16 @@ function commonlib.Json.Decode(s)
 	--local reader = JsonReader:New(s)
 	--return reader:Read()
 	local o = {};
-	if(type(s) == "string" and NPL.FromJson(s, o)) then
-		return o;
+	if(type(s) == "string" and s~="") then
+		local firstChar = string.byte(s, 1)
+		-- if string begins with "{" or "["
+		if(firstChar == 123 or firstChar == 91) then
+			if(NPL.FromJson(s, o)) then
+				return o;
+			end
+		elseif(NPL.FromJson(format("[%s]", s), o)) then
+			return o[1];
+		end
 	end
 end
 
