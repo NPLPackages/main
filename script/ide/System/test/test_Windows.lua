@@ -179,6 +179,16 @@ function test_Windows:test_pe_custom()
 	self.windows = {window};
 end
 
+function test_Windows:test_min_screen_size()
+	local window = Window:new();
+	window:Show({
+		url="script/ide/System/test/test_css_page.html", 
+		alignment="_fi", left = 0, top = 0, width = 0, height = 0,
+	});
+	window:SetMinimumScreenSize(1920, 1080)
+end
+
+
 function test_Windows:TestEditbox()
 	
 	-- create the native window
