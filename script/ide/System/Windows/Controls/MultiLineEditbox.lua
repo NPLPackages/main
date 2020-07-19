@@ -68,6 +68,7 @@ MultiLineEditbox:Property({"lineWrap", nil, "GetLineWrap", "SetLineWrap", auto=t
 MultiLineEditbox:Property({"ItemHeight",20, auto=true, "GetItemHeight", "SetItemHeight"})
 -- if nil, its value depends on whether self.InputMethodEnabled is true.
 MultiLineEditbox:Property({"isAlwaysShowIMEButton", nil})
+MultiLineEditbox:Property({"m_bMoveViewWhenAttachWithIME", false, "isMoveViewWhenAttachWithIME", "setMoveViewWhenAttachWithIME"});
 
 --MultiLineEditbox:Property({"vSliderWidth", 20, auto=true});
 --MultiLineEditbox:Property({"hSliderHeight", 20, auto=true});
@@ -187,9 +188,21 @@ function MultiLineEditbox:UpdateIMEButton()
 	end
 end
 
+function MultiLineEditbox:setMoveViewWhenAttachWithIME(bMove)
+	self.m_bMoveViewWhenAttachWithIME = bMove;
+	if (self.viewport) then
+		self.viewport:setMoveViewWhenAttachWithIME(bMove)
+	end
+end
+
+function MultiLineEditbox:isMoveViewWhenAttachWithIME()
+	return self.m_bMoveViewWhenAttachWithIME;
+end
+
 function MultiLineEditbox:initViewport()
 	self.viewport = TextControl:new():init(self);
 	self.viewport:SetClip(true);
+	self.viewport:setMoveViewWhenAttachWithIME(self:isMoveViewWhenAttachWithIME());
 	self.viewport:Connect("SizeChanged", self, "updateScrollStatus");
 	self.viewport:Connect("PositionChanged", self, "updateScrollValue");
 	self.viewport:Connect("mouseOverWordChanged", self, "mouseOverWordChanged");

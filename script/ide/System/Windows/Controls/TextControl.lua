@@ -12,10 +12,12 @@ local TextControl = commonlib.gettable("System.Windows.Controls.TextControl");
 NPL.load("(gl)script/ide/System/Windows/UIElement.lua");
 NPL.load("(gl)script/ide/System/Core/UniString.lua");
 NPL.load("(gl)script/ide/System/Util/SyntaxAnalysis.lua");
+
 local SyntaxAnalysis = commonlib.gettable("System.Util.SyntaxAnalysis");
 local Rect = commonlib.gettable("mathlib.Rect");
 local UniString = commonlib.gettable("System.Core.UniString");
 local Application = commonlib.gettable("System.Windows.Application");
+local Keyboard = commonlib.gettable("System.Windows.Keyboard");
 local FocusPolicy = commonlib.gettable("System.Core.Namespace.FocusPolicy");
 local Point = commonlib.gettable("mathlib.Point");
 
@@ -44,6 +46,7 @@ TextControl:Property({"lineHeight", 20, "GetLineHeight", "SetLineHeight", auto=t
 TextControl:Property({"AutoTabToSpaces", true, "IsAutoTabToSpaces", "SetAutoTabToSpaces", auto=true})
 TextControl:Property({"EmptyText", nil, "GetEmptyText", "SetEmptyText", auto=true})
 TextControl:Property({"language", nil, "Language", "SetLanguage", auto=true})
+TextControl:Property({"m_bMoveViewWhenAttachWithIME", false, "isMoveViewWhenAttachWithIME", "setMoveViewWhenAttachWithIME"});
 
 
 --TextControl:Signal("SizeChanged",function(width,height) end);
@@ -131,6 +134,14 @@ function TextControl:separate()
 	self.m_separator = true;
 end
 
+function TextControl:setMoveViewWhenAttachWithIME(bMove)
+	self.m_bMoveViewWhenAttachWithIME = bMove;
+end
+
+function TextControl:isMoveViewWhenAttachWithIME()
+	return self.m_bMoveViewWhenAttachWithIME;
+end
+
 function TextControl:CursorPos()
 	return {line = self.cursorLine, pos = self.cursorPos};
 end
@@ -173,16 +184,33 @@ end
 
 -- virtual: 
 function TextControl:focusInEvent(event)
-	-- Application:inputMethod():show();
 	self:setCursorVisible(true);
 	self:setCursorBlinkPeriod(Application:cursorFlashTime());
+	
+	if (self:isMoveViewWhenAttachWithIME()) then
+		local pos = Point:new_from_pool(0, self:y() + self:height());
+		pos = self:mapToGlobal(pos);
+		
+		Keyboard:attachWithIME(pos:y());
+	else
+		Keyboard:attachWithIME(nil);
+	end
 
 	TextControl._super.focusInEvent(self, event)
 end
 
 -- virtual: 
 function TextControl:focusOutEvent(event)
-	-- Application:inputMethod():hide();
+
+	if (self:isMoveViewWhenAttachWithIME()) then
+		local pos = Point:new_from_pool(0, self:y() + self:height());
+		pos = self:mapToGlobal(pos);
+		
+		Keyboard:detachWithIME(pos:y());
+	else
+		Keyboard:detachWithIME(nil);
+	end
+	
 	self:setCursorVisible(false);
 	self:setCursorBlinkPeriod(0);
 

@@ -44,6 +44,8 @@ function pe_textarea:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 		_this:SetParent(parentElem);
 	end
 
+	_this:setMoveViewWhenAttachWithIME(self:GetBool("MoveViewWhenAttachWithIME", false));
+
 	_this:ShowLineNumber(self:GetBool("ShowLineNumber",false));
 	_this:SetEmptyText(self:GetAttributeWithCode("EmptyText", nil, true));
 	_this:SetLanguage(self:GetAttributeWithCode("language", nil, true));

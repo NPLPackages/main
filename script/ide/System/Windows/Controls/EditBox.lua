@@ -15,10 +15,13 @@ local EditBox = commonlib.gettable("System.Windows.Controls.EditBox");
 NPL.load("(gl)script/ide/System/Windows/UITextElement.lua");
 NPL.load("(gl)script/ide/System/Core/UniString.lua");
 NPL.load("(gl)script/ide/math/Rect.lua");
+
 local Rect = commonlib.gettable("mathlib.Rect");
 local UniString = commonlib.gettable("System.Core.UniString");
 local Application = commonlib.gettable("System.Windows.Application");
+local Keyboard = commonlib.gettable("System.Windows.Keyboard");
 local FocusPolicy = commonlib.gettable("System.Core.Namespace.FocusPolicy");
+local Point = commonlib.gettable("mathlib.Point");
 local EditBox = commonlib.inherit(commonlib.gettable("System.Windows.UITextElement"), commonlib.gettable("System.Windows.Controls.EditBox"));
 EditBox:Property("Name", "EditBox");
 EditBox:Property({"Background", "", auto=true});
@@ -45,6 +48,7 @@ EditBox:Property({"topTextMargin", 2});
 EditBox:Property({"rightTextMargin", 0});
 EditBox:Property({"bottomTextMargin", 2});
 EditBox:Property({"EmptyText", nil, "GetEmptyText", "SetEmptyText", auto=true});				  --*********************************************	 
+EditBox:Property({"m_bMoveViewWhenAttachWithIME", false, "isMoveViewWhenAttachWithIME", "setMoveViewWhenAttachWithIME"});
 
 EditBox:Signal("resetInputContext");
 EditBox:Signal("selectionChanged");
@@ -97,6 +101,14 @@ function EditBox:setReadOnly(bReadOnly)
     else
         self:setCursorBlinkPeriod(Application:cursorFlashTime());
 	end
+end
+
+function EditBox:setMoveViewWhenAttachWithIME(bMove)
+	self.m_bMoveViewWhenAttachWithIME = bMove;
+end
+
+function EditBox:isMoveViewWhenAttachWithIME()
+	return self.m_bMoveViewWhenAttachWithIME;
 end
 
 function EditBox:GetText()
@@ -411,15 +423,36 @@ end
 
 -- virtual: 
 function EditBox:focusInEvent(event)
-	-- Application:inputMethod():show();
+
 	self:setCursorVisible(true);
 	self:setCursorBlinkPeriod(Application:cursorFlashTime());
+
+	if (self:isMoveViewWhenAttachWithIME()) then
+		local pos = Point:new_from_pool(0, self:y() + self:height());
+		pos = self:mapToGlobal(pos);
+		
+		Keyboard:attachWithIME(pos:y());
+	else
+		Keyboard:attachWithIME(nil);
+	end
+	
+	
 	EditBox._super.focusInEvent(self, event)
 end
 
+
 -- virtual: 
 function EditBox:focusOutEvent(event)
-	-- Application:inputMethod():hide();
+
+	if (self:isMoveViewWhenAttachWithIME()) then
+		local pos = Point:new_from_pool(0, self:y() + self:height());
+		pos = self:mapToGlobal(pos);
+		
+		Keyboard:detachWithIME(pos:y());
+	else
+		Keyboard:detachWithIME(nil);
+	end
+	
 	self:setCursorVisible(false);
 	self:setCursorBlinkPeriod(0);
 

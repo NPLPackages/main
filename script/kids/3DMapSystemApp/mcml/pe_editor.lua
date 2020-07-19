@@ -1362,6 +1362,10 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 				Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, OnRightClick, event);
 			end
 		end
+	
+		if mcmlNode:GetBool("MoveViewWhenAttachWithIME", false) then
+			ctl:setMoveViewWhenAttachWithIME(true);
+		end
 
 		local syntax_map = mcmlNode:GetString("syntax_map");
 		if(syntax_map) then
@@ -1403,8 +1407,8 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 				_this.enabled = false;
 			end
 			
-			if mcmlNode:GetBool("MoveViewWhenAttackWithIME") then
-				_this:SetField("MoveViewWhenAttackWithIME", true);
+			if mcmlNode:GetBool("MoveViewWhenAttachWithIME") then
+				_this:SetField("MoveViewWhenAttachWithIME", true);
 			end
 		end
 		mcmlNode.uiobject_id = _this.id;

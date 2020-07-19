@@ -50,6 +50,24 @@ function Keyboard:EnableIME(bEnabled)
 	Screen:GetGUIRoot():SetField("EnableIME", bEnabled == true);
 end
 
+function Keyboard:attachWithIME(ctrlBottom)
+
+	ctrlBottom = ctrlBottom or 0;
+	
+	local root = Screen:GetGUIRoot();
+	root:SetField("ControlBottom", ctrlBottom);
+	root:SetField("IMEKeyboardState", true);
+end
+
+function Keyboard:detachWithIME(ctrlBottom)
+	
+	ctrlBottom = ctrlBottom or 0;
+	
+	local root = Screen:GetGUIRoot();
+	root:SetField("ControlBottom", ctrlBottom);
+	root:SetField("IMEKeyboardState", false);
+end
+
 -- emulate the IME 
 function Keyboard:SendInputMethodEvent(str)
 	if(str) then
