@@ -72,6 +72,7 @@ local inheritable_fields = {
 	["line-height"] = true,
 	["caret-color"] = true,
 	["text-singleline"] = true,
+	["base-font-size"] = true,
 };
 
 -- only merge inheritable style like font, color, etc. 
@@ -309,16 +310,19 @@ function StyleItem:GetFontSettings()
 		local font_family = self["font-family"] or "System";
 		-- this is tricky. we convert font size to integer, and we will use scale if font size is either too big or too small. 
 		font_size = math.floor(tonumber(self["font-size"] or 12));
---		local max_font_size = tonumber(self["base-font-size"]) or 14;
---		local min_font_size = tonumber(self["base-font-size"]) or 11;
---		if(font_size>max_font_size) then
---			scale = font_size / max_font_size;
---			font_size = max_font_size;
---		end
---		if(font_size<min_font_size) then
---			scale = font_size / min_font_size;
---			font_size = min_font_size;
---		end
+
+		if(self["base-font-size"]) then
+			local baseFontSize = tonumber(self["base-font-size"]) or 12;
+			if(font_size>baseFontSize) then
+				scale = font_size / baseFontSize;
+				font_size = baseFontSize;
+			end
+			if(font_size<baseFontSize) then
+				scale = font_size / baseFontSize;
+				font_size = baseFontSize;
+			end			
+		end
+
 		local font_weight = self["font-weight"] or "norm";
 		font = string.format("%s;%d;%s", font_family, font_size, font_weight);
 	else
@@ -332,11 +336,11 @@ function StyleItem:TextShadow()
 end
 
 function StyleItem:TextShadowOffsetX()
-	return self["text-shadow-offset-x"] or 3;
+	return self["text-shadow-offset-x"] or 1;
 end
 
 function StyleItem:TextShadowOffsetY()
-	return self["text-shadow-offset-y"] or 3;
+	return self["text-shadow-offset-y"] or 1;
 end
 
 function StyleItem:TextShadowColor()
