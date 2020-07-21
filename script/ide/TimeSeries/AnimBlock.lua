@@ -707,7 +707,7 @@ function AnimBlock:MoveKeyFrame(key_time, from_keytime)
 			local time = self.times[index];
 			self.times[from_index] = key_time;
 			if(index ~= from_index) then
-				if(time<key_time and index < #(self.times)) then
+				if(key_time > time and from_index>index) then
 					index = index + 1;
 				end
 				if(index ~= from_index) then
