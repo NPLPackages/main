@@ -102,22 +102,38 @@ end
 function Button:paintWithTexture(painter)
 	local x, y = self:x(), self:y();
 	local background = self.Background;
+	local isUnderMouse = self:underMouse()
+	local bgColor;
 	if (self.down or self.menuOpen) then
-		-- suken state
+		-- pressed (suken) state
 		background = self.BackgroundDown or background;
+		if(self.BackgroundDown) then
+			bgColor = "#ffffff"
+		elseif(background and self.down) then
+			-- to be compatible with default system GUIButton control
+			bgColor = self.BackgroundColorPressed
+		end
 	end
 	if(self.checked) then
 		-- checked state
 		background = self.BackgroundChecked or background;
 	else
 		-- normal raised
+		if(isUnderMouse) then
+			if(not self.down) then
+				bgColor = self.BackgroundColorHighlight
+			end
+		else
+			-- to be compatible with default system GUIButton control
+			bgColor = self.BackgroundColorNormal
+		end
 	end
 	if(background and background~="") then
-		painter:SetPen(self:GetBackgroundColor());
+		painter:SetPen(bgColor or self:GetBackgroundColor());
 		painter:DrawRectTexture(x, y, self:width(), self:height(), background);
 	end
 
-	if(self:underMouse()) then
+	if(isUnderMouse) then
 		if(self.BackgroundOver) then
 			painter:SetPen("#ffffff");
 			painter:DrawRectTexture(x+2, y+2, self:width()-4, self:height()-4, self.BackgroundOver);

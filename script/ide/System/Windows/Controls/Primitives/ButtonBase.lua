@@ -13,6 +13,9 @@ NPL.load("(gl)script/ide/System/Windows/UITextElement.lua");
 local ButtonBase = commonlib.inherit(commonlib.gettable("System.Windows.UITextElement"), commonlib.gettable("System.Windows.Controls.Primitives.ButtonBase"));
 ButtonBase:Property("Name", "ButtonBase");
 ButtonBase:Property({"BackgroundColor", "#ffffff", auto=true});
+ButtonBase:Property({"BackgroundColorPressed", "#a0a0a0", auto=true});
+ButtonBase:Property({"BackgroundColorNormal", "#e6e6e6", auto=true});
+ButtonBase:Property({"BackgroundColorHighlight", "#ffffff", auto=true});
 ButtonBase:Property({"Icon", nil, auto=true});
 ButtonBase:Property({"IconSize", nil, auto=true});
 ButtonBase:Property({"Color", "#000000", auto=true});
@@ -39,6 +42,13 @@ ButtonBase:Signal("released");
 ButtonBase:Signal("toggled", function(bChecked) end);
 
 function ButtonBase:ctor()
+end
+
+function ButtonBase:SetBackgroundColor(color)
+	self.BackgroundColor = color;
+	self.BackgroundColorPressed = color;
+	self.BackgroundColorHighlight = color;
+	self.BackgroundColorNormal = color;
 end
 
 -- Returns true if pos is inside the clickable button rectangle; otherwise returns false.
