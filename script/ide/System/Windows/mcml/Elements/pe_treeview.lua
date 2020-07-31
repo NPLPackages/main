@@ -84,6 +84,8 @@ function pe_treeview:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	_this:SetVerticalScrollBarPageSize(self:GetNumber("VerticalScrollBarPageSize") or css.VerticalScrollBarPageSize);
 	_this:SetMouseOverBG(self:GetString("MouseOverBG") or css.MouseOverBG);
 	--_this:SetClickThrough(self:GetBool("ClickThrough"));
+	_this:Connect("onScrollEnd", self, self.OnScrollEnd, "UniqueConnection")
+
 	self.onclick = self:GetAttributeWithCode("OnClick", nil, true);
 
 	if(css["overflow-y"] and css["overflow-y"] == "hidden") then
@@ -371,4 +373,12 @@ function pe_treeview:UpdateChildLayout(layout)
 
 
 	--layout:AddObject(width, height);
+end
+
+function pe_treeview:OnScrollEnd()
+	local onscrollend = self:GetAttributeWithCode("onscrollend", nil, true) or
+		self:GetParent():GetAttributeWithCode("onscrollend", nil, true);
+	if (onscrollend) then
+		self:DoPageEvent(onscrollend);
+	end
 end

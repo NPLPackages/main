@@ -30,7 +30,7 @@ SliderBase:Property({"down", false, "Down", auto=true});
 
 
 SliderBase:Signal("sliderMoved",function(pos) end);
-SliderBase:Signal("valueChanged",function(value) end);
+SliderBase:Signal("valueChanged",function(value, toEnd) end);
 
 
 
@@ -38,6 +38,9 @@ function SliderBase:ctor()
 	-- the position for parent
 --	self.groove = Rect:new():init(0,0,0,0);
 --	self.slider = Rect:new():init(0,0,0,0);
+
+	-- while not first scroll to end, emmit scrollToEnd event
+	self.firstToEnd = true;
 end
 
 function SliderBase:SetDirection(direction)
@@ -73,6 +76,14 @@ end
 function SliderBase:SetValue(value, emitSingal)
 	if(value == self.value) then
 		return;
+	end
+	if (emitSingal and value > self.max) then
+		if (self.firstToEnd) then
+			self.firstToEnd = false;
+		else
+			self:valueChanged(self.max, true);
+			return;
+		end
 	end
 	value = self:bound(value);
 	if(value == self.value) then

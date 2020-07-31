@@ -43,6 +43,12 @@ _guihelper.MessageBox("<div style='color:#0000ff'>MCML code here</div>",nil, _gu
 _guihelper.MessageBox("Hello ParaEngine!", function(res)
 end, _guihelper.MessageBoxButtons.OKCancel_CustomLabel,nil,nil,nil,nil,{ ok = L"立即购买", cancel = L"再想想", title = L"提示", });
 
+_guihelper.MessageBox("Hello ParaEngine!", function(res)
+    if(res == _guihelper.DialogResult.OK) then
+    else
+	end
+end, _guihelper.MessageBoxButtons.OKCancel_CustomLabel_Highlight_Right,nil,nil,nil,nil,{ ok = L"立即购买", cancel = L"再想想", title = L"提示", });
+
 
 _guihelper.MessageBox("Hello ParaEngine!",nil,nil,nil,nil,nil,nil,{ title = L"温馨提示", });
 ------------------------------------------------------
@@ -91,6 +97,7 @@ _guihelper.MessageBoxButtons = {
 	Nothing = 7,
 
 	OKCancel_CustomLabel = 8,
+    OKCancel_CustomLabel_Highlight_Right = 9,
 };
 
 -- Specifies identifiers to indicate the return value of a dialog box. 
@@ -281,12 +288,15 @@ function _guihelper.OnMessageBoxClick(name)
 		_guihelper.MessageBoxClass.CheckShowCallback = nil;
 	end
 
-	if(not dialogResult) then
-		return
-	elseif(dialogResult == _guihelper.DialogResult.Cancel and _guihelper.values.buttons ~= _guihelper.MessageBoxButtons.YesNoCancel) then
-		return;
+	if(_guihelper.values.buttons == _guihelper.MessageBoxButtons.OKCancel_CustomLabel or  _guihelper.values.buttons == _guihelper.MessageBoxButtons.OKCancel_CustomLabel_Highlight_Right) then
+        --do nothing
+    else
+	    if(not dialogResult) then
+		    return
+	    elseif(dialogResult == _guihelper.DialogResult.Cancel and _guihelper.values.buttons ~= _guihelper.MessageBoxButtons.YesNoCancel) then
+		    return;
+	    end
 	end
-	
 	if(_guihelper.MsgBoxClick_CallBack~=nil) then
 		if(type(_guihelper.MsgBoxClick_CallBack) == "string") then
 			NPL.DoString(_guihelper.MsgBoxClick_CallBack);

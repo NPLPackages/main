@@ -112,7 +112,9 @@ function ScrollArea:updateScrollInfo()
 
 	--if(not self.vbar:isHidden()) then
 		self.vbar:setRange(0, self.viewport:height() - clip:height() - 1);
-		self.vbar:setStep(clip:height()/10, clip:height());
+		local step = self:GetVerticalScrollBarStep();
+		local pagesize = self:GetVerticalScrollBarPageSize();
+		self.vbar:setStep(step, pagesize);
 		self.vbar:SetValue(self.viewport:vValue());
 	--end
 end

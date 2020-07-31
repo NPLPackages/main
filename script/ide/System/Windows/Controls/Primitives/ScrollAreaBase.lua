@@ -27,6 +27,8 @@ ScrollAreaBase:Property({"AllowWheel", true, auto=true});
 ScrollAreaBase:Property({"horizontalScrollBarPolicy", "AlwaysOff", "getHorizontalScrollBarPolicy", "setHorizontalScrollBarPolicy", auto=true});
 ScrollAreaBase:Property({"verticalScrollBarPolicy", "Auto", "getVerticalScrollBarPolicy", "setVerticalScrollBarPolicy", auto=true});
 
+ScrollAreaBase:Signal("onScrollEnd",function() end);
+
 function ScrollAreaBase:ctor()
 
 	self.hbar = nil;
@@ -65,9 +67,13 @@ function ScrollAreaBase:initScrollBar()
 
 	self.vbar = ScrollBar:new():init(self);
 	self.vbar:SetDirection("vertical");
-	self.vbar:Connect("valueChanged", function(value)
+	self.vbar:Connect("valueChanged", function(value, toEnd)
 		self.vscroll = value;
 		self:updateViewportPos();
+		if (toEnd) then
+			commonlib.echo("scroll to end");
+			self:onScrollEnd();
+		end
 	end);
 	self.vbar:setRange(0,0,false);
 	--self.vbar:hide();
