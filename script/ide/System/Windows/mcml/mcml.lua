@@ -143,6 +143,8 @@ function mcml:LoadAllElements()
 	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_iframe.lua");
 	Elements.pe_iframe:RegisterAs("iframe");
 	-- TODO: add all system defined page element here
+	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/kp_usertag.lua");
+	Elements.kp_usertag:RegisterAs("kp:usertag");
 end
 
 -- create page element from xml node by its name. 

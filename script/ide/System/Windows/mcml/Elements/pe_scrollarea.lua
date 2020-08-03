@@ -44,9 +44,12 @@ function pe_scrollarea:OnAfterChildLayout(layout, left, top, right, bottom)
 		self.control:scrollToPos();
 
 		-- use ScrollToEnd="true" in mcml <pe_treeview/>
-		local ScrollToEnd = self:GetBool("ScrollToEnd");
-		if(ScrollToEnd) then
-			self.control:scrollToEnd();
+		local ScrollToEnd = self:GetAttributeWithCode("ScrollToEnd", nil, true);
+		if (ScrollToEnd) then
+			local v = string.lower(tostring(ScrollToEnd));
+			if(v == "true") then
+				self.control:scrollToEnd();
+			end
 		end
 	end
 end

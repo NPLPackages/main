@@ -587,9 +587,12 @@ end
 
 function pe_gridview:OnAfterChildLayout(layout, left, top, right, bottom)
 	pe_gridview._super.OnAfterChildLayout(self, layout, left, top, right, bottom);
-	local ScrollToEnd = self:GetBool("ScrollToEnd");
-	if(ScrollToEnd) then
-		self.treeview:ScrollToEnd();
+	local ScrollToEnd = self:GetAttributeWithCode("ScrollToEnd", nil, true);
+	if (ScrollToEnd) then
+		local v = string.lower(tostring(ScrollToEnd));
+		if(v == "true") then
+			self.treeview:ScrollToEnd();
+		end
 	end
 end
 
