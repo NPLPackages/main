@@ -421,12 +421,7 @@ function EditBox:finishChange(validateFromState, update, edited)
     end
 end
 
--- virtual: 
-function EditBox:focusInEvent(event)
-
-	self:setCursorVisible(true);
-	self:setCursorBlinkPeriod(Application:cursorFlashTime());
-
+function EditBox:attachWithIME()
 	if (self:isMoveViewWhenAttachWithIME()) then
 		local pos = Point:new_from_pool(0, self:y() + self:height());
 		pos = self:mapToGlobal(pos);
@@ -435,15 +430,9 @@ function EditBox:focusInEvent(event)
 	else
 		Keyboard:attachWithIME(nil);
 	end
-	
-	
-	EditBox._super.focusInEvent(self, event)
 end
 
-
--- virtual: 
-function EditBox:focusOutEvent(event)
-
+function EditBox:detachWithIME()
 	if (self:isMoveViewWhenAttachWithIME()) then
 		local pos = Point:new_from_pool(0, self:y() + self:height());
 		pos = self:mapToGlobal(pos);
@@ -452,6 +441,24 @@ function EditBox:focusOutEvent(event)
 	else
 		Keyboard:detachWithIME(nil);
 	end
+end
+
+-- virtual: 
+function EditBox:focusInEvent(event)
+
+	self:setCursorVisible(true);
+	self:setCursorBlinkPeriod(Application:cursorFlashTime());
+
+	self:attachWithIME();
+	
+	EditBox._super.focusInEvent(self, event)
+end
+
+
+-- virtual: 
+function EditBox:focusOutEvent(event)
+
+	self:detachWithIME();
 	
 	self:setCursorVisible(false);
 	self:setCursorBlinkPeriod(0);
@@ -627,6 +634,10 @@ function EditBox:mousePressEvent(e)
 		end
 		e:accept();
 		self.isLeftMouseDown = true;
+		
+		if (self:hasFocus() and not e.isDoubleClick) then
+			self:attachWithIME();
+		end
 	end
 end
 
