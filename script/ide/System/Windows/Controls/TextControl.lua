@@ -182,11 +182,7 @@ function TextControl:PageElement()
 	return self.parent:PageElement();
 end
 
--- virtual: 
-function TextControl:focusInEvent(event)
-	self:setCursorVisible(true);
-	self:setCursorBlinkPeriod(Application:cursorFlashTime());
-	
+function TextControl:attachWithIME()
 	if (self:isMoveViewWhenAttachWithIME()) then
 		local pos = Point:new_from_pool(0, self:y() + self:height());
 		pos = self:mapToGlobal(pos);
@@ -194,14 +190,10 @@ function TextControl:focusInEvent(event)
 		Keyboard:attachWithIME(pos:y());
 	else
 		Keyboard:attachWithIME(nil);
-	end
-
-	TextControl._super.focusInEvent(self, event)
+	end	
 end
 
--- virtual: 
-function TextControl:focusOutEvent(event)
-
+function TextControl:detachWithIME()
 	if (self:isMoveViewWhenAttachWithIME()) then
 		local pos = Point:new_from_pool(0, self:y() + self:height());
 		pos = self:mapToGlobal(pos);
@@ -210,6 +202,22 @@ function TextControl:focusOutEvent(event)
 	else
 		Keyboard:detachWithIME(nil);
 	end
+end
+
+-- virtual: 
+function TextControl:focusInEvent(event)
+	self:setCursorVisible(true);
+	self:setCursorBlinkPeriod(Application:cursorFlashTime());
+	
+	self:attachWithIME();
+
+	TextControl._super.focusInEvent(self, event)
+end
+
+-- virtual: 
+function TextControl:focusOutEvent(event)
+
+	self:detachWithIME();
 	
 	self:setCursorVisible(false);
 	self:setCursorBlinkPeriod(0);
@@ -521,6 +529,10 @@ function TextControl:mousePressEvent(e)
 		e:accept();
 		self:docPos();
 		self.isLeftMouseDown = true;
+		
+		if (self:hasFocus() and not e.isDoubleClick) then
+			self:attachWithIME();
+		end
 	end
 end
 
