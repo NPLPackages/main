@@ -59,7 +59,7 @@ Window:Signal("windowClosed", function() end)
 function Window:ctor()
 	self.window = self;
 	self:setAttribute("WA_AlwaysShowToolTips", true);
-	self:setFocusPolicy(FocusPolicy.TabFocus);
+	self:setFocusPolicy(FocusPolicy.NoFocus);
 end
 
 -- show and bind to a new ParaUI control object to receive events from. 
