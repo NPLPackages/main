@@ -306,6 +306,8 @@ local color2_num = {};
 
 -- @param color1 and color2: string like "#ff0000"
 function Color.Multiply(color1, color2)
+	color1_num[4] = nil;
+	color2_num[4] = nil;
 	local color_index = 1;
 	for s in string.gfind(color1,"%x%x") do
 		color1_num[color_index] = tonumber(s, 16);
@@ -326,5 +328,14 @@ function Color.Multiply(color1, color2)
 	for i = 1, 3 do
 		color = color..string.format("%02x", color_num[i]);
 	end
+
+	if (#color1_num > 3 and #color2_num > 3) then
+		color = color..string.format("%02x", color1_num[4] * color2_num[4] / 255);
+	elseif (#color1_num > 3) then
+		color = color..string.format("%02x", color1_num[4]);
+	elseif (#color2_num > 3) then
+		color = color..string.format("%02x", color2_num[4]);
+	end
+
 	return color;
 end

@@ -86,13 +86,26 @@ UIElement:Property({"render_priority", 0, auto=true});
 UIElement:Property({"clip", false, "IsClip", "SetClip", auto=true});
 UIElement:Property({"InputMethodEnabled", true, "IsInputMethodEnabled", "SetInputMethodEnabled", auto=true});
 
+UIElement:Property({"TranslationX", 0, auto=true});
+UIElement:Property({"TranslationY", 0, auto=true});
+UIElement:Property({"ScalingX", 1, auto=true});
+UIElement:Property({"ScalingY", 1, auto=true});
+UIElement:Property({"Rotation", 0, auto=true});
+UIElement:Property({"Color", "#ffffffff", auto=true});
+
 -- number of posted events
 UIElement.postedEvents = 0;
+
+-- globals for generating id
+-- generate a unique id for UIElement object
+UIElement.gNextId = 0;
 
 function UIElement:ctor()
 	-- client rect
 	self.crect = Rect:new():init(0,0,0,0);
 	self._page_element = nil;
+	UIElement.gNextId = UIElement.gNextId + 1;
+	self.elementId = UIElement.gNextId;
 end
 
 -- init and return the object. 
@@ -101,6 +114,10 @@ end
 function UIElement:init(parent)
 	self:SetParent(parent);
 	return self;
+end
+
+function UIElement:GetID()
+	return self.elementId;
 end
 
 function UIElement:SetParent(parent)
@@ -142,6 +159,14 @@ function UIElement:ApplyCss(css)
 		self.transform = {rotate = css.transform.rotate, scale = css.transform.scale};
 		if(css["transform-origin"]) then
 			self.transform.origin = css["transform-origin"];
+		end
+	end
+	if(css["background-animation"]) then
+		local anim_file = string.gsub(css["background-animation"], "url%((.*)%)", "%1");
+		local fileName,animName = string.match(anim_file, "^([^#]+)#(.*)$");
+		if(fileName and animName) then
+			NPL.load("(gl)script/ide/UIAnim/UIAnimManagerEx.lua");
+			UIAnimManagerEx.PlayUIAnimationSequence(self, fileName, animName, true);
 		end
 	end
 end
