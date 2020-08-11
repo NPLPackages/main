@@ -871,7 +871,7 @@ function pe_iframe.create(rootName,mcmlNode, bindingContext, _parent, left, top,
 		(css["margin-left"] or css["margin"] or 0),(css["margin-top"] or css["margin"] or 0),
 		(css["margin-bottom"] or css["margin"] or 0),(css["margin-right"] or css["margin"] or 0);
 	
-	parentLayout:NewLine();
+	--parentLayout:NewLine();
 	width = mcmlNode:GetNumber("width") or css.width;
 	height = mcmlNode:GetNumber("height") or css.height;
 	local parent_left, parent_top, parent_width, parent_height = parentLayout:GetPreferredRect();
@@ -948,7 +948,7 @@ function pe_iframe.create(rootName,mcmlNode, bindingContext, _parent, left, top,
 	end
 
 	parentLayout:AddObject(width+margin_right+margin_left+padding_left+padding_right, height+margin_top+margin_bottom+padding_top+padding_bottom);
-	parentLayout:NewLine();
+	--parentLayout:NewLine();
 end
 
 -- get the MCML value on the node
