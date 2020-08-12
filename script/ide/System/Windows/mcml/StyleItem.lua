@@ -243,18 +243,18 @@ function StyleItem:AddItem(name,value)
 		value = string_gsub(value, "url%((.*)%)", "%1");
 		value = string_gsub(value, "#", ";");
 	end
-	if(image_fields[name] and string.match(value,"^http[s]?")) then
-		if(self.pageElement) then
-			-- mcml v2 http texture process
-			LocalCache:GetRemoteTexture(value, self:GetPageCachePolicy(), function (entry)
-				if(entry and entry.entry and entry.entry.url and entry.payload and entry.payload.cached_filepath) then
-					self[name] = entry.payload.cached_filepath;
-					self.pageElement:UpdateCssStyle();
-				end
-			end);
-			return;
-		end
-	end
+--	if(image_fields[name] and string.match(value,"^http[s]?")) then
+--		if(self.pageElement) then
+--			-- mcml v2 http texture process
+--			LocalCache:GetRemoteTexture(value, self:GetPageCachePolicy(), function (entry)
+--				if(entry and entry.entry and entry.entry.url and entry.payload and entry.payload.cached_filepath) then
+--					self[name] = entry.payload.cached_filepath;
+--					self.pageElement:UpdateCssStyle();
+--				end
+--			end);
+--			return;
+--		end
+--	end
 	self[name] = value;
 end
 
