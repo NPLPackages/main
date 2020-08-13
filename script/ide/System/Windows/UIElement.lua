@@ -737,18 +737,22 @@ function UIElement:childAtRecursiveHelper(p)
 	local child = self.children:last();
 	while (child) do
 		-- Map the point 'p' from parent coordinates to child coordinates.
-		local childPoint = p:clone_from_pool();
-		childPoint:sub(child.crect:topLeft());
+		if (not child:isHidden() and (not child:PageElement() or not child:PageElement():isHidden())) then
+			local childPoint = p:clone_from_pool();
+			childPoint:sub(child.crect:topLeft());
 
-		-- Check if the point hits the child.
-		if (child:pointInsideRectAndMask(childPoint)) then
-			if(child.children and not child.children:empty()) then
-				-- Do the same for the child's descendants.
-				return child:childAtRecursiveHelper(childPoint) or child;
-			else
-				return child;
+			-- Check if the point hits the child.
+			if (child:pointInsideRectAndMask(childPoint)) then
+				if(child.children and not child.children:empty()) then
+				-- if(child.children and not child.children:empty()) then
+					-- Do the same for the child's descendants.
+					return child:childAtRecursiveHelper(childPoint) or child;
+				else
+					return child;
+				end
 			end
-		end
+		end 
+		
 		child = self.children:prev(child);
 	end
 end
