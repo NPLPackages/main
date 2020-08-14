@@ -39,6 +39,8 @@ local elem = PageElement:new();
 ]]
 NPL.load("(gl)script/ide/System/localserver/UrlHelper.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/StyleItem.lua");
+NPL.load("(gl)script/ide/System/Windows/mcml/ElementLayout.lua");
+local ElementLayout = commonlib.gettable("System.Windows.mcml.ElementLayout");
 local StyleItem = commonlib.gettable("System.Windows.mcml.StyleItem");
 local mcml = commonlib.gettable("System.Windows.mcml");
 local Elements = commonlib.gettable("System.Windows.mcml.Elements");
@@ -174,13 +176,8 @@ end
 -- @param parentLayout: only for casual initial layout. 
 -- @return used_width, used_height
 function PageElement:LoadComponent(parentElem, parentLayout, styleItem)
-	if(self:GetAttribute("display") == "none") then 
-		return 
-	end
-	if(no_parse_nodes[self.name]) then
-		return;
-	end
-
+	if(self:GetAttribute("display") == "none") then return end
+	if(no_parse_nodes[self.name]) then return end
 
 	-- apply models
 	self:ApplyPreValues();
@@ -250,18 +247,34 @@ end
 function PageElement:paintEvent(painter)
 end
 
+
+-- 获取元素布局
+function PageElement:GetElementLayout(layout)
+	if (not self.elementLayout) then 
+		self.elementLayout = ElementLayout:new():Init(self);
+	end
+	return self.elementLayout;
+end
+
+-- 是否UIWindow元素
+function PageElement:IsUIWindowElement()
+	local page = self:GetPageCtrl();
+	local window = page and page:GetWindow();
+	return window and and window.IsUIWindow and window:IsUIWindow();
+end
+
 -- this function is called automatically after page component is loaded and whenever the window resize. 
 function PageElement:UpdateLayout(parentLayout)
-	if(self:isHidden()) then 
-		return 
-	end
-	if(no_parse_nodes[self.name]) then
-		return;
-	end
+	if(self:isHidden()) then return end
+	if(no_parse_nodes[self.name]) then return end
 	local css = self:GetStyle();
-	if(not css) then
-		return;
+	if(not css) then return end
+	
+	-- 是UIWindow则走元素布局方案
+	if (self:IsUIWindowElement()) then
+		return self:GetElementLayout():UpdateLayout(parentLayout);
 	end
+
 	local padding_left, padding_top, padding_right, padding_bottom = css:paddings();
 	local margin_left, margin_top, margin_right, margin_bottom = css:margins();
 	local availWidth, availHeight = parentLayout:GetPreferredSize();
@@ -369,7 +382,6 @@ function PageElement:UpdateLayout(parentLayout)
 	-----------------------------
 	-- self and child layout recursively.
 	-----------------------------
-
 	if(not self:OnBeforeChildLayout(myLayout)) then
 		self:UpdateChildLayout(myLayout);
 	end

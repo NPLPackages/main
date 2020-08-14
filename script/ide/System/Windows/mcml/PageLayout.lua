@@ -39,6 +39,8 @@ local PageLayout = commonlib.inherit(commonlib.gettable("System.Windows.Layout")
 	-- the next available renderable position 
 	availableX = 0,
 	availableY = 0,
+	-- rightAvailableX = 0,
+	-- rightAvailableY = 0,
 	-- the next new line position
 	newlineX = 0,
 	newlineY = 0,
@@ -60,12 +62,14 @@ end
 -- in most cases, one also calls SetUsedSize(0,0) to make the copy useful for a child PageLayout. 
 function PageLayout:clone()
 	return self:new({
+		-- rightAvailableX = self.rightAvailableX,
+		-- rightAvailableY = self.rightAvailableY,
 		availableX = self.availableX,
 		availableY = self.availableY,
 		newlineX = self.newlineX,
 		newlineY = self.newlineY,
-		width = self.width,
-		height = self.height,
+		width = self.width,  -- right
+		height = self.height, -- bottom
 		usedWidth = self.usedWidth,
 		usedHeight = self.usedHeight,
 		realWidth = self.realWidth,
