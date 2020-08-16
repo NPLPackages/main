@@ -248,7 +248,6 @@ function PageElement:paintEvent(painter)
 end
 
 
--- 获取元素布局
 function PageElement:GetElementLayout(layout)
 	if (not self.elementLayout) then 
 		self.elementLayout = ElementLayout:new():Init(self);
@@ -256,11 +255,10 @@ function PageElement:GetElementLayout(layout)
 	return self.elementLayout;
 end
 
--- 是否UIWindow元素
 function PageElement:IsUIWindowElement()
 	local page = self:GetPageCtrl();
 	local window = page and page:GetWindow();
-	return window and and window.IsUIWindow and window:IsUIWindow();
+	return window and window.IsUIWindow and window:IsUIWindow();
 end
 
 -- this function is called automatically after page component is loaded and whenever the window resize. 
@@ -270,7 +268,6 @@ function PageElement:UpdateLayout(parentLayout)
 	local css = self:GetStyle();
 	if(not css) then return end
 	
-	-- 是UIWindow则走元素布局方案
 	if (self:IsUIWindowElement()) then
 		return self:GetElementLayout():UpdateLayout(parentLayout);
 	end
