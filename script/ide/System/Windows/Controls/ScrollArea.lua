@@ -68,7 +68,8 @@ end
 
 local ScrollArea = commonlib.inherit(commonlib.gettable("System.Windows.Controls.Primitives.ScrollAreaBase"), commonlib.gettable("System.Windows.Controls.ScrollArea"));
 ScrollArea:Property("Name", "ScrollArea");
-
+ScrollArea:Property({"VerticalScrollBarStep", 24, auto = "true"});
+ScrollArea:Property({"VerticalScrollBarPageSize", 24, auto = "true"});
 function ScrollArea:ctor()
 
 end

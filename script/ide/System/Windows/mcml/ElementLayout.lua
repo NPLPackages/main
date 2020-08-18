@@ -30,12 +30,16 @@ end
 function ElementLayout:GetElement()
 	return self.element;
 end
-
 -- 获取页面元素的CSS
 function ElementLayout:GetElementStyle()
 	return self:GetElement() and self:GetElement():GetStyle();
 end
-
+-- 获取父元素的元素布局
+function ElementLayout:GetParentElementLayout()
+	local element = self:GetElement();
+	local parentElement = element and element:GetParent();
+	return parentElement and parentElement:GetElementLayout();
+end
 -- 设置填充
 function ElementLayout:SetPaddings(padding_left, padding_top, padding_right, padding_bottom)
 	self.padding_left, self.padding_top, self.padding_right, self.padding_bottom = padding_left, padding_top, padding_right, padding_bottom;
@@ -174,34 +178,8 @@ function ElementLayout:PrepareUpdateLayout(parentLayout)
 	-- 计算宽高
 	local width = self:GetElement():GetAttribute("width") or css.width;      -- 支持百分比, px
 	local height = self:GetElement():GetAttribute("height") or css.height;   -- 支持百分比, px
-	if(width) then
-		if(css.position == "screen") then
-			width = self:PercentageToNumber(width, ScreenWidth);
-		else	
-			width=self:PercentageToNumber(width, maxWidth - margin_left - margin_right);
-			if(availWidth < (width + margin_left + margin_right)) then 
-				width=availWidth-margin_left-margin_right;
-			end
-			if(width<=0) then
-				width = nil;
-			end
-		end	
-	end
-	if(height) then
-		if(css.position == "screen") then
-			height = self:PercentageToNumber(height, ScreenHeight);
-		else	
-			height = self:PercentageToNumber(height, maxHeight - margin_top - margin_bottom);
-			if(availHeight < (height + margin_top + margin_bottom)) then
-				height = availHeight - margin_top - margin_bottom;
-			end
-			if(height <= 0) then
-				height = nil;
-			end
-		end	
-	end
-	-- 保存宽高
-	self:SetWidthHeight(width, height);
+	width = width and self:PercentageToNumber(width, maxWidth);
+	height = height and self:PercentageToNumber(height, maxHeight);
 
 	-- 确定元素是否新起一行
 	if (css.float) then  
@@ -209,13 +187,25 @@ function ElementLayout:PrepareUpdateLayout(parentLayout)
 		if (width and availWidth < (width + margin_left + margin_right)) then
 			parentLayout:NewLine();
 		end
+	elseif (css.position) then
+		-- 定位元素
 	else
-		-- 默认为块元素
+		-- 文档流元素
 		if (self:IsBlockElement(css.display)) then
+			-- 块元素
 			parentLayout:NewLine();
+			availWidth, availHeight = parentLayout:GetPreferredSize();
+			-- 块元素默认占据父元素宽度
+			width = width or availWidth;
+		else
+			-- 内联元素
+			if (width and width > availWidth) then
+				parentLayout:NewLine();
+			end
 		end
 	end
-
+	-- 保存宽高
+	self:SetWidthHeight(width, height);
 	-- 构建自身布局
 	self:SetLayout(parentLayout:clone());
 	-- 设置起始点 父元素的可用位置即为元素起始点
@@ -245,6 +235,7 @@ function ElementLayout:ApplyPositionStyle()
 	if (float == "right") then
 
 	elseif (float == "left") then
+
 	elseif(position == "absolute" or position == "fixed") then
 		local parent = self:GetElement():GetParent();
 		if (position == "absolute") then
@@ -394,6 +385,7 @@ end
 function ElementLayout:ApplyAfterChildLayout()
 	local css = self:GetElementStyle();
 	local layout = self:GetLayout();
+	local width, height = self:GetWidthHeight();
 	local boxWidth, boxHeight = self:GetBoxWidthHeight();
 	local maxWidth, maxHeight = self:GetMaxWidthHeight();
 	local usedWidth, usedHeight = layout:GetUsedSize();
@@ -403,23 +395,31 @@ function ElementLayout:ApplyAfterChildLayout()
 	local align = self:GetElement():GetAttribute("align") or css["align"];
 	local valign = self:GetElement():GetAttribute("valign") or css["valign"];
 	local offset_x, offset_y = 0, 0;
+
+	width = width or boxWidth;
+	height = height or boxHeight;
+
+	if (self:GetParentElementLayout()) then
+		maxWidth, maxHeight = self:GetParentElementLayout():GetWidthHeight();
+	end
+
 	-- align at center. 
 	if(align == "center") then 
-		offset_x = (maxWidth - boxWidth) / 2;
+		offset_x = (maxWidth - width) / 2;
 	elseif(align == "right") then
-		offset_x = (maxWidth - boxWidth);
+		offset_x = (maxWidth - width);
 	end	
 	
 	if(valign == "center") then
-		offset_y = (maxHeight - boxHeight) / 2;
+		offset_y = (maxHeight - height) / 2;
 	elseif(valign == "bottom") then
-		offset_y = (maxHeight - boxHeight);
+		offset_y = (maxHeight - height);
 	end	
 	-- 应用排列
 	if(offset_x~=0 or offset_y~=0) then
 		-- offset and recalculate if there is special alignment. 
 		left, top = left + offset_x, top + offset_y;
-		usedWidth, usedHeight = left + boxWidth, top + boxHeight;
+		usedWidth, usedHeight = left + width + margin_right + margin_left, top + height +margin_bottom + margin_top;
 		self:SetLayout(self:GetParentLayout():clone());
 		self:SetPos(left, top);
 		layout = self:GetLayout();
@@ -432,19 +432,21 @@ function ElementLayout:ApplyAfterChildLayout()
 		if(not self:GetElement():OnBeforeChildLayout(layout)) then
 			self:GetElement():UpdateChildLayout(layout);
 		end
-		layout:SetUsedSize(usedWidth, usedHeight);
 		self:GetElement():OnAfterChildLayout(layout, left + margin_left, top + margin_top, usedWidth - margin_right, usedHeight - margin_bottom);
 		usedWidth, usedHeight = layout:GetUsedSize();
-		self:SetBoxWidthHeight(usedWidth - left, usedHeight - top);
+		layout:SetRealSize(usedWidth + padding_right - left - margin_left, usedHeight + padding_bottom - top - margin_top);
 	elseif (css.float == "right") then
 		-- 只支持一个右浮动
 		local parentLayoutWidth, parentLayoutHeight = self:GetParentLayout():GetSize();
 		local layoutWidth, layoutHeight = layout:GetSize();
 		self:SetLayout(self:GetParentLayout():clone());
-		self:SetPos(parentLayoutWidth - boxWidth, top);
+		left = parentLayoutWidth - width - margin_left - margin_right;
+		layoutWidth = parentLayoutWidth;
+		layoutHeight = top + height + margin_top + margin_bottom;
+		self:SetPos(left, top);
 		layout = self:GetLayout();
-		layout:SetPos(parentLayoutWidth - boxWidth, top);
-		layout:SetSize(parentLayoutWidth, top + boxHeight);
+		layout:SetPos(left, top);
+		layout:SetSize(layoutWidth, layoutHeight);
 		layout:OffsetPos(margin_left + padding_left, margin_top + padding_top);
 		layout:IncWidth(-margin_right - padding_right);
 		layout:IncHeight(-margin_bottom - padding_bottom);
@@ -452,20 +454,25 @@ function ElementLayout:ApplyAfterChildLayout()
 		if(not self:GetElement():OnBeforeChildLayout(layout)) then
 			self:GetElement():UpdateChildLayout(layout);
 		end
-		layout:SetUsedSize(usedWidth, usedHeight);
-		self:GetElement():OnAfterChildLayout(layout, parentLayoutWidth - boxWidth + margin_left, top + margin_top, parentLayoutWidth - margin_right, top + boxHeight - margin_bottom);
+		self:GetElement():OnAfterChildLayout(layout, left + margin_left, top + margin_top, layoutWidth - margin_right, layoutHeight - margin_bottom);
 		usedWidth, usedHeight = layout:GetUsedSize();
-		self:SetBoxWidthHeight(usedWidth - (parentLayoutWidth - boxWidth), usedHeight - top);
+		layout:SetRealSize(usedWidth + padding_right - left - margin_left, usedHeight + padding_bottom - top - margin_top);
 	end
 end
 
 -- 应用元素使用空间
 function ElementLayout:ApplyUseSpace()
 	if (not self:IsUseSpace()) then return end
-
+	local parentLayout = self:GetParentLayout();
 	local css = self:GetElementStyle();
-
-	self:GetParentLayout():AddObject(self:GetBoxWidthHeight());
+	local maxWidth, maxHeight = parentLayout:GetSize();
+	local avaliX, avaliY = parentLayout:GetPreferredPos();
+	local boxWidth, boxHeight = self:GetBoxWidthHeight();
+	-- boxWidth = if_else((avaliX + boxWidth) > maxWidth, maxWidth - avaliX, boxWidth);
+	-- boxHeight = if_else((avaliY + boxHeight) > maxHeight, maxHeight - avaliY, boxHeight);
+	self:GetParentLayout():AddObject(boxWidth, boxHeight);
+	
+	-- self:GetParentLayout():AddObject(self:GetBoxWidthHeight());
 
 	if (not css.float and self:IsBlockElement(css.display)) then
 		self:GetParentLayout():NewLine();
