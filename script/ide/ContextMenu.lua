@@ -384,6 +384,7 @@ function ContextMenu:Show(x, y, param1)
 						local _item = ParaUI.CreateUIObject("container", "Menuitem_"..j, "_lt", 
 									style.borderLeft, menuHeight, self.width - style.borderLeft - style.borderRight, style.menuitemHeight);
 						_item.background = "";
+						_item.Enable = nodeLvl1.Enable;
 						_menu:AddChild(_item);
 					
 						local _itemBG = ParaUI.CreateUIObject("button", "BG", "_fi", 0, 0, 0, 0);
@@ -400,6 +401,11 @@ function ContextMenu:Show(x, y, param1)
 							if(style.level1itemcolor) then
 								_guihelper.SetFontColor(_text, style.level1itemcolor);
 							end
+							
+							if (nodeLvl1.Enable == false) then
+								_guihelper.SetFontColor(_text, "#999696");
+							end
+
 							if(style.textFont) then
 								_text.font = style.textFont;
 							end
@@ -410,6 +416,11 @@ function ContextMenu:Show(x, y, param1)
 							if(style.level1itemcolor) then
 								_guihelper.SetFontColor(_text, style.level1itemcolor);
 							end
+
+							if (nodeLvl1.Enable == false) then
+								_guihelper.SetFontColor(_text, "#999696");
+							end
+
 							if(style.textFont) then
 								_text.font = style.textFont;
 							end
@@ -531,9 +542,13 @@ function ContextMenu:Show(x, y, param1)
 							-- mouse click event for normal menu nodes
 							local _itemBtn = ParaUI.CreateUIObject("button", "Btn", "_fi", 0, 0, 0, 0);
 							_itemBtn.background = "";
-							_itemBtn.onclick = string.format([[;CommonCtrl.ContextMenu.OnClickItem(%q, %q);]], self.name, nodeLvl1:GetNodePath());
-							_itemBtn.onmouseenter = string.format([[;CommonCtrl.ContextMenu.OnMouseEnterNormalItem(%q, %d);]], self.name, j);
-							_itemBtn.onmouseleave = string.format([[;CommonCtrl.ContextMenu.OnMouseLeaveNormalItem(%q, %d);]], self.name, j);
+
+							if (nodeLvl1.Enable ~= false) then
+								_itemBtn.onclick = string.format([[;CommonCtrl.ContextMenu.OnClickItem(%q, %q);]], self.name, nodeLvl1:GetNodePath());
+								_itemBtn.onmouseenter = string.format([[;CommonCtrl.ContextMenu.OnMouseEnterNormalItem(%q, %d);]], self.name, j);
+								_itemBtn.onmouseleave = string.format([[;CommonCtrl.ContextMenu.OnMouseLeaveNormalItem(%q, %d);]], self.name, j);
+							end
+
 							_item:AddChild(_itemBtn);
 						end
 					end
