@@ -128,7 +128,9 @@ end
 
 -- private: 
 function SceneContext:UpdateAutoCameraManipulator()
-	ParaCamera.GetAttributeObject():SetField("BlockInput", not self:IsAutoCameraEnabled());
+	if(not System.os.options.IsInputDisabled()) then
+		ParaCamera.GetAttributeObject():SetField("BlockInput", not self:IsAutoCameraEnabled());
+	end
 end
 
 -- virtual function: 

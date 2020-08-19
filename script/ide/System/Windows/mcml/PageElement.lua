@@ -99,15 +99,15 @@ function PageElement:createChildRecursive_helper()
 			if(type(child) == "table") then
 				local class_type = mcml:GetClassByTagName(child.name or "div");
 				if(class_type) then
-					class_type:createFromXmlNode(child);
+					child = class_type:createFromXmlNode(child);
 				else
 					LOG.std(nil, "warn", "mcml", "can not find tag name %s", child.name or "");
 				end
 			else
 				-- for inner text of xml
 				child = Elements.pe_text:createFromString(child);
-				self[i] = child;
 			end
+			self[i] = child;
 			child.parent = self;
 			child.index = i;
 		end

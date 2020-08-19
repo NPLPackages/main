@@ -6,7 +6,7 @@ Desc:
 use the lib:
 ------------------------------------------------------------
 NPL.load("(gl)script/ide/System/os/options.lua");
-System.os.options:SetWorkerThreadsCount(2, 16);
+System.os.options.SetWorkerThreadsCount(2, 16);
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/System/Core/DOM.lua");
@@ -35,4 +35,22 @@ function options.SetProcessorQueueSize(nProcessorQueueID, nSize)
 	if(asyncloader) then
 		asyncloader:SetField("ProcessorQueueSize", {nProcessorQueueID, nSize})
 	end
+end
+
+function options.DisableInput(isInputDisabled)
+	options.isInputDisabled = isInputDisabled;
+	ParaCamera.GetAttributeObject():SetField("BlockInput", isInputDisabled);
+	ParaScene.GetAttributeObject():SetField("BlockInput", isInputDisabled);
+	if(not isInputDisabled) then
+		NPL.load("(gl)script/ide/System/Core/SceneContextManager.lua");
+		local SceneContextManager = commonlib.gettable("System.Core.SceneContextManager");
+		local context = SceneContextManager:GetCurrentContext();
+		if(context) then
+			context:UpdateAutoCameraManipulator()
+		end
+	end
+end
+
+function options.IsInputDisabled()
+	return options.isInputDisabled;
 end
