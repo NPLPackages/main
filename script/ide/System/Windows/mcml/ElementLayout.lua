@@ -178,6 +178,7 @@ function ElementLayout:PrepareUpdateLayout(parentLayout)
 	-- 计算宽高
 	local width = self:GetElement():GetAttribute("width") or css.width;      -- 支持百分比, px
 	local height = self:GetElement():GetAttribute("height") or css.height;   -- 支持百分比, px
+
 	width = width and self:PercentageToNumber(width, maxWidth);
 	height = height and self:PercentageToNumber(height, maxHeight);
 
