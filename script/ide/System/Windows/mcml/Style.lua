@@ -166,12 +166,7 @@ end
 
 -- it does not copy and merge items in the given style, it simply add a reference to the given style
 function Style:AddReference(style, type)
-	local references;
-	if(not type or type == "mcss") then
-		references = self.references;
-	elseif(type == "css") then
-		references = self.css_references;
-	end
+	local references = if_else(not type or type == "mcss", self.references, self.css_references);
 	if(style) then
 		--local references = self.references;
 		for i=1, #(references) do
@@ -184,8 +179,8 @@ function Style:AddReference(style, type)
 end
 
 -- remove a given reference
-function Style:RemoveReference(style)
-	local references = self.references;
+function Style:RemoveReference(style, type)
+	local references = if_else(not type or type == "mcss", self.references, self.css_references);
 	local index;
 	for i=1, #(references) do
 		if(references[i] == style) then
