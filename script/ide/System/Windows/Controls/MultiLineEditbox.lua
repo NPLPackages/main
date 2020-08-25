@@ -208,6 +208,7 @@ function MultiLineEditbox:initViewport()
 	self.viewport:Connect("mouseOverWordChanged", self, "mouseOverWordChanged");
 	self.viewport:Connect("rightClicked", self, "rightClicked");
 	self.viewport:Connect("userTyped", self, "textChanged");
+	self.viewport:SetLineWrap(self:GetLineWrap());
 end
 
 function MultiLineEditbox:ShowLineNumber(value)

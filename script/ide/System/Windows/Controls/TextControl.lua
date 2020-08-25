@@ -1190,10 +1190,33 @@ function TextControl:docPos(line, pos)
 end
 
 function TextControl:InsertTextInCursorPos(text)
-	self:separate();
+	local linewrap = self:GetLineWrap();
+	if (not linewrap) then
+		-- 旧逻辑  不换行
+		self:separate();
+		self:removeSelectedText();
+		self:InsertTextAddToCommand(text, self.cursorLine, self.cursorPos, true);
+		--self:RemoveTextAddToCommand(self.m_selLineStart, self.m_selPosStart, self.m_selLineEnd, self.m_selPosEnd);
+		return ;
+	end
+	-- TODO 做自动换行处理
+	
+	-- 移除选择
 	self:removeSelectedText();
-	--self:RemoveTextAddToCommand(self.m_selLineStart, self.m_selPosStart, self.m_selLineEnd, self.m_selPosEnd);
-	self:InsertTextAddToCommand(text, self.cursorLine, self.cursorPos, true);
+
+	local textlen = string.len(text);
+	local linewidth = self:width();
+	local i = 1; 
+	while (i <= textlen) do
+		local char = string.sub(text, i, i);
+		local linetext = self:GetLineText(self.cursorLine) or "";
+		local textwidth = self:GetTextWidth(linetext .. char);
+		if (textwidth >= linewidth) then
+			self:InsertTextNotAddToCommand("\r\n", self.cursorLine, self.cursorPos, true);
+		end
+		self:InsertTextNotAddToCommand(char, self.cursorLine, self.cursorPos, true);
+		i = i + 1;
+	end
 end
 
 function TextControl:InsertTextAddToCommand(text, line, pos, moveCursor)
@@ -1860,6 +1883,12 @@ function TextControl:ApplyCss(css)
 	if(css["caret-color"]) then
 		self:SetCursorColor(css["caret-color"]);
 	end
+	local font, fontSize, fontScale = css:GetFontSettings();
+	if (font) then self:SetFont(font) end
+	if (fontScale) then self:SetScale(fontScale) end
+	if (css["color"]) then self:SetColor(css["color"]) end
+	css["line-height"] = css["line-height"] or math.floor(1.5 * (fontSize or 14));
+	self:SetLineHeight(css["line-height"]);
 end
 
 function TextControl:GetCursorPositionInClient()

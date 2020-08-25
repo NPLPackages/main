@@ -1871,25 +1871,36 @@ function PageElement:FocusOutEvent()
 end
 
 function PageElement:NextTabNode(node)
-	if(self:TabIndex() == 0 and not self:Focused()) then
+	if(self:TabIndex() == 0 or not self:Focused()) then
 		return self;
 	end
-
-	local size = #self;
-	if(size == 0 or (node and node.index == size)) then
-		if(self.parent) then
-			return self.parent:NextTabNode(self);
-		else
-			return;
+	for i = 1, #self do
+		local node = self[i];
+		local tabNode = node:NextTabNode();
+		if (tabNode) then 
+			return tabNode;
 		end
-	else
-		if(node) then
-			node = self[node.index + 1];
-		else
-			node = self[1];
-		end
-		return node:NextTabNode();
 	end
+
+	-- 下面旧实现就是递归遍历子元素, 且依赖节点的index值, 若此设置不对会引起无限循环, 直接修改为常规递归方式
+	-- if(self:TabIndex() == 0 and not self:Focused()) then
+	-- 	return self;
+	-- end
+	-- local size = #self;
+	-- if(size == 0 or (node and node.index == size)) then
+	-- 	if(self.parent) then
+	-- 		return self.parent:NextTabNode(self);
+	-- 	else
+	-- 		return;
+	-- 	end
+	-- else
+	-- 	if(node) then
+	-- 		node = self[node.index + 1];
+	-- 	else
+	-- 		node = self[1];
+	-- 	end
+	-- 	return node:NextTabNode();
+	-- end
 end
 
 -- @return code, bindingContext;

@@ -226,7 +226,10 @@ function _guihelper.MessageBox(content,MsgBoxClick_CallBack, buttons, icon, mcml
 	end
 	
 	local width, height = 370, 250;
-	
+	if(System.options.mc)then
+        width = 630;
+        height = 250;
+    end
 	if(type(mcmlTemplate) ~= "string") then
 		mcmlTemplate = _guihelper.defaultMsgBoxMCMLTemplate;
 	end	

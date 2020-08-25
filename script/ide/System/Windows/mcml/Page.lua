@@ -855,7 +855,9 @@ function Page:HandlKeyPressEvent(key)
 		if(not self.currentTabNode) then
 			self.currentTabNode = self:NextTabNode();
 		end
-		self.currentTabNode:SetFocus();
+		if (self.currentTabNode) then
+			self.currentTabNode:SetFocus();
+		end
 		return true;
 	end
 

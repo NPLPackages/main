@@ -45,10 +45,13 @@ function pe_textarea:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	end
 
 	_this:setMoveViewWhenAttachWithIME(self:GetBool("MoveViewWhenAttachWithIME", false));
-
+	_this:SetAlwaysShowCurLineBackground(self:GetBool("AlwaysShowCurLineBackground", true));
 	_this:ShowLineNumber(self:GetBool("ShowLineNumber",false));
 	_this:SetEmptyText(self:GetAttributeWithCode("EmptyText", nil, true));
 	_this:SetLanguage(self:GetAttributeWithCode("language", nil, true));
+	
+	_this:ViewPort():SetLineWrap(self:GetBool("LineWrap", false));
+	
 	if(not self:GetBool("InputMethodEnabled", true)) then
 		_this:SetInputMethodEnabled(false);
 	end

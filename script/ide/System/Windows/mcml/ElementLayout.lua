@@ -182,6 +182,9 @@ function ElementLayout:PrepareUpdateLayout(parentLayout)
 	width = width and self:PercentageToNumber(width, maxWidth);
 	height = height and self:PercentageToNumber(height, maxHeight);
 
+	-- 清除无效float值
+	if (css.float and css.float ~= "left" and css.float ~= "right") then css.float = nil end
+
 	-- 确定元素是否新起一行
 	if (css.float) then  
 		-- 浮动元素

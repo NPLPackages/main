@@ -74,7 +74,7 @@ end
 
 
 function SliderBase:SetValue(value, emitSingal)
-	if(value == self.value) then
+	if(value == self.value or self.max < 0) then
 		return;
 	end
 	if (emitSingal and value > self.max) then
