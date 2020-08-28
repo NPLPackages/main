@@ -191,7 +191,7 @@ function ElementLayout:PrepareUpdateLayout(parentLayout)
 		if (width and availWidth < (width + margin_left + margin_right)) then
 			parentLayout:NewLine();
 		end
-	elseif (css.position) then
+	elseif (css.position and css.position ~= "relative" and css.position ~= "static") then
 		-- 定位元素
 	else
 		-- 文档流元素
@@ -257,11 +257,13 @@ function ElementLayout:ApplyPositionStyle()
 		local relLeft, relTop, relWidth, relHeight = 0, 0, 0, 0;
 		if (parent) then 
 			relLeft, relTop = parent:GetElementLayout():GetPos();
-			relWidth, relHeight = parent:GetElementLayout():GetLayout():GetSize();
+			-- relWidth, relHeight = parent:GetElementLayout():GetLayout():GetSize();
+			relWidth, relHeight = parent:GetElementLayout():GetMaxWidthHeight();
 		else
 			relLeft, relTop = parentLayout:GetNewlinePos();
 			relWidth, relHeight = parentLayout:GetSize();
 		end
+		relLeft, relTop, relWidth, relHeight = relLeft or 0, relTop or 0, relWidth or 0, relHeight or 0;
 		if (left or top) then
 			left = left or 0;
 			top = top or 0;
@@ -276,6 +278,8 @@ function ElementLayout:ApplyPositionStyle()
 			bottom = relHeight - self:PercentageToNumber(bottom, relHeight - relTop);
 		else
 			-- 没有宽高使用容器宽高
+			left = left or 0;
+			top = top or 0;
 			right = relLeft + left + (width or (layoutWidth - layoutLeft));
 			bottom = relTop + top + (height or (layoutHeight - layoutTop));
 		end

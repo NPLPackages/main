@@ -13,7 +13,10 @@ local defaultEffectHandle = 12;
 --@return effectHandle: remember the previous effect so we can set it back later
 function TransparentEffect.Apply(character)
 	if(character and character:IsValid())then
-		local prevEffectHandle = character:GetField("render_tech",nil);
+		local prevEffectHandle = character:GetField("render_tech", 0);
+		if(prevEffectHandle < 100) then
+			character:SetDynamicField("previousEffect", prevEffectHandle)
+		end
 		TransparentEffect.CreateEffect();
 		character:SetField("render_tech",effectHandleId);
 		character:SetField("RenderImportance",3);

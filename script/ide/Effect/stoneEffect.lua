@@ -33,7 +33,11 @@ end
 
 function StoneEffect.ApplyEffect(character)
 	if(character and character:IsValid())then
-		local prevEffectHandle = character:GetField("render_tech",nil);
+		local prevEffectHandle = character:GetField("render_tech", 0);
+		if(prevEffectHandle < 100) then
+			character:SetDynamicField("previousEffect", prevEffectHandle)
+		end
+
 		local effect,effectHandle = StoneEffect.CreateEffect();
 		character:SetField("render_tech",effectHandle);
 		character:SetField("IsAnimPaused",true);

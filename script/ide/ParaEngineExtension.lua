@@ -680,3 +680,11 @@ end
 CreateDummy_functions();
 
 
+--[[ for debugging and tracking SetField()
+ParaScene.ParaObject["SetField"] = function(self, name, value)
+	if(name == "render_tech") then
+		echo(value)
+	end
+	self:GetAttributeObject():SetField(name, value)
+end
+]]

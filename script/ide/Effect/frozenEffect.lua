@@ -33,7 +33,11 @@ end
 --@return effectHandle: remember the previous effect so you can set it back later
 function FrozenEffect.ApplyFrozenEffect(character)
 	if(character and character:IsValid())then
-		local prevEffectHandle = character:GetField("render_tech",nil);
+		local prevEffectHandle = character:GetField("render_tech", 0);
+
+		if(prevEffectHandle < 100) then
+			character:SetDynamicField("previousEffect", prevEffectHandle)
+		end
 
 		local effect,effectHandle = FrozenEffect.CreateFrozenEffect();
 		character:SetField("render_tech",effectHandle);
@@ -46,11 +50,14 @@ end
 
 
 function FrozenEffect.ResetEffect(character, effectHandle)
-	effectHandle = effectHandle or default_effect_handle;
 	if(character and character:IsValid())then
-		FrozenEffect.prevEffectHandle = character:GetField("render_tech",nil);
-		character:SetField("render_tech",effectHandle);
-		character:SetField("RenderImportance", 0);	
-		character:SetField("IsAnimPaused", false);
+		local lastEffect = character:GetDynamicField("previousEffect", 0)
+		effectHandle = effectHandle or lastEffect or default_effect_handle;
+		if(effectHandle ~= 0) then
+			character:SetDynamicField("previousEffect", effectHandle)
+			character:SetField("render_tech",effectHandle);
+			character:SetField("RenderImportance", 0);	
+			character:SetField("IsAnimPaused", false);
+		end
 	end
 end

@@ -48,23 +48,23 @@ local Rect = commonlib.gettable("mathlib.Rect");
 local ScrollBar = commonlib.inherit(commonlib.gettable("System.Windows.Controls.Primitives.SliderBase"), commonlib.gettable("System.Windows.Controls.ScrollBar"));
 ScrollBar:Property("Name", "ScrollBar");
 
-
 ScrollBar:Property({"grooveWidth", nil, nil, "SetGrooveWidth",auto=true});
 ScrollBar:Property({"grooveHeight", nil, nil, "SetGrooveHeight",auto=true});
---ScrollBar:Property({"grooveBackground", "Texture/Aries/Creator/Theme/GameCommonIcon_32bits.png;456 396 16 16:4 4 4 4",auto=true});
-ScrollBar:Property({"grooveBackground", nil,auto=true});
-
+--ScrollBar:Property({"GrooveBackground", "Texture/Aries/Creator/Theme/GameCommonIcon_32bits.png;456 396 16 16:4 4 4 4",auto=true});
+ScrollBar:Property({"GrooveBackground", nil,auto=true});
+ScrollBar:Property({"GrooveBackgroundColor", nil,auto=true});
 ScrollBar:Property({"sliderWidth", nil, nil, "SetSliderWidth",auto=true});
 ScrollBar:Property({"sliderHeight", nil, nil, "SetSliderHeight",auto=true});
---ScrollBar:Property({"sliderBackground", "Texture/3DMapSystem/common/ThemeLightBlue/slider_button_16.png;5 5 5 5:1 1 1 1",auto=true});
-ScrollBar:Property({"sliderBackground", nil,auto=true});
-
+--ScrollBar:Property({"SliderBackground", "Texture/3DMapSystem/common/ThemeLightBlue/slider_button_16.png;5 5 5 5:1 1 1 1",auto=true});
+ScrollBar:Property({"SliderBackground", nil, auto=true});
+ScrollBar:Property({"SliderBackgroundColor", nil, auto=true});
 ScrollBar:Property({"buttonWidth", nil ,auto=true});
 ScrollBar:Property({"buttonHeight", nil, auto=true});
 --ScrollBar:Property({"PrevButtonBackground", "Texture/3DMapSystem/common/ThemeLightBlue/slider_button_16.png;5 5 5 5:1 1 1 1"});
 --ScrollBar:Property({"NextButtonBackground", "Texture/3DMapSystem/common/ThemeLightBlue/slider_button_16.png;5 5 5 5:1 1 1 1"});
 ScrollBar:Property({"PrevButtonBackground", nil});
 ScrollBar:Property({"NextButtonBackground", nil});
+ScrollBar:Property({"ShowButton", true, "IsShowButton", "SetShowButton", auto=true});
 
 function ScrollBar:ctor()
 	self.groove = nil;
@@ -302,7 +302,7 @@ function ScrollBar:updateGroove()
 end
 
 function ScrollBar:updateButtonGeometry()
-	--if(not self.updateButton) then
+	if(self:IsShowButton()) then
 		if(self.direction == "horizontal") then
 			self.prevButton:setGeometry(0, 0, 16, self:height());
 			self.nextButton:setGeometry(self:width() - 16, 0, 16, self:height());
@@ -310,9 +310,12 @@ function ScrollBar:updateButtonGeometry()
 			self.prevButton:setGeometry(0, 0, self:width(), 16);
 			self.nextButton:setGeometry(0, self:height() - 16, self:width(), 16);
 		end
-
-		self.updateButton = true;
-	--end
+	else
+		self.prevButton:hide();
+		self.nextButton:hide();
+		self.prevButton:resize(0, 0);
+		self.nextButton:resize(0, 0);
+	end
 end
 
 function ScrollBar:paintEvent(painter)
@@ -320,7 +323,7 @@ function ScrollBar:paintEvent(painter)
 	self:updateGroove();
 	self:updateSlider();
 	local groove = self:Groove();
-	local groovBackground = self.grooveBackground;
+	local GrooveBackground = self.GrooveBackground;
 	local groove_x, groove_y, groove_w, groove_h = groove:x(), groove:y(), groove:width(), groove:height();
 	if(self.direction == "horizontal") then
 		groove_x = 0;
@@ -329,25 +332,25 @@ function ScrollBar:paintEvent(painter)
 		groove_y = 0;
 		groove_h = self:height()
 	end
-	if(groovBackground and groovBackground~="") then
-		painter:SetPen("#00ff00");
-		--painter:DrawRectTexture(self:x() + groove:x(), self:y() + groove:y(), 4, groove:height(), groovBackground);
-		--painter:DrawRectTexture(self:x() + groove:x(), self:y() + groove:y(), groove:width(), groove:height(), groovBackground);
-		painter:DrawRectTexture(self:x() + groove_x, self:y() + groove_y, groove_w, groove_h, groovBackground);
+	if(GrooveBackground and GrooveBackground~="") then
+		painter:SetPen(self:GetGrooveBackgroundColor() or "#00ff00");
+		--painter:DrawRectTexture(self:x() + groove:x(), self:y() + groove:y(), 4, groove:height(), GrooveBackground);
+		--painter:DrawRectTexture(self:x() + groove:x(), self:y() + groove:y(), groove:width(), groove:height(), GrooveBackground);
+		painter:DrawRectTexture(self:x() + groove_x, self:y() + groove_y, groove_w, groove_h, GrooveBackground);
 	else
-		painter:SetPen("#f1f1f1");
-		--painter:DrawRectTexture(self:x() + groove:x(), self:y() + groove:y(), 4, groove:height(), groovBackground);
+		painter:SetPen(self:GetGrooveBackgroundColor() or "#f1f1f1");
+		--painter:DrawRectTexture(self:x() + groove:x(), self:y() + groove:y(), 4, groove:height(), GrooveBackground);
 		--painter:DrawRectTexture(self:x() + groove:x(), self:y() + groove:y(), groove:width(), groove:height(), "");
 		painter:DrawRectTexture(self:x() + groove_x, self:y() + groove_y, groove_w, groove_h, "");
 	end
 
 	local slider = self:Slider();
-	local sliderBackground = self.sliderBackground;
-	if(sliderBackground and sliderBackground~="") then
-		painter:SetPen("#00ffff");
-		painter:DrawRectTexture(self:x() + slider:x(), self:y() + slider:y(), slider:width(), slider:height(), sliderBackground);
+	local SliderBackground = self.SliderBackground;
+	if(SliderBackground and SliderBackground~="") then
+		painter:SetPen(self:GetSliderBackgroundColor() or "#00ffff");
+		painter:DrawRectTexture(self:x() + slider:x(), self:y() + slider:y(), slider:width(), slider:height(), SliderBackground);
 	else
-		painter:SetPen("#c1c1c1");
+		painter:SetPen(self:GetSliderBackgroundColor() or "#c1c1c1");
 		painter:DrawRectTexture(self:x() + slider:x(), self:y() + slider:y(), slider:width(), slider:height(), "");
 	end
 end

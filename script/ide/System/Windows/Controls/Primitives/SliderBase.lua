@@ -61,37 +61,25 @@ function SliderBase:setRange(min, max, emitSingal)
 	if(emitSingal ~= false) then
 		emitSingal = true;
 	end
-	self.min = min;
-	self.max = max;
+	self.min = math.max(min, 0);
+	self.max = math.max(max, 0);
 	self:SetValue(self.value, emitSingal);
 end
 
 function SliderBase:setStep(single, page)
 	self.singleStep = single;
 	self.pageStep = page;
-	--self:SetValue(value);
 end
 
 
 function SliderBase:SetValue(value, emitSingal)
-	if(value == self.value or self.max < 0) then
-		return;
-	end
-	if (emitSingal and value > self.max) then
-		if (self.firstToEnd) then
+	self.value = self:bound(value);
+	if(emitSingal) then
+		if (self.value >= self.max and self.firstToEnd) then 
 			self.firstToEnd = false;
 		else
-			self:valueChanged(self.max, true);
-			return;
+			self:emitValueChanged();
 		end
-	end
-	value = self:bound(value);
-	if(value == self.value) then
-		return;
-	end
-	self.value = value;
-	if(emitSingal) then
-		self:emitValueChanged();
 	end
 end
 
@@ -196,7 +184,11 @@ function SliderBase:scrollByDelta(delta)
 	else
 		stepToScroll = math.max(-self.pageStep, math.min(self.pageStep, stepToScroll));
 	end
-	self:SetValue(self.value + stepToScroll, true);
+	-- 先比较再设置, 避免事件不停触发
+	local value = self:bound(self.value +stepToScroll);
+	if (value ~= self.value) then  
+		self:SetValue(self.value + stepToScroll, true);
+	end
 end
 
 
