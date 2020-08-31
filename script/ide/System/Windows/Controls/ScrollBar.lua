@@ -54,7 +54,9 @@ ScrollBar:Property({"grooveHeight", nil, nil, "SetGrooveHeight",auto=true});
 ScrollBar:Property({"GrooveBackground", nil,auto=true});
 ScrollBar:Property({"GrooveBackgroundColor", nil,auto=true});
 ScrollBar:Property({"sliderWidth", nil, nil, "SetSliderWidth",auto=true});
+ScrollBar:Property({"MinSliderWidth", nil, auto=true});
 ScrollBar:Property({"sliderHeight", nil, nil, "SetSliderHeight",auto=true});
+ScrollBar:Property({"MinSliderHeight", nil, auto=true});
 --ScrollBar:Property({"SliderBackground", "Texture/3DMapSystem/common/ThemeLightBlue/slider_button_16.png;5 5 5 5:1 1 1 1",auto=true});
 ScrollBar:Property({"SliderBackground", nil, auto=true});
 ScrollBar:Property({"SliderBackgroundColor", nil, auto=true});
@@ -346,11 +348,12 @@ function ScrollBar:paintEvent(painter)
 
 	local slider = self:Slider();
 	local SliderBackground = self.SliderBackground;
+	local sliderWidth, sliderHeight = math.max(self:GetMinSliderWidth() or 0, slider:width()), math.max(self:GetMinSliderHeight() or 0, slider:height());
 	if(SliderBackground and SliderBackground~="") then
 		painter:SetPen(self:GetSliderBackgroundColor() or "#00ffff");
-		painter:DrawRectTexture(self:x() + slider:x(), self:y() + slider:y(), slider:width(), slider:height(), SliderBackground);
+		painter:DrawRectTexture(self:x() + slider:x(), self:y() + slider:y(), sliderWidth, sliderHeight, SliderBackground);
 	else
 		painter:SetPen(self:GetSliderBackgroundColor() or "#c1c1c1");
-		painter:DrawRectTexture(self:x() + slider:x(), self:y() + slider:y(), slider:width(), slider:height(), "");
+		painter:DrawRectTexture(self:x() + slider:x(), self:y() + slider:y(), sliderWidth, sliderHeight, "");
 	end
 end
