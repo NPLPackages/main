@@ -185,7 +185,7 @@ function SliderBase:scrollByDelta(delta)
 		stepToScroll = math.max(-self.pageStep, math.min(self.pageStep, stepToScroll));
 	end
 	-- 先比较再设置, 避免事件不停触发
-	local value = self:bound(self.value +stepToScroll);
+	local value = self:bound(self.value + stepToScroll);
 	if (value ~= self.value) then  
 		self:SetValue(self.value + stepToScroll, true);
 	end

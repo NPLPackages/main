@@ -263,6 +263,17 @@ function Color.convert8_32(rgb)
     return a+r+g+b;
 end
 
+-- convert 8bits color to 32bits(without alpha)
+function Color.convert8_24(rgb)
+	local r = lshift(band(rgb, 0x30), 18);
+	r = r + rshift(r, 2)+rshift(r, 4) + rshift(r, 6);
+    local g = lshift(band(rgb, 0xC ), 12);
+	g = g + rshift(g, 2)+rshift(g, 4) + rshift(g, 6);
+    local b = lshift(band(rgb, 0x3 ),  6);
+	b = b + rshift(b, 2)+rshift(b, 4) + rshift(b, 6);
+    return r+g+b;
+end
+
 
 -- @param color: either 0xffffff, or string like "#ff0000"
 function Color.ToValue(color)

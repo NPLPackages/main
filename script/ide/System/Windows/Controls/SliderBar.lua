@@ -42,11 +42,11 @@ SliderBar:Property("Name", "SliderBar");
 
 SliderBar:Property({"grooveWidth", nil, nil, "SetGrooveWidth",auto=true});
 SliderBar:Property({"grooveHeight", nil, nil, "SetGrooveHeight",auto=true});
-SliderBar:Property({"grooveBackground", nil,auto=true});
+SliderBar:Property({"grooveBackground", nil, auto=true});
 
 SliderBar:Property({"sliderWidth", nil, nil, "SetSliderWidth",auto=true});
 SliderBar:Property({"sliderHeight", nil, nil, "SetSliderHeight",auto=true});
-SliderBar:Property({"sliderBackground", nil,auto=true});
+SliderBar:Property({"sliderBackground", nil, auto=true});
 
 function SliderBar:ctor()
 	self.groove = nil;
