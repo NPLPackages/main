@@ -544,7 +544,9 @@ end
 
 function UIElement:clearFocus()
     local w = self;
-    while (w) do
+	while (w) do
+		if (w:hasFocus()) then Application:setFocusWidget(nil, "clearFocus") end
+		
         if (w.focus_child == self) then
             w.focus_child = nil;
 		end

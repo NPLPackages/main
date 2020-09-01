@@ -113,7 +113,7 @@ function ElementLayout:UpdateLayout(parentLayout)
 
 	-- 准备布局
 	self:PrepareUpdateLayout(parentLayout);
-
+	
 	-- 调整位置信息
 	self:ApplyPositionStyle();
 
@@ -257,32 +257,32 @@ function ElementLayout:ApplyPositionStyle()
 		local relLeft, relTop, relWidth, relHeight = 0, 0, 0, 0;
 		if (parent) then 
 			relLeft, relTop = parent:GetElementLayout():GetPos();
-			-- relWidth, relHeight = parent:GetElementLayout():GetLayout():GetSize();
-			relWidth, relHeight = parent:GetElementLayout():GetMaxWidthHeight();
+			relWidth, relHeight = parent:GetElementLayout():GetWidthHeight();
+			if (not realWidth) then realWidth, relHeight = parent:GetElementLayout():GetBoxWidthHeight() end
+			if (not realWidth) then realWidth, relHeight = parent:GetElementLayout():GetMaxWidthHeight() end
 		else
 			relLeft, relTop = parentLayout:GetNewlinePos();
 			relWidth, relHeight = parentLayout:GetSize();
 		end
 		relLeft, relTop, relWidth, relHeight = relLeft or 0, relTop or 0, relWidth or 0, relHeight or 0;
-		if (left or top) then
-			left = left or 0;
-			top = top or 0;
-			left = self:PercentageToNumber(left, relWidth - relLeft);
-			top = self:PercentageToNumber(top, relHeight - relTop);
-			layout:SetPos(relLeft + left, relTop + top);
-		end
-		if (right or bottom) then
-			right = right or 0;
-			bottom = bottom or 0;
+		-- echo({relLeft, relTop, relWidth, relHeight});
+		left, top = left or 0, top or 0;
+		left = self:PercentageToNumber(left, relWidth - relLeft);
+		top = self:PercentageToNumber(top, relHeight - relTop);
+		if (right) then
 			right = relWidth - self:PercentageToNumber(right, relWidth - relLeft);
-			bottom = relHeight - self:PercentageToNumber(bottom, relHeight - relTop);
-		else
-			-- 没有宽高使用容器宽高
-			left = left or 0;
-			top = top or 0;
-			right = relLeft + left + (width or (layoutWidth - layoutLeft));
-			bottom = relTop + top + (height or (layoutHeight - layoutTop));
+			if (width) then left = right - width end
+		else 
+			right = left + (width or (layoutWidth - layoutLeft));
 		end
+		if (bottom) then
+			bottom = relHeight - self:PercentageToNumber(bottom, relHeight - relTop);
+			if (height) then top = bottom - height end
+		else 
+			bottom = top + (height or (layoutHeight - layoutTop));
+		end
+		-- echo({left, top, right, bottom});
+		layout:SetPos(left, top);
 		layout:SetSize(right, bottom);
 		self:SetUseSpace(false);
 	elseif(position == "relative") then

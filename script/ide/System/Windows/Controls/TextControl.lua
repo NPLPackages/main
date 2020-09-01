@@ -1204,11 +1204,12 @@ function TextControl:InsertTextInCursorPos(text)
 	-- 移除选择
 	self:removeSelectedText();
 
-	local textlen = string.len(text);
+	local unistr = UniString:new(text);   
+	local textlen = unistr:length();
 	local linewidth = self:width();
 	local i = 1; 
 	while (i <= textlen) do
-		local char = string.sub(text, i, i);
+		local char = unistr:sub(i, i).text;
 		local linetext = self:GetLineText(self.cursorLine) or "";
 		local textwidth = self:GetTextWidth(linetext .. char);
 		if (textwidth >= linewidth) then

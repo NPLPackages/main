@@ -294,7 +294,6 @@ function Window:create_sys(native_window, initializeWindow, destroyOldWindow)
 		local event = KeyEvent:init("keyPressEvent")
 		
 		self:HandlePagePressKeyEvent(event);
-
 		if(not event:isAccepted()) then
 			Application:sendEvent(self:focusWidget(), event);
 		end

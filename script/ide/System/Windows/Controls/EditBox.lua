@@ -635,6 +635,10 @@ function EditBox:mousePressEvent(e)
 		e:accept();
 		self.isLeftMouseDown = true;
 		
+		if (not self:hasFocus()) then
+			self:setFocus("click");
+		end
+
 		if (self:hasFocus() and not e.isDoubleClick) then
 			self:attachWithIME();
 		end
