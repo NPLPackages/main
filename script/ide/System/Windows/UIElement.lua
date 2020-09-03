@@ -333,6 +333,7 @@ function UIElement:destroy(destroyWindow)
             self:hide_sys();
         end
 	end
+	self:Destroy();
     self.window = nil;
 end
 
