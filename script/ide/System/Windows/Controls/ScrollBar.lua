@@ -264,7 +264,7 @@ function ScrollBar:updateSlider()
 	local len = range + self.pageStep;
 	local span, pos;
 	if(self.direction == "horizontal") then
-		span = groove:width() - slider:width();
+		span = groove:width() - math.max(self:GetMinSliderWidth() or 0, slider:width());
 		pos = self:positionFromValue(self.value, span);
 		slider:setX(groove:x() + pos);
 		if(slider:width() > slider:height()) then
@@ -272,7 +272,7 @@ function ScrollBar:updateSlider()
 			slider:setWidth(w);
 		end
 	else
-		span = groove:height() - slider:height();
+		span = groove:height() - math.max(self:GetMinSliderHeight() or 0, slider:height());
 		pos = self:positionFromValue(self.value, span);
 		slider:setY(groove:y() + pos);
 		if(slider:height() > slider:width()) then
@@ -349,11 +349,12 @@ function ScrollBar:paintEvent(painter)
 	local slider = self:Slider();
 	local SliderBackground = self.SliderBackground;
 	local sliderWidth, sliderHeight = math.max(self:GetMinSliderWidth() or 0, slider:width()), math.max(self:GetMinSliderHeight() or 0, slider:height());
+	local sliderX, sliderY = self:x() + math.min(slider:x(), groove_w - sliderWidth), self:y() + math.min(slider:y(), groove_h - sliderHeight);
 	if(SliderBackground and SliderBackground~="") then
 		painter:SetPen(self:GetSliderBackgroundColor() or "#00ffff");
-		painter:DrawRectTexture(self:x() + slider:x(), self:y() + slider:y(), sliderWidth, sliderHeight, SliderBackground);
+		painter:DrawRectTexture(sliderX, sliderY, sliderWidth, sliderHeight, SliderBackground);
 	else
 		painter:SetPen(self:GetSliderBackgroundColor() or "#c1c1c1");
-		painter:DrawRectTexture(self:x() + slider:x(), self:y() + slider:y(), sliderWidth, sliderHeight, "");
+		painter:DrawRectTexture(sliderX, sliderY, sliderWidth, sliderHeight, "");
 	end
 end

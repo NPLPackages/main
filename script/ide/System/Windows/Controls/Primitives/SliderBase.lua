@@ -193,5 +193,5 @@ end
 
 
 function SliderBase:emitValueChanged()
-	self:valueChanged(self.value);
+	self:valueChanged(self.value, self.value >= self.max);
 end

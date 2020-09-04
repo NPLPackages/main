@@ -213,6 +213,9 @@ function Window:CloseWindow(bDestroy)
 		System.PopState(self.esc_state);
 	end
 	self:windowClosed();
+	if (bDestroy) then 
+		self:Destroy();
+	end
 end
 
 function Window:GetNativeWindow()
