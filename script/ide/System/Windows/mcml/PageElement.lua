@@ -1753,12 +1753,15 @@ end
 --  the script function will be called with function(...) end
 -- @param ... : event parameter
 function PageElement:DoPageEvent(handlerScript, ...)
-	local pageEnv, result;
+	local pageEnv, result, pageEventFilterFunc;
 	if(self) then
 		-- get the page env table where the inline script function is defined, it may be nil if there is no page control or there is no inline script function. 
 		local pageCtrl = self:GetPageCtrl();
 		if(pageCtrl) then
 			pageEnv = pageCtrl._PAGESCRIPT
+			-- tricky: pageEventFilterFunc is filter function that takes a function and return another function.
+			-- some page environment is in coroutine, and we will need to replace all page event callback, such as in code block 
+			pageEventFilterFunc = pageEnv and pageEnv.pageEventFilterFunc;
 		end
 		
 		Elements.pe_script.BeginCode(self);
@@ -1776,13 +1779,24 @@ function PageElement:DoPageEvent(handlerScript, ...)
 				pFunc = commonlib.getfield(handlerScript);
 			end	
 			if(type(pFunc) == "function") then
+				if(pageEventFilterFunc) then
+					pFunc = pageEventFilterFunc(pFunc);
+					if(not pFunc) then
+						return
+					end
+				end
 				result = pFunc(...);
 			else
 				log("warning: MCML page event call back "..handlerScript.." is not a valid function. \n")	
 			end
 		end	
 	elseif(type(handlerScript) == "function") then
-		--result = pFunc(...);
+		if(pageEventFilterFunc) then
+			handlerScript = pageEventFilterFunc(handlerScript);
+			if(not handlerScript) then
+				return
+			end
+		end
 		result = handlerScript(...);
 	end
 	if(self) then
