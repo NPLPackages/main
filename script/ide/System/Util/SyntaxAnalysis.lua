@@ -154,7 +154,10 @@ local LUA_TEXT_CONFIG = {
 	["function"] = {color = "#800000", bold = false},
 }
 
-local inMultiComments = false;
+
+function SyntaxAnalysis:Reset()
+	self.inMultiComments = false;
+end
 
 function SyntaxAnalysis:GetToken(uniStr)
 --local function getToken(uniStr)
@@ -166,10 +169,10 @@ function SyntaxAnalysis:GetToken(uniStr)
 		if(pos > len) then
 			return;
 		end
-		if(inMultiComments) then
+		if(self.inMultiComments) then
 			while(pos < len) do
 				if(beCommentEnd(uniStr, pos)) then
-					inMultiComments = false;
+					self.inMultiComments = false;
 					pos = pos + 1;
 					return tokenWrapper("comment", 1, pos, LUA_TEXT_CONFIG["comment"]["color"], LUA_TEXT_CONFIG["comment"]["bold"]);
 				end
@@ -196,7 +199,7 @@ function SyntaxAnalysis:GetToken(uniStr)
 		local beComment, beSingle = beCommentStart(uniStr, pos);
 		if(beComment) then
 			if(not beSingle) then
-				inMultiComments = true;
+				self.inMultiComments = true;
 			end
 			local start_pos = pos;
 			pos = len;

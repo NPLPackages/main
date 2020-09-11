@@ -265,6 +265,9 @@ function TextControl:setCursorBlinkPeriod(msec)
 end
 
 function TextControl:SetText(text)
+	if(self.syntaxAnalyzer) then
+		self.syntaxAnalyzer:Reset()
+	end
 	self.items:clear();
 	self.m_history:clear();
 	self.m_undoState = 0;
