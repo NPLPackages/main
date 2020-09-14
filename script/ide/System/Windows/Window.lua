@@ -532,6 +532,10 @@ function Window:handleRender()
 	end
 	self.isRepaintScheduled = false;
 	self:Render(self.painterContext);
+	if(self.bSelfPaint) then
+		-- for some reason, opengl sprites needs to be flushed in order to paint
+		self.painterContext:Flush();
+	end
 end
 
 -- whether to automatically clear the background to fully transparent when doing self paint on its own render target.
