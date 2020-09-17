@@ -357,6 +357,11 @@ function Window:handleMouseEvent(event)
 		event:localPos():set(receiver:mapFromGlobal(event:globalPos()));
 	end
 
+	-- 聚焦点击窗体
+	if (event:GetType() == "mousePressEvent") then
+		receiver:setFocus(nil);
+	end
+
 	Application:sendMouseEvent(receiver, event);
 
 	if(event:GetType() == "mouseReleaseEvent") then
@@ -638,6 +643,7 @@ function Window:mousePressEvent(event)
 	if(event:isAccepted()) then
 		return true;
 	end
+	
 	if(self:GetCanDrag() and event:button()=="left") then
 		self.isMouseDown = true;
 		self.startDragPosition = event:screenPos():clone();

@@ -12,6 +12,52 @@ NPL.load("(gl)script/kids/3DMapSystemApp/mcml/pe_textsprite.lua");
 if(not Map3DSystem.mcml_controls) then Map3DSystem.mcml_controls = {} end
 
 local pe_textsprite = {};
+
+pe_textsprite.Images = {
+	["default"] = "Texture/16number.png",
+	["MallCost"] = "Texture/Aries/Creator/keepwork/Mall/mall_number_119X95_32bits.png",
+}
+
+pe_textsprite.Sprites = {
+	["default"] = {
+		["1"] = {rect = "0 0 20 31", width = 20, height = 32},
+		["2"] = {rect = "32 0 19 31", width = 19, height = 32},
+		["3"] = {rect = "64 0 19 31", width = 19, height = 32},
+		["4"] = {rect = "96 0 19 31", width = 19, height = 32},
+		["5"] = {rect = "0 32 20 31", width = 20, height = 32},
+		["6"] = {rect = "32 32 19 32", width = 19, height = 32},
+		["7"] = {rect = "64 32 19 31", width = 19, height = 32},
+		["8"] = {rect = "96 32 19 31", width = 19, height = 32},
+		["9"] = {rect = "0 64 19 31", width = 19, height = 32},
+		["0"] = {rect = "32 64 19 31", width = 19, height = 32},
+		["A"] = {rect = "64 64 22 31", width = 22, height = 32},
+		["B"] = {rect = "96 64 20 31", width = 20, height = 32},
+		["C"] = {rect = "0 96 19 31", width = 19, height = 32},
+		["D"] = {rect = "32 96 19 31", width = 19, height = 32},
+		["E"] = {rect = "64 96 19 31", width = 19, height = 32},
+		["F"] = {rect = "96 96 19 31", width = 19, height = 32},
+	},
+
+	["MallCost"] = {
+		["1"] = {rect = "0 0 20 31", width = 20, height = 32},
+		["2"] = {rect = "32 0 22 31", width = 22, height = 32},
+		["3"] = {rect = "64 0 21 32", width = 21, height = 32},
+		["4"] = {rect = "92 0 28 32", width = 28, height = 32},
+		["5"] = {rect = "0 32 25 31", width = 25, height = 32},
+		["6"] = {rect = "32 32 23 32", width = 23, height = 32},
+		["7"] = {rect = "64 32 20 31", width = 20, height = 32},
+		["8"] = {rect = "94 32 23 31", width = 23, height = 32},
+		["9"] = {rect = "0 64 22 31", width = 22, height = 32},
+		["0"] = {rect = "30 64 21 31", width = 21, height = 32},
+		["."] = {rect = "64 64 22 31", width = 22, height = 32},
+		["A"] = {rect = "64 64 22 31", width = 22, height = 32},
+		["B"] = {rect = "96 64 20 31", width = 20, height = 32},
+		["C"] = {rect = "0 96 19 31", width = 19, height = 32},
+		["D"] = {rect = "32 96 19 31", width = 19, height = 32},
+		["E"] = {rect = "64 96 19 31", width = 19, height = 32},
+		["F"] = {rect = "96 96 19 31", width = 19, height = 32},
+	},
+}
 Map3DSystem.mcml_controls.pe_textsprite = pe_textsprite;
 
 function pe_textsprite.create(rootName, mcmlNode, bindingContext, _parent, left, top, width, height, style, parentLayout)
@@ -51,11 +97,14 @@ function pe_textsprite.create(rootName, mcmlNode, bindingContext, _parent, left,
 	height = height - margin_bottom;
 	-- create the 3d canvas for avatar display
 	local instName = mcmlNode:GetInstanceName(rootName);
-	
 	local color = css["color"] or "#FFFF00"
 	local value =  mcmlNode:GetAttributeWithCode("value","", true);
 	local fontsize =  css["font-size"] or 31;
 	NPL.load("(gl)script/ide/TextSprite.lua");
+
+	local fontName = mcmlNode:GetAttribute("fontName") or "default";
+	local imagePath = pe_textsprite.Images[fontName] or "Texture/16number.png"
+	local sprites = pe_textsprite.Sprites[fontName] or pe_textsprite.Sprites["default"]
 	local ctl = CommonCtrl.TextSprite:new{
 		name = instName,
 		alignment = "_lt",
@@ -69,26 +118,9 @@ function pe_textsprite.create(rootName, mcmlNode, bindingContext, _parent, left,
 		-- the height of the font. the width is determined according to the font image.
 		fontsize = fontsize,
 		-- sprite info, below are default settings. 
-		image = "Texture/16number.png",
+		image = imagePath,
 		-- rect is "left top width height"
-		sprites = {
-			["1"] = {rect = "0 0 20 31", width = 20, height = 32},
-			["2"] = {rect = "32 0 19 31", width = 19, height = 32},
-			["3"] = {rect = "64 0 19 31", width = 19, height = 32},
-			["4"] = {rect = "96 0 19 31", width = 19, height = 32},
-			["5"] = {rect = "0 32 20 31", width = 20, height = 32},
-			["6"] = {rect = "32 32 19 32", width = 19, height = 32},
-			["7"] = {rect = "64 32 19 31", width = 19, height = 32},
-			["8"] = {rect = "96 32 19 31", width = 19, height = 32},
-			["9"] = {rect = "0 64 19 31", width = 19, height = 32},
-			["0"] = {rect = "32 64 19 31", width = 19, height = 32},
-			["A"] = {rect = "64 64 22 31", width = 22, height = 32},
-			["B"] = {rect = "96 64 20 31", width = 20, height = 32},
-			["C"] = {rect = "0 96 19 31", width = 19, height = 32},
-			["D"] = {rect = "32 96 19 31", width = 19, height = 32},
-			["E"] = {rect = "64 96 19 31", width = 19, height = 32},
-			["F"] = {rect = "96 96 19 31", width = 19, height = 32},
-		},
+		sprites = sprites,
 	};
 	mcmlNode.control = ctl;
 	ctl:Show(true);
