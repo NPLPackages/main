@@ -37,7 +37,7 @@ end
 function pe_text:GetTextTrimmed()
 	local value = self.value or self:GetAttributeWithCode("value", nil, true);
 	if(value) then
-		value = string.gsub(value, "nbsp;", "");
+		value = string.gsub(value, "&nbsp;", " ");
 		value = string.gsub(value, "^[%s]+", "");
 		value = string.gsub(value, "[%s]+$", "");
 	end

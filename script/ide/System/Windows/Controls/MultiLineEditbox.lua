@@ -526,6 +526,23 @@ function MultiLineEditbox:GetItemHeight()
 	return self.ItemHeight;
 end
 
+function MultiLineEditbox:IsHavingFocus()
+	if((self.viewport and self.viewport.cursorVisible and self.viewport:hasFocus()) or (self.imeButton and self.imeButton:hasFocus()) or self:hasFocus()) then
+		return true;
+	end
+end
+
+function MultiLineEditbox:mousePressEvent(e)
+	if(self.showLineNumber and e:button() == "left" and self.viewport) then
+		-- left click to select line
+		local line = self.viewport:yToLine(e:pos():y());
+		local text = self.viewport:GetLineText(line);
+		self.viewport:moveCursor(line,0, false);
+		self.viewport:moveCursor(line,text:length(), true);
+		self.viewport:setFocus();
+	end
+end
+
 function MultiLineEditbox:paintEvent(painter)
 	self:updateScrollGeometry();
 	painter:SetPen(self:GetBackgroundColor());
@@ -538,7 +555,7 @@ function MultiLineEditbox:paintEvent(painter)
 		local lineHeight = self.viewport:GetLineHeight();
 
 		local bShowIME;
-		if(self.viewport and self.viewport.cursorVisible and self.viewport:hasFocus() and not self.viewport:isReadOnly()) then
+		if(self.viewport and self:IsHavingFocus() and not self.viewport:isReadOnly()) then
 			-- draw the cursor line bg
 			painter:SetPen(self.viewport:GetCurLineBackgroundColor());
 			painter:DrawRect(self:x(), self:y() + self.topTextMargin + lineHeight * (self.viewport.cursorLine-self.viewport.from_line), self:LineNumberWidth(), lineHeight);
