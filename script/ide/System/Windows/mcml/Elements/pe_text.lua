@@ -37,9 +37,9 @@ end
 function pe_text:GetTextTrimmed()
 	local value = self.value or self:GetAttributeWithCode("value", nil, true);
 	if(value) then
-		value = string.gsub(value, "&nbsp;", " ");
 		value = string.gsub(value, "^[%s]+", "");
 		value = string.gsub(value, "[%s]+$", "");
+		value = string.gsub(value, "nbsp;", " ");
 	end
 	return value;
 end
@@ -49,7 +49,6 @@ function pe_text:LoadComponent(parentElem, parentLayout, style)
 	css["text-align"] = css["text-align"] or "left";
 
 	local value = self:GetTextTrimmed();
-	self.value = value;
 	if(not value or value=="") then
 		return true;
 	end
@@ -82,8 +81,7 @@ end
 
 -- this function is called automatically after page component is loaded and whenever the window resize. 
 function pe_text:UpdateLayout(parentLayout)
-	self.value = self:GetTextTrimmed();
-	self:CalculateTextLayout(self:GetValue(), parentLayout);
+	self:CalculateTextLayout(self:GetTextTrimmed(), parentLayout);
 end
 
 -- static function: calculate text. 
