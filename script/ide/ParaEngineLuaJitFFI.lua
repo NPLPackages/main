@@ -96,7 +96,8 @@ if(use_ffi) then
 	int ParaBlockWorld_GetFirstBlock(void* pWorld, uint16_t x, uint16_t y, uint16_t z, int nBlockId, uint16_t nSide /*= 4*/, uint32_t max_dist /*= 32*/);
 
 	void ParaTerrain_GetBlockFullData(uint16_t x, uint16_t y, uint16_t z, uint16_t* pId, uint32_t* pUserData);
-	
+	void ParaTerrain_LoadBlockAsync(uint16_t x, uint16_t y, uint16_t z, uint16_t blockId, uint32_t userData);
+
 	bool ParaScene_CheckExist(int nID);
 
 	bool ParaGlobal_SetFieldCData(const char* sFieldname, void* pValue);
@@ -287,6 +288,11 @@ if(use_ffi) then
 					ParaEngineClient.ParaTerrain_GetBlockFullData(x, y, z, pTmpId, pTmpUserData);
 			
 					return pTmpId[0], pTmpUserData[0];
+				end
+			end
+			if(ParaTerrain.LoadBlockAsync) then
+				ParaTerrain.LoadBlockAsync = function(x, y, z, blockId, userData)
+					ParaEngineClient.ParaTerrain_LoadBlockAsync(x, y, z, blockId, userData);
 				end
 			end
 

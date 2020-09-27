@@ -64,6 +64,8 @@ function DOM.GetDOM(name)
 		dom = ParaEngine.GetAttributeObject():GetChild("gameFRC");
 	elseif(name == "player") then
 		dom = ParaScene.GetPlayer():GetAttributeObject();
+	elseif(name == "BlockWorldClient") then
+		dom = ParaTerrain.GetBlockAttributeObject(); -- ParaScene.GetAttributeObject():GetChildAt(1, 1);
 	elseif(name == "npl") then
 		dom = NPL.GetAttributeObject();
 	elseif(name == "camera") then
