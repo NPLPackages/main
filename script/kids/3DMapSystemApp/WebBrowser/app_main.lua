@@ -299,6 +299,15 @@ function Map3DSystem.App.WebBrowser.OnExec(app, commandName, params)
 		if(url~=nil) then
 			-- using mcml page instead
 			if(url ~= "#") then
+				if (string.match(url, "screenOrientation=(%w+)") == "portrait") then
+					WebView.setOrientation(1)
+
+					commonlib.TimerManager.SetTimeout(function()
+						ParaGlobal.ShellExecute("open", url, "", "", 1);
+					end, 500)
+					return
+				end
+
 				ParaGlobal.ShellExecute("open", url, "", "", 1);
 				--NPL.load("(gl)script/kids/3DMapSystemApp/WebBrowser/OpenInBrowserDlgPage.lua");
 				--Map3DSystem.App.WebBrowser.OpenInBrowserDlgPage.Show(url)
