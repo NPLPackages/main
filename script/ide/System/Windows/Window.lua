@@ -47,6 +47,7 @@ Window:Property({"AutoClearBackground", true, nil, "SetAutoClearBackground"});
 Window:Property({"CanDrag", false, auto=true});
 Window:Property({"Alignment", "_lt", auto=true});
 Window:Property({"zorder", nil, "GetZOrder", "SetZOrder", auto=true});
+Window:Property({"CanHaveFocus", nil, "GetCanHaveFocus", "SetCanHaveFocus", auto=true});
 Window:Property({"uiScaling", nil, "GetUIScaling", "SetUIScaling"}); -- x, y
 Window:Property({"InputMethodEnabled", true, "IsInputMethodEnabled", "SetInputMethodEnabled", auto=true});
 Window:Property({"DestroyOnClose", true,  "IsDestroyOnClose", "SetDestroyOnClose", auto=true});
@@ -499,13 +500,20 @@ end
 -- set key focus to the window. 
 function Window:SetFocus_sys()
 	if(self.native_ui_obj) then
-		if(not self.CanHaveFocus) then
+		if(self.CanHaveFocus == nil) then
 			-- enable key focus only once
 			self.CanHaveFocus = true;
 			self.native_ui_obj:SetField("CanHaveFocus", self.CanHaveFocus); 
 			self.native_ui_obj:SetField("InputMethodEnabled", self.CanHaveFocus and self:IsInputMethodEnabled()); 
 		end
 		self.native_ui_obj:Focus();
+	end
+end
+
+function Window:SetCanHaveFocus(bCanHaveFocus)
+	self.CanHaveFocus = bCanHaveFocus == true; 
+	if(self.native_ui_obj) then
+		self.native_ui_obj:SetField("CanHaveFocus", self.CanHaveFocus); 
 	end
 end
 
