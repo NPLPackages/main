@@ -33,39 +33,41 @@ local options = commonlib.gettable("Map3DSystem.options");
 --
 -- ParaWorld platform commandline setting processing
 --
--- let command line params to override some loaded or default settings. 
-User.Name = ParaEngine.GetAppCommandLineByParam("username", User.Name);
-User.Password = ParaEngine.GetAppCommandLineByParam("password", User.Password);
+if(__rts__:GetName() == "main") then
+	-- let command line params to override some loaded or default settings. 
+	User.Name = ParaEngine.GetAppCommandLineByParam("username", User.Name);
+	User.Password = ParaEngine.GetAppCommandLineByParam("password", User.Password);
 
-User.ChatDomain = ParaEngine.GetAppCommandLineByParam("chatdomain", nil);
-User.Domain = ParaEngine.GetAppCommandLineByParam("domain", nil);
-if(paraworld) then
-	paraworld.ChangeDomain({domain=User.Domain, chatdomain=User.ChatDomain})
+	User.ChatDomain = ParaEngine.GetAppCommandLineByParam("chatdomain", nil);
+	User.Domain = ParaEngine.GetAppCommandLineByParam("domain", nil);
+	if(paraworld) then
+		paraworld.ChangeDomain({domain=User.Domain, chatdomain=User.ChatDomain})
+	end
+	options.ForceGateway = ParaEngine.GetAppCommandLineByParam("gateway", nil);
+
+	local IsServerMode = ParaEngine.GetAppCommandLineByParam("servermode", "false") == "true";
+	local IsQuestServerMode = ParaEngine.GetAppCommandLineByParam("questservermode", "false") == "true";
+	if(IsServerMode) then
+		--main_state = "JGSL_servermode";
+		--ParaGlobal.SetGameLoop("(gl)script/kids/3DMapSystemNetwork/JGSL_servermode_loop.lua");
+	elseif(IsQuestServerMode) then
+		--main_state = "Quest_servermode";
+		--ParaGlobal.SetGameLoop("(gl)script/kids/3DMapSystemQuest/Quest_Server_Loop.lua");
+	end
+
+	User.IP = ParaEngine.GetAppCommandLineByParam("IP", "0");
+	User.Port = tonumber(ParaEngine.GetAppCommandLineByParam("port", "60001"));
+
+	-- update application title
+	ParaEngine.SetWindowText(string.format("www.paraengine.com -- powered by ParaEngine"));
+
+	-- whether we are in a web browser plugin. 
+	options.IsWebBrowser = ((ParaEngine.GetAttributeObject():GetField("CoreUsage", 1) % 2) == 0);
+	-- whether we are in the mobile platform
+	options.IsMobilePlatform = (ParaEngine.GetAppCommandLineByParam("IsMobilePlatform", "false") == "true"); -- ParaEngine.GetAttributeObject():GetField("IsMobilePlatform", false);
+	-- do not allow resizing windows when running standalone mode. Allow resizing in web browser
+	ParaEngine.GetAttributeObject():SetField("IgnoreWindowSizeChange", not options.IsWebBrowser);
 end
-options.ForceGateway = ParaEngine.GetAppCommandLineByParam("gateway", nil);
-
-local IsServerMode = ParaEngine.GetAppCommandLineByParam("servermode", "false") == "true";
-local IsQuestServerMode = ParaEngine.GetAppCommandLineByParam("questservermode", "false") == "true";
-if(IsServerMode) then
-	--main_state = "JGSL_servermode";
-	--ParaGlobal.SetGameLoop("(gl)script/kids/3DMapSystemNetwork/JGSL_servermode_loop.lua");
-elseif(IsQuestServerMode) then
-	--main_state = "Quest_servermode";
-	--ParaGlobal.SetGameLoop("(gl)script/kids/3DMapSystemQuest/Quest_Server_Loop.lua");
-end
-
-User.IP = ParaEngine.GetAppCommandLineByParam("IP", "0");
-User.Port = tonumber(ParaEngine.GetAppCommandLineByParam("port", "60001"));
-
--- update application title
-ParaEngine.SetWindowText(string.format("www.paraengine.com -- powered by ParaEngine"));
-
--- whether we are in a web browser plugin. 
-options.IsWebBrowser = ((ParaEngine.GetAttributeObject():GetField("CoreUsage", 1) % 2) == 0);
--- whether we are in the mobile platform
-options.IsMobilePlatform = (ParaEngine.GetAppCommandLineByParam("IsMobilePlatform", "false") == "true"); -- ParaEngine.GetAttributeObject():GetField("IsMobilePlatform", false);
--- do not allow resizing windows when running standalone mode. Allow resizing in web browser
-ParaEngine.GetAttributeObject():SetField("IgnoreWindowSizeChange", not options.IsWebBrowser);
 
 --
 -- ParaWorld platform common functions: init, reset, LoadWorld, CreateWorld
