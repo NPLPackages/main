@@ -1076,7 +1076,7 @@ function UIElement:mapTo(parent, pos)
     local p = Point:new_from_pool(pos:x(),pos:y());
     if (parent) then
         local w = self;
-        while (w ~= parent) do
+        while (w and w ~= parent) do
             p = w:mapToParent(p);
             w = w:parentWidget();
         end
