@@ -124,7 +124,7 @@ end
 
 local fileInfo = {};
 -- main handler
-local function filehandler(req, res, baseDir, nocache, BrowserCacheExpire)
+local function filehandler(req, res, baseDir, nocache, BrowserCacheExpire, filename)
 	if req.cmd_mth ~= "GET" and req.cmd_mth ~= "HEAD" then
 		return WebServer.common_handlers.err_405(req, res)
 	end
@@ -132,14 +132,16 @@ local function filehandler(req, res, baseDir, nocache, BrowserCacheExpire)
 	if not in_base(req.relpath) then
 		return WebServer.common_handlers.err_403(req, res)
 	end
-
 	local path;
-	if(baseDir == "") then
-		path = req.relpath:gsub("^/", "");
-	else
-		path = baseDir..req.relpath:gsub("^/", "");
-	end
-
+    if(filename)then
+        path = baseDir .. filename;
+    else
+        if(baseDir == "") then
+		    path = req.relpath:gsub("^/", "");
+	    else
+		    path = baseDir..req.relpath:gsub("^/", "");
+	    end
+    end
 	res.headers["Content-Type"] = mimetypes:guess_type(path);
 	
 	--if(nocache) then
@@ -154,7 +156,6 @@ local function filehandler(req, res, baseDir, nocache, BrowserCacheExpire)
 	if (not ParaIO.GetFileInfo(path, fileInfo)) then
 		return WebServer.common_handlers.err_404(req, res);
 	end
-	
 	if (fileInfo.mode == "directory") then
 		req.parsed_url.path = req.parsed_url.path .. "/"
 		res.statusline = "HTTP/1.1 301 Moved Permanently"
@@ -281,18 +282,20 @@ end
 
 
 -- public: file handler maker. it returns a handler that serves files in the baseDir dir
--- @param baseDir: the directory from which to serve files. "%world%" is current world directory
--- it can also be a table {baseDir=string, nocache=boolean, BrowserCacheExpire=number}
+-- @param baseDir_input: the directory from which to serve files. "%world%" is current world directory
+-- it can also be a table {baseDir=string, nocache=boolean, BrowserCacheExpire=number, filename=string}
 -- @return the actual handler function(request, response) end
-function WebServer.filehandler(baseDir)
+function WebServer.filehandler(baseDir_input)
+	local baseDir;
 	local nocache;
 	local BrowserCacheExpire = WebServer.config.CacheDefaultExpire;
-	if type(baseDir) == "table" then 
-		nocache = baseDir.nocache;
-		baseDir = baseDir.baseDir;
-		BrowserCacheExpire = baseDir.BrowserCacheExpire or BrowserCacheExpire;
+    local filename;
+	if type(baseDir_input) == "table" then 
+		nocache = baseDir_input.nocache;
+		baseDir = baseDir_input.baseDir;
+		BrowserCacheExpire = baseDir_input.BrowserCacheExpire or BrowserCacheExpire;
+		filename = baseDir_input.filename;
 	end
-	
 	local bReplaceWorldDir;
 	if(type(baseDir) == "string") then
 		if(baseDir:match("^%%world%%")) then
@@ -305,11 +308,12 @@ function WebServer.filehandler(baseDir)
 	
 	return function(req, res)
 		local baseDir_ = baseDir;
+		local filename_ = filename;
 		if(bReplaceWorldDir) then
 			baseDir_ = baseDir_:gsub("^%%world%%", ParaWorld.GetWorldDirectory());
 		end
 		if(npl_thread_name == handlerThreadName) then
-			return filehandler(req, res, baseDir_, nocache, BrowserCacheExpire)	
+			return filehandler(req, res, baseDir_, nocache, BrowserCacheExpire, filename_)	
 		else
 			req:discard();
 			CheckLoadFileThread();
@@ -319,6 +323,7 @@ function WebServer.filehandler(baseDir)
 				baseDir = baseDir_,
 				nocache = nocache, 
 				BrowserCacheExpire = BrowserCacheExpire, 
+				filename = filename_, 
 			};
 			NPL.activate(targetFile, msg);
 		end
@@ -327,7 +332,7 @@ end
 
 local function activate()
 	local req = request:new():init(msg.req);
-	local result = filehandler(req, req.response, msg.baseDir, msg.nocache, msg.BrowserCacheExpire);
+	local result = filehandler(req, req.response, msg.baseDir, msg.nocache, msg.BrowserCacheExpire, msg.filename);
 	req.response:finish();
 end
 NPL.this(activate)
