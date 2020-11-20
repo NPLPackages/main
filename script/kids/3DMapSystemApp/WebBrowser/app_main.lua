@@ -299,13 +299,15 @@ function Map3DSystem.App.WebBrowser.OnExec(app, commandName, params)
 		if(url~=nil) then
 			-- using mcml page instead
 			if(url ~= "#") then
-				if (string.match(url, "screenOrientation=(%w+)") == "portrait") then
-					WebView.setOrientation(1)
-
-					commonlib.TimerManager.SetTimeout(function()
-						ParaGlobal.ShellExecute("open", url, "", "", 1);
-					end, 500)
-					return
+				if System.os.GetPlatform() == 'android' then
+					if (string.match(url, "screenOrientation=(%w+)") == "portrait") then
+						WebView.setOrientation(1)
+	
+						commonlib.TimerManager.SetTimeout(function()
+							ParaGlobal.ShellExecute("open", url, "", "", 1);
+						end, 500)
+						return
+					end
 				end
 
 				ParaGlobal.ShellExecute("open", url, "", "", 1);
