@@ -105,7 +105,7 @@ function Files.Find(output, rootfolder,nMaxFileLevels, nMaxFilesNum, filter, zip
 	output = output or {};
 	local sInitDir;
 	if((not zipfile or zipfile == "") and not Files.IsAbsolutePath(rootfolder)) then
-		sInitDir = ParaIO.GetCurDirectory(0)..rootfolder;
+		sInitDir = ParaIO.GetWritablePath() .. rootfolder;
 	else
 		sInitDir = rootfolder;
 	end
