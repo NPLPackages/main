@@ -22,9 +22,16 @@
   <!--rules used when starting a web server. Multiple rules with different id can be defined. -->
   <rules id="simple_rule">
     
-    <rule match="^/?npl_block_editor_deps/.+%.js" with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/npl_block_editor_web/"}'></rule>    
+    <rule match="^/?npl_block_editor_deps/.+%.js"  with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/npl_block_editor_web/"}'></rule>    
+    <rule match="^/?npl_block_editor_deps/.+%.css" with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/npl_block_editor_web/"}'></rule>    
+    <rule match="^/?npl_block_editor_deps/.+%.png" with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/npl_block_editor_web/"}'></rule>    
+    <rule match="^/?npl_block_editor_deps/.+%.svg" with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/npl_block_editor_web/"}'></rule>    
+    <rule match="^/?npl_block_editor_deps/.+%.mp3" with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/npl_block_editor_web/"}'></rule>    
+    <rule match="^/?npl_block_editor_deps/.+%.ttf" with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/npl_block_editor_web/"}'></rule>    
+    <rule match="^/?npl_block_editor_deps/.+%.woff" with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/npl_block_editor_web/"}'></rule>    
+    
     <rule match="^/?npl_block_editor_dist/.+%.js" with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/npl_block_editor_web/"}'></rule>    
-    <rule match="^/?npl_block_editor/avatar" with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/npl_block_editor_web", filename = "npl_block_editor/avatar/index.html"}'></rule>
+    <rule match="^/?npl_block_editor/microbit" with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/npl_block_editor_web", filename = "npl_block_editor/microbit/index.html"}'></rule>
     <rule match="^/?npl_block_editor/cad" with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/npl_block_editor_web", filename = "npl_block_editor/cad/index.html"}'></rule>
     
     <!--URI map everything without extension to index.page-->
