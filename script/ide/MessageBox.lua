@@ -97,7 +97,8 @@ _guihelper.MessageBoxButtons = {
 	Nothing = 7,
 
 	OKCancel_CustomLabel = 8,
-    OKCancel_CustomLabel_Highlight_Right = 9,
+	OKCancel_CustomLabel_Highlight_Right = 9,
+	OK_CustomLabel = 10,
 };
 
 -- Specifies identifiers to indicate the return value of a dialog box. 
@@ -291,7 +292,9 @@ function _guihelper.OnMessageBoxClick(name)
 		_guihelper.MessageBoxClass.CheckShowCallback = nil;
 	end
 
-	if(_guihelper.values.buttons == _guihelper.MessageBoxButtons.OKCancel_CustomLabel or  _guihelper.values.buttons == _guihelper.MessageBoxButtons.OKCancel_CustomLabel_Highlight_Right) then
+	if(_guihelper.values.buttons == _guihelper.MessageBoxButtons.OKCancel_CustomLabel or
+	   _guihelper.values.buttons == _guihelper.MessageBoxButtons.OKCancel_CustomLabel_Highlight_Right or
+	   _guihelper.values.buttons == _guihelper.MessageBoxButtons.OK_CustomLabel) then
         --do nothing
     else
 	    if(not dialogResult) then
