@@ -149,8 +149,17 @@ function ObjEditor.CreateObjectByParams(param)
 		obj:SetPosition(param.x, param.y, param.z);
 		
 		if(param.CCSInfoStr ~= nil) then
-			-- NOTE by Andy: mount the default CCS information if provided
-			CCS.ApplyCCSInfoString(obj, param.CCSInfoStr);
+            if(System and System.options and System.options.mc)then
+                if(CCS.ApplyCCSInfoString_MC)then
+			        CCS.ApplyCCSInfoString_MC(obj, param.CCSInfoStr);
+                else
+			        CCS.ApplyCCSInfoString(obj, param.CCSInfoStr);
+                end
+            else
+                -- NOTE by Andy: mount the default CCS information if provided
+			    CCS.ApplyCCSInfoString(obj, param.CCSInfoStr);
+            end
+			
 		else
 			if(obj:ToCharacter():IsCustomModel() == true) then
 				CCS.DefaultAppearance.MountDefaultAppearance(obj);

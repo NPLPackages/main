@@ -31,8 +31,9 @@
     <rule match="^/?npl_block_editor_deps/.+%.woff" with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/npl_block_editor_web/"}'></rule>    
     
     <rule match="^/?npl_block_editor_dist/.+%.js" with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/npl_block_editor_web/"}'></rule>    
-    <rule match="^/?npl_block_editor/microbit" with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/npl_block_editor_web", filename = "npl_block_editor/microbit/index.html"}'></rule>
+    <rule match="^/?npl_block_editor/avatar" with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/npl_block_editor_web", filename = "npl_block_editor/avatar/index.html"}'></rule>
     <rule match="^/?npl_block_editor/cad" with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/npl_block_editor_web", filename = "npl_block_editor/cad/index.html"}'></rule>
+    <rule match="^/?npl_block_editor/microbit" with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/npl_block_editor_web", filename = "npl_block_editor/microbit/index.html"}'></rule>
     
     <!--URI map everything without extension to index.page-->
     <rule match='{"^[^%./]*/$", "^[^%.]+$", "robots.txt"}' with="WebServer.redirecthandler" params='{"/index.page"}'></rule>
