@@ -494,6 +494,11 @@ if(ParaUI and ParaUI.ParaUIObject) then
 					local callInfo = pool[eventname];
 					if(callInfo) then
 						if(type(callInfo.func) == "function") then
+							if(commonlib.__onuievent__) then
+								if(commonlib.__onuievent__(obj, eventname, callInfo)) then
+									return
+								end
+							end
 							if(callInfo.args) then
 								callInfo.func(obj, unpack(callInfo.args, 1, callInfo.args.n));
 							else
