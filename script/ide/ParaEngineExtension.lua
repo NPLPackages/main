@@ -180,7 +180,7 @@ end
 -- after calling this function, please call ParaCamera.SetEyePos(facing, height, angle) to change the camera eye position. 
 function ParaCamera.SetLookAtPos(x, y, z)
 	local player = ParaCamera.GetDummyObject();
-	player:SetPosition(x, y - 0.35, z);
+	player:SetPosition(x, y, z);
 	player:ToCharacter():SetFocus();
 end
 
