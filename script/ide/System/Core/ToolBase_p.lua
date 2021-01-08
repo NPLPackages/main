@@ -143,9 +143,18 @@ local function InstallProperty_helper(class_def, property)
 	end
 	
 	if(property.auto) then
-		setterName = setterName or ("Set"..name);
-		getterName = getterName or ("Get"..name);
+        local default_set = "Set".. name;
+        local default_get = "Get".. name;
 
+        if(property.camelCase)then
+            default_set = "set".. name;
+            default_get = "get".. name;
+        end
+
+		setterName = setterName or default_set;
+		getterName = getterName or default_get;
+
+        
 		-- create setting and getter automatically
 		-- setter name like self:SetValue(value), one may override
 			
