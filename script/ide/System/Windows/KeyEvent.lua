@@ -32,6 +32,7 @@ function KeyEvent:init(event_type, vKey)
 	self.alt_pressed = Keyboard:IsAltKeyPressed();
 	self.key_sequence = self:GetKeySequence();
 	self.accepted = nil;
+	self.recorded = nil;
 	return self;
 end
 

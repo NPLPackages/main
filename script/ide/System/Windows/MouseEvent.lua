@@ -34,6 +34,7 @@ function MouseEvent:ctor()
 	self.local_pos = Point:new();
 	self.isDoubleClick = false;
 	self.isTripleClick = false;
+	self.recorded = nil; 
 end
 
 
