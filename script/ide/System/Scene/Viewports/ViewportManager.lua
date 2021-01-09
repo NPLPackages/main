@@ -24,6 +24,10 @@ function ViewportManager:ctor()
 	NPL.load("(gl)script/ide/System/Scene/Viewports/SceneViewport.lua");
 	local SceneViewport = commonlib.gettable("System.Scene.Viewports.SceneViewport");
 	self.viewports["scene"]  = SceneViewport:new():init("scene");
+
+    NPL.load("(gl)script/ide/System/Scene/Viewports/SceneViewport.lua");
+	local SceneViewport = commonlib.gettable("System.Scene.Viewports.SceneViewport");
+	self.viewports["visual_scene_editor"]  = SceneViewport:new():init("visual_scene_editor");
 end
 
 function ViewportManager:GetGUIViewport()
@@ -32,6 +36,10 @@ end
 
 function ViewportManager:GetSceneViewport()
 	return self.viewports["scene"];
+end
+
+function ViewportManager:GetVisualSceneEditorViewport()
+	return self.viewports["visual_scene_editor"];
 end
 
 ViewportManager:InitSingleton();
