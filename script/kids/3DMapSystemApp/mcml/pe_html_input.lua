@@ -329,7 +329,7 @@ function pe_editor_radio.create(rootName, mcmlNode, bindingContext, _parent, lef
 		(css["margin-bottom"] or css["margin"] or 0),(css["margin-right"] or css["margin"] or 0);	
 		
 	local left, top = parentLayout:AddObject(width+margin_left+margin_right, height+margin_top+margin_bottom);
-	local btnName = mcmlNode:GetInstanceName(rootName);
+	local btnName = mcmlNode:GetAttributeWithCode("uiname", nil, true) or mcmlNode:GetInstanceName(rootName);
 	local groupName = mcmlNode:GetString("name") or "_defaultRadioGroup";
 	local value = mcmlNode:GetAttributeWithCode("value");
 	local checked = mcmlNode:GetAttributeWithCode("checked");
@@ -637,7 +637,7 @@ function pe_editor_checkbox.create(rootName, mcmlNode, bindingContext, _parent, 
 	local left, top = parentLayout:AddObject(width+margin_left+margin_right, height+margin_top+margin_bottom);
 	
 	
-	local btnName = mcmlNode:GetInstanceName(rootName);
+	local btnName = mcmlNode:GetAttributeWithCode("uiname", nil, true) or mcmlNode:GetInstanceName(rootName);
 	local value = mcmlNode:GetAttributeWithCode("checked", nil, true);
 	-- NOTE: some pages use checked="checked", some use checked="true"
 	if(type(value) == "string") then

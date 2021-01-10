@@ -1585,7 +1585,8 @@ function mcml.baseNode:DrawDisplayBlock(rootName, bindingContext, _parent, left,
 
 	if(onclick_for or onclick or tooltip or ontouch) then
 		-- if there is onclick event, the inner nodes will not be interactive.
-		local instName = mcmlNode:GetInstanceName(rootName);
+		local instName = mcmlNode:GetAttributeWithCode("uiname", nil, true) or mcmlNode:GetInstanceName(rootName);
+		
 		local _this=ParaUI.CreateUIObject("button",instName or "b","_lt", left+margin_left, top+margin_top, width-left-margin_left-margin_right, height-top-margin_top-margin_bottom);
 		mcmlNode.uiobject_id = _this.id;
 		if(background) then
