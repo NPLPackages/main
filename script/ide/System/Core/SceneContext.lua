@@ -201,9 +201,11 @@ end
 
 
 function SceneContext:handleMouseEvent(event)
-	event:updateModifiers();
+	if(not event.isEmulated) then
+		event:updateModifiers();
+	end
 	self:FetchPickingResult();
-
+	
 	local widget = self:GetObjectAtMousePos() or self;
 
 	if(event:GetType() == "mousePressEvent") then

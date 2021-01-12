@@ -17,19 +17,25 @@ local Screen = commonlib.gettable("System.Windows.Screen");
 local Keyboard = commonlib.inherit(commonlib.gettable("System.Core.ToolBase"), commonlib.gettable("System.Windows.Keyboard"));
 Keyboard:Property("Name", "Keyboard");
 
+Keyboard.emulatedKeys = {};
 function Keyboard:ctor()
 end
 
+-- @return emulatedKeys: {alt_pressed=nil, ctrl_pressed, shift_pressed}
+function Keyboard:GetEmulatedKeys()
+	return Keyboard.emulatedKeys;
+end
+
 function Keyboard:IsAltKeyPressed()
-	return ParaUI.IsKeyPressed(DIK_SCANCODE.DIK_LMENU) or ParaUI.IsKeyPressed(DIK_SCANCODE.DIK_RMENU);
+	return Keyboard.emulatedKeys.alt_pressed or ParaUI.IsKeyPressed(DIK_SCANCODE.DIK_LMENU) or ParaUI.IsKeyPressed(DIK_SCANCODE.DIK_RMENU);
 end
 
 function Keyboard:IsCtrlKeyPressed()
-	return ParaUI.IsKeyPressed(DIK_SCANCODE.DIK_LCONTROL) or ParaUI.IsKeyPressed(DIK_SCANCODE.DIK_RCONTROL);
+	return Keyboard.emulatedKeys.ctrl_pressed or ParaUI.IsKeyPressed(DIK_SCANCODE.DIK_LCONTROL) or ParaUI.IsKeyPressed(DIK_SCANCODE.DIK_RCONTROL);
 end
 
 function Keyboard:IsShiftKeyPressed()
-	return ParaUI.IsKeyPressed(DIK_SCANCODE.DIK_LSHIFT) or ParaUI.IsKeyPressed(DIK_SCANCODE.DIK_RSHIFT);
+	return Keyboard.emulatedKeys.shift_pressed or ParaUI.IsKeyPressed(DIK_SCANCODE.DIK_LSHIFT) or ParaUI.IsKeyPressed(DIK_SCANCODE.DIK_RSHIFT);
 end
 
 -- send a simulated raw key event to paraengine. 

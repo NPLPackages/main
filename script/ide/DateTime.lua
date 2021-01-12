@@ -95,7 +95,7 @@ function commonlib.timehelp.GetDaysTweenDate(date1, date2)
 	end
 end
 
---·µ»ØÈÕÆÚµÄºÁÃëÊý
+--ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÚµÄºï¿½ï¿½ï¿½ï¿½ï¿½
 --@param date:yyyy-MM-dd H:mm:ss
 function commonlib.GetMillisecond_Date(date)
 	local __,__,year,month,day,hour,min,sec = string_find(date,"(.+)-(.+)-(.+) (.+):(.+):(.+)");
@@ -109,7 +109,7 @@ function commonlib.GetMillisecond_Date(date)
 	local total_secs = days * commonlib.timehelp.GetDaySeconds() + commonlib.timehelp.GetSeconds(hour,min,sec);
 	return total_secs * 1000;
 end
---·µ»ØÁ½¸öÈÕÆÚÖ®¼äÏà²îµÄºÁÃëÊý
+--ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö®ï¿½ï¿½ï¿½ï¿½ï¿½Äºï¿½ï¿½ï¿½ï¿½ï¿½
 --@param date1:yyyy-MM-dd H:mm:ss
 --@param date2:yyyy-MM-dd H:mm:ss
 function commonlib.GetMillisecond_BetweenToDate(date1,date2)
@@ -120,7 +120,7 @@ function commonlib.GetMillisecond_BetweenToDate(date1,date2)
 	local min_mill = math.min(a_1,a_2);
 	return max_mill - min_mill;
 end
---·µ»ØÁ½¸öÈÕÆÚÖ®¼äÏà²îµÄÌìÊý
+--ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö®ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 --return day,hours,minutes,seconds,time_str,total_mill    e.g: day,hours,minutes,seconds,H:mm:ss,total_mill
 function commonlib.GetTimeStr_BetweenToDate(date1,date2)
 	local total_mill = commonlib.GetMillisecond_BetweenToDate(date1,date2);
@@ -170,7 +170,7 @@ function timehelp.GetLocalTime()
 	local hour = ParaGlobal.GetTimeFormat("H-mm-ss");
 	return today,hour;
 end
---ÊÇ·ñÊÇÍ¬Ò»Ìì
+--ï¿½Ç·ï¿½ï¿½ï¿½Í¬Ò»ï¿½ï¿½
 
 local function isEqual(a,b)
 	if(a and b and a == b)then
@@ -301,12 +301,12 @@ function timehelp.MillToTimeStr(totalMillseconds,timefmt)
 	seconds = string.format("%.3f",seconds);
 	return hours..":"..minutes..":"..seconds,hours,minutes,seconds;
 end
---day1ºÍday2Ö®¼äÏà²îµÄºÁÃëÊý
+--day1ï¿½ï¿½day2Ö®ï¿½ï¿½ï¿½ï¿½ï¿½Äºï¿½ï¿½ï¿½ï¿½ï¿½
 --@param day1: a number value
 --@param day2: a number value
 --@param time1: a string value "20:05:05"
 --@param time2: a string value "22:05:05"
---note:Ö»ÄÜÊÇÒ»¸öÔÂÄÚµÄÁ½Ìì
+--note:Ö»ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½ï¿½ï¿½
 --[[
 NPL.load("(gl)script/ide/commonlib.lua");
 local day1 = 10;
@@ -459,6 +459,22 @@ function timehelp.get_days_number_in_month(year, month)
 	return num;
 end
 
+function timehelp.GetTimeStampByDateTime(date_time)
+    -- date_time = "2020-09-09T06:52:43.000Z"
+    local year, month, day, hour, min, sec = date_time:match("^(%d+)%D(%d+)%D(%d+)%D(%d+)%D(%d+)%D(%d+)") 
+    local time_stamp = os.time({day=tonumber(day), month=tonumber(month), year=tonumber(year), hour=tonumber(hour) + 8})
+    time_stamp = time_stamp + min * 60 + sec
+    return time_stamp
+end
+
+function timehelp.GetWeeHoursTimeStamp(time)
+    local year = os.date("%Y", time)	
+    local month = os.date("%m", time)
+	local day = os.date("%d", time)
+    local day_time_stamp = os.time({year = year, month = month, day = day, hour=0, minute=0, second=0})
+    
+    return day_time_stamp
+end
 ----------------------------------------
 -- date time range
 ----------------------------------------

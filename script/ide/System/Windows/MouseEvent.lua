@@ -34,7 +34,6 @@ function MouseEvent:ctor()
 	self.local_pos = Point:new();
 	self.isDoubleClick = false;
 	self.isTripleClick = false;
-	self.recorded = nil; 
 end
 
 
@@ -134,7 +133,8 @@ function MouseEvent:init(event_type, window, localPos, windowPos, screenPos)
 	self.mouse_button = mouse_button;
 	self.mouse_wheel = mouse_wheel;
 	self.accepted = nil;
-
+	self.recorded = nil; 
+	self.isEmulated = false;
 	self:isDoubleAndTripleClick();
 
 	return self;
