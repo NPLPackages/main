@@ -314,6 +314,24 @@ function PageCtrl:GetParentUIObject()
 	end
 end
 
+-- get the root or top level ui object
+function PageCtrl:GetRootUIObject()
+	local parent = self:GetParentUIObject()
+	while(parent:IsValid()) do
+		local newParent = parent.parent;
+		if(newParent:IsValid()) then
+			if(newParent.name == "__root") then
+				break;
+			else
+				parent = newParent
+			end
+		else
+			break;
+		end
+	end
+	return parent;
+end
+
 -- close the containing window
 -- @param bDestroy: if true, it will destroy the window, otherwise it will just hide it.
 function PageCtrl:CloseWindow(bDestroy)

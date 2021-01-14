@@ -508,10 +508,11 @@ function ContextMenu:Show(x, y, param1)
 										-- accumulate subMenuHeight
 										subMenuHeight = subMenuHeight + style.menuitemHeight;
 								
-										local _itemBtn = ParaUI.CreateUIObject("button", "Btn", "_fi", 0, 0, 0, 0);
+										local _itemBtn = ParaUI.CreateUIObject("button", nodeLvl2.uiname or "Btn", "_fi", 0, 0, 0, 0);
 										_itemBtn.background = "";
-										_itemBtn.onclick = "";
-										_itemBtn.onclick = string.format([[;CommonCtrl.ContextMenu.OnClickItem(%q, %q);]], self.name, nodeLvl2:GetNodePath());
+										_itemBtn:SetScript("onclick", function()
+											CommonCtrl.ContextMenu.OnClickItem(self.name, nodeLvl2:GetNodePath());
+										end)
 										_itemBtn.onmouseenter = string.format([[;CommonCtrl.ContextMenu.OnMouseEnterNormalItem(%q, %d, %d);]], self.name, j, k);
 										_itemBtn.onmouseleave = string.format([[;CommonCtrl.ContextMenu.OnMouseLeaveNormalItem(%q, %d, %d);]], self.name, j, k);
 										_item:AddChild(_itemBtn);
@@ -540,11 +541,13 @@ function ContextMenu:Show(x, y, param1)
 							table.insert(self.AllMouseLeaveItem, j);
 						else
 							-- mouse click event for normal menu nodes
-							local _itemBtn = ParaUI.CreateUIObject("button", "Btn", "_fi", 0, 0, 0, 0);
+							local _itemBtn = ParaUI.CreateUIObject("button", nodeLvl1.uiname or "Btn", "_fi", 0, 0, 0, 0);
 							_itemBtn.background = "";
 
 							if (nodeLvl1.Enable ~= false) then
-								_itemBtn.onclick = string.format([[;CommonCtrl.ContextMenu.OnClickItem(%q, %q);]], self.name, nodeLvl1:GetNodePath());
+								_itemBtn:SetScript("onclick", function()
+									CommonCtrl.ContextMenu.OnClickItem(self.name, nodeLvl1:GetNodePath());
+								end)
 								_itemBtn.onmouseenter = string.format([[;CommonCtrl.ContextMenu.OnMouseEnterNormalItem(%q, %d);]], self.name, j);
 								_itemBtn.onmouseleave = string.format([[;CommonCtrl.ContextMenu.OnMouseLeaveNormalItem(%q, %d);]], self.name, j);
 							end

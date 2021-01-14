@@ -544,6 +544,7 @@ function TextControl:mouseReleaseEvent(event)
 	if(event:button() == "right") then
 		self:rightClicked(event);
 	end
+	event:accept();
 end
 
 
@@ -613,6 +614,7 @@ function TextControl:inputMethodEvent(event)
 	--self:InsertTextAddToCommand(commitString, nil, nil, true);
 	self:InsertTextInCursorPos(commitString);
 	self:userTyped(self, commitString);
+	event:accept();
 end
 
 function TextControl:keyPressEvent(event)

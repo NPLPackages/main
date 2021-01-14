@@ -12,6 +12,8 @@ NPL.load("(gl)script/ide/object_editor.lua");
 NPL.load("(gl)script/ide/object_editor_v1.lua"); -- all v1 functions are included
 NPL.load("(gl)script/kids/3DMapSystemUI/CCS/ccs.lua"); --TODO: lixizhi 2008.6.12 we shall remove dependency?
 NPL.load("(gl)script/kids/3DMapSystemUI/CCS/Main.lua");
+NPL.load("(gl)script/apps/Aries/Creator/Game/Entity/PlayerAssetFile.lua");
+local PlayerAssetFile = commonlib.gettable("MyCompany.Aries.Game.EntityManager.PlayerAssetFile")
 
 local CCS = commonlib.gettable("Map3DSystem.UI.CCS");
 
@@ -72,6 +74,10 @@ function ObjEditor.GetObjectParams(obj,param)
 			
 			if(char:IsCustomModel()) then
 				param.CCSInfoStr = CCS.GetCCSInfoString(obj);
+			end
+			local assetname = obj:GetPrimaryAsset():GetKeyName();
+			if(PlayerAssetFile:HasCustomGeosets(assetname)) then
+				param.CustomGeosets = PlayerAssetFile:GetDefaultCustomGeosets();
 			end
 		else
 			param.rotation = obj:GetRotation(param.rotation or {})
@@ -160,6 +166,8 @@ function ObjEditor.CreateObjectByParams(param)
 			    CCS.ApplyCCSInfoString(obj, param.CCSInfoStr);
             end
 			
+		elseif (param.CustomGeosets) then
+			PlayerAssetFile:RefreshCustomGeosets(obj, param.CustomGeosets);
 		else
 			if(obj:ToCharacter():IsCustomModel() == true) then
 				CCS.DefaultAppearance.MountDefaultAppearance(obj);

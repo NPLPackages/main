@@ -134,6 +134,7 @@ function MultiLineEditbox:Show(bShow)
 			local Window = commonlib.gettable("System.Windows.Window");
 			self.window = Window:new();
 			self.ctrlEditbox = MultiLineEditbox:new():init(self.window);
+			self.ctrlEditbox:SetUIName(self.name);
 			if(self.empty_text and self.empty_text~="") then
 				self.ctrlEditbox:SetEmptyText(self.empty_text);
 			end

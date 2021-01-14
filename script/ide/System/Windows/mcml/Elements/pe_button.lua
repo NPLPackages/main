@@ -36,6 +36,10 @@ function pe_button:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 		_this = Button:new():init(parentElem);
 		_this:SetPolygonStyle(polygonStyle);
 		_this:SetDirection(direction);
+		local uiname = self:GetAttributeWithCode("uiname", nil, true);
+		if(uiname) then
+			_this:SetUIName(uiname)
+		end
 		self:SetControl(_this);
 	else
 		_this:SetParent(parentElem);

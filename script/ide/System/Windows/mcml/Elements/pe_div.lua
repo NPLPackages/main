@@ -47,6 +47,10 @@ function pe_div:LoadComponent(parentElem, parentLayout, style)
 		if(onclick_for or onclick or tooltip or ontouch) then
 			_this = Button:new():init(parentElem);
 			_this:SetPolygonStyle("none");
+			local uiname = self:GetAttributeWithCode("uiname", nil, true);
+			if(uiname) then
+				_this:SetUIName(uiname)
+			end
 			self.isButton = true;
 		else
 			_this = Rectangle:new():init(parentElem);

@@ -722,5 +722,15 @@ function Application.LoadComponent(uiElement, url)
 	end
 end
 
+local uiObjects = {};
+function Application.SetUIObject(name, uiElement)
+	uiObjects[name or ""] = uiElement;
+end
+
+function Application.GetUIObject(name)
+	return name and uiObjects[name];
+end
+
+
 -- this is a singleton class
 Application:InitSingleton();

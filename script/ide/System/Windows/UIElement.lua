@@ -82,6 +82,7 @@ UIElement:Property({"transform", nil, auto=true});
 UIElement:Property({"focus_policy", FocusPolicy.NoFocus, "focusPolicy", "setFocusPolicy"});
 UIElement:Property({"mouseTracking", nil, "hasMouseTracking", "setMouseTracking"});
 UIElement:Property({"render_priority", 0, auto=true});
+UIElement:Property({"uiName", nil, "GetUIName", "SetUIName"});
 
 UIElement:Property({"clip", false, "IsClip", "SetClip", auto=true});
 UIElement:Property({"InputMethodEnabled", true, "IsInputMethodEnabled", "SetInputMethodEnabled", auto=true});
@@ -118,6 +119,32 @@ end
 
 function UIElement:GetID()
 	return self.elementId;
+end
+
+-- user interface name
+-- @param bSearchParent: if true, we will also find its parent by at most 4 levels. This is useful for compositive controls
+function UIElement:GetUIName(bSearchParent)
+	if(self.uiName) then
+		return self.uiName;
+	elseif(bSearchParent) then
+		local parent = self.parent
+		local i=0;
+		while(parent and i <= 4) do
+			if(parent.uiName) then
+				return parent.uiName;
+			else
+				parent = self.parent
+				i = i + 1
+			end
+		end
+	end
+end
+
+function UIElement:SetUIName(uiName)
+	self.uiName = uiName;
+	if(uiName) then
+		Application.SetUIObject(uiName, self);
+	end
 end
 
 function UIElement:SetParent(parent)
@@ -1006,6 +1033,11 @@ function UIElement:underMouse()
 	return self:testAttribute("WA_UnderMouse");
 end
 
+function UIElement:GetAbsPosition()
+	local pos = self:mapToGlobal(Point:new_from_pool(0,0))
+	local x, y = pos:x(), pos:y();
+	return x, y, self:width(), self:height();
+end
 
 -- convert to global position
 -- @return the returned Point is temporary, do not hold it for long

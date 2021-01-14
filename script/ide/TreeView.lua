@@ -826,7 +826,7 @@ function TreeView.DrawSingleSelectionNodeHandler(_parent,treeNode)
 			
 		elseif(treeNode.Text ~= nil) then
 			-- node that text. We shall display text
-			_this=ParaUI.CreateUIObject("button","b","_lt", left, 0 , nodeWidth - left-2, height - 1);
+			_this=ParaUI.CreateUIObject("button", treeNode.uiname or "b","_lt", left, 0 , nodeWidth - left-2, height - 1);
 			_parent:AddChild(_this);
 			if(treeNode.Selected) then
 				_this.background = "Texture/alphadot.png";
