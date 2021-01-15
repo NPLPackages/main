@@ -150,6 +150,13 @@ function TreeView:Show(bShow, bDoNotUpdate, bShowLastElement)
 	--+++++++++++++++++++++++++++++++++++
 	local bUpdated;
 	_this=ParaUI.GetUIObject(self.name);
+
+	if(self.uiname) then
+		self.mainName = self.uiname;
+	else
+		self.mainName = "main";
+	end
+
 	if(_this:IsValid() == false) then
 	
 		_this=ParaUI.CreateUIObject("container",self.name,self.alignment,self.left,self.top,self.width,self.height);
@@ -205,7 +212,7 @@ function TreeView:Update(bShowLastElement, ShowNode, DisableRecursive)
 		return
 	end
 	-- simply remove all sub UI and IDE controls 
-	local main = _parent:GetChild("main");
+	local main = _parent:GetChild(self.mainName);
 	local VScrollBar = _parent:GetChild("VScrollBar");
 	
 	CommonCtrl.DeleteAllSubControls(self);
@@ -216,7 +223,7 @@ function TreeView:Update(bShowLastElement, ShowNode, DisableRecursive)
 	if(self.RootNode.LogicalBottom<=TreeViewHeight) then
 		-- disable scroll bar
 		if(not main:IsValid()) then
-			main = ParaUI.CreateUIObject("container","main","_fi",0,0,0,0);
+			main = ParaUI.CreateUIObject("container",self.mainName,"_fi",0,0,0,0);
 			main.background = self.main_bg;
 			if (self.ClickThrough) then
 				main:GetAttributeObject():SetField("ClickThrough", true);
@@ -267,13 +274,15 @@ function TreeView:Update(bShowLastElement, ShowNode, DisableRecursive)
 		if(self.AutoVerticalScrollBar) then
 			-- enable scroll bar
 			if(not main:IsValid()) then
-				main=ParaUI.CreateUIObject("container","main","_fi",0,0,if_else(self.IsExternalScrollBar, 0, self.VerticalScrollBarWidth),0);
+				main=ParaUI.CreateUIObject("container",self.mainName,"_fi",0,0,if_else(self.IsExternalScrollBar, 0, self.VerticalScrollBarWidth),0);
 				main.background = self.main_bg;
 				if(not self.NoClipping) then
 					main.fastrender = false;
 				end	
 				if(not self.disablemousewheel) then
-					main.onmousewheel = string.format(";CommonCtrl.TreeView.OnTreeViewMouseWheel(%q)", self.name);
+					main:SetScript("onmousewheel", function()
+						CommonCtrl.TreeView.OnTreeViewMouseWheel(self.name);
+					end)
 				end	
 				if (self.ClickThrough) then
 					main:GetAttributeObject():SetField("ClickThrough", true);
@@ -291,7 +300,9 @@ function TreeView:Update(bShowLastElement, ShowNode, DisableRecursive)
 						main.fastrender = false;
 					end	
 					if(not self.disablemousewheel and main.onmousewheel == "" ) then
-						main.onmousewheel = string.format(";CommonCtrl.TreeView.OnTreeViewMouseWheel(%q)", self.name);
+						main:SetScript("onmousewheel", function()
+							CommonCtrl.TreeView.OnTreeViewMouseWheel(self.name);
+						end)
 					end	
 				end
 				main.background = self.main_bg;
@@ -329,7 +340,7 @@ function TreeView:Update(bShowLastElement, ShowNode, DisableRecursive)
 		else
 			-- disable scroll bar
 			if(not main:IsValid()) then
-				main = ParaUI.CreateUIObject("container","main","_fi",0,0,0,0);
+				main = ParaUI.CreateUIObject("container",self.mainName,"_fi",0,0,0,0);
 				main.background = self.main_bg;
 				if(self.onmouseup_parent) then
 					main.onmouseup = string.format(";CommonCtrl.TreeView.OnMouseUpContainer(%q)", self.name);
@@ -367,7 +378,7 @@ function TreeView:RefreshUI(DisableRecursive, bShowLastElement)
 		return
 	end
 	
-	_parent	= _parent:GetChild("main");
+	_parent	= _parent:GetChild(self.mainName);
 	if(not _parent:IsValid()) then
 		return
 	end
@@ -568,9 +579,11 @@ function TreeView:EnableMouseWheel(bEnable)
 	local _parent = ParaUI.GetUIObject(self.name);
 	if(_parent:IsValid()) then
 		if(not self.disablemousewheel) then
-			_parent:GetChild("main").onmousewheel = string.format(";CommonCtrl.TreeView.OnTreeViewMouseWheel(%q)", self.name);
+			_parent:GetChild(self.mainName):SetScript("onmousewheel", function()
+				CommonCtrl.TreeView.OnTreeViewMouseWheel(self.name);
+			end)
 		else
-			_parent:GetChild("main").onmousewheel = "";
+			_parent:GetChild(self.mainName).onmousewheel = "";
 		end
 	end	
 end

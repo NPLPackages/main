@@ -310,6 +310,11 @@ function pe_gridview.create(rootName, mcmlNode, bindingContext, _parent, left, t
 			TreeViewNode:SetAttribute("ScrollBarTrackWidth", ScrollBarTrackWidth);
 		end
 
+		local uiname = mcmlNode:GetAttribute("uiname")
+		if(uiname) then
+			TreeViewNode:SetAttribute("uiname", uiname);
+		end
+
 		mcmlNode:AddChild(TreeViewNode, nil);
 	end
 	

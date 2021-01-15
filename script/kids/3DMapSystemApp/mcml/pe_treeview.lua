@@ -204,6 +204,7 @@ function pe_treeview.create(rootName, mcmlNode, bindingContext, _parent, left, t
 	end
 	local ctl = CommonCtrl.TreeView:new{
 		name = instName,
+		uiname = mcmlNode:GetAttributeWithCode("uiname",nil,true),
 		alignment = "_lt",
 		left = left,
 		top = top,

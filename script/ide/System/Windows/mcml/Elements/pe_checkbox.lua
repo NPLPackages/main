@@ -34,6 +34,10 @@ function pe_checkbox:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	if(not _this) then
 		_this = Button:new():init(parentElem);
 		_this:SetPolygonStyle(polygonStyle or "check");
+		local uiname = self:GetAttributeWithCode("uiname", nil, true);
+		if(uiname) then
+			_this:SetUIName(uiname)
+		end
 		self:SetControl(_this);
 	else
 		_this:SetParent(parentElem);

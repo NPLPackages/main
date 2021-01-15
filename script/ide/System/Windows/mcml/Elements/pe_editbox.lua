@@ -25,6 +25,10 @@ function pe_editbox:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	local _this = self.control;
 	if(not _this) then
 		_this = EditBox:new():init(parentElem);
+		local uiname = self:GetAttributeWithCode("uiname", nil, true);
+		if(uiname) then
+			_this:SetUIName(uiname)
+		end
 		self:SetControl(_this);
 	else
 		_this:SetParent(parentElem);

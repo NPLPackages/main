@@ -90,25 +90,34 @@ function SliderBar:new (o)
 end
 
 function SliderBar:Destroy ()
-	ParaUI.Destroy(self.name);
+	if(self.id) then
+		ParaUI.Destroy(self.id);
+	end
+end
+
+function SliderBar:GetInnerControl()
+	local _this;
+	if(self.id) then
+		_this = ParaUI.GetUIObject(self.id);
+		if(not _this:IsValid()) then
+			_this = nil;
+		end
+	end
+	return _this;
 end
 
 function SliderBar:Show(bShow)
-	local _this,_parent;
-	if(self.name == nil)then
-		log("SliderBar instance name can not be nil\r\n");
-		return;
-	end
+	local _parent;
+	local _this = self:GetInnerControl()
 	
-	_this = ParaUI.GetUIObject(self.name);
-	if(_this:IsValid() == false)then
-		_this = ParaUI.CreateUIObject("container",self.name,self.alignment,self.left,self.top,self.width,self.height);
+	if(not _this)then
+		_this = ParaUI.CreateUIObject("container","c",self.alignment,self.left,self.top,self.width,self.height);
 		_this.background = "";
 		_this:SetScript("onmousedown", function() self:OnMouseDown(); end);
 		_this:SetScript("onmouseup", function() self:OnMouseUp(); end);
 		_this:SetScript("onmousewheel", function() self:OnMouseWheel(); end);
 		_this:SetScript("ontouch", function() self:OnTouch(); end);
-
+		
 		if(self.tooltip) then
 			_this.tooltip = self.tooltip
 		end	
@@ -150,22 +159,28 @@ function SliderBar:Show(bShow)
 		_parent:AddChild(_this);
 		
 		if(self.step_btn_size>0) then
-			_this = ParaUI.CreateUIObject("button","left","_lt",-icon_size,0,icon_size,icon_size);
+			self.leftBtnName = "left";
+			if(self.uiname) then
+				self.leftBtnName = self.uiname..".left"
+			end
+			_this = ParaUI.CreateUIObject("button",self.leftBtnName,"_lt",-icon_size,0,icon_size,icon_size);
 			_this.background = self.step_left_button_bg or self.button_bg;
 			_this:SetScript("onclick", function()
 				self:OnStepLeft();
 			end);
 			_parent:AddChild(_this);
 
-			_this = ParaUI.CreateUIObject("button","right","_lt",self.button_width,0,icon_size,icon_size);
+			self.rightBtnName = "right";
+			if(self.uiname) then
+				self.rightBtnName = self.uiname..".right"
+			end
+			_this = ParaUI.CreateUIObject("button",self.rightBtnName,"_lt",self.button_width,0,icon_size,icon_size);
 			_this.background = self.step_right_button_bg or self.button_bg;
 			_this:SetScript("onclick", function()
 				self:OnStepRight();
 			end);
 			_parent:AddChild(_this);
 		end
-
-		CommonCtrl.AddControl(self.name,self);
 
 		if(not self.value)	then
 			self.value = self.min;
@@ -184,8 +199,8 @@ end
 
 -- Update UI according to the current value, min, and max. But it does not fire onchage event
 function SliderBar:UpdateUI()
-	local _this = ParaUI.GetUIObject(self.name);
-	if(_this:IsValid() == true) then
+	local _this = self:GetInnerControl()
+	if(_this) then
 		local btn = _this:GetChild("b");
 		if(btn:IsValid())then
 			local _,_, width, height = _this:GetAbsPosition();
@@ -212,10 +227,10 @@ function SliderBar:UpdateUI()
 				btn.text = string.format(self.buttontext_format, self.value, self.max);
 			end
 			if(self.show_step_button) then
-				local left_btn = _this:GetChild("left");	
+				local left_btn = _this:GetChild(self.leftBtnName);	
 				left_btn.x = btn.x - self.step_btn_size;
 				left_btn.y = btn.y;
-				local right_btn = _this:GetChild("right");	
+				local right_btn = _this:GetChild(self.rightBtnName);	
 				right_btn.x = btn.x + self.button_width;
 				right_btn.y = btn.y;
 			end
@@ -284,8 +299,8 @@ function SliderBar:UpdateData(mouse_x, mouse_y)
 	end
 	
 
-	local _this = ParaUI.GetUIObject(self.name);
-	if(_this:IsValid() == true) then
+	local _this = self:GetInnerControl()
+	if(_this) then
 		local btn = _this:GetChild("b");
 		if(btn:IsValid())then
 			local x,y, width, height = _this:GetAbsPosition();
@@ -387,8 +402,8 @@ function SliderBar:OnMouseDown(x, y)
 	local mouse_x = x or mouse_x;
 	local mouse_y = y or mouse_y;
 	-- check if mouse is on button
-	local _this = ParaUI.GetUIObject(self.name);
-	if(_this:IsValid()) then
+	local _this = self:GetInnerControl()
+	if(_this) then
 		if(not x and not y) then
 			_this:SetScript("onframemove", function() self:OnFrameMove(); end);
 		end
@@ -420,8 +435,8 @@ function SliderBar.IsDragging()
 end
 
 function SliderBar:OnMouseUp(mouse_x, mouse_y)
-	local _this = ParaUI.GetUIObject(self.name);
-	if(_this:IsValid()) then
+	local _this = self:GetInnerControl()
+	if(_this) then
 		_this:SetScript("onframemove", nil);
 	end
 	if(not self.canDrag)then return; end
@@ -488,8 +503,8 @@ end
 
 -- user input edit box value
 function SliderBar:OnTextValue()
-	local _this = ParaUI.GetUIObject(self.name);
-	if(_this:IsValid()) then
+	local _this = self:GetInnerControl()
+	if(_this) then
 		local editor = _this:GetChild("editor");
 		if(editor:IsValid())then
 			local value = tonumber(editor.text);

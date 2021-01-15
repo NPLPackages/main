@@ -269,6 +269,7 @@ function Window:create_sys(native_window, initializeWindow, destroyOldWindow)
 		self:SetAutoClearBackground(self.AutoClearBackground);
 	end
 
+	_this:GetAttributeObject():SetDynamicField("isWindow", true)
 	-- redirect events from native ParaUI object to this object. 
 	_this:SetScript("onsize", function()
 		self:handleGeometryChangeEvent();
@@ -524,7 +525,9 @@ function Window:SetFocus_sys()
 			self.native_ui_obj:SetField("CanHaveFocus", self.CanHaveFocus); 
 			self.native_ui_obj:SetField("InputMethodEnabled", self.CanHaveFocus and self:IsInputMethodEnabled()); 
 		end
-		self.native_ui_obj:Focus();
+		if(not self.isEmulatedFocus) then
+			self.native_ui_obj:Focus();
+		end
 	end
 end
 

@@ -94,6 +94,16 @@ local function_key_map = {
 	["DIK_F12"] = true,
 }
 
+local CtrlShiftAlt_key_map = {
+	["DIK_LSHIFT"] = true,
+	["DIK_RSHIFT"] = true,
+	["DIK_LCONTROL"] = true,
+	["DIK_RCONTROL"] = true,
+	["DIK_LMENU"] = true,
+	["DIK_RMENU"] = true,
+}
+
+
 -- win32 sequence map
 function KeyEvent:GetKeySequence()
 	if(self.ctrl_pressed and self.shift_pressed) then
@@ -114,6 +124,10 @@ end
 
 function KeyEvent:IsFunctionKey()
 	return function_key_map[self.keyname];
+end
+
+function KeyEvent:IsShiftCtrlAltKey()
+	return CtrlShiftAlt_key_map[self.keyname]
 end
 
 function KeyEvent:KeyName()

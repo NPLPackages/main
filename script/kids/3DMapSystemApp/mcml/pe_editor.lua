@@ -120,7 +120,7 @@ end
 -- create editor or pe_container
 function pe_editor.create(rootName, mcmlNode, bindingContext, _parent, left, top, width, height,style, parentLayout)
 	if(mcmlNode:GetAttribute("display") == "none") then return end
-	local instName = mcmlNode:GetInstanceName(rootName);
+	local instName = mcmlNode:GetAttributeWithCode("uiname", nil, true) or mcmlNode:GetInstanceName(rootName);
 	if(mcmlNode.name == "pe:editor") then
 		-- create a new binding context whenever a pe_editor is met. 
 		bindingContext = pe_editor.NewBinding(instName, bindingContext);

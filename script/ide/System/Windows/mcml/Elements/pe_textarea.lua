@@ -39,6 +39,10 @@ function pe_textarea:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	local _this = self.control;
 	if(not _this) then
 		_this = MultiLineEditbox:new():init(parentElem);
+		local uiname = self:GetAttributeWithCode("uiname", nil, true);
+		if(uiname) then
+			_this:SetUIName(uiname)
+		end
 		self:SetControl(_this);
 	else
 		_this:SetParent(parentElem);

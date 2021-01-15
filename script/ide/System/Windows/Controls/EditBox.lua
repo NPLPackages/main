@@ -392,6 +392,7 @@ function EditBox:inputMethodEvent(event)
     if (isGettingInput) then
         self:finishChange(priorState);
 	end
+	event:accept();
 end
 
 -- Completes a change to the line control text.  If the change is not valid
@@ -658,6 +659,7 @@ end
 
 function EditBox:mouseReleaseEvent(e)
 	self.isLeftMouseDown = false;
+	e:accept();
 end
 
 -- Returns true if the given text str is valid for any validator
