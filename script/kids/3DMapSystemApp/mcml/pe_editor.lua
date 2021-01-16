@@ -1307,7 +1307,8 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 	left=left+margin_left;
 	top=top+margin_top
 	
-	local instName = mcmlNode:GetAttributeWithCode("uiname", nil, true) or mcmlNode:GetInstanceName(rootName);
+	local uiname = mcmlNode:GetAttributeWithCode("uiname", nil, true)
+	local instName = uiname or mcmlNode:GetInstanceName(rootName);
 	
 	if(rows>1 or mcmlNode.name=="textarea") then
 		-- multiline editbox
@@ -1469,7 +1470,7 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 		if(mcmlNode:GetString("onkeyup")) then
 			_this:SetScript("onkeyup", pe_editor_text.onkeyup, mcmlNode, instName, bindingContext, name);
 		end
-		if(mcmlNode:GetString("onmodify") or mcmlNode:GetString("onchange")) then
+		if(mcmlNode:GetString("onmodify") or mcmlNode:GetString("onchange") or uiname) then
 			_this:SetScript("onmodify", pe_editor_text.onmodify, mcmlNode, instName, bindingContext, name);
 		end
 		if(mcmlNode:GetString("onactivate")) then
@@ -1556,8 +1557,10 @@ function pe_editor_text.onmodify(uiobj, mcmlNode, instName, bindingContext, name
 		return
 	end
 	local onmodify = mcmlNode:GetString("onmodify") or mcmlNode:GetString("onchange") or "";
-	-- the callback function format is function(name, mcmlNode) end
-	Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, onmodify, name, mcmlNode,uiobj);
+	if(onmodify ~= "") then
+		-- the callback function format is function(name, mcmlNode) end
+		Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, onmodify, name, mcmlNode,uiobj);
+	end
 end
 
 -- this is the onfocusin handler. 

@@ -106,6 +106,17 @@ function SliderBar:GetInnerControl()
 	return _this;
 end
 
+-- @param eventName: "OnMouseDown", "OnMouseUp", "OnMouseWheel", "OnTouch" and like virtual event
+function SliderBar:handleEvent(eventName, ...)
+	local func = self[eventName];
+	if(func) then
+		func(self, ...);
+	end
+	if(SliderBar.__onuievent__) then
+		SliderBar.__onuievent__(self, eventName, ...);
+	end
+end
+
 function SliderBar:Show(bShow)
 	local _parent;
 	local _this = self:GetInnerControl()
@@ -113,10 +124,10 @@ function SliderBar:Show(bShow)
 	if(not _this)then
 		_this = ParaUI.CreateUIObject("container","c",self.alignment,self.left,self.top,self.width,self.height);
 		_this.background = "";
-		_this:SetScript("onmousedown", function() self:OnMouseDown(); end);
-		_this:SetScript("onmouseup", function() self:OnMouseUp(); end);
-		_this:SetScript("onmousewheel", function() self:OnMouseWheel(); end);
-		_this:SetScript("ontouch", function() self:OnTouch(); end);
+		_this:SetScript("onmousedown", function() self:handleEvent("OnMouseDown"); end);
+		_this:SetScript("onmouseup", function() self:handleEvent("OnMouseUp"); end);
+		_this:SetScript("onmousewheel", function() self:handleEvent("OnMouseWheel"); end);
+		_this:SetScript("ontouch", function() self:handleEvent("OnTouch"); end);
 		
 		if(self.tooltip) then
 			_this.tooltip = self.tooltip
@@ -166,7 +177,7 @@ function SliderBar:Show(bShow)
 			_this = ParaUI.CreateUIObject("button",self.leftBtnName,"_lt",-icon_size,0,icon_size,icon_size);
 			_this.background = self.step_left_button_bg or self.button_bg;
 			_this:SetScript("onclick", function()
-				self:OnStepLeft();
+				self:handleEvent("OnStepLeft")
 			end);
 			_parent:AddChild(_this);
 
@@ -177,7 +188,7 @@ function SliderBar:Show(bShow)
 			_this = ParaUI.CreateUIObject("button",self.rightBtnName,"_lt",self.button_width,0,icon_size,icon_size);
 			_this.background = self.step_right_button_bg or self.button_bg;
 			_this:SetScript("onclick", function()
-				self:OnStepRight();
+				self:handleEvent("OnStepRight")
 			end);
 			_parent:AddChild(_this);
 		end
@@ -188,12 +199,41 @@ function SliderBar:Show(bShow)
 		
 		-- update the control
 		self:UpdateUI();
+
+		if(self.uiname) then
+			CommonCtrl.AddControl(self.uiname, self)
+		end
 	else
 		if(bShow == nil) then
 			_this.visible = not _this.visible;
 		else
 			_this.visible = bShow;
 		end		
+	end
+end
+
+function SliderBar:GetButtonCenterByValue(value)
+	local _this = self:GetInnerControl()
+	if(_this) then
+		local x, y;
+		local left,top, width, height = _this:GetAbsPosition();
+		if(self.direction=="horizontal" or width>height) then
+			if(self.IsShowEditor) then
+				width = width - self.editor_width;
+			end
+			-- horizontal slider bar
+			x = (value-self.min)/(self.max-self.min)*(width-self.button_width);
+			y = (height-self.button_height)/2
+		else
+			-- vertical slider bar
+			x = (width-self.button_width)/2
+			y = (value-self.min)/(self.max-self.min)*(height-self.button_height);
+		end
+		if(x and y) then
+			x = left + math.floor(x + self.button_width / 2)
+			y = top + math.floor(y + self.button_height / 2)
+			return x, y
+		end
 	end
 end
 
@@ -418,7 +458,7 @@ function SliderBar:OnMouseDown(x, y)
 				self.last_mouse_x_offset = math.floor((x + self.button_width/2) - mouse_x);
 				self.last_mouse_y_offset = math.floor((y + self.button_height/2) - mouse_y);
 				self.last_mouse_x, self.last_mouse_y = mouse_x,mouse_y;
-				self:OnClickButton();
+				self:handleEvent("OnClickButton")
 				return;
 			end	
 		end
@@ -465,7 +505,7 @@ function SliderBar:OnFrameMove(mouse_x, mouse_y, isFromTouch)
 	else
 		if(self.IsMouseDown) then
 			if(not ParaUI.IsMousePressed(0)) then
-				self:OnMouseUp(mouse_x, mouse_y);
+				self:handleEvent("OnMouseUp", mouse_x, mouse_y);
 			else	
 				-- this is a drag operation
 				self:UpdateData(mouse_x, mouse_y);
@@ -474,7 +514,7 @@ function SliderBar:OnFrameMove(mouse_x, mouse_y, isFromTouch)
 			if(ParaUI.IsMousePressed(0)) then
 				self:UpdateData(mouse_x, mouse_y);
 			else
-				self:OnMouseUp(mouse_x, mouse_y);
+				self:handleEvent("OnMouseUp", mouse_x, mouse_y);
 			end
 		end
 	end
@@ -549,7 +589,6 @@ function SliderBar:OnClickButton()
 		end
 	end
 end	
-
 	
 		
 		

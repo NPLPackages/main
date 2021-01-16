@@ -101,6 +101,9 @@ local CtrlShiftAlt_key_map = {
 	["DIK_RCONTROL"] = true,
 	["DIK_LMENU"] = true,
 	["DIK_RMENU"] = true,
+	-- also disable win key
+	["DIK_WIN_LWINDOW"] = true,
+	["DIK_WIN_RWINDOW"] = true,
 }
 
 
