@@ -171,7 +171,13 @@ function RotateManip:mouseMoveEvent(event)
 		event:accept();
 		-- ray cast to virtual plane to obtain the mouse picking point. 
 		local point = vector3d:new();
-		local result, dist = self:MouseRayIntersectPlane(nil, nil, self.virtualPlane, point);
+
+		local mouse_x, mouse_y;
+		if(not self.FromAngle) then
+			mouse_x = self.last_mouse_x;
+			mouse_y = self.last_mouse_y;
+		end
+		local result, dist = self:MouseRayIntersectPlane(mouse_x, mouse_y, self.virtualPlane, point);
 		if(result == 1) then
 			point = point - self.rotOrigin;
 			point:normalize();

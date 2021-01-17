@@ -139,11 +139,16 @@ end
 function TranslateManip:mouseMoveEvent(event)
 	if(self.selectedAxis) then
 		event:accept();
+		
 		-- get the mouse position for mouse ray casting. 
 		local mouseMoveDir = vector3d:new(event.x - self.last_mouse_x, event.y-self.last_mouse_y, 0);
 		local dist = mouseMoveDir:dot(self.screenSpaceDir);
 		local mouse_x = self.last_mouse_x + self.screenSpaceDir[1] * dist;
 		local mouse_y = self.last_mouse_y + self.screenSpaceDir[2] * dist;
+		if(not self.pressPoint) then
+			mouse_x = self.last_mouse_x;
+			mouse_y = self.last_mouse_y;
+		end
 		-- ray cast to virtual plane to obtain the mouse picking point. 
 		local point = vector3d:new();
 		local result, dist = self:MouseRayIntersectPlane(mouse_x, mouse_y, self.virtualPlane, point);

@@ -118,6 +118,10 @@ function ScaleManip:mouseMoveEvent(event)
 		local dist = mouseMoveDir:dot(self.screenSpaceDir);
 		local mouse_x = self.last_mouse_x + self.screenSpaceDir[1] * dist;
 		local mouse_y = self.last_mouse_y + self.screenSpaceDir[2] * dist;
+		if(not self.pressPoint) then
+			mouse_x = self.last_mouse_x;
+			mouse_y = self.last_mouse_y;
+		end
 		-- ray cast to virtual plane to obtain the mouse picking point. 
 		local point = vector3d:new();
 		local result, dist = self:MouseRayIntersectPlane(mouse_x, mouse_y, self.virtualPlane, point);
