@@ -460,10 +460,15 @@ function timehelp.get_days_number_in_month(year, month)
 end
 
 function timehelp.GetTimeStampByDateTime(date_time)
-    -- date_time = "2020-09-09T06:52:43.000Z"
+	-- date_time = "2020-09-09T06:52:43.000Z"
+	-- local HttpWrapper = NPL.load("(gl)script/apps/Aries/Creator/HttpAPI/HttpWrapper.lua");
+    -- local httpwrapper_version = HttpWrapper.GetDevVersion();
+    -- if httpwrapper_version == "RELEASE" or httpwrapper_version == "LOCAL" then
+    --     return os.time()
+	-- end
+	
     local year, month, day, hour, min, sec = date_time:match("^(%d+)%D(%d+)%D(%d+)%D(%d+)%D(%d+)%D(%d+)") 
-    local time_stamp = os.time({day=tonumber(day), month=tonumber(month), year=tonumber(year), hour=tonumber(hour) + 8})
-    time_stamp = time_stamp + min * 60 + sec
+    local time_stamp = os.time({day=tonumber(day), month=tonumber(month), year=tonumber(year), hour=tonumber(hour) + 8, min=tonumber(min), sec=tonumber(sec)})
     return time_stamp
 end
 
