@@ -308,7 +308,7 @@ function ParaXModelAttr:GetAnimationsCData()
 	if(self.m_animsCData) then
 		return self.m_animsCData;
 	end
-	if(self.attr) then
+	if(self.attr and self.attr.GetFieldCData) then
 		local animations = ffi.new('struct ModelAnimation *[1]');
 		if(self.attr:GetFieldCData("Animations", animations)) then
 			self.m_animsCData = animations[0];
