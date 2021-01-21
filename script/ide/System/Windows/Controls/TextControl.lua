@@ -1819,7 +1819,6 @@ function TextControl:updateGeometry()
 			self:setHeight(clip:height());
 		else
 			if(self:y() == 0) then
-				-- ��һ����Ⱦʱ������ֱλ��
 				self:scrollY(clip:y() - self:y());
 			end
 			self:setHeight(self:GetRealHeight());
