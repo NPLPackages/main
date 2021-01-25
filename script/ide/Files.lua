@@ -210,3 +210,28 @@ function Files.TouchFolder(foldername)
 	file:close();
 	ParaIO.DeleteFile(tmpFilename);
 end
+
+--[[
+"WinterCamp2021-main/nplm.json" 
+to:
+"WinterCamp2021-main","nplm.json"
+--]]
+--https://github.com/moteus/lua-path/blob/master/lua/path.lua#L153
+-- return: dir, name
+function Files.splitPath(filepath)
+     return string.match(filepath,"^(.-)[\\/]?([^\\/]*)$")
+end
+--[[
+"WinterCamp2021-main/nplm.json" 
+to:
+"WinterCamp2021-main/nplm",".json"
+--]]
+-- return path, extension
+function Files.splitText(filepath)
+     local s1,s2 = string.match(filepath,"(.-[^\\/.])(%.[^\\/.]*)$")
+    if s1 then return s1,s2 end
+    return filepath, ''
+end
+
+
+
