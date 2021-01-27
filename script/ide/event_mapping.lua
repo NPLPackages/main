@@ -38,6 +38,7 @@ DIK_SCANCODE = {
  DIK_MINUS           =12,--    /* - on main keyboard */
  DIK_EQUALS          =13,
  DIK_BACK            =14,--    /* backspace */
+ DIK_BACKSPACE       =14,--    /* backspace */
  DIK_TAB             =15,
  DIK_Q               =16,
  DIK_W               =17,

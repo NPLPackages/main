@@ -166,7 +166,7 @@ function ObjEditor.CreateObjectByParams(param)
 			    CCS.ApplyCCSInfoString(obj, param.CCSInfoStr);
             end
 			
-		elseif (param.CustomGeosets) then
+		elseif (param.CustomGeosets and PlayerAssetFile:HasCustomGeosets(param.AssetFile)) then
 			PlayerAssetFile:RefreshCustomGeosets(obj, param.CustomGeosets);
 		else
 			if(obj:ToCharacter():IsCustomModel() == true) then

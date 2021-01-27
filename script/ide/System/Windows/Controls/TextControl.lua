@@ -28,6 +28,7 @@ TextControl:Property({"Background", "", auto=true});
 TextControl:Property({"BackgroundColor", "#cccccc", auto=true});
 TextControl:Property({"Color", "#000000", auto=true})
 TextControl:Property({"CursorColor", "#000000", auto=true})
+TextControl:Property({"StaticCursorColor", "#00000033", auto=true})
 TextControl:Property({"EmptyTextColor", "#888888", auto=true})
 TextControl:Property({"SelectedBackgroundColor", "#99c9ef", auto=true})
 TextControl:Property({"CurLineBackgroundColor", "#e5ebf1e0", auto=true})
@@ -2047,5 +2048,10 @@ function TextControl:paintEvent(painter)
 			painter:SetPen(self:GetCursorColor());
 			painter:DrawRect(self:x() + cursor_x, self:y() + cursor_y, self.m_cursorWidth, self.lineHeight);
 		end
+	elseif(self:isAlwaysShowCurLineBackground()) then
+		local cursor_x = self:cursorToX();
+		local cursor_y = (self.cursorLine - 1) * self.lineHeight;
+		painter:SetPen(self:GetStaticCursorColor());
+		painter:DrawRect(self:x() + cursor_x, self:y() + cursor_y, self.m_cursorWidth, self.lineHeight);
 	end
 end
