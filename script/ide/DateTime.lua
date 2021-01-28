@@ -461,10 +461,14 @@ end
 
 function timehelp.GetTimeStampByDateTime(date_time)
 	-- date_time = "2020-09-09T06:52:43.000Z"
-	local HttpWrapper = NPL.load("(gl)script/apps/Aries/Creator/HttpAPI/HttpWrapper.lua");
-    local httpwrapper_version = HttpWrapper.GetDevVersion();
-    if httpwrapper_version == "RELEASE" or httpwrapper_version == "LOCAL" then
-        return os.time()
+	-- local HttpWrapper = NPL.load("(gl)script/apps/Aries/Creator/HttpAPI/HttpWrapper.lua");
+    -- local httpwrapper_version = HttpWrapper.GetDevVersion();
+    -- if httpwrapper_version == "RELEASE" or httpwrapper_version == "LOCAL" then
+    --     return os.time()
+	-- end
+	
+	if System.options.isDevMode then
+		return os.time()
 	end
 	
     local year, month, day, hour, min, sec = date_time:match("^(%d+)%D(%d+)%D(%d+)%D(%d+)%D(%d+)%D(%d+)") 
