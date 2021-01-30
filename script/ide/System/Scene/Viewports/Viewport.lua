@@ -173,7 +173,8 @@ function Viewport:GetUIObject(bCreateIfNotExist)
 			local viewport = ViewportManager:GetSceneViewport();
 			local margin_right = math.floor(viewport:GetMarginRight() / Screen:GetUIScaling()[1]);
 			local margin_bottom = math.floor(viewport:GetMarginBottom() / Screen:GetUIScaling()[2])
-			_this = ParaUI.CreateUIObject("container", name, "_fi", 0,0,margin_right, margin_bottom);
+			local top = math.floor(viewport:GetTop() / Screen:GetUIScaling()[2]);
+			_this = ParaUI.CreateUIObject("container", name, "_fi", 0,top,margin_right, margin_bottom);
 			_this.background = ""
 			_this:SetField("ClickThrough", true);
 			
@@ -186,6 +187,7 @@ function Viewport:GetUIObject(bCreateIfNotExist)
 				local _this = ParaUI.GetUIObject(name);
 				local margin_right = math.floor(viewport:GetMarginRight() / Screen:GetUIScaling()[1]);
 				local margin_bottom = math.floor(viewport:GetMarginBottom() / Screen:GetUIScaling()[2])
+				_this.y = math.floor(viewport:GetTop() / Screen:GetUIScaling()[2]);
 				_this.height = margin_bottom;
 				_this.width = margin_right;
 			end)
