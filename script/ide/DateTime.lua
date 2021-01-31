@@ -469,9 +469,13 @@ function timehelp.GetTimeStampByDateTime(date_time, is_get_server_time)
 	if is_get_server_time and System.options.isDevMode then
 		return os.time()
 	end
+
+    local a = os.date('!*t',os.time())--中时区的时间
+    local b = os.date('*t',os.time())
+	local time_zone= ((b.hour - a.hour) * 3600 + (b.min - a.min) * 60)/3600
 	
     local year, month, day, hour, min, sec = date_time:match("^(%d+)%D(%d+)%D(%d+)%D(%d+)%D(%d+)%D(%d+)") 
-    local time_stamp = os.time({day=tonumber(day), month=tonumber(month), year=tonumber(year), hour=tonumber(hour) + 8, min=tonumber(min), sec=tonumber(sec)})
+    local time_stamp = os.time({day=tonumber(day), month=tonumber(month), year=tonumber(year), hour=tonumber(hour) + time_zone, min=tonumber(min), sec=tonumber(sec)})
     return time_stamp
 end
 

@@ -869,6 +869,7 @@ function pe_select.create(rootName, mcmlNode, bindingContext, _parent, left, top
 		NPL.load("(gl)script/ide/dropdownlistbox.lua");
 		local ctl = CommonCtrl.dropdownlistbox:new{
 			name = instName,
+			uiname = mcmlNode:GetAttributeWithCode("uiname",nil,true),
 			alignment = "_lt",
 			left=left,
 			top=top,
