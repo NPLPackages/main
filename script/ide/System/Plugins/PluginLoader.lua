@@ -417,9 +417,6 @@ function PluginLoader:LoadPlugin(modname)
 			if(output and #output>0) then
 				-- just in case, the user has zipped everything in a folder, such as downloading from github as a zip file. 
 				local base_folder_name, main_filename = output[1].filename:match("^([^/]+)/(%w+/[^/]+/main.lua)");
-                echo("==========base_folder_name");
-                echo(base_folder_name);
-                echo(main_filename);
 				if(main_filename) then
 					local zip_archive = ParaEngine.GetAttributeObject():GetChild("AssetManager"):GetChild("CFileManager"):GetChild(filename);
 					zip_archive:SetField("SetBaseDirectory", base_folder_name);
