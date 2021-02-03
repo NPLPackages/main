@@ -490,7 +490,8 @@ end
 
 
 -- called when the user select a list box item
-function dropdownlistbox.OnSelectListBox(self)
+-- @param value: if nil, it will use current listbox value. otherwise it will force select this value. 
+function dropdownlistbox.OnSelectListBox(self, value)
 	local listbox = ParaUI.GetUIObject(self.listbox_id);
 	if(listbox:IsValid()) then
 		-- hide the listbox	container
@@ -501,18 +502,22 @@ function dropdownlistbox.OnSelectListBox(self)
 		local editbox = ParaUI.GetUIObject(self.editbox_id);
 		if(editbox:IsValid()) then
 			-- use some formatting if any.
-			if(not self.FuncTextFormat) then
-				editbox.text = listbox.text;
+			if(value) then
+				self:SetValue(value)
 			else
-				editbox.text = self.FuncTextFormat(listbox.text);
-			end	
+				if(not self.FuncTextFormat) then
+					editbox.text = listbox.text;
+				else
+					editbox.text = self.FuncTextFormat(listbox.text);
+				end	
+			end
 			
 			-- call the event handler if any
 			if(self.onselect~=nil)then
 				if(type(self.onselect) == "string") then
 					NPL.DoString(self.onselect);
 				else
-					self.onselect(self.name, self:GetValue());
+					self.onselect(self.name, value or self:GetValue());
 				end
 			end
 		end
