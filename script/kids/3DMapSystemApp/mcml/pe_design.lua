@@ -1535,6 +1535,7 @@ function pe_colorpicker.create(rootName, mcmlNode, bindingContext, _parent, left
 	NPL.load("(gl)script/ide/colorpicker.lua");
 	local ctl = CommonCtrl.ColorPicker:new{
 		name = instName,
+		uiname = mcmlNode:GetAttributeWithCode("uiname", nil, true),
 		alignment = "_lt",
 		left = left,
 		top = top,
