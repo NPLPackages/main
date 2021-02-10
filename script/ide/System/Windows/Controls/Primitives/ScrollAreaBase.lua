@@ -71,7 +71,6 @@ function ScrollAreaBase:initScrollBar()
 		self.vscroll = value;
 		self:updateViewportPos();
 		if (toEnd) then
-			commonlib.echo("scroll to end");
 			self:onScrollEnd();
 		end
 	end);
