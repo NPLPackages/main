@@ -222,18 +222,34 @@ end
 function ToolBase.Property(class_def, name, default_value, getterName, setterName, notifySignal)
 	local property;
 	if(type(name) == "string") then
-		property = { 
-			auto = true, 
-			name = name,
-			-- private name like self.Value_
-			private_name = name.."_",
-			-- default value
-			default = default_value,
-			get = getterName,
-			set = setterName, 
-			-- private signal name ValueChanged(value)
-			signal_name = notifySignal,
-		}
+		local property_ = class_def._propertyfields and class_def._propertyfields:get(name);
+		if(not property_) then
+			property = { 
+				auto = true, 
+				name = name,
+				-- private name like self.Value_
+				private_name = name.."_",
+				-- default value
+				default = default_value,
+				get = getterName,
+				set = setterName, 
+				-- private signal name ValueChanged(value)
+				signal_name = notifySignal,
+			}
+		else
+			-- overwrite default value of existing property or setter and getter functions
+			property = { 
+				auto = true, 
+				name = name,
+				private_name = property_.private_name,
+				-- default value
+				default = default_value,
+				get = getterName,
+				set = setterName, 
+				-- private signal name ValueChanged(value)
+				signal_name = notifySignal,
+			}
+		end
 	else
 		property = name;
 	end
