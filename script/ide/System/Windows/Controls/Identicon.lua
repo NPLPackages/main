@@ -67,22 +67,32 @@ function Identicon:paintEvent(painter)
 	painter:DrawRect(0, 0, self:width(), self:height());
 	local size = self:width();
 	local margin = math.floor(size*self:GetMargin());
-	local cell = math.floor((size - (margin *2))/5);
 	local hash = self:GetHash() or "1234567890abcdef";
 	if(#hash < 16) then
 		return;
 	end
 
+	Identicon.drawIdentiIcon(painter, hash, size, margin)
+	
+	painter:Translate(-dx, -dy);
+end
+
+-- static function 
+-- @param hash: hash = ParaMisc.md5(text)
+function Identicon.drawIdentiIcon(painter, hash, size, margin)
+	if(#hash < 16) then
+		return;
+	end
+	local cell = math.floor((size - (margin *2))/5);
+
 	-- foreground is last 7 chars as hue at 50% saturation, 70% brightness
     local r, g, b = Color.hsl2rgb(tonumber(hash:sub(-7), 16) / 0xfffffff, 0.5, 0.7);
 	local fg = Color.RGBA_TO_DWORD(r, g, b, 255);
-	
+	painter:SetPen(fg);
 	-- the first 15 characters of the hash control the pixels (even/odd)
     -- they are drawn down the middle first, then mirrored outwards
     for i = 0, 14 do
 		if(tonumber(hash:sub(i+1,i+1), 16) % 2 == 1) then
-			local color = fg;
-			painter:SetPen(color);
 			if (i < 5) then
 				painter:DrawRect(2 * cell + margin, i * cell + margin, cell, cell);
 			elseif (i < 10) then
@@ -94,5 +104,5 @@ function Identicon:paintEvent(painter)
 			end
 		end
     end
-	painter:Translate(-dx, -dy);
 end
+
