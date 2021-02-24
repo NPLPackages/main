@@ -215,6 +215,8 @@ function SocketIOClient:Ping()
     local result = self:SendPacket(pkt);
     if(result ~= 0)then
         self.state = "CLOSED";
+		LOG.std("", "info", "SocketIOClient", "closed by ping");
+        self:DispatchEvent({type = "OnClose" , from = "ping"});
     end
 end
 function SocketIOClient:GetArgs(name, ...)
@@ -262,7 +264,6 @@ end
 function SocketIOClient:KeepAlive()
     if(not self.timer)then
         self.timer = commonlib.Timer:new({callbackFunc = function(timer)
-           
 	        if(self.state == "OPEN")then
                 self:Ping();
             end
@@ -309,6 +310,7 @@ local function activate()
     else
         local decoded,fin,opcode = frame.decode(response);
         if(opcode == frame.CLOSE)then
+		    LOG.std("", "info", "SocketIOClient", "closed connection by server");
             client:HandleClose(nid)
             return
         end
