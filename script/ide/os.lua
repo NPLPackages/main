@@ -753,3 +753,14 @@ function CommonCtrl.os.hook.UnhookWindowsHook(hook)
 	end
 end
 
+function CommonCtrl.os.GetAllMCMLPages()
+	local pages = {};
+	for name, app in pairs(CommonCtrl.os.apps) do
+		for wndName, wnd in pairs(app.windows) do
+			if(wnd.MyPage) then
+				pages[#pages+1] = wnd.MyPage
+			end
+		end
+	end
+	return pages;
+end
