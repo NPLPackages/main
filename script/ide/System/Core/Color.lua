@@ -16,6 +16,7 @@ local rshift = mathlib.bit.rshift;
 local lshift = mathlib.bit.lshift;
 local band = mathlib.bit.band;
 local bor = mathlib.bit.bor;
+local tonumber = tonumber;
 
 local math_floor = math.floor;
 local alphaMask = (256*256*256);
@@ -28,6 +29,25 @@ function Color.ConvertColorToRGBAString(color)
 		end);
 	end
 	return color;
+end
+
+-- @param rgb: such as "255 255 255"
+-- @return "#ffffff"
+function Color.ConvertRGBAStringToColor(rgb)
+	local r, g, b, a = rgb:match("^(%d+) (%d+) (%d+) ?(%d*)$")
+	if(r) then
+		r = tonumber(r);
+		g = tonumber(g);
+		b = tonumber(b);
+		if(not a or a=="") then
+			return string.format("#%02x%02x%02x", r, g, b);
+		else
+			a = tonumber(a);
+			return string.format("#%02x%02x%02x%02x", r, g, b, a);
+		end
+	else
+		return rgb;
+	end
 end
 
 
