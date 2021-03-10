@@ -17,7 +17,7 @@ local lshift = mathlib.bit.lshift;
 local band = mathlib.bit.band;
 local bor = mathlib.bit.bor;
 local tonumber = tonumber;
-
+local format = string.format;
 local math_floor = math.floor;
 local alphaMask = (256*256*256);
 local Color = commonlib.gettable("System.Core.Color");
@@ -40,10 +40,10 @@ function Color.ConvertRGBAStringToColor(rgb)
 		g = tonumber(g);
 		b = tonumber(b);
 		if(not a or a=="") then
-			return string.format("#%02x%02x%02x", r, g, b);
+			return format("#%02x%02x%02x", r, g, b);
 		else
 			a = tonumber(a);
-			return string.format("#%02x%02x%02x%02x", r, g, b, a);
+			return format("#%02x%02x%02x%02x", r, g, b, a);
 		end
 	else
 		return rgb;
@@ -171,35 +171,50 @@ function Color.ColorStr_TO_DWORD(color)
 	return 0;
 end
 
+
+--@param colorStr: "#ffffff" or "#ffffffff"
+--@param colorFloats: array of {r,g,b,a} where r in range [0, 255]
+function Color.ColorStrToValues(colorStr, colorFloats)
+	local r,g,b,a = colorStr:match("(%x%x)(%x%x)(%x%x)(%x?%x?)")
+	if(r) then
+		colorFloats[1] = tonumber(r, 16);
+		colorFloats[2] = tonumber(g, 16);
+		colorFloats[3] = tonumber(b, 16);
+		if(a ~= "") then
+			colorFloats[4] = tonumber(a, 16);
+		else
+			colorFloats[4] = nil;
+		end
+	end
+end
+
+
 -- @return r,g,b,a in [0,1] range
 function Color.ColorStr_TO_RGBAfloat(color)
-	if(string.find(color, "#")~=nil) then
-		local dwColor = 0;
-		local r,g,b,a;
-		color = string.gsub(string.gsub(color, "#", ""), "(%x%x)", function (h)
-			h = tonumber(h, 16) / 255;
-			if(not r) then
-				r = h
-			elseif(not g) then
-				g = h
-			elseif(not b) then
-				b = h
-			elseif(not a) then
-				r,g,b,a = g, b, h, r
-			end
-		end);
-		return r, g, b, a;
+	local r,g,b,a = colorStr:match("(%x%x)(%x%x)(%x%x)(%x?%x?)")
+	if(r) then
+		r = tonumber(r, 16) / 255;
+		g = tonumber(g, 16) / 255;
+		b = tonumber(b, 16) / 255;
+		if(a ~= "") then
+			a = tonumber(a, 16) / 255;
+			return r, g, b, a;
+			--return g, b, a, r;
+		else
+			return r, g, b;
+		end
+	else
+		return 0,0,0;
 	end
-	return 0,0,0;
 end
 
 -- @param r,g,b,a in [0,1] range
 -- @return #ffffff or #ffffff00
 function Color.RGBAfloat_TO_ColorStr(r,g,b,a)
 	if(not a) then
-		return string.format("#%02x%02x%02x", math.floor(r*255+0.5), math.floor(g*255+0.5), math.floor(b*255+0.5));
+		return format("#%02x%02x%02x", math.floor(r*255+0.5), math.floor(g*255+0.5), math.floor(b*255+0.5));
 	else
-		return string.format("#%02x%02x%02x%02x", math.floor(r*255+0.5), math.floor(g*255+0.5), math.floor(b*255+0.5), math.floor(a*255+0.5));
+		return format("#%02x%02x%02x%02x", math.floor(r*255+0.5), math.floor(g*255+0.5), math.floor(b*255+0.5), math.floor(a*255+0.5));
 	end
 end
 
@@ -313,9 +328,9 @@ function Color.FromValueToStr(color)
 		local g = rshift(band(color, 0x0000FF00), 8);
 		local b = band(color, 0x000000FF);
 		if(a == 0) then
-			color = string.format("#%02x%02x%02x", r, g, b);
+			color = format("#%02x%02x%02x", r, g, b);
 		else
-			color = string.format("#%02x%02x%02x%02x", r, g, b, 1);
+			color = format("#%02x%02x%02x%02x", r, g, b, 1);
 		end
 	end
 	return color;
@@ -335,38 +350,35 @@ end
 local color1_num = {};
 local color2_num = {};
 
+
 -- @param color1 and color2: string like "#ff0000"
 function Color.Multiply(color1, color2)
-	color1_num[4] = nil;
-	color2_num[4] = nil;
-	local color_index = 1;
-	for s in string.gfind(color1,"%x%x") do
-		color1_num[color_index] = tonumber(s, 16);
-		color_index = color_index + 1;
+	if(color2 == "#ffffffff") then
+		if(#color1 == 7) then
+			return color1.."ff";
+		else
+			return color1;
+		end
 	end
-	color_index = 1;
-	for s in string.gfind(color2,"%x%x") do
-		color2_num[color_index] = tonumber(s, 16);
-		color_index = color_index + 1;
-	end
+	Color.ColorStrToValues(color1, color1_num)
+	Color.ColorStrToValues(color2, color2_num)
 
-	local color_num = {};
-	for i = 1,3 do
-		color_num[i] = color1_num[i] * color2_num[i] / 255;
-	end
+	local r = color1_num[1] * color2_num[1] / 255;
+	local g = color1_num[2] * color2_num[2] / 255;
+	local b = color1_num[3] * color2_num[3] / 255;
+	
+	local color
+	local a1 = color1_num[4]
+	local a2 = color2_num[4]
 
-	local color = "#";
-	for i = 1, 3 do
-		color = color..string.format("%02x", color_num[i]);
+	if (a1 and a2) then
+		color = format("#%02x%02x%02x%02x", r, g, b, a1 * a2 / 255);
+	elseif (a1) then
+		color = format("#%02x%02x%02x%02x", r, g, b, a1);
+	elseif (a2) then
+		color = format("#%02x%02x%02x%02x", r, g, b, a2);
+	else
+		color = format("#%02x%02x%02x", r, g, b);
 	end
-
-	if (#color1_num > 3 and #color2_num > 3) then
-		color = color..string.format("%02x", color1_num[4] * color2_num[4] / 255);
-	elseif (#color1_num > 3) then
-		color = color..string.format("%02x", color1_num[4]);
-	elseif (#color2_num > 3) then
-		color = color..string.format("%02x", color2_num[4]);
-	end
-
 	return color;
 end
