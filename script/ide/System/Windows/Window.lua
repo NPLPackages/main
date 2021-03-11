@@ -457,7 +457,7 @@ function Window:setGeometry_sys(ax, ay, aw, ah)
 		else
 			-- not visible
 			if(isResize or isMove) then
-				self:setAttribute("WA_PendingSizeEvent");
+				self:SetPendingSizeEvent()
 			end
 		end
 		self:emitSizeChanged();
@@ -780,5 +780,11 @@ function Window:OnViewportSizeChange()
 				self:setGeometry(self.screen_x, self.screen_y, width, height);
 			end
 		end
+	end
+end
+function Window:SetClickThrough(v)
+	local nativeWnd = self:GetNativeWindow()
+	if(nativeWnd)then
+		nativeWnd:GetAttributeObject():SetField("ClickThrough", v);
 	end
 end

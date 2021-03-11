@@ -444,13 +444,7 @@ function UIElement:event(event)
 		local event_type = event:GetType();
 		local func = self[event:GetHandlerFuncName()];
 		if(type(func) == "function") then
-			if(event_type == "paintEvent") then
-				self:setClipRegion(event);
-			end
 			func(self, event);
-			if(event_type == "paintEvent") then
-				self:resetClipRegion(event);
-			end
 		end
 		if(event_type == "focusInEvent" or event_type == "moveEvent" or event_type == "sizeEvent") then
 			self:updateWidgetTransform(event);
@@ -616,7 +610,11 @@ end
 function UIElement:prepareToRender()
 	if(self:isVisible()) then
 		-- Make sure the widget is laid out correctly.
-		self:GetWindow():sendPendingSizeEvents(true, true);
+		local window = self:GetWindow();
+		if(window and window:testAttribute("WA_HasPendingSizeEvent")) then
+			window:setAttribute("WA_HasPendingSizeEvent", false)
+			window:sendPendingSizeEvents(true, true);
+		end
 	end
 end
 
@@ -655,6 +653,9 @@ function UIElement:drawWidget(painterContext, offset)
 	else
 		self:setAttribute("WA_WState_InPaintEvent", true);
 		-- actually send the paint event
+		if(self:IsClip()) then
+			self:setClipRegion(painterContext)
+		end
 		if(self.transform) then
 			self:applyRenderTransform(painterContext, self.transform)
 		end
@@ -678,6 +679,9 @@ function UIElement:drawWidget(painterContext, offset)
 	end
 	if(self.transform) then
 		painterContext:Restore()
+	end
+	if(self:IsClip()) then
+		self:resetClipRegion(painterContext)
 	end
 end
 
@@ -817,8 +821,6 @@ function UIElement:setGeometry(ax, ay, aw, ah)
         self:setGeometry_sys(ax, ay, aw, ah);
     else
 		self:setRect(ax, ay, aw, ah);
---		self.crect:setRect(ax, ay, aw, ah);
---		self:setAttribute("WA_PendingSizeEvent");
 	end
 end
 
@@ -835,13 +837,7 @@ function UIElement:move(x, y)
     if (self:testAttribute("WA_WState_Created")) then
 		self:setGeometry_sys(x + self:geometry():x(), y + self:geometry():y(), self:width(), self:height(), true);
     else
-        -- no frame yet: 
---		if(not self:isWindow()) then
---			self.crect:setX(x); 
---			self.crect:setY(y); 
---		end
 		self:reposition(x, y);
-        --self:setAttribute("WA_PendingSizeEvent");
     end
 end
 
@@ -853,10 +849,19 @@ function UIElement:resize(aw, ah)
 	self.crect:setSize(aw, ah);
 	self:emitSizeChanged();
 	if (not self:testAttribute("WA_WState_Created") or not self:isVisible()) then
-		self:setAttribute("WA_PendingSizeEvent");
+		self:SetPendingSizeEvent()
 	end
 	return true;
 end
+
+function UIElement:SetPendingSizeEvent()
+	self:setAttribute("WA_PendingSizeEvent");
+	local window = self:GetWindow()
+	if(window) then
+		window:setAttribute("WA_HasPendingSizeEvent");
+	end
+end
+
 
 function UIElement:reposition(ax, ay)
 	if(self:x() == ax and self:y() == ay) then
@@ -867,7 +872,7 @@ function UIElement:reposition(ax, ay)
 		self:emitPositionChanged();
 	end
 	if (not self:testAttribute("WA_WState_Created") or not self:isVisible()) then
-		self:setAttribute("WA_PendingSizeEvent");
+		self:SetPendingSizeEvent()
 	end
 	return true;
 end
@@ -968,18 +973,19 @@ end
 
 function UIElement:sendPendingSizeEvents(recursive, disableUpdates)
 	disableUpdates = disableUpdates and self:updatesEnabled();
-    if (disableUpdates) then
-       self:setAttribute("WA_UpdatesDisabled");
-	end
 
 	if(self:testAttribute("WA_PendingSizeEvent")) then
+		if (disableUpdates) then
+		   self:setAttribute("WA_UpdatesDisabled");
+		end
+
 		local event = SizeEvent:new():init(self:rect());
 		Application:sendEvent(self, event);	
 		self:setAttribute("WA_PendingSizeEvent", false);
-	end
-    
-	if (disableUpdates) then
-        self:setAttribute("WA_UpdatesDisabled", false);
+
+		if (disableUpdates) then
+			self:setAttribute("WA_UpdatesDisabled", false);
+		end
 	end
 
 	if (recursive) then
