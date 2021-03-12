@@ -135,6 +135,8 @@ if(use_ffi) then
 	void ParaPainter_DrawLineList(struct Vector3* lineList, int nLineCount, int nIndexOffset);
 	void ParaPainter_DrawText(float x, float y, const char* s);
 	void ParaPainter_DrawText2(float x, float y, float w, float h, const char* s, int textOption);
+	void ParaPainter_SetPenStr(const char* sColor);
+	void ParaPainter_SetPenInt(uint32_t color);
 	]]);
 
 
@@ -195,7 +197,7 @@ if(use_ffi) then
 		--------------------------------------------
 		-- shared by client/server
 		--------------------------------------------
-		if(not ParaEngineClient.ParaGlobal_timeGetTime) then
+		if(not xpcall(function() return ffi.cast("void*", ParaEngineClient.ParaGlobal_timeGetTime) end, function() end)) then
 			ParaGlobal.WriteToLogFile("error: LuaJit FFI not working, possibly because dll is not found\n");
 			return;
 		end
@@ -360,7 +362,7 @@ if(use_ffi) then
 		--------------------------------------
 		-- ParaPainter
 		--------------------------------------
-		if(not ParaEngineClient.ParaPainter_Flush) then
+		if(not xpcall(function() return ffi.cast("void*", ParaEngineClient.ParaPainter_Flush) end, function() end)) then
 			ParaGlobal.WriteToLogFile("warning: FFI for ParaPainter NOT installed\n");
 		else
 			-- this will means that we have full FFI support. 
@@ -440,6 +442,19 @@ if(use_ffi) then
 					ParaEngineClient.ParaPainter_DrawText(x, y, w);
 				else
 					ParaEngineClient.ParaPainter_DrawText2(x, y, w, h, s, textOption);
+				end
+			end
+			if(xpcall(function() return ffi.cast("void*", ParaEngineClient.ParaPainter_SetPenStr) end, function() end)) then
+				local old_SetPen = ParaPainter.SetPen;
+				ParaPainter.SetPen = function (pen)
+					local typePen = type(pen)
+					if(typePen == "string") then
+						ParaEngineClient.ParaPainter_SetPenStr(pen);
+					elseif(typePen == "number") then
+						ParaEngineClient.ParaPainter_SetPenInt(pen);
+					else
+						old_SetPen(pen);
+					end
 				end
 			end
 		end
