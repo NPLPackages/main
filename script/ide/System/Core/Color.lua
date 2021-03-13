@@ -191,7 +191,7 @@ end
 
 -- @return r,g,b,a in [0,1] range
 function Color.ColorStr_TO_RGBAfloat(color)
-	local r,g,b,a = colorStr:match("(%x%x)(%x%x)(%x%x)(%x?%x?)")
+	local r,g,b,a = color:match("(%x%x)(%x%x)(%x%x)(%x?%x?)")
 	if(r) then
 		r = tonumber(r, 16) / 255;
 		g = tonumber(g, 16) / 255;
