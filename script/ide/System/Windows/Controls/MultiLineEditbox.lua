@@ -172,6 +172,7 @@ end
 function MultiLineEditbox:OnClickToggleIME()
 	self:SetInputMethodEnabled(not self:IsInputMethodEnabled());
 	self:UpdateIMEButton();
+	self.viewport:setFocus();
 end
 
 function MultiLineEditbox:UpdateIMEButton()
