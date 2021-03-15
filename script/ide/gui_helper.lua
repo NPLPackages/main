@@ -189,6 +189,18 @@ function _guihelper.GetTextObjectByFont(fontName)
 	end
 end
 
+local textWidthCache = {};
+local function GetTextWidthCache(fontName)
+	local cache = textWidthCache[fontName or ""]
+	if(cache) then
+		return cache
+	else
+		cache = commonlib.ArrayMap:new();
+		textWidthCache[fontName or ""] = cache;
+		return cache;
+	end
+end
+
 -- get the width of text of a given font. It internally cache the font object and UI object on first call. 
 -- @param text: text for which to determine the width
 -- @param fontName: font name, such as "System;12". If nil, it will use the default font of text control. 
@@ -197,9 +209,26 @@ function _guihelper.GetTextWidth(text, fontName)
 	if(not text or text=="") then 
 		return 0 
 	end
-	local _this = _guihelper.GetTextObjectByFont(fontName);
-	_this.text = text;
-	return _this:GetTextLineSize();
+	local cache = GetTextWidthCache(fontName)
+	local item = cache[text]
+	local curTime = commonlib.TimerManager.GetCurrentTime();
+	if(item) then
+		item[2] = curTime 
+		return item[1];
+	else
+		local _this = _guihelper.GetTextObjectByFont(fontName);
+		_this.text = text;
+		width = _this:GetTextLineSize();
+
+		cache:push(text, {width, curTime});
+		if(cache:size() > 500) then
+			cache:valueSort(function(a, b)
+				return a[2] >= b[2]
+			end)
+			cache:resize(300)
+		end
+		return width;
+	end
 end
 
 -- Automatically trim additional text so that the text can be displayed inside a given width

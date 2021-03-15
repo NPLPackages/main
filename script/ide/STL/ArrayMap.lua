@@ -28,6 +28,20 @@ array:ksort(); -- sort by key
 for key, value in array:pairs() do
 	echo({key, value})
 end
+
+-- sorting
+NPL.load("(gl)script/ide/STL.lua");
+local array = commonlib.ArrayMap:new();
+array:push("a1", 1)
+array:push("b1", 1)
+array:push("c3", 3)
+array:push("d3", 3)
+array:valueSort(function(a, b)
+	return a >= b 
+end)
+for key, value in array:pairs() do
+	echo({key, value})
+end
 -------------------------------------------------------
 ]]
 local type, ipairs, pairs, unpack = type, ipairs, pairs, unpack;
@@ -68,6 +82,18 @@ function ArrayMap:clear()
 	commonlib.cleartable(self.key_index_map);
 	self.free_index = 0;
 	return self;
+end
+
+function ArrayMap:resize(nCount)
+	local nSize = self:size()
+	if(nCount < nSize) then
+		for index = nSize, nCount+1, -1 do
+			local key = self.key_array[index];
+			self.key_array[index] = nil;
+			self.key_index_map[key] = nil;
+			self.key_map[key] = nil;
+		end
+	end
 end
 
 function ArrayMap:size()
@@ -196,6 +222,44 @@ function ArrayMap:ksort(compare_func)
 	end
 end
 
+-- sort by value:
+-- @param compareFunc:   function(a, b) return a >= b end
+-- @param start, endi: usually nil
+function ArrayMap:valueSort(compareFunc, start, endi)
+	start, endi = start or 1, endi or #(self.key_array)
+	--partition w.r.t. first element
+	if(endi <= start) then return end
+	local pivot = start
+	for i = start + 1, endi do
+		if( not compareFunc(self:at(pivot), self:at(i))) then
+			-- local temp = t[pivot + 1]
+			local tempkey = self.key_array[pivot + 1];
+			local tempkeyIndex = self.key_index_map[pivot + 1];
+			
+			-- t[pivot + 1] = t[pivot]
+			self.key_array[pivot + 1] = self.key_array[pivot]
+			self.key_index_map[pivot + 1] = self.key_index_map[pivot]
+			
+			if(i == pivot + 1) then
+				-- t[pivot] = temp
+				self.key_array[pivot] = tempkey
+				self.key_index_map[pivot] = tempkeyIndex
+
+			else
+				-- t[pivot] = t[i]
+				self.key_array[pivot] = self.key_array[i]
+				self.key_index_map[pivot] = self.key_index_map[i]
+
+				-- t[i] = temp
+				self.key_array[i] = tempkey
+				self.key_index_map[i] = tempkeyIndex
+			end
+			pivot = pivot + 1
+		end
+	end
+	self:valueSort(compareFunc, start, pivot - 1)
+	return self:valueSort(compareFunc, pivot + 1, endi)
+end
 
 -- return iterator of key, value pairs in current array order
 function ArrayMap:pairs()
@@ -208,6 +272,12 @@ function ArrayMap:pairs()
 			idx = idx + 1;
 			return key, key_map[key];
 		end
+	end
+end
+
+function ArrayMap:Print()
+	for key, value in self:pairs() do
+		echo({key, value})
 	end
 end
 
