@@ -754,6 +754,10 @@ function TextControl:keyPressEvent(event)
 		self.parent:SearchNext();
 	elseif(keyname == "DIK_ESCAPE") then
 		unknown = true;
+	elseif(keyname == "DIK_L" and event.ctrl_pressed) then
+		if(self.parent and self.parent:GetName() == "MultiLineEditbox") then
+			self.parent:OnClickToggleIME();
+		end
 	else
 		if(event:IsFunctionKey() or event.ctrl_pressed) then
 			unknown = true;

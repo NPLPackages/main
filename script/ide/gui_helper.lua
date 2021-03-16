@@ -210,7 +210,7 @@ function _guihelper.GetTextWidth(text, fontName)
 		return 0 
 	end
 	local cache = GetTextWidthCache(fontName)
-	local item = cache[text]
+	local item = cache:get(text)
 	local curTime = commonlib.TimerManager.GetCurrentTime();
 	if(item) then
 		item[2] = curTime 
