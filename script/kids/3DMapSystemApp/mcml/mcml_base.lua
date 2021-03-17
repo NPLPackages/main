@@ -171,6 +171,21 @@ function mcml.baseNode:SetAttribute(attrName, value)
 	end
 end
 
+function mcml.baseNode:SetUIAttribute(attrName, value)
+	self.attr = self.attr or {};
+	self.attr[attrName] = value;
+	if(attrName == "style") then
+		-- tricky code: since we will cache style table on the node, we need to delete the cached style when it is changed. 
+		self.style = nil;
+	end
+
+	local page = self:GetPageCtrl()
+	
+	if (page) then
+		page:Refresh(0.01)
+	end
+end
+
 -- set the attribute if attribute is not code. 
 function mcml.baseNode:SetAttributeIfNotCode(attrName, value)
 	self.attr = self.attr or {};
