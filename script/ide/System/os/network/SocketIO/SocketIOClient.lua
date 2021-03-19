@@ -163,9 +163,16 @@ end
 function SocketIOClient:Connect(url,sid,moreQuery)
     url = self:BuildURL(url,"websocket",sid,moreQuery);
     local protocol,host,port,uri = tools.parse_url(url);
+	LOG.std("", "info", "SocketIOClient", "Connect:%s", url);
+	LOG.std("", "info", "SocketIOClient pared url", {
+		protocol = protocol,
+		host = host,
+		port = port,
+		uri = uri,
+	});
+
     port = port or 80;
     local key = tools.generate_key();
-	LOG.std("", "info", "SocketIOClient", "Connect:%s", url);
     local token;
     if(moreQuery)then
         token = moreQuery.token;
@@ -174,7 +181,7 @@ function SocketIOClient:Connect(url,sid,moreQuery)
             key = key,
             host = host,
             port = port,
-            protocols = {},
+            protocols = { },
             origin = "",
             uri = uri,
             token = token,
@@ -186,6 +193,8 @@ function SocketIOClient:Connect(url,sid,moreQuery)
 	NPL.StartNetServer("0.0.0.0", "0");
 	NPL.AddNPLRuntimeAddress({host = host, port = tostring(port), nid = self:GetAddressID()})
 	
+	LOG.std("", "info", "SocketIOClient req:", req);
+	LOG.std("", "info", "SocketIOClient GetServerAddr:", self:GetServerAddr());
 
     if(NPL.activate_with_timeout(2, self:GetServerAddr(), req) == 0) then
     end
