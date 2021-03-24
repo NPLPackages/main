@@ -196,7 +196,7 @@ function SocketIOClient:Connect(url,sid,moreQuery)
 	LOG.std("", "info", "SocketIOClient req:", req);
 	LOG.std("", "info", "SocketIOClient GetServerAddr:", self:GetServerAddr());
 
-    if(NPL.activate_with_timeout(2, self:GetServerAddr(), req) == 0) then
+    if(NPL.activate_async_with_timeout(2, self:GetServerAddr(), req) == 0) then
     end
 end
 -- send a packet to server by tcp connection

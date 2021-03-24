@@ -566,11 +566,14 @@ end
 
 function TextControl:mouseMoveEvent(e)
 	if(e:button() == "left" and self.isLeftMouseDown) then
-		local select = true;
-		local line = self:yToLine(e:pos():y());
-		local text = self:GetLineText(line);
-		local pos = self:xToPos(text, e:pos():x());
-		self:moveCursor(line, pos, select, true);
+
+		if(not e.isTripleClick and not e.isDoubleClick) then
+			local select = true;
+			local line = self:yToLine(e:pos():y());
+			local text = self:GetLineText(line);
+			local pos = self:xToPos(text, e:pos():x());
+			self:moveCursor(line, pos, select, true);
+		end
 
 		e:accept();
 	else
