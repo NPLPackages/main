@@ -840,5 +840,24 @@ function commonlib.keysorted_pairs(t, sortFunc)
 		end
 	end
 end
-
+-- echo(commonlib.ResolvePath("/a/b/c","d/e","f", "g/", "/h"))
+function commonlib.ResolvePath(...)
+	local result = "";
+	local args = {...};
+	local len = #args;
+	for k, input in ipairs(args) do
+		if(type(input) == "string") then
+			input = input:gsub("^[/\\]+", "");
+			input = input:gsub("[/\\]+$", "");
+			
+			if(k == 1)then
+				result = input	
+			else
+				result = string.format("%s/%s", result, input)
+			end	
+		end
+	end	
+	result = result:gsub("\\", "/");
+	return result;
+end
 FooterLoader();
