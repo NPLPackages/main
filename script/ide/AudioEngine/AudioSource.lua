@@ -211,3 +211,9 @@ function AudioSource:release()
 		self.source = nil;
 	end
 end
+
+function AudioSource:getCurrentAudioTime()
+	if (self.source) then
+		return self.source.CurrentAudioTime;
+	end
+end

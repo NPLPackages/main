@@ -54,6 +54,8 @@ audio_src:play(); -- then play with default.
 ]]
 NPL.load("(gl)script/ide/XPath.lua");
 NPL.load("(gl)script/ide/AudioEngine/AudioSource.lua");
+NPL.load("(gl)script/apps/Aries/Creator/Game/Sound/BackgroundMusic.lua");
+local BackgroundMusic = commonlib.gettable("MyCompany.Aries.Game.Sound.BackgroundMusic");
 
 local AudioEngine = commonlib.gettable("AudioEngine");
 local AudioSource = commonlib.gettable("AudioEngine.AudioSource");
@@ -302,5 +304,40 @@ function AudioEngine.Play3DSound(sound_name, x,y,z, bLoop)
 	local audio_src = AudioEngine.Get(sound_name)
 	if(audio_src) then
 		audio_src:play3d(x,y,z, bLoop);
+	end
+end
+
+function AudioEngine.ResetAudioDevice(value)
+	local music, channel, last_tick;
+	for name, audio_src in pairs(active_playlist) do
+		if (audio_src.isBackgroundMusic and audio_src:isPlaying()) then
+			music = audio_src.file;
+			channel = audio_src.channel;
+			last_tick = audio_src:getCurrentAudioTime();
+			if (channel) then
+				BackgroundMusic:StopChannel(channel);
+			else
+				BackgroundMusic:Stop();
+			end
+		end
+		audio_src:release();
+		AudioEngine.RemoveFromPlayList(audio_src);
+	end
+
+	ParaEngine.GetAttributeObject():SetField("ResetAudioDevice", value or "");
+
+	if (music) then
+		local sound = BackgroundMusic:GetMusic(music);
+		if(sound) then
+			if(last_tick) then
+				sound:stop();
+				sound:seek(last_tick);
+			end
+			if(channel) then
+				BackgroundMusic:PlayOnChannel(channel, sound);
+			else
+				BackgroundMusic:PlayBackgroundSound(sound);
+			end
+		end
 	end
 end
