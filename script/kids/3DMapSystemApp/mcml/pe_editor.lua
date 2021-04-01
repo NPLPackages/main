@@ -808,6 +808,10 @@ function pe_editor_button.create(rootName, mcmlNode, bindingContext, _parent, le
 	if(ontouch == "")then
 		ontouch = nil;
 	end
+	local ondoubleclick = mcmlNode:GetString("ondoubleclick");
+	if(ondoubleclick == "")then
+		ondoubleclick = nil
+	end
 	local btnName
 	if(href) then
 		if(href ~= "#") then
@@ -827,7 +831,7 @@ function pe_editor_button.create(rootName, mcmlNode, bindingContext, _parent, le
 		else
 			log("warning: mcml <input type=\"button\"> can not find any iframe in its ancestor node to which the target url can be loaded\n");
 		end
-	elseif(onclick or onclick_for or ontouch) then
+	elseif(onclick or onclick_for or ontouch or ondoubleclick) then
 		btnName = mcmlNode:GetAttributeWithCode("name",nil,true)
 		-- tricky: we will just prefetch any params with code that may be used in the callback 
 		for i=1,5 do
@@ -849,6 +853,8 @@ function pe_editor_button.create(rootName, mcmlNode, bindingContext, _parent, le
 		end
 		if(onclick or onclick_for) then
 			_this:SetScript("onclick", pe_editor_button.on_click, mcmlNode, instName, bindingContext, btnName);
+		elseif(ondoubleclick) then
+			_this:SetScript("onclick", pe_editor_button.on_double_click, mcmlNode, instName, bindingContext, btnName);
 		elseif(ontouch) then
 			_this:SetScript("ontouch", pe_editor_button.on_touch, mcmlNode, instName, bindingContext, btnName);
 		end
@@ -971,6 +977,29 @@ function pe_editor_button.on_touch(uiobj, mcmlNode, instName, bindingContext, bu
 		result = Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, ontouch, buttonName, mcmlNode, msg)
 	end
 	return result;
+end
+
+function pe_editor_button.on_double_click(uiobj, mcmlNode, instName, bindingContext, buttonName)
+	if(not mcmlNode or not uiobj) then
+		return
+	end
+
+	local ondoubleclick = mcmlNode:GetString("ondoubleclick");
+
+	if pe_editor_button.curDoubleClickInstName == instName then
+		pe_editor_button.curDoubleClickInstName = nil
+		return Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, ondoubleclick, buttonName, mcmlNode)
+	end
+
+	pe_editor_button.curDoubleClickInstName = instName
+
+	commonlib.Timer:new(
+		{
+			callbackFunc = function()
+				pe_editor_button.curDoubleClickInstName = nil
+			end
+		}
+	):Change(700, nil)
 end
 
 -- this is the new on_click handler. 
@@ -1323,6 +1352,7 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 			height = height,
 			parent = _parent,
 			DefaultNodeHeight = lineheight,
+			fontFamily = css["font-family"],
 			fontsize = mcmlNode:GetNumber("fontsize"),
 			ReadOnly = bReadOnly,
 			ShowLineNumber = mcmlNode:GetBool("ShowLineNumber"),

@@ -308,14 +308,12 @@ function AudioEngine.Play3DSound(sound_name, x,y,z, bLoop)
 end
 
 function AudioEngine.ResetAudioDevice(value)
-	local music, channel, last_tick;
+	local music_src = {};
 	for name, audio_src in pairs(active_playlist) do
 		if (audio_src.isBackgroundMusic and audio_src:isPlaying()) then
-			music = audio_src.file;
-			channel = audio_src.channel;
-			last_tick = audio_src:getCurrentAudioTime();
-			if (channel) then
-				BackgroundMusic:StopChannel(channel);
+			music_src[#music_src + 1] = {file = audio_src.file, channel = audio_src.channel, last_tick = audio_src:getCurrentAudioTime()};
+			if (audio_src.channel) then
+				BackgroundMusic:StopChannel(audio_src.channel);
 			else
 				BackgroundMusic:Stop();
 			end
@@ -326,8 +324,11 @@ function AudioEngine.ResetAudioDevice(value)
 
 	ParaEngine.GetAttributeObject():SetField("ResetAudioDevice", value or "");
 
-	if (music) then
-		local sound = BackgroundMusic:GetMusic(music);
+	for i = 1, #music_src do
+		local file = music_src[i].file;
+		local channel = music_src[i].channel;
+		local last_tick = music_src[i].last_tick;
+		local sound = BackgroundMusic:GetMusic(file);
 		if(sound) then
 			if(last_tick) then
 				sound:stop();

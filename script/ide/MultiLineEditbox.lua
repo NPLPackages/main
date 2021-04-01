@@ -157,8 +157,9 @@ function MultiLineEditbox:Show(bShow)
 			self.ctrlEditbox:SetBackgroundColor("#00000000");
 			self.ctrlEditbox:SetItemHeight(self.DefaultNodeHeight);
 			self.ctrlEditbox:SetAlwaysShowCurLineBackground(self.AlwaysShowCurLineBackground);
-			if(self.fontsize) then
-				self.ctrlEditbox:SetFont(format("System;%d;norm", self.fontsize))
+			
+			if(self.fontsize or self.fontFamily) then
+				self.ctrlEditbox:SetFont(format("%s;%d;norm", self.fontFamily or "System", self.fontsize or 14))
 			end
 			if(self.ReadOnly) then
 				self.ctrlEditbox:setReadOnly(true);
