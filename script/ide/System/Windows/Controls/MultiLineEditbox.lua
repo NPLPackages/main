@@ -228,6 +228,12 @@ function MultiLineEditbox:SetFont(font)
 	end
 end
 
+function MultiLineEditbox:GetFont(font)
+	if(self.viewport) then
+		return self.viewport:GetFont();
+	end
+end
+
 function MultiLineEditbox:SetScale(scale)
 	if(self.viewport) then
 		return self.viewport:SetScale(scale);
