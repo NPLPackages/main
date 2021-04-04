@@ -920,19 +920,19 @@ function TextControl:internalRedo()
     self:emitCursorPositionChanged();
 end
 
-function TextControl:scrollX(offst_x)
+function TextControl:scrollX(offset_x)
 	local min_x = self.parent:ViewRegionOffsetX();
-	local x = math.min(min_x,self:x() + offst_x);
+	local x = math.min(min_x,self:x() + offset_x);
 	self:setX(x, true);
 end
 
-function TextControl:scrollY(offst_y)
-	if(offst_y % self.lineHeight ~= 0) then
-		local tmp_offset = math.ceil(math.abs(offst_y) / self.lineHeight) * self.lineHeight;
-		offst_y = if_else(offst_y >0 ,tmp_offset ,-tmp_offset);
+function TextControl:scrollY(offset_y)
+	if(offset_y % self.lineHeight ~= 0) then
+		local tmp_offset = math.ceil(math.abs(offset_y) / self.lineHeight) * self.lineHeight;
+		offset_y = if_else(offset_y >0 ,tmp_offset ,-tmp_offset);
 	end
 	local min_y = self.parent:ViewRegionOffsetY();
-	local y = math.min(min_y,self:y() + offst_y);
+	local y = math.min(min_y,self:y() + offset_y);
 	self:setY(y, true);
 end
 
@@ -1909,6 +1909,15 @@ function TextControl:GetCursorPositionInClient()
 	local cursor_y = (self.cursorLine - 1) * self.lineHeight;
 	return cursor_x, cursor_y
 end
+
+function TextControl:GetFromLine()
+	return self.from_line
+end
+
+function TextControl:SetFromLine(from_line)
+	self:setY(-((self.lineHeight * math.max(0, from_line -1)) - self.parent:ViewRegionOffsetY()), true)
+end
+
 
 function TextControl:paintEvent(painter)
 	if(self.needRecomputeTextHeight or self.needRecomputeTextWidth or self.needUpdateControlSize) then
