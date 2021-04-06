@@ -77,8 +77,9 @@ function Timer:new(o)
 	o.id = o.id or Timer.GetNextTimerID();
 	setmetatable(o, self)
 	self.__index = self
-	timer_pool_[o.id] = o;
-	o:Change(o.dueTime, o.period);
+	if(o.dueTime) then
+		o:Change(o.dueTime, o.period);
+	end
 	return o
 end
 
@@ -166,17 +167,6 @@ end
 -- timer manager: it groups timers with their intervals and check if any of them needs to be activated. 
 --------------------------------------
 
--- TODO: this is for high resolution timer whose interval is smaller than 60 milli-seconds
-local timer_pool_60 = {};
--- TODO: this is for medium resolution timer whose interval is between (60-600) milli-seconds
-local timer_pool_600 = {};
--- TODO: this is for low resolution timer whose interval is between (600-1500) milli-seconds
-local timer_pool_1500 = {};
--- TODO: this is for very low resolution timer whose interval is less than 10 seconds
-local timer_pool_10sec = {};
--- TODO: this is for most low resolution timer whose interval is above 10 seconds
-local timer_pool_slow = {};
-
 -- a table of newly added timers. 
 local new_timers;
 
@@ -262,7 +252,6 @@ function TimerManager.OnTimer()
 	
 	-- add new timers from the pool
 	if(new_timers) then
-		local id, timer
 		for id, timer in pairs(new_timers) do
 			timer_pool_[id] = timer;
 		end
@@ -282,7 +271,6 @@ function TimerManager.OnTimer()
 	
 	-- remove expired or disabled timers. 
 	if(remove_timers) then
-		local _, id
 		for id, _ in pairs(remove_timers) do
 			timer_pool_[id] = nil;
 		end
