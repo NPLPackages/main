@@ -38,7 +38,7 @@ commonlib.TimerManager.GetCurrentTime();
 commonlib.TimerManager.SetTimeout(function()  end, 1000)
 ------------------------------------------------------------
 ]]
-
+NPL.load("(gl)script/ide/STL/List.lua");
 local Timer = {
 	-- must be unique
 	id = nil,
@@ -69,7 +69,7 @@ local ParaGlobal_timeGetTime = ParaGlobal.timeGetTime
 local MAX_TIMER_DUE_TIME = 30*24*60*60*1000;
 
 -- mapping from id to the timer object. 
-local timer_pool_ = {};
+local activeTimerList = commonlib.List:new();
 
 -- a new timer class with infinite time. 
 function Timer:new(o)
@@ -170,9 +170,6 @@ end
 -- a table of newly added timers. 
 local new_timers;
 
--- a table of to-be removed timers
-local remove_timers;
-
 -- if timer is started. 
 local IsStarted = false;
 local npl_profiler;
@@ -181,7 +178,6 @@ local npl_profiler;
 function TimerManager.Start()
 	-- clear all timers
 	NPL.SetTimer(TimerManager.timer_id, 0.01, ";commonlib.TimerManager.OnTimer();");
-	--log("TimerManager started\n")
 	
 	NPL.load("(gl)script/ide/Debugger/NPLProfiler.lua");
 	npl_profiler = npl_profiler or commonlib.gettable("commonlib.npl_profiler");
@@ -194,7 +190,7 @@ end
 -- clear all timers
 function TimerManager.Clear()
 	new_timers = {};
-	timer_pool_ = {};
+	activeTimerList:clear();
 	TimerManager.Stop()
 	IsStarted = false;
 end
@@ -203,41 +199,47 @@ end
 -- it will automatically set timer.enabled to true. 
 -- @param timer: the timer object
 function TimerManager.AddTimer(timer)
-	timer.enabled = true;
-	-- start immediately on load
-	if(not IsStarted) then
-		IsStarted = true;
-		TimerManager.Start();
-	end	
+	if(not timer.enabled) then
+		timer.enabled = true;
 
-	--commonlib.echo({"timer added", timer.id, tick=timer.lastTick});
+		-- only add if not already in list
+		if(not timer.prev and not timer.next) then
+			-- start immediately on load
+			if(not IsStarted) then
+				IsStarted = true;
+				TimerManager.Start();
+			end	
 
-	-- add to active timer pool if not added before
-	if(not timer_pool_[timer.id]) then
-		-- note: we should never modify the timer pool directly, since this function may be inside the timer loop.
-		new_timers = new_timers or {};
-		new_timers[timer.id] = timer;
-	elseif(remove_timers and remove_timers[timer.id]) then
-		remove_timers[timer.id] = nil;
+			-- note: we should never modify the timer pool directly, since this function may be inside the timer loop.
+			-- add to new timer pool if not added before
+			new_timers = new_timers or {};
+			new_timers[timer.id] = timer;	
+		end
 	end
 end
 
 -- remove the given timer by id
 function TimerManager.RemoveTimer(timer)
 	timer.enabled = nil;
+	if(new_timers) then
+		new_timers[timer.id] = nil;
+	end
 	-- note: we should never modify the timer pool directly, since this function may be inside the timer loop.
 end
 
 -- dump timer info. 
 function TimerManager.DumpTimerCount()
 	local activeCount, totalCount = 0,0;
-	for id,timer in pairs(timer_pool_) do
+
+	local timer = activeTimerList:first();
+	while (timer) do
 		totalCount = totalCount + 1
 		if(timer.enabled) then
 			activeCount = activeCount + 1
 		end	
+		timer = activeTimerList:next(timer)
 	end
-	commonlib.applog("Current Timer Info: Active Timers: %d, Total Timers: %d", activeCount, totalCount)
+	LOG.std(nil, "info", "timer", "Current Timer Info: Active Timers: %d, Total Timers: %d", activeCount, totalCount);
 	return activeCount, totalCount;
 end
 
@@ -253,29 +255,25 @@ function TimerManager.OnTimer()
 	-- add new timers from the pool
 	if(new_timers) then
 		for id, timer in pairs(new_timers) do
-			timer_pool_[id] = timer;
+			-- only add if not already in list
+			if(not timer.prev and not timer.next) then
+				activeTimerList:addtail(timer)
+			end
 		end
 		new_timers = nil;
 	end
 
 	-- frame move all timers (Tick timers)
-	local id, timer
-	for id,timer in pairs(timer_pool_) do
+	local timer = activeTimerList:first();
+	while (timer) do
 		if(timer.enabled) then
 			timer:Tick(last_tick);
+			timer = activeTimerList:next(timer)
 		else
-			remove_timers = remove_timers or {};
-			remove_timers[id] = true;
+			timer = activeTimerList:remove(timer)
 		end	
 	end
 	
-	-- remove expired or disabled timers. 
-	if(remove_timers) then
-		for id, _ in pairs(remove_timers) do
-			timer_pool_[id] = nil;
-		end
-		remove_timers = nil;
-	end
 	npl_profiler.perf_end("TimerManager.OnTimer");
 end
 

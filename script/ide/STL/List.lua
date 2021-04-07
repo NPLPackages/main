@@ -28,10 +28,10 @@ local table_remove = table.remove;
 local type, ipairs, pairs, unpack = type, ipairs, pairs, unpack;
 
 
-------------------------------------------------
--- List:
-------------------------------------------------
-local List = commonlib.gettable("commonlib.List");
+commonlib = commonlib or {}
+commonlib.List = commonlib.List or {};
+local List = commonlib.List;
+
 List.__index = List;
 
 function List:new(o)
@@ -214,8 +214,6 @@ function List:remove(item)
 	else
 		if(self.head == item) then
 			self.head = next;
-		else
-			log("warning: you are trying to remove an item that does not belong to the list\n")
 		end
 	end
 	
@@ -224,8 +222,6 @@ function List:remove(item)
 	else
 		if(self.tail == item) then
 			self.tail = prev;
-		else
-			log("warning: you are trying to remove an item that does not belong to the list\n")
 		end
 	end
 	item.next = nil;
