@@ -102,7 +102,7 @@ function Timer:Change(dueTime,period)
 	if(not dueTime) then
 		TimerManager.RemoveTimer(self);
 	else
-		self.lastTick = ParaGlobal_timeGetTime() + dueTime - (period or 0);
+		self.lastTick = (TimerManager.last_tick or ParaGlobal_timeGetTime()) + dueTime - (period or 0);
 		TimerManager.AddTimer(self);
 	end
 end

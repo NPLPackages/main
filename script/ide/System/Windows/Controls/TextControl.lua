@@ -436,22 +436,22 @@ function TextControl:RecomputeTextWidth()
 	self:SetRealWidth(width);
 end
 
-function TextControl:setX(x, emitSingal)
+function TextControl:setX(x, emitSignal)
 	if(x == self:x()) then
 		return;
 	end
 	TextControl._super.setX(self, x);
-	if(emitSingal) then
+	if(emitSignal) then
 		self:emitPositionChanged();
 	end
 end
 
-function TextControl:setY(y, emitSingal)
+function TextControl:setY(y, emitSignal)
 	if(y == self:y()) then
 		return;
 	end
 	TextControl._super.setY(self, y);
-	if(emitSingal) then
+	if(emitSignal) then
 		self:emitPositionChanged();
 	end
 end
@@ -754,7 +754,16 @@ function TextControl:keyPressEvent(event)
 		local selectedText = self:selectedText();
 		self.parent:Search(selectedText);
 	elseif(keyname == "DIK_F3") then
-		self.parent:SearchNext();
+		if(event.ctrl_pressed) then
+			local selectedText = self:selectedText();
+			self.parent:Search(selectedText);
+			self.parent:SearchNext();
+		elseif(event.shift_pressed) then
+			self.parent:SearchPrevious()
+		else
+			self.parent:SearchNext();
+		end
+		
 	elseif(keyname == "DIK_ESCAPE") then
 		unknown = true;
 	elseif(keyname == "DIK_L" and event.ctrl_pressed) then
@@ -1616,7 +1625,43 @@ function TextControl:searchNext(text)
 end
 
 function TextControl:searchPrevious(text)
+	local lineIndex = self.cursorLine;
+	local initPos = self.cursorPos + 1;
+	local lineUniStr = self:GetLineText(lineIndex)
 
+	local count = 0;
+
+	local sPos, ePos;
+	while(not sPos or not ePos) do
+		if(initPos > lineUniStr:length()) then
+			if(lineIndex == 1) then
+				lineIndex = #self.items;
+			else
+				lineIndex = lineIndex - 1;
+			end
+			lineUniStr = self:GetLineText(lineIndex);
+			initPos = 1;
+		end
+		if((self.cursorLine ~= 1 and lineIndex == self.cursorLine - 1) or 
+			(self.cursorLine == 1 and lineIndex == #self.items)) then
+			count = count + 1;
+			if(count > 1) then
+				break;
+			end
+		end
+
+		sPos, ePos = lineUniStr:findFirstOf(text, initPos);
+
+		initPos = lineUniStr:length() + 1;
+	end
+
+	if(lineIndex and sPos and ePos) then
+		local selStart = {line = lineIndex, pos = sPos - 1};
+		local selEnd = {line = lineIndex, pos = ePos};
+		self:setSelect(selStart, selEnd, selEnd, true);
+	end
+
+	self.parent:SearchResult(sPos ~= nil);
 end
 
 function TextControl:setSelect(selStart, selEnd, cursorPos, adjustCursor)
@@ -1915,13 +1960,19 @@ function TextControl:GetFromLine()
 end
 
 function TextControl:SetFromLine(from_line)
-	self:setY(-((self.lineHeight * math.max(0, from_line -1)) - self.parent:ViewRegionOffsetY()), true)
+	-- we need to wait for next paint event for from_line to take effect
+	self.target_from_line = from_line;
 end
 
 
 function TextControl:paintEvent(painter)
 	if(self.needRecomputeTextHeight or self.needRecomputeTextWidth or self.needUpdateControlSize) then
 		self:updateGeometry();
+	end
+	if(self.target_from_line) then
+		local from_line = self.target_from_line;
+		self.target_from_line = nil;
+		self:setY(-((self.lineHeight * math.max(0, from_line -1)) - self.parent:ViewRegionOffsetY()), true)	
 	end
 	local clipRegion = self:ClipRegion();
 	self.from_line = math.max(1, 1 + math.floor((-(self:y() - self.parent:ViewRegionOffsetY())) / self.lineHeight)); 

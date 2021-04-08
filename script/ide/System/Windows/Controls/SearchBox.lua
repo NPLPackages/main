@@ -215,6 +215,10 @@ end
 function SearchBox:keyPressEvent(event)
 	if(event.keyname == "DIK_F3") then
 		event:accept();
-		self:moveDown(self:getSearchContent());
+		if(event.shift_pressed) then
+			self:moveUp(self:getSearchContent());
+		else
+			self:moveDown(self:getSearchContent());
+		end
 	end
 end
