@@ -383,7 +383,8 @@ function pe_editor.create(rootName, mcmlNode, bindingContext, _parent, left, top
 		end
 		if(onclick_for or onclick) then
 			_parent:SetScript("onmouseup", Map3DSystem.mcml_controls.pe_editor_button.on_click, mcmlNode, nil, bindingContext, btnName);
-		elseif(ontouch) then
+		end
+		if(ontouch) then
 			_parent:SetScript("ontouch", Map3DSystem.mcml_controls.pe_editor_button.on_touch, mcmlNode, nil, bindingContext, btnName);
 		end
 	end
