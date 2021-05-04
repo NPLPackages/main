@@ -1678,6 +1678,11 @@ function TextControl:setSelect(selStart, selEnd, cursorPos, adjustCursor)
 end
 
 function TextControl:moveCursor(line, pos, mark, adjustCursor)
+	if(line > #self.items) then
+		line = #self.items;
+		pos = 0;
+	end
+
 	if (mark) then
 		local anchorLine,anchorPos;
 		if(self.m_selLineStart == self.cursorLine and self.m_selPosStart == self.cursorPos) then
@@ -1961,6 +1966,9 @@ end
 
 function TextControl:SetFromLine(from_line)
 	-- we need to wait for next paint event for from_line to take effect
+	if(from_line > #self.items ) then
+		from_line = #self.items;
+	end
 	self.target_from_line = from_line;
 end
 
