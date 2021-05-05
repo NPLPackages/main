@@ -1251,7 +1251,7 @@ function TextControl:InsertTextNotAddToCommand(text, line, pos, moveCursor)
 	self:InsertText(text, line, pos, false, moveCursor);
 end
 
-function TextControl:InsertText(text, line, pos , addToCommand, moveCursor)
+function TextControl:InsertText(text, line, pos, addToCommand, moveCursor)
 	if(text == "" or not text) then
 		return;
 	end
