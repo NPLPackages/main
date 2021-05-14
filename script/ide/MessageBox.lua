@@ -226,10 +226,11 @@ function _guihelper.MessageBox(content,MsgBoxClick_CallBack, buttons, icon, mcml
 		_this.zorder = zorder;
 	end
 	
-	local width, height = 370, 250;
+	local width, height, extraHeight = 370, 250, 0;
 	if(System.options.mc)then
         width = 630;
         height = 250;
+		extraHeight = 200;
     end
 	if(type(mcmlTemplate) ~= "string") then
 		mcmlTemplate = _guihelper.defaultMsgBoxMCMLTemplate;
@@ -253,7 +254,7 @@ function _guihelper.MessageBox(content,MsgBoxClick_CallBack, buttons, icon, mcml
 	_guihelper.values.icon = icon;
 	_guihelper.values.options = options or {};
 	_guihelper.values.IsInitialized = false; -- tricky: this causes the content to be evaluated only once. 
-	pageCtrl:Create("IDE_HELPER_MSGBOX_PANEL", _this, "_ct",-width/2,-height/2-50,width+80, height);
+	pageCtrl:Create("IDE_HELPER_MSGBOX_PANEL", _this, "_ct",-width/2,-height/2-50,width+80, height+extraHeight);
 	
 	_guihelper.values.IsInitialized = true; -- tricky: this causes the content to be evaluated only once. 
 	
