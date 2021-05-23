@@ -325,7 +325,7 @@ local function activate()
         end
         if(opcode == frame.TEXT)then
             local b, response = packet.decode(decoded);
-            if(b)then
+            if(b == true)then
                 client:HandleMsg(response)
             else
 		        LOG.std("", "error", "SocketIOClient", "%s packet.decode failed:%s", nid, decoded);

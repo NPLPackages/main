@@ -111,7 +111,7 @@ local function decode(s)
         
         local res = {};
         if(not NPL.FromJson(r.body,res))then
-            return res, string.format("%s (%q)", "paring error:", r.body)
+            return res, string.format("%s (%q)", "parsing error:", r.body)
         end
         r.raw_body = r.body
         r.body = res
