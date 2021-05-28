@@ -185,6 +185,13 @@ function MultiLineEditbox:OnClickToggleIME()
 	self.viewport:setFocus();
 end
 
+function MultiLineEditbox:SetInputMethodEnabled(bEnabled)
+	MultiLineEditbox._super.SetInputMethodEnabled(self, bEnabled == true);
+	if(self.viewport) then
+		self.viewport:SetInputMethodEnabled(bEnabled == true);
+	end
+end
+
 function MultiLineEditbox:UpdateIMEButton()
 	if(self.imeButton) then
 		if(self:IsInputMethodEnabled()) then

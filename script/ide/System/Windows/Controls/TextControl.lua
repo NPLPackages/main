@@ -210,7 +210,9 @@ function TextControl:focusInEvent(event)
 	self:setCursorVisible(true);
 	self:setCursorBlinkPeriod(Application:cursorFlashTime());
 	
-	self:attachWithIME();
+	if(self:IsInputMethodEnabled()) then
+		self:attachWithIME();
+	end
 
 	TextControl._super.focusInEvent(self, event)
 end
@@ -534,7 +536,7 @@ function TextControl:mousePressEvent(e)
 		self:docPos();
 		self.isLeftMouseDown = true;
 		
-		if (self:hasFocus() and not e.isDoubleClick) then
+		if (self:hasFocus() and not e.isDoubleClick and self:IsInputMethodEnabled()) then
 			self:attachWithIME();
 		end
 	end
