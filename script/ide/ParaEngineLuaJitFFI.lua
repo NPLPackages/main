@@ -41,12 +41,15 @@ end
 ]]
 NPL.load("(gl)script/ide/commonlib.lua");
 local is64BitsSystem = ParaEngine.GetAttributeObject():GetField("Is64BitsSystem", false);
+local platform = ParaEngine.GetAttributeObject():GetField("Platform", 0);
+
 local str64BitsSystem;
 if(is64BitsSystem) then
 	str64BitsSystem = "64bits";
 else
 	str64BitsSystem = "32bits";
 end
+
 
 local use_ffi = jit and jit.version 
 	-- skipping PARA_PLATFORM_IOS == 1, since iOS does not allow it right now.
@@ -57,6 +60,13 @@ local use_ffi = jit and jit.version
 -- debug version uses "lua_d.dll", so it is not jit enabled
 if(use_ffi) then
 	ParaGlobal.WriteToLogFile(string.format("ParaEngine LuaJIT %s version:%s\r\n", str64BitsSystem, tostring(jit.version)));
+	-- ios(1) or android(2)
+	if(platform == 1 or platform == 2)  then
+		-- android with jit on is slower than jit off. 
+		jit.off();
+		ParaGlobal.WriteToLogFile("JIT is turned off on mobile devices\r\n");
+	end
+
 	local jit_status = {jit.status()};
 	jit_status[1] = tostring(jit_status[1]) or "";
 	jit_status = table.concat(jit_status, ", ");
