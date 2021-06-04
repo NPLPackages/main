@@ -787,6 +787,10 @@ pe_select.listbox_bg = pe_select.listbox_bg or nil;
 -- the dropdownlistbox control takes up 20 pixels in height
 function pe_select.create(rootName, mcmlNode, bindingContext, _parent, left, top, width, height, style, parentLayout)
 	local name  = mcmlNode:GetAttributeWithCode("name",nil,true);
+	local dropBg = mcmlNode:GetAttributeWithCode("dropBg",nil,true); --下拉列表三角按钮
+	local dropWidth = mcmlNode:GetAttributeWithCode("dropWidth",nil,true); --下拉列表三角按钮宽
+	local dropHeight = mcmlNode:GetAttributeWithCode("dropHeight",nil,true); --下拉列表三角按钮高
+	local contentBg = mcmlNode:GetAttributeWithCode("contentBg",nil,true); --下拉列表显示框背景
 	local rows = mcmlNode:GetNumber("size") or 1;
 	local css = mcmlNode:GetStyle(Map3DSystem.mcml_controls.pe_html.css["input-select"]);
 	local margin_left, margin_top, margin_bottom, margin_right = 
@@ -878,11 +882,11 @@ function pe_select.create(rootName, mcmlNode, bindingContext, _parent, left, top
 			dropdownheight = math.min(math.max((height - 2) * table.getn(items), (height - 2) * 3), 300),
 			parent = _parent,
 			editbox_bg = pe_select.editbox_bg,
-			dropdownbutton_bg = pe_select.dropdownBtn_bg,
-			container_bg = pe_select.container_bg,
+			dropdownbutton_bg = dropBg and string.gsub(dropBg,"#",";") or pe_select.dropdownBtn_bg,
+			container_bg = contentBg and string.gsub(contentBg,"#",";") or pe_select.container_bg,
 			listbox_bg = pe_select.listbox_bg,
-			dropdownbutton_width = pe_select.dropdownbutton_width,
-			dropdownbutton_height = pe_select.dropdownbutton_height,
+			dropdownbutton_width = dropWidth and tonumber(dropWidth) or pe_select.dropdownbutton_width,
+			dropdownbutton_height = dropHeight and tonumber(dropHeight)  or pe_select.dropdownbutton_height,
 			items = items,
 			text = selected_text,
 			AllowUserEdit = mcmlNode:GetBool("AllowUserEdit"),
