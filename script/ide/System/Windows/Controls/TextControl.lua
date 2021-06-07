@@ -295,17 +295,16 @@ function TextControl:SetText(text)
 end
 
 function TextControl:GetText()
-	local text = "";
-	for i = 1, #self.items do
-		local lineText = tostring(self:GetLineText(i));
-		text = text..lineText;
-		if(i ~= #self.items) then
-			text = text.."\r\n";
-		elseif(i > 1 and lineText == "") then
-			text = text.."\r\n";
-		end
+	local lines = {};
+	local lineCount = #self.items
+	for i = 1, lineCount do
+		lines[i] = tostring(self:GetLineText(i));
 	end
-	return text;
+	if(lineCount > 1 and lines[lineCount] == "") then
+		-- if the last line is "", we will add a trailing \r\n
+		lines[lineCount+1] = ""
+	end
+	return table.concat(lines, "\r\n");
 end
 
 function TextControl:AddItem(text)
@@ -2068,7 +2067,7 @@ function TextControl:paintEvent(painter)
 		end
 	end
 
-	if(not self.items:empty() and self:GetText() ~= "") then
+	if(not self.items:empty()) then
 		for i = self.from_line, self.to_line do
 			local item = self.items:get(i);	
 			local text = item.text;
