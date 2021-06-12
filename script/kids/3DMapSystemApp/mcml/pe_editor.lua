@@ -1418,7 +1418,7 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 		-- single line editbox
 		local _this;
 		if(("password" == mcmlNode:GetString("type")) or mcmlNode:GetString("PasswordChar")) then
-			if (System.os.GetPlatform() == "android") then
+			if (System.os.GetPlatform() == "android" or System.os.GetPlatform() == "ios") then
 				_this = ParaUI.CreateUIObject("imeeditbox", instName, "_lt", left, top, width, height);
 			else
 				_this = ParaUI.CreateUIObject("editbox", instName, "_lt", left, top, width, height);
