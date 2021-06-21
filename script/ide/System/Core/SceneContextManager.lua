@@ -24,6 +24,8 @@ SceneContextManager:Property("Name", "SceneContextManager");
 -- event hook priority. 
 SceneContextManager:Property({"priority", 10});
 SceneContextManager:Property({"m_bAcceptAllEvents", false, "IsAcceptAllEvents", "SetAcceptAllEvents", desc="whether to accept all events and prevent other handlers", auto=true});
+SceneContextManager:Property({"enableMouseEvent", true, "IsMouseEventEnabled", "SetMouseEventEnabled", auto=true});
+SceneContextManager:Property({"enableKeyboardEvent", true, "IsKeyboardEventEnabled", "SetKeyboardEventEnabled", auto=true});
 SceneContextManager:Signal("contextUnselected");
 SceneContextManager:Signal("contextSelected");
 
@@ -140,6 +142,10 @@ function SceneContextManager.OnMouseDown(nCode, appName, msg)
 	-- in most cases, if nCode is nil, the hook procedure should do nothing. 
 	if(nCode==nil) then return end
 	
+	if(not SceneContextManager:IsMouseEventEnabled()) then
+		return true;
+	end
+
 	local self = SceneContextManager;
 	local context = self:GetCurrentContext();
 	if(context) then
@@ -172,6 +178,10 @@ function SceneContextManager.OnMouseMove(nCode, appName, msg)
 	-- in most cases, if nCode is nil, the hook procedure should do nothing. 
 	if(nCode==nil) then return end
 	
+	if(not SceneContextManager:IsMouseEventEnabled()) then
+		return true;
+	end
+
 	local self = SceneContextManager;
 	local context = self:GetCurrentContext();
 	if(context) then
@@ -193,7 +203,10 @@ function SceneContextManager.OnMouseUp(nCode, appName, msg)
 	-- return the nCode to be passed to the next hook procedure in the hook chain. 
 	-- in most cases, if nCode is nil, the hook procedure should do nothing. 
 	if(nCode==nil) then return end
-	
+	if(not SceneContextManager:IsMouseEventEnabled()) then
+		return true;
+	end
+
 	local self = SceneContextManager;
 	local context = self:GetCurrentContext();
 	if(context) then
@@ -224,7 +237,10 @@ function SceneContextManager.OnMouseWheel(nCode, appName, msg)
 	-- return the nCode to be passed to the next hook procedure in the hook chain. 
 	-- in most cases, if nCode is nil, the hook procedure should do nothing. 
 	if(nCode==nil) then return end
-	
+	if(not SceneContextManager:IsMouseEventEnabled()) then
+		return true;
+	end
+
 	local self = SceneContextManager;
 	local context = self:GetCurrentContext();
 	if(context) then
@@ -242,7 +258,10 @@ function SceneContextManager.OnKeyDownProc(nCode, appName, msg)
 	-- return the nCode to be passed to the next hook procedure in the hook chain. 
 	-- in most cases, if nCode is nil, the hook procedure should do nothing. 
 	if(nCode==nil) then return end
-	
+	if(not SceneContextManager:IsKeyboardEventEnabled()) then
+		return true;
+	end
+
 	local self = SceneContextManager;
 	local context = self:GetCurrentContext();
 	if(context) then
@@ -264,7 +283,10 @@ function SceneContextManager.OnKeyUpProc(nCode, appName, msg)
 	-- return the nCode to be passed to the next hook procedure in the hook chain. 
 	-- in most cases, if nCode is nil, the hook procedure should do nothing. 
 	if(nCode==nil) then return end
-	
+	if(not SceneContextManager:IsKeyboardEventEnabled()) then
+		return true;
+	end
+
 	local self = SceneContextManager;
 	local context = self:GetCurrentContext();
 	if(context) then
