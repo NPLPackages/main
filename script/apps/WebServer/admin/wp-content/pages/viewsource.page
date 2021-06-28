@@ -14,20 +14,33 @@ end
 local src = request:get("src");
 local filename = commonlib.Encoding.Utf8ToDefault(src);
 local function GetCode()
-  local file = ParaIO.open(filename, "r");
-  if(file:IsValid()) then
-    local text = file:GetText();
-    file:close();
-    return text;
-  elseif(not filename:match(":")) then
-	-- also try absolute path in case file is in world zip file
-	local file = ParaIO.open(ParaIO.GetCurDirectory(0)..filename, "r");
+	if(src:match("_block%(%d+")) then
+		-- for code block files
+		local x, y, z = src:match("_block%((%d+),%s?(%d+),%s?(%d+)%)$")
+		if(x and y and z) then
+			x, y, z = tonumber(x), tonumber(y), tonumber(z)
+			local text;
+			local entity = GameLogic.EntityManager.GetBlockEntity(x, y, z)
+			if(entity and entity.GetText) then
+				text = entity:GetText()
+			end
+			return text;
+		end
+	end
+	local file = ParaIO.open(filename, "r");
 	if(file:IsValid()) then
 		local text = file:GetText();
 		file:close();
 		return text;
+	elseif(not filename:match(":")) then
+		-- also try absolute path in case file is in world zip file
+		local file = ParaIO.open(ParaIO.GetCurDirectory(0)..filename, "r");
+		if(file:IsValid()) then
+			local text = file:GetText();
+			file:close();
+			return text;
+		end
 	end
-  end
 end
 if(is_ajax()) then
 	add_action('wp_ajax_get_source', function()

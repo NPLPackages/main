@@ -16,15 +16,32 @@ if(is_ajax()) then
         local output = {success = false};
 		local fileitem = request:get("json");
         if(fileitem and fileitem.text) then
-			src = commonlib.Encoding.Utf8ToDefault(src)
-			local dir = src:gsub("[^/\\]*$", "")
-			ParaIO.CreateDirectory(dir);
-            local file = ParaIO.open(src, "w");
-	        if(file:IsValid()) then
-                file:WriteString(fileitem.text);
-                output.success = true;
-                file:close();
-            end
+			if(src:match("_block%(%d+")) then
+				-- for code block files
+				local x, y, z = src:match("_block%((%d+),%s?(%d+),%s?(%d+)%)$")
+				if(x and y and z) then
+					x, y, z = tonumber(x), tonumber(y), tonumber(z)
+					local text;
+					local entity = GameLogic.EntityManager.GetBlockEntity(x, y, z)
+					if(entity and entity.GetText) then
+						entity:BeginEdit()
+						entity:SetNPLCode(fileitem.text);
+						entity:EndEdit()
+						entity:remotelyUpdated()
+						output.success = true;
+					end
+				end
+			else
+				src = commonlib.Encoding.Utf8ToDefault(src)
+				local dir = src:gsub("[^/\\]*$", "")
+				ParaIO.CreateDirectory(dir);
+				local file = ParaIO.open(src, "w");
+				if(file:IsValid()) then
+					file:WriteString(fileitem.text);
+					output.success = true;
+					file:close();
+				end
+			end
         end
         wp_send_json(output);
     end)
