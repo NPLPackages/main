@@ -483,7 +483,7 @@ function timehelp.GetWeeHoursTimeStamp(time)
     local year = os.date("%Y", time)	
     local month = os.date("%m", time)
 	local day = os.date("%d", time)
-    local day_time_stamp = os.time({year = year, month = month, day = day, hour=0, minute=0, second=0})
+    local day_time_stamp = os.time({year = year, month = month, day = day, hour=0, min=0, sec=0})
     
     return day_time_stamp
 end
