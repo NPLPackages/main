@@ -303,3 +303,17 @@ local function NPL_require_()
 	end	
 end
 NPL_require_();
+
+--[[ NPL.Dostring is now almost every called
+local oldNPL_DoString = NPL.DoString
+NPL.DoString = function(sCode)
+	if(type(sCode) == "string") then
+		local code_func, errormsg = loadstring(sCode);
+		if(code_func) then
+			local ok, result = pcall(code_func);
+			if(not ok) then
+			end
+		end
+	end
+end
+]]
