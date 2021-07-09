@@ -1485,9 +1485,16 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 		
 		
 		local empty_text = mcmlNode:GetAttributeWithCode("EmptyText");
+		
 		if(empty_text and empty_text~="") then
 			_this:SetField("EmptyText", empty_text);
 		end
+
+		local emptyTextColor = mcmlNode:GetAttributeWithCode("EmptyTextColor");
+		if (emptyTextColor and emptyTextColor ~= '') then
+			_this:SetField("EmptyTextColor", _guihelper.ColorStr_TO_DWORD(emptyTextColor));
+		end
+
 
 		if(mcmlNode:GetBool("autofocus")) then
 			_this:Focus();

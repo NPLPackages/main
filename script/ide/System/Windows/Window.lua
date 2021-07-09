@@ -741,17 +741,28 @@ end
 function Window:SetMinimumScreenSize(minScreenWidth,minScreenHeight)
 	self.minScreenWidth = minScreenWidth;
 	self.minScreenHeight = minScreenHeight;
-	
+	self:DetectViewportSizeChange()
+end
+
+function Window:DetectViewportSizeChange()
 	NPL.load("(gl)script/ide/System/Scene/Viewports/ViewportManager.lua");
 	local ViewportManager = commonlib.gettable("System.Scene.Viewports.ViewportManager");
 	local viewport = ViewportManager:GetSceneViewport();
 	viewport:Connect("sizeChanged", self, "OnViewportSizeChange", "UniqueConnection")
-
+	
 	self:OnViewportSizeChange();
 end
 
+-- @param width, height: we will ensure the adjusted ui resolution is bigger than width*height. 
+-- and at least one side equals to width or height.
+function Window:SetDesignResolution(width, height)
+	self.designUIWidth = width;
+	self.designUIHeight = height;
+	self:DetectViewportSizeChange()
+end
+
 function Window:OnViewportSizeChange()
-	if(self.minScreenWidth and self.minScreenHeight) then
+	if((self.minScreenWidth and self.minScreenHeight) or (self.designUIWidth)) then
 		local nativeWnd = self:GetNativeWindow();
 		if(nativeWnd) then
 			local parent = nativeWnd.parent
@@ -760,12 +771,22 @@ function Window:OnViewportSizeChange()
 			end
 			local x, y, width, height = parent:GetAbsPosition();
 			local scalingWidth, scalingHeight = 1, 1;
-			if(width < self.minScreenWidth) then
-				scalingWidth = width / self.minScreenWidth;
+
+			if(self.designUIWidth and self.designUIHeight) then
+				local desiredWidth = math.max(self.designUIWidth, self.minScreenWidth or self.designUIWidth);
+				local desiredHeight = math.max(self.designUIHeight, self.minScreenHeight or self.designUIHeight);
+				scalingWidth = width / desiredWidth;
+				scalingHeight = height / desiredHeight;
+			else
+				if(width < self.minScreenWidth) then
+					scalingWidth = width / self.minScreenWidth;
+				end
+			
+				if(height < self.minScreenHeight) then
+					scalingHeight = height / self.minScreenHeight;
+				end
 			end
-			if(height < self.minScreenHeight) then
-				scalingHeight = height / self.minScreenHeight;
-			end
+			
 			local scaling = math.min(scalingWidth, scalingHeight);
 			self:SetUIScaling(scaling, scaling);
 

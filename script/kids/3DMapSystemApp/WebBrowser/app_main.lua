@@ -61,6 +61,8 @@ the second param can be a table with following field
 | bToggleShowHide | if true, it will toggle show hide |
 | DestroyOnClose | default to nil. if true, it will destroy the window if user clicks close window button |
 | enable_esc_key | enable esc key. if true, the esc key will hide or close the window. |
+| DesignResolutionWidth | |
+| DesignResolutionHeight | |
 | SelfPaint | use a render texture to paint on  |
 | [win frame parameters] | all windowsframe property are support. |
 
@@ -224,6 +226,13 @@ local function MCMLWinFrameMSGProc(window, msg)
 	elseif(msg.type == CommonCtrl.os.MSGTYPE.WM_SHOW) then
 		if(msg.param1) then
 			window.isOnCloseCalled = false;
+			if(window.DesignResolutionWidth) then
+				System.Windows.Screen:ChangeUIDesignResolution(window.DesignResolutionWidth, window.DesignResolutionHeight)
+			end
+		else
+			if(window.DesignResolutionWidth) then
+				System.Windows.Screen:RestoreUIDesignResolution()
+			end
 		end
 		if(window.enable_esc_key) then --  and System.options.isAB_SDK
 			-- esc key logics here
@@ -413,6 +422,8 @@ function Map3DSystem.App.WebBrowser.OnExec(app, commandName, params)
 				_wnd.url = params.url or _wnd.url;
 				_wnd.DestroyOnClose = params.DestroyOnClose;
 				_wnd.enable_esc_key = params.enable_esc_key;
+				_wnd.DesignResolutionWidth = params.DesignResolutionWidth;
+				_wnd.DesignResolutionHeight = params.DesignResolutionHeight;
 				_wnd.SelfPaint = params.SelfPaint;
 				_wnd.isPinned = params.isPinned;
 				
