@@ -243,9 +243,6 @@ function TimerManager.DumpTimerCount()
 	return activeCount, totalCount;
 end
 
-TimerManager.last_tick = 0;
-
-
 -- the global ParaEngine high resolution timer. 
 function TimerManager.OnTimer()
 	npl_profiler.perf_begin("TimerManager.OnTimer");
@@ -280,7 +277,7 @@ end
 -- get the current time in millisecond. This may be faster than ParaGlobal_timeGetTime() since it is updated only at rendering frame rate. 
 -- @note the resolution of the timer is same as the scripting frame move rate.
 function TimerManager.GetCurrentTime()
-	return TimerManager.last_tick;
+	return TimerManager.last_tick or TimerManager.timeGetTime();
 end
 
 -- same as ParaGlobal.timeGetTime(), it does not cache, but using the current system time. 

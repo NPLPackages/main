@@ -13,9 +13,8 @@ Viewport:init("scene"):SetMarginBottom(100)
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/System/Windows/Screen.lua");
-local Screen = commonlib.gettable("System.Windows.Screen");
-
 NPL.load("(gl)script/ide/System/Scene/Viewports/Viewport.lua");
+local Screen = commonlib.gettable("System.Windows.Screen");
 local Viewport = commonlib.inherit(commonlib.gettable("System.Core.ToolBase"), commonlib.gettable("System.Scene.Viewports.Viewport"));
 
 Viewport:Property({"MarginLeftHandler", nil, auto=true});
@@ -84,7 +83,7 @@ function Viewport:SetMarginBottom(margin)
 			margin = margin or 0;
 			self.margin_bottom = margin;
 			attr:SetField("height", margin);
-			self:sizeChanged();
+			self:OnUpdateSize();
 		end
 	end
 end
@@ -102,7 +101,7 @@ function Viewport:SetMarginRight(margin)
 			margin = margin or 0;
 			self.margin_right = margin;
 			attr:SetField("width", margin);
-			self:sizeChanged();
+			self:OnUpdateSize();
 		end
 	end
 end
@@ -117,7 +116,7 @@ function Viewport:SetLeft(nValue)
 	if(attr) then
 		self.margin_left = nValue;
 		attr:SetField("left", nValue);
-		self:sizeChanged();
+		self:OnUpdateSize();
 	end
 end
 
@@ -131,7 +130,7 @@ function Viewport:SetTop(nValue)
 	if(attr) then
 		self.margin_top = nValue;
 		attr:SetField("top", nValue);
-		self:sizeChanged();
+		self:OnUpdateSize();
 	end
 end
 
@@ -144,7 +143,7 @@ function Viewport:SetWidth(nValue)
 	local attr = self:GetAttrObject();
 	if(attr) then
 		attr:SetField("width", Screen:GetWidth() - nValue);
-		self:sizeChanged();
+		self:OnUpdateSize();
 	end
 end
 
@@ -153,8 +152,20 @@ function Viewport:SetHeight(nValue)
 	local attr = self:GetAttrObject();
 	if(attr) then
 		attr:SetField("height", Screen:GetHeight() - nValue);
-		self:sizeChanged();
+		self:OnUpdateSize();
 	end
+end
+
+function Viewport:OnUpdateSize()
+	local _this = self:GetUIObject()
+	if(_this) then
+		local margin_right = math.floor(self:GetMarginRight() / Screen:GetUIScaling()[1]);
+		local margin_bottom = math.floor(self:GetMarginBottom() / Screen:GetUIScaling()[2])
+		_this.y = math.floor(self:GetTop() / Screen:GetUIScaling()[2]);
+		_this.height = margin_bottom;
+		_this.width = margin_right;
+	end
+	self:sizeChanged();
 end
 
 -- create get the UI container object that is the same size of the view port.
@@ -180,17 +191,12 @@ function Viewport:GetUIObject(bCreateIfNotExist)
 			
 			_this.zorder = -3;
 			_this:AttachToRoot();
+
 			_this:SetScript("onsize", function()
-				self:sizeChanged();
+				self:OnUpdateSize();
 			end);
-			self:Connect("sizeChanged", nil, function()
-				local _this = ParaUI.GetUIObject(name);
-				local margin_right = math.floor(viewport:GetMarginRight() / Screen:GetUIScaling()[1]);
-				local margin_bottom = math.floor(viewport:GetMarginBottom() / Screen:GetUIScaling()[2])
-				_this.y = math.floor(viewport:GetTop() / Screen:GetUIScaling()[2]);
-				_this.height = margin_bottom;
-				_this.width = margin_right;
-			end)
+
+			Screen:Connect("sizeChanged", self, self.OnUpdateSize, "UniqueConnection");
 		end
 		self.uiobject_id = _this.id;
 		return _this;
