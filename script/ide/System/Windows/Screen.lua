@@ -104,6 +104,30 @@ function Screen:AutoAdjustUIScalingImp()
 	end
 end
 
+local designRes = {};
+function Screen:PushDesignResolution(width, height)
+	designRes[#designRes + 1] = {width, height}
+	self:ChangeUIDesignResolution(width, height)
+end
+
+function Screen:PopDesignResolution()
+	if(#designRes > 0) then
+		local res = designRes[#designRes]
+		designRes[#designRes] = nil;
+		local width, height = res[1], res[2]
+		if(#designRes > 0) then
+			local res = designRes[#designRes]
+			local width, height = res[1], res[2]
+			self:ChangeUIDesignResolution(width, height)
+		else
+			self:RestoreUIDesignResolution();
+		end
+		return width, height;
+	else
+		self:RestoreUIDesignResolution();
+	end
+end
+
 function Screen:ScheduleUIResolutionUpdate(delayTime, callbackFunc)
 	self:Disconnect("sizeChanged", self, self.AutoAdjustUIScalingImp);
 	self.mytimer = self.mytimer or commonlib.Timer:new({callbackFunc = function(timer)

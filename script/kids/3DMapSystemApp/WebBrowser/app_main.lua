@@ -227,11 +227,11 @@ local function MCMLWinFrameMSGProc(window, msg)
 		if(msg.param1) then
 			window.isOnCloseCalled = false;
 			if(window.DesignResolutionWidth) then
-				System.Windows.Screen:ChangeUIDesignResolution(window.DesignResolutionWidth, window.DesignResolutionHeight)
+				System.Windows.Screen:PushDesignResolution(window.DesignResolutionWidth, window.DesignResolutionHeight)
 			end
 		else
 			if(window.DesignResolutionWidth) then
-				System.Windows.Screen:RestoreUIDesignResolution()
+				System.Windows.Screen:PopDesignResolution()
 			end
 		end
 		if(window.enable_esc_key) then --  and System.options.isAB_SDK
