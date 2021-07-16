@@ -794,6 +794,26 @@ function commonlib.split(str,delimiter)
 	return result;
 end
 
+--- TODO self?
+--- @param func function
+--- @param delay number
+--- @return function
+function commonlib.debounce(func, delay)
+	local timer;
+
+	return function (...)
+		local args = {...};
+
+		if(timer) then
+			timer:Change();
+		end
+
+		timer = commonlib.TimerManager.SetTimeout(function ()
+			func(unpack(args));
+		end, delay);
+	end
+end
+
 --[[
 	local t = 
 	{
