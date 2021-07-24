@@ -750,6 +750,17 @@ function commonlib.GetRandomIndex(range,excludeindex)
 	return r;
 end
 
+function commonlib.GetLimitLabel(text, maxCharCount)
+    maxCharCount = maxCharCount or 13;
+    local len = ParaMisc.GetUnicodeCharNum(text);
+    if(len >= maxCharCount)then
+	    text = ParaMisc.UniSubString(text, 1, maxCharCount-2) or "";
+        return text .. "...";
+    else
+        return text;
+    end
+end
+
 -- Use a private proxy environment for the module,
 -- so that the module can access global variables.
 --  + Global assignments inside module get placed in the module
