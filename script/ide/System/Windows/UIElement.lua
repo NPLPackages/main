@@ -196,6 +196,9 @@ function UIElement:ApplyCss(css)
 			UIAnimManagerEx.PlayUIAnimationSequence(self, fileName, animName, true);
 		end
 	end
+	if(css.overflow == "hidden") then
+		self:SetClip(true)
+	end
 end
 
 -- Returns true if this object is a parent, (or grandparent and so on
