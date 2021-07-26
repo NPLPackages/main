@@ -574,7 +574,7 @@ function pe_editor_button.create(rootName, mcmlNode, bindingContext, _parent, le
 		local font_family = css["font-family"] or "System";
 		-- this is tricky. we convert font size to integer, and we will use scale if font size is either too big or too small. 
 		local font_size = math.floor(tonumber(css["font-size"] or 12));
-		local max_font_size = 20;
+		local max_font_size = 50;
 		local min_font_size = 11;
 		if(font_size>max_font_size) then
 			font_size = max_font_size;
