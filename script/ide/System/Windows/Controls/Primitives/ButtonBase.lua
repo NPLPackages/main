@@ -14,8 +14,8 @@ local ButtonBase = commonlib.inherit(commonlib.gettable("System.Windows.UITextEl
 ButtonBase:Property("Name", "ButtonBase");
 ButtonBase:Property({"BackgroundColor", "#ffffff", auto=true});
 ButtonBase:Property({"BackgroundColorPressed", "#a0a0a0", auto=true});
-ButtonBase:Property({"BackgroundColorNormal", "#e6e6e6", auto=true});
-ButtonBase:Property({"BackgroundColorHighlight", "#ffffff", auto=true});
+ButtonBase:Property({"BackgroundColorNormal", "#ffffff", auto=true});
+ButtonBase:Property({"BackgroundColorHighlight", "#e6e6e6", auto=true});
 ButtonBase:Property({"Icon", nil, auto=true});
 ButtonBase:Property({"IconSize", nil, auto=true});
 ButtonBase:Property({"Color", "#000000", auto=true});
