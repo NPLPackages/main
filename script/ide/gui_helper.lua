@@ -78,7 +78,6 @@ e.g. _guihelper.SetUIColor(uiobject, "255 0 0"); or _guihelper.SetUIColor(uiobje
 function _guihelper.SetUIColor(uiobject, color)
 	if(uiobject~=nil and uiobject:IsValid())then
 		color = getcolor(color);
-		local texture;
 		uiobject:SetCurrentState("highlight");
 		uiobject.color=color;		
 		uiobject:SetCurrentState("pressed");
