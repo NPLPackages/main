@@ -36,6 +36,8 @@
     <rule match="^/?_next/.+%.js"  with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/nplcad3/"}'></rule>
     <rule match="^/?_next/.+%.css"  with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/nplcad3/"}'></rule>
 
+    <rule match="^/?nplcad3/partdesign" with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/nplcad3", filename = "partdesign.html"}'></rule>
+    <rule match="^/?nplcad3/js" with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/nplcad3", filename = "editor.html"}'></rule>
     <rule match="^/?nplcad3/editor" with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/nplcad3", filename = "nplcad3.html"}'></rule>
     <rule match="^/?nplcad3" with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/nplcad3", filename = "nplcad3.html"}'></rule>
 
