@@ -385,7 +385,11 @@ function Map3DSystem.App.WebBrowser.OnExec(app, commandName, params)
 			end
 		end
 		
-	elseif(commandName == "File.MCMLWindowFrame") then	
+	elseif(commandName == "File.MCMLWindowFrame") then
+		if(GameLogic and GameLogic.GetFilters) then
+			params = GameLogic.GetFilters():apply_filters("File.MCMLWindowFrame", params) or params;
+		end
+
 		if(type(params) ~= "table" or not params.name) then	
 			log("warning: File.MCMLWindowFrame command must have input of a table or name field is nonexistent\n")
 			return;
