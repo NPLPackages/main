@@ -648,7 +648,14 @@ function pe_editor_checkbox.create(rootName, mcmlNode, bindingContext, _parent, 
 		end
 	end
 	
-	local IsEnabled = mcmlNode:GetBool("enabled")
+	local isEnabled;
+
+	if (mcmlNode:GetBool("enabled") == nil) then
+		isEnabled = mcmlNode:GetAttributeWithCode("enabled");
+	else
+		isEnabled = mcmlNode:GetBool("enabled");
+	end
+
 	local name = mcmlNode:GetAttributeWithCode("name") or "_defaultCheckbox";
 	
 	local iconWidth = width;
@@ -690,9 +697,9 @@ function pe_editor_checkbox.create(rootName, mcmlNode, bindingContext, _parent, 
 	if(mcmlNode:GetString("tooltip")) then
 		_this.tooltip = mcmlNode:GetAttributeWithCode("tooltip")
 	end
-	
-	if(IsEnabled~=nil) then
-		_this.enabled = IsEnabled;
+
+	if (isEnabled ~= nil) then
+		_this.enabled = isEnabled;
 	end
 	_parent:AddChild(_this);
 end
