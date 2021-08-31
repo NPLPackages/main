@@ -12,6 +12,9 @@ if(zipFile:open("temp/test.zip")) then
 	zipFile:unzip();
 	zipFile:close();
 end
+
+ZipFile.GeneratePkgFile("temp/test.zip")
+ZipFile.GeneratePkgFile("temp/test.xml", "temp/test.xml")
 ------------------------------------------------------------
 ]]
 
@@ -129,3 +132,26 @@ function ZipFile:unzip(destinationFolder,maxCnt)
 	LOG.std(nil, "info", "ZipFile", "%s is unziped to %s ( %d files)", self.filename, destinationFolder, fileCount); 
 end
 
+-- static function: convert from zip to pkg file. this function is NOT thread safe. 
+-- @param fromFile: must be a zip file
+-- @param toFile: if nil, we will replace fromFile's file extension from zip to pkg
+-- @return true if succeed.
+function ZipFile.GeneratePkgFile(fromFile, toFile)
+	if(not toFile and fromFile) then
+		toFile = fromFile:gsub("%.zip", ".pkg")
+	end
+	local result;
+	if(fromFile ~= toFile) then
+		return ParaAsset.GeneratePkgFile(fromFile, toFile);
+	elseif(fromFile) then
+		local tempFile = ParaIO.GetWritablePath().."temp/temp.pkg";
+		if(ParaAsset.GeneratePkgFile(fromFile, tempFile)) then
+			ParaIO.CreateDirectory(toFile);
+			if(ParaIO.MoveFile(tempFile, toFile)) then
+				result = true
+			end
+			ParaIO.DeleteFile(tempFile);
+		end
+	end
+	return result
+end
