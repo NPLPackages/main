@@ -739,7 +739,7 @@ end
 
 -- get the MCML value on the node
 function pe_editor_checkbox.GetValue(mcmlNode)
-	if(mcmlNode:GetAttribute("checked")) then
+	if (mcmlNode:GetAttribute("checked")) then
 		return true;
 	else
 		return false;
@@ -749,22 +749,15 @@ end
 -- get the MCML value on the node
 function pe_editor_checkbox.SetValue(mcmlNode, value)
 	if(value) then
-		mcmlNode:SetAttribute("checked", "true")
+		mcmlNode:SetAttribute("checked", "true");
 	else
-		mcmlNode:SetAttribute("checked", nil)
+		mcmlNode:SetAttribute("checked", nil);
 	end
 end
 
--- get the UI value on the node
+-- get the checkbox value
 function pe_editor_checkbox.GetUIValue(mcmlNode, pageInstName)
-	local ctl = mcmlNode:GetControl(pageInstName);
-	if(ctl) then
-		local bg = ctl.background;
-		if(bg) then
-			bg = string.gsub(bg, "[;:].*$", "");
-			return (bg == (mcmlNode:GetAttributeWithCode("CheckedBG") or pe_editor_checkbox.checked_bg))
-		end	
-	end
+	return mcmlNode.checked;
 end
 
 -- set the UI value on the node

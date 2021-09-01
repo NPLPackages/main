@@ -1460,9 +1460,11 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 
 		local alignFormat = 0;
 		if(css["text-align"]) then
-			if(css["text-align"] == "right") then
+			if (css["text-align"] == "center") then
+				alignFormat = 3;
+			elseif (css["text-align"] == "right") then
 				alignFormat = 2;
-			elseif(css["text-align"] == "left") then
+			elseif (css["text-align"] == "left") then
 				alignFormat = 0;
 			end
 		end
