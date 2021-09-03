@@ -825,6 +825,47 @@ function commonlib.debounce(func, delay)
 	end
 end
 
+function commonlib.find(arr, func)
+	if(not arr) then 
+		return nil;
+	end;
+
+	for index, item in ipairs(arr) do
+		if(func(item)) then
+			return item;
+		end;
+	end
+
+	return nil;
+end
+
+function commonlib.map(arr, func)
+	if(not arr) then 
+		return nil;
+	end;
+
+	local items = {};
+	for index, item in ipairs(arr) do
+		table.insert(items, func(item))
+	end
+	return items;
+end
+
+function commonlib.filter(arr, filterFunc)
+	if(not arr) then 
+		return nil;
+	end;
+
+	local newItems = {};
+	for index, item in ipairs(arr) do
+		if(filterFunc(item)) then
+			table.insert(newItems, item)
+		end
+	end
+
+	return newItems;
+end
+
 --[[
 	local t = 
 	{

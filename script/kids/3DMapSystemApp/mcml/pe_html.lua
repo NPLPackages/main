@@ -434,15 +434,17 @@ function pe_text.create(rootName,mcmlNode, bindingContext, _parent, left, top, w
 				local font_family = css["font-family"] or "System";
 				-- this is tricky. we convert font size to integer, and we will use scale if font size is either too big or too small. 
 				local font_size = math.floor(tonumber(css["font-size"] or 12));
-				local max_font_size = tonumber(css["base-font-size"]) or 14;
-				local min_font_size = tonumber(css["base-font-size"]) or 11;
+				local max_font_size = 50;
+				local min_font_size = 11;
 				if(font_size>max_font_size) then
-					scale = font_size/max_font_size
 					font_size = max_font_size;
 				end
 				if(font_size<min_font_size) then
-					scale = font_size/min_font_size
 					font_size = min_font_size;
+				end
+				local base_font_size = tonumber(css["base-font-size"]);
+				if(base_font_size) then
+					font_size = font_size;
 				end
 				local font_weight = css["font-weight"] or "norm";
 				font = string.format("%s;%d;%s", font_family, font_size, font_weight);
@@ -514,6 +516,7 @@ function pe_text.create(rootName,mcmlNode, bindingContext, _parent, left, top, w
 			height = _this.height;
 			
 			if(scale) then
+				-- TODO: this does not work, since we have not called _parent:ApplyAnim();
 				_this.scalingx = scale;
 				_this.scalingy = scale;
 				_this.translationx = (width * scale - width)/2;
@@ -1651,25 +1654,24 @@ function pe_label.create(rootName,mcmlNode, bindingContext, _parent, left, top, 
 		local font_family = css["font-family"] or "System";
 		-- this is tricky. we convert font size to integer, and we will use scale if font size is either too big or too small. 
 		local font_size = math.floor(tonumber(css["font-size"] or 12));
-		local max_font_size = tonumber(css["base-font-size"]) or 14;
-		local min_font_size = tonumber(css["base-font-size"]) or 11;
-		
-		local scale;
-		
+		local max_font_size = 50;
+		local min_font_size = 11;
 		if(font_size>max_font_size) then
-			scale = font_size/max_font_size
 			font_size = max_font_size;
 		end
 		if(font_size<min_font_size) then
-			scale = font_size/min_font_size
 			font_size = min_font_size;
 		end
-				
+		local base_font_size = tonumber(css["base-font-size"]);
+		if(base_font_size) then
+			font_size = font_size;
+		end
 		local font_weight = css["font-weight"] or "norm";
 		font = string.format("%s;%d;%s", font_family, font_size, font_weight);
 		
 		_this.font = font;
 		if(scale) then
+			-- TODO: this does not work, since we have not called _parent:ApplyAnim();
 			_this.scalingx = scale;
 			_this.scalingy = scale;
 			_this.translationx = (width * scale - width)/2;

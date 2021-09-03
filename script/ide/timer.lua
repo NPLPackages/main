@@ -80,6 +80,10 @@ function Timer:new(o)
 	if(o.dueTime) then
 		o:Change(o.dueTime, o.period);
 	end
+
+	-- 每次使用定时器都检测
+	TimerManager.CheckTimer();
+
 	return o
 end
 
@@ -185,6 +189,21 @@ end
 
 function TimerManager.Stop()
 	NPL.KillTimer(TimerManager.timer_id);
+end
+
+-- 重启定时器
+function TimerManager.Restart()
+	NPL.KillTimer(TimerManager.timer_id);
+	NPL.SetTimer(TimerManager.timer_id, 0.01, ";commonlib.TimerManager.OnTimer();");
+end
+
+-- 检测定时器是否有效
+function TimerManager.CheckTimer()
+	local last_tick = ParaGlobal_timeGetTime();
+	-- 时间间隔超过200ms 是定时间间隔的20倍 则认为无效重启定时器
+	if (not TimerManager.last_tick or (last_tick - TimerManager.last_tick) > 200) then
+		TimerManager.Restart();
+	end
 end
 
 -- clear all timers

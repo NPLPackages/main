@@ -61,7 +61,7 @@ tree view sample code:
         <NodeTemplate DataType="file">
             <div style="height:20px;">
                 <%=XPath("this|text")%>
-				<span color="#008000">(ÒÑÍê³É)</span>
+				<span color="#008000">(ï¿½ï¿½ï¿½ï¿½ï¿½)</span>
             </div>
         </NodeTemplate>
 	</NodeTemplates>
@@ -99,7 +99,7 @@ Example 2: binding with XPath:
         <NodeTemplate DataType="file">
             <div style="height:20px;">
                 <%=XPath("this|text")%>
-				<span color="#008000">(ÒÑÍê³É)</span>
+				<span color="#008000">(ï¿½ï¿½ï¿½ï¿½ï¿½)</span>
             </div>
         </NodeTemplate>
 	</NodeTemplates>
