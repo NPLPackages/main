@@ -151,5 +151,30 @@ end
         <div>child5</div>
     </pe:treeview>
 </pe:tab-item>
+<pe:tab-item text="Scrolling" >
+   <pe:treeview name="tvwXMLTest5" DataSource='<%={ {name="folder", attr={text="parent_folder", expanded=true}, {name="file", attr={text="filename"}}, }}%>'
+		    DefaultNodeHeight="100" OnClick="tvwOnClickNode()" ItemToggleSize="10" ItemToggleRightSpacing="6">
+	    <pe:treenode text="static nodes">
+		    <div>this is static nodes that are not bound to any data source. it can shown either before or after NodeTemplates</div>
+	    </pe:treenode>
+	    <NodeTemplates>
+		    <NodeTemplate DataType="folder">
+                <pe:treenode text='<%=XPath("this|text")%>' expanded='<%=XPath("this|expanded")%>'></pe:treenode>
+            </NodeTemplate>
+            <NodeTemplate DataType="file">
+                <div style="height:20px;">
+                    <%=XPath("this|text")%>
+				    <span color="#008000">(已完成)</span>
+                </div>
+            </NodeTemplate>
+	    </NodeTemplates>
+        <!--this is where the data binded treenode to appear-->
+        <DataNodePlaceholder xpath="*"/>
+        <pe:treenode text="Select all file nodes" expanded="true">
+            <DataNodePlaceholder xpath="//file"/>
+	    </pe:treenode>
+	    <div style="font-size:30px">scrolling content with bigger scaled font</div>
+    </pe:treeview>
+</pe:tab-item>
 </pe:tabs>
 </pe:mcml>
