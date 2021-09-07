@@ -324,16 +324,18 @@ end
 -- DT_WORDBREAK                0x00000010
 -- DT_NOCLIP				   0x00000100
 -- DT_EXTERNALLEADING		   0x00000200
-function _guihelper.SetUIFontFormat(uiobject, format)
+-- @param fontName: if nil, it default to "text", can also be "selected_text" for editbox
+function _guihelper.SetUIFontFormat(uiobject, format, fontName)
 	if(uiobject~=nil and uiobject:IsValid())then
+		fontName = fontName or "text";
 		uiobject:SetCurrentState("highlight");
-		uiobject:GetFont("text").format=format;
+		uiobject:GetFont(fontName).format=format;
 		uiobject:SetCurrentState("pressed");
-		uiobject:GetFont("text").format=format;
+		uiobject:GetFont(fontName).format=format;
 		uiobject:SetCurrentState("disabled");
-		uiobject:GetFont("text").format=format;
+		uiobject:GetFont(fontName).format=format;
 		uiobject:SetCurrentState("normal");
-		uiobject:GetFont("text").format=format;
+		uiobject:GetFont(fontName).format=format;
 	end
 end
 

@@ -1483,6 +1483,7 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 		end
 		if(alignFormat~=0) then
 			_guihelper.SetUIFontFormat(_this, alignFormat);
+			_guihelper.SetUIFontFormat(_this, alignFormat, "selected_text");
 		end
 		
 		
