@@ -81,6 +81,7 @@ if it is "_mcmlblank", it will be opened in a new popup mcml window.
 | EmptyText | empty text to display such as "click to enter text ..." |
 | VerticalScrollBarStep | |
 | fontsize | font size to use for multiline text. | 
+| lineheight | lineheight |
 | css.lineheight | line height for multiline text. |
 | spacing	| for text or button control.  |
 | UseSystemControl | true to use advanced multiple line edit box in new system control |
@@ -1302,10 +1303,17 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 		(css["margin-bottom"] or css["margin"] or 0),(css["margin-right"] or css["margin"] or 0);	
 		
 	local left, top, width, height = parentLayout:GetPreferredRect();
-	local lineheight;
-	if(css["line-height"]) then
+	local fontsize = mcmlNode:GetAttributeWithCode("fontsize", nil, true)
+	if(fontsize) then
+		fontsize = tonumber(fontsize);
+	end
+	local lineheight = mcmlNode:GetAttributeWithCode("lineheight", nil, true);
+	if(lineheight) then
+		lineheight = tonumber(lineheight);
+	elseif(css["line-height"]) then
 		lineheight = tonumber(css["line-height"]);
 	end
+
 	if(mcmlNode:GetAttribute("height")) then
 		local height = mcmlNode:GetAttribute("height");
 		css.height = tonumber(string.match(height, "%d+"));
@@ -1354,7 +1362,7 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 			parent = _parent,
 			DefaultNodeHeight = lineheight,
 			fontFamily = css["font-family"],
-			fontsize = mcmlNode:GetNumber("fontsize"),
+			fontsize = fontsize,
 			ReadOnly = bReadOnly,
 			ShowLineNumber = mcmlNode:GetBool("ShowLineNumber"),
 			SingleLineEdit = mcmlNode:GetBool("SingleLineEdit"),
