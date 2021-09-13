@@ -1582,7 +1582,8 @@ Map3DSystem.mcml_controls.pe_label = pe_label;
 -- @param mcmlNode: is a text
 function pe_label.create(rootName,mcmlNode, bindingContext, _parent, left, top, width, height, style, parentLayout)
 	if(mcmlNode:GetAttribute("display") == "none") then return end
-
+	local font;
+	local scale;
 	local left, top, width, height = parentLayout:GetPreferredRect();
 	
 	local css = mcmlNode:GetStyle(Map3DSystem.mcml_controls.pe_html.css["pe:label"], style) or {};
