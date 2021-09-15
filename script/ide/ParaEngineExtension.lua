@@ -255,6 +255,7 @@ end
 
 NPL.load("(gl)script/ide/System/localserver/factory.lua");
 ParaAsset.RemoteTexture_cache_policy = System.localserver.CachePolicy:new("access plus 1 hour");
+-- It is called automatically when the ParaEngine Core detects that a texture is a remote texture. 
 -- An internal ResourceStore (local server) called "_default_" is used to serve http textures. 
 -- An internal time is also used so that we can sequence downloader threads. 
 -- @param cache_policy: please note for http object, cache-control: max-age is always added to the cache_policy
@@ -293,7 +294,8 @@ function ParaAsset.ClearTextureCache()
 end
 
 --[[
-This function is only used internally. It is called automatically when the ParaEngine Core detects that a texture is a remote texture. 
+This function is OBSOLETED. now NPLRuntime uses ParaAsset.GetRemoteTexture instead. 
+It is called automatically when the ParaEngine Core detects that a texture is a remote texture. 
 @note: One shall never call this function explicitly. In scripting interface, we can call ParaAsset.LoadRemoteTexture() instead
 Load a texture from remote file. It first checks if the file is available from the local texture cache,
 if yes, it will immediately use the local copy, before refreshing from the network. In either case, a thread is 
@@ -313,6 +315,7 @@ function ParaAsset.SyncRemoteTexture(FileUrl)
 	NPL.SyncFile(uri, DestFolder, string.format("ParaAsset.SyncRemoteTexture_callback(%q, %q);", FileUrl, DestFolder), FileUrl)
 end
 
+-- This function is OBSOLETED. 
 function ParaAsset.SyncRemoteTexture_callback(FileUrl, DestFolder)
 	if(msg~=nil and msg.DownloadState=="complete") then
 		local asset = ParaAsset.LoadTexture("", FileUrl, 1);

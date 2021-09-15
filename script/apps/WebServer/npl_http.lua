@@ -223,6 +223,11 @@ function npl_http.OnFinishedCallback(response)
 	end
 end
 
+function npl_http.IsGGSHTTP(msg)
+	local XServerType = type(msg) == "table" and msg["X-Server-Type"];
+	return XServerType == "GGS_HTTP";
+end
+
 local function activate()
 	if(enable_http_pipeline) then
 		local req = request:new():init(msg);
@@ -235,6 +240,9 @@ local function activate()
 			-- append request
 			last_req.next_req = req;
 		end
+	elseif (type(npl_http.IsGGSHTTP) == "function" and npl_http.IsGGSHTTP(msg)) then
+		local Http = NPL.load("Mod/GeneralGameServerMod/Server/Http/Http.lua");
+		Http:OnActivate(msg);
 	else
 		local req = request:new():init(msg);
 		npl_http.handleRequest(req);
