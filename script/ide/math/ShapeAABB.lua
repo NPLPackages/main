@@ -246,6 +246,14 @@ function ShapeAABB:GetExtendValues()
 	return self.mExtents[1], self.mExtents[2], self.mExtents[3];
 end
 
+function ShapeAABB:GetMaxExtent()
+	return math.max(math.max(self.mExtents[1], self.mExtents[2]), self.mExtents[3]);
+end
+
+function ShapeAABB:GetMinExtent()
+	return math.min(math.min(self.mExtents[1], self.mExtents[2]), self.mExtents[3]);
+end
+
 function ShapeAABB:GetCenter()
 	return self.mCenter:clone();
 end
