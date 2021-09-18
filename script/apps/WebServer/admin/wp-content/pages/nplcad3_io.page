@@ -1,0 +1,101 @@
+<?npl
+local blockpos = request:get("blockpos");
+local content = request:get("content");
+local options = request:get("options");
+NPL.load("(gl)script/apps/Aries/Creator/Game/block_engine.lua");
+local BlockEngine = commonlib.gettable("MyCompany.Aries.Game.BlockEngine")
+NPL.load("(gl)script/apps/Aries/Creator/Game/game_logic.lua");
+local GameLogic = commonlib.gettable("MyCompany.Aries.Game.GameLogic")
+
+
+local name = request:get("name");
+local code = request:get("code");
+local type = request:get("type");
+local preview = request:get("preview");
+
+if(options and options ~= "")then
+	local out = {};
+	if(NPL.FromJson(options, out)) then
+		options = out;
+	end
+end
+options = options  or {};
+local function GetBlockPosition()
+	local bx, by, bz;
+	if(blockpos) then
+		local pos = {};
+		for v in blockpos:gmatch("%d+") do
+			pos[#pos+1] = tonumber(v);
+		end
+		bx, by, bz = pos[1], pos[2], pos[3]
+	end
+	return bx, by, bz;
+end
+local function GetCodeEntity(bx, by, bz)
+	if(bx) then
+		local codeEntity = BlockEngine:GetBlockEntity(bx, by, bz)
+		if(codeEntity and codeEntity.class_name == "EntityNplCadEditor") then
+			return codeEntity;
+		end
+	end
+end
+local function SaveEntityData(name, codeEntity, bx, by, bz, content)
+	if(not codeEntity)then
+		return
+	end
+	codeEntity:BeginEdit()
+	codeEntity:SetEditorType("full_editor")
+	codeEntity:SetIDEContent(content);
+	codeEntity:EndEdit()
+	if(options.nplcad3_notify_update)then
+		if(GameLogic and GameLogic.GetFilters and GameLogic.GetFilters())then
+			GameLogic.GetFilters():apply_filters("nplcad3_notify_update", name, bx, by, bz, codeEntity, options);
+		end
+	end
+	
+end
+local function SaveEntityPreview(name, codeEntity, bx, by, bz, content)
+	if(not codeEntity)then
+		return
+	end
+	if(options.nplcad3_notify_preview)then
+		if(GameLogic and GameLogic.GetFilters and GameLogic.GetFilters())then
+			GameLogic.GetFilters():apply_filters("nplcad3_notify_preview", name, bx, by, bz, codeEntity, content, options);
+		end
+	end
+end
+
+if(is_ajax()) then
+    add_action('wp_ajax_loadidedata', function()
+      	local bx, by, bz = GetBlockPosition();
+        local codeEntity = GetCodeEntity(bx, by, bz)
+			if(codeEntity) then
+				local data = codeEntity:GetIDEContent();
+				wp_send_json({ blockpos = blockpos , data = data });
+				return
+			end
+		end)
+    add_action('wp_ajax_savepreview', function()
+      	local bx, by, bz = GetBlockPosition();
+        local codeEntity = GetCodeEntity(bx, by, bz)
+				if(codeEntity) then
+					SaveEntityPreview(name, codeEntity, bx, by, bz, preview);
+					wp_send_json({ blockpos = blockpos , success = true });
+					return
+				end
+		end)
+    add_action('wp_ajax_saveidedata', function()
+      	local bx, by, bz = GetBlockPosition();
+        local codeEntity = GetCodeEntity(bx, by, bz)
+				if(codeEntity) then
+					SaveEntityData(name, codeEntity, bx, by, bz, content);
+					wp_send_json({ blockpos = blockpos , success = true });
+					return
+				end
+		end)
+    return
+end
+?>
+
+
+

@@ -1,0 +1,28 @@
+<?npl
+--[[
+Title: download asset manifest files via this proxy server
+Author: LiXizhi
+Date: 2021/9/8
+Desc: http://127.0.0.1:8099/assetserver?filename=/texture/whitedot.png.p,dcd40f18341aba7f389ee0c7d57d02d1,94
+ParaAsset.SetAssetServerUrl("http://127.0.0.1:8099/assetserver?filename=/");
+]]
+if(not is_admin()) then
+  exit("access denied")
+end
+
+local filename = request:get("filename")
+if(filename) then
+	NPL.load("(gl)script/apps/Aries/Creator/Game/Website/assetserverProxy.lua");
+	local assetserverProxy = commonlib.gettable("MyCompany.Aries.Game.assetserverProxy")
+	assetserverProxy.GetFile(filename, function(localFilename, fileContent)
+		if(fileContent) then
+			response.headers["Content-Length"] = #fileContent;
+			response.headers["Content-Type"] = "application/x-binary";
+			response.headers["Content-Transfer-Encoding"] = "binary";
+			
+			response:send_headers();
+			response:send_data(fileContent);	
+		end
+	end)
+end
+?>
