@@ -56,15 +56,41 @@ function Quaternion.__sub(a,b)
 	return Quaternion:new({a[1]-b[1], a[2]-b[2], a[3]-b[3], a[4]-b[4]})
 end
 
+-- rotate quaternion or a vector3
 -- q3*(q2*q1) = rotate q1 and then q2, then q3
 -- @param b: can be vector3d or Quaternion
+-- @return quaternion or a vector3 depending on what b is. 
 function Quaternion.__mul(a,b)
-	return Quaternion:new({
-		a[4] * b[1] + a[1] * b[4] + a[2] * b[3] - a[3] * b[2],
-		a[4] * b[2] + a[2] * b[4] + a[3] * b[1] - a[1] * b[3],
-		a[4] * b[3] + a[3] * b[4] + a[1] * b[2] - a[2] * b[1],
-		a[4] * b[4] - a[1] * b[1] - a[2] * b[2] - a[3] * b[3]
-	});
+	if(b[4]) then
+		return Quaternion:new({
+			a[4] * b[1] + a[1] * b[4] + a[2] * b[3] - a[3] * b[2],
+			a[4] * b[2] + a[2] * b[4] + a[3] * b[1] - a[1] * b[3],
+			a[4] * b[3] + a[3] * b[4] + a[1] * b[2] - a[2] * b[1],
+			a[4] * b[4] - a[1] * b[1] - a[2] * b[2] - a[3] * b[3]
+		});
+	else
+		return { Quaternion.RotateVector3(a, b[1], b[2], b[3]) }
+	end
+end
+
+-- use this if one do not want to create additional vector3 table
+function Quaternion:RotateVector3(vx, vy, vz)
+	local x = self[1] * 2;
+	local y = self[2] * 2;
+	local z = self[3] * 2;
+	local xx = self[1] * x;
+	local yy = self[2] * y;
+	local zz = self[3] * z;
+	local xy = self[1] * y;
+	local xz = self[1] * z;
+	local yz = self[2] * z;
+	local wx = self[4] * x;
+	local wy = self[4] * y;
+	local wz = self[4] * z;
+	local rx = (1.0 - (yy + zz)) * vx + (xy - wz) * vy + (xz + wy) * vz;
+	local ry = (xy + wz) * vx + (1.0 - (xx + zz)) * vy + (yz - wx) * vz;
+	local rz = (xz - wy) * vx + (yz + wx) * vy + (1.0 - (xx + yy)) * vz;
+	return rx, ry, rz;
 end
 
 -- multiplay in place without creating a new quaternion
@@ -374,6 +400,7 @@ end
 function Quaternion:Inverse()
     self[1], self[2], self[3], self[4] = -self[1],-self[2],-self[3], self[4];
 end
+
 
 -- const static identity matrix. 
 Quaternion.IDENTITY = Quaternion:new({0, 0, 0, 1});

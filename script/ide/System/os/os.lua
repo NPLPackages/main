@@ -42,6 +42,24 @@ function os.GetPlatform()
 	return os.platform;
 end
 
+local isWindowsXP;
+-- if it is old system
+function os.IsWindowsXP()
+	if(isWindowsXP == nil) then
+		isWindowsXP = false;
+		if(os.GetPlatform() == "win32") then
+			local stats = System.os.GetPCStats();
+            if(stats and stats.os) then
+                if(stats.os:lower():match("windows xp")) then
+                    isWindowsXP = true;
+                end
+            end
+		end
+	end
+	return isWindowsXP;
+end
+				
+
 -- return true if is mobile device
 function os.IsMobilePlatform()
 	if (os.GetPlatform() == "ios" or os.GetPlatform() == "android") then
@@ -141,7 +159,21 @@ function os.GetPCStats()
 		pc_stats.IsFullScreenMode = att:GetField("IsFullScreenMode", false);
 		pc_stats.resolution_x = tonumber(att:GetDynamicField("ScreenWidth", 1020)) or 1020;
 		pc_stats.resolution_y = tonumber(att:GetDynamicField("ScreenHeight", 680)) or 680;
-		pc_stats.IsWebBrowser = System.options.IsWebBrowser;
+		-- pc_stats.IsWebBrowser = System.options and System.options.IsWebBrowser;
 	end
 	return pc_stats;
+end
+
+if(os.IsWindowsXP()) then
+	local NPL_AppendURLRequest = NPL.AppendURLRequest;
+
+	NPL.AppendURLRequest = function(urlParams, sCallback, sForm, sPoolName)
+		if(type(urlParams) == "table" and urlParams.url) then
+			-- libcurl.dll under windows XP does not support openssl protocol, we will try using http instead. 
+			urlParams.url = urlParams.url:gsub("^https://", "http://")
+		elseif(type(urlParams) == "string") then
+			urlParams = urlParams:gsub("^https://", "http://")
+		end
+		return NPL_AppendURLRequest(urlParams, sCallback, sForm, sPoolName)
+	end
 end
