@@ -1459,6 +1459,12 @@ function pe_img.create(rootName,mcmlNode, bindingContext, _parent, left, top, wi
 			_this.background = mcmlNode:GetAbsoluteURL(src);
 		end	
 	end
+
+	local click_through = mcmlNode:GetBool("ClickThrough");
+	if(click_through) then
+		_this:SetField("ClickThrough", click_through);
+	end
+
 	if(css["background-repeat"] == "repeat") then
 		_this:GetAttributeObject():SetField("UVWrappingEnabled", true);
 	end
