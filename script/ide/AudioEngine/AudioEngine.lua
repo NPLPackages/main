@@ -50,6 +50,15 @@ audio_src:play3d(x,y,z, true)
 local audio_src = AudioEngine.CreateGet("CodeDriven1")
 audio_src.file = "Audio/Example.wav"
 audio_src:play(); -- then play with default.
+
+-- audio recording
+AudioEngine.StartRecording()
+commonlib.TimerManager.SetTimeout(function()  
+    AudioEngine.StopRecording()
+    if(AudioEngine.SaveRecording("temp/capture.ogg", 0.1)) then
+		echo("succeed")
+	end
+end, 5000)
 -------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/XPath.lua");
@@ -340,5 +349,29 @@ function AudioEngine.ResetAudioDevice(value)
 				BackgroundMusic:PlayBackgroundSound(sound);
 			end
 		end
+	end
+end
+
+function AudioEngine.StartRecording()
+	ParaAudio.StartRecording()
+end
+
+function AudioEngine.StopRecording()
+	ParaAudio.StopRecording()
+end
+
+-- it will stop recording and save current recording to ogg audio file. 
+-- @param filename: if nil, default to "temp/capture.ogg"
+-- @param quality: if nil, default to 0.1.  [0.1, 1], 0.1 is lowest quality, 1 is best quality. 
+-- @return absolute filename that the audio is saved to.
+function AudioEngine.SaveRecording(filename, quality)
+	filename = filename or "temp/capture.ogg";
+	if(not commonlib.Files.IsAbsolutePath(filename)) then
+		filename = ParaIO.GetWritablePath()..filename;
+	end
+	quality = quality or 0.1;
+	ParaEngine.GetAttributeObject():GetChild("AudioEngine"):SetField("CaptureAudioQuality", quality);
+	if(ParaAudio.SaveRecording(filename)) then
+		return filename;
 	end
 end

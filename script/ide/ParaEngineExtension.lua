@@ -614,7 +614,6 @@ local obsoleted_functions = {
 	["ParaAudio.LoadInMemoryWaveBank"] = true, 
 	["ParaAudio.LoadStreamWaveBank"] = true, 
 	["ParaAudio.LoadSoundBank"] = true, 
-	["ParaAudio.StopRecording"] = true, 
 	["ParaAudio.GetRecordingDeviceEnum"] = true, 
 	["ParaAudio.SetRecordingOutput"] = true, 
 	["ParaAudio.BeginRecording"] = true, 
