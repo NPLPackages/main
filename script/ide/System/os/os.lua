@@ -166,7 +166,6 @@ end
 
 if(os.IsWindowsXP()) then
 	local NPL_AppendURLRequest = NPL.AppendURLRequest;
-
 	NPL.AppendURLRequest = function(urlParams, sCallback, sForm, sPoolName)
 		if(type(urlParams) == "table" and urlParams.url) then
 			-- libcurl.dll under windows XP does not support openssl protocol, we will try using http instead. 
@@ -175,5 +174,14 @@ if(os.IsWindowsXP()) then
 			urlParams = urlParams:gsub("^https://", "http://")
 		end
 		return NPL_AppendURLRequest(urlParams, sCallback, sForm, sPoolName)
+	end
+
+
+	local NPL_AsyncDownload = NPL.AsyncDownload;
+	NPL.AsyncDownload = function(urlParams, ...)
+		if(type(urlParams) == "string") then
+			urlParams = urlParams:gsub("^https://", "http://")
+		end
+		return NPL_AsyncDownload(urlParams, ...)
 	end
 end
