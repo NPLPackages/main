@@ -227,6 +227,10 @@ function System.localserver.ProcessFile_result(request_id, index)
 	local url = task:GetUrl(index);
 	
 	if(url and msg~=nil) then
+		-- this fixed a bug, when in notify callback we download again for the same url will generate duplicated url warning. 
+		if(msg.DownloadState == "terminated" or msg.DownloadState == "complete") then
+			TaskManager.urls[url] = nil;
+		end
 		-- notify progress
 		task:NotifyUrlProgress(index, msg)
 	end	

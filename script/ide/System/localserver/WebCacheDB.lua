@@ -714,7 +714,7 @@ function WebCacheDB:InsertEntry(entry)
 		log("warning: InsertEntry: if entry.ignore_query is true, url can not contain query strings.\n")
 		return
 	end
-	if(string.find(entry.url, "#")) then
+	if(entry.ignore_query and string.find(entry.url, "#")) then
 		log("warning: InsertEntry: if entry.url can not contain # \n")
 		return
 	end
