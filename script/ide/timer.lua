@@ -314,11 +314,24 @@ function TimerManager.ClearInterval(timer)
 	timer:Change();
 end
 
+local timeoutTimers = {};
 -- create a timer object that will timeout once and call func. 
 -- @param milliSecond: default to 1000ms (1 second)
+-- @param timerName: if nil, a new timer will always be created for this timeout, if not, we will reuse the same timer object. 
+-- and reset the timeout, if the same timer is being called in short interval. 
 -- @return the timer object. 
-function TimerManager.SetTimeout(func, milliSecond)
-	local timer = Timer:new({callbackFunc = func});
+function TimerManager.SetTimeout(func, milliSecond, timerName)
+	local timer
+	if(not timerName) then
+		timer = Timer:new({callbackFunc = func});
+	else
+		timer = timeoutTimers[timerName]
+		if(not timer) then
+			timer = Timer:new({callbackFunc = func});
+			timeoutTimers[timerName] = timer;
+		end
+		timer.callbackFunc = func or timer.callbackFunc;
+	end
 	timer:Change(milliSecond);
 	return timer;
 end

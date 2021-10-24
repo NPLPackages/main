@@ -1,7 +1,8 @@
 --[[
 Title: A CaptureTask processes a CaptureRequest asynchronously in the background
-Author(s): LiXizhi
-Date: 2008/2/27
+Author(s): LiXizhi, big
+CreateDate: 2008.02.27
+ModifyDate: 2021.10.22
 Desc: 
 use the lib:
 ------------------------------------------------------------
@@ -256,6 +257,11 @@ function System.localserver.ProcessFile_result(request_id, index)
 			if (not DestFile or DestFile == "") then
 				local filename = string.gsub(url, ".*/", "");
 				filename = string.gsub(filename, "[%?#].*$", "");
+
+				if (#filename > 15) then
+					filename = string.sub(filename, 1, 15);
+				end
+
 				DestFile = string.format("%s%s-%s", dataDir, ParaGlobal.GenerateUniqueID(), filename);
 			end
 			-- copy temp to local store's data directory. 
