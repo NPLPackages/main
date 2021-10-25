@@ -257,6 +257,7 @@ function System.localserver.ProcessFile_result(request_id, index)
 			if (not DestFile or DestFile == "") then
 				local filename = string.gsub(url, ".*/", "");
 				filename = string.gsub(filename, "[%?#].*$", "");
+				filename = string.gsub(filename, "[^%w_%-]", "");
 
 				if (#filename > 15) then
 					filename = string.sub(filename, 1, 15);
