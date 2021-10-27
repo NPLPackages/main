@@ -39,6 +39,14 @@ function pe_editbox:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	
 	_this:SetEmptyText(self:GetAttributeWithCode("EmptyText", nil, true));
 	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
+	local CaretColor = self:GetAttributeWithCode("CaretColor", nil, true)
+	if(CaretColor) then
+		_this:SetCursorColor(CaretColor);
+	end
+	local textcolor = self:GetAttributeWithCode("textcolor", nil, true)
+	if(textcolor) then
+		_this:SetColor(textcolor);
+	end
 	
 	_this:setMoveViewWhenAttachWithIME(self:GetBool("MoveViewWhenAttachWithIME", false));
 

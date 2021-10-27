@@ -75,7 +75,7 @@ end
 -- @param scaling: if nil, it is user specified. 
 function Screen:SetUserUIScaling(scaling)
 	self.userUIScaling = scaling;
-	self:SetUIScale(scaling, scaling)
+	self:AutoAdjustUIScalingImp();
 end
 
 -- this may be nil if user did not specify it explicitly. 
@@ -92,7 +92,22 @@ function Screen:GetWindowSolution()
 	local frame_width = frame_size[1];
 	local frame_height = frame_size[2];
 	if(frame_height == 0) then
-		-- in case "WindowResolution" API is not supported, such as on mac platform, we will use UI resolution instead.  
+		-- in case "ScreenResolution" API is not supported, such as on mac platform, we will use UI resolution instead.  
+		local scaling = self:GetUIScaling();
+		frame_width = math.floor(Screen:GetWidth() * scaling + 0.5);
+		frame_height = math.floor(Screen:GetHeight() * scaling + 0.5);
+	end
+	return frame_width, frame_height;
+end
+
+-- get unscaled screen resolution. 
+-- @NOTE: This function only return creation window size, which is pretty buggy. 
+function Screen:GetScreenSolution()
+	local frame_size = ParaEngine.GetAttributeObject():GetField("ScreenResolution", {960,560});
+	local frame_width = frame_size[1];
+	local frame_height = frame_size[2];
+	if(frame_height == 0) then
+		-- in case "ScreenResolution" API is not supported, such as on mac platform, we will use UI resolution instead.  
 		local scaling = self:GetUIScaling();
 		frame_width = math.floor(Screen:GetWidth() * scaling + 0.5);
 		frame_height = math.floor(Screen:GetHeight() * scaling + 0.5);
@@ -103,10 +118,17 @@ end
 function Screen:AutoAdjustUIScalingImp()
 	local width, height = self.curDesignUIWidth, self.curDesignUIHeight;
 	if(not width or not height) then
+		local winWidth, winHeight = self:GetWindowSolution();
+		local minWidth, minHeight = self:GetMinimumScreenSize();
 		local scaling = self:GetUserUIScaling();
+		local destWidth, destHeight = winWidth / (scaling or 1), winHeight / (scaling or 1)
+		if(minWidth and (minWidth > destWidth or minHeight > destHeight)) then
+			scaling = scaling / math.max(minWidth / destWidth, minHeight / destHeight);
+			if(math.abs(scaling - 1) < 0.005) then
+				scaling = 1;
+			end
+		end
 		if(not scaling) then
-			local winWidth, winHeight = self:GetWindowSolution();
-			local minWidth, minHeight = self:GetMinimumScreenSize();
 			if(winWidth and minWidth and winWidth >= minWidth*2 and winHeight >= minHeight * 2) then
 				-- user is using 2K or 4K monitor, we will scale by 2 or 4. 
 				local ultraDisplayFactor = math.min(winWidth / minWidth, winHeight/minHeight);
