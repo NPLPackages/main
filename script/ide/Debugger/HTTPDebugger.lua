@@ -122,6 +122,10 @@ function HTTPDebugger.AttachAsync(type, param1, param2, msg, from)
 	HTTPDebugger.Attach();
 end
 
+function HTTPDebugger.DetachAsync()
+	HTTPDebugger.Detach()
+end
+
 -- this is only called when program is not paused. 
 local function activate()
 	HTTPDebugger.SetDebugger(HTTPDebugger);
@@ -140,6 +144,8 @@ local function activate()
 		HTTPDebugger.ListBreakpoints();
 	elseif(command == "exec") then
 		-- TODO: evaluate when still running
+	elseif(command == "Detach") then
+		HTTPDebugger.DetachAsync()
 	end
 end
 NPL.this(activate)

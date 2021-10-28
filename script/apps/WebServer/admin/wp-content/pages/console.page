@@ -158,6 +158,7 @@ end
   }
 </style>
 <?npl
+wp_enqueue_script("pptxgen", "/wp-includes/js/pptxgenjs/pptxgen.bundle.js"); 
 wp_enqueue_script("ace", "/wp-includes/js/ace/ace.js"); 
 wp_enqueue_script("angular", "/wp-includes/js/angular/angular.min.js");
 wp_enqueue_script("ngStorage", "/wp-includes/js/angular/ngStorage.js");
@@ -263,7 +264,24 @@ wp_enqueue_script("ngSanitize", "/wp-includes/js/angular/angular-sanitize.min.js
 			window.open("/debugger", '_blank');
 			$.post("/ajax/debugger?action=openfile", {filename:"temp/console.lua", line:0})
 		}
-		
+		$scope.OnPPTX = function(){
+			//var text = editor.getValue();
+			let pptx = new PptxGenJS();
+			let slide = pptx.addSlide();
+
+			slide.addText("BONJOUR - CIAO - GUTEN TAG - HELLO - HOLA - NAMASTE - ÄãºÃ", {
+				x: 0,
+				y: 1,
+				w: "100%",
+				h: 2,
+				align: "center",
+				color: "0088CC",
+				fill: "F1F1F1",
+				fontSize: 24,
+			});
+
+			pptx.writeFile({ fileName: "PptxGenJS-Demo" });
+		}
 		if(typeof Page != 'undefined')
             Page.ShowSideBar(false);
 	 });
@@ -281,6 +299,7 @@ wp_enqueue_script("ngSanitize", "/wp-includes/js/angular/angular-sanitize.min.js
 		<button class="btn btn-primary" name="btnRunCode" ng-click='runcode()' title="Run code (Ctrl+R)">Run as code (F5)</button>
 		<button class="btn" name="btnRunPage" ng-click='runpage()'>Run as page</button>
 		<button class="btn" style="margin-left:30px;" name="btnOpenInDebugger" ng-click='OpenInDebugger()'>Open in debugger...</button>
+		<button class="btn" style="margin-left:30px;" name="btnOnPPTX" ng-click='OnPPTX()'>Make pptx</button>
 	  </p>
 	</div>
 	<p style='color:green' ng-show="success==true">success!</p>

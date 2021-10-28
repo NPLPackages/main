@@ -184,6 +184,11 @@ function TextControl:PageElement()
 end
 
 function TextControl:attachWithIME()
+	-- android/ios external keyboard requires IME to work, so we will attach IME, even if IsInputMethodEnabled is false
+	if(self:IsInputMethodEnabled() and System.os.GetPlatform() == "win32") then
+		return;
+	end
+	
 	if (self:isMoveViewWhenAttachWithIME()) then
 		local pos = Point:new_from_pool(0, self:y() + self:height());
 		pos = self:mapToGlobal(pos);
@@ -210,10 +215,8 @@ function TextControl:focusInEvent(event)
 	self:setCursorVisible(true);
 	self:setCursorBlinkPeriod(Application:cursorFlashTime());
 	
-	if(self:IsInputMethodEnabled()) then
-		self:attachWithIME();
-	end
-
+	self:attachWithIME();
+	
 	TextControl._super.focusInEvent(self, event)
 end
 
@@ -535,7 +538,7 @@ function TextControl:mousePressEvent(e)
 		self:docPos();
 		self.isLeftMouseDown = true;
 		
-		if (self:hasFocus() and not e.isDoubleClick and self:IsInputMethodEnabled()) then
+		if (self:hasFocus() and not e.isDoubleClick) then
 			self:attachWithIME();
 		end
 	end
