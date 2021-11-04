@@ -703,6 +703,25 @@ function pe_editor_button.create(rootName, mcmlNode, bindingContext, _parent, le
 	if(css.padding) then
 		_this:SetField("Padding", css.padding)
 	end
+
+	local icon = mcmlNode:GetAttribute("icon");
+	local icon_obj
+	if icon then
+		local icon_width = tonumber(mcmlNode:GetAttribute("icon_width")) or 0
+		local icon_height = tonumber(mcmlNode:GetAttribute("icon_height")) or 0
+
+		local icon_off_x = tonumber(mcmlNode:GetAttribute("icon_off_x")) or 0
+		local icon_off_y = tonumber(mcmlNode:GetAttribute("icon_off_y")) or 0
+		local icon_x = left + margin_left + buttonWidth/2 - icon_width/2 + icon_off_x
+		local icon_y = top+ margin_top + height/2 - icon_height/2 + icon_off_y
+		local icon_name = instName and instName .. "_icon" or "b_icon"
+		icon_obj = ParaUI.CreateUIObject("button", icon_name, "_lt", icon_x, icon_y, icon_width, icon_height)
+		_guihelper.SetUIColor(icon_obj, "255 255 255 255");
+		-- icon_obj.zorder = 10
+		icon_obj.enabled = false
+		icon_obj.background = icon
+	end
+
 	if(css["text-offset-x"]) then
 		_this:SetField("TextOffsetX", tonumber(css["text-offset-x"]) or 0)
 	end
@@ -919,6 +938,9 @@ function pe_editor_button.create(rootName, mcmlNode, bindingContext, _parent, le
 		
 	_parent:AddChild(_this);
 		
+	if icon_obj then
+		_parent:AddChild(icon_obj);
+	end
 	if(mcmlNode:GetAttribute("DefaultButton")) then
 		_this:SetDefault(true);
 	end

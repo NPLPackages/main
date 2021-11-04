@@ -805,6 +805,32 @@ function commonlib.split(str,delimiter)
 	return result;
 end
 
+--[[
+	字符串切割
+	local result = commonlib.split_by_str("aabaaba","ab");
+	echo(result, true);
+	输出 { "a", "a", "a" }
+	commonlib.split 的话这种情况会输出 {}
+--]]
+function commonlib.split_by_str(str, delimiter)
+	local star_index = 1
+	local split_index = 1
+	local split_array = {}
+	while true do
+	  local last_index = string.find(str, delimiter, star_index)
+	  if not last_index then
+		split_array[split_index] = string.sub(str, star_index, string.len(str))
+		break
+	  end
+
+	  split_array[split_index] = string.sub(str, star_index, last_index - 1)
+	  star_index = last_index + string.len(delimiter)
+	  split_index = split_index + 1
+	end
+
+	return split_array
+end
+
 --- TODO self?
 --- @param func function
 --- @param delay number
