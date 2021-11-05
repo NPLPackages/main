@@ -194,6 +194,11 @@ function _guihelper.MessageBox(content,MsgBoxClick_CallBack, buttons, icon, mcml
 		_guihelper.CloseMessageBox();
 		return true;
 	end
+
+	if _guihelper.MessageBoxLockHide then
+		return
+	end
+	
 	if(type(content)~="string") then
 		content = commonlib.serialize(content);
 	end
@@ -311,6 +316,10 @@ function _guihelper.OnMessageBoxClick(name)
 			_guihelper.MsgBoxClick_CallBack(dialogResult);
 		end	
 	end
+end
+
+function _guihelper.SetMessageBoxLockHide(flag)
+	_guihelper.MessageBoxLockHide = flag
 end
 
 -- play open window animation, 
