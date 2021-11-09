@@ -21,8 +21,13 @@ if(not is_admin()) then
 end
 
 local code = request:get("text");
+local is_export_ppt = request:get("isppt");
 local function GetCode()
 	return code or "";
+end
+
+local function IsAutoExportPPt()
+	return is_export_ppt or false
 end
 
 local function CreateSandBoxEnv()
@@ -114,6 +119,13 @@ if(is_ajax()) then
 			RunWithResult(output);
 			wp_send_json(output);
 		end
+    end)
+
+	-- getpptdata
+	add_action('wp_ajax_getpptdata', function()
+		local RedSummerCampPPtPage = NPL.load("(gl)script/apps/Aries/Creator/Game/Tasks/RedSummerCamp/RedSummerCampPPtPage.lua");
+		local result = RedSummerCampPPtPage.GetExportData()
+		wp_send_json({result = result});
     end)
 
 	-- get request params
@@ -266,22 +278,29 @@ wp_enqueue_script("ngSanitize", "/wp-includes/js/angular/angular-sanitize.min.js
 		}
 		$scope.OnPPTX = function(){
 			//var text = editor.getValue();
-			let pptx = new PptxGenJS();
-			let slide = pptx.addSlide();
 
-			slide.addText("BONJOUR - CIAO - GUTEN TAG - HELLO - HOLA - NAMASTE - ÄãºÃ", {
-				x: 0,
-				y: 1,
-				w: "100%",
-				h: 2,
-				align: "center",
-				color: "0088CC",
-				fill: "F1F1F1",
-				fontSize: 24,
-			});
+          $.get("ajax/console", { action: "getpptdata"}, function(data){
+			
+			let pptx = new PptxGenJS();
+			for (var i=0;i<data.result.length;i++)
+			{ 
+				let ppt_data = data.result[i]
+				let slide = pptx.addSlide();
+				let index=i+1
+				let img_file = "/pptimg/ppt" + index + ".jpg"
+				slide.addImage({path:img_file,x:0,y:0,w:"100%",h:"100%"})
+				slide.addNotes(ppt_data.notes_str)
+			}
 
 			pptx.writeFile({ fileName: "PptxGenJS-Demo" });
+          });			
 		}
+
+		var is_export_ppt = <?=IsAutoExportPPt()?>;
+		if(is_export_ppt){
+			$scope.OnPPTX();
+		}
+
 		if(typeof Page != 'undefined')
             Page.ShowSideBar(false);
 	 });
@@ -299,7 +318,6 @@ wp_enqueue_script("ngSanitize", "/wp-includes/js/angular/angular-sanitize.min.js
 		<button class="btn btn-primary" name="btnRunCode" ng-click='runcode()' title="Run code (Ctrl+R)">Run as code (F5)</button>
 		<button class="btn" name="btnRunPage" ng-click='runpage()'>Run as page</button>
 		<button class="btn" style="margin-left:30px;" name="btnOpenInDebugger" ng-click='OpenInDebugger()'>Open in debugger...</button>
-		<button class="btn" style="margin-left:30px;" name="btnOnPPTX" ng-click='OnPPTX()'>Make pptx</button>
 	  </p>
 	</div>
 	<p style='color:green' ng-show="success==true">success!</p>
