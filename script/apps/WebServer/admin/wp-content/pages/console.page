@@ -124,8 +124,8 @@ if(is_ajax()) then
 	-- getpptdata
 	add_action('wp_ajax_getpptdata', function()
 		local RedSummerCampPPtPage = NPL.load("(gl)script/apps/Aries/Creator/Game/Tasks/RedSummerCamp/RedSummerCampPPtPage.lua");
-		local result = RedSummerCampPPtPage.GetExportData()
-		wp_send_json({result = result});
+		local result, course_name = RedSummerCampPPtPage.GetExportData()
+		wp_send_json({result = result, course_name = course_name});
     end)
 
 	-- get request params
@@ -278,7 +278,7 @@ wp_enqueue_script("ngSanitize", "/wp-includes/js/angular/angular-sanitize.min.js
 		}
 		$scope.OnPPTX = function(){
 			//var text = editor.getValue();
-
+	
           $.get("ajax/console", { action: "getpptdata"}, function(data){
 			
 			let pptx = new PptxGenJS();
@@ -289,10 +289,14 @@ wp_enqueue_script("ngSanitize", "/wp-includes/js/angular/angular-sanitize.min.js
 				let index=i+1
 				let img_file = "/pptimg/ppt" + index + ".jpg"
 				slide.addImage({path:img_file,x:0,y:0,w:"100%",h:"100%"})
-				slide.addNotes(ppt_data.notes_str)
+				console.log(ppt_data.notes_content)
+				if (ppt_data.notes_content != 'undefined') {
+					slide.addNotes(ppt_data.notes_content)
+				}
+				
 			}
 
-			pptx.writeFile({ fileName: "PptxGenJS-Demo" });
+			pptx.writeFile({ fileName: data.course_name});
           });			
 		}
 
@@ -318,6 +322,7 @@ wp_enqueue_script("ngSanitize", "/wp-includes/js/angular/angular-sanitize.min.js
 		<button class="btn btn-primary" name="btnRunCode" ng-click='runcode()' title="Run code (Ctrl+R)">Run as code (F5)</button>
 		<button class="btn" name="btnRunPage" ng-click='runpage()'>Run as page</button>
 		<button class="btn" style="margin-left:30px;" name="btnOpenInDebugger" ng-click='OpenInDebugger()'>Open in debugger...</button>
+		<!-- <button class="btn" style="margin-left:30px;" name="btnOnPPTX" ng-click='OnPPTX()'>Make pptx</button> -->
 	  </p>
 	</div>
 	<p style='color:green' ng-show="success==true">success!</p>
