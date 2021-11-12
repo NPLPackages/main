@@ -462,7 +462,7 @@ end
 function timehelp.GetTimeStampByDateTime(date_time, is_get_server_time)
 	-- date_time = "2020-09-09T06:52:43.000Z"
 
-	if date_time == nil then
+	if date_time == nil or date_time == "" then
 		return 0
 	end
 	
