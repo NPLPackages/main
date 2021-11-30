@@ -283,6 +283,14 @@ function AudioEngine.SetVolume(sound_name, volume)
 	end
 end
 
+-- get volume by name
+function AudioEngine.GetVolume(sound_name)
+	local sound = AudioEngine.Get(sound_name);
+	if(sound) then
+		return sound:GetVolume();
+	end
+end
+
 -- create one if no audio source with the name exist.
 -- use CreateGet() instead of Get(), so that we can all audio source functions without validations.
 -- such as AudioEngine.CreateGet("bg_theme_alien"):play();

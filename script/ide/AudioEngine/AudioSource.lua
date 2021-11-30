@@ -60,6 +60,7 @@ function AudioSource:play2d(volume, pitch)
 		if(volume) then
 			source.Volume = volume;
 		end
+		self:SetLastVolume(volume or 1)
 		if(pitch) then
 			source.Pitch = pitch;
 		end
@@ -78,7 +79,15 @@ end
 function AudioSource:SetVolume(volume)
 	local source = self:GetSource()
 	if(source and volume) then
+		self:SetLastVolume(volume)
 		source.Volume = volume;
+	end
+end
+
+function AudioSource:GetVolume()
+	local source = self:GetSource()
+	if(source) then
+		return source.Volume;
 	end
 end
 
@@ -102,6 +111,7 @@ function AudioSource:play3d(x,y,z, loop, strength, pitch)
 		if(volume) then
 			source.Volume = volume;
 		end
+		self:SetLastVolume(volume or 1)
 
 		if(pitch) then
 			source.Pitch = pitch;
@@ -215,5 +225,49 @@ end
 function AudioSource:getCurrentAudioTime()
 	if (self.source) then
 		return self.source.CurrentAudioTime;
+	end
+end
+
+function AudioSource:SetLastVolume(volume)
+	if volume == 0 then
+		print(commonlib.debugstack())
+	end
+	self.last_volume = volume
+end
+
+function AudioSource:GetLastVolume()
+	return self.last_volume
+end
+
+function AudioSource:Silence()
+	if self.is_silence then
+		return
+	end
+
+	local source = self:GetSource()
+	if not source then
+		return
+	end
+	
+	self:SetLastVolume(source.Volume)
+	source.Volume = 0;
+
+	self.is_silence = true
+end
+
+function AudioSource:Recover()
+	if not self.is_silence then
+		return
+	end
+	self.is_silence = false
+
+	local source = self:GetSource()
+	if not source then
+		return
+	end
+
+	local last_volume = self:GetLastVolume()
+	if last_volume then
+		source.Volume = last_volume
 	end
 end
