@@ -36,6 +36,7 @@ function Viewport:init(name_or_id)
 		end
 		self.id = name_or_id;
 	end
+	Screen:Connect("sizeChanged", self, self.OnUpdateSize, "UniqueConnection");
 	return self;
 end
 
@@ -195,8 +196,6 @@ function Viewport:GetUIObject(bCreateIfNotExist)
 			_this:SetScript("onsize", function()
 				self:OnUpdateSize();
 			end);
-
-			Screen:Connect("sizeChanged", self, self.OnUpdateSize, "UniqueConnection");
 		end
 		self.uiobject_id = _this.id;
 		return _this;

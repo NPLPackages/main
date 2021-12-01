@@ -123,7 +123,7 @@ function Screen:AutoAdjustUIScalingImp()
 		local scaling = self:GetUserUIScaling();
 		local destWidth, destHeight = winWidth / (scaling or 1), winHeight / (scaling or 1)
 		if(minWidth and (minWidth > destWidth or minHeight > destHeight)) then
-			scaling = scaling / math.max(minWidth / destWidth, minHeight / destHeight);
+			scaling = (scaling or 1) / math.max(minWidth / destWidth, minHeight / destHeight);
 			if(math.abs(scaling - 1) < 0.005) then
 				scaling = 1;
 			end
