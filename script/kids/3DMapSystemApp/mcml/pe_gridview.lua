@@ -292,6 +292,9 @@ function pe_gridview.create(rootName, mcmlNode, bindingContext, _parent, left, t
 		if(mcmlNode:GetBool("RememberScrollPos")) then
 			TreeViewNode:SetAttribute("RememberScrollPos", true);
 		end	
+		if(mcmlNode:GetBool("AllowOverflowScroll")) then
+			TreeViewNode:SetAttribute("AllowOverflowScroll", true);
+		end
 		if(mcmlNode:GetBool("ClickThrough")) then
 			TreeViewNode:SetAttribute("ClickThrough", true);
 		end	

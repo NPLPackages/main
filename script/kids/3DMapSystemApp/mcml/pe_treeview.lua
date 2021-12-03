@@ -202,6 +202,9 @@ function pe_treeview.create(rootName, mcmlNode, bindingContext, _parent, left, t
 			InitialClientY = ctl.ClientY
 		end	
 	end
+
+	local AllowOverflowScroll = mcmlNode:GetBool("AllowOverflowScroll");
+
 	local ctl = CommonCtrl.TreeView:new{
 		name = instName,
 		uiname = mcmlNode:GetAttributeWithCode("uiname",nil,true),
@@ -233,6 +236,7 @@ function pe_treeview.create(rootName, mcmlNode, bindingContext, _parent, left, t
 		bindingContext = bindingContext,
 		-- init client position
 		InitialClientY = InitialClientY,
+		AllowOverflowScroll = AllowOverflowScroll,
 		VerticalScrollBarWidth = mcmlNode:GetNumber("VerticalScrollBarWidth") or css.VerticalScrollBarWidth or CommonCtrl.TreeView.VerticalScrollBarWidth,
 		ScrollBarTrackWidth = mcmlNode:GetNumber("ScrollBarTrackWidth") or css.ScrollBarTrackWidth or CommonCtrl.TreeView.ScrollBarTrackWidth,
 	};

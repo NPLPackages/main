@@ -122,6 +122,7 @@ local TreeView = commonlib.inherit(nil, commonlib.createtable("CommonCtrl.TreeVi
 	ClientHeight = 10,
 	-- a mapping from node path to existing line control container index, the total number of mapping here does not exceed CacheSize
 	NodeUIContainers = {},
+	AllowOverflowScroll = false,
 }));
 
 -- constructor
@@ -247,10 +248,13 @@ function TreeView:Update(bShowLastElement, ShowNode, DisableRecursive)
 		self.ClientWidth = TreeViewWidth;
 	else
 		-- auto enable scroll bar
-		if((self.ClientY+self.ClientHeight)>self.RootNode.LogicalBottom) then
-			self.ClientY = self.RootNode.LogicalBottom - self.ClientHeight;
+
+		if not self.AllowOverflowScroll then
+			if((self.ClientY+self.ClientHeight)>self.RootNode.LogicalBottom) then
+				self.ClientY = self.RootNode.LogicalBottom - self.ClientHeight;
+			end
 		end
-		
+
 		if(bShowLastElement) then
 			self:ScrollToEnd();
 		elseif(ShowNode~=nil) then
