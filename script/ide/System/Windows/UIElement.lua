@@ -514,7 +514,7 @@ end
 
 function UIElement:setFocus_sys()
 	if(self.window) then
-		self.window:SetFocus_sys();
+		self.window:SetFocus_sys(self:focusPolicy());
 	end
 end
 

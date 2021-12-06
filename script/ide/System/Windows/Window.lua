@@ -517,7 +517,12 @@ function Window:repaint()
 end
 
 -- set key focus to the window. 
-function Window:SetFocus_sys()
+-- @param focusPolicy: the triggering UI Element's focus policy
+function Window:SetFocus_sys(focusPolicy)
+	if(focusPolicy == FocusPolicy.NoFocus) then
+		-- do nothing if the triggering element has no focus policy
+		return
+	end
 	if(self.native_ui_obj) then
 		if(self.CanHaveFocus == nil) then
 			-- enable key focus only once

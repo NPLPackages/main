@@ -26,6 +26,8 @@ NPL.load("(gl)script/ide/System/Scene/Cameras/Cameras.lua");
 NPL.load("(gl)script/ide/System/Windows/Screen.lua");
 NPL.load("(gl)script/ide/System/Core/AttributeObject.lua");
 NPL.load("(gl)script/ide/STL.lua");
+NPL.load("(gl)script/ide/System/Scene/Viewports/ViewportManager.lua");
+local ViewportManager = commonlib.gettable("System.Scene.Viewports.ViewportManager");
 local Screen = commonlib.gettable("System.Windows.Screen");
 local Matrix4 = commonlib.gettable("mathlib.Matrix4");
 local math3d = commonlib.gettable("mathlib.math3d");
@@ -147,8 +149,9 @@ function Manipulator:TransformVectorsInScreenSpace(vecList)
 	local viewMat = Cameras:GetCurrent():GetViewMatrix();
 	local projMat = Cameras:GetCurrent():GetProjMatrix();
 	local finalMat = worldMat*viewMat*projMat;
-	local screenWidth = Screen:GetWidth();
-	local screenHeight = Screen:GetHeight();
+	local viewport = ViewportManager:GetSceneViewport()
+	local left, top, screenWidth, screenHeight = viewport:GetUIRect()
+
 	for _, vec in ipairs(vecList) do
 		math3d.Vector4MultiplyMatrix(vec, vec, finalMat);
 		vec:MulByFloat(1/vec[4]);

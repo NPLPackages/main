@@ -169,6 +169,15 @@ function Viewport:OnUpdateSize()
 	self:sizeChanged();
 end
 
+-- @return left, top, width, height in screen UI space
+function Viewport:GetUIRect()
+	local left = 0;
+	local top = math.floor(self:GetTop() / Screen:GetUIScaling()[2]);
+	local width = Screen:GetWidth() - left - math.floor(self:GetMarginRight() / Screen:GetUIScaling()[1]);
+	local height = Screen:GetHeight() - top - math.floor(self:GetMarginBottom() / Screen:GetUIScaling()[2])
+	return left, top, width, height;
+end
+
 -- create get the UI container object that is the same size of the view port.
 function Viewport:GetUIObject(bCreateIfNotExist)
 	if(self.uiobject_id) then
