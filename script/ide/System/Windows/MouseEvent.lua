@@ -40,18 +40,30 @@ end
 local firstPressPositionX = 0;
 local secondPressPositionX = 0;
 local thirdPressPositionX = 0;
+local lastPressTime = 0;
+local lastMoveX = 0;
+local lastMoveY = 0;
+local dragDistance = 0;
+
+-- whether it is a user click, only call this in "mouseReleaseEvent".
+function MouseEvent:isClick()
+	if(self.event_type == "mouseReleaseEvent") then
+		return math.abs(ParaGlobal.timeGetTime() - lastPressTime) < 250;
+	end
+end
+
 
 -- private function: use self.isDoubleClick instead
-function MouseEvent:isDoubleAndTripleClick()
+function MouseEvent:isDoubleAndTripleClick_()
 	if(self:button() == "left" and self.event_type == "mousePressEvent") then
 		thirdPressPositionX = self.global_pos:x() 
-		self.isTripleClick = self:isTriplePress()
-		self.isDoubleClick = self:isDoublePress()		
+		self.isTripleClick = self:isTriplePress_()
+		self.isDoubleClick = self:isDoublePress_()		
 	end
 end			
 
 -- private function: use self.isDoubleClick instead
-function MouseEvent:isDoublePress()
+function MouseEvent:isDoublePress_()
 	if(firstPressPositionX == secondPressPositionX and ParaGlobal.timeGetTime() - MouseEvent.left_click_info.first_click_time < 250) then
 		MouseEvent.left_click_info.event_type = self.event_type;
 		MouseEvent.left_click_info.second_click_time = ParaGlobal.timeGetTime();
@@ -64,7 +76,7 @@ function MouseEvent:isDoublePress()
 end
 
 -- private function: use self.isTripleClick instead
-function MouseEvent:isTriplePress()
+function MouseEvent:isTriplePress_()
 	if(thirdPressPositionX == secondPressPositionX and ParaGlobal.timeGetTime() - MouseEvent.left_click_info.second_click_time < 250) then
 		return true;
 	end
@@ -95,13 +107,14 @@ end
 -- return current mouse event object. 
 -- @param event_type: "mousePressEvent", "mouseReleaseEvent", "mouseMoveEvent", "mouseWheelEvent"
 -- @param window: the window that is receiving this event. 
-
 function MouseEvent:init(event_type, window, localPos, windowPos, screenPos)
 	MouseEvent._super.init(self, event_type);
 
 	-- global pos
 	if(event_type == "mouseMoveEvent") then
 		self.x, self.y = ParaUI.GetMousePosition();
+		dragDistance = dragDistance + math.abs(lastMoveX - self.x) + math.abs(lastMoveY - self.y)
+		lastMoveX, lastMoveY = self.x, self.y
 	else
 		if(not mouse_x) then
 			mouse_x, mouse_y = ParaUI.GetMousePosition();
@@ -135,7 +148,12 @@ function MouseEvent:init(event_type, window, localPos, windowPos, screenPos)
 	self.accepted = nil;
 	self.recorded = nil; 
 	self.isEmulated = false;
-	self:isDoubleAndTripleClick();
+	if(event_type == "mousePressEvent") then
+		lastPressTime = ParaGlobal.timeGetTime();
+		dragDistance = 0;
+		lastMoveX, lastMoveY = self.x, self.y
+	end
+	self:isDoubleAndTripleClick_();
 
 	return self;
 end
@@ -146,7 +164,8 @@ end
 
 -- mouse drag distance, usually used in mouseReleaseEvent
 function MouseEvent:GetDragDist()
-	return self.dragDist or 0;
+	--return self.dragDist or 0;
+	return dragDistance or 0;
 end
 
 -- mouse wheel delta
