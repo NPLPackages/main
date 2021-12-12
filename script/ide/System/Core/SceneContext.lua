@@ -154,7 +154,7 @@ function SceneContext:FetchPickingResult()
 	self:SetPickingRenderFrame(commonlib.TimerManager.GetCurrentTime());
 	if(self.manipulators) then
 		for i, manip in pairs(self.manipulators) do
-			if(manip.EnablePicking) then
+			if(manip.EnablePicking and manip.enabled) then
 				OverlayPicking:SetResultDirty(true);
 				OverlayPicking:Pick(nil, nil, self.pickingPointSize, self.pickingPointSize)
 				self:SetPickingName(OverlayPicking:GetActivePickingName());
@@ -176,7 +176,7 @@ function SceneContext:GetObjectAtMousePos()
 		if(self.manipulators) then
 			local nLastTick = self:GetPickingRenderFrame();
 			for i, manip in pairs(self.manipulators) do
-				if(manip.EnablePicking and manip:GetPickingRenderFrame() >= nLastTick) then
+				if(manip.EnablePicking and manip.enabled and manip:GetPickingRenderFrame() >= nLastTick) then
 					obj = manip:GetChildByPickingName(pickingName); 
 					if(not obj and manip:HasPickingName(pickingName)) then
 						obj = manip;
@@ -219,7 +219,7 @@ function SceneContext:handleMouseEvent(event)
 			if(self.manipulators) then
 				local nLastTick = self:GetPickingRenderFrame();
 				for i, manip in pairs(self.manipulators) do
-					if(manip.EnablePicking and manip:GetPickingRenderFrame() >= nLastTick) then
+					if(manip.EnablePicking and manip.enabled and manip:GetPickingRenderFrame() >= nLastTick) then
 						self:notify(manip, event);
 						if(event:isAccepted()) then
 							break;
@@ -241,9 +241,11 @@ function SceneContext:handleKeyEvent(event)
 	-- it just send events to all manipulators. 
 	if(self.manipulators) then
 		for i, manip in pairs(self.manipulators) do
-			manip:handleKeyEvent(event);
-			if(event:isAccepted()) then
-				break;
+			if(manip.enabled) then
+				manip:handleKeyEvent(event);
+				if(event:isAccepted()) then
+					break;
+				end
 			end
 		end
 	end
@@ -257,9 +259,11 @@ function SceneContext:handleKeyReleaseEvent(event)
 	-- it just send events to all manipulators. 
 	if(self.manipulators) then
 		for i, manip in pairs(self.manipulators) do
-			manip:handleKeyReleaseEvent(event);
-			if(event:isAccepted()) then
-				break;
+			if(manip.enabled) then
+				manip:handleKeyReleaseEvent(event);
+				if(event:isAccepted()) then
+					break;
+				end
 			end
 		end
 	end

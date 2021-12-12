@@ -220,9 +220,11 @@ function Overlay:handleKeyEvent(event)
 		local children = self.children;
 		local child = children:first();
 		while (child) do
-			child:handleKeyEvent(event);
-			if(event:isAccepted()) then
-				break;
+			if(child.enabled) then
+				child:handleKeyEvent(event);
+				if(event:isAccepted()) then
+					break;
+				end
 			end
 			child = children:next(child);
 		end
@@ -238,11 +240,13 @@ function Overlay:handleKeyReleaseEvent(event)
 		local children = self.children;
 		local child = children:first();
 		while (child) do
-			if(child.handleKeyReleaseEvent) then
-				child:handleKeyReleaseEvent(event);
-			end
-			if(event:isAccepted()) then
-				break;
+			if(child.enabled) then
+				if(child.handleKeyReleaseEvent) then
+					child:handleKeyReleaseEvent(event);
+				end
+				if(event:isAccepted()) then
+					break;
+				end
 			end
 			child = children:next(child);
 		end
@@ -544,9 +548,11 @@ function Overlay:GetChildByPickingName(pickingName)
 		local resultNode;
 		local child = self.children:last();
 		while (child and not resultNode) do
-			resultNode = child:GetChildByPickingName(pickingName);
-			if(not resultNode and child:HasPickingName(pickingName)) then
-				resultNode = child;
+			if(child.enabled) then
+				resultNode = child:GetChildByPickingName(pickingName);
+				if(not resultNode and child:HasPickingName(pickingName)) then
+					resultNode = child;
+				end
 			end
 			child = self.children:prev(child);
 		end
