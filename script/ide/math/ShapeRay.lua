@@ -101,7 +101,7 @@ end
 -- @return boolean, distance: where the first element indicates whether an intersection occurs, 
 -- and if true, the second element will indicate the distance along the ray at which it intersects. 
 function ShapeRay:intersectsAABB(box)
-	local rayorig,raydir = self.mDir, self.mOrig;
+	local rayorig,raydir = self.mOrig, self.mDir;
 	
 	local lowt = 0;
 	local t;
@@ -121,7 +121,8 @@ function ShapeRay:intersectsAABB(box)
 		t = (min[1] - rayorig[1]) / raydir[1];
 		if (t > 0) then
 			-- Substitute t back into ray and check bounds and dist
-			hitpoint = rayorig + raydir * t;
+			-- hitpoint = rayorig + raydir * t;
+			hitpoint:set(rayorig):add(raydir[1]*t, raydir[2]*t, raydir[3]*t);
 			if (hitpoint[2] >= min[2] and hitpoint[2] <= max[2] and
 				hitpoint[3] >= min[3] and hitpoint[3] <= max[3] and
 				(not hit or t < lowt)) then
@@ -135,7 +136,8 @@ function ShapeRay:intersectsAABB(box)
 		t = (max[1] - rayorig[1]) / raydir[1];
 		if (t > 0) then
 			-- Substitute t back into ray and check bounds and dist
-			hitpoint = rayorig + raydir * t;
+			--hitpoint = rayorig + raydir * t;
+			hitpoint:set(rayorig):add(raydir[1]*t, raydir[2]*t, raydir[3]*t);
 			if (hitpoint[2] >= min[2] and hitpoint[2] <= max[2] and
 				hitpoint[3] >= min[3] and hitpoint[3] <= max[3] and
 				(not hit or t < lowt)) then
@@ -149,7 +151,8 @@ function ShapeRay:intersectsAABB(box)
 		t = (min[2] - rayorig[2]) / raydir[2];
 		if (t > 0) then
 			-- Substitute t back into ray and check bounds and dist
-			hitpoint = rayorig + raydir * t;
+			--hitpoint = rayorig + raydir * t;
+			hitpoint:set(rayorig):add(raydir[1]*t, raydir[2]*t, raydir[3]*t);
 			if (hitpoint[1] >= min[1] and hitpoint[1] <= max[1] and
 				hitpoint[3] >= min[3] and hitpoint[3] <= max[3] and
 				(not hit or t < lowt)) then
@@ -163,7 +166,8 @@ function ShapeRay:intersectsAABB(box)
 		t = (max[2] - rayorig[2]) / raydir[2];
 		if (t > 0) then
 			-- Substitute t back into ray and check bounds and dist
-			hitpoint = rayorig + raydir * t;
+			--hitpoint = rayorig + raydir * t;
+			hitpoint:set(rayorig):add(raydir[1]*t, raydir[2]*t, raydir[3]*t);
 			if (hitpoint[1] >= min[1] and hitpoint[1] <= max[1] and
 				hitpoint[3] >= min[3] and hitpoint[3] <= max[3] and
 				(not hit or t < lowt)) then
@@ -177,7 +181,8 @@ function ShapeRay:intersectsAABB(box)
 		t = (min[3] - rayorig[3]) / raydir[3];
 		if (t > 0) then
 			-- Substitute t back into ray and check bounds and dist
-			hitpoint = rayorig + raydir * t;
+			--hitpoint = rayorig + raydir * t;
+			hitpoint:set(rayorig):add(raydir[1]*t, raydir[2]*t, raydir[3]*t);
 			if (hitpoint[1] >= min[1] and hitpoint[1] <= max[1] and
 				hitpoint[2] >= min[2] and hitpoint[2] <= max[2] and
 				(not hit or t < lowt)) then
@@ -191,7 +196,8 @@ function ShapeRay:intersectsAABB(box)
 		t = (max[3] - rayorig[3]) / raydir[3];
 		if (t > 0) then
 			-- Substitute t back into ray and check bounds and dist
-			hitpoint = rayorig + raydir * t;
+			-- hitpoint = rayorig + raydir * t;
+			hitpoint:set(rayorig):add(raydir[1]*t, raydir[2]*t, raydir[3]*t);
 			if (hitpoint[1] >= min[1] and hitpoint[1] <= max[1] and
 				hitpoint[2] >= min[2] and hitpoint[2] <= max[2] and
 				(not hit or t < lowt)) then

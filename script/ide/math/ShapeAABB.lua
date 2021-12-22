@@ -414,6 +414,15 @@ function ShapeAABB:CalculateZOffset(aabb, dz, epsilon)
     end
 end
 
+-- @return true if aabb contains the given points. 
+function ShapeAABB:ContainsPoint(x, y, z)
+	local self_minX, self_minY, self_minZ = self:GetMinValues();
+	local self_maxX, self_maxY, self_maxZ = self:GetMaxValues();
+	if(self_minX<=x and x <= self_maxX and self_minY<=y and y <= self_maxY and self_minZ<=z and z <= self_maxZ) then
+		return true
+	end
+end
+
 -- calculate the smallest offset in all three axis
 -- @return dx, dy, dz, bCollided
 function ShapeAABB:CalculateOffset(aabb, epsilon)
