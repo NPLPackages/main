@@ -266,6 +266,14 @@ function vector3d:compare(v)
 	return (self[1] == v[1] and self[2] == v[2] and self[3] == v[3]);
 end
 
+function vector3d:greaterThan(v)
+	return (self[1] > v[1] and self[2] > v[2] and self[3] < v[3]);
+end
+
+function vector3d:lessThan(v)
+	return (self[1] < v[1] and self[2] < v[2] and self[3] < v[3]);
+
+end
 function vector3d:equals(v,epsilon)
 	epsilon = epsilon or 0;
 	if(epsilon==0) then

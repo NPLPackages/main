@@ -95,3 +95,110 @@ function ShapeRay:IntersectPlane(plane, point)
 	end
 	return 1, t;
 end
+
+-- Tests whether this ray intersects the given box. 
+-- param box: aabb box
+-- @return boolean, distance: where the first element indicates whether an intersection occurs, 
+-- and if true, the second element will indicate the distance along the ray at which it intersects. 
+function ShapeRay:intersectsAABB(box)
+	local rayorig,raydir = self.mDir, self.mOrig;
+	
+	local lowt = 0;
+	local t;
+	local hit = false;
+	local hitpoint = vector3d:new_from_pool(0,0,0);
+	local min = vector3d:new_from_pool(box:GetMinValues())
+	local max = vector3d:new_from_pool(box:GetMaxValues());
+
+	-- Check origin inside first
+	if ( rayorig:greaterThan(min) and rayorig:lessThan(max) ) then
+		return true, 0;
+	end
+
+	-- Check each face in turn, only check closest 3
+	-- Min x
+	if (rayorig[1] < min[1] and raydir[1] > 0) then
+		t = (min[1] - rayorig[1]) / raydir[1];
+		if (t > 0) then
+			-- Substitute t back into ray and check bounds and dist
+			hitpoint = rayorig + raydir * t;
+			if (hitpoint[2] >= min[2] and hitpoint[2] <= max[2] and
+				hitpoint[3] >= min[3] and hitpoint[3] <= max[3] and
+				(not hit or t < lowt)) then
+				hit = true;
+				lowt = t;
+			end
+		end
+	end
+	-- Max x
+	if (rayorig[1] > max[1] and raydir[1] < 0) then
+		t = (max[1] - rayorig[1]) / raydir[1];
+		if (t > 0) then
+			-- Substitute t back into ray and check bounds and dist
+			hitpoint = rayorig + raydir * t;
+			if (hitpoint[2] >= min[2] and hitpoint[2] <= max[2] and
+				hitpoint[3] >= min[3] and hitpoint[3] <= max[3] and
+				(not hit or t < lowt)) then
+				hit = true;
+				lowt = t;
+			end
+		end
+	end
+	-- Min y
+	if (rayorig[2] < min[2] and raydir[2] > 0) then
+		t = (min[2] - rayorig[2]) / raydir[2];
+		if (t > 0) then
+			-- Substitute t back into ray and check bounds and dist
+			hitpoint = rayorig + raydir * t;
+			if (hitpoint[1] >= min[1] and hitpoint[1] <= max[1] and
+				hitpoint[3] >= min[3] and hitpoint[3] <= max[3] and
+				(not hit or t < lowt)) then
+				hit = true;
+				lowt = t;
+			end
+		end
+	end
+	-- Max y
+	if (rayorig[2] > max[2] and raydir[2] < 0) then
+		t = (max[2] - rayorig[2]) / raydir[2];
+		if (t > 0) then
+			-- Substitute t back into ray and check bounds and dist
+			hitpoint = rayorig + raydir * t;
+			if (hitpoint[1] >= min[1] and hitpoint[1] <= max[1] and
+				hitpoint[3] >= min[3] and hitpoint[3] <= max[3] and
+				(not hit or t < lowt)) then
+				hit = true;
+				lowt = t;
+			end
+		end
+	end
+	-- Min z
+	if (rayorig[3] < min[3] and raydir[3] > 0) then
+		t = (min[3] - rayorig[3]) / raydir[3];
+		if (t > 0) then
+			-- Substitute t back into ray and check bounds and dist
+			hitpoint = rayorig + raydir * t;
+			if (hitpoint[1] >= min[1] and hitpoint[1] <= max[1] and
+				hitpoint[2] >= min[2] and hitpoint[2] <= max[2] and
+				(not hit or t < lowt)) then
+				hit = true;
+				lowt = t;
+			end
+		end
+	end
+	-- Max z
+	if (rayorig[3] > max[3] and raydir[3] < 0) then
+		t = (max[3] - rayorig[3]) / raydir[3];
+		if (t > 0) then
+			-- Substitute t back into ray and check bounds and dist
+			hitpoint = rayorig + raydir * t;
+			if (hitpoint[1] >= min[1] and hitpoint[1] <= max[1] and
+				hitpoint[2] >= min[2] and hitpoint[2] <= max[2] and
+				(not hit or t < lowt)) then
+				hit = true;
+				lowt = t;
+			end
+		end
+	end
+	return hit, lowt;
+end
