@@ -92,10 +92,10 @@ function Screen:GetWindowSolution()
 	local frame_width = frame_size[1];
 	local frame_height = frame_size[2];
 	if(frame_height == 0) then
-		-- in case "ScreenResolution" API is not supported, such as on mac platform, we will use UI resolution instead.  
+		-- in case "WindowResolution" API is not supported, such as on mac platform, we will use UI resolution instead.  
 		local scaling = self:GetUIScaling();
-		frame_width = math.floor(Screen:GetWidth() * scaling + 0.5);
-		frame_height = math.floor(Screen:GetHeight() * scaling + 0.5);
+		frame_width = math.floor(Screen:GetWidth() * scaling[1] + 0.5);
+		frame_height = math.floor(Screen:GetHeight() * scaling[2] + 0.5);
 	end
 	return frame_width, frame_height;
 end
@@ -109,8 +109,8 @@ function Screen:GetScreenSolution()
 	if(frame_height == 0) then
 		-- in case "ScreenResolution" API is not supported, such as on mac platform, we will use UI resolution instead.  
 		local scaling = self:GetUIScaling();
-		frame_width = math.floor(Screen:GetWidth() * scaling + 0.5);
-		frame_height = math.floor(Screen:GetHeight() * scaling + 0.5);
+		frame_width = math.floor(Screen:GetWidth() * scaling[1] + 0.5);
+		frame_height = math.floor(Screen:GetHeight() * scaling[2] + 0.5);
 	end
 	return frame_width, frame_height;
 end
