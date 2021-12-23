@@ -59,3 +59,7 @@ function CameraTarget:CheckValue()
 	self.Angle = tonumber(self.Angle) or 1;
 	self.RotY = tonumber(self.RotY) or 1;
 end
+
+function CameraTarget:HideFPSCursor()
+	ParaUI.Destroy("FPS_Cursor")
+end
