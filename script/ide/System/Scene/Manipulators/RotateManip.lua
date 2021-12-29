@@ -56,6 +56,9 @@ RotateManip:Property({"InitialVector", {1,0,0}, "GetInitialVector", "SetInitialV
 RotateManip:Property({"MinRotAngle", nil, "GetMinRotAngle", "SetMinRotAngle", auto=true});
 -- max rot angle, such as pi
 RotateManip:Property({"MaxRotAngle", nil, "GetMaxRotAngle", "SetMaxRotAngle", auto=true});
+-- default to nil, if not, the returned angle will always be snap to steps, such pi/2, pi/4, pi/6
+RotateManip:Property({"GridStep", nil, "GetGridStep", "SetGridStep", auto=true});
+RotateManip:Property({"SupportUndo", false, "IsSupportUndo", "SetSupportUndo", auto=true});
 
 function RotateManip:ctor()
 	self.names = {};
@@ -163,6 +166,9 @@ function RotateManip:mousePressEvent(event)
 	self.last_pitch = self:GetField("pitch", 0);
 	self.last_roll = self:GetField("roll", 0);
 	self.is_dragging = true;
+	if(self:IsSupportUndo()) then
+		self:SnapshotToHistory()
+	end
 end
 
 -- virtual: 
@@ -228,6 +234,10 @@ end
 
 function RotateManip:NormalizeAngle(angle)
 	angle = mathlib.ToStandardAngle(angle);
+	if(self:GetGridStep()) then
+		local step = self:GetGridStep()
+		angle = math.floor( angle / step + 0.5) * step
+	end
 	if(self:GetMinRotAngle()) then
 		angle = math.max(angle, self:GetMinRotAngle())
 	end
@@ -459,5 +469,36 @@ function RotateManip:paintEvent(painter)
 		self.names.x = x_name;
 		self.names.y = y_name;
 		self.names.z = z_name;
+	end
+end
+
+-- called in mouse press event to save last snapshot. 
+function RotateManip:SnapshotToHistory()
+	-- TODO: since we are using delta values, instead of absolute values, it is a bit hard to implement undo here. 
+	--self.history = self.history or {}
+	--self.history[#(self.history) + 1] = nil;
+end
+
+function RotateManip:Undo()
+	-- TODO: 
+end
+
+function RotateManip:Redo()
+	-- TODO: 
+end
+
+-- virtual: actually means key stroke. 
+function RotateManip:keyPressEvent(key_event)
+	if(self:IsSupportUndo()) then
+		local keyseq = key_event:GetKeySequence();
+		if(keyseq == "Undo") then
+			if(self:Undo()) then
+				key_event:accept()
+			end
+		elseif(keyseq == "Redo") then
+			if(self:Redo()) then
+				key_event:accept()
+			end
+		end
 	end
 end

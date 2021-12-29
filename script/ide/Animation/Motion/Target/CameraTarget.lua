@@ -60,6 +60,18 @@ function CameraTarget:CheckValue()
 	self.RotY = tonumber(self.RotY) or 1;
 end
 
-function CameraTarget:HideFPSCursor()
-	ParaUI.Destroy("FPS_Cursor")
+local _fpsCursorX = 0
+local _fpsCursorY = 0
+function CameraTarget:HideFPSCursor(hide)
+	--ParaUI.Destroy("FPS_Cursor")
+	local _this = ParaUI.GetUIObject("FPS_Cursor");	
+	if not hide then
+		_this.x = _fpsCursorX
+		_this.y = _fpsCursorY
+	else
+		_fpsCursorX =_this.x
+		_fpsCursorY = _this.y
+		_this.x = 20000
+		_this.y = 20000
+	end
 end

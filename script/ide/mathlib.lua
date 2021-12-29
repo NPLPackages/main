@@ -197,3 +197,11 @@ local MIN_VALUE = -math.huge
 function mathlib.validateNumber(x)
 	return (x==x and x~=MAX_VALUE and x~=MIN_VALUE) and x or 0;
 end
+
+-- snapping value to multiples of gridSize
+-- @param gridSize: default to 1
+-- @return snapped value
+function mathlib.SnapToGrid(value, gridSize)
+	gridSize = gridSize or 1;
+	return math.floor(value / gridSize + 0.5) * gridSize;
+end
