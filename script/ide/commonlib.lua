@@ -533,6 +533,58 @@ function commonlib.moveArrayItem(t, nIndex1, nIndex2)
 	end
 end
 
+function commonlib.moveArrayItemWithNum(t, nNum) --用时间换空间O(n^2)
+	local tNum = table_getn(t)
+	local moveNum = math.abs(nNum)
+	if moveNum >= tNum then
+		return
+	end
+	if nNum < 0 then
+		for i=1,moveNum do
+			local temp = t[1]
+			for j=1,tNum do
+				t[j] = t[j+1]
+			end
+			t[tNum] = temp
+		end
+	else
+		for i=1,moveNum do
+			local temp = t[tNum]
+			for j=tNum,1,-1 do
+				t[j] = t[j - 1]
+			end
+			t[1] = temp
+		end
+	end
+end
+
+function commonlib.quickMoveArrayItemWithNum(t, nNum) --用空间换时间O(n)
+	local tNum = table_getn(t)
+	local moveNum = math.abs(nNum)
+	if moveNum >= tNum then
+		return
+	end
+	local move_index = nNum < 0 and moveNum or tNum - moveNum
+	local tempArray = {}
+	local tempArray1 = {} 
+	for i=1,tNum do
+		if i<= move_index then
+			tempArray[#tempArray + 1] = commonlib.copy(t[i])
+		else
+			tempArray1[#tempArray1 + 1] = commonlib.copy(t[i])
+		end
+	end
+	local tempIndex = #tempArray1
+	for i=1,tNum do
+		if i<= tempIndex then
+			t[i] = tempArray1[i]
+		else
+			t[i] = tempArray[i - tempIndex]
+		end
+	end
+end
+
+
 -- empty a given table
 commonlib.cleartable = table.clear;
 
@@ -958,4 +1010,60 @@ function commonlib.ResolvePath(...)
 	result = result:gsub("\\", "/");
 	return result;
 end
+
+--此方法转换后带有单位
+---阿拉伯数字转中文大写
+function commonlib.NumberToString(digit)
+    local wordDigit = ""
+    local digitLength = 0
+    local iNum = 0
+    local iAddZero = 0
+    local digitUnit = {"", "十", "百", "千", "万", "十", "百", "千", "亿","十", "百", "千", "万", "十", "百", "千"}
+    local wordFigure = {"零", "一", "二", "三", "四", "五", "六", "七", "八", "九"}
+    if nil == tonumber(digit) then
+        return tostring(digit)
+    end
+    digitLength =string.len(digit)
+    if digitLength > 10 or digitLength == 0 or tonumber(digit) < 0 then
+        return tostring(digit)
+    end
+    for i = 1, digitLength  do
+        iNum = string.sub(digit,i,i)
+        if iNum == 0 and i ~= digitLength then
+            iAddZero = iAddZero + 1
+        else
+            if iAddZero > 0 then
+            wordDigit = wordDigit..wordFigure[1]
+        end
+            wordDigit = wordDigit..wordFigure[iNum + 1] --//转换为相应的数字
+            iAddZero = 0
+        end
+        if (iAddZero < 4) and (0 == (digitLength - i) % 4 or 0 ~= tonumber(iNum)) then
+            wordDigit = wordDigit..digitUnit[digitLength-i+1]
+        end
+    end
+    local function removeZero(num)
+        --去掉末尾多余的 零
+        num = tostring(num)
+        local szLen = string.len(num)
+        local zero_num = 0
+        for i = szLen, 1, -3 do
+            digit = string.sub(num,i-2,i)
+            if digit == wordFigure[1] then
+                zero_num = zero_num + 1
+            else
+                break
+            end
+        end
+        num = string.sub(num, 1,szLen - zero_num * 3)
+        digit = string.sub(num, 1,6)
+        --- 开头的 "一十" 转成 "十" , 贴近人的读法
+        if digit == wordFigure[2]..digitUnit[2] then
+            num = string.sub(num, 4, string.len(num))
+        end
+        return num
+    end
+    return removeZero(wordDigit)
+end
+
 FooterLoader();

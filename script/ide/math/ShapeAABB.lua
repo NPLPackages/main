@@ -16,9 +16,11 @@ aabb:Extend(vector3d:new({14,1,1}))
 echo({aabb:GetMin(), aabb:GetMax()})
 -------------------------------------------------------
 ]]
+NPL.load("(gl)script/ide/math/math3d.lua");
 NPL.load("(gl)script/ide/math/vector.lua");
-local vector3d = commonlib.gettable("mathlib.vector3d");
 NPL.load("(gl)script/ide/math/AABBPool.lua");
+local math3d = commonlib.gettable("mathlib.math3d");
+local vector3d = commonlib.gettable("mathlib.vector3d");
 local AABBPool = commonlib.gettable("mathlib.AABBPool");
 
 local ShapeAABB = commonlib.gettable("mathlib.ShapeAABB");
@@ -449,4 +451,22 @@ function ShapeAABB:CalculateOffset(aabb, epsilon)
 		end
 	end
 	return 0,0,0, false;
+end
+
+-- Recomputes the ShapeAABB after an arbitrary transform by a 4x4 matrix.
+-- @param mtx: a Matrix4
+-- @param aabb: the output transformed ShapeAABB, if nil, it is self.
+function ShapeAABB:Rotate(mtx, aabb)
+	aabb = aabb or self;
+	-- Compute new center
+	math3d.Vector4MultiplyMatrix(aabb.mCenter, self.mCenter, mtx);
+	
+	-- Compute new extents.
+	local mExtents = self.mExtents;
+	local Exx, Exy, Exz = math.abs(mtx[1] * mExtents[1]), math.abs(mtx[2] * mExtents[1]), math.abs(mtx[3] * mExtents[1]);
+	local Eyx, Eyy, Eyz = math.abs(mtx[5] * mExtents[2]), math.abs(mtx[6] * mExtents[2]), math.abs(mtx[7] * mExtents[2]);
+	local Ezx, Ezy, Ezz = math.abs(mtx[9] * mExtents[3]), math.abs(mtx[10] * mExtents[3]), math.abs(mtx[11] * mExtents[3]);
+	aabb.mExtents[1] = Exx + Eyx + Ezx;
+	aabb.mExtents[2] = Exy + Eyy + Ezy;
+	aabb.mExtents[3] = Exz + Eyz + Ezz;
 end
