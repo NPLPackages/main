@@ -62,6 +62,14 @@ function ShapeRay:Distance(point)
 	return math.sqrt(dist), t;
 end
 
+function ShapeRay:GetOriginValues()
+	return self.mOrig[1], self.mOrig[2], self.mOrig[3]
+end
+
+function ShapeRay:GetDirValues()
+	return self.mDir[1], self.mDir[2], self.mDir[3]
+end
+
 -- @param point: if not nil, it will receive the intersection point
 -- @return: int, distance: interaction type, and distance.
 --  1:intersected
@@ -98,7 +106,7 @@ end
 
 -- Tests whether this ray intersects the given box. 
 -- param box: aabb box
--- @return boolean, distance: where the first element indicates whether an intersection occurs, 
+-- @return boolean, distance, hitpoint: where the first element indicates whether an intersection occurs, 
 -- and if true, the second element will indicate the distance along the ray at which it intersects. 
 function ShapeRay:intersectsAABB(box)
 	local rayorig,raydir = self.mOrig, self.mDir;
