@@ -569,9 +569,9 @@ function commonlib.quickMoveArrayItemWithNum(t, nNum) --用空间换时间O(n)
 	local tempArray1 = {} 
 	for i=1,tNum do
 		if i<= move_index then
-			tempArray[#tempArray + 1] = commonlib.copy(t[i])
+			tempArray[#tempArray + 1] = t[i]
 		else
-			tempArray1[#tempArray1 + 1] = commonlib.copy(t[i])
+			tempArray1[#tempArray1 + 1] = t[i]
 		end
 	end
 	local tempIndex = #tempArray1
