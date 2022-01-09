@@ -412,12 +412,14 @@ end
 function MultiLineEditbox:updateScrollInfo()
 	local clip = self:ViewRegion();
 	--if(not self.hbar:isHidden()) then
+		self.hbar:SetValue(self.viewport:hValue());
 		self.hbar:setRange(0, self.viewport:GetRealWidth() - clip:width() - 1);
 		self.hbar:setStep(self.viewport:WordWidth(), clip:width());
 		self.hbar:SetValue(self.viewport:hValue());
 	--end
 
 	--if(not self.vbar:isHidden()) then
+		self.vbar:SetValue(self.viewport:vValue());
 		self.vbar:setRange(0, self.viewport:GetRow() - self:GetRow());
 		self.vbar:setStep(1, self:GetRow());
 		self.vbar:SetValue(self.viewport:vValue());
@@ -425,13 +427,13 @@ function MultiLineEditbox:updateScrollInfo()
 end
 
 function MultiLineEditbox:updateScrollValue()
+	self.hscroll = self.viewport:hValue();
 	if(not self.hbar:isHidden()) then
-		self.hscroll = self.viewport:hValue();
 		self.hbar:SetValue(self.hscroll);
 	end
 
+	self.vscroll = self.viewport:vValue();
 	if(not self.vbar:isHidden()) then
-		self.vscroll = self.viewport:vValue();
 		self.vbar:SetValue(self.vscroll);
 	end
 end
