@@ -1461,7 +1461,15 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 			if(mcmlNode:GetString("enable_ime") ~= "false") then
 				_this = ParaUI.CreateUIObject("imeeditbox", instName, "_lt", left, top, width, height)
 			else
-				_this = ParaUI.CreateUIObject("editbox", instName, "_lt", left, top, width, height)
+				if (System.os.GetPlatform() == "android") then
+					if (ParaEngine.GetAttributeObject():GetField("GetUsbMode", false)) then
+						_this = ParaUI.CreateUIObject("imeeditbox", instName, "_lt", left, top, width, height)
+					else
+						_this = ParaUI.CreateUIObject("editbox", instName, "_lt", left, top, width, height)
+					end
+				else
+					_this = ParaUI.CreateUIObject("editbox", instName, "_lt", left, top, width, height)
+				end
 			end
 			_this.text = text;
 			_this.background = css.background;
