@@ -304,6 +304,16 @@ function commonlib.LoadTableFromString(body)
 	end
 end
 
+-- convert msg to table, if msg can not be serialized to table, we will return {[1] = msg}
+-- return a table 
+function commonlib.totable(msg)
+	msg = commonlib.LoadTableFromString(msg)
+	if(type(msg) ~= "table") then
+		msg = {msg}
+	end
+	return msg
+end
+
 -- this function will return a table created from file. 
 -- @param bBeautified: true to enable indentation which is well organized and easy to read the table structure
 -- function may return nil.e.g.

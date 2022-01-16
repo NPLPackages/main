@@ -416,10 +416,19 @@ function ShapeAABB:CalculateZOffset(aabb, dz, epsilon)
     end
 end
 
+-- @param pointRadius: if nil, it means 0
 -- @return true if aabb contains the given points. 
-function ShapeAABB:ContainsPoint(x, y, z)
+function ShapeAABB:ContainsPoint(x, y, z, pointRadius)
 	local self_minX, self_minY, self_minZ = self:GetMinValues();
 	local self_maxX, self_maxY, self_maxZ = self:GetMaxValues();
+	if(pointRadius) then
+		self_minX = self_minX - pointRadius
+		self_minY = self_minY - pointRadius
+		self_minZ = self_minZ - pointRadius
+		self_maxX = self_maxX + pointRadius
+		self_maxY = self_maxY + pointRadius
+		self_maxZ = self_maxZ + pointRadius
+	end
 	if(self_minX<=x and x <= self_maxX and self_minY<=y and y <= self_maxY and self_minZ<=z and z <= self_maxZ) then
 		return true
 	end
