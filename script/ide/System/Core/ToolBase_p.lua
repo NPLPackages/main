@@ -65,14 +65,16 @@ function ConnectionSynapse:Activate(...)
 		if(self.receiver) then
 			self.receiver.currentSender = self.sender;
 		end
+		local result;
 		if(self.receiver) then
-			self.slot(self.receiver, ...);
+			result = self.slot(self.receiver, ...);
 		else
-			self.slot(...);
+			result = self.slot(...);
 		end
 		if(self.receiver) then
 			self.receiver.currentSender = nil;
 		end
+		return result;
 	end
 end
 
@@ -261,7 +263,7 @@ end
 --  @param ...: parameter list is only used for documentation purpose. 
 function ToolBase.Signal(class_def, name)
 	local function signal_func(self, ...)
-		self:Activate(signal_func, ...)
+		return self:Activate(signal_func, ...)
 	end
 	class_def[name] = signal_func;
 end

@@ -425,14 +425,16 @@ function ToolBase.Activate(sender, signal, ...)
 	if(connection) then
 		local synapse = connection:first();
 		local synapse_next;
+		local result
 		while (synapse) do
 			-- fixed: this will allow synapse:Activate() to remove the current signal
 			-- however, it does not prevent other deletion cases inside activate call
 			-- it is not recommended to call Disconnect inside current signal. 
 			synapse_next = connection:next(synapse);
-			synapse:Activate(...);
+			result = synapse:Activate(...) or result;
 			synapse = synapse_next;
 		end
+		return result
 	end
 end
 
