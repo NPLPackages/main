@@ -307,7 +307,9 @@ function Canvas3D:ShowModel(obj, bAutoAdjustCamera)
 	if(bAutoAdjustCamera==nil) then
 		bAutoAdjustCamera = true;
 	end
-
+	if obj and obj.Attribute then --暂时把这个属性去掉，放置使用场景中的环境光和漫反射
+		obj.Attribute = nil
+	end
 	if(type(obj) == "table") then
 		obj = ObjEditor.CreateObjectByParams(obj);
 	end
