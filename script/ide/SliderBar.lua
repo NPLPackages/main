@@ -45,6 +45,8 @@ local SliderBar = {
 	no_value_check = nil,
 	-- minimum step of value. if this is nil, it has screen pixel resolution, otherwise one can specify a value, such as (max-min)/10.  
 	min_step = nil, 
+	-- if specified, we will always ensure the gridSize are not skipped when dragging UI control. 
+	gridSize = nil,
 	-- string, tooltip to be displayed when mouse over
 	tooltip = nil, 
 	-- appearance
@@ -280,25 +282,32 @@ end
 
 
 -- ensure value is in proper range and steps
-function SliderBar:ValidateData()
+-- @param value_: if nil, it will value and replace self.value in place. 
+-- @return the validated value
+function SliderBar:ValidateData(value_)
 	if(self.no_value_check) then
-		return;
+		return value_;
 	end
+	local value = value_ or self.value;
 	-- ensure value is interger times of min_step
 	if(self.min_step~=nil) then
-		local nStep = math.floor((self.value-self.min)/self.min_step);
-		local reminder = (self.value-self.min-self.min_step*nStep);
+		local nStep = math.floor((value-self.min)/self.min_step);
+		local reminder = (value-self.min-self.min_step*nStep);
 		if(reminder>=self.min_step/2) then
 			nStep = nStep+1;
 		end
-		self.value = self.min+self.min_step*nStep;
+		value = self.min+self.min_step*nStep;
 	end
-	if(self.value>self.max) then
-		self.value = self.max;
+	if(value>self.max) then
+		value = self.max;
 	end
-	if(self.value<self.min) then
-		self.value = self.min;
+	if(value<self.min) then
+		value = self.min;
 	end
+	if(not value_) then
+		self.value = value;
+	end
+	return value;
 end
 
 -- set value, validate it and update UI
@@ -365,13 +374,16 @@ function SliderBar:UpdateData(mouse_x, mouse_y)
 			
 			if(self.direction=="horizontal" or width>height) then
 				-- horizontal slider bar
-				if(x<=self.button_width/2) then
-					self.value = self.min;
-				elseif(x>=(width-self.button_width/2))then
-					self.value = self.max;
-				else
-					self.value = self.min+(x - self.button_width/2)/(width-self.button_width)*(self.max-self.min);
+				local value = self:ValidateData(self:MapMouseXToValue(x, width))
+				if(self.gridSize) then
+					local valueBefore = self:ValidateData(self:MapMouseXToValue(x-1, width))
+					local valueAfter = self:ValidateData(self:MapMouseXToValue(x+1, width))
+					local valueAtGrid = self:ValidateData(math.floor((value/self.gridSize) + 0.5)*self.gridSize);
+					if( not (valueAtGrid < valueBefore or valueAfter < valueAtGrid)) then
+						value = valueAtGrid
+					end
 				end
+				self.value = value;
 			else
 				-- vertical slider bar
 				if(y<=self.button_height/2) then
@@ -381,16 +393,9 @@ function SliderBar:UpdateData(mouse_x, mouse_y)
 				else
 					self.value = self.min+(y - self.button_height/2)/(height-self.button_height)*(self.max-self.min);
 				end
+				-- ensure value is interger times of min_step
+				self:ValidateData();
 			end
-			
-			--if(self.IsMouseDown) then
-				---- locking the mouse cursor at one axis. 
-				--local root_ = ParaUI.GetUIObject("root");
-				--root_:GetAttributeObject():SetField("MousePosition", {mouse_x, mouse_y});
-			--end
-
-			 -- ensure value is interger times of min_step
-			self:ValidateData();
 			
 			-- only update and call onchange if value changed. 
 			if(oldvalue~=self.value) then
@@ -399,6 +404,16 @@ function SliderBar:UpdateData(mouse_x, mouse_y)
 				--btn.text = tostring(self.value); -- for testing
 			end	
 		end	
+	end
+end
+
+function SliderBar:MapMouseXToValue(x, width)
+	if(x<=self.button_width/2) then
+		self.value = self.min;
+	elseif(x>=(width-self.button_width/2))then
+		self.value = self.max;
+	else
+		self.value = self.min+(x - self.button_width/2)/(width-self.button_width)*(self.max-self.min);
 	end
 end
 

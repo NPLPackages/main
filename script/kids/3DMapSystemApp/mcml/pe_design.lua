@@ -223,6 +223,7 @@ One can use SetUIValue and GetUIValue to modify the current value.
 | min		| default to 0 |
 | max		| default to 100 |
 | min_step	| default to nil, the minimum step value |
+| gridsize  | default to nil, value are not skipped by this value |
 | value		| default to nil |
 | direction | nil, "vertical" or "horizontal". If nil it will deduce from the width and height.|
 | style.background | background of slider bar. |
@@ -1336,7 +1337,9 @@ function pe_sliderbar.create(rootName, mcmlNode, bindingContext, _parent, left, 
 	ctl.IsShowEditor = mcmlNode:GetBool("IsShowEditor");
 	ctl.no_value_check = mcmlNode:GetBool("no_value_check");
 	ctl.min = mcmlNode:GetNumber("min") or ctl.min;
+
 	ctl.max = tonumber(mcmlNode:GetAttributeWithCode("max")) or ctl.max;
+	ctl.gridSize = tonumber(mcmlNode:GetAttributeWithCode("gridsize"));
 	ctl.value = tonumber(mcmlNode:GetAttributeWithCode("value"));
 	ctl.direction = mcmlNode:GetNumber("direction");
 	ctl.min_step = mcmlNode:GetNumber("min_step");
