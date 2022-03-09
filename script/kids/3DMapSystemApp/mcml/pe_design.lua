@@ -1146,6 +1146,17 @@ function pe_canvas3d.create(rootName, mcmlNode, bindingContext, _parent, left, t
 		end
 		ctl:SetMaskTexture(MaskTexture);
 	end]]
+	--#region playmovie
+	local moviefile = mcmlNode:GetAttributeWithCode("moviefile")
+	local fromTime = mcmlNode:GetNumber("fromTime")
+	local toTime = mcmlNode:GetNumber("toTime")
+	local originX = mcmlNode:GetNumber("originX")
+	local originY = mcmlNode:GetNumber("originY")
+	local originZ = mcmlNode:GetNumber("originZ")
+	if moviefile and moviefile ~= "" then
+		ctl:PlayMovieFile(moviefile, fromTime, toTime, originX, originY, originZ)
+	end
+	--#endregion
 end
 
 -- get the MCML value on the node

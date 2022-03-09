@@ -47,11 +47,17 @@ local dragDistance = 0;
 
 -- whether it is a user click, only call this in "mouseReleaseEvent".
 function MouseEvent:isClick()
-	if(self.event_type == "mouseReleaseEvent") then
+	if(self.touchSession) then
+		return self.touchSession:IsClick();
+	elseif(self.event_type == "mouseReleaseEvent") then
 		return math.abs(ParaGlobal.timeGetTime() - lastPressTime) < 250;
 	end
 end
 
+-- this may return nil if no touch session is available. 
+function MouseEvent:GetTouchSession()
+	return self.touchSession
+end
 
 -- private function: use self.isDoubleClick instead
 function MouseEvent:isDoubleAndTripleClick_()
@@ -88,14 +94,17 @@ function MouseEvent:updateModifiers()
 	MouseEvent.shift_pressed = ParaUI.IsKeyPressed(DIK_SCANCODE.DIK_LSHIFT) or ParaUI.IsKeyPressed(DIK_SCANCODE.DIK_RSHIFT);
 	MouseEvent.ctrl_pressed = ParaUI.IsKeyPressed(DIK_SCANCODE.DIK_LCONTROL) or ParaUI.IsKeyPressed(DIK_SCANCODE.DIK_RCONTROL);
 	MouseEvent.alt_pressed = ParaUI.IsKeyPressed(DIK_SCANCODE.DIK_LMENU) or ParaUI.IsKeyPressed(DIK_SCANCODE.DIK_RMENU);
-	MouseEvent.buttons_state = 0;
-	-- left button
-	if(ParaUI.IsMousePressed(0)) then
-		MouseEvent.buttons_state = MouseEvent.buttons_state + 1;
-	end
-	-- right button
-	if(ParaUI.IsMousePressed(1)) then
-		MouseEvent.buttons_state = MouseEvent.buttons_state + 2;
+	
+	if(not self.touchSession) then
+		self.buttons_state = 0;
+		-- left button
+		if(ParaUI.IsMousePressed(0)) then
+			self.buttons_state = self.buttons_state + 1;
+		end
+		-- right button
+		if(ParaUI.IsMousePressed(1)) then
+			self.buttons_state = self.buttons_state + 2;
+		end
 	end
 end	
 
@@ -148,6 +157,7 @@ function MouseEvent:init(event_type, window, localPos, windowPos, screenPos)
 	self.accepted = nil;
 	self.recorded = nil; 
 	self.isEmulated = false;
+	self.touchSession = nil;
 	if(event_type == "mousePressEvent") then
 		lastPressTime = ParaGlobal.timeGetTime();
 		dragDistance = 0;
@@ -164,8 +174,12 @@ end
 
 -- mouse drag distance, usually used in mouseReleaseEvent
 function MouseEvent:GetDragDist()
-	--return self.dragDist or 0;
-	return dragDistance or 0;
+	if(self.touchSession) then
+		return self.touchSession:GetMaxDragDistance();
+	else
+		--return self.dragDist or 0;
+		return dragDistance or 0;
+	end
 end
 
 -- mouse wheel delta

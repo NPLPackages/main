@@ -165,13 +165,26 @@ function os.GetPCStats()
 end
 
 if(os.IsWindowsXP()) then
+	log("Info: windows XP does not support https, we will replace all https calls with http\n")
 	local NPL_AppendURLRequest = NPL.AppendURLRequest;
 	NPL.AppendURLRequest = function(urlParams, sCallback, sForm, sPoolName)
 		if(type(urlParams) == "table" and urlParams.url) then
 			-- libcurl.dll under windows XP does not support openssl protocol, we will try using http instead. 
-			urlParams.url = urlParams.url:gsub("^https://", "http://")
+			local url = urlParams.url:gsub("^https://", "http://");
+			if(urlParams.url ~= url) then
+				-- TODO: for unknown reason, 7niu cdn redirection always uses SSL 
+				url = url:gsub("^http://apicdn%.keepwork%.com", "http://api.keepwork.com");
+				urlParams.url = url;
+				log("Info: replacing https->http:"..url.."\n")
+			end
 		elseif(type(urlParams) == "string") then
-			urlParams = urlParams:gsub("^https://", "http://")
+			local url = urlParams:gsub("^https://", "http://")
+			if(urlParams ~= url) then
+				-- TODO: for unknown reason, 7niu cdn redirection always uses SSL 
+				url = url:gsub("^http://apicdn%.keepwork%.com", "http://api.keepwork.com");
+				urlParams = url
+				log("Info: replacing https->http:"..url.."\n")
+			end
 		end
 		return NPL_AppendURLRequest(urlParams, sCallback, sForm, sPoolName)
 	end
@@ -180,7 +193,13 @@ if(os.IsWindowsXP()) then
 	local NPL_AsyncDownload = NPL.AsyncDownload;
 	NPL.AsyncDownload = function(urlParams, ...)
 		if(type(urlParams) == "string") then
-			urlParams = urlParams:gsub("^https://", "http://")
+			local url = urlParams:gsub("^https://", "http://")
+			if(urlParams ~= url) then
+				-- TODO: for unknown reason, 7niu cdn redirection always uses SSL 
+				url = url:gsub("^http://apicdn%.keepwork%.com", "http://api.keepwork.com");
+				urlParams = url
+				log("Info: replacing https->http:"..url.."\n")
+			end
 		end
 		return NPL_AsyncDownload(urlParams, ...)
 	end

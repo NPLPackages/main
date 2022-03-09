@@ -37,9 +37,10 @@ Config.SetIntValue("DBClick_interval",200);
 -- One can install custom game font files at "fonts/*.ttf"
 ----------------------------------------------------------------------------------------
 -- map "System" to "fonts/Tahoma.ttf", if exist, or "Tahoma" font
---local system_font_name = "Verdana";
+-- local system_font_name = "Verdana";
 -- local system_font_name = "ParaEngineThaiFont";
 local system_font_name = "Tahoma";
+-- local system_font_name = "Microsoft YaHei UI"; -- Better Chinese font, but has scaling for smaller fonts
 --local system_font_name = "Georgia";
 Config.AppendTextValue("GUI_font_mapping","System");	Config.AppendTextValue("GUI_font_mapping",system_font_name);
 

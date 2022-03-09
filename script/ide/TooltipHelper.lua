@@ -244,7 +244,7 @@ function TooltipHelper.Reposition(container, params, x, y, used_width, used_heig
 		x, y = _x + params.absolute_x, _y + params.absolute_y;
 	end
 	params.position_x, params.position_y = x, y;
-	container:Reposition("_lt", x, y, used_width, used_width);
+	container:Reposition("_lt", x, y, used_width, used_height);
 end
 
 -- private:

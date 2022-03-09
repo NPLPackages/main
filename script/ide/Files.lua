@@ -233,5 +233,76 @@ function Files.splitText(filepath)
     return filepath, ''
 end
 
+function Files.CreateDirectory(path)
+	local segmentationArray = {}
 
+	for segmentation in string.gmatch(path, "[^/]+") do
+		segmentationArray[#segmentationArray + 1] = segmentation;
+	end
+
+	local curFolder = "";
+
+	for key, item in ipairs(segmentationArray) do
+		curFolder = curFolder .. item .. "/"
+
+		if (not ParaIO.DoesFileExist(curFolder)) then
+			ParaIO.CreateDirectory(curFolder);
+		end
+	end
+end
+
+function Files.CopyFolder(src, dest)
+	if (not src or
+		not dest or
+		type(src) ~= "string" or
+		type(dest) ~= "string") then
+		return;
+	end
+
+	local finished = false;
+	local curSrc = src;
+	local curDest = dest;
+	local folders = {};
+
+	-- check dest folder exist
+	if (not ParaIO.DoesFileExist(dest)) then
+		Files.CreateDirectory(dest);
+	end
+
+	local function FindFiles()
+		if (#folders > 0) then
+			curSrc = folders[#folders].srcPath;
+			curDest = folders[#folders].destPath;
+			table.remove(folders);
+		end
+
+		local result = Files.Find({}, curSrc, 0, 10000, "*");
+
+		for key, item in ipairs(result) do
+			if (item.fileattr == 32) then
+				-- file
+				local srcFile = curSrc.."/"..item.filename;
+				local destFile = curDest .. "/" .. item.filename;
+
+				ParaIO.CopyFile(srcFile, destFile, true);
+			else
+				-- folder
+				ParaIO.CreateDirectory(curDest .. "/" .. item.filename .. "/");
+
+				folders[#folders + 1] = {
+					srcPath = curSrc .. "/" .. item.filename,
+					destPath = curDest .. "/" .. item.filename,
+				}
+			end
+		end
+
+		if (#folders == 0) then
+			finished = true;
+		end
+	end
+
+	while (not finished) do
+		FindFiles();
+	end
+end
 

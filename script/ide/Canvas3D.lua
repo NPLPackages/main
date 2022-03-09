@@ -121,7 +121,7 @@ CommonCtrl.Canvas3D = Canvas3D;
 
 
 -- constructor
-function Canvas3D:new (o)
+function Canvas3D:new(o)
 	o = o or {}   -- create object if user does not provide one
 	setmetatable(o, self)
 	self.__index = self
@@ -131,7 +131,7 @@ function Canvas3D:new (o)
 end
 
 -- Destroy the UI control
-function Canvas3D:Destroy ()
+function Canvas3D:Destroy()
 	ParaUI.Destroy(self.name);
 end
 
@@ -155,8 +155,6 @@ function Canvas3D:Show(bShow)
 		
 		if(self.ExternalSceneName) then
 			self.miniscenegraphname = self.miniscenegraphname or self.ExternalSceneName;
-			-- with external scene, we should delete 3d object on close. 
-			_this.ondestroy = string.format(";CommonCtrl.Canvas3D.OnDestroy(%q);", self.name);
 		elseif(self.IsInteractive) then
 			_this.onmousedown = string.format(";CommonCtrl.Canvas3D.OnMouseDown(%q);", self.name);
 			_this.onmouseup = string.format(";CommonCtrl.Canvas3D.OnMouseUp(%q);", self.name);
@@ -167,6 +165,10 @@ function Canvas3D:Show(bShow)
 		else
 			_this:GetAttributeObject():SetField("ClickThrough", true)
 		end	
+		-- with external scene, we should delete 3d object on close. 
+		_this:SetScript("ondestroy", function()
+			self:OnDestroy();
+		end);
 
 		if(self.IsInteractive or self.autoRotateSpeed or self.FrameMoveCallback) then
 			_this.onframemove = string.format(";CommonCtrl.Canvas3D.OnFrameMove(%q);", self.name);
@@ -192,13 +194,7 @@ function Canvas3D:Show(bShow)
 end
 
 -- close the given control
-function Canvas3D.OnDestroy(sCtrlName)
-	local self = CommonCtrl.GetControl(sCtrlName);
-	if(self==nil)then
-		log("error getting Canvas3D instance "..sCtrlName.."\r\n");
-		return;
-	end
-	
+function Canvas3D:OnDestroy()
 	if(self.ExternalSceneName) then
 		local obj = ParaUI.GetUIObject(self.name);
 		if(not obj:IsValid()) then
@@ -208,6 +204,17 @@ function Canvas3D.OnDestroy(sCtrlName)
 			end
 		end
 	end	
+	if(self.movieChannelName) then
+		NPL.load("(gl)script/apps/Aries/Creator/Game/Movie/MovieManager.lua");
+		local MovieManager = commonlib.gettable("MyCompany.Aries.Game.Movie.MovieManager");
+		local channel = MovieManager:CreateGetMovieChannel(self.movieChannelName);
+		if(channel.canvas3d_obj == self) then
+			channel:Stop();
+			--self:GetScene():Reset();
+			ParaScene.DeleteMiniSceneGraph(self.resourceName)
+		end
+		self.movieChannelName = nil
+	end
 end
 
 --@return: if the ui object is valid
@@ -295,37 +302,19 @@ end
 function Canvas3D:GetContainer()
 	return ParaUI.GetUIObject(self.name);
 end
--- public: bind the canvas to a given 3d model or character. it will reset the scene before adding the new model.
--- it will use the currently bind miniscene graph to display it. if no miniscene graph is bind, it will create a default one named "Canvas3D", which is 128*128 in size. 
--- @param obj: a newly created ParaObject or it can be objParams. Note: it can NOT be an object from the main scene or an attached object. 
--- @param bAutoAdjustCamera: true to automatically adjust camera to best view the obj. if nil, it means true. 
-function Canvas3D:ShowModel(obj, bAutoAdjustCamera)
-	if(ParaUI.GetUIObject(self.name):IsValid() == false) then
-		return
-	end
-	
-	if(bAutoAdjustCamera==nil) then
-		bAutoAdjustCamera = true;
-	end
-	if obj and obj.Attribute then --暂时把这个属性去掉，放置使用场景中的环境光和漫反射
-		obj.Attribute = nil
-	end
-	if(type(obj) == "table") then
-		obj = ObjEditor.CreateObjectByParams(obj);
-	end
-	if(obj == nil or not obj:IsValid()) then
-		-- if no model specified, remove all objects in the mini scene, otherwise the miniscene shows the last shown object
-		if(self.resourceType == nil and self.resourceName~=nil and not self.ExternalSceneName) then
-			local scene = ParaScene.GetMiniSceneGraph(self.resourceName);
-			if(scene:IsValid()) then
-				scene:DestroyChildren();
-			end
-		else
-			-- self:ShowImage("")
-		end
-		return 
-	end
-	
+
+
+function Canvas3D:ClearScene()
+	local scene = ParaScene.GetMiniSceneGraph(self.resourceName);
+	scene:DestroyChildren();
+end
+
+function Canvas3D:SetFieldOfView(defaultValue)
+	self.FieldOfView = defaultValue;
+end
+
+-- @return mini scene object
+function Canvas3D:PrepareScene()
 	local scene;
 	
 	if(self.ExternalSceneName) then
@@ -390,8 +379,43 @@ function Canvas3D:ShowModel(obj, bAutoAdjustCamera)
 		-- bind to the mini scene graph
 		self:ShowMiniscene(scene:GetName())	
 	end
+	return scene;
+end
+
+-- public: bind the canvas to a given 3d model or character. it will reset the scene before adding the new model.
+-- it will use the currently bind miniscene graph to display it. if no miniscene graph is bind, it will create a default one named "Canvas3D", which is 128*128 in size. 
+-- @param obj: a newly created ParaObject or it can be objParams. Note: it can NOT be an object from the main scene or an attached object. 
+-- @param bAutoAdjustCamera: true to automatically adjust camera to best view the obj. if nil, it means true. 
+function Canvas3D:ShowModel(obj, bAutoAdjustCamera)
+	if(ParaUI.GetUIObject(self.name):IsValid() == false) then
+		return
+	end
 	
-	if(scene:IsValid()) then
+	if(bAutoAdjustCamera==nil) then
+		bAutoAdjustCamera = true;
+	end
+	if obj and obj.Attribute then --暂时把这个属性去掉，放置使用场景中的环境光和漫反射
+		obj.Attribute = nil
+	end
+	if(type(obj) == "table") then
+		obj = ObjEditor.CreateObjectByParams(obj);
+	end
+	if(obj == nil or not obj:IsValid()) then
+		-- if no model specified, remove all objects in the mini scene, otherwise the miniscene shows the last shown object
+		if(self.resourceType == nil and self.resourceName~=nil and not self.ExternalSceneName) then
+			local scene = ParaScene.GetMiniSceneGraph(self.resourceName);
+			if(scene:IsValid()) then
+				scene:DestroyChildren();
+			end
+		else
+			-- self:ShowImage("")
+		end
+		return 
+	end
+	
+	local scene = self:PrepareScene();
+	
+	if(scene and scene:IsValid()) then
 		if(not self.ExternalSceneName) then
 			-- clear all. 
 			scene:DestroyChildren();
@@ -686,6 +710,29 @@ function Canvas3D:SetMaskTexture(textureFile)
 			scene:SetMaskTexture(ParaAsset.LoadTexture("", textureFile, 1));
 		end
 	end
+end
+
+-- @param filename: block template file that should only contain one movie block. 
+-- @param fromTime: default to 0, in milliseconds
+-- @param toTime: default to -1, which is the movie length
+-- @param originX, originY, originZ: origin to play inside the mini scene graph or main 3d scene. default to 0,128,0
+-- @return movieEntity
+function Canvas3D:PlayMovieFile(filename, fromTime, toTime, originX, originY, originZ)
+	NPL.load("(gl)script/apps/Aries/Creator/Game/Movie/MovieManager.lua");
+	local MovieManager = commonlib.gettable("MyCompany.Aries.Game.Movie.MovieManager");
+	if MovieManager:GetInited() ==nil then--if not in world or is entering world something logic is not Init,so return 
+		return
+	end
+	self.movieChannelName = self.resourceName or "default"
+	local channel = MovieManager:CreateGetMovieChannel(self.movieChannelName);
+	self:SetFieldOfView(1.04); --default 3d scene field of view. 
+	self:PrepareScene()
+	self:ClearScene()
+	channel.canvas3d_obj = self;
+	channel:CreateFromTemplateFile(filename, originX or 0, originY or 128, originZ or 0);
+	channel:SetScene(self.resourceName)
+	channel:Stop()
+	channel:Play(fromTime or 0, toTime or -1)
 end
 
 ----------------------------------------------------

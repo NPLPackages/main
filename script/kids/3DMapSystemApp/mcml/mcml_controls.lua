@@ -27,6 +27,7 @@ NPL.load("(gl)script/kids/3DMapSystemApp/mcml/pe_profile.lua");
 NPL.load("(gl)script/kids/3DMapSystemApp/mcml/pe_item.lua");
 NPL.load("(gl)script/kids/3DMapSystemApp/mcml/pe_avatar.lua");
 NPL.load("(gl)script/kids/3DMapSystemApp/mcml/pe_map.lua");
+NPL.load("(gl)script/kids/3DMapSystemApp/mcml/pe_markdown.lua");
 NPL.load("(gl)script/kids/3DMapSystemApp/mcml/pe_motion.lua");
 NPL.load("(gl)script/kids/3DMapSystemApp/mcml/pe_storyboard.lua");
 NPL.load("(gl)script/kids/3DMapSystemApp/mcml/pe_gridview.lua");
@@ -116,6 +117,8 @@ local default_control_mapping = {
 	["pe:map"] = mcml_controls.pe_map,
 	["pe:mark"] = mcml_controls.pe_none,
 	["pe:map-anchor"] = mcml_controls.pe_none,
+
+	["pe:markdown"] = mcml_controls.pe_markdown,
 
 	["pe:downlistbutton"] = mcml_controls.pe_downlistbutton,
 
@@ -270,7 +273,7 @@ local default_control_mapping = {
 	--v2
 	["camera_v2"] = mcml_controls.aries_camera_2,
 	["camera_empty_v2"] = mcml_controls.aries_camera_2_empty,
-	--·ÏÆú["camera_point"]
+	--åºŸå¼ƒ["camera_point"]
 	["camera_track_v2"] = mcml_controls.aries_camera_2_track,
 	["camera_dynamic_v2"] = mcml_controls.aries_camera_2_dynamic,
 	["camera_caster_v2"] = mcml_controls.aries_camera_2_caster,

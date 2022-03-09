@@ -1,7 +1,8 @@
 --[[
 Title: Screen
-Author(s): LiXizhi
-Date: 2015/8/20
+Author(s): LiXizhi, big
+CreateDate: 2015.8.20
+ModifyDate: 2022.2.16
 Desc: a singleton class for current screen. 
 use the lib:
 ------------------------------------------------------------
@@ -73,9 +74,9 @@ function Screen:RestoreUIDesignResolution(callbackFunc)
 end
 
 -- @param scaling: if nil, it is user specified. 
-function Screen:SetUserUIScaling(scaling)
-	self.userUIScaling = scaling;
-	self:AutoAdjustUIScalingImp();
+function Screen:SetUserUIScaling(userUIScaling)
+	self.userUIScaling = userUIScaling;
+	self:SetUIScale(userUIScaling, userUIScaling);
 end
 
 -- this may be nil if user did not specify it explicitly. 
@@ -88,60 +89,73 @@ function Screen:GetDesignUIResolution()
 end
 
 function Screen:GetWindowSolution()
-	local frame_size = ParaEngine.GetAttributeObject():GetField("WindowResolution", {960,560});
+	local frame_size = ParaEngine.GetAttributeObject():GetField("WindowResolution", {960, 560});
 	local frame_width = frame_size[1];
 	local frame_height = frame_size[2];
-	if(frame_height == 0) then
+
+	if (frame_height == 0) then
 		-- in case "WindowResolution" API is not supported, such as on mac platform, we will use UI resolution instead.  
 		local scaling = self:GetUIScaling();
 		frame_width = math.floor(Screen:GetWidth() * scaling[1] + 0.5);
 		frame_height = math.floor(Screen:GetHeight() * scaling[2] + 0.5);
 	end
+
 	return frame_width, frame_height;
 end
 
 -- get unscaled screen resolution. 
 -- @NOTE: This function only return creation window size, which is pretty buggy. 
 function Screen:GetScreenSolution()
-	local frame_size = ParaEngine.GetAttributeObject():GetField("ScreenResolution", {960,560});
+	local frame_size = ParaEngine.GetAttributeObject():GetField("ScreenResolution", {960, 560});
 	local frame_width = frame_size[1];
 	local frame_height = frame_size[2];
-	if(frame_height == 0) then
+
+	if (frame_height == 0) then
 		-- in case "ScreenResolution" API is not supported, such as on mac platform, we will use UI resolution instead.  
 		local scaling = self:GetUIScaling();
 		frame_width = math.floor(Screen:GetWidth() * scaling[1] + 0.5);
 		frame_height = math.floor(Screen:GetHeight() * scaling[2] + 0.5);
 	end
+
 	return frame_width, frame_height;
 end
 
 function Screen:AutoAdjustUIScalingImp()
 	local width, height = self.curDesignUIWidth, self.curDesignUIHeight;
-	if(not width or not height) then
+
+	if (not width or not height) then
 		local winWidth, winHeight = self:GetWindowSolution();
 		local minWidth, minHeight = self:GetMinimumScreenSize();
-		local scaling = self:GetUserUIScaling();
-		local destWidth, destHeight = winWidth / (scaling or 1), winHeight / (scaling or 1)
-		if(minWidth and (minWidth > destWidth or minHeight > destHeight)) then
-			scaling = (scaling or 1) / math.max(minWidth / destWidth, minHeight / destHeight);
-			if(math.abs(scaling - 1) < 0.005) then
-				scaling = 1;
-			end
-		end
-		if(not scaling) then
-			if(winWidth and minWidth and winWidth >= minWidth*2 and winHeight >= minHeight * 2) then
+		local userUIScaling = self:GetUserUIScaling();
+		local UIScaling = 1;
+
+		if (not userUIScaling) then
+			if (winWidth >= minWidth * 2 and
+				winHeight >= minHeight * 2) then
 				-- user is using 2K or 4K monitor, we will scale by 2 or 4. 
-				local ultraDisplayFactor = math.min(winWidth / minWidth, winHeight/minHeight);
-				if(ultraDisplayFactor > 2.2  and ultraDisplayFactor < 4.4) then
-					ultraDisplayFactor = 2; -- 2k monitor
+				local ultraDisplayFactor = math.min(winWidth / minWidth, winHeight / minHeight);
+
+				if (System.os.GetPlatform() == "mac") then
+					if (ultraDisplayFactor >= 2) then
+						ultraDisplayFactor = 2;
+					elseif (ultraDisplayFactor >= 4) then
+						ultraDisplayFactor = 4;
+					end
 				else
-					ultraDisplayFactor = 4; -- 4k monitor
+					if (ultraDisplayFactor > 2.2 and ultraDisplayFactor < 4.4) then
+						ultraDisplayFactor = 2; -- 2k monitor
+					else
+						ultraDisplayFactor = 4; -- 4k monitor
+					end
 				end
-				scaling = ultraDisplayFactor;
+
+				UIScaling = ultraDisplayFactor;
 			end
+		else
+			UIScaling = userUIScaling;
 		end
-		scaling = scaling or 1;
-		self:SetUIScale(scaling, scaling)
+
+		self:SetUIScale(UIScaling, UIScaling)
 	else
 		local minWidth, minHeight = self:GetMinimumScreenSize()
 		width = math.max(minWidth, width);
@@ -162,8 +176,9 @@ function Screen:AutoAdjustUIScalingImp()
 
 		local scalingX = frame_width / width;
 		local scalingY = frame_height / height;
-		local scaling = math.min(scalingX, scalingY)
-		if(scaling ~= scaleWidth) then	
+		local scaling = math.min(scalingX, scalingY);
+
+		if (scaling ~= scaleWidth) then	
 			LOG.std(nil, "info", "Screen", "design resolution is changed to %d, %d", width or 0, height or 0);
 			self:SetUIScale(scaling)
 		end	

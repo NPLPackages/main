@@ -26,10 +26,13 @@
     <rule match='^/?pptimg/' with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/", nocache=true}'></rule>
 
     <rule match="^/?nplcad3" with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/nplcad3", filename = "nplcad3.html"}'></rule>
+    
     <rule match="^/?tafcad/umd" with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/nplcad3", filename = "umd.html"}'></rule>
     <rule match="^/?tafcad/partdesign" with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/nplcad3", filename = "partdesign.html"}'></rule>
     <rule match="^/?tafcad/desktop" with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/nplcad3", filename = "desktop.html"}'></rule>
-
+    <rule match="^/?tafcad/block" with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/nplcad3", filename = "block.html"}'></rule>
+    <rule match="^/?tafcad/design" with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/nplcad3", filename = "design.html"}'></rule>
+    
     <!--URI map everything without extension to index.page-->
     <rule match='{"^[^%./]*/$", "^[^%.]+$", "robots.txt"}' with="WebServer.redirecthandler" params='{"/index.page"}'></rule>
     <!--npl script example-->

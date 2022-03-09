@@ -123,6 +123,9 @@ function TextSprite:Show(bShow)
 	if(not _this or not _this:IsValid())then
 		_this = ParaUI.CreateUIObject("container",self.name,self.alignment,self.left,self.top,self.width,self.height);
 		_this.background = self.background;
+		if self.click_through ~= nil then
+			_this:SetField("ClickThrough", self.click_through)
+		end
 		_parent = _this;
 		
 		if(self.parent == nil)then
@@ -201,9 +204,13 @@ function TextSprite:UpdateUI()
 							if(self.tooltip) then
 								temp.tooltip = self.tooltip;
 							end
+							if self.click_through ~= nil then
+								temp:SetField("ClickThrough", self.click_through)
+							end
 							_this:AddChild(temp);
 						end
-						temp.background = self.image..";"..info.rect;
+						local image = info.image_path or self.image
+						temp.background = image..";"..info.rect;
 						_guihelper.SetUIColor(temp, self.color);
 						left = left + width;
 						nIndex = nIndex + 1;

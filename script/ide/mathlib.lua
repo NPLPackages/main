@@ -205,3 +205,28 @@ function mathlib.SnapToGrid(value, gridSize)
 	gridSize = gridSize or 1;
 	return math.floor(value / gridSize + 0.5) * gridSize;
 end
+
+-- @return [-pi, pi]
+function mathlib.GetAngleFromOffset(dx, dy)
+	local len = dx^2+dy^2;
+	if(len>0.0000001) then
+		len = math.sqrt(len)
+		local facing = math.acos(dx/len);
+		if(dy>0) then	
+			facing = -facing;
+		end
+		return facing;
+	else
+		return 0;
+	end
+end
+
+-- tricky: tricky conversion using an unused float32 field in attribute system. 
+function mathlib.DoubleToFloat(x)
+	return ParaScene.GetAttributeObject():GetField("RenderDistance", ParaScene.GetAttributeObject():SetField("RenderDistance", x));
+end
+
+-- getting rid of decimal part, including negative values. This differs from math.floor()
+function mathlib.FloatToInt(value) 
+	return math.floor(value >=0 and value or (value + 1))
+end

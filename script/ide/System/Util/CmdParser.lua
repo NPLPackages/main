@@ -108,22 +108,28 @@ function CmdParser.ParseFormated(cmd_text, strFmt)
 	return nil, cmd_text;
 end
 
-
+-- @param bTextOnly: default to fales. if true, option can only start with non-number
 -- parse option that begins with -, return the option name
-function CmdParser.ParseOption(cmd_text)
-	local value, cmd_text_remain = cmd_text:match("^%s*%-([%w_]+)%s*(.*)$");
+function CmdParser.ParseOption(cmd_text, bTextOnly)
+	local value, cmd_text_remain;
+	if(not bTextOnly) then
+		value, cmd_text_remain = cmd_text:match("^%s*%-([%w_]+)%s*(.*)$");
+	else
+		value, cmd_text_remain = cmd_text:match("^%s*%-(%D[%w_]*)%s*(.*)$");
+	end
 	if(value) then
 		return value, cmd_text_remain;
 	end
 	return nil, cmd_text;
 end
 
+-- @param bTextOnly: default to fales. if true, option can only start with non-number
 -- return options: -[options]
-function CmdParser.ParseOptions(cmd_text)
+function CmdParser.ParseOptions(cmd_text, bTextOnly)
 	local options = {};
 	local option, cmd_text_remain = nil, cmd_text;
 	while(cmd_text_remain) do
-		option, cmd_text_remain = CmdParser.ParseOption(cmd_text_remain);
+		option, cmd_text_remain = CmdParser.ParseOption(cmd_text_remain, bTextOnly);
 		if(option) then
 			options[option] = true;
 		else

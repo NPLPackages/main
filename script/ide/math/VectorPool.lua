@@ -31,7 +31,7 @@ VectorPool.maxNumCleansToShrink = 30*30;
 VectorPool.numEntriesToRemove = 500;
 -- we will automatically reuse from beginning when reaching this value. 
 -- such that CleanPool() is not a must-call function. Depending on usage pattern.
-VectorPool.maxPoolSize = 1000;
+VectorPool.maxPoolSize = 3000;
 
 function VectorPool:new()
 	local o = {};
@@ -83,7 +83,7 @@ function VectorPool:GetVector(x,y,z)
 
     self.nextPoolIndex = self.nextPoolIndex + 1;
 	if(self.nextPoolIndex > self.maxPoolSize) then
-		LOG.std(nil, "debug", "VectorPool", "maxPoolSize reached %d", self.maxPoolSize);
+		-- LOG.std(nil, "debug", "VectorPool", "maxPoolSize reached %d", self.maxPoolSize);
 		self.maxPoolIndex = self.maxPoolSize;
 		self.nextPoolIndex = 1;
 	end

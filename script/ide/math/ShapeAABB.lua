@@ -256,8 +256,16 @@ function ShapeAABB:GetMinExtent()
 	return math.min(math.min(self.mExtents[1], self.mExtents[2]), self.mExtents[3]);
 end
 
+function ShapeAABB:GetVolume()
+	return self.mExtents[1] * self.mExtents[2] * self.mExtents[3] * 8;
+end
+
 function ShapeAABB:GetCenter()
 	return self.mCenter:clone();
+end
+
+function ShapeAABB:GetCenterValues()
+	return self.mCenter[1], self.mCenter[2], self.mCenter[3];
 end
 
 function ShapeAABB:SetInvalid()

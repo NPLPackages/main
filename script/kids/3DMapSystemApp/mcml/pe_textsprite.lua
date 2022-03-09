@@ -57,6 +57,19 @@ pe_textsprite.Sprites = {
 		["E"] = {rect = "64 96 19 31", width = 19, height = 32},
 		["F"] = {rect = "96 96 19 31", width = 19, height = 32},
 	},
+
+	["VipLimitTime"] = {
+		["0"] = {rect = "0 0 28 25", width = 28, height = 25, image_path="Texture/Aries/Creator/keepwork/vip/vip_time/0_28x25_32bits.png"},
+		["1"] = {rect = "0 0 15 25", width = 15, height = 25, image_path="Texture/Aries/Creator/keepwork/vip/vip_time/1_15x25_32bits.png"},
+		["2"] = {rect = "0 0 28 25", width = 28, height = 25, image_path="Texture/Aries/Creator/keepwork/vip/vip_time/2_28x25_32bits.png"},
+		["3"] = {rect = "0 0 28 25", width = 28, height = 25, image_path="Texture/Aries/Creator/keepwork/vip/vip_time/3_28x25_32bits.png"},
+		["4"] = {rect = "0 0 27 25", width = 27, height = 25, image_path="Texture/Aries/Creator/keepwork/vip/vip_time/4_27x25_32bits.png"},
+		["5"] = {rect = "0 0 28 25", width = 28, height = 25, image_path="Texture/Aries/Creator/keepwork/vip/vip_time/5_28x25_32bits.png"},
+		["6"] = {rect = "0 0 28 25", width = 28, height = 25, image_path="Texture/Aries/Creator/keepwork/vip/vip_time/6_28x25_32bits.png"},
+		["7"] = {rect = "0 0 26 25", width = 26, height = 25, image_path="Texture/Aries/Creator/keepwork/vip/vip_time/7_26x25_32bits.png"},
+		["8"] = {rect = "0 0 28 25", width = 28, height = 25, image_path="Texture/Aries/Creator/keepwork/vip/vip_time/8_28x25_32bits.png"},
+		["9"] = {rect = "0 0 28 25", width = 28, height = 25, image_path="Texture/Aries/Creator/keepwork/vip/vip_time/9_28x25_32bits.png"},
+	},
 }
 Map3DSystem.mcml_controls.pe_textsprite = pe_textsprite;
 
@@ -99,6 +112,7 @@ function pe_textsprite.create(rootName, mcmlNode, bindingContext, _parent, left,
 	local instName = mcmlNode:GetInstanceName(rootName);
 	local color = css["color"] or "#FFFF00"
 	local value =  mcmlNode:GetAttributeWithCode("value","", true);
+	local click_through =  mcmlNode:GetBool("ClickThrough",nil);
 	local fontsize =  css["font-size"] or 31;
 	NPL.load("(gl)script/ide/TextSprite.lua");
 
@@ -121,6 +135,7 @@ function pe_textsprite.create(rootName, mcmlNode, bindingContext, _parent, left,
 		image = imagePath,
 		-- rect is "left top width height"
 		sprites = sprites,
+		click_through = click_through,
 	};
 	mcmlNode.control = ctl;
 	ctl:Show(true);

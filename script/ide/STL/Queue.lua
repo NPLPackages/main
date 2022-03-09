@@ -48,7 +48,6 @@ Queue.push = Queue.pushright;
 function Queue:popleft()
   local first = self.first
   if first > self.last then 
-	log("Queue is empty\n") 
 	return
   end
   local value = self[first]
@@ -62,7 +61,6 @@ Queue.pop = Queue.popleft;
 function Queue:popright()
   local last = self.last
   if self.first > last then 
-    log("Queue is empty\n") 
     return
   end
   local value = self[last]

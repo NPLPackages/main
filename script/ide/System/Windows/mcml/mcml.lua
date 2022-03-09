@@ -142,6 +142,8 @@ function mcml:LoadAllElements()
 	Elements.pe_progressbar:RegisterAs("pe:progressbar", "progressbar");
 	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_iframe.lua");
 	Elements.pe_iframe:RegisterAs("iframe");
+	NPL.load("(gl)script/ide/System/Windows/mcml/Elements/pe_markdown.lua");
+    Elements.pe_markdown:RegisterAs("pe:markdown");
 	-- TODO: add all system defined page element here
 end
 

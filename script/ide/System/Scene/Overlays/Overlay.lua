@@ -56,6 +56,7 @@ NPL.load("(gl)script/ide/math/Matrix4.lua");
 NPL.load("(gl)script/ide/math/vector.lua");
 local vector3d = commonlib.gettable("mathlib.vector3d");
 local Matrix4 = commonlib.gettable("mathlib.Matrix4");
+local Cameras = commonlib.gettable("System.Scene.Cameras");
 local OverlayPicking = commonlib.gettable("System.Scene.Overlays.OverlayPicking");
 local type = type;
 
@@ -342,7 +343,7 @@ function Overlay:CalculateWorldMatrix(mWorld, bUseRenderOffset)
 				local x, y, z = w:GetPosition();
 				mWorld:offsetTrans(x or 0, y or 0, z or 0);
 				if(bUseRenderOffset) then
-					local orgin = ParaCamera.GetAttributeObject():GetField("RenderOrigin", {0,0,0});
+					local orgin = Cameras:GetCurrent():GetRenderOrigin();
 					mWorld:offsetTrans(-orgin[1], -orgin[2], -orgin[3]);
 				end
 				w = nil;

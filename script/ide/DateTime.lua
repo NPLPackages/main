@@ -487,6 +487,16 @@ function timehelp.GetWeeHoursTimeStamp(time)
     
     return day_time_stamp
 end
+
+-- 根据时间戳获取是周几
+function timehelp.GetWeekDay(time_stamp)
+    time_stamp = time_stamp or os.time()
+    local weekNum = os.date("*t",time_stamp).wday  -1
+    if weekNum == 0 then
+        weekNum = 7
+    end
+    return weekNum
+end
 ----------------------------------------
 -- date time range
 ----------------------------------------

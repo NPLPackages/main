@@ -1477,7 +1477,7 @@ function pe_img.create(rootName,mcmlNode, bindingContext, _parent, left, top, wi
 	local tooltip; 
 	tooltip = mcmlNode:GetAttributeWithCode("bindtooltip");
 	if(tooltip and tooltip ~= "")then
-		CommonCtrl.TooltipHelper.BindObjTooltip(_this.id, tooltip, mcmlNode:GetNumber("tooltip_offset_x"), mcmlNode:GetNumber("tooltip_offset_y"), mcmlNode:GetNumber("show_width"),mcmlNode:GetNumber("show_height"),mcmlNode:GetNumber("show_duration"), nil, nil, nil, mcmlNode:GetBool("is_lock_position"), mcmlNode:GetBool("use_mouse_offset"), mcmlNode:GetNumber("screen_padding_bottom"));
+		CommonCtrl.TooltipHelper.BindObjTooltip(_this.id, tooltip, mcmlNode:GetNumber("tooltip_offset_x"), mcmlNode:GetNumber("tooltip_offset_y"), mcmlNode:GetNumber("show_width"),mcmlNode:GetNumber("show_height"),mcmlNode:GetNumber("show_duration"), mcmlNode:GetBool("enable_tooltip_hover"), nil, mcmlNode:GetBool("is_tool_tip_click_enabled"), mcmlNode:GetBool("is_lock_position"), mcmlNode:GetBool("use_mouse_offset"), mcmlNode:GetNumber("screen_padding_bottom"));
 	else
 		tooltip = mcmlNode:GetAttributeWithCode("tooltip",nil,true);
 		if(tooltip) then
