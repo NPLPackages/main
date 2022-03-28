@@ -39,7 +39,7 @@ end
 
 -- get the low level API audio source object. It will try to create one if not before. 
 function AudioSource:GetSource()
-	if(self.file ~= "" and (not self.source or not self.source:IsValid())) then
+	if((self.file or "") ~= "" and (not self.source or not self.source:IsValid())) then
 		local source = ParaAudio.CreateGet(self.name, self.file, self.stream);
 		self.source = source;
 		if(self.mindistance) then

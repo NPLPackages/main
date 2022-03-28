@@ -99,6 +99,7 @@ _guihelper.MessageBoxButtons = {
 	OKCancel_CustomLabel = 8,
 	OKCancel_CustomLabel_Highlight_Right = 9,
 	OK_CustomLabel = 10,
+	OKCancel_CustomLabel_Gray_All = 11,
 };
 
 -- Specifies identifiers to indicate the return value of a dialog box. 

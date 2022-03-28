@@ -31,7 +31,7 @@ local CmdParser = commonlib.gettable("System.Util.CmdParser");
 
 -- return integer or float, cmd_text_remain
 function CmdParser.ParseInt(cmd_text)
-	local value, cmd_text_remain = cmd_text:match("^%s*(%-?[%d%.]+)%s*(.*)$");
+	local value, cmd_text_remain = cmd_text:match("^%s*(%S+)%s*(.*)$");
 	if(value) then
 		value = tonumber(value);
 		if(value) then

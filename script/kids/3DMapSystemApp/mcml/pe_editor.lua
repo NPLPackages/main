@@ -1549,14 +1549,14 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 		if(spacing) then
 			_this.spacing = spacing;
 		end
-
+		
 		if(mcmlNode:GetString("onkeyup")) then
 			_this:SetScript("onkeyup", pe_editor_text.onkeyup, mcmlNode, instName, bindingContext, name);
 		end
 		if(mcmlNode:GetString("onmodify") or mcmlNode:GetString("onchange") or uiname) then
 			_this:SetScript("onmodify", pe_editor_text.onmodify, mcmlNode, instName, bindingContext, name);
 		end
-		if(mcmlNode:GetString("onactivate")) then
+		if(mcmlNode:GetString("onactivate") or uiname) then
 			_this:SetScript("onactivate", pe_editor_text.onactivate, mcmlNode, instName, bindingContext, name);
 		end
 		if(mcmlNode:GetString("onfocusin")) then
@@ -1603,8 +1603,10 @@ function pe_editor_text.onactivate(uiobj, mcmlNode, instName, bindingContext, na
 		return
 	end
 	local onactivate = mcmlNode:GetString("onactivate") or "";
-	-- the callback function format is function(name, mcmlNode) end
-	Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, onactivate, name, mcmlNode,uiobj);
+	if(onactivate and onactivate~="") then
+		-- the callback function format is function(name, mcmlNode) end
+		Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, onactivate, name, mcmlNode,uiobj);
+	end
 end
 
 function pe_editor_text.onfocusin(uiobj, mcmlNode, instName, bindingContext, name)
