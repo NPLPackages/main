@@ -8,7 +8,7 @@ use the lib:
 ------------------------------------------------------------
 NPL.load("(gl)script/ide/System/Windows/Screen.lua");
 local Screen = commonlib.gettable("System.Windows.Screen");
-echo({Screen:GetWidth(), Screen:GetHeight()})
+echo({Screen:GetWidth(), Screen:GetHeight(), Screen:GetUIScaling()})
 Screen:ChangeUIDesignResolution(1280, 720)
 Screen:RestoreUIDesignResolution()
 ------------------------------------------------------------
@@ -45,6 +45,7 @@ end
 function Screen:OnSizeChange(width, height)
 	if(self.last_width ~= width or self.last_height~=height) then
 		self.last_width, self.last_height = width, height;
+		self:GetUIScaling(true);
 		self:sizeChanged(width, height);
 	end
 end
@@ -89,13 +90,19 @@ function Screen:GetDesignUIResolution()
 end
 
 function Screen:GetWindowSolution()
-	local frame_size = ParaEngine.GetAttributeObject():GetField("WindowResolution", {960, 560});
+	local frame_size;
+	if System.os.GetPlatform()=="win32" then
+		frame_size = ParaEngine.GetAttributeObject():GetField("VisibleSize")
+	end
+	if frame_size==nil then
+		frame_size = ParaEngine.GetAttributeObject():GetField("WindowResolution", {1280, 720});
+	end
 	local frame_width = frame_size[1];
 	local frame_height = frame_size[2];
 
 	if (frame_height == 0) then
 		-- in case "WindowResolution" API is not supported, such as on mac platform, we will use UI resolution instead.  
-		local scaling = self:GetUIScaling();
+		local scaling = self:GetUIScaling(true);
 		frame_width = math.floor(Screen:GetWidth() * scaling[1] + 0.5);
 		frame_height = math.floor(Screen:GetHeight() * scaling[2] + 0.5);
 	end
@@ -106,13 +113,13 @@ end
 -- get unscaled screen resolution. 
 -- @NOTE: This function only return creation window size, which is pretty buggy. 
 function Screen:GetScreenSolution()
-	local frame_size = ParaEngine.GetAttributeObject():GetField("ScreenResolution", {960, 560});
+	local frame_size = ParaEngine.GetAttributeObject():GetField("ScreenResolution", {1280, 720});
 	local frame_width = frame_size[1];
 	local frame_height = frame_size[2];
 
 	if (frame_height == 0) then
 		-- in case "ScreenResolution" API is not supported, such as on mac platform, we will use UI resolution instead.  
-		local scaling = self:GetUIScaling();
+		local scaling = self:GetUIScaling(true);
 		frame_width = math.floor(Screen:GetWidth() * scaling[1] + 0.5);
 		frame_height = math.floor(Screen:GetHeight() * scaling[2] + 0.5);
 	end
@@ -161,7 +168,7 @@ function Screen:AutoAdjustUIScalingImp()
 		width = math.max(minWidth, width);
 		height = math.max(minHeight, height);
 
-		local scaleWidth, scaleHeight = self:GetUIScale();
+		local scaleWidth, scaleHeight = self:GetUIScale(true);
 		local curScreenWidth, curScreenHeight = Screen:GetWidth(), Screen:GetHeight();
 		local frame_width = scaleWidth * curScreenWidth;
 		local frame_height = scaleHeight * curScreenHeight;
@@ -209,6 +216,16 @@ function Screen:PopDesignResolution()
 	end
 end
 
+function Screen:GetTopDesignResolution()
+	if #designRes>0 then
+		local res = designRes[#designRes]
+		local width, height = res[1], res[2]
+		return width, height
+	else
+		return self:GetWindowSolution()
+	end
+end
+
 function Screen:ScheduleUIResolutionUpdate(delayTime, callbackFunc)
 	self:Disconnect("sizeChanged", self, self.AutoAdjustUIScalingImp);
 	self.mytimer = self.mytimer or commonlib.Timer:new({callbackFunc = function(timer)
@@ -235,6 +252,9 @@ function Screen:ChangeUIDesignResolution(width, height, callbackFunc)
 	self:ScheduleUIResolutionUpdate(nil, callbackFunc)
 end
 
+
+local ui_scaling
+
 -- @param scalingX: default to 1
 -- @param scalingY: default to scalingX
 function Screen:SetUIScale(scalingX, scalingY)
@@ -242,21 +262,28 @@ function Screen:SetUIScale(scalingX, scalingY)
 	scalingY = scalingY or scalingX
 
 	LOG.std(nil, "info", "Screen", "set UIScale to %f, %f", scalingX, scalingY);
-	ParaUI.GetUIObject("root"):SetField("UIScale", {scalingX, scalingY});
+	ui_scaling = ui_scaling or {};
+	ui_scaling[1], ui_scaling[2] = scalingX, scalingY;
+	ParaUI.GetUIObject("root"):SetField("UIScale", ui_scaling);
 end
 
 -- return scaleX, scaleY
-function Screen:GetUIScale()
-	local scaling = self:GetUIScaling()
+function Screen:GetUIScale(bForceUpdate)
+	local scaling = self:GetUIScaling(bForceUpdate)
 	return scaling[1], scaling[2]
 end
 
-
-local scaling = {1,1}
-
 -- return {scaleX, scaleY}
-function Screen:GetUIScaling()
-	return self:GetGUIRoot():GetField("UIScale", scaling)
+function Screen:GetUIScaling(bForceUpdate)
+	if(not ui_scaling) then
+		ui_scaling = {1, 1}
+		bForceUpdate = true;
+	end
+	if(bForceUpdate) then
+		return self:GetGUIRoot():GetField("UIScale", ui_scaling)
+	else
+		return ui_scaling;
+	end
 end
 
 

@@ -475,7 +475,15 @@ function timehelp.GetTimeStampByDateTime(date_time, is_get_server_time)
 	-- local time_zone= ((b.hour - a.hour) * 3600 + (b.min - a.min) * 60)/3600
 	
     local year, month, day, hour, min, sec = date_time:match("^(%d+)%D(%d+)%D(%d+)%D(%d+)%D(%d+)%D(%d+)") 
+	if tonumber(year) >= 3000 then
+		year = 2500
+	end
+	
     local time_stamp = os.time({day=tonumber(day), month=tonumber(month), year=tonumber(year), hour=tonumber(hour) + 8, min=tonumber(min), sec=tonumber(sec)})
+	if not time_stamp then
+		--时间戳的过期时间是2038
+		time_stamp = os.time({day=tonumber(day), month=tonumber(month), year=tonumber(2037), hour=tonumber(hour) + 8, min=tonumber(min), sec=tonumber(sec)})
+	end
     return time_stamp
 end
 

@@ -1,0 +1,105 @@
+<template style="height: 30px; width: 120px; display: inline-block;">
+    <input ref="input" style="width: 100%; height: 100%;" v-bind:placeholder="placeholder" readonly=true onfocus=onfocus onblur=onblur onchange=onchange></input>
+    <div v-if="isShowListBox" class="listitems">
+        <div v-for="option in SelectOptions" class="listitem" onmousedown=clickOption(option)>{{option.label or option.value}}</div>
+    </div>
+</template>
+
+<script type="text/lua">
+    local OptionsAttrValue = GetAttrValue("options", {});
+    local isFilter = GetAttrValue("filter", false, "boolean");
+    local inputValue = "";
+
+    SelectOptions = OptionsAttrValue;
+    placeholder = GetAttrValue("placeholder", "");
+    isShowListBox = false;
+    
+    function onfocus()
+        isShowListBox = true;
+    end
+    
+    function onblur()
+        isShowListBox = false;
+        select();
+    end
+    
+    function GetOptions(options, filterStr)
+        if (not filterStr or filterStr == "") then return options end
+    
+        local list = {};
+        for _, option in ipairs(options) do
+            if (string.sub(option.label, 1, #filterStr) == filterStr) then
+                table.insert(list, #list + 1, option);
+            end
+        end
+        return list;
+    end
+    
+    function onchange(val)
+        if (not isFilter) then return end
+        SelectOptions = GetOptions(OptionsAttrValue, val);
+    end
+    
+    function clickOption(option)
+        GetEvent():Accept();
+        local inputEl = GetRef("input");
+        inputEl:SetAttrValue("value", option.label or option.value);
+        select(option);
+        isShowListBox = false;
+    end
+    
+    function select(selected)
+        local inputEl = GetRef("input");
+        local value = inputEl:GetValue();
+        if (not selected) then
+            selected = {label = value, value = value};
+            for _, option in ipairs(SelectOptions) do
+                if (option.label == selected.label) then 
+                    selected = option;
+                    break;
+                end
+            end
+        end
+        local onselect = GetAttrValue("onselect", nil, "function");
+        if (type(onselect) == "function") then onselect(selected) end
+    end
+    
+    -- 组件解析完成
+    function OnReady()
+        GetRef("input"):SetAttrValue("value", tostring(inputValue))
+    end
+    
+    -- 数据发送更新
+    function OnAttrValueChange(attrName)
+        if (attrName == "options") then 
+            OptionsAttrValue = GetAttrValue("options", {});
+            SelectOptions = OptionsAttrValue;
+        elseif (attrName == "value") then
+            local value = GetAttrValue("value");
+            if (not value) then  
+                value = SelectOptions[1] or {};
+            end
+            inputValue = type(value) == "table" and (value.value or "") or value;
+            if (GetRef("input")) then
+                local curValue = GetRef("input"):GetValue();
+                if (inputValue ~= curValue) then GetRef("input"):SetAttrValue("value", tostring(inputValue)) end
+            end
+        end
+    end
+</script>
+
+<style>
+.listitems {
+    position: absolute;
+    top: 34px;
+    left: 0px;
+    max-height: 130px;
+    width: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    background-color: #ffffff;
+}
+.listitem {
+    padding: 2px 4px;
+}
+</style>

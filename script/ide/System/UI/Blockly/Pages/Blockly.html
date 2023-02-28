@@ -1,0 +1,104 @@
+<template class="container">
+    <div class="header-container">
+        <div class="title">图块编程</div>
+        <div style="display: flex;">
+            <div onclick=ClickBlockly class="text">图块</div>
+            <div onclick=ClickCode class="text">代码</div>
+            <div onclick=ClickExec class="text">运行</div>
+            <div onclick=ClickSave class="text">保存</div>
+            <div onclick=ClickFileManager class="text">文件管理器</div>
+        </div>
+        <div onclick=CloseWindow class="btn" style="width: 22px; height: 22px; background: url(Texture/Aries/Creator/keepwork/ggs/dialog/guanbi_22X22_32bits.png#0 0 22 22);"></div>
+    </div>
+    <Blockly v-show="tab == 'blockly'" ref="blockly" class="tab-item" v-bind:ToolBoxXmlText="ToolBoxXmlText"></Blockly>
+    <div v-show="tab == 'code'" class="tab-item text-code">{{code}}</div>
+    <div v-show="tab == 'exec'" class="tab-item text-code">{{out}}</div>
+</template>
+
+<script type="text/lua">
+RegisterComponent("WindowTitleBar", "%vue%/Components/WindowTitleBar.html");
+
+local FileManager = NPL.load("script/ide/System/UI/Blockly/Pages/FileManager.lua", IsDevEnv);
+local Sandbox = NPL.load("script/ide/System/UI/Blockly/Sandbox/Sandbox.lua", IsDevEnv);
+
+local BlocklyEl = nil;
+local BroadcastHelper = commonlib.gettable("CommonCtrl.BroadcastHelper");
+
+tab = "blockly";
+code = "";
+out = "";
+
+-- 组件解析完成
+function OnReady()
+    BlocklyEl = GetRef("blockly");
+    FileManager:SetBlockly(BlocklyEl);
+    FileManager:EditDefaultFile();
+end
+
+function ClickBlockly()
+    tab = "blockly";
+end
+
+function ClickCode()
+    local rawcode, prettycode = BlocklyEl:GetCode();
+    code = prettycode;
+    tab = "code";
+    <!-- print(rawcode);
+    print(prettycode) -->
+end
+
+function ClickExec()
+    tab = "exec";
+    local rawcode, prettycode = BlocklyEl:GetCode();
+    out = Sandbox:ExecCode(rawcode);
+end
+
+function ClickSave()
+    local xmlNodeText = BlocklyEl:SaveToXmlNodeText();
+    if (FileManager:Save(xmlNodeText)) then
+        BroadcastHelper.PushLabel({id="Blockly", label = "保存成功", max_duration=3000, color = "0 255 0", font_size=18, bold=true, shadow=true,});
+    else
+        BroadcastHelper.PushLabel({id="Blockly", label = "无法保存当前文档", max_duration=3000, color = "255 0 0", font_size=18, bold=true, shadow=true,});
+    end
+
+    <!-- print(xmlNodeText); -->
+end
+
+function ClickFileManager()
+    FileManager:Show(BlocklyEl)
+end
+</script>
+
+<style>
+.container {
+    height: 100%; 
+    width: 100%; 
+    display: flex;
+    flex-direction: column;
+    padding: 2px;
+    background: url(Texture/Aries/Creator/keepwork/Window/dakuang_32bits.png#0 0 440 93:378 43 33 44);
+}
+
+.header-container {
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    color: #ffffff;
+    height: 37px;
+    width: 100%;
+    font-size: 16px;
+    padding: 0px 20px;
+}
+
+.tab-item {
+    width: 100%; 
+    flex: 1;
+}
+
+.text-code {
+    white-space: pre;
+    font-size: 16px;
+    padding: 16px;
+    overflow-y: auto;
+}
+</style>

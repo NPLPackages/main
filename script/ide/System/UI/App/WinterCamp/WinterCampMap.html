@@ -1,0 +1,147 @@
+
+<template class="container">
+    <div onclick=CloseWindow style="position: absolute; right: 16px; top: 16px; background:url(Texture/Aries/Creator/keepwork/ggs/dialog/guanbi_22X22_32bits.png#0 0 22 22); width:30px; height:30px;"></div>
+    <div style="position: absolute; left: 40px; top: 120px; width: 240px; height: 420px; font-size:24px; font-weight: bold; color: #ffffff; line-height: 30px;">
+        <div onclick="GoPlace(1)" style="margin-bottom: 8px; display: flex; width: 100%; height: 30px;">
+            <div style="margin-top: 6px; width: 17px; height: 19px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/map/point_17x19_32bits.png#0 0 17 19);"></div>
+            <div style="margin-left: 10px;">课程学习广场</div>
+        </div>
+        <div onclick="GoPlace(2)" style="margin-bottom: 8px; display: flex; width: 100%; height: 30px;">
+            <div style="margin-top: 6px; width: 17px; height: 19px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/map/point_17x19_32bits.png#0 0 17 19);"></div>
+            <div style="margin-left: 10px;">射箭运动场</div>
+        </div>
+        <div onclick="GoPlace(3)" style="margin-bottom: 8px; display: flex; width: 100%; height: 30px;">
+            <div style="margin-top: 6px; width: 17px; height: 19px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/map/point_17x19_32bits.png#0 0 17 19);"></div>
+            <div style="margin-left: 10px;">跨栏运动场</div>
+        </div>
+        <div onclick="GoPlace(4)" style="margin-bottom: 8px; display: flex; width: 100%; height: 30px;">
+            <div style="margin-top: 6px; width: 17px; height: 19px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/map/point_17x19_32bits.png#0 0 17 19);"></div>
+            <div style="margin-left: 10px;">短道竞技体验区</div>
+        </div>
+        <div onclick="GoPlace(5)" style="margin-bottom: 8px; display: flex; width: 100%; height: 30px;">
+            <div style="margin-top: 6px; width: 17px; height: 19px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/map/point_17x19_32bits.png#0 0 17 19);"></div>
+            <div style="margin-left: 10px;">记忆比拼体验区</div>
+        </div>
+        <div onclick="GoPlace(6)" style="margin-bottom: 8px; display: flex; width: 100%; height: 30px;">
+            <div style="margin-top: 6px; width: 17px; height: 19px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/map/point_17x19_32bits.png#0 0 17 19);"></div>
+            <div style="margin-left: 10px;">环保广场</div>
+        </div>
+        <div onclick="GoPlace(7)" style="margin-bottom: 8px; display: flex; width: 100%; height: 30px;">
+            <div style="margin-top: 6px; width: 17px; height: 19px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/map/point_17x19_32bits.png#0 0 17 19);"></div>
+            <div style="margin-left: 10px;">国家体育馆</div>
+        </div>
+        <div onclick="GoPlace(8)" style="margin-bottom: 8px; display: flex; width: 100%; height: 30px;">
+            <div style="margin-top: 6px; width: 17px; height: 19px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/map/point_17x19_32bits.png#0 0 17 19);"></div>
+            <div style="margin-left: 10px;">水立方</div>
+        </div>
+        <div onclick="GoPlace(9)" style="margin-bottom: 8px; display: flex; width: 100%; height: 30px;">
+            <div style="margin-top: 6px; width: 17px; height: 19px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/map/point_17x19_32bits.png#0 0 17 19);"></div>
+            <div style="margin-left: 10px;">鸟巢</div>
+        </div>
+        <div onclick="GoPlace(10)" style="margin-bottom: 8px; display: flex; width: 100%; height: 30px;">
+            <div style="margin-top: 6px; width: 17px; height: 19px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/map/point_17x19_32bits.png#0 0 17 19);"></div>
+            <div style="margin-left: 10px;">雪上长城</div>
+        </div>
+        <div onclick="GoPlace(11)" style="margin-bottom: 8px; display: flex; width: 100%; height: 30px;">
+            <div style="margin-top: 6px; width: 17px; height: 19px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/map/point_17x19_32bits.png#0 0 17 19);"></div>
+            <div style="margin-left: 10px;">民俗观光街</div>
+        </div>
+    </div>
+    <div style="position: absolute; left: 310px; top: 120px; width: 660px; height: 400px;">
+        <div onclick="GoPlace(1)" class="place" style="left: 160px; top: 130px;">
+            <div class="place-tip">{{places[1].title}}</div>
+        </div>
+        <div onclick="GoPlace(2)" class="place" style="left: 345px; top: 155px;">
+            <div class="place-tip">{{places[2].title}}</div>
+        </div>
+        <div onclick="GoPlace(3)" class="place" style="left: 430px; top: 160px;">
+            <div class="place-tip">{{places[3].title}}</div>
+        </div>
+        <div onclick="GoPlace(4)" class="place" style="left: 320px; top: 150px;">
+            <div class="place-tip">{{places[4].title}}</div>
+        </div>
+        <div onclick="GoPlace(5)" class="place" style="left: 520px; top: 180px;">
+            <div class="place-tip">{{places[5].title}}</div>
+        </div>
+        <div onclick="GoPlace(6)" class="place" style="left: 590px; top: 260px;">
+            <div class="place-tip">{{places[6].title}}</div>
+        </div>
+        <div onclick="GoPlace(7)" class="place" style="left: 300px; top: 160px;">
+            <div class="place-tip">{{places[7].title}}</div>
+        </div>
+        <div onclick="GoPlace(8)" class="place" style="left: 200px; top: 180px;">
+            <div class="place-tip">{{places[8].title}}</div>
+        </div>
+        <div onclick="GoPlace(9)" class="place" style="left: 320px; top: 190px;">
+            <div class="place-tip">{{places[9].title}}</div>
+        </div>
+        <div onclick="GoPlace(10)" class="place" style="left: 460px; top: 125px;">
+            <div class="place-tip">{{places[10].title}}</div>
+        </div>
+        <div onclick="GoPlace(11)" class="place" style="left: 160px; top: 300px;">
+            <div class="place-tip">{{places[11].title}}</div>
+        </div>
+    </div>
+
+</template>
+
+<script type="text/lua">
+
+places = {
+    [1] = {title = "课程学习广场", pos = {18160,12,19391}},
+    [2] = {title = "射箭运动场", pos = {18316,12,19314}},
+    [3] = {title = "跨栏运动场", pos = {18315,12,19142}},
+    [4] = {title = "短道竞技体验区", pos = {18383,12,19350}},
+    [5] = {title = "记忆比拼体验区", pos = {18343,12,18980}},
+    [6] = {title = "环保广场", pos = {18174,12,18994}},
+    [7] = {title = "国家体育馆", pos = {18216,12,19206}},
+    [8] = {title = "水立方", pos = {18144,13,19220}},
+    [9] = {title = "鸟巢", pos = {18173,12,19170}},
+    [10] = {title = "雪上长城", pos = {18527,89,19254}},
+    [11] = {title = "民俗观光街", pos = {18025,12,19117}},
+};
+
+function GoPlace(index)
+    local pos = places[index].pos;
+    cmd(string.format("/goto %s %s %s", pos[1], pos[2], pos[3]));
+    CloseWindow();
+end
+
+</script>
+
+<style>
+.container {
+    width: 100%;
+    height: 100%;
+    background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/map/map_1024x600_32bits.png#0 0 1024 600);
+}
+
+.place {
+    position: absolute; 
+    left: 0px; 
+    top: 0px; 
+    width: 17px; 
+    height: 19px; 
+    background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/map/point_17x19_32bits.png#0 0 17 19);
+}
+
+.place-tip {
+    visibility: hidden;
+    width: 200px;
+    height: 30px;
+    line-height: 30px;
+    position: absolute;
+    top: -30px;
+    left: -100px;
+    text-align: center;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: bold;
+    background-color: rgb(159,204,255);
+    border-radius: 8px;
+}
+
+.place:hover .place-tip {
+    visibility: visible;
+}
+</style>

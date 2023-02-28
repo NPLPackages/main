@@ -1,0 +1,57 @@
+<template class="container">
+    <div class="title">{{title}}</div>
+    <div class="fields-title">
+        <div v-for="field in fields" class="field field-title">{{field.title}}</div>
+    </div>
+    <div style="width: 100%; height: 300px; overflow-y: auto;">
+        <div v-for="item in data" class="fields fields-content">
+            <div v-for="field in fields" class="field">{{item[field.key]}}</div>
+        </div>
+    </div>
+</template>
+
+<script type="text/lua">
+title = _G.title or "排行榜"
+data = _G.data or {{name = "张三", score = 1}, {name = "李四", score = 2}, {name = "王五", score = 3}, {name = "赵六", score = 4}}
+fields = _G.fields or {{title = "玩家", key = "name"}, {title = "分数", key = "score"}}
+</script>
+
+<style scoped=true>
+.container {
+    width: 100%;
+    height: 100%;
+    background: url(@/assets/commonmask.png);
+}
+.title {
+    height: 40px;
+    line-height: 40px;
+    font-size: 26px;
+    text-align: center;
+    color: #ff0000;
+}
+.fields-title {
+    display: flex;
+    color: #ffffff;
+}
+.field-title {
+    font-size: 22px;
+}
+.field {
+    width: 100px;
+    font-size: 20px;
+    text-align: center;
+}
+.fields {
+    display: flex;
+    color: #ffffff;
+}
+.fields-content:nth-child(1) {
+    color: #ff0000;
+}
+.fields-content:nth-child(2) {
+    color: #ffff00;
+}
+.fields-content:nth-child(3) {
+    color: #00ffff;
+}
+</style>

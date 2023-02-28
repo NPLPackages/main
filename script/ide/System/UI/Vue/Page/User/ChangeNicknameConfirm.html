@@ -1,0 +1,33 @@
+<template style="height: 242px; width: 500px; background: url(Texture/Aries/Creator/keepwork/Window/dakuang_32bits.png#0 0 440 93:378 43 33 44);">
+    <div style="height: 43px;">
+        <div onclick=Close style="float: right; background:url(Texture/Aries/Creator/keepwork/ggs/dialog/guanbi_22X22_32bits.png#0 0 22 22); width:22px; height:22px; margin-right: 20px; margin-top: 10px;"></div>
+    </div>
+    <div style="margin-top: 40px; text-align: center; font-size: 20px; base-font-size: 20px; color: #101010;">修改昵称将消耗 10 个知识豆, 请确认是否修改</div>
+    <div style="margin-top: 60px;">
+        <div onclick=clickConfirm style="display: inline-block; text-align: center; line-height: 58px; margin-left:55px; width:178px; height:58px; font-size: 24px; base-font-size: 24px; color: #000000;background: url(Texture/Aries/Creator/keepwork/Window/button/btn_huangse_32bits.png#0 0 38 64:16 16 16 16);">修改</div>
+        <div onclick=clickCancel style="display: inline-block; text-align: center; line-height: 58px; margin-left:30px; width:178px; height:58px; font-size: 24px; base-font-size: 24px; color: #000000;background: url(Texture/Aries/Creator/keepwork/Window/button/btn_huise_32bits.png#0 0 38 64:16 16 16 16);">取消</div>
+    </div>
+</template>
+
+<script type="text/lua">
+function Close() 
+    CloseWindow();
+end
+
+function clickConfirm()
+    Close();
+    if (type(Confirm) == "function") then
+        Confirm();
+    end
+end
+
+function clickCancel()
+    Close();
+
+    if (type(Cancel) == "function") then
+        Cancel();
+    end
+end
+
+
+</script>

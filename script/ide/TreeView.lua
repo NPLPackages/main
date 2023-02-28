@@ -123,6 +123,7 @@ local TreeView = commonlib.inherit(nil, commonlib.createtable("CommonCtrl.TreeVi
 	-- a mapping from node path to existing line control container index, the total number of mapping here does not exceed CacheSize
 	NodeUIContainers = {},
 	AllowOverflowScroll = false,
+	onmousewheel = nil,
 }));
 
 -- constructor
@@ -135,6 +136,15 @@ function TreeView:ctor()
 	CommonCtrl.AddControl(self.name, self);
 end
 
+
+function TreeView.GetControlByUIName(uiname)
+	if(TreeView.uinames and uiname) then
+		local name = TreeView.uinames[uiname]
+		if(name) then
+			return CommonCtrl.GetControl(name)
+		end
+	end
+end
 
 --@param bShow: boolean to show or hide. if nil, it will toggle current setting. 
 --@param bDoNotUpdate: Most the time, this is nil. If true, it will not update the treeview; this usually happens when people wants to perform some sort and then call Update manually. 
@@ -151,8 +161,10 @@ function TreeView:Show(bShow, bDoNotUpdate, bShowLastElement)
 	--+++++++++++++++++++++++++++++++++++
 	local bUpdated;
 	_this=ParaUI.GetUIObject(self.name);
-
+	
 	if(self.uiname) then
+		TreeView.uinames = TreeView.uinames or {}
+		TreeView.uinames[self.uiname] = self.name;
 		self.mainName = self.uiname;
 	else
 		self.mainName = "main";
@@ -568,6 +580,20 @@ function TreeView:GetNodeByPath(path)
 	return node;
 end
 
+function TreeView:FindNodeByUIName(uiname)
+	local node = self.RootNode;
+	if(node) then
+		return node:FindNodeByUIName(uiname)
+	end
+end
+
+function TreeView:FindVisibleNodeByUIName(uiname)
+	local node = self.RootNode;
+	if(node) then
+		return node:FindVisibleNodeByUIName(uiname)
+	end
+end
+
 -- public: whether to draw the root node. Default to false
 function TreeView:ShowRootNode(bShow)
 	if(bShow) then
@@ -595,22 +621,34 @@ end
 -- private: called whenever the mouse wheel is detected in each TreeNode container
 function TreeView.OnTreeViewMouseWheel(sCtrlName)
 	local self = CommonCtrl.GetControl(sCtrlName);
-	if(self==nil)then
+
+	if (self == nil) then
 		log("error getting TreeView instance "..sCtrlName.."\r\n");
 		return;
 	end
+
 	local _parent = ParaUI.GetUIObject(self.name);
-	if(not _parent:IsValid()) then
+
+	if (not _parent:IsValid()) then
 		commonlib.applog("error getting Tree View parent");
-		return
+		return;
 	end
-	
+
 	local tmp = _parent:GetChild("VScrollBar");
-	if(tmp:IsValid()) then
+
+	if (tmp:IsValid()) then
 		tmp.value = tmp.value-mouse_wheel*self.VerticalScrollBarStep;
-		
+
 		self.ClientY = tmp.value;
 		self:RefreshUI();
+
+		if (TreeView.__onuievent__) then
+			TreeView.__onuievent__(self, "onmousewheel", mouse_wheel)
+		end
+	end
+
+	if (self.onmousewheel and type(self.onmousewheel) == "string") then
+		loadstring(self.onmousewheel)();
 	end
 end
 
@@ -667,6 +705,9 @@ function TreeView.OnToggleNode(sCtrlName, nodePath, bForceSelect)
 			node:OnClickNode();
 		end
 		node.TreeView:Update(nil, node);
+		if(TreeView.__onuievent__) then
+			TreeView.__onuievent__(self, "OnToggleNode", node)
+		end
 	end
 end
 
@@ -682,6 +723,9 @@ function TreeView.OnClickNode(sCtrlName, nodePath)
 	if(node ~= nil) then
 		-- call the event handler if any
 		node:OnClickNode();
+		if(TreeView.__onuievent__) then
+			TreeView.__onuievent__(self, "OnClickNode", node)
+		end
 	end
 end
 -- default node renderer: it display a clickable check box for expandable node, followed by node text

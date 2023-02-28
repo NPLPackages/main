@@ -1,0 +1,89 @@
+<template class="container">
+    <div style="width:100%; height: 100%;" onmousedown=OnMouseDown onmousemove=OnMouseMove onmouseup=OnMouseUp>
+        <WindowTitleBar title="测试"></WindowTitleBar>
+    </div>
+</template>
+
+<script type="text/lua">
+RegisterComponent("WindowTitleBar", "%vue%/Components/WindowTitleBar.html");
+
+local isMouseDown = false;
+local mousePressTimer = nil;  -- 鼠标按下定时器
+local tracks = {
+    {minX = 1, minY = 1, maxX = 3, maxY = 3},
+    {minX = 1, minY = 1, maxX = 3, maxY = 3},
+    {minX = 1, minY = 1, maxX = 3, maxY = 3},
+}
+
+-- 是否在指定轨迹内
+local function IsInnerTrack(x, y)
+    for _, track in ipairs(tracks) do
+        if (x < track.minX or x > track.maxX or y < track.minY or y > track.maxY) then return false end
+    end
+    return true;
+end
+
+-- 组件解析完成
+function OnReady()
+end
+
+-- 鼠标按下事件回调
+function OnMouseDown(event)
+    isMouseDown = true;
+    
+    -- 长按事件处理
+    mousePressTimer = SetTimeout(function() 
+        -- 长按后的逻辑处理 TODO
+        print("长按 500 ms");
+    end, 500); -- 500 毫秒后执行回调函数
+
+    local screenX, screenY = event.x, event.y;
+    print(string.format("鼠标的坐标值为 X = %s, Y = %s", screenX, screenY));
+end
+
+-- 鼠标移动事件回调
+function OnMouseMove(event)
+    -- 鼠标没有按下直接返回
+    if (not isMouseDown) then return end
+
+    -- 鼠标方向处理
+    
+    local x, y = event.x, event.y;
+
+    -- 不在指定轨迹内, 则重新开始
+    if (not IsInnerTrack(x, y)) then 
+        isMouseDown = false;
+        return;
+    end
+
+    -- 也记录之前移动点和按下, 根据坐标识别抽象方向
+end
+
+-- 鼠标抬起事件回调
+function OnMouseUp(event)
+    isMouseDown = false;
+    -- 结束长按定时器
+    ClearTimeout(mousePressTimer)
+end
+
+</script>
+
+<style>
+.container {
+    height: 100%; 
+    width: 100%; 
+    padding: 0px 2px 2px 2px;
+    border: 1px solid #ffffff;
+}
+</style>
+
+<!--  
+local Page = NPL.load("Mod/GeneralGameServerMod/UI/Page.lua", true);
+Page.ShowVueTestPage(nil, {
+    url = "%vue%/Example/Mouse.html", 
+    alignment = "_ml",
+    height= "60%",
+    width = "50%",
+    x = 200,
+});
+-->

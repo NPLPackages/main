@@ -1,0 +1,68 @@
+
+<template class="container">
+    <div style="position: absolute; left: 0px; right: 0px; top: 0px; bottom: 0px;">
+        <Blockly ref="blockly" 
+            v-bind:language="Language or 'SystemNplBlock'" 
+            style="width: 100%; height: 100%;" 
+            onchange=OnBlocklyChange
+            v-bind:OnGenerateBlockCodeBefore="OnGenerateBlockCodeBefore" 
+            v-bind:OnGenerateBlockCodeAfter="OnGenerateBlockCodeAfter" 
+            v-bind:ToolBoxXmlText="ToolBoxXmlText"></Blockly>
+    </div>
+</template>
+
+<script type="text/lua">
+RegisterComponent("WindowTitleBar", "%vue%/Components/WindowTitleBar.html");
+local BlocklyEl = nil;
+
+-- 组件解析完成
+function OnReady()
+    BlocklyEl = GetRef("blockly");
+
+    _G.GetCode = function()
+        local rawcode, prettycode = BlocklyEl:GetCode();
+        return string.gsub(prettycode, "\t", "    ");
+    end
+
+    _G.GetXml = function()
+        local xmlNodeText = BlocklyEl:SaveToXmlNodeText();
+        return xmlNodeText;
+    end
+
+    _G.SetRunBlockId = function(blockid)
+        BlocklyEl:SetRunBlockId(blockid);
+        <!-- if (blockid == 0) then
+            _G.PopRunBlockId();
+        else
+            _G.PushRunBlockId(blockid);
+        end -->
+    end
+    _G.PushRunBlockId = function(blockid)
+        if (not BlocklyEl) then return end 
+        BlocklyEl:SetRunBlockId(BlocklyEl:PushRunBlockId(blockid));
+    end
+    _G.PopRunBlockId = function() 
+        if (not BlocklyEl) then return end 
+        BlocklyEl:SetRunBlockId(BlocklyEl:PopRunBlockId());
+    end
+    BlocklyEl:SetReadOnly((ReadOnly == true or ReadOnly == "true"))
+    BlocklyEl:LoadFromXmlNodeText(_G.xmltext);
+end
+
+function OnBlocklyChange()
+    if (type(_G.OnChange) == "function") then
+        _G.OnChange();
+    end
+end
+
+</script>
+
+<style>
+.container {
+    height: 100%; 
+    width: 100%; 
+    padding: 0px 2px 2px 2px;
+    background-color: #cccccc;
+    /* background: url(Texture/Aries/Creator/keepwork/Window/dakuang_32bits.png#0 0 440 93:378 43 33 44); */
+}
+</style>

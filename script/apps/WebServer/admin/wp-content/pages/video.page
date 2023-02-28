@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html style="font-size:20px;">
+<?npl
+--[[
+Title:
+Author: ygy
+Date: 2022/12/12
+Desc: 
+- ajax/video?src=filename
+]]
+
+local RedSummerCampPPtPage = NPL.load("(gl)script/apps/Aries/Creator/Game/Tasks/RedSummerCamp/RedSummerCampPPtPage.lua");
+local Config = NPL.load('(gl)Mod/WorldShare/config/Config.lua')
+
+if (not is_admin()) then
+    exit("access denied");
+end
+
+local function GetVideoSrcWebm()
+    local NplBrowserManager = NPL.load("(gl)script/apps/Aries/Creator/Game/NplBrowser/NplBrowserManager.lua");	
+    local video_src = NplBrowserManager:GetVideoUrlSrc("webm");
+
+    return video_src or "";
+end
+
+local function GetVideoSrcMp4()
+    local NplBrowserManager = NPL.load("(gl)script/apps/Aries/Creator/Game/NplBrowser/NplBrowserManager.lua");	
+    local video_src = NplBrowserManager:GetVideoUrlSrc("mp4");
+
+    return video_src or "";
+end
+
+local function GetEnv()
+    for key, item in pairs(Config.env) do
+        if key == Config.defaultEnv then
+            return Config.defaultEnv;
+        end
+    end
+
+	return Config.env.ONLINE;
+end
+
+local function GetApi()
+    return Config.eventGatewayList[GetEnv()] or "";
+end
+
+if (is_ajax()) then
+    add_action('wp_ajax_getvideostate', function()	
+        local RedSummerCampPPtPage = NPL.load("(gl)script/apps/Aries/Creator/Game/Tasks/RedSummerCamp/RedSummerCampPPtPage.lua");
+        RedSummerCampPPtPage.isLoadVideo = true;
+
+        local NplBrowserManager = NPL.load("(gl)script/apps/Aries/Creator/Game/NplBrowser/NplBrowserManager.lua");
+        local is_paused = NplBrowserManager:GetVideoPaused();
+
+        if is_paused ~= nil then
+            wp_send_json({is_pause_video = is_paused});
+            NplBrowserManager:ClearVideoPausedState();
+        else
+            wp_send_json({is_pause_video = 'undefined'});
+        end
+    end)
+
+    add_action('wp_ajax_tofullscreen', function()
+        local RedSummerCampPPtPage = NPL.load("(gl)script/apps/Aries/Creator/Game/Tasks/RedSummerCamp/RedSummerCampPPtPage.lua");
+        RedSummerCampPPtPage.ToVideoFullScreen();
+    end)
+
+    add_action('wp_ajax_cancelfullscreen', function()
+        local RedSummerCampPPtPage = NPL.load("(gl)script/apps/Aries/Creator/Game/Tasks/RedSummerCamp/RedSummerCampPPtPage.lua");
+        RedSummerCampPPtPage.CancelVideoFullScreen();
+    end)
+    return;
+end
+?>
+<?npl
+wp_enqueue_script("angular", "/wp-includes/js/angular/angular.min.js");
+wp_enqueue_script("ngStorage", "/wp-includes/js/angular/ngStorage.js");
+wp_enqueue_script("ngSanitize", "/wp-includes/js/angular/angular-sanitize.min.js");
+?>
+<script>
+    angular.module('Video', ['ngStorage', 'ngSanitize'])
+    .config(['$localStorageProvider', function ($localStorageProvider) {
+        $localStorageProvider.setKeyPrefix('NPLVideo');
+    }])
+    .controller('VideoController', function ($scope, $http, $interval, $localStorage) {
+        $scope.isModified = false;
+
+
+
+        var pollTimer;
+        $scope.startTimer = function () {
+            if (angular.isDefined(pollTimer)) return;
+            var videoEl=document.getElementById("myPlayer");
+            var hasFullScreen = false;
+            var IsVideoPaused = true;
+            pollTimer = $interval(function () {
+                $.get("ajax/video", { action: "getvideostate"}, function(data){
+                    if(data.is_pause_video != 'undefined'){
+                        if(data.is_pause_video){
+                            videoEl.pause();
+                        }
+                        else{
+                            var videoE2 = document.getElementById("myPlayer");
+                            videoE2.play();
+                        }
+                    }	
+                });
+                
+                if(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement){
+                    
+                    if(!hasFullScreen){
+                        hasFullScreen=true;
+                        //$.post("/ajax/video?action=tofullscreen")
+                    }
+                }
+                else{
+                    if(hasFullScreen){
+                        hasFullScreen=false;
+                        //$.post("/ajax/video?action=cancelfullscreen")
+                    }
+                }
+                //videoEl.play();
+            }, 500);
+        }
+
+        $scope.stopTimer = function () {
+            if (angular.isDefined(pollTimer)) {
+                $interval.cancel(pollTimer);
+                pollTimer = undefined;
+            }
+        }
+
+        $scope.startTimer()
+
+        if(typeof Page != 'undefined'){
+            Page.ShowSideBar(false);
+        }  
+    });
+
+    window.api = "<?npl echo(GetApi()); ?>";
+</script>
+<body>
+    <style>
+        .fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            overflow: auto;
+            z-index: 10;
+            background-color:#e3e3e4;
+        }
+    </style>
+    <div ng-app="Video"
+        ng-controller="VideoController as Video"
+        class="fullscreen">
+        <div style="margin-top:0px;
+                    margin-left:0px">
+            <video id="myPlayer"
+                style="width:100%;
+                       height:100%;
+                       object-fit:fill"
+                controls
+                controlslist="nodownload nofullscreen noremoteplayback"
+                autoplay
+                playsinline
+                disablePictureInPicture>
+                <source src="<?npl echo(GetVideoSrcWebm()) ?>"
+                        type="video/webm">
+                <source src="<?npl echo(GetVideoSrcMp4()) ?>"
+                        type="video/mp4">
+            </video>
+        </div>
+        <div id="currentUserId" style="display:none;"><?npl echo(Mod.WorldShare.Store:Get("user/userId")); ?></div>
+        <div id="CurCourseName" style="display:none;"><?npl echo(RedSummerCampPPtPage.CurCourseName); ?></div>
+        <div id="SelectLessonIndex" style="display:none;"><?npl echo(RedSummerCampPPtPage.SelectLessonIndex); ?></div>
+    </div>
+    <div id="result"></div>
+    <hr/>
+    <script src="/wp-includes/js/videoProcessEvent.js"></script>
+</body>
+</html>

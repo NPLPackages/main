@@ -1,0 +1,64 @@
+<template style="width: 100%; height: 100%;">
+    <div style="width: 100%; height: 40px; display: flex; align-items: center; margin-left: 3px;">
+        <div onclick="SelectTab('works')" v-bind:class="GetClass('works')">
+            <div class="tab-content" style="background: url(Texture/Aries/Creator/keepwork/ggs/user/renwuqiehuan/zi_zuoping_31X16_32bits.png#0 0 31 16);"></div>
+        </div>
+        <div v-if="isAuthUser" onclick="SelectTab('skin')" v-bind:class="GetClass('skin')">
+            <div class="tab-content" style="background: url(Texture/Aries/Creator/keepwork/ggs/user/renwuqiehuan/zi_waiguang_31X16_32bits.png#0 0 31 16);"></div>
+        </div>
+        <div onclick="SelectTab('honor')" v-bind:class="GetClass('honor')">
+            <div class="tab-content" style="background: url(Texture/Aries/Creator/keepwork/ggs/user/renwuqiehuan/zi_rongyu_31X16_32bits.png#0 0 31 16);"></div>
+        </div>
+    </div>
+
+    <div style="height: 540px;">
+        <WorksList id="works" type="works" v-show="CharacterTabIndex == 'works'"></WorksList>
+        <AvatarTab v-show="CharacterTabIndex == 'skin'"></AvatarTab>
+        <Honor v-show="CharacterTabIndex == 'honor'"></Honor>
+    </div>
+</template>
+
+<script type="text/lua">
+RegisterComponent("AvatarTab", "%vue%/Page/User/AvatarTab.html");
+RegisterComponent("Honor", "%vue%/Page/User/Honor.html");
+RegisterComponent("WorksList", "%vue%/Page/User/WorksList.html");
+
+local GlobalScope = GetGlobalScope();
+
+function SelectTab(index)
+    GlobalScope:Set("CharacterTabIndex", index);
+end
+
+function GetClass(index)
+    local tabindex = GlobalScope:Get("CharacterTabIndex");
+    return index .. " tab center " .. (tabindex == index and "active" or "");
+end
+
+GetGlobalScope():Watch("isAuthUser", function(val)
+    SelectTab(HeaderTabIndex or (val and "skin" or "works"));
+end)
+</script>
+
+<style scoped=true>
+.tab {
+    width: 90px; 
+    height: 34px;
+    margin-right: 10px; 
+    display: inline-flex;
+    background-color: rgb(77,77,77);
+    background:url(Texture/Aries/Creator/keepwork/ggs/user/renwuqiehuan/btn_qiehuan_32X16_32bits.png#0 0 32 16:14 14 14 1);
+}
+
+.tab-content {
+    margin-top:4px; 
+    width: 31px; 
+    height: 16px; 
+}
+
+.active {
+    background-color: #ffffff;
+}
+.active>.tab-content {
+    background-color: rgb(24,24,24);
+}
+</style>

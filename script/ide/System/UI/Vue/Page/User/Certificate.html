@@ -1,0 +1,57 @@
+<template style="width: 100%; height: 100%; background-color: #00000080;">
+    <div onmouseup=clickToContinue  class="back-btn button"></div>
+    <div class="center" style="width: 100%; height: 100%;">
+        <div v-bind:style="GetCertStyle()">
+            <div style="background:url(Texture/Aries/Creator/keepwork/ggs/user/zhang_77X77_32bits.png#0 0 77 77);position:absolute;top:250px;left:352px;height:77;width:77;"></div>
+            <div v-if="datetime" style="position:absolute;top:291px;left:352px;height:30;width:200;">{{datetime}}</div>
+            <div style="position:absolute;top:154px;left:40px;height:80;width:128; text-align: center;">{{username}}</div>
+        </div>
+        <div v-if="description ~= nil" style="font-size: 14px; width: 400px; height: 368px; margin-left: 12px; padding: 8px; color: #ffffff;">
+            {{description}}
+        </div>
+    </div>
+    <div v-if="worldId ~= nil" onclick=ClickOpenWorld style="position: absolute; right: 80px; bottom: 80px; width: 152px; height: 52px; font-weight: bold; font-size:20px; background-color: #ffffffd0; background: url(Texture/Aries/Creator/keepwork/SchoolCenter/btn_qiehuan_32X32_32bits.png#0 0 32 32:8 8 8 8);" class="button">进入世界</div>
+
+</template>
+
+<script type="text/lua">
+
+function GetCertStyle()
+    return string.format("background:url(%s#0 0 512 368);top:1;left:10;height:368;width:512;", certurl); 
+end 
+
+function clickToContinue()
+    GetEvent():Accept();
+    CloseWindow();
+end
+
+function ClickOpenWorld()
+    GameLogic.RunCommand(string.format("/loadworld -s -force %d", worldId));    
+end
+</script>
+
+<style scoped=true>
+.back-btn {
+    position: absolute;
+    top: 80px;
+    left: 80px;
+    width: 38px;
+    height: 33px;
+    background: url(Texture/Aries/Creator/keepwork/ggs/user/fanhui_38X33_32bits.png#0 0 38 33);
+}
+
+.button {
+    background-color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.button:hover {
+    background-color: #cccccc;
+}
+</style>
+<!-- 
+    Texture/Aries/Creator/keepwork/ggs/user/1_512X368_32bits.png#0 0 512 368
+    Texture/Aries/Creator/keepwork/ggs/user/zhang_77X77_32bits.png#0 0 77 77
+ -->

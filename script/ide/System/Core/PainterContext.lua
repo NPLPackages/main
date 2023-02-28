@@ -320,6 +320,7 @@ function painter:IsUseWorldMatrix()
 end
 
 -- similar to glMatrixMode() in opengl. 
+-- one usually needs to call self:LoadCurrentMatrix() immediately after this function.
 -- @param nMode:  0 is world, 1 is view, 2 is projection. default to 0. 
 function painter:SetMatrixMode(nMode)
 	ParaPainter.SetField("MatrixMode", nMode);

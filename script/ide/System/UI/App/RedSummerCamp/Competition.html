@@ -1,0 +1,152 @@
+<template style="width: 100%; height: 100%;">
+    <div style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;" onclick="CloseWindow">
+        <div class="container" onclick="StopPropagation">
+            <div>
+                <div class="title">神通杯{{areas[area]}}地区集训营</div>
+            </div>
+            <div>
+                <image class="qrcode" v-bind:src="qrcode"></image>
+            </div>
+            <div style="color: #ffffff; font-size: 18px; font-weight: bold; text-align: center; margin-top: 20px;">微信扫一扫, 进入集训营</div>
+        
+            <div style="padding: 20px 30px;">
+                <div class="areas">
+                    <div class="area" onclick="ClickArea('all')">
+                        <div class="radius-bg">
+                            <div v-if="area == 'all'" class="radius"></div>
+                        </div>
+                        <div class="radius-text">全国</div>
+                    </div>
+                    <div class="area" onclick="ClickArea('guangdong')">
+                        <div class="radius-bg">
+                            <div v-if="area == 'guangdong'" class="radius"></div>
+                        </div>
+                        <div class="radius-text">广东</div>
+                    </div>
+                    <div class="area" onclick="ClickArea('guangxi')">
+                        <div class="radius-bg">
+                            <div v-if="area == 'guangxi'" class="radius"></div>
+                        </div>
+                        <div class="radius-text">广西</div>
+                    </div>
+                </div>
+                <div class="areas">
+                    <div class="area" onclick="ClickArea('zhejiang')">
+                        <div class="radius-bg">
+                            <div v-if="area == 'zhejiang'" class="radius"></div>
+                        </div>
+                        <div class="radius-text">浙江</div>
+                    </div>
+                    <div class="area" onclick="ClickArea('hunan')">
+                        <div class="radius-bg">
+                            <div v-if="area == 'hunan'" class="radius"></div>
+                        </div>
+                        <div class="radius-text">湖南</div>
+                    </div>
+                    <div class="area" onclick="ClickArea('jiangxi')">
+                        <div class="radius-bg">
+                            <div v-if="area == 'jiangxi'" class="radius"></div>
+                        </div>
+                        <div class="radius-text">江西</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script type="text/lua">
+local Keepwork = NPL.load("(gl)script/apps/Aries/Creator/HttpAPI/Keepwork.lua");
+
+areaIds = {
+    all = 1,
+    guangdong = 2139,
+    hunan = 2002,
+    jiangxi = 1447,
+    zhejiang = 1131,
+    guangxi = 2279,
+}
+areas = {
+    all = "全国",
+    guangdong = "广东",
+    guangxi = "广西",
+    zhejiang = "浙江",
+    hunan = "湖南",
+    jiangxi = "江西",
+}
+area = "all"
+qrcode = "Texture/Aries/Creator/keepwork/RedSummerCamp/shentongbei/qrcode/all.png"
+
+function ClickArea(area_name)
+    area = area_name
+    qrcode = string.format("Texture/Aries/Creator/keepwork/RedSummerCamp/shentongbei/qrcode/%s_32bits.png#0 0 396 396", area);
+end
+
+local region = "all";
+
+Keepwork:GetSchoolRegionId(function(schoolRegionId)
+    for key, val in pairs(areaIds) do 
+        if (val == schoolRegionId) then
+            region = key;
+            break;
+        end
+    end
+    ClickArea(region);
+end)
+</script>
+
+<style scoped=true>
+.container {
+    width: 412;
+    height: 530;
+    background: url(Texture/Aries/Creator/keepwork/RedSummerCamp/shentongbei/shentongbei_32bits.png#17 629 70 134:25 70 15 15);
+}
+
+.title {
+    font-size: 24px;
+    font-weight: bold;
+    color: #ffffff;
+    margin-top: 18px;
+    text-align: center;
+    height: 60px;
+}
+
+.qrcode {
+    margin-top: 30px;
+    margin-left: 86px;
+    width: 240px;
+    height: 240px;
+}
+
+.areas {
+    padding-left: 20px;
+    display: flex; 
+    justify-content: space-between;
+    align-items: center;
+}
+.area {
+    width: 100px;
+    height: 40px;
+}
+.radius-bg {
+    position: absolute;
+    top: 8px;
+    width: 22px;
+    height: 22px;
+    background: url(Texture/Aries/Creator/keepwork/RedSummerCamp/shentongbei/shentongbei_32bits.png#204 645 22 22);
+}
+.radius {
+    margin-top: 3px;
+    margin-left: 1px;
+    width: 20px;
+    height: 20px;
+    background: url(Texture/Aries/Creator/keepwork/RedSummerCamp/shentongbei/shentongbei_32bits.png#166 648 20 20);
+}
+.radius-text {
+    margin-left: 30px;
+    height: 40px;
+    line-height: 40px;
+    color: #181818;
+    font-size: 18px;
+}
+</style>

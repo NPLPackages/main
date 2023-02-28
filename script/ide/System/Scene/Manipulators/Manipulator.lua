@@ -51,6 +51,18 @@ Manipulator:Property({"yColor", "#0000ff"});
 Manipulator:Property({"zColor", "#00ff00"});
 Manipulator:Property({"textScale", 0.01});
 
+Manipulator:Property({"showXPlane", false, "IsShowXPlane", "SetShowXPlane", auto=true});
+Manipulator:Property({"showYPlane", false, "IsShowYPlane", "SetShowYPlane", auto=true});
+Manipulator:Property({"showZPlane", false, "IsShowZPlane", "SetShowZPlane", auto=true});
+Manipulator:Property({"planeSize", 10, "GetPlaneSize", "SetPlaneSize", auto=true});
+Manipulator:Property({"planeColor", 0x20ffffff, "GetPlaneColor", "SetPlaneColor", auto=true});
+Manipulator:Property({"planeGridColor", 0x20000000, "GetPlainLineColor", "SetPlainLineColor", auto=true});
+
+Manipulator:Property({"showGrid", false, "IsShowGrid", "SetShowGrid", auto=true});
+Manipulator:Property({"snapToGrid", false, "IsSnapToGrid", "SetSnapToGrid", auto=true});
+Manipulator:Property({"gridSize", 0.1, "GetGridSize", "SetGridSize", auto=true});
+Manipulator:Property({"gridOffset", {0,0,0}, "GetGridOffset", "SetGridOffset", auto=true});
+
 Manipulator:Signal("valueChanged", function() end);
 -- connect this to depedent node to support undo/redo operation. 
 Manipulator:Signal("modifyBegun");
@@ -321,5 +333,55 @@ function Manipulator:GetValue(name, defaultValue, bPreviousValue)
 	else
 		local field = self.valueFields:get(name);
 		return field.preValue;
+	end
+end
+
+
+function Manipulator:SnapToGrid(new_x, new_y, new_z)
+	local gridSize = self:GetGridSize();
+	local offset = self:GetGridOffset();
+	new_x = math.floor((new_x-offset[1])/gridSize + 0.5)*gridSize + offset[1];
+	new_y = math.floor((new_y-offset[2])/gridSize + 0.5)*gridSize + offset[2];
+	new_z = math.floor((new_z-offset[3])/gridSize + 0.5)*gridSize + offset[3];
+	return new_x, new_y, new_z;
+end
+
+-- one need to call painter:SetPen(self.pen); before this function
+function Manipulator:paintPlanes(painter)
+	if(self:IsPickingPass()) then
+		return
+	end
+	if(self:IsShowXPlane() or self:IsShowYPlane() or self:IsShowZPlane()) then
+		local size = math.floor(self:GetPlaneSize() / 2);
+		if(self.planeColor and self.planeColor~=0) then
+			painter:SetBrush(self.planeColor);
+			if(self:IsShowXPlane()) then
+				ShapesDrawer.DrawAABB(painter, 0, -size, -size, 0, size, size, true);
+			end
+			if(self:IsShowYPlane()) then
+				ShapesDrawer.DrawAABB(painter, -size, 0, -size, size, 0, size, true);
+			end
+			if(self:IsShowZPlane()) then
+				ShapesDrawer.DrawAABB(painter, -size, -size, 0, size, size, 0, true);
+			end
+		end
+		
+		if(self.planeGridColor and self.planeGridColor~=0) then
+			painter:SetBrush(self.planeGridColor);
+			for i=-size, size do
+				if(self:IsShowXPlane()) then
+					ShapesDrawer.DrawLine(painter, 0, i, -size, 0, i, size)
+					ShapesDrawer.DrawLine(painter, 0, -size, i, 0, size, i)
+				end
+				if(self:IsShowYPlane()) then
+					ShapesDrawer.DrawLine(painter, i, 0, -size, i, 0, size)
+					ShapesDrawer.DrawLine(painter, -size, 0, i, size, 0, i)
+				end
+				if(self:IsShowZPlane()) then
+					ShapesDrawer.DrawLine(painter, i, -size, 0, i, size, 0)
+					ShapesDrawer.DrawLine(painter, -size, i, 0, size, i, 0)
+				end
+			end
+		end
 	end
 end

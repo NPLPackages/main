@@ -1,0 +1,977 @@
+<template style="display: inline-block;">
+    <div onmousemove="onmousemove"
+         onmouseenter=onmouseenter
+         onmouseleave=onmouseleave
+         style="margin-top: 11px;
+                margin-left: 9px;
+                height:569px;
+                width: 339px;
+                background:url(Texture/Aries/Creator/keepwork/ggs/user/renwukuang_339X529_32bits.png#0 0 339 529:50 300 50 50);">
+        <div style="height: 298px;
+                    position: relative;">
+            <div style="margin-top: 4px;">
+                <div class="center">
+                    <div style="width: 334px;
+                                height: 50px;
+                                margin-top:10px;">
+                        <div style="float: left;
+                                    margin-left: 10px;
+                                    width: 50px;
+                                    height: 50px;
+                                    background:url(Texture/Aries/Creator/keepwork/Avatar/kuang_50X50_32bits.png#0 0 50 50);">
+                            <div style="margin-left: 6px;
+                                        margin-top:16px;
+                                        width:37px;
+                                        height: 18px;
+                                        background: url(Texture/Aries/Creator/keepwork/Avatar/10yanjing_37X18_32bits.png#0 0 37 18);"></div>
+                        </div>
+                        <div style="float: left;
+                                    margin-left: 212px;
+                                    width: 50px;
+                                    height: 50px;
+                                    background: url(Texture/Aries/Creator/keepwork/Avatar/kuang_50X50_32bits.png#0 0 50 50);">
+                            <div style="margin-left: 9px;
+                                        margin-top: 17px;
+                                        width: 32px;
+                                        height: 15px;
+                                        background: url(Texture/Aries/Creator/keepwork/Avatar/9zuiba_32X15_32bits.png#0 0 32 15);"></div>
+                        </div>
+                    </div>
+                    <div style="width: 334px;
+                                height: 50px;
+                                margin-top: 10px;">
+                        <div style="float: left;
+                                    margin-left: 10px;
+                                    width: 50px;
+                                    height: 50px;
+                                    background:url(Texture/Aries/Creator/keepwork/Avatar/kuang_50X50_32bits.png#0 0 50 50);">
+                            <div style="margin-left: 9px;
+                                        margin-top: 12px;
+                                        width: 32px;
+                                        height: 26px;
+                                        background:url(Texture/Aries/Creator/keepwork/Avatar/3yifu_32X26_32bits.png#0 0 32 26);"></div>
+                        </div>
+                        <div style="float: left;
+                                    margin-left: 212px;
+                                    width: 50px;
+                                    height: 50px;
+                                    background: url(Texture/Aries/Creator/keepwork/Avatar/kuang_50X50_32bits.png#0 0 50 50);">
+                            <div style="margin-left: 9px;
+                                        margin-top: 11px;
+                                        width: 31px;
+                                        height: 27px;
+                                        background: url(Texture/Aries/Creator/keepwork/Avatar/2kuzi_31X27_32bits.png#0 0 31 27);"></div>
+                        </div>
+                    </div>
+                    <div style="width: 334px;
+                                height: 50px;
+                                margin-top: 10px;">
+                        <div style="float: left;
+                                    margin-left: 10px;
+                                    width: 50px;
+                                    height: 50px;
+                                    background: url(Texture/Aries/Creator/keepwork/Avatar/kuang_50X50_32bits.png#0 0 50 50);">
+                            <div style="margin-left: 12px;
+                                        margin-top: 10px;
+                                        width: 30px;
+                                        height: 30px;
+                                        background:url(Texture/Aries/Creator/keepwork/Avatar/4beibu_30X30_32bits.png#0 0 30 30);"></div>
+                        </div>
+                        <div style="float:left;
+                                    margin-left:212px;
+                                    width:50px;
+                                    height:50px;
+                                    background:url(Texture/Aries/Creator/keepwork/Avatar/kuang_50X50_32bits.png#0 0 50 50);">
+                            <div style="margin-left:8px;
+                                        margin-top:7px;
+                                        width:33px;
+                                        height:35px;
+                                        background:url(Texture/Aries/Creator/keepwork/Avatar/8shouchi_33X35_32bits.png#0 0 33 35);"></div>
+                        </div>
+                    </div>
+                    <div style="width:334px;
+                                height:50px;
+                                margin-top:
+                                10px;">
+                        <div style="float:left;
+                                    margin-left:10px;
+                                    width:50px;
+                                    height:50px;
+                                    background:url(Texture/Aries/Creator/keepwork/Avatar/kuang_50X50_32bits.png#0 0 50 50);">
+                            <div style="margin-left:7px;
+                                        margin-top:13px;
+                                        width:36px;
+                                        height:24px;
+                                        background:url(Texture/Aries/Creator/keepwork/Avatar/6toushi_36X24_32bits.png#0 0 36 24);"></div>
+                        </div>
+                        <div style="float:left;
+                                    margin-left:212px;
+                                    width:50px;
+                                    height:50px;
+                                    background:url(Texture/Aries/Creator/keepwork/Avatar/kuang_50X50_32bits.png#0 0 50 50);">
+                            <div style="margin-left:8px;
+                                        margin-top:7px;
+                                        width:33px;
+                                        height:35px;
+                                        background:url(Texture/Aries/Creator/keepwork/Avatar/11zuoqi_36X35_32bits.png#0 0 36 35);"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top: -240px;">
+                <div class="center">
+                    <div style="width:334px;
+                                height:50px;
+                                margin-top:10px;">
+                        <!-- 眼睛 -->
+                        <div v-if="IsIconValid(1)"
+                             v-on:click="ClickIcon(1)"
+                             onmousemove="OnMouseMoveAvatarItem(1)"
+                             style="float:left;
+                                    margin-left:10px;
+                                    width:50px;
+                                    height:50px;
+                                    background:url(Texture/Aries/Creator/keepwork/Avatar/kuang2_50X50_32bits.png#0 0 50 50);">
+                            <div v-bind:style="IconStyle(1)"></div>
+                        </div>
+                        <div v-if="not IsIconValid(1)"
+                             style="float:left;
+                                    margin-left:10px;
+                                    width:50px;
+                                    height:50px;"></div>
+
+                        <!-- 嘴巴 -->
+                        <div v-if="IsIconValid(2)"
+                             v-on:click="ClickIcon(2)"
+                             onmousemove="OnMouseMoveAvatarItem(2)"
+                             style="float:left;
+                                    margin-left:212px;
+                                    width:50px;
+                                    height:50px;
+                                    background:url(Texture/Aries/Creator/keepwork/Avatar/kuang2_50X50_32bits.png#0 0 50 50);">
+                            <div v-bind:style="IconStyle(2)"></div>
+                        </div>
+                        <div v-if="not IsIconValid(2)"
+                             style="float:left;
+                                    margin-left:212px;
+                                    width:50px;
+                                    height:50px;"></div>
+                    </div>
+                    <div style="width: 334px;
+                                height: 50px;
+                                margin-top: 10px;">
+                        <!-- 衣服 -->
+                        <div v-if="IsIconValid(3)"
+                             v-on:click="ClickIcon(3)"
+                             onmousemove="OnMouseMoveAvatarItem(3)"
+                             style="float:left;
+                                    margin-left:10px;
+                                    width:50px;
+                                    height:50px;
+                                    background:url(Texture/Aries/Creator/keepwork/Avatar/kuang2_50X50_32bits.png#0 0 50 50);">
+                            <div v-bind:style="IconStyle(3)"></div>
+                        </div>
+                        <div v-if="not IsIconValid(3)"
+                             style="float:left;
+                                    margin-left:10px;
+                                    width:50px;
+                                    height:50px;">
+                        </div>
+                        <!-- 裤子 -->
+                        <div v-if="IsIconValid(4)"
+                             v-on:click="ClickIcon(4)"
+                             onmousemove="OnMouseMoveAvatarItem(4)"
+                             style="float:left;
+                                    margin-left:212px;
+                                    width:50px;
+                                    height:50px;
+                                    background:url(Texture/Aries/Creator/keepwork/Avatar/kuang2_50X50_32bits.png#0 0 50 50);">
+                            <div v-bind:style="IconStyle(4)"></div>
+                        </div>
+                        <div v-if="not IsIconValid(4)"
+                             style="float:left;
+                                    margin-left:212px;
+                                    width:50px;
+                                    height:50px;">
+                        </div>
+                    </div>
+                    <div style="width:334px;
+                                height:50px;
+                                margin-top:10px;">
+                        <!-- 背带 -->
+                        <div v-if="IsIconValid(5)"
+                             v-on:click="ClickIcon(5)"
+                             onmousemove="OnMouseMoveAvatarItem(5)"
+                             style="float:left;
+                                    margin-left:10px;
+                                    width:50px;
+                                    height:50px;
+                                    background:url(Texture/Aries/Creator/keepwork/Avatar/kuang2_50X50_32bits.png#0 0 50 50);">
+                            <div v-bind:style="IconStyle(5)"></div>
+                        </div>
+                        <div v-if="not IsIconValid(5)"
+                             style="float:left;
+                                    margin-left:10px;
+                                    width:50px;
+                                    height:50px;">
+                        </div>
+                        <!-- 手持 -->
+                        <div v-if="IsIconValid(6)"
+                             v-on:click="ClickIcon(6)"
+                             onmousemove="OnMouseMoveAvatarItem(6)"
+                             style="float:left;
+                                    margin-left:212px;
+                                    width:50px;
+                                    height:50px;
+                                    background:url(Texture/Aries/Creator/keepwork/Avatar/kuang2_50X50_32bits.png#0 0 50 50);">
+                            <div v-bind:style="IconStyle(6)"></div>
+                        </div>
+                        <div v-if="not IsIconValid(6)"
+                             style="float:left;
+                                    margin-left:212px;
+                                    width:50px;
+                                    height:50px;">
+                        </div>
+                    </div>
+                    <div style="width:334px;
+                                height:50px;
+                                margin-top:10px;">
+                        <!-- 头发 -->
+                        <div v-if="IsIconValid(7)"
+                             v-on:click="ClickIcon(7)"
+                             onmousemove="OnMouseMoveAvatarItem(7)"
+                             style="float:left;
+                                    margin-left:10px;
+                                    width:50px;
+                                    height:50px;
+                                    background:url(Texture/Aries/Creator/keepwork/Avatar/kuang2_50X50_32bits.png#0 0 50 50);">
+                            <div v-bind:style="IconStyle(7)"></div>
+                        </div>
+                        <div v-if="not IsIconValid(7)"
+                             style="float:left;
+                                    margin-left:10px;
+                                    width:50px;
+                                    height:50px;">
+                        </div>
+                        <!-- 坐骑 -->
+                        <div v-if="IsIconValid(8)"
+                             v-on:click="ClickIcon(8)"
+                             onmousemove="OnMouseMoveAvatarItem(8)"
+                             style="float:left;
+                                    margin-left:212px;
+                                    width:50px;
+                                    height:50px;
+                                    background:url(Texture/Aries/Creator/keepwork/Avatar/kuang2_50X50_32bits.png#0 0 50 50);">
+                            <div v-bind:style="IconStyle(8)"></div>
+                        </div>
+                        <div v-if="not IsIconValid(8)"
+                             style="float:left;
+                                    margin-left:212px;
+                                    width:50px;
+                                    height:50px;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+           <div style="margin-top: -230px;">
+                <div class="center"
+                     v-if="not isEditNickName">
+                    <div style="display: inline;">
+                        <div v-if="isCrown"
+                             tooltip="Paracraft 会员"
+                             style="margin-left:2px;
+                                    display: inline-block;
+                                    width:24px;
+                                    height:24px;
+                                    background:url(Texture/Aries/Creator/keepwork/UserInfo/crown_32bits.png#0 0 18 18)"></div>
+                        <div v-if="not isTeacher and isStudent"
+                             tooltip="合作机构vip学员"
+                             style="margin-left: 2px;
+                                    display: inline-block;
+                                    width: 24px;
+                                    height: 24px;
+                                    background: url(Texture/Aries/Creator/keepwork/UserInfo/V_32bits.png#0 0 18 18)"></div>
+                        <div v-if="isTeacher"
+                             tooltip="合作机构vip教师"
+                             style="margin-left: 2px;
+                                    display: inline-block;
+                                    width: 24px;
+                                    height: 24px;
+                                    background: url(Texture/Aries/Creator/keepwork/UserInfo/blue_v_32bits.png#0 0 18 18)"></div>
+                    </div>
+                    <div style="display: inline;
+                                margin-left: 5px;
+                                font-size: 18px;
+                                base-font-size: 18px;
+                                color: #ffffff;
+                                shadow-quality: 8;
+                                shadow-color:#000000;
+                                text-shadow:true;">{{GetNickName(nickname or username)}}</div>
+                    <div v-if="isAuthUser"
+                         v-on:click="ClickEditNickName"
+                         style="margin-left: 5px;
+                                display: inline-block;
+                                height: 24px;
+                                width: 24px;
+                                background:url(Texture/Aries/Creator/keepwork/ggs/user/btn_bianji_24X24_32bits.png#2 1 26 25);"></div>
+                    <Follow v-if="not isAuthUser and isLogin"
+                            v-bind:UserDetail="UserDetail"
+                            style="display: inline;
+                                   margin-left: 5px;
+                                   margin-top:-2px;"></Follow>
+                </div>
+                <div v-if="isEditNickName"
+                     class="center">
+                    <ChangeNickName v-bind:finish="OnEditNickNameFinish"
+                                    v-bind:userId="UserDetail.id"
+                                    v-bind:nickname="UserDetail.nickname"
+                                    style="display: inline;"></ChangeNickName>
+                </div>
+            </div>
+            <div class="center"
+                 style="margin-top: 0px;">
+                <div style="position: absolute;
+                            top: 20px;
+                            left: 70px;
+                            width: 200px;
+                            height: 200px;
+                            z-index: 10;">
+                    <canvas3d v-bind:assetfile="MainAsset"
+                              v-bind:skin="MainSkin"
+                              v-bind:scale="scale"
+                              miniscenegraphname="AvatarMyselfTabCharacter"
+                              style="margin-left: -30px;
+                                     margin-top: -20px;
+                                     width:256px;
+                                     height:256px;"
+                              IsInteractive="true"
+                              LookAtHeight=0.9
+                              CameraObjectDist=5
+                              RenderTargetSize=256></canvas3d>
+                </div>
+            </div>
+            <!-- <div v-if="isAuthUser" v-on:click="ClickPrevAsset" style="position: absolute; left: 70px; top: 160px; height:21px; width: 12px; background:url(Texture/Aries/Creator/keepwork/ggs/user/btn_qiehuanzuo_12X21_32bits.png#0 0 12 21);"></div> -->
+            <!-- <div v-if="isAuthUser" v-on:click="ClickNextAsset" style="position: absolute; left: 260px; top: 160px; height:21px; width: 12px; background:url(Texture/Aries/Creator/keepwork/ggs/user/btn_qiehuanyou_12X21_32bits.png#0 0 12 21);"></div> -->
+            <!-- <div v-on:click="ClickPrevRotate" style="position: absolute; left: 70px; top: 230px; height:35px; width: 40px; background:url(Texture/Aries/Creator/keepwork/ggs/user/btn_xuanzhuanzou_40X35_32bits.png#0 0 40 35);"></div> -->
+            <!-- <div v-on:click="ClickNextRotate" style="position: absolute; left: 230px; top: 230px; height:35px; width: 40px; background:url(Texture/Aries/Creator/keepwork/ggs/user/btn_xuanzhuanyou_40X35_32bits.png#0 0 40 35);"></div> -->
+            <div v-on:click="ClickPersonalPage"
+                 class="btn"
+                 style="position: absolute;
+                        left: 15px;
+                        bottom: 8px;
+                        height:38px;
+                        width: 40px;
+                        background:url(Texture/Aries/Creator/keepwork/ggs/user/btn_gerenwangzhan_38X38_32bits.png#0 0 40 38);"></div>
+            <div v-show="UserDetail.paraMini"
+                 onclick=ClickHomeBtn
+                 class="btn"
+                 style="position: absolute;
+                        left: 60px;
+                        bottom: 4px;
+                        height: 42px;
+                        width: 42px;
+                        background:url(Texture/Aries/Creator/keepwork/ggs/user/btn_jiayuan_42X42_32bits.png#0 0 42 42);"></div>
+            <div v-if="isAuthUser and not isRealName"
+                 v-on:click="ClickGoRealName"
+                 style="position: absolute;
+                        left: 120px;
+                        bottom: 6px;
+                        text-align: center;
+                        line-height: 24px;
+                        width:100px;
+                        height: 30px;
+                        font-size: 14px;
+                        base-font-size: 14px;
+                        color: #000000;
+                        background: url(Texture/Aries/Creator/keepwork/worldshare_32bits.png#673 198 38 64:12 10 12 15);">实名认证</div>
+            <div v-on:click="ClickSendMsgBtn"
+                 class="btn"
+                 style="position: absolute;
+                        right: 15px;
+                        bottom: 4px;
+                        height:48px;
+                        width: 44px;
+                        background: url(Texture/Aries/Creator/keepwork/ggs/user/btn_faxiaoxi_44X48_32bits.png#0 0 44 48);"></div>
+            <ScaleSlider v-if="isAuthUser"
+                         onscale="OnScale"
+                         style="position: absolute;
+                                left: 60px;
+                                top: 50px;"></ScaleSlider>
+        </div>
+        <div style="padding-left: 4px;
+                    width: 316px;
+                    height: 360px;
+                    margin-left: 11px;">
+            <div style="display: flex;
+                        margin-top: 20px;
+                        height: 38px;
+                        width: 310px;
+                        background-color: #c1c2c2;
+                        font-size: 14px;
+                        base-font-size: 14px;
+                        color: #313131;">
+                <div class="center"
+                     style="width: 154px;
+                            height: 100%;">
+                    <div style="display: inline;
+                                padding-right: 5px;">
+                        {{UserDetail.rank.follow or 0}}
+                    </div>
+                    <div style="display: inline;
+                                margin-top: 2px;
+                                width:34px;
+                                height: 16px;
+                                background: url(Texture/Aries/Creator/keepwork/ggs/user/zi_guangzhu_34X16_32bits.png#0 0 34 16);"></div>
+                </div>
+                <div style="display: inline;
+                            width: 1px;
+                            height: 100%;
+                            background: url(Texture/Aries/Creator/keepwork/ggs/user/fengexian_1X45_32bits.png#0 0 1 45);"></div>
+                <div class="center"
+                     style="width: 154px;
+                            height: 100%;">
+                    <div style="display: inline;
+                                padding-right: 5px;">
+                        {{UserDetail.rank.fans or 0}}
+                    </div>
+                    <div style="display: inline;
+                                margin-top: 2px;
+                                width: 34px;
+                                height: 15px;
+                                background: url(Texture/Aries/Creator/keepwork/ggs/user/zi_fensi_34X15_32bits.png#0 0 34 15);"></div>
+                </div>
+            </div>
+            <div style="padding-left: 10px;
+                        font-size: 14px;
+                        base-font-size: 14px;
+                        color: #323232;">
+                <div style="margin-top: 10px;
+                            height: 24px;">
+                    <div style="position: relative;
+                                width: 70px;
+                                height: 24px;
+                                display: inline;">
+                        <div style="position: absolute;
+                                    left: 0px;
+                                    top: 0px;
+                                    width: 70px;
+                                    height: 24px;
+                                    background: url(Texture/Aries/Creator/keepwork/ggs/user/wenzidi_70X24_32bits.png#0 0 70 24);"></div>
+                        <div style="position: absolute;
+                                    left: 18px;
+                                    top: 4px;
+                                    width: 34px;
+                                    height: 16px;
+                                    background: url(Texture/Aries/Creator/keepwork/ggs/user/zi_zhanghao_34X16_32bits.png#0 0 34 16);"></div>
+                    </div>
+                    <div style="display: inline;
+                                padding-left: 10px;
+                                width: 230px;
+                                height: 24px;
+                                line-height: 24px;">
+                        {{username}}
+                    </div>
+                </div>
+                <div style="margin-top: 16px;
+                            height: 24px;">
+                    <div style="position: relative;
+                                width: 70px;
+                                height: 24px;
+                                display: inline;">
+                        <div style="position: absolute;
+                                    left: 0px;
+                                    top: 0px;
+                                    display: inline;
+                                    width: 70px;
+                                    height: 24px;
+                                    background: url(Texture/Aries/Creator/keepwork/ggs/user/wenzidi_70X24_32bits.png#0 0 70 24);"></div>
+                        <div style="position: absolute;
+                                    left: 18px;
+                                    top: 4px;
+                                    display: inline;
+                                    width: 32px;
+                                    height: 15px;
+                                    background: url(Texture/Aries/Creator/keepwork/ggs/user/zi_shengri_32X15_32bits.png#0 0 32 15);"></div>
+                    </div>
+                    <div  style="display: inline;
+                                 padding-left: 10px;
+                                 width: 230px;
+                                 height: 24px;
+                                 line-height: 24px;">
+                        {{registerAt}}
+                    </div>
+                </div>
+                <div style="margin-top: 16px;
+                            height: 24px;">
+                    <div style="position: relative;
+                                width: 70px;
+                                height: 24px;
+                                display: inline;">
+                        <div style="position: absolute;
+                                    left: 0px;
+                                    top: 0px;
+                                    display: inline;
+                                    width: 70px;
+                                    height: 24px;
+                                    background: url(Texture/Aries/Creator/keepwork/ggs/user/wenzidi_70X24_32bits.png#0 0 70 24);"></div>
+                        <div style="position: absolute;
+                                    left: 18px;
+                                    top: 4px;
+                                    display: inline;
+                                    width: 34px;
+                                    height: 17px;
+                                    background: url(Texture/Aries/Creator/keepwork/ggs/user/zi_xuexiao_34X17_32bits.png#0 0 34 17);"></div>
+                    </div>
+                    <div v-if="schoolName ~= ''"
+                         onclick=ClickSchoolbtn
+                         style="max-width: 180px;
+                                display: inline;
+                                padding-left: 10px;
+                                width: 230px;
+                                height: 24px;
+                                line-height: 24px;
+                                color: rgb(60,158,220);">
+                        {{schoolName}}
+                    </div>
+                    <div v-if="isAuthUser and schoolName == ''"
+                         onclick=ClickSchoolEdit
+                         style="margin-top: -2px;
+                                display: inline-block;
+                                line-height: 29px;
+                                text-align: center;
+                                margin-left: 8px;
+                                width: 86px;
+                                height: 29px;
+                                background: url(Texture/Aries/Creator/keepwork/ggs/user/btn_confirm_16X16_32bits.png#0 0 16 16: 5 5 5 5);">加入学校</div>
+                    <div v-if="isAuthUser and schoolName ~= ''"
+                         onclick=ClickSchoolEdit
+                         style="display: inline;
+                                margin-left: 6px;
+                                width: 20px;
+                                height: 20px;
+                                background: url(Texture/Aries/Creator/keepwork/ggs/user/bianji_20X20_32bits.png#0 0 20 20);"></div>
+                </div>
+                <div v-if="schoolType ~= '大学'"
+                     style="margin-top: 16px; height: 24px;">
+                    <div style="position: relative;
+                                width: 70px;
+                                height: 24px;
+                                display: inline;">
+                        <div style="position: absolute;
+                                    left: 0px;
+                                    top: 0px;
+                                    display: inline;
+                                    width: 70px;
+                                    height: 24px;
+                                    background: url(Texture/Aries/Creator/keepwork/ggs/user/wenzidi_70X24_32bits.png#0 0 70 24);"></div>
+                        <div style="position: absolute;
+                                    left: 18px;
+                                    top: 4px;
+                                    display: inline;
+                                    width: 35px;
+                                    height: 17px;
+                                    background: url(Texture/Aries/Creator/keepwork/ggs/user/gerenziliao/banji_35X17_32bits.png#0 0 35 17);"></div>
+                    </div>
+                    <div v-if="not isAuthUser or className ~= ''"
+                         style="max-width: 180px;
+                                display: inline;
+                                padding-left:10px;
+                                width: 230px;
+                                height: 24px;
+                                line-height: 24px; ">
+                        {{className}}
+                    </div>
+                    <div v-if="isAuthUser and className == ''"
+                         onclick=ClickClassbtn
+                         style="margin-top: -2px;
+                                display: inline-block;
+                                line-height: 29px;
+                                text-align: center;
+                                margin-left: 8px;
+                                width: 86px;
+                                height: 29px;
+                                background: url(Texture/Aries/Creator/keepwork/ggs/user/btn_confirm_16X16_32bits.png#0 0 16 16: 5 5 5 5);">加入班级</div>
+                    <div v-if="isAuthUser and className ~= ''"
+                         onclick=ClickClassbtn
+                         style="display: inline;
+                                margin-left: 6px;
+                                width: 20px;
+                                height: 20px;
+                                background: url(Texture/Aries/Creator/keepwork/ggs/user/bianji_20X20_32bits.png#0 0 20 20);"></div>
+                </div>
+                <div v-if="isAuthUser"
+                     style="margin-top: 16px;
+                            height: 24px;">
+                    <div v-show="not isExitPrefectUserInfoItem and not isPrefectUserInfo"
+                         style="position: absolute;
+                                top: 30px;
+                                left: 50px;
+                                height: 50px;
+                                width: 192px;
+                                padding:20px 20px 0px;
+                                color: #ffffff;
+                                font-size: 12px;
+                                background: url(Texture/Aries/Creator/keepwork/ggs/user/gerenziliao/kuang_128X71_32bits.png#0 0 128 71:16 16 16 16);">完善个人资料可获得奖励哦</div>
+                    <div v-show="not isExitPrefectUserInfoItem and isPrefectUserInfo"
+                         style="position: absolute;
+                                top: 30px;
+                                left: -5px;
+                                height: 65px;
+                                width: 300px;
+                                padding: 20px 20px 0px;
+                                color: #ffffff;
+                                font-size: 12px;
+                                background: url(Texture/Aries/Creator/keepwork/ggs/user/gerenziliao/kuang_128X71_32bits.png#0 0 128 71:16 16 16 16);">恭喜你已完善全部资料，奖励请在“任务”中“完善个人资料任务”领取</div>
+                    <div class="center"
+                         onclick=ClickEditMoreBtn
+                         style="margin-top: -2px;
+                                margin-left: 78px;
+                                width: 130px;
+                                height: 28px;
+                                background: url(Texture/Aries/Creator/keepwork/ggs/user/btn_confirm_16X16_32bits.png#0 0 16 16: 5 5 5 5);">更多资料</div>
+                </div>
+            </div>
+        </div>
+        <div ref="avatarItem"
+             style="position:fixed;
+                    left: -100000px;
+                    top: -10000px;
+                    z-index: 10;
+                    width: 142px;
+                    height: 140px;">
+            <div v-if="currentHoverItemName ~= ''"
+                 style="display: inline-block;
+                        line-height: 38px;
+                        font-size: 12px;
+                        height: 38px;
+                        padding: 0px 12px;
+                        color: #ffffff;
+                        background: url(Texture/Aries/Creator/keepwork/Window/tooltip/tipbj_32bits.png:14 14 14 14);">{{currentHoverItemName}}</div>
+            
+            <!-- <AvatarItem id="test" v-bind:itemid="currentHoverItemId"></AvatarItem> -->
+        </div>
+    </div>    
+</template>
+
+<script type="text/lua">
+    NPL.load("(gl)script/apps/Aries/Creator/Game/Entity/EntityManager.lua");
+
+    RegisterComponent("ChangeNickName", "%vue%/Page/User/ChangeNickName.html");
+    RegisterComponent("Follow", "%vue%/Page/User/Follow.html");
+    RegisterComponent("ScaleSlider", "%vue%/Page/User/ScaleSlider.html");
+    RegisterComponent("AvatarItem", "%vue%/Page/User/AvatarItem.html");
+
+    local EntityManager = commonlib.gettable("MyCompany.Aries.Game.EntityManager");
+    local UniString = commonlib.gettable("System.Core.UniString");
+    local KeepWorkItemManager = NPL.load("(gl)script/apps/Aries/Creator/HttpAPI/KeepWorkItemManager.lua");
+    local KpUserTag = NPL.load("(gl)script/apps/Aries/Creator/Game/mcml/keepwork/KpUserTag.lua");
+    local RegisterModal = NPL.load("(gl)Mod/WorldShare/cellar/RegisterModal/RegisterModal.lua");
+    local Keepwork = NPL.load("(gl)script/apps/Aries/Creator/HttpAPI/Keepwork.lua");
+
+    local assets = {
+        "character/CC/02human/paperman/boy01.x",
+        "character/CC/02human/paperman/boy02.x",
+        "character/CC/02human/paperman/boy03.x",
+        "character/CC/02human/paperman/boy04.x",
+        "character/CC/02human/paperman/boy05.x",
+        "character/CC/02human/paperman/boy06.x",
+        "character/CC/02human/paperman/boy07.x",
+        "character/CC/02human/paperman/girl01.x",
+        "character/CC/02human/paperman/girl02.x",
+        "character/CC/02human/paperman/girl03.x",
+        "character/CC/02human/paperman/girl04.x",
+        "character/CC/02human/paperman/girl05.x",
+    }
+    local Grades = {"一年级", "二年级", "三年级", "四年级", "五年级", "六年级", "七年级", "八年级", "九年级", "高一", "高二", "高三", "往届学生", "教师"};
+
+    local curAssetIndex = 1;
+    local avatarItemEl = nil;
+    self.isEditNickName = false;
+    self.isNeedUpdateRegion = nil;
+    self.isShowUpdateRegionTip = true;
+    self.isExitPrefectUserInfoItem = Keepwork:IsExitPrefectUserInfoItem();
+    self.isPrefectUserInfo = Keepwork:IsPrefectUserInfo();
+    self.currentHoverItemId = 0;
+    self.currentHoverItemName = "";
+
+    function OnAttrValueChange(attrName, attrValue)
+        if (attrName == "UserDetail") then
+            OnReady();
+        end
+    end
+
+    local function GetGradeClassName(class)
+        if (not class or not class.grade) then return "" end 
+        local gradeNo = tonumber(class.grade);
+        gradeNo = math.max(gradeNo, 1);
+        gradeNo = math.min(#Grades, gradeNo);
+        class.grade = gradeNo;
+        return Grades[class.grade] .. (class.classNo and (class.classNo .. "班" or ""));
+    end 
+
+    function OnReady()
+        avatarItemEl = GetRef("avatarItem");
+
+        local region = UserDetail.region or {};
+        self.bean = tostring(UserDetail.bean or 0);
+        self.schoolName = UserDetail.school and UserDetail.school.name or "";
+        self.schoolType = UserDetail.school and UserDetail.school.type or "";
+        self.className = GetGradeClassName(UserDetail.class);
+        self.userId = UserDetail.id;
+        self.username = UserDetail.username;
+        self.nickname = MyCompany.Aries.Chat.BadWordFilter.FilterString(UserDetail.nickname);
+        self.isCrown = UserDetail.vip == 1;
+        self.isTeacher = UserDetail.tLevel == 1;
+        self.isStudent = UserDetail.student == 1;
+        self.isNeedUpdateRegion = region.hasChildren == 1 and true or false;
+        local fullname = UniString:new(region.displayName or region.fullname or "");
+        self.regionname = fullname:sub(1, 11):GetText() .. (fullname:length() > 11 and "..." or "");
+        self.isRealName = UserDetail.isRealname;
+        -- 格式化注册时间
+        local datetime = UserDetail.createdAt;
+        local year, month, day = commonlib.timehelp.GetYearMonthDayFromStr(datetime);
+        self.registerAt = tostring(year) .. "." .. tostring(month) .. "." .. tostring(day);
+
+        local extra = UserDetail.extra or {};
+        local player = GameLogic.GetPlayerController():GetPlayer();
+        extra.ParacraftPlayerEntityInfo = extra.ParacraftPlayerEntityInfo or {};
+        self.scale = extra.ParacraftPlayerEntityInfo.scale or (player and player:GetScaling()) or 1;
+    end
+
+    function ClickEditNickName()
+        self.isEditNickName = not self.isEditNickName;
+    end
+
+    function OnScale(scale)
+        self.scale = scale;
+    end
+
+    function ClickEditMoreBtn()
+        ShowWindow({
+            OnFinish = function()
+                self.isPrefectUserInfo = Keepwork:IsPrefectUserInfo();
+            end,
+        }, {
+            url = "%vue%/Page/User/MoreUserInfo.html",
+            draggable = false,
+        });
+    end 
+
+    function ClickClassbtn()
+        if (self.schoolName == "") then
+            ShowWindow({
+                text = "请先加入学校",
+            }, {
+                url = "%vue%/Page/User/MessageBox.html",
+                draggable = false,
+            });
+            return;
+        end
+        ShowWindow({
+            OnFinish = function(className)
+                self.className = className or "";
+                self.isPrefectUserInfo = Keepwork:IsPrefectUserInfo();
+            end
+        }, {
+            url = "%vue%/Page/User/EditClass.html",
+            draggable = false,
+        })
+    end 
+
+    function ClickSchoolEdit()
+        GameLogic.GetFilters():apply_filters('cellar.my_school.select_school', function ()
+            KeepWorkItemManager.LoadProfile(false, function()
+                local profile = KeepWorkItemManager.GetProfile();
+                UserDetail.school = profile.school;
+                self.schoolName = UserDetail.school and UserDetail.school.name or "";
+            end)
+        end);
+    end
+
+    function ClickGoRealName()
+        CloseWindow();
+        RegisterModal:ShowClassificationPage();
+    end
+
+    function OnEditNickNameFinish(nickname)
+        self.isEditNickName = false;
+        if (not nickname) then return end
+        UserDetail.nickname = nickname;
+        self.nickname = nickname;
+        local userinfo = KeepWorkItemManager.GetProfile();
+        userinfo.nickname = nickname;
+    end 
+
+    function ClickSchoolbtn()
+        local schoolParaWorld = UserDetail.schoolParaWorld;
+        if (not schoolParaWorld) then return end 
+        CloseWindow();
+        GameLogic.RunCommand(string.format("/loadworld %s", schoolParaWorld.projectId)); 
+    end 
+
+    function ClickHomeBtn()
+        local paramin = UserDetail.paraMini;
+        if (not paramin) then return end 
+        CloseWindow();
+        GameLogic.RunCommand(string.format("/loadworld %s", paramin.projectId)); 
+    end 
+
+    function ClickSendMsgBtn()
+        local FriendManager = NPL.load("(gl)script/apps/Aries/Creator/Game/Tasks/Friend/FriendManager.lua");
+        FriendManager.ChatWithFriend(UserDetail.id); 
+    end
+
+    -- 获取昵称
+    function GetNickName(text)
+        if type(text) ~= 'string' then return '' end
+        local utf8Text = UniString:new(text);
+        if _guihelper.GetTextWidth(text) > 112 then
+            return utf8Text:sub(1, 8).text .. '...'
+        else
+            return text
+        end
+    end
+
+    function ChangePlayerAsset(assetfile)
+        assetfile = EntityManager.PlayerAssetFile:GetValidAssetByString(assetfile);
+        local playerEntity = GameLogic.GetPlayerController():GetPlayer();
+        if(assetfile and assetfile~=playerEntity:GetMainAssetPath()) then
+            local oldAssetFile = playerEntity:GetMainAssetPath()
+            if(playerEntity.SetModelFile) then
+                playerEntity:SetModelFile(assetfile);
+            else
+                playerEntity:SetMainAssetPath(assetfile);
+            end
+            GameLogic.options:SetMainPlayerAssetName(assetfile);
+            -- this ensure that at least one default skin is selected
+            if(playerEntity:GetSkin()) then
+                playerEntity:SetSkin(nil);
+            else
+                playerEntity:RefreshSkin();
+            end
+            if(math.abs(EntityManager.PlayerAssetFile:GetDefaultScale(oldAssetFile) - playerEntity:GetScaling()) < 0.01) then
+                playerEntity:SetScaling(EntityManager.PlayerAssetFile:GetDefaultScale(assetfile))
+            end
+        end
+    end 
+
+    function ClickPrevAsset()
+        if (curAssetIndex == 1) then 
+            curAssetIndex = #assets;
+        else
+            curAssetIndex = curAssetIndex - 1;
+        end 
+        mainasset = assets[curAssetIndex];
+        --GameLogic.GetPlayerController():GetPlayer():SetMainAssetPath(mainasset);
+        --GameLogic.options:SetMainPlayerAssetName(mainasset);
+        ChangePlayerAsset(mainasset);
+
+        UpdatePlayerInfo();
+    end
+
+    function ClickNextAsset()
+        if (curAssetIndex == #assets) then
+            curAssetIndex = 1;
+        else
+            curAssetIndex = curAssetIndex + 1;
+        end 
+        mainasset = assets[curAssetIndex];
+        --GameLogic.GetPlayerController():GetPlayer():SetMainAssetPath(mainasset);
+        --GameLogic.options:SetMainPlayerAssetName(mainasset);
+        ChangePlayerAsset(mainasset);
+        UpdatePlayerInfo();
+    end
+
+    function UpdatePlayerInfo()
+        -- 更新用户信息
+        if (not isAuthUser) then return end
+        local player = GameLogic.GetPlayerController():GetPlayer();
+        local asset = player:GetMainAssetPath();
+        local skin = player:GetSkin();
+        local extra = UserDetail.extra or {};
+        extra.ParacraftPlayerEntityInfo = extra.ParacraftPlayerEntityInfo or {};
+        extra.ParacraftPlayerEntityInfo.asset = asset;
+        extra.ParacraftPlayerEntityInfo.skin = skin;
+        keepwork.user.setinfo({
+            router_params = {id = AuthUserId},
+            extra = extra,
+        }, function(status, msg, data) 
+            if (status < 200 or status >= 300) then return echo("更新玩家实体信息失败") end
+            local userinfo = KeepWorkItemManager.GetProfile();
+            userinfo.extra = extra;
+        end);
+    end 
+
+    function ClickPersonalPage()
+        ParaGlobal.ShellExecute("open", "https://keepwork.com/u/" .. UserDetail.username, "", "", 1);
+    end
+
+    function IsIconValid(index)
+        local avtarIcons = GetGlobalScope():Get("AvatarIcons");
+        return avtarIcons and avtarIcons[index] and avtarIcons[index].icon ~= "";
+    end
+
+    function IconStyle(index)
+        local avtarIcons = GetGlobalScope():Get("AvatarIcons");
+        if (avtarIcons and avtarIcons[index]) then
+            return string.format("margin:5px;width:40px;height:40px;background:url(%s);", avtarIcons[index].icon or "");
+        else
+            return "margin:5px;width:40px;height:40px;";
+        end
+    end
+
+    function ClickIcon(index)
+        if (not isAuthUser) then return end;
+        NPL.load("(gl)script/apps/Aries/Creator/Game/Entity/CustomCharItems.lua");
+        local CustomCharItems = commonlib.gettable("MyCompany.Aries.Game.EntityManager.CustomCharItems");
+        local avtarIcons = GetGlobalScope():Get("AvatarIcons");
+
+        if (avtarIcons and avtarIcons[index] and avtarIcons[index].id) then
+            local currentSkin = GetGlobalScope():Get("MainSkin");
+            local skin = CustomCharItems:RemoveItemInSkin(currentSkin, avtarIcons[index].id);
+            if (currentSkin ~= skin) then
+                avtarIcons[index].id = "";
+                avtarIcons[index].name = "";
+                avtarIcons[index].icon = "";
+                GetGlobalScope():Set("AvatarIcons", avtarIcons);
+                GetGlobalScope():Set("MainSkin", skin);
+            end
+        end
+    end
+
+    function OnMouseMoveAvatarItem(index) 
+        local event = GetEvent();
+        event:Accept();
+        if (not avatarItemEl) then return avatarItemEl:SetVisible(false) end 
+        self.currentHoverItemId = 0;
+        self.currentHoverItemName = "";
+        local avatarIcons = GetGlobalScope():Get("AvatarIcons");
+        local avatarIcon = avatarIcons[index];
+        if (not avatarIcon) then return avatarItemEl:SetVisible(false) end 
+
+        local CustomCharItems = commonlib.gettable("MyCompany.Aries.Game.EntityManager.CustomCharItems");
+        local itemid = avatarIcon.id;
+        local item = CustomCharItems:GetItemById(itemid);
+        if (not item) then return end
+        self.currentHoverItemId = itemid;
+        self.currentHoverItemName = item.name;
+        local windowX, windowY = event:GetWindowXY();
+        windowX, windowY = windowX + 30, windowY + 30;
+        avatarItemEl:SetStyleValue("left", windowX);
+        avatarItemEl:SetStyleValue("top", windowY);
+        avatarItemEl:SetPosition(windowX, windowY);
+        avatarItemEl:SetVisible(true);
+    end
+
+    function onmousemove()
+        OnMouseMoveAvatarItem(0);
+    end
+
+    function onmouseenter()
+        OnMouseMoveAvatarItem(0);
+    end 
+
+    function onmouseleave()
+        OnMouseMoveAvatarItem(0);
+    end 
+</script>

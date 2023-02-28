@@ -1,0 +1,56 @@
+<template ref="progress" style="height: 10px; width: 100px; background-color: rgb(235,238,245); color: rgb(64,158,255);">
+    <div id="debug" ref="stroke" style="position: absolute; left: 0px; top: 0px; width: 0px; bottom: 0px;"></div>
+</template>
+
+<script type="text/lua">
+-- 进度百分比
+percentage = 0;
+
+-- 进度元素值
+local isReady = false;
+local strokeEl = nil;
+local progressEl = nil;
+
+-- 组件解析完成
+function OnReady()
+    isReady = true;
+    strokeEl = GetRef("stroke");
+    progressEl = GetRef("progress");
+    strokeEl:SetStyleValue("background-color", GetAttrStringValue("color") or progressEl:GetColor());
+end
+
+-- 百分比更新
+function OnPercentageUpdate()
+    if (not isReady) then return end
+
+    percentage = math.min(math.max(percentage, 0), 100);
+    local progressWidth = progressEl:GetWidth();
+    local strokeWidth = math.floor(progressWidth * percentage / 100);
+    strokeEl:SetWidth(strokeWidth);
+end
+
+-- 属性更新回调
+function OnAttrValueChange(attrName, attrValue)
+    if (attrName == "percentage") then 
+        percentage = tonumber(attrValue) or 0;
+        OnPercentageUpdate();
+    end
+end
+
+</script>
+
+<style>
+
+</style>
+
+<!-- 
+组件:进度条
+属性: percentage 进度百分比,  color 进度颜色
+示例:
+<template>
+    <Progress percentage="50" color="#00ff00" style="background-color:#0000fff;"></Progress>
+</template>
+<script type="text/lua">
+    RegisterComponent("Progress", "%vue%/Components/Progress.html");
+</script>
+ -->

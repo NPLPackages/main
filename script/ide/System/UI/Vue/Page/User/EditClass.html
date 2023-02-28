@@ -1,0 +1,120 @@
+
+<template class="container">
+    <WindowTitleBar titleStyle="margin-top: 8px; width: 97px; height:25px; background: url(Texture/Aries/Creator/keepwork/ggs/user/gerenziliao/jiarubanji_97X25_32bits.png#0 0 97 25);"></WindowTitleBar>
+    <div style="margin-left: 40px; margin-top: 20px;">
+        <div style="display:inline-block; margin-top:4px; width: 100px; height:24px; background: url(Texture/Aries/Creator/keepwork/ggs/user/gerenziliao/zi7_100X24_32bits.png#0 0 100 24);"></div>
+        <select v-bind:value="grade" style="margin-left: 40px; width: 114px; height: 32px;" v-bind:options="ClassOptions" onselect=OnGradeSelect placeholder="年级"></select>
+    </div>
+    <div style="margin-left: 40px; margin-top: 16px;">
+        <div style="display:inline-block; margin-top:4px; width: 100px; height:24px; background: url(Texture/Aries/Creator/keepwork/ggs/user/gerenziliao/zi6_100X24_32bits.png#0 0 100 24);"></div>
+        <input v-bind:value="classNo" style="margin-left: 40px; width: 114px; height: 32px;" type="number" onchange=OnClassChange placeholder="班级"></input>
+        <div style="display:inline-block; margin-top:8px; margin-left: -20px; width: 14px; height:13px; background: url(Texture/Aries/Creator/keepwork/ggs/user/gerenziliao/ban_14X13_32bits.png#0 0 14 13);"></div>
+    </div>
+    <div style="margin-left: 40px; margin-top: 16px;">
+        <div style="display:inline-block; margin-top:4px; width: 100px; height:24px; background: url(Texture/Aries/Creator/keepwork/ggs/user/gerenziliao/zi5_100X24_32bits.png#0 0 100 24);"></div>
+        <select v-bind:value="year" style="margin-left: 40px; width: 114px; height: 32px;" v-bind:options="YearOptions" onselect=OnYearSelect placeholder="入学年份"></select>
+    </div>
+   
+    <div style="margin-top: 16px;">
+        <div onclick=clickCancel class="btn" style="display: inline-block; text-align: center; line-height: 40px; margin-left:30px; width:120px; height:40px; font-size: 20px; color: #000000;background: url(Texture/Aries/Creator/keepwork/Window/button/btn_huise_32bits.png#0 0 38 64:16 16 16 16);">取消</div>
+        <div onclick=clickConfirm class="btn" style="display: inline-block; text-align: center; line-height: 40px; margin-left:30px; width:120px; height:40px; font-size: 20px; color: #000000;background: url(Texture/Aries/Creator/keepwork/Window/button/btn_huangse_32bits.png#0 0 38 64:16 16 16 16);">保存</div>
+    </div>
+</template>
+
+<script type="text/lua">
+local KeepWorkItemManager = NPL.load("(gl)script/apps/Aries/Creator/HttpAPI/KeepWorkItemManager.lua");
+local BroadcastHelper = commonlib.gettable("CommonCtrl.BroadcastHelper");
+
+RegisterComponent("WindowTitleBar", "%vue%/Components/WindowTitleBar.html");
+
+local dateobj = os.date("*t");
+local UserDetail = KeepWorkItemManager.GetProfile();
+ClassOptions = {
+    {"一年级", "1"},
+    {"二年级", "2"},
+    {"三年级", "3"},
+    {"四年级", "4"},
+    {"五年级", "5"},
+    {"六年级", "6"},
+    {"七年级", "7"},
+    {"八年级", "8"},
+    {"九年级", "9"},
+    {"高一", "10"},
+    {"高二", "11"},
+    {"高三", "12"},
+    {"往届学生", "13"},
+    {"教师", "14"},
+}
+YearOptions = {};
+for i = 1, 50 do
+    local yearstr = tostring( dateobj.year - i + 1);
+    YearOptions[i] = {label = yearstr, value = yearstr};
+end
+
+grade, classNo, year = "", "", "";
+local gradeLabel = "";
+
+function OnGradeSelect(value, label)
+    grade = value .. "";
+    if (dateobj.month < 9) then
+        year = tostring(dateobj.year - tonumber(value));
+    else
+        year = tostring(dateobj.year - tonumber(value) + 1);
+    end
+end 
+
+function OnYearSelect(value)
+    year = value;
+end 
+
+function OnClassChange(value)
+    classNo = value;
+end 
+
+function clickConfirm()
+    if (grade == "" or classNo == "" or year == "") then
+        return BroadcastHelper.PushLabel({id="", label = "请将信息填写完整再保存哦。", max_duration=7000, color = "255 0 0", scaling=1.1, bold=true, shadow=true});
+    end
+
+    local className, gradeLabel = "", "";
+    for i = 1, #ClassOptions do 
+        if (ClassOptions[i][2] == grade) then
+            gradeLabel = ClassOptions[i][1];
+        end
+    end 
+    if (gradeLabel ~= "") then
+        if (classNo ~= "") then className = gradeLabel .. classNo .. "班"
+        else className = gradeLabel end 
+    end
+    
+    if (type(OnFinish) == "function") then OnFinish(className) end 
+
+    local classinfo = {
+        grade = tonumber(grade),
+        classNo = tonumber(classNo),
+        enrollmentYear = tonumber(year),
+    };
+    UserDetail.class = classinfo;
+
+    CloseWindow();
+    keepwork.user.set_class(classinfo);
+end 
+
+function clickCancel()
+    CloseWindow();
+end 
+
+function OnReady()
+    local classinfo = UserDetail.class or {};
+    grade, classNo, year = tostring(classinfo.grade or ""), tostring(classinfo.classNo or ""), tostring(classinfo.enrollmentYear or "");
+end
+</script>
+
+<style>
+.container {
+    height: 260px; 
+    width: 350px; 
+    padding: 0px 2px 2px 2px;
+    background: url(Texture/Aries/Creator/keepwork/Window/dakuang2_32bits.png#0 0 64 69:26 44 24 22);
+}
+</style>

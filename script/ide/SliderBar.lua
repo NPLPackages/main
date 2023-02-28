@@ -79,6 +79,7 @@ local SliderBar = {
 	-- function(isDragging) end
 	onMouseUpEvent = nil,
 	canDrag = true,
+	stretch = nil
 }
 CommonCtrl.SliderBar = SliderBar;
 
@@ -144,8 +145,12 @@ function SliderBar:Show(bShow)
 			self.parent:AddChild(_this);
 		end
 		
-		-- create the background. 
-		_this = ParaUI.CreateUIObject("container","bg","_fi",0,self.background_margin_top or 0, if_else(self.IsShowEditor, self.editor_width, 0), self.background_margin_bottom or 0);
+		-- create the background.print("slider bg============",0,self.background_margin_top or 0, if_else(self.IsShowEditor, self.editor_width, 0), self.background_margin_bottom or 0) 
+		if not self.stretch then
+			_this = ParaUI.CreateUIObject("container","bg","_fi",0,self.background_margin_top or 0, if_else(self.IsShowEditor, self.editor_width, 0), self.background_margin_bottom or 0);
+		else
+			_this = ParaUI.CreateUIObject("container","bg","_lt",0,self.background_margin_top or 0, self.width,self.height - (self.background_margin_bottom or 0) - (self.background_margin_top or 0));
+		end
 		_this.background = self.background;
 		_this.enabled = false;
 		_parent:AddChild(_this);

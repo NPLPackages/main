@@ -119,6 +119,15 @@ function vector:AddAll(arrayList)
 	end
 end
 
+-- concatenate another array, same as AddAll above. 
+function vector:concat(arrayList)
+	local n = #self;
+	for i = 1, #arrayList do
+		n = n + 1;
+		self[n] = self[i]
+	end
+end
+
 -- this could be slow. use UnorderedArray for faster ones. 
 function vector:remove(index)
 	for k=index, #self do
@@ -147,4 +156,15 @@ end
 
 function vector:last()
 	return self[#self];
+end
+
+-- pop the first value, and shifting to the left
+-- @return the first value in array
+function vector:pop_front()
+	local frontValue = self[1];
+	for i=2, #self do
+		self[i-1] = self[i]
+	end
+	self[#self] = nil;
+	return frontValue;
 end

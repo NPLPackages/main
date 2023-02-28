@@ -9,6 +9,7 @@ use the lib:
 NPL.load("(gl)script/ide/System/Windows/Mouse.lua");
 local Mouse = commonlib.gettable("System.Windows.Mouse");
 Mouse:Capture(uiElement);
+Mouse:SetCursorFromFile(filename, offsetX, offsetY)
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/System/Core/ToolBase.lua");
@@ -81,6 +82,19 @@ function Mouse:SetTouchButtonSwapped(bSwapped)
 	Screen:GetGUIRoot():SetField("TouchButtonSwapped", bSwapped==true);
 end
 
+-- set root cursor file
+-- @param filename: this needs to be a tga file 
+-- @param offsetX, offsetY: default to 0, 0
+function Mouse:SetCursorFromFile(filename, offsetX, offsetY)
+	offsetX, offsetY = offsetX or 0, offsetY or 0
+	local root_ = ParaUI.GetUIObject("root");
+	if(root_.SetCursor) then
+		ParaUI.SetCursorFromFile(filename, offsetX, offsetY)
+		root_:SetCursor(filename, offsetX, offsetY);
+	else
+		root_.cursor = filename;
+	end
+end
 
 -- this is a singleton class
 Mouse:InitSingleton();

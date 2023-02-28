@@ -49,6 +49,7 @@ function pe_editbox:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	end
 	
 	_this:setMoveViewWhenAttachWithIME(self:GetBool("MoveViewWhenAttachWithIME", false));
+	_this:setAutoVirtualKeyboard(self:GetBool("auto_virtual_keyboard", false));
 
 	local type = self:GetAttributeWithCode("type", nil, true);
 	_this:setEncrypted(type == "password");

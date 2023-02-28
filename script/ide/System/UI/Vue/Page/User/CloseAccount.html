@@ -1,0 +1,166 @@
+<template style="height: 382px;
+                 width: 500px;
+                 background: url(Texture/Aries/Creator/keepwork/Window/dakuang_32bits.png#0 0 440 93:378 43 33 44);">
+    <div style='height: 40px;'>
+        <div style='float: left;
+                    margin-top: 8px;
+                    margin-left: 10px;
+                    base-font-size: 16px;
+                    font-size: 16px;
+                    color: #FFFFFF;
+                    width: 97px;
+                    height:26px;'>
+            注销账号
+        </div>
+        <div onclick=close
+             class='btn'
+             style='float: right;
+                    background:url(Texture/Aries/Creator/keepwork/ggs/dialog/guanbi_22X22_32bits.png#0 0 22 22);
+                    width: 20px;
+                    height: 20px;
+                    margin-top: 10px;
+                    margin-right: 10px;
+                    border-radius: 0px;'></div>
+    </div>
+    <div style='padding: 30px;'>
+        <div v-if='step == 1'>
+            <div style='base-font-size: 18px;
+                        font-size: 18px;
+                        margin-bottom: 10px;'>
+                为保证你的账号安全，在你提交的注销申请生效前，需同时满足以下条件:
+            </div>
+            <div>1.账号处于安全状态</div>
+            <div style='margin-bottom: 10px;'>账号处于正常使用状态，无被盗风险</div>
+            <div>2.账号财产已结清</div>
+            <div style='margin-bottom: 10px;'>没有资产、欠款、未结清的资金和虚拟权益，本账号及通过本账号接入的第三方中没有未完成或存在争议的服务</div>
+            <div>3.账号无任何纠纷，包括投诉举报</div>
+            <div style='margin-top: 20px;'>
+                <radiogroup v-model="agree">
+                    <label for="agreeRadio"><radio id="agreeRadio" value="true"></radio>我已阅读并同意以上内容</label>
+                </radiogroup>
+            </div>
+            <div>
+                <div onclick=next
+                     class="btn"
+                     style="display: inline-block;
+                            text-align: center;
+                            line-height: 40px;
+                            margin-left: 320px;
+                            width: 120px;
+                            height: 40px;
+                            font-size: 20px;
+                            color: #000000;
+                            background: url(Texture/Aries/Creator/keepwork/Window/button/btn_huangse_32bits.png#0 0 38 64:16 16 16 16);">下一步</div>
+            </div>
+        </div>
+        <div v-if='step == 2'>
+            <div style='base-font-size: 16px;font-size: 16px;'>
+                <div style='margin-bottom: 20px;'>
+                    为防止误操作，请再次确认操作并清楚注销之后的影响。
+                </div>
+                <div>
+                    您注销账号后，我们将停止为您提供依赖账号登录的产品和服务，并依据您的要求，删除或匿名化处理您的个人信息，数据将无法恢复，即使重新创建账号也无法恢复旧账号数据。
+                </div>
+                <div style='base-font-size: 18px;
+                            font-size: 18px;
+                            margin-top: 60px;'>
+                    请输入登录密码进行验证：
+                </div>
+                <div>
+                    <input ref='input'
+                           type='password'
+                           v-model='pwd'
+                           autofocus=true
+                           style='display:inline-block;
+                                  background: url(Texture/Aries/Creator/keepwork/RedSummerCamp/works/works_32bits.png#176 173 32 42: 7 7 7 7);
+                                  width: 100%;
+                                  border: none;
+                                  height: 32px;'></input>
+                </div>
+                <div style='margin-top: 25px;'>
+                    <div onclick=close
+                         class="btn"
+                         style="display: inline-block;
+                                text-align: center;
+                                line-height: 40px;
+                                margin-left: 190px;
+                                width:120px;
+                                height:40px;
+                                font-size: 20px;
+                                color: #000000;
+                                background: url(Texture/Aries/Creator/keepwork/Window/button/btn_huangse_32bits.png#0 0 38 64:16 16 16 16);">放弃</div>
+                    <div onclick=confirm
+                         class="btn"
+                         style="display: inline-block;
+                                text-align: center;
+                                line-height: 40px;
+                                margin-left: 10px;
+                                width: 120px;
+                                height: 40px;
+                                font-size: 20px;
+                                color: #000000;
+                                background: url(Texture/Aries/Creator/keepwork/Window/button/btn_huise_32bits.png#0 0 38 64:16 16 16 16);">确认注销</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script type="text/lua">
+    step = 1
+
+    function close()
+        CloseWindow()
+    end
+
+    function next()
+        if agree ~= 'true' then
+            _guihelper.MessageBox(
+                '请同意后再点击下一步',
+                nil,
+                nil,
+                {
+                    src = 'Texture/Aries/Creator/keepwork/RedSummerCamp/lessonppt/tishi_70x48_32bits.png#0 0 70 48',
+                    icon_width = 70,
+                    icon_height = 48,
+                    icon_x = 5,
+                    icon_y = -14
+                }
+            )
+
+            return
+        end
+
+        step = 2
+    end
+
+    function confirm()
+        if not pwd or
+           type(pwd) ~= 'string' or
+           pwd == '' then
+           _guihelper.MessageBox(
+                '请输入密码',
+                nil,
+                nil,
+                {
+                    src = 'Texture/Aries/Creator/keepwork/RedSummerCamp/lessonppt/tishi_70x48_32bits.png#0 0 70 48',
+                    icon_width = 70,
+                    icon_height = 48,
+                    icon_x = 5,
+                    icon_y = -14
+                }
+           )
+
+            return
+        end
+
+        Mod.WorldShare.MsgBox:Show(L'正在删除账号，请稍候...', nil, nil, 380, nil, 10, nil, nil, true)
+
+        local KeepworkServiceSession = NPL.load('(gl)Mod/WorldShare/service/KeepworkService/KeepworkServiceSession.lua')
+        KeepworkServiceSession:RemoveAccount(pwd)
+    end
+</script>
+
+<style scoped=true>
+    
+</style>

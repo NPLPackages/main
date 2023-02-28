@@ -1,0 +1,69 @@
+<template style="display: inline-block; padding: 2px; width: 100%; height: 100%;">
+    <div class="scroll" style="width: 100%; height: 100%; overflow-y: auto;">
+        <div v-for="honor in honors" class="honor" onclick="ClickHonor(honor)">
+            <div v-bind:style="HonorStyle(honor)"></div>
+            <div class="center" style="height: 30px; color: #000000; font-size: 12px;">{{honor.name}}</div>
+        </div>
+    </div>
+</template>
+
+<script type="text/lua">
+
+<!-- honorlist = _G.GetUserHonors(); -->
+honors = {}
+function UpdateHonorList()
+    if (GlobalScope:Get("CharacterTabIndex") == "honor") then
+        honors = GlobalScope:Get("HonorList");
+    else
+        honors = {};
+    end
+end 
+
+GetGlobalScope():Watch("HonorList", function()
+    UpdateHonorList();
+end);
+
+GetGlobalScope():Watch("CharacterTabIndex", function()
+    UpdateHonorList();
+end);
+
+function OnAttrValueChange()
+end
+
+function ClickHonor(honor)
+    if (not honor.certurl or honor.certurl == "") then return end;
+    if (not honor.has) then return end 
+    
+    local username = UserDetail.username;
+    if (UserDetail.realnickname and UserDetail.realnickname ~= "") then username = UserDetail.realnickname end
+    <!-- if (UserDetail.realnickname and UserDetail.realnickname ~= "") then username = string.format("%s(%s)", UserDetail.realnickname, UserDetail.username) end -->
+
+    ShowWindow({
+        username = honor.has and username or "",
+        datetime = honor.createdAt and os.date("%Y-%m-%d", commonlib.timehelp.GetTimeStampByDateTime(honor.createdAt)),
+        certurl = honor.certurl,
+    }, {
+        url = "%vue%/Page/User/Certificate.html",
+        draggable = false,
+    });
+end 
+
+function HonorStyle(honor)
+    return string.format("margin-top: 15px; margin-bottom: 15px; width: 128px; height: 64px; background:url(%s)", honor.icon);
+end
+
+function OnReady()
+    UpdateHonorList()
+end 
+
+</script>
+
+<style>
+.honor {
+    width: 146px;
+    height: 140px;
+    padding: 10px 9px 0px 9px;
+    display: inline-block;
+    background: url(Texture/Aries/Creator/keepwork/ggs/user/renwuqiehuan/wupingbj_146X140_32bits.png#0 0 146 140);
+}
+</style>

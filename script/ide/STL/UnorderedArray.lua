@@ -59,6 +59,17 @@ function UnorderedArray:contains(value)
 	end
 end
 
+-- return a new array which has only unique values in current array. 
+function UnorderedArray:unique()
+	local b = UnorderedArray:new()
+	for i=1, #self do
+		if(not b:contains(self[i])) then
+			b[#b+1] = self[i]
+		end
+	end
+    return b;
+end
+
 -- clone the array, please note it does not clone the value (value are referenced)
 function UnorderedArray:clone()
 	local o = {};

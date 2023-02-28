@@ -1,0 +1,172 @@
+<template class="style-container">
+    <div>
+        <div class="title">位置大小</div>
+        <div class="style-items">
+            <div class="style-item">
+                <div class="label">宽</div>
+                <input style="width: 80px;" v-bind:value="GetStyleValue('width')" onkeydown.enter="SetStyleValue('width', ...)"></input>
+            </div>
+            <div class="style-item">
+                <div class="label">高</div>
+                <input style="width: 80px;"  v-bind:value="GetStyleValue('height')" onkeydown.enter="SetStyleValue('height', ...)"></input>
+            </div>
+        </div>
+
+        <div class="style-items">
+            <div class="style-item">
+                <div class="label">左</div>
+                <input style="width: 80px;" v-bind:value="GetStyleValue('left')" onkeydown.enter="SetStyleValue('left', ...)"></input>
+            </div>
+            <div class="style-item">
+                <div class="label">上</div>
+                <input style="width: 80px;" v-bind:value="GetStyleValue('top')" onkeydown.enter="SetStyleValue('top', ...)"></input>
+            </div>
+        </div>
+
+        <div class="style-items">
+            <div class="style-item">
+                <div class="label">右</div>
+                <input style="width: 80px;" v-bind:value="GetStyleValue('right')" onkeydown.enter="SetStyleValue('right', ...)"></input>
+            </div>
+            <div class="style-item">
+                <div class="label">下</div>
+                <input style="width: 80px;" v-bind:value="GetStyleValue('bottom')" onkeydown.enter="SetStyleValue('bottom', ...)"></input>
+            </div>
+        </div>
+        
+        <div class="title">字体</div>
+        <div class="style-items">
+            <div class="style-item">
+                <div class="label">颜色</div>
+                <input style="width: 80px;" v-bind:value="GetStyleValue('color ')" onkeydown.enter="SetStyleValue('color', ...)"></input>
+            </div>
+            <div class="style-item">
+                <div class="label">大小</div>
+                <input style="width: 80px;" v-bind:value="GetStyleValue('font-size')" onkeydown.enter="SetStyleValue('font-size', ...)"></input>
+            </div>
+        </div>
+
+        <div class="title">背景</div>
+        <div class="style-item">
+            <div class="label">背景颜色</div>
+            <input style="width: 80px;" v-bind:value="GetStyleValue('background-color')" onkeydown.enter="SetStyleValue('background-color', ...)"></input>
+        </div>
+        <div class="style-item">
+            <div class="label">背景图片</div>
+            <input style="width: 200px;" v-bind:value="GetStyleValue('background')" onkeydown.enter="SetStyleValue('background', ...)"></input>
+        </div>
+        <div v-for="styleItem in NormalStyleItemList" class="style-item">
+            <input readonly=true v-bind:value="styleItem.key"></input>
+            <select readonly=true v-bind:value="styleItem.value" v-bind:options="GetStyleValueOptions(styleItem.key)"></select>
+        </div>
+
+        <div class="title">间距</div>
+        <div class="style-items">
+            <div class="style-item">
+                <div class="label">左</div>
+                <input style="width: 80px;" v-bind:value="GetStyleValue('margin-left')" onkeydown.enter="SetStyleValue('margin-left', ...)"></input>
+            </div>
+            <div class="style-item">
+                <div class="label">上</div>
+                <input style="width: 80px;" v-bind:value="GetStyleValue('margin-top')" onkeydown.enter="SetStyleValue('margin-top', ...)"></input>
+            </div>
+        </div>
+        <div class="style-items">
+            <div class="style-item">
+                <div class="label">右</div>
+                <input style="width: 80px;" v-bind:value="GetStyleValue('margin-right')" onkeydown.enter="SetStyleValue('margin-right', ...)"></input>
+            </div>
+            <div class="style-item">
+                <div class="label">下</div>
+                <input style="width: 80px;" v-bind:value="GetStyleValue('margin-bottom')" onkeydown.enter="SetStyleValue('margin-bottom', ...)"></input>
+            </div>
+        </div>
+
+        <div class="title">填充</div>
+        <div class="style-items">
+            <div class="style-item">
+                <div class="label">左</div>
+                <input style="width: 80px;" v-bind:value="GetStyleValue('padding-left')" onkeydown.enter="SetStyleValue('padding-left', ...)"></input>
+            </div>
+            <div class="style-item">
+                <div class="label">上</div>
+                <input style="width: 80px;" v-bind:value="GetStyleValue('padding-top')" onkeydown.enter="SetStyleValue('padding-top', ...)"></input>
+            </div>
+        </div>
+        <div class="style-items">
+            <div class="style-item">
+                <div class="label">右</div>
+                <input style="width: 80px;" v-bind:value="GetStyleValue('padding-right')" onkeydown.enter="SetStyleValue('padding-right', ...)"></input>
+            </div>
+            <div class="style-item">
+                <div class="label">下</div>
+                <input style="width: 80px;" v-bind:value="GetStyleValue('padding-bottom')" onkeydown.enter="SetStyleValue('padding-bottom', ...)"></input>
+            </div>
+        </div>
+
+        <div v-if="CurrentElementId ~= WindowDataItem.id">
+            <div class="title">文本</div>
+            <textarea v-model="CurrentListItem.text" style="margin-left: 10%; width: 80%; height: 120px;"></textarea>
+        </div>
+    </div>
+</template>
+
+<script type="text/lua">
+local GlobalScope = GetGlobalScope();
+
+StyleValueOptions = {
+    position = {"absolute", "fixed", "static"},
+}
+
+function GetStyleValueOptions(styleKey)
+    return StyleValueOptions[styleKey] or {};
+end 
+
+function GetStyleValue(styleName)
+    return tostring(CurrentElementStyle[styleName] or "");
+end
+
+function SetStyleValue(styleName, styleValue)
+    CurrentElementStyle[styleName] = styleValue;
+    local styleStr = "";
+    for _, styleName in ipairs(StyleNameList) do 
+        if (CurrentElementStyle[styleName]) then
+            styleStr = string.format("%s:%s;%s", styleName, CurrentElementStyle[styleName], styleStr);
+        end
+    end
+    if (not CurrentElement) then return end 
+    CurrentElement:SetAttrValue("style", styleStr);
+    print(styleStr)
+end
+
+</script>
+
+<style scoped=true>
+.style-container {
+    position: absolute;
+    top: 60px;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+}
+.title {
+    font-size: 18px;
+    padding: 20px 0px 10px 10px;
+}
+.style-items {
+    display: flex;
+    justify-content: space-around;
+}
+.style-item {
+    font-size: 16px;
+    display: flex;
+    height: 32px;
+    align-items: center;
+}
+.style-item>.label {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    padding: 0px 4px;
+}
+</style>

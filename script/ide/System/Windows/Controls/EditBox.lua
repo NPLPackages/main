@@ -49,6 +49,7 @@ EditBox:Property({"rightTextMargin", 0});
 EditBox:Property({"bottomTextMargin", 2});
 EditBox:Property({"EmptyText", nil, "GetEmptyText", "SetEmptyText", auto=true});				  --*********************************************	 
 EditBox:Property({"m_bMoveViewWhenAttachWithIME", false, "isMoveViewWhenAttachWithIME", "setMoveViewWhenAttachWithIME"});
+EditBox:Property({"bAutoVirtualKeyboard", false, "isAutoVirtualKeyboard", "setAutoVirtualKeyboard"});
 
 EditBox:Signal("resetInputContext");
 EditBox:Signal("selectionChanged");
@@ -109,6 +110,14 @@ end
 
 function EditBox:isMoveViewWhenAttachWithIME()
 	return self.m_bMoveViewWhenAttachWithIME;
+end
+
+function EditBox:setAutoVirtualKeyboard(bAuto)
+	self.bAutoVirtualKeyboard = bAuto;
+end
+
+function EditBox:isAutoVirtualKeyboard()
+	return self.bAutoVirtualKeyboard;
 end
 
 function EditBox:GetText()
@@ -450,7 +459,14 @@ function EditBox:focusInEvent(event)
 	self:setCursorVisible(true);
 	self:setCursorBlinkPeriod(Application:cursorFlashTime());
 
-	self:attachWithIME();
+	if self.bAutoVirtualKeyboard and System.options.IsTouchDevice then
+		NPL.load("(gl)script/apps/Aries/Creator/Game/GUI/TouchVirtualKeyboardIcon.lua");
+		local TouchVirtualKeyboardIcon = commonlib.gettable("MyCompany.Aries.Game.GUI.TouchVirtualKeyboardIcon");
+		TouchVirtualKeyboardIcon.GetSingleton():ShowKeyboard(true)
+	else
+		self:attachWithIME();
+	end
+	
 	
 	EditBox._super.focusInEvent(self, event)
 end
@@ -459,7 +475,13 @@ end
 -- virtual: 
 function EditBox:focusOutEvent(event)
 
-	self:detachWithIME();
+	if self.bAutoVirtualKeyboard and System.options.IsTouchDevice then
+		NPL.load("(gl)script/apps/Aries/Creator/Game/GUI/TouchVirtualKeyboardIcon.lua");
+		local TouchVirtualKeyboardIcon = commonlib.gettable("MyCompany.Aries.Game.GUI.TouchVirtualKeyboardIcon");
+		TouchVirtualKeyboardIcon.GetSingleton():ShowKeyboard(false)
+	else
+		self:detachWithIME();
+	end
 	
 	self:setCursorVisible(false);
 	self:setCursorBlinkPeriod(0);
@@ -641,7 +663,13 @@ function EditBox:mousePressEvent(e)
 		end
 
 		if (self:hasFocus() and not e.isDoubleClick) then
-			self:attachWithIME();
+			if self.bAutoVirtualKeyboard and System.options.IsTouchDevice then
+				NPL.load("(gl)script/apps/Aries/Creator/Game/GUI/TouchVirtualKeyboardIcon.lua");
+				local TouchVirtualKeyboardIcon = commonlib.gettable("MyCompany.Aries.Game.GUI.TouchVirtualKeyboardIcon");
+				TouchVirtualKeyboardIcon.GetSingleton():ShowKeyboard(true)
+			else
+				self:attachWithIME();
+			end
 		end
 	end
 end

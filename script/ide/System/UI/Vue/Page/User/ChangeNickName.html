@@ -1,0 +1,101 @@
+<template>
+    <div style="display: inline;">
+        <input ref="input" v-bind:value="value" autofocus=true style="display:inline-block; width: 180px; height: 26px; background: url(Texture/Aries/Creator/keepwork/ggs/user/shuruzhuangdi_16X16_32bits.png#0 0 16 16: 5 5 5 5);"></input>
+        <button onclick=confirm style="height: 28px; width: 55px; background: url(Texture/Aries/Creator/keepwork/ggs/user/btn_confirm_16X16_32bits.png#0 0 16 16: 5 5 5 5);">确认</button>
+        <button onclick="cancel" style="height: 28px; width: 55px; background: url(Texture/Aries/Creator/keepwork/ggs/user/btn_cancel_16X16_32bits.png#0 0 16 16: 5 5 5 5);">取消</button>
+    </div>
+</template>
+
+<script type="text/lua">
+local KeepWorkItemManager = NPL.load("(gl)script/apps/Aries/Creator/HttpAPI/KeepWorkItemManager.lua");
+local IsExistNicknameGSItem = SessionStorage:GetItem("IsExistNicknameGSItem");
+if (IsExistNicknameGSItem == nil) then IsExistNicknameGSItem = KeepWorkItemManager.HasGSItem(129) end
+
+function OnAttrValueChange(attrName, attrValue)
+    self.value = GetAttrValue("nickname");
+end
+
+function OnReady()
+
+end
+
+local function FinishCallback(value, notify)
+    local finish = GetAttrValue("finish");
+    if (type(finish) == "function") then
+        finish(value);
+    end
+
+    if (notify) then
+        GameLogic.GetFilters():apply_filters("ggs", {action = "UpdateNickName", nickname = value});
+        GameLogic.GetFilters():apply_filters("ggs", {action = "UpdateUserInfo", userinfo = {nickname = value}});
+    end
+end
+
+function cancel()
+    FinishCallback(nil, false);
+end
+
+function ShowResultBox(text)
+    ShowWindow({
+        text = text
+    }, {
+        url = "%vue%/Page/User/ChangeNicknameResult.html",
+        width = 500,
+        height = 242,
+    });
+end
+
+function UpdateNickName(value)
+    keepwork.user.setinfo({
+        router_params = {id = userId},
+        nickname = value,
+    }, function(status, msg, data) 
+        if (status < 200 or status >= 300) then 
+            ShowResultBox(data and data.message or "修改昵称失败");
+            return cancel() 
+        end
+        if (IsExistNicknameGSItem) then
+            ShowResultBox("昵称修改成功, 知识豆扣除 10 个");
+            if (type(UserDetail) == "table") then UserDetail.bean = (UserDetail.bean or 0) - 10 end
+        else
+            ShowResultBox("昵称修改成功");
+            IsExistNicknameGSItem = true;
+            SessionStorage:SetItem("IsExistNicknameGSItem", IsExistNicknameGSItem);
+        end
+        FinishCallback(value, true);
+    end);
+end
+
+function confirm()
+    local inputEl = GetRef("input");
+    local value = inputEl:GetValue();
+    if (value == self.nickname or value == "") then return cancel() end
+    
+    -- 客户端处理铭感词
+    local temp = MyCompany.Aries.Chat.BadWordFilter.FilterString(value);
+    if temp~=value then 
+        ShowResultBox(L"包含敏感词，请重新修改");
+        return
+    end
+    
+    if (not IsExistNicknameGSItem) then
+        return UpdateNickName(value);
+    end
+
+    ShowWindow({
+        Confirm = function()
+            UpdateNickName(value);
+        end,
+        Cancel = function()
+            cancel();
+        end
+    },
+    {
+        url = "%vue%/Page/User/ChangeNicknameConfirm.html",
+        width = 500,
+        height = 242,
+       
+    });
+end 
+
+</script>

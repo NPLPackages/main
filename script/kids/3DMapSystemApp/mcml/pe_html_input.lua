@@ -187,15 +187,23 @@ end
 function pe_input.GetUIValue(mcmlNode, pageInstName)
 	local type = mcmlNode:GetString("type");
 	if(type == nil or type == "text") then
-		if(mcmlNode:GetBool("SkipAutoBadWordFilter") or mcmlNode:GetBool("UseSystemControl")) then
-			return Map3DSystem.mcml_controls.pe_editor_text.GetUIValue(mcmlNode, pageInstName);
+		local originValue = Map3DSystem.mcml_controls.pe_editor_text.GetUIValue(mcmlNode, pageInstName)
+		if not originValue then
+			originValue = ""
+		end
+		if (mcmlNode:GetBool("RemoveSpaces")) then
+			originValue = string.gsub(originValue, " ", "");
+		end
+
+		if (mcmlNode:GetBool("SkipAutoBadWordFilter") or mcmlNode:GetBool("UseSystemControl")) then
+			return originValue;
 		else
 			-- bad word filter for Aries project
 			if(commonlib.getfield("MyCompany.Aries.Chat.BadWordFilter")) then
-				local ret = Map3DSystem.mcml_controls.pe_editor_text.GetUIValue(mcmlNode, pageInstName);
-				return MyCompany.Aries.Chat.BadWordFilter.FilterString(ret);
+
+				return MyCompany.Aries.Chat.BadWordFilter.FilterString(originValue);
 			else
-				return Map3DSystem.mcml_controls.pe_editor_text.GetUIValue(mcmlNode, pageInstName);
+				return originValue;
 			end
 		end
 	elseif(type == "file") then
@@ -342,6 +350,14 @@ function pe_editor_radio.create(rootName, mcmlNode, bindingContext, _parent, lef
 		end
 	end
 
+	local isEnabled;
+
+	if (mcmlNode:GetBool("enabled") == nil) then
+		isEnabled = mcmlNode:GetAttributeWithCode("enabled");
+	else
+		isEnabled = mcmlNode:GetBool("enabled");
+	end
+
 	local max = tonumber(mcmlNode:GetAttributeWithCode("max")) or 1; -- max number of concurrent selection
 	local min = tonumber(mcmlNode:GetAttributeWithCode("min")) or 1;
 
@@ -415,6 +431,10 @@ function pe_editor_radio.create(rootName, mcmlNode, bindingContext, _parent, lef
 	local tooltip = mcmlNode:GetAttributeWithCode("tooltip");
 	if(tooltip) then
 		_this.tooltip = tooltip;
+	end
+
+	if (isEnabled ~= nil) then
+		_this.enabled = isEnabled;
 	end
 	_parent:AddChild(_this);
 end
@@ -790,6 +810,8 @@ function pe_select.create(rootName, mcmlNode, bindingContext, _parent, left, top
 	local dropBg = mcmlNode:GetAttributeWithCode("dropBg",nil,true); --下拉列表三角按钮
 	local dropWidth = mcmlNode:GetAttributeWithCode("dropWidth",nil,true); --下拉列表三角按钮宽
 	local dropHeight = mcmlNode:GetAttributeWithCode("dropHeight",nil,true); --下拉列表三角按钮高
+	local dropX = mcmlNode:GetAttributeWithCode("dropX",nil,true); --下拉列表三角按钮位置X
+	local dropY = mcmlNode:GetAttributeWithCode("dropY",nil,true); --下拉列表三角按钮位置Y
 	local contentBg = mcmlNode:GetAttributeWithCode("contentBg",nil,true); --下拉列表显示框背景
 	local rows = mcmlNode:GetNumber("size") or 1;
 	local css = mcmlNode:GetStyle(Map3DSystem.mcml_controls.pe_html.css["input-select"]);
@@ -887,6 +909,8 @@ function pe_select.create(rootName, mcmlNode, bindingContext, _parent, left, top
 			listbox_bg = pe_select.listbox_bg,
 			dropdownbutton_width = dropWidth and tonumber(dropWidth) or pe_select.dropdownbutton_width,
 			dropdownbutton_height = dropHeight and tonumber(dropHeight)  or pe_select.dropdownbutton_height,
+			dropdownbutton_X = tonumber(dropX),
+			dropdownbutton_Y = tonumber(dropY),
 			items = items,
 			text = selected_text,
 			AllowUserEdit = mcmlNode:GetBool("AllowUserEdit"),

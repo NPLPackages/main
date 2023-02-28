@@ -1,0 +1,12 @@
+<template>
+    <div v-bind:style="style"></div>
+</template>
+
+<script type="text/lua">
+self.style = "width: 12px; height: 20px; background: url(Texture/Aries/Creator/keepwork/ggs/user/number/0_16X20_32bits.png#0 0 16 20)";
+
+function OnAttrValueChange()
+    local number = GetAttrValue("number", 0);
+    self.style = "width: 12px; height: 20px; background: url(Texture/Aries/Creator/keepwork/ggs/user/number/" .. number .. "_16X20_32bits.png#0 0 16 20)";
+end
+</script>

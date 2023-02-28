@@ -35,6 +35,8 @@ ScaleManip:Property({"selectedAxis", nil});
 ScaleManip:Property({"UniformScaling", false, "IsUniformScaling", "SetUniformScaling", auto=true});
 -- whether to update values during dragging
 ScaleManip:Property({"RealTimeUpdate", true, "IsRealTimeUpdate", "SetRealTimeUpdate", auto=true});
+-- whether to update the manipulator's real position according to "position" variable.
+ScaleManip:Property({"UpdatePosition", true, "IsUpdatePosition", "SetUpdatePosition", auto=true});
 
 
 function ScaleManip:ctor()
@@ -45,7 +47,7 @@ end
 
 function ScaleManip:OnValueChange(name, value)
 	ScaleManip._super.OnValueChange(self);
-	if(name == "position") then
+	if(self:IsUpdatePosition() and name == "position") then
 		self:SetPosition(unpack(value));
 	end
 end

@@ -200,7 +200,7 @@ end
 function ParaCamera.GetDummyObject()
 	local player = ParaScene.GetObject("invisible camera");
 	if(player:IsValid() == false) then
-		player = ParaScene.CreateCharacter ("invisible camera", "", "", true, 0, 0, 0);
+		player = ParaScene.CreateCharacter("invisible camera", "", "", true, 0, 0, 0);
 		--player:GetAttributeObject():SetField("SentientField", 0);--senses nobody
 		player:GetAttributeObject():SetField("SentientField", 65535);--senses everybody
 		--player:SetAlwaysSentient(true);--senses everybody

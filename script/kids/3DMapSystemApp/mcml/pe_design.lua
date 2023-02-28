@@ -119,6 +119,14 @@ addtional attributes and events: For more information, please see FileViewCtrl a
 | objectbinding | "selection",  it binds to System.obj.GetObjectParams(objectbinding); |
 | cameraName  |   model config camera name  --clayman
 | value | table or table string of inner text |
+| moviefile | block template file containing a movie block |
+| fromTime | movie file from time, default to 0 |
+| toTime | movie file to time, default to -1, which is default movie length |
+| isLooping | if movie file should be played looped |
+| originX | movie file relative origin result to 0, 128, 0 |
+| originY | |
+| originZ | |
+
 Canvas3d sample code:      
 <verbatim> 
 	 <pe:canvas3d name="canvas1">
@@ -1096,7 +1104,12 @@ function pe_canvas3d.create(rootName, mcmlNode, bindingContext, _parent, left, t
 	ctl.background = css.background;
 	ctl.IgnoreExternalCamera = mcmlNode:GetAttribute("IgnoreExternalCamera") == "true";
 	ctl.mask_texture = mcmlNode:GetAttributeWithCode("MaskTexture");
+	local xmlInfo = mcmlNode:GetAttributeWithCode("xmlInfo")
+	if xmlInfo then
+		ctl.xmlInfo = commonlib.LoadTableFromString(xmlInfo)
+	end
 	ctl:Show(true);
+
 	local objParamsStr = pe_canvas3d.GetValue(mcmlNode);
 	if(type(objParamsStr) == "table") then
 		ctl:ShowModel(objParamsStr);
@@ -1106,6 +1119,8 @@ function pe_canvas3d.create(rootName, mcmlNode, bindingContext, _parent, left, t
 		if(objParams) then
 			ctl:ShowModel(objParams)
 		end
+	elseif ctl.xmlInfo then
+		ctl:Show3dUIWithEntityLiveModelLinkedXmlInfo(ctl.xmlInfo)
 	else
 		local objbinding = mcmlNode:GetString("objectbinding");
 		if(objbinding and objbinding~="") then
@@ -1150,11 +1165,17 @@ function pe_canvas3d.create(rootName, mcmlNode, bindingContext, _parent, left, t
 	local moviefile = mcmlNode:GetAttributeWithCode("moviefile")
 	local fromTime = mcmlNode:GetNumber("fromTime")
 	local toTime = mcmlNode:GetNumber("toTime")
+	local isLooping = mcmlNode:GetBool("isLooping")
 	local originX = mcmlNode:GetNumber("originX")
 	local originY = mcmlNode:GetNumber("originY")
 	local originZ = mcmlNode:GetNumber("originZ")
 	if moviefile and moviefile ~= "" then
-		ctl:PlayMovieFile(moviefile, fromTime, toTime, originX, originY, originZ)
+		NPL.load("(gl)script/apps/Aries/Creator/Game/Common/Files.lua");
+		local Files = commonlib.gettable("MyCompany.Aries.Game.Common.Files");
+		moviefile = Files.FindFile(moviefile)
+		if(moviefile) then
+			ctl:PlayMovieFile(moviefile, fromTime, toTime, originX, originY, originZ, isLooping)
+		end
 	end
 	--#endregion
 end

@@ -1,14 +1,19 @@
---[[ NPL code generator
+--[[ NPL code generator / formatter
 Edited By: Zhiyuan, LiXizhi
 Borrowed from Metalua project
 Date: 2016-12-11
 Desc: Rewrite in pure lua/npl
 -------------------------------
-NPL.load("(gl)script/ide/System/Compiler/nplgen.lua");
-local nplgen = commonlib.gettable("System.Compiler.nplgen")
-local gen = nplgen:new()
-gen:SetIgnoreNewLine(true)
-echo(gen:run(ast))
+NPL.load("(gl)script/ide/System/Compiler/nplc.lua");
+local nplp = System.Compiler.nplp:new()
+local nplGenerator = System.Compiler.nplgen:new()
+nplGenerator:SetIgnoreNewLine(true)
+nplGenerator:SetIgnoreIdentation(false)
+nplGenerator:SetCurrentIndentation(-1)
+nplGenerator:SetIdentStepString("\t")
+local ast = nplp:src_to_ast("any_code = here", "somefilename.npl")
+local compiled_src = nplGenerator:run(ast)
+log(compiled_src)
 -------------------------------
 ]]
 NPL.load("(gl)script/ide/System/Compiler/lib/util.lua");
@@ -20,7 +25,23 @@ function nplgen:ctor()
 	self.current_indent = 0; -- Current level of line indentation
 	self.indent_step = "    "; -- Indentation symbol, normally spaces or '\t'
 	self.current_line = 1;  -- Current line number
+	self.ignore_indent = true;
 	self.ignore_newline = false; -- ignore multiple new lines when generating code. 
+end
+
+-- one can set to -1 to ignore the file-level anonymous indentation.
+function nplgen:SetCurrentIndentation(curIdentation)
+	self.current_indent = curIdentation or -1
+end
+
+-- default to true
+function nplgen:SetIgnoreIdentation(ignore_indent)
+	self.ignore_indent = ignore_indent;
+end
+
+-- default to four spaces, it can also be "\t"
+function nplgen:SetIdentStepString(stepStr)
+	self.indent_step = stepStr or "    "
 end
 
 function nplgen:SetIgnoreNewLine(bIgnore)
@@ -54,48 +75,56 @@ function nplgen:acc(x)
 	if x then table.insert(self._acc, x) end
 end
 
---------------------------------------------------------------------------------
 -- Accumulate an indented newline.
 -- Jumps an extra line if indentation is 0, so that
 -- toplevel definitions are separated by an extra empty line.
---------------------------------------------------------------------------------
 function nplgen:nl()
-	if self.current_indent == 0 then self:acc "\n" end
-	self:acc("\n" .. self.indent_step:rep(self.current_indent))
+	if(self._acc[#(self._acc)] == " ") then
+		self._acc[#(self._acc)] = nil;
+	end
+	if self.current_indent <= 0 or self.ignore_indent then
+		self:acc("\n")
+	else
+		self:acc("\n" .. self.indent_step:rep(self.current_indent))
+	end
 end
 
---------------------------------------------------------------------------------
 -- Increase indentation and accumulate a new line.
---------------------------------------------------------------------------------
 function nplgen:nlindent()
 	self.current_indent = self.current_indent + 1
 	self:nl()
 end
 
---------------------------------------------------------------------------------
--- Decrease indentation and accumulate a new line.
---------------------------------------------------------------------------------
-function nplgen:nldedent()
-	self.current_indent = self.current_indent - 1
-	self:acc("\n" .. self.indent_step:rep(self.current_indent))
+-- increase indentation without newline
+function nplgen:indent()
+	self.current_indent = self.current_indent + 1
 end
 
---------------------------------------------------------------------------------
+-- Decrease indentation and accumulate a new line.
+function nplgen:nldedent()
+	self.current_indent = self.current_indent - 1
+	self:nl()
+end
+
+-- decrease indentation without a new line
+function nplgen:dedent()
+	self.current_indent = self.current_indent - 1
+end
+
+
 -- Go to the line.
---------------------------------------------------------------------------------
 function nplgen:goHead(node)
 	local dst_line = 0
 	if node.lineinfo and node.lineinfo.first then
 		dst_line = node.lineinfo.first[1]
 	end
 	if(self.ignore_newline) then
-		if(self.current_line >= dst_line - 1) then
-			self:acc("\n")
+		if(self.current_line < dst_line) then
+			self:nl()
 		end
 	else
-
-		for i = self.current_line, dst_line - 1 do
-			self:acc("\n")
+		for i = self.current_line + 1, dst_line do
+			self:nl()
 		end
 	end
 	self.current_line = dst_line
@@ -106,14 +135,13 @@ function nplgen:goTail(node)
 	if node.lineinfo and node.lineinfo.last then
 		dst_line = node.lineinfo.last[1]
 	end
-
 	if(self.ignore_newline) then
-		if(self.current_line >= dst_line - 1) then
-			self:acc("\n")
+		if(self.current_line < dst_line) then
+			self:nl()
 		end
 	else
-		for i = self.current_line, dst_line - 1 do
-			self:acc("\n")
+		for i = self.current_line + 1, dst_line do
+			self:nl()
 		end
 	end
 	self.current_line = dst_line
@@ -226,7 +254,8 @@ end
 -- of a list. 
 --------------------------------------------------------------------------------
 function nplgen:list(list, sep, start)
-	for i = start or 1, # list do
+	self:indent()
+	for i = start or 1, #list do
 		self:node(list[i])
 		--print("in List")
 		if list[i + 1] then
@@ -236,6 +265,7 @@ function nplgen:list(list, sep, start)
 			else error "Invalid list separator" end
 		end
 	end
+	self:dedent()
 end
 
 --------------------------------------------------------------------------------
@@ -281,8 +311,8 @@ function nplgen:Set(node)
 		self:goHead(node)
 		self:list(lhs, ", ")
 		self:acc " = "
-		self:goTail(node)
 		self:list(rhs, ", ")
+		self:goTail(node)
 		return
 	end
 	-- Note by Xizhi: following code is wrong for "a[1] = function() end"
@@ -353,7 +383,7 @@ function nplgen:While(node, cond, body)
 	self:goHead(node)
 	self:acc "while "
 	self:node(cond)
-	self:acc " do" -- TODO: put 'do' in right position
+	self:acc " do"
 	self:acc " "
 	self:list(body, " ")
 	self:acc " "
@@ -367,7 +397,7 @@ function nplgen:Repeat(node, body, cond)
 	self:acc " "
 	self:list(body, " ")
 	self:acc " "
-	self:acc "until " -- TODO: put 'until' in right position
+	self:acc "until "
 	self:node(cond)
 end
 
@@ -376,16 +406,22 @@ function nplgen:If(node)
 	for i = 1, #node - 1, 2 do
 		-- for each ``if/then'' and ``elseif/then'' pair --
 		local cond, body = node[i], node[i + 1]
+		self:goHead(cond)
 		self:acc(i==1 and "if " or "elseif ")
 		self:node(cond)
-		self:acc " then" -- TODO: put 'then' in right position
+		self:acc " then"
 		self:acc " "
 		self:list(body, " ")
 		self:acc " "
 	end
 	-- odd number of children --> last one is an `else' clause --
 	if #node%2 == 1 then 
-		self:acc "else" -- TODO: put 'else' in right position
+		-- tricky code: put 'else' in right position by forcing a new line before 'else'
+		if(not self.ignore_indent) then
+			self:nl()
+			self.current_line = self.current_line + 1;
+		end
+		self:acc "else"
 		self:acc " "
 		self:list(node[#node], " ")
 		self:acc(" ")
@@ -526,7 +562,7 @@ end
 
 function nplgen:Function(node, params, body)
 	self:goHead(node)
-	self:acc "function ("
+	self:acc "function("
 	self:list(params, ", ")
 	self:acc ")"
 	self:acc " "
@@ -537,11 +573,15 @@ function nplgen:Function(node, params, body)
 end
 
 function nplgen:Table(node)
-	if not node[1] then self:acc "{ }" else
+	if not node[1] then 
+		self:acc "{}" 
+	else
 		self:acc "{"
 		self:acc " "
-		--if #node > 1 then self:nlindent () else self:acc " " end
+		self:goHead(node)
+		self:indent()
 		for i, elem in ipairs(node) do
+			self:goHead(elem)
 			if elem.tag == 'Pair' 
 			and elem[1].tag == 'String' 
 			and is_ident(elem[1][1]) and not keywords[elem[1][1]] then
@@ -571,8 +611,9 @@ function nplgen:Table(node)
 				self:acc " "
 			end
 		end
-		--if #node > 1 then self:nldedent () else self:acc " " end
+		self:dedent()
 		self:acc " "
+		self:goTail(node)
 		self:acc "}"
 	end
 end

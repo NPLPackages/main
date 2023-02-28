@@ -1,0 +1,20 @@
+<template>
+    <div style="position: relative; height:41px; width: 76px; background: url(Texture/Aries/Creator/keepwork/ggs/user/fenshudi_76X41_32bits.png#0 0 76 41);">
+        <Number v-bind:number="one" style="position: absolute; left: 10px; top: 5px;"></Number>
+        <Number v-bind:number="two" style="position: absolute; left: 22px; top: 5px;"></Number>
+        <div style="position: absolute; left: 34px; top: 13px; height:7px; width: 7px; background: url(Texture/Aries/Creator/keepwork/ggs/user/number/dian_7X7_32bits.png#0 0 7 7);"></div>
+        <Number v-bind:number="three" style="position: absolute; left: 41px; top: 5px;"></Number>
+    </div>
+</template>
+
+<script type="text/lua">
+RegisterComponent("Number", "%vue%/Page/User/Number.html");
+
+function OnAttrValueChange()
+    local rate = GetAttrValue("rate");
+    if (not rate or rate == 0) then return end
+    local ratestr = tostring(rate or 0);
+    self.one, self.two, self.three = string.match(ratestr, "(%d?)(%d?)%D?(%d?)");
+end
+
+</script>

@@ -1,0 +1,193 @@
+<template style="width: 100%; height: 100%;" class="center">
+    <div style="height: 242px; width: 500px; background: url(Texture/Aries/Creator/keepwork/Window/dakuang_32bits.png#0 0 440 93:378 43 33 44);">
+        <div style="height: 43px;">
+            <div v-on:click="close" style="float: right; background:url(Texture/Aries/Creator/keepwork/ggs/dialog/guanbi_22X22_32bits.png#0 0 22 22); width:22px; height:22px; margin-right: 20px; margin-top: 10px;"></div>
+        </div>
+        <div style="padding-left: 50px; margin-top: 30px;">
+            <div>选择地区:</div>
+            <div style="margin-top: 10px">
+                <select id="state" class="select" v-bind:options="stateOptions" v-bind:value="state and state.name" placeholder="省" onselect=selectState></select>
+                <select id="city" class="select" v-bind:options="cityOptions" v-bind:value="city and city.name" placeholder="市" onselect=selectCity></select>
+                <select id="county" class="select" v-bind:options="countyOptions" v-bind:value="county and county.name" placeholder="区" onselect=selectCounty></select>
+            </div>
+        </div>
+        <div id="btn" style="margin-top: 30px; padding-left: 150px;">
+            <div onmousedown=clickConfirm style="display: inline-block; text-align: center; line-height: 58px; width:178px; height:58px; font-size: 24px; color: #000000;background: url(Texture/Aries/Creator/keepwork/Window/button/btn_huangse_32bits.png#0 0 38 64:16 16 16 16);">确定</div>
+        </div>
+    </div>
+</template>
+
+<script type="text/lua">
+RegisterComponent("Select", "%vue%/Page/User/Select.html");
+local KeepWorkItemManager = NPL.load("(gl)script/apps/Aries/Creator/HttpAPI/KeepWorkItemManager.lua");
+local KeepworkServiceSchoolAndOrg = NPL.load("(gl)Mod/WorldShare/service/KeepworkService/SchoolAndOrg.lua");
+local states, citys, countys = {}, {}, {};
+local country = {id = 1, name = "中国"};
+local regionId = nil;
+state, city, county = {}, {}, {};
+stateOptions = {};
+cityOptions = {};
+countyOptions = {};
+local IsExistRegionGSItem = SessionStorage:GetItem("IsExistRegionGSItem");
+if (IsExistRegionGSItem == nil) then IsExistRegionGSItem = KeepWorkItemManager.HasGSItem(130) end
+
+if (UserRegion and UserRegion.info) then
+    local info = UserRegion.info;
+    regionId = info and info.county and info.county.id;
+    country, state, city, county = info.country, info.state, info.city, info.county;
+end
+
+local function loadStates(callback)
+    stateOptions, states = {}, {};
+    KeepworkServiceSchoolAndOrg:GetSchoolRegion("province", nil, function(data)
+        if type(data) ~= "table" then return end
+        states = data;
+        for key, item in ipairs(states) do
+            table.insert(stateOptions, {value = item.id, label = item.name});
+        end
+        stateOptions = stateOptions;
+        if (callback) then callback() end
+    end);
+end
+
+local function loadCitys(callback)
+    cityOptions, citys = {}, {};
+    KeepworkServiceSchoolAndOrg:GetSchoolRegion("city", state.id, function(data)
+        if type(data) ~= "table" then return end
+        citys = data;
+        for key, item in ipairs(citys) do
+            table.insert(cityOptions, {value = item.id, label = item.name});
+        end
+        cityOptions = cityOptions;
+        if (callback) then callback() end
+    end)
+end
+
+local function loadCountys(callback)
+    countyOptions, countys = {}, {};
+    KeepworkServiceSchoolAndOrg:GetSchoolRegion("area", city.id, function(data)
+        if type(data) ~= "table" then return end
+        countys = data;
+        for key, item in ipairs(countys) do
+            table.insert(countyOptions, {value = item.id, label = item.name});
+        end
+        countyOptions = countyOptions;
+        if (callback) then callback() end
+    end)
+end
+
+loadStates(function() 
+    if (not state or not state.id) then return end
+
+    loadCitys(function() 
+        if (not city or not city.id) then return end
+
+        loadCountys();
+    end)
+end)
+
+function selectState(option)
+    if (state and state.id == option.value) then return end
+    local isExist = false;
+    for _, item in ipairs(states) do 
+        if (tostring(item.id) == tostring(option.value)) then
+            state = item;
+            isExist = true;
+            break;
+        end
+    end
+    if (not isExist) then 
+        state = {};
+        return ;
+    end
+
+    cityOptions, citys = {}, {};
+    loadCitys(function() 
+        local autoCity = citys[1] or {};
+        selectCity({value = autoCity.id, label = autoCity.name});
+    end)
+end
+
+function selectCity(option)
+    if (city and city.id == option.value) then return end
+    local isExist = false;
+    for _, item in ipairs(citys) do 
+        if (tostring(item.id) == tostring(option.value)) then
+            city = item;
+            isExist = true;
+            break;
+        end
+    end
+    if (not isExist) then 
+        city = {};
+        return ;
+    end
+    loadCountys(function() 
+        local autoCounty = countys[1] or {label = "", value = ""};
+        selectCounty({value = autoCounty.id, label = autoCounty.name});
+    end);
+end
+
+function selectCounty(option)
+    if (county and county.id == option.value) then 
+        return;
+    end
+    local isExist = false;
+    for _, item in ipairs(countys) do 
+        if (tostring(item.id) == tostring(option.value)) then
+            county = item;
+            isExist = true;
+            break;
+        end
+    end
+    if (not isExist) then
+        county = {};
+        return;
+    end
+end
+
+function close()
+    CloseWindow();
+end
+
+local function ShowMessageBoxPage(G)
+    ShowWindow(G, {
+        url = "%vue%/Page/User/MessageBox.html",
+        width = 500,
+        height = 242,
+        draggable = false,
+    });
+end
+
+function clickConfirm()
+    local newregionid = county.id or city.id or state.id or country.id;
+    if (newregionid == regionId) then return close() end
+    keepwork.user.setinfo({
+        router_params = {id = userId},
+        regionId = newregionid,
+    }, function(status, msg, data) 
+        if (status < 200 or status >= 300) then 
+            ShowMessageBoxPage({text = data and data.message or "修改地区失败"});
+            return CloseWindow();
+        end
+        ShowMessageBoxPage({text = "地区修改成功"});
+        <!-- if (not IsExistRegionGSItem) then
+            if (UserDetail) then UserDetail.bean = (UserDetail.bean or 0) + 5 end    
+            ShowMessageBoxPage({text = "地区修改成功, 获得了5知识豆"});
+            IsExistRegionGSItem = true;
+            SessionStorage:SetItem("IsExistRegionGSItem", IsExistRegionGSItem);
+        else
+            ShowMessageBoxPage({text = "地区修改成功"});
+        end -->
+        if (type(confirm) == "function") then confirm(county.id and county or city) end
+        CloseWindow();
+    end);
+end
+
+</script>
+
+<style>
+    .select {
+        margin-right: 10px;
+    }
+</style>

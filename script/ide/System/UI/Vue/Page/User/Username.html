@@ -1,0 +1,41 @@
+<template style="background-color: #00000080; display: flex; align-items: center;">
+    <div v-if="portrait" v-bind:style="portraitStyle"></div>
+    <div v-if="isCrown" tooltip="Paracraft 会员" valign="center" class="icon" style=" background:url(Texture/Aries/Creator/keepwork/UserInfo/crown_32bits.png#0 0 18 18)"></div>
+    <div v-if="not isTeacher and isStudent" tooltip="合作机构vip学员" class="icon" style="height:18px;background:url(Texture/Aries/Creator/keepwork/UserInfo/V_32bits.png#0 0 18 18)"></div>
+    <div v-if="isTeacher" tooltip="合作机构vip教师" class="icon" style="background:url(Texture/Aries/Creator/keepwork/UserInfo/blue_v_32bits.png#0 0 18 18)"></div>
+    <div style="display: inline; margin-left: 5px; color: #ffffff; align-self: center; min-width: 180px;">{{MyCompany.Aries.Chat.BadWordFilter.FilterString(username)}}</div>
+</template>
+
+<script type="text/lua">
+ 
+function OnReady()
+   
+end
+
+function OnAttrValueChange()
+    local UserInfo = GetAttrValue("UserInfo");
+
+    if (not UserInfo) then return end
+    self.portrait = UserInfo.portrait;
+    self.username = UserInfo.username;
+    self.isCrown = UserInfo.vip == 1;
+    self.isTeacher = UserInfo.tLevel == 1;
+    self.isStudent = UserInfo.student == 1;
+
+    if (self.portrait) then
+        self.portraitStyle = string.format("display: inline-block; margin-left: 8px; width: 24px; height: 24px; background:url(%s);", self.portrait);
+    end
+end
+
+</script>
+
+<style>
+.icon {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    margin-left:4px; 
+    display: flex; 
+    align-self: center;
+}
+</style>

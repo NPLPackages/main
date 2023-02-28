@@ -87,7 +87,7 @@ function Overlay:ctor()
 end
 
 local function compare_zorder_less(left, right)
-	return (left.zorder or 0) < (right.zorder or 0);
+	return (left.zorder or 0) <= (right.zorder or 0);
 end
 
 -- @param parent: if nil, we will create as root. 
@@ -325,6 +325,12 @@ function Overlay:GetLocalTransform()
 	return self.localTransform;
 end
 
+-- @return vector3
+function Overlay:CalculateWorldOrigin()
+	local mWorld = self:CalculateWorldMatrix(nil, false)
+	return mathlib.vector3d:new(mWorld[13], mWorld[14], mWorld[15])
+end
+
 -- recalculate world matrix all the way up to root overlay. 
 -- this is slow, do not calculate it every frame
 -- @param mWorld: if not nil, we will pre-multiply this matrix.
@@ -359,9 +365,13 @@ end
 
 
 -- set local transform
--- @param trans: nil or 4*4.  4*4 matrix is an array of 16 floats.
-function Overlay:SetLocalTransform(trans)
-	self.localTransform:set(trans);
+-- @param matTransform: nil or 4*4.  4*4 matrix is an array of 16 floats.
+function Overlay:SetLocalTransform(matTransform)
+	if(matTransform) then
+		self.localTransform:set(matTransform);
+	else
+		self.localTransform:identity();
+	end
 end
 
 function Overlay:PushLocalTransform(painter)

@@ -1,0 +1,57 @@
+<template>
+    <div style="display: inline;">
+        <div v-if="not IsFollow" v-on:click="clickFollow" style="display:inline-flex; align-items:center; width: 99px; height: 30px; background: url(Texture/Aries/Creator/keepwork/ggs/user/btn_add_guanzhudi_99X30_32bits.png#0 0 99 30);">
+            <div style="display:inline-block; margin-left: 18px; width: 30px; height: 15px; background: url(Texture/Aries/Creator/keepwork/ggs/user/zi_guanzhu_30X15_32bits.png#0 0 30 15);"></div>
+        </div>
+        <div v-if="IsFollow" style="display: inline;">
+            <div v-on:click="ShowCancelFollow" style="display:inline-flex; align-items:center; width: 99px; height: 30px; background: url(Texture/Aries/Creator/keepwork/ggs/user/btn_guanzhudi_99X30_32bits.png#0 0 99 30);">
+                <div style="display:inline-block; margin-left:10px; width: 46px; height: 15px; background: url(Texture/Aries/Creator/keepwork/ggs/user/zi_yiguanzhu_46X15_32bits.png#0 0 46 15);"></div>
+            </div>
+            <!-- <div v-if="isShowCancelFollow" v-on:click="clickCancelFollow" style="position: absolute; top: 30px; width: 99px; height: 30px; background: url(Texture/Aries/Creator/keepwork/ggs/user/btn_quxiaoguanzhu_99X30_32bits.png#0 0 99 30);"></div> -->
+            <div v-if="isShowCancelFollow" v-on:click="clickCancelFollow" style="width: 99px; height: 30px; background: url(Texture/Aries/Creator/keepwork/ggs/user/btn_quxiaoguanzhu_99X30_32bits.png#0 0 99 30);"></div>
+        </div>
+    </div>
+</template>
+
+<script type="text/lua">
+self.isShowCancelFollow = false;
+
+local GlobalScope = GetGlobalScope();
+
+function OnReady()
+end
+
+function ShowCancelFollow()
+    self.isShowCancelFollow = not self.isShowCancelFollow;
+end
+
+function clickFollow()
+    if (not isLogin) then return end
+    UserDetail.rank.fans = UserDetail.rank.fans + 1;
+    GlobalScope:Set("IsFollow", true);
+    keepwork.user.follow({
+        objectType = 0,
+        objectId = UserDetail.id,
+    }, function(status, msg, data)
+        -- self.fans = self.fans + 1;
+    end);
+end
+
+function clickCancelFollow()
+    if (not isLogin) then return end
+    
+    self.isShowCancelFollow = false;
+    GlobalScope:Set("IsFollow", false);
+    UserDetail.rank.fans = UserDetail.rank.fans - 1;
+
+    keepwork.user.unfollow({
+        objectType = 0,
+        objectId = UserDetail.id,
+    }, function(status, msg, data)
+        -- self.fans = self.fans - 1;
+    end);
+end
+
+GetGlobalScope():Watch("UserDetail", OnReady);
+
+</script>

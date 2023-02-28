@@ -75,14 +75,14 @@ end
 function nplc.loadstring(code, filename, nplp_obj)
 	if(code) then
 		local ast = {}
-		
 		if nplp_obj then
 			ast = nplp_obj:src_to_ast(code, filename)
 		else
 			CheckLoadDefaultNplDslExtension();
 			ast = nplp:src_to_ast(code, filename)
 		end
-		local compiled_src = nplgen.ast_to_str(ast)
+		local gen = nplgen:new()
+		local compiled_src = gen:run(ast)
 		return loadstring(compiled_src, filename)
 	end
 end

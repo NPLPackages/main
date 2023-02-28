@@ -1,0 +1,34 @@
+<template class="container">
+    <div onclick=ClickAddSubTitleBtn class="subtitle btn">
+        添加字幕
+    </div>
+</template>
+
+<script type="text/lua" src="%ui%/Page/Macro/MacrosManager.lua">
+function ClickAddSubTitleBtn()
+    _G.PauseMacroRecord();
+    ShowWindow({
+        OnClose = function()
+            _G.RestoreMacroRecord();
+        end,
+        OnConfirm = function(text)
+            _G.AddMacro("ShowSubTitlePage", {text = text});
+        end,
+    }, {
+        url = "%ui%/Page/Macro/AddSubTitleMacro.html",
+    });
+end
+</script>
+
+<style>
+.container {
+    padding-top: 10px; 
+    width: 100%;
+    height: 100%;
+}    
+
+.subtitle {
+    height: 32px;
+    width: 100px;
+}
+</style>

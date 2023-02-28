@@ -1,7 +1,8 @@
 --[[
 Title: base mcml function and base Node implementation of mcml
-Author(s): LiXizhi
-Date: 2008/2/15
+Author(s): LiXizhi, big
+CreateDate: 2008.2.15
+ModifyDate: 2022.7.19
 Desc: only included and used by mcml
 use the lib:
 ------------------------------------------------------------
@@ -1327,13 +1328,17 @@ end
 --  see self.DrawChildBlocks_Callback for an example callback
 function mcml.baseNode:DrawDisplayBlock(rootName, bindingContext, _parent, left, top, width, height, parentLayout, style, render_callback)
 	local mcmlNode = self;
-	if(mcmlNode:GetAttribute("display") == "none") then return end
+
+	if (mcmlNode:GetAttribute("display") == "none") then
+		return;
+	end
 
 	-- process any variables that is taking place. 
 	mcmlNode:ProcessVariables();
 
 	local css = mcmlNode:GetStyle(pe_html.css[mcmlNode.name], style) or {};
-	if(style) then
+
+	if (style) then
 		-- pass through some css styles from parent. 
 		css.color = css.color or style.color;
 		css["font-family"] = css["font-family"] or style["font-family"];
@@ -1342,145 +1347,197 @@ function mcml.baseNode:DrawDisplayBlock(rootName, bindingContext, _parent, left,
 		css["text-shadow"] = css["text-shadow"] or style["text-shadow"];
 	end
 
-	local padding_left, padding_top, padding_bottom, padding_right = 
-		(css["padding-left"] or css["padding"] or 0),(css["padding-top"] or css["padding"] or 0),
-		(css["padding-bottom"] or css["padding"] or 0),(css["padding-right"] or css["padding"] or 0);
-	local margin_left, margin_top, margin_bottom, margin_right = 
-		(css["margin-left"] or css["margin"] or 0),(css["margin-top"] or css["margin"] or 0),
-		(css["margin-bottom"] or css["margin"] or 0),(css["margin-right"] or css["margin"] or 0);	
+	local padding_left,
+	      padding_top,
+		  padding_bottom,
+		  padding_right = 
+			(css["padding-left"] or css["padding"] or 0),
+			(css["padding-top"] or css["padding"] or 0),
+			(css["padding-bottom"] or css["padding"] or 0),
+			(css["padding-right"] or css["padding"] or 0);
+
+	if (style and style.scale) then
+		padding_left = padding_left * style.scale;
+		padding_top = padding_top * style.scale;
+		padding_bottom = padding_bottom * style.scale;
+		padding_right = padding_right * style.scale;
+	end
+
+	local margin_left,
+		  margin_top,
+		  margin_bottom,
+		  margin_right = 
+			(css["margin-left"] or css["margin"] or 0),
+			(css["margin-top"] or css["margin"] or 0),
+			(css["margin-bottom"] or css["margin"] or 0),
+			(css["margin-right"] or css["margin"] or 0);
+
+	if (style and style.scale) then
+		margin_left = margin_left * style.scale;
+		margin_top = margin_top * style.scale;
+		margin_bottom = margin_bottom * style.scale;
+		margin_right = margin_right * style.scale;
+	end	
 
 	local availWidth, availHeight = parentLayout:GetPreferredSize();
 	local maxWidth, maxHeight = parentLayout:GetMaxSize();
 
-	if(css["max-width"]) then
+	if (css["max-width"]) then
 		local max_width = css["max-width"];
-		if(maxWidth>max_width) then
+
+		if (maxWidth > max_width) then
 			local left, top, right, bottom = parentLayout:GetAvailableRect();
+
 			-- align at center. 
 			local align = mcmlNode:GetAttribute("align") or css["align"];
-			if(align == "center") then
-				left = left + (maxWidth - max_width)/2
-			elseif(align == "right") then
+
+			if (align == "center") then
+				left = left + (maxWidth - max_width) / 2;
+			elseif (align == "right") then
 				left = right - max_width;
-			end	
+			end
+
 			right = left + max_width;
 			parentLayout:reset(left, top, right, bottom);
 		end
 	end
 
-	if(css["max-height"]) then
+	if (css["max-height"]) then
 		local max_height = css["max-height"];
-		if(maxHeight>max_height) then
+
+		if (maxHeight>max_height) then
 			local left, top, right, bottom = parentLayout:GetAvailableRect();
+
 			-- align at center. 
 			local valign = mcmlNode:GetAttribute("valign") or css["valign"];
-			if(valign == "center") then
+
+			if (valign == "center") then
 				top = top + (maxHeight - max_height)/2
-			elseif(valign == "bottom") then
+			elseif (valign == "bottom") then
 				top = bottom - max_height;
-			end	
+			end
+
 			bottom = top + max_height;
 			parentLayout:reset(left, top, right, bottom);
 		end
 	end
-	
-	if(mcmlNode:GetAttribute("trans")) then
+
+	if (mcmlNode:GetAttribute("trans")) then
 		-- here we will translate all child nodes recursively, using the given lang 
 		-- unless any of the child attribute disables or specifies a different lang
 		mcmlNode:TranslateMe();
 	end
-	
+
 	local width, height = mcmlNode:GetAttribute("width"), mcmlNode:GetAttribute("height");
-	if(width) then
+
+	if (width) then
 		css.width = tonumber(string.match(width, "%d+"));
-		if(css.width and string.match(width, "%%$")) then
-			if(css.position == "screen") then
-				css.width = ParaUI.GetUIObject("root").width * css.width/100;
-			else	
-				css.width=math.floor((maxWidth-margin_left-margin_right)*css.width/100);
-				if(availWidth<(css.width+margin_left+margin_right)) then
-					css.width=availWidth-margin_left-margin_right;
+
+		if (css.width and string.match(width, "%%$")) then
+			if (css.position == "screen") then
+				css.width = ParaUI.GetUIObject("root").width * css.width / 100;
+			else
+				css.width = math.floor((maxWidth - margin_left - margin_right) * css.width / 100);
+
+				if (availWidth < (css.width + margin_left + margin_right)) then
+					css.width = availWidth-margin_left-margin_right;
 				end
-				if(css.width<=0) then
+
+				if (css.width <= 0) then
 					css.width = nil;
 				end
 			end	
 		end	
 	end
-	if(height) then
+
+	if (height) then
 		css.height = tonumber(string.match(height, "%d+"));
-		if(css.height and string.match(height, "%%$")) then
-			if(css.position == "screen") then
-				css.height = ParaUI.GetUIObject("root").height * css.height/100;
-			else	
-				css.height=math.floor((maxHeight-margin_top-margin_bottom)*css.height/100);
-				if(availHeight<(css.height+margin_top+margin_bottom)) then
-					css.height=availHeight-margin_top-margin_bottom;
+
+		if (css.height and string.match(height, "%%$")) then
+			if (css.position == "screen") then
+				css.height = ParaUI.GetUIObject("root").height * css.height / 100;
+			else
+				css.height = math.floor((maxHeight - margin_top - margin_bottom) * css.height / 100);
+
+				if (availHeight < (css.height + margin_top + margin_bottom)) then
+					css.height = availHeight - margin_top - margin_bottom;
 				end
-				if(css.height<=0) then
+
+				if (css.height <= 0) then
 					css.height = nil;
 				end
 			end	
 		end	
 	end
-	
+
 	-- whether this control takes up space
-	local bUseSpace; 
-	if(css.float) then
+	local bUseSpace;
+
+	if (css.float) then
 		local minWidth = css.width or css["min-width"];
-		if(minWidth) then
-			if(availWidth<(minWidth+margin_left+margin_right)) then
+
+		if (minWidth) then
+			if (availWidth < (minWidth + margin_left + margin_right)) then
 				parentLayout:NewLine();
 			end
-		end	
+		end
 	else
 		parentLayout:NewLine();
 	end
+
 	local myLayout = parentLayout:clone();
 	myLayout:ResetUsedSize();
-	
-	if(css.width) then
+
+	if (css.width) then
 		local align = mcmlNode:GetAttribute("align") or css["align"];
-		if(align and align~="left") then
+
+		if (align and align ~= "left") then
 			local max_width = css.width;
 			local left, top, right, bottom = myLayout:GetAvailableRect();
+
 			-- align at center. 
-			if(align == "center") then
-				left = left + (maxWidth - max_width)/2
-			elseif(align == "right") then
+			if (align == "center") then
+				left = left + (maxWidth - max_width) / 2;
+			elseif (align == "right") then
 				max_width = max_width + margin_left + margin_right;
 				left = right - max_width;
-			end	
+			end
+
 			right = left + max_width
 			myLayout:reset(left, top, right, bottom);
 		end
 	end
-	if(css.height) then
+
+	if (css.height) then
 		-- align at center. 
 		local valign = mcmlNode:GetAttribute("valign") or css["valign"];
-		if(valign and valign~="top") then
+
+		if (valign and valign ~= "top") then
 			local max_height = css.height;
 			local left, top, right, bottom = myLayout:GetAvailableRect();
-			if(valign == "center") then
-				top = top + (maxHeight - max_height)/2
-			elseif(valign == "bottom") then
+
+			if (valign == "center") then
+				top = top + (maxHeight - max_height) / 2
+			elseif (valign == "bottom") then
 				max_height = max_height + margin_top + margin_bottom;
 				top = bottom - max_height;
-			end	
-			bottom = top + max_height
+			end
+
+			bottom = top + max_height;
 			myLayout:reset(left, top, right, bottom);
 		end
 	end
 
-	if(css.position == "absolute") then
+	if (css.position == "absolute") then
 		-- absolute positioning in parent
-		if(css.width and css.height and css.left and css.top) then
+		if (css.width and css.height and css.left and css.top) then
 			-- if all rect is provided, we will do true absolute position. 
 			myLayout:reset(css.left, css.top, css.left + css.width, css.top + css.height);
 		else
 			-- this still subject to parent rect. 
 			myLayout:SetPos(css.left, css.top);
 		end
+
 		myLayout:ResetUsedSize();
 	elseif(css.position == "relative") then
 		-- relative positioning in next render position. 
@@ -1489,31 +1546,42 @@ function mcml.baseNode:DrawDisplayBlock(rootName, bindingContext, _parent, left,
 		-- relative positioning in screen client area
 		local offset_x, offset_y = 0, 0;
 		local left, top = mcmlNode:GetAttribute("left"), mcmlNode:GetAttribute("top");
-		if(left) then
+
+		if (left) then
 			left = tonumber(string.match(left, "(%d+)%%$"));
 			offset_x = ParaUI.GetUIObject("root").width * left/100;
 		end
-		if(top) then
+
+		if (top) then
 			top = tonumber(string.match(top, "(%d+)%%$"));
 			offset_y = ParaUI.GetUIObject("root").height * top/100;
 		end
+
 		local px,py = _parent:GetAbsPosition();
-		myLayout:SetPos((css.left or 0)-px + offset_x, (css.top or 0)-py + offset_y); 
+		myLayout:SetPos((css.left or 0) - px + offset_x, (css.top or 0) - py + offset_y); 
 	else
 		myLayout:OffsetPos(css.left, css.top);
 		bUseSpace = true;	
 	end
-	
+
 	left,top = myLayout:GetAvailablePos();
 	myLayout:SetPos(left,top);
 	width,height = myLayout:GetSize();
-	
-	if(css.width) then
-		myLayout:IncWidth(left+margin_left+margin_right+css.width-width)
+
+	if (css.width) then
+		if (style and style.scale) then
+			css.width = css.width * style.scale;
+		end
+		
+		myLayout:IncWidth(left + margin_left + margin_right + css.width - width)
 	end
-	
-	if(css.height) then
-		myLayout:IncHeight(top+margin_top+margin_bottom+css.height-height)
+
+	if (css.height) then
+		if (style and style.scale) then
+			css.height = css.height * style.scale;
+		end
+
+		myLayout:IncHeight(top + margin_top + margin_bottom + css.height - height)
 	end	
 	
 	-- for inner control preferred size
@@ -1526,182 +1594,304 @@ function mcml.baseNode:DrawDisplayBlock(rootName, bindingContext, _parent, left,
 	---------------------------------
 	local ignore_onclick, ignore_background, ignore_tooltip;
 
-	
-	if(render_callback) then
+	if (render_callback) then
 		local left, top, width, height = myLayout:GetPreferredRect();
-		ignore_onclick, ignore_background, ignore_tooltip = render_callback(mcmlNode, rootName, bindingContext, _parent, left-padding_left, top-padding_top, width+padding_right, height+padding_bottom, myLayout, css);
+		ignore_onclick,
+		ignore_background,
+		ignore_tooltip =
+			render_callback(
+				mcmlNode,
+				rootName,
+				bindingContext,
+				_parent,
+				left-padding_left,
+				top-padding_top,
+				width+padding_right,
+				height+padding_bottom,
+				myLayout,
+				css
+			);
 	end
 
 	local width, height = myLayout:GetUsedSize()
 	width = width + padding_right + margin_right
 	height = height + padding_bottom + margin_bottom
-	if(css.width) then
-		width = left + css.width + margin_left+margin_right;
-	end	
-	if(css.height) then
-		height = top + css.height + margin_top+margin_bottom;
+
+	if (css.width) then
+		width = left + css.width + margin_left + margin_right;
 	end
-	if(css["min-width"]) then
+
+	if (css.height) then
+		height = top + css.height + margin_top + margin_bottom;
+	end
+
+	if (css["min-width"]) then
 		local min_width = css["min-width"];
-		if((width-left) < min_width) then
+		
+		if ((width-left) < min_width) then
 			width = left + min_width;
 		end
 	end
-	if(css["min-height"]) then
+
+	if (css["min-height"]) then
 		local min_height = css["min-height"];
-		if((height-top) < min_height) then
+		
+		if ((height-top) < min_height) then
 			height = top + min_height;
 		end
 	end
-	if(css["max-height"]) then
+
+	if (css["max-height"]) then
 		local max_height = css["max-height"];
-		if((height-top) > max_height) then
+		
+		if ((height-top) > max_height) then
 			height = top + max_height;
 		end
 	end
-	if(bUseSpace) then
+
+	if (bUseSpace) then
 		parentLayout:AddObject(width-left, height-top);
-		if(not css.float) then
+
+		if (not css.float) then
 			parentLayout:NewLine();
 		end	
 	end
+
 	local onclick, ontouch;
 	local onclick_for;
-	if(not ignore_onclick) then
+	
+	if (not ignore_onclick) then
 		onclick = mcmlNode:GetString("onclick");
-		if(onclick == "") then
+
+		if (onclick == "") then
 			onclick = nil;
 		end
+
 		onclick_for = mcmlNode:GetString("for");
-		if(onclick_for == "") then
+
+		if (onclick_for == "") then
 			onclick_for = nil;
 		end
+
 		ontouch = mcmlNode:GetString("ontouch");
-		if(ontouch == "") then
+
+		if (ontouch == "") then
 			ontouch = nil;
 		end
 	end
-	local tooltip
-	if(not ignore_tooltip) then
-		tooltip = mcmlNode:GetAttributeWithCode("tooltip",nil,true);
-		if(tooltip == "") then
+
+	local tooltip;
+
+	if (not ignore_tooltip) then
+		tooltip = mcmlNode:GetAttributeWithCode("tooltip", nil, true);
+
+		if (tooltip == "") then
 			tooltip = nil;
 		end
 	end
+
 	local background;
-	if(not ignore_background) then
+
+	if (not ignore_background) then
 		background = mcmlNode:GetAttribute("background") or css.background;
 	end
-	if(css["background-color"] and not ignore_background) then
-		if(not background and not css.background2) then
+
+	if (css["background-color"] and not ignore_background) then
+		if (not background and not css.background2) then
 			background = "Texture/whitedot.png";
 		end
 	end
 
-	if(onclick_for or onclick or tooltip or ontouch) then
+	if (onclick_for or onclick or tooltip or ontouch) then
 		-- if there is onclick event, the inner nodes will not be interactive.
 		local instName = mcmlNode:GetAttributeWithCode("uiname", nil, true) or mcmlNode:GetInstanceName(rootName);
-		
-		local _this=ParaUI.CreateUIObject("button",instName or "b","_lt", left+margin_left, top+margin_top, width-left-margin_left-margin_right, height-top-margin_top-margin_bottom);
+
+		local _this =
+			ParaUI.CreateUIObject(
+				"button",
+				instName or "b",
+				"_lt",
+				left + margin_left,
+				top + margin_top,
+				width - left - margin_left - margin_right,
+				height - top - margin_top - margin_bottom
+			);
+
 		mcmlNode.uiobject_id = _this.id;
-		if(background) then
+
+		if (background) then
 			_this.background = background;
-			if(background~="") then
+
+			if (background ~= "") then
 				if(css["background-color"]) then
 					_guihelper.SetUIColor(_this, css["background-color"]);
-				end	
-				if(css["background-rotation"]) then
-					_this.rotation = tonumber(css["background-rotation"])
 				end
+
+				if(css["background-rotation"]) then
+					_this.rotation = tonumber(css["background-rotation"]);
+				end
+
 				if(css["background-repeat"] == "repeat") then
 					_this:GetAttributeObject():SetField("UVWrappingEnabled", true);
 				end
 			end
-			if(css["background-animation"]) then
+
+			if (css["background-animation"]) then
 				local anim_file = string.gsub(css["background-animation"], "url%((.*)%)", "%1");
 				local fileName,animName = string.match(anim_file, "^([^#]+)#(.*)$");
-				if(fileName and animName) then
+
+				if (fileName and animName) then
 					UIAnimManager.PlayUIAnimationSequence(_this, fileName, animName, true);
 				end
 			end
 		else
 			_this.background = "";
 		end
-		if(css.background2 and not ignore_background) then
+
+		if (css.background2 and not ignore_background) then
 			_guihelper.SetVistaStyleButton(_this, nil, css.background2);
 		end
+
 		local zorder = mcmlNode:GetNumber("zorder");
-		if(zorder) then
-			_this.zorder = zorder
+
+		if (zorder) then
+			_this.zorder = zorder;
 		end
-		if(onclick_for or onclick or ontouch) then
+
+		if (onclick_for or onclick or ontouch) then
 			local btnName = mcmlNode:GetAttributeWithCode("name")
+
 			-- tricky: we will just prefetch any params with code that may be used in the callback 
 			local i;
-			for i=1,5 do
-				if(not mcmlNode:GetAttributeWithCode("param"..i)) then
+
+			for i = 1, 5 do
+				if (not mcmlNode:GetAttributeWithCode("param" .. i)) then
 					break;
 				end
 			end
-			if(onclick_for or onclick) then
+
+			if (onclick_for or onclick) then
 				_this:SetScript("onclick", Map3DSystem.mcml_controls.pe_editor_button.on_click, mcmlNode, instName, bindingContext, btnName);
-			elseif(ontouch) then
+			elseif (ontouch) then
 				_this:SetScript("ontouch", Map3DSystem.mcml_controls.pe_editor_button.on_touch, mcmlNode, instName, bindingContext, btnName);
 			end
-		end	
-		if(tooltip) then
+		end
+
+		if (tooltip) then
 			local tooltip_page = string.match(tooltip or "", "page://(.+)");
 			local tooltip_static_page = string.match(tooltip or "", "page_static://(.+)");
-			if(tooltip_page) then
-				CommonCtrl.TooltipHelper.BindObjTooltip(mcmlNode.uiobject_id, tooltip_page, mcmlNode:GetNumber("tooltip_offset_x"), mcmlNode:GetNumber("tooltip_offset_y"), mcmlNode:GetNumber("show_width"),mcmlNode:GetNumber("show_height"),mcmlNode:GetNumber("show_duration"), mcmlNode:GetBool("enable_tooltip_hover"), nil, mcmlNode:GetBool("tooltip_is_interactive"), mcmlNode:GetBool("is_lock_position"), mcmlNode:GetBool("use_mouse_offset"), mcmlNode:GetNumber("screen_padding_bottom"), nil, nil, nil, mcmlNode:GetBool("offset_ctrl_width"), mcmlNode:GetBool("offset_ctrl_height"));
-			elseif(tooltip_static_page) then
-				CommonCtrl.TooltipHelper.BindObjTooltip(mcmlNode.uiobject_id, tooltip_static_page, mcmlNode:GetNumber("tooltip_offset_x"), mcmlNode:GetNumber("tooltip_offset_y"), mcmlNode:GetNumber("show_width"),mcmlNode:GetNumber("show_height"),mcmlNode:GetNumber("show_duration"),mcmlNode:GetBool("enable_tooltip_hover"),mcmlNode:GetBool("click_through"));
+
+			if (tooltip_page) then
+				CommonCtrl.TooltipHelper.BindObjTooltip(
+					mcmlNode.uiobject_id,
+					tooltip_page,
+					mcmlNode:GetNumber("tooltip_offset_x"),
+					mcmlNode:GetNumber("tooltip_offset_y"),
+					mcmlNode:GetNumber("show_width"),
+					mcmlNode:GetNumber("show_height"),
+					mcmlNode:GetNumber("show_duration"),
+					mcmlNode:GetBool("enable_tooltip_hover"),
+					nil,
+					mcmlNode:GetBool("tooltip_is_interactive"),
+					mcmlNode:GetBool("is_lock_position"),
+					mcmlNode:GetBool("use_mouse_offset"),
+					mcmlNode:GetNumber("screen_padding_bottom"),
+					nil,
+					nil,
+					nil,
+					mcmlNode:GetBool("offset_ctrl_width"),
+					mcmlNode:GetBool("offset_ctrl_height")
+				);
+			elseif (tooltip_static_page) then
+				CommonCtrl.TooltipHelper.BindObjTooltip(
+					mcmlNode.uiobject_id,
+					tooltip_static_page,
+					mcmlNode:GetNumber("tooltip_offset_x"),
+					mcmlNode:GetNumber("tooltip_offset_y"),
+					mcmlNode:GetNumber("show_width"),
+					mcmlNode:GetNumber("show_height"),
+					mcmlNode:GetNumber("show_duration"),
+					mcmlNode:GetBool("enable_tooltip_hover"),
+					mcmlNode:GetBool("click_through")
+				);
 			else
 				_this.tooltip = tooltip;
 			end
 		end
+
 		_parent:AddChild(_this);
 	else
-		if(background) then
+		if (background) then
 			local instName;
-			if(mcmlNode:GetAttribute("name") or mcmlNode:GetAttribute("id")) then
+
+			if (mcmlNode:GetAttribute("name") or mcmlNode:GetAttribute("id")) then
 				-- this is solely for giving a global name to background image control so that it can be animated
 				-- background image control is mutually exclusive with inner text control. hence if there is a background, inner text becomes anonymous
 				instName = mcmlNode:GetInstanceName(rootName);
-			end	
-			local _this=ParaUI.CreateUIObject("button",instName or "b","_lt", left+margin_left, top+margin_top, width-left-margin_left-margin_right, height-top-margin_top-margin_bottom);
+			end
+
+			local _this =
+				ParaUI.CreateUIObject(
+					"button",
+					instName or "b",
+					"_lt",
+					left + margin_left,
+					top + margin_top,
+					width - left - margin_left - margin_right,
+					height - top - margin_top - margin_bottom
+				);
+
 			_this.background = background;
 			_this.enabled = false;
 			mcmlNode.uiobject_id = _this.id;
-			if(css["background-color"]) then
+			
+			if (css["background-color"]) then
 				_guihelper.SetUIColor(_this, css["background-color"]);
 			else
 				_guihelper.SetUIColor(_this, "255 255 255 255");
-			end	
-			if(css["background-rotation"]) then
+			end
+
+			if (css["background-rotation"]) then
 				_this.rotation = tonumber(css["background-rotation"])
 			end
-			if(css["background-repeat"] == "repeat") then
+
+			if (css["background-repeat"] == "repeat") then
 				_this:GetAttributeObject():SetField("UVWrappingEnabled", true);
 			end
+
 			_parent:AddChild(_this);
 			local zorder = mcmlNode:GetNumber("zorder");
-			if(zorder) then
+
+			if (zorder) then
 				_this.zorder = zorder
 			end
+
 			_this:BringToBack();
-			if(css["background-animation"]) then
+
+			if (css["background-animation"]) then
 				local anim_file = string.gsub(css["background-animation"], "url%((.*)%)", "%1");
-				local fileName,animName = string.match(anim_file, "^([^#]+)#(.*)$");
-				if(fileName and animName) then
+				local fileName, animName = string.match(anim_file, "^([^#]+)#(.*)$");
+
+				if (fileName and animName) then
 					UIAnimManager.PlayUIAnimationSequence(_this, fileName, animName, true);
 				end
 			end
-		elseif(mcmlNode:GetBool("enabled") == false) then
-			local _this=ParaUI.CreateUIObject("button","b","_lt", left+margin_left, top+margin_top, width-left-margin_left-margin_right, height-top-margin_top-margin_bottom);
-			if(tooltip) then
+		elseif (mcmlNode:GetBool("enabled") == false) then
+			local _this =
+				ParaUI.CreateUIObject(
+					"button",
+					"b",
+					"_lt",
+					left + margin_left,
+					top + margin_top,
+					width - left - margin_left - margin_right,
+					height - top - margin_top - margin_bottom
+				);
+
+			if (tooltip) then
 				_this.tooltip = tooltip;
 			end
+
 			_this.background = background or "";
 			_parent:AddChild(_this);
 		end
@@ -1709,15 +1899,29 @@ function mcml.baseNode:DrawDisplayBlock(rootName, bindingContext, _parent, left,
 	
 	-- call onload(mcmlNode) function if any. 
 	local onloadFunc = mcmlNode:GetString("onload");
-	if(onloadFunc and onloadFunc~="") then
+
+	if (onloadFunc and onloadFunc ~= "") then
 		Map3DSystem.mcml_controls.pe_script.BeginCode(mcmlNode);
 		local pFunc = commonlib.getfield(onloadFunc);
-		if(type(pFunc) == "function") then
+
+		if (type(pFunc) == "function") then
 			pFunc(mcmlNode);
 		else
 			LOG.std("", "warn", "mcml", "%s node's onload call back: %s is not a valid function.", mcmlNode.name, onloadFunc)	
 		end
-		Map3DSystem.mcml_controls.pe_script.EndCode(rootName, mcmlNode, bindingContext, _parent, left, top, width, height,style, parentLayout);
+
+		Map3DSystem.mcml_controls.pe_script.EndCode(
+			rootName,
+			mcmlNode,
+			bindingContext,
+			_parent,
+			left,
+			top,
+			width,
+			height,
+			style,
+			parentLayout
+		);
 	end
 end
 

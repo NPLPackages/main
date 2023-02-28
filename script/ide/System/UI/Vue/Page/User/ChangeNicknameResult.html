@@ -1,0 +1,27 @@
+<template style="height: 242px; width: 500px; background: url(Texture/Aries/Creator/keepwork/Window/dakuang_32bits.png#0 0 440 93:378 43 33 44);">
+    <div style="height: 43px;">
+        <div v-on:click="Close" style="float: right; background:url(Texture/Aries/Creator/keepwork/ggs/dialog/guanbi_22X22_32bits.png#0 0 22 22); width:22px; height:22px; margin-right: 20px; margin-top: 10px;"></div>
+    </div>
+    <div style="margin-top: 40px; text-align: center; font-size: 20px; base-font-size: 20px; color: #101010;">{{text or ""}}</div>
+    <div style="margin-top: 60px;" class="hcenter">
+        <div onclick=clickConfirm style="display: inline-block; text-align: center; line-height: 58px; width:178px; height:58px; font-size: 24px; base-font-size: 24px; color: #000000;background: url(Texture/Aries/Creator/keepwork/Window/button/btn_huangse_32bits.png#0 0 38 64:16 16 16 16);">确定</div>
+    </div>
+</template>
+
+<script type="text/lua">
+function Close() 
+    CloseWindow();
+end
+
+function clickConfirm()
+    Close();
+
+    if (type(Confirm) == "function") then
+        Confirm();
+    end
+end
+</script>
+
+<!-- 
+    
+ -->

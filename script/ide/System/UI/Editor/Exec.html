@@ -1,0 +1,18 @@
+<template class="container">
+    <WindowTitleBar title="UI 编辑器运行窗口"></WindowTitleBar>
+    <div style="position: absolute; top: 40px; left: 2px; right: 2px; bottom: 2px;">
+        <component v-bind:template="template"></component>
+    </div>
+</template>
+
+<script type="text/lua">
+RegisterComponent("WindowTitleBar", "%vue%/Components/WindowTitleBar.html");
+</script>
+
+<style scoped=true>
+.container {
+    height: 100%; 
+    width: 100%; 
+    background: url(Texture/Aries/Creator/keepwork/Window/dakuang2_32bits.png#0 0 64 69:26 44 24 22);
+}
+</style>

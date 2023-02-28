@@ -37,14 +37,14 @@ function options.SetProcessorQueueSize(nProcessorQueueID, nSize)
 	end
 end
 
+-- globally enable or disable all mouse and keyboard event
 function options.DisableInput(isInputDisabled)
 	options.isInputDisabled = isInputDisabled;
 	ParaCamera.GetAttributeObject():SetField("BlockInput", isInputDisabled);
 	ParaScene.GetAttributeObject():SetField("BlockInput", isInputDisabled);
+	System.Core.SceneContextManager:EnableInput(not isInputDisabled)
 	if(not isInputDisabled) then
-		NPL.load("(gl)script/ide/System/Core/SceneContextManager.lua");
-		local SceneContextManager = commonlib.gettable("System.Core.SceneContextManager");
-		local context = SceneContextManager:GetCurrentContext();
+		local context = System.Core.SceneContextManager:GetCurrentContext();
 		if(context) then
 			context:UpdateAutoCameraManipulator()
 		end

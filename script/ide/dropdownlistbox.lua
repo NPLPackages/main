@@ -48,6 +48,8 @@ local dropdownlistbox = {
 	-- if not nil, it will centered inside buttonwidth and height
 	dropdownbutton_width = nil,
 	dropdownbutton_height = nil,
+	dropdownbutton_X = nil,
+	dropdownbutton_Y = nil,
 	listbox_bg = nil, -- list box background texture
 	listbox_container_bg = "", 
 	-- data
@@ -132,19 +134,23 @@ function dropdownlistbox:Show(bShow)
 			self:handleEvent("OnTextChange");
 		end)
 
+		if(self.uiname) then
+			_this:SetScript("onmodify", function()
+				self:handleEvent("OnEditBoxModify");
+			end)
+			_this:SetScript("onkeyup", function()
+				self:handleEvent("OnEditBoxKeyup");
+			end)
+		end
+
 		if self.editbox_bg~=nil then
 			_this.background = self.editbox_bg;
 		end
 
 		-- create the dropdown button
-		_this = ParaUI.CreateUIObject(
-			"button",
-			"b",
-			"_rt",
-			-width + (width - (self.dropdownbutton_width or width)) * 0.5,
-			(height - (self.dropdownbutton_height or height)) * 0.5,
-			self.dropdownbutton_width or width, self.dropdownbutton_height or height
-		);
+		local dropX = self.dropdownbutton_X or -width + (width - (self.dropdownbutton_width or width)) * 0.5
+		local dropY = self.dropdownbutton_Y or (height - (self.dropdownbutton_height or height)) * 0.5
+		_this = ParaUI.CreateUIObject("button","b","_rt",dropX,dropY,self.dropdownbutton_width or width, self.dropdownbutton_height or height);
 
 		_parent:AddChild(_this);
 
@@ -371,6 +377,13 @@ function dropdownlistbox:GetParentUIObject()
 	end
 end
 
+function dropdownlistbox:GetEditBoxUIObject()
+	local _this = ParaUI.GetUIObject(self.editbox_id);
+	if(_this:IsValid()) then
+		return _this;
+	end
+end
+
 -- called when the drop down button is clicked.
 function dropdownlistbox.OnClickDropDownButton(self)
 	-- calculate the position of drop down list box from the current position of the control
@@ -547,8 +560,9 @@ end
 function dropdownlistbox:GetItemIndexByValue(value)
 	if(self.items) then
 		local valueMap = self.items.values;
+		local value = tostring(value)
 		for i, v in ipairs(self.items) do
-			if (v == value or (valueMap and valueMap[v] == value)) then
+			if (tostring(v) == value or (valueMap and tostring(valueMap[v]) == value)) then
 				return i;
 			end
 		end

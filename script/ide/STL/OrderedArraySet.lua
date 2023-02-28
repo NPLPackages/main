@@ -49,10 +49,11 @@ end
 
 function OrderedArraySet:insert(pos, value)
 	if (self.value_set[value] == nil) then
+		pos = pos or (#self + 1)
 		table.insert(self, pos, value);
-		self.value_set[value] = pos or #self;
+		self.value_set[value] = pos;
 		for i=pos+1, #self do
-			self.value_set[i] = i;
+			self.value_set[self[i]] = i;
 		end
 		return value;
 	end

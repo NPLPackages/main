@@ -35,7 +35,7 @@ RotateManip:Property({"Name", "RotateManip", auto=true});
 
 RotateManip:Property({"FromAngle", nil, auto=true});
 RotateManip:Property({"ToAngle", nil, auto=true});
-RotateManip:Property({"PenWidth", 0.01});
+RotateManip:Property({"PenWidth", 0.02});
 RotateManip:Property({"radius", 1.2});
 -- private: "x|y|z" current selected axis
 RotateManip:Property({"selectedAxis", nil});
@@ -59,6 +59,8 @@ RotateManip:Property({"MaxRotAngle", nil, "GetMaxRotAngle", "SetMaxRotAngle", au
 -- default to nil, if not, the returned angle will always be snap to steps, such pi/2, pi/4, pi/6
 RotateManip:Property({"GridStep", nil, "GetGridStep", "SetGridStep", auto=true});
 RotateManip:Property({"SupportUndo", false, "IsSupportUndo", "SetSupportUndo", auto=true});
+-- whether to update the manipulator's real position according to "position" variable.
+RotateManip:Property({"UpdatePosition", true, "IsUpdatePosition", "SetUpdatePosition", auto=true});
 
 function RotateManip:ctor()
 	self.names = {};
@@ -97,7 +99,7 @@ end
 
 function RotateManip:OnValueChange(name, value)
 	RotateManip._super.OnValueChange(self);
-	if(name == "position") then
+	if(self:IsUpdatePosition() and name == "position") then
 		self:SetPosition(unpack(value));
 	end
 end

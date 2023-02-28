@@ -1,0 +1,148 @@
+<template class="set-container">
+    <div class="title">背景图片</div>
+    <div class="form-item">
+        <input style="width: 100%; padding-right: 30px;" v-model="background" placeholder="背景图片url" onblur=ChangeImageUrl></input>
+        <div onclick=ClickOpenFileDialog style="position: absolute; right: 1px; bottom: 8px; width: 30px; top: 8px;" class="center">...</div>
+    </div>
+    
+    <div v-if="not IsWindowElement">
+        <div class="title">静态文本</div>
+        <textarea v-bind:value="text" onchange=OnTextChange style="width: 100%; height: 120px;"></textarea>
+        <div class="title">动态文本</div>
+        <input v-bind:value="textVarName" placeholder="变量名" onchange=OnTextVarNameChange style="width: 100%;"></input>
+    </div>
+    <div class="form-item">
+        <div class="label">标签名</div>
+        <!-- <input class="value" placeholder="元素标签名" onchange="OnValueChange('tagname', ...)" v-bind:value="value.tagname"></input> -->
+        <select v-bind:disabled="IsWindowElement" v-bind:options="TagNameOptions" class="value" placeholder="元素标签名" onchange="OnValueChange('tagname', ...)" v-bind:value="value.tagname"></select>
+    </div>
+    <div class="form-item">
+        <div class="label">序 号</div>
+        <input class="value" type="number" placeholder="元素序号" onchange="OnValueChange('order', ...)" v-bind:value="value.order"></input>
+    </div>
+</template>
+
+<script type="text/lua">
+local CommonLib = NPL.load("Mod/GeneralGameServerMod/CommonLib/CommonLib.lua");
+
+local GlobalScope = GetGlobalScope();
+local ListItem = {};
+
+value = {
+    tagname = "";
+    order = 0;
+}
+text = "";
+textVarName = "";
+background = "";
+
+function ChangeImageUrl()
+    if (background == CurrentListItemData.style.background) then return end
+    if (background == "") then
+        CurrentListItemData.style["background"] = nil;
+    else
+        if (not string.match(background, "^url%(")) then
+            CurrentListItemData.style["background"] = string.format("url(%s)", background);
+        else 
+            CurrentListItemData.style["background"] = background;
+        end
+    end
+    _G.UpdateCurrentListItemDataStyle();
+end 
+
+function ClickOpenFileDialog()
+    local filename = CommonLib.OpenTextureFileDialog();
+    if (not filename) then return end
+    filename = CommonLib.ToCanonicalFilePath(filename, "linux");
+    local width, height = string.match(filename, "(%d+)[xX](%d+)");
+    if (width and height) then 
+        filename = filename .. "#0 0 " .. width .. " " .. height;
+        CurrentListItemData.style["width"] = tonumber(width) or width;
+        CurrentListItemData.style["height"] = tonumber(height) or height;
+    end
+    ChangeImageUrl(filename);
+end 
+
+function OnValueChange(key, val)
+    value[key] = val;
+    CurrentListItemData[key] = val;
+    if (key == "tagname") then
+        ListItem[key] = val;
+    end
+end 
+
+function OnTextChange(val)
+    if (val == "") then return end
+    text = val;
+    CurrentListItemData.text = val;
+    ListItem.text = val;
+end
+
+function OnTextVarNameChange(val)
+    if (val == "") then return end
+    textVarName = val;
+    CurrentListItemData.textVarName = val;
+end
+
+function OnSelectParentId()
+    CurrentListItemData.parentId = parentId;
+end 
+
+GlobalScope:Watch("CurrentElementId", function() 
+    ListItem = GetListItemById(CurrentElementId);
+    text = ListItem.text;
+    textVarName = CurrentListItemData.textVarName;
+    background = CurrentListItemData.style.background or "";
+    value.tagname = CurrentListItemData.tagname or "";
+    value.order = CurrentListItemData.order or 0;
+end);
+
+</script>
+
+<style scoped=true>
+
+.set-container {
+    position: absolute;
+    top: 60px;
+    bottom: 0px;
+    left: 10px;
+    right: 10px;
+    padding-left: 4px;
+}
+
+.title {
+    font-size: 18px;
+    padding: 20px 0px 10px 0px;
+}
+
+.item-container {
+    margin-left: 10%;
+    width: 80%;
+}
+
+.image {
+    width: 100%;
+    height: 160px;
+    background-color: #ffffff;
+}
+
+.form-item {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 40px;
+    /* border: 1px solid #cccccc; */
+}
+.form-item>.label {
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.form-item>.value {
+    width: 200px;
+}
+</style>
+
+

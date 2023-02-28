@@ -1,0 +1,65 @@
+<template class="container">
+    <div style="width: 100%; height: 100%;" onclick=ClickCloseWindowBtn>
+        <div v-bind:style='string.format("position: absolute; width: 700px; height:400px; left: %spx; top: %spx; background-color: #323536; padding: 2px;", Left - 300, Top + 40)'>
+            <Blockly ref="Blockly" style="width: 100%; height: 100%;" onchange=OnBlocklyChange v-bind:ToolBoxXmlText="BlocklyAttrStyleToolBoxXmlText"></Blockly>
+        </div>
+    </div>
+</template>
+
+<script type="text/lua">
+
+local Blockly = nil;
+
+BlocklyAttrStyleToolBoxXmlText = [[
+<toolbox>
+    <category name="属性" color="#764BCC">
+		<block type="UI_Attr_Class"/>
+		<block type="UI_Attr_Item"/>
+		<block type="UI_Attr_Event"/>
+		<block type="UI_Attr_VBind"/>
+	</category>
+    <category name="样式" color="#76CE62">
+		<block type="UI_Style_Layout"/>
+		<block type="UI_Style_Position"/>
+		<block type="UI_Style_Width_Height"/>
+		<block type="UI_Style_Margin"/>
+		<block type="UI_Style_Padding"/>
+		<block type="UI_MCML_Style_BG_Color_Image"/>
+		<block type="UI_MCML_Style_Font_Size_Color"/>
+		<block type="UI_Style_Item"/>
+    </category>
+</toolbox>
+]]
+
+function OnReady()
+    Blockly = GetRef("Blockly");
+    if (_G.XmlText) then
+        Blockly:LoadFromXmlNodeText(_G.XmlText);
+    end
+end
+
+function OnBlocklyChange()
+    if (type(_G.OnBlocklyChange) == "function") then
+        local rawcode, prettycode = Blockly:GetCode();
+        local xmltext = Blockly:SaveToXmlNodeText();
+        _G.OnBlocklyChange(rawcode, xmltext);
+    end
+end 
+
+function ClickCloseWindowBtn()
+    local rawcode, prettycode = Blockly:GetCode();
+    local xmltext = Blockly:SaveToXmlNodeText();
+    
+    CloseWindow();
+    if (type(_G.OnFinish) == "function") then
+        _G.OnFinish(rawcode, xmltext);
+    end
+end
+</script>
+
+<style>
+.container {
+    width: 100%;
+    height: 100%;
+}
+</style>

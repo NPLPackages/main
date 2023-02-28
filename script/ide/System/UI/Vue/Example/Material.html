@@ -1,0 +1,108 @@
+﻿<template style="width: 100%; height: 100%">
+    <div class="container">
+        <div style="position: absolute; top: 10px; bottom: 0px; left: 0px; width: 150px; border-right: 1px solid #cccccc;">
+            <div v-for="material in MaterialList" v-bind:class="GetNavItemClass(material.ID)" onclick="SelectedMaterial(material.ID)">{{tostring(material.ID) .. "." .. (material.MaterialName or "")}}</div>
+        </div>
+        <div style="position: absolute; top: 10px; bottom: 0px; left: 160px; right: 0px;">
+            <div class="form-item">
+                <div class="form-label">名称</div>
+                <input class="form-input"></input>
+            </div>
+            <div class="form-item">
+                <div class="form-label">颜色</div>
+                <input class="form-input"></input>
+            </div>
+            <div class="form-item">
+                <div class="form-label">金属</div>
+                <input class="form-input"></input>
+            </div>
+            <div class="form-item">
+                <div class="form-label">镜面反射</div>
+                <input class="form-input"></input>
+            </div>
+            <div class="form-item">
+                <div class="form-label">粗糙度</div>
+                <input class="form-input"></input>
+            </div>
+            <div class="form-item">
+                <div class="form-label">半透明</div>
+                <input class="form-input"></input>
+            </div>
+            <div class="form-item">
+                <div class="form-label">法线</div>
+                <input class="form-input"></input>
+            </div>
+            <div class="form-item">
+                <div class="form-label">漫反射</div>
+                <input class="form-input"></input>
+            </div>
+            <div class="form-item">
+                <div class="btn" onclick="ClickUpdateBtn">修改</div>
+                <div class="btn" onclick="ClickNewBtn">新增</div>
+                <div class="btn" onclick="ClickDeleteBtn">删除</div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script type="text/lua">
+MaterialList = {{ID = 1}}
+
+function GetNavItemClass(id)
+    return ID == MaterialId and "nav-item selected" or "nav-item";
+end
+
+function ClickUpdateBtn()
+end
+
+function ClickNewBtn()
+    local material = CreateMaterial();
+    material.MaterialName = MaterialName;
+    material.BaseColor = BaseColor;
+    material.Metallic = Metallic;
+    material.Specular = Specular;
+    material.Roughness = Roughness;
+    material.EmissiveColor = EmissiveColor;
+    material.Normal = Normal;
+    material.Diffuse = Diffuse;
+end
+
+function ClickDeleteBtn()
+end
+
+</script>
+
+<style scoped="true">
+.container 
+{
+    width: 100%;
+    height: 100%;
+    background-color: #ffffff;
+}
+
+.btn 
+{
+    width: 100px;
+    height: 30px;
+    line-height: 30px;
+    display: inline-block;
+    text-align: center;
+    border: 1px solid #cccccc;
+    margin-right: 10px;
+}
+
+.form-item
+{
+    margin-top: 10px;
+}
+
+.form-label
+{
+    display: inline-block;
+    width: 100px;
+    height: 32px;
+    line-height: 32px;
+    text-align: right;
+    padding-right: 10px;
+}
+</style>

@@ -136,7 +136,7 @@ end
 function Quaternion:FromAngleAxis(rfAngle, rkAxis)
     -- The quaternion representing the rotation is
     --   q = cos(A/2)+sin(A/2)*(x*i+y*j+z*k)
-	local sumOfSquares = rkAxis:length2();
+	local sumOfSquares = (rkAxis[1]^2 + rkAxis[2]^2+rkAxis[3]^2);
 	if(sumOfSquares <= 0.00001) then
 		-- Axis too small.
 		self[1], self[2], self[3], self[4] = 0,0,0,1;
@@ -154,10 +154,11 @@ function Quaternion:FromAngleAxis(rfAngle, rkAxis)
 	return self;
 end
 
+-- @param rkAxis: output axis vector, can be nil. 
 -- @return angle, axis: float, vector3d
-function Quaternion:ToAngleAxis()
+function Quaternion:ToAngleAxis(rkAxis)
 	local rfAngle;
-	local rkAxis = vector3d:new();
+	rkAxis = rkAxis or vector3d:new();
     --The quaternion representing the rotation is
     --   q = cos(A/2)+sin(A/2)*(x*i+y*j+z*k)
 	local x,y,z = self[1], self[2], self[3];
@@ -224,34 +225,62 @@ local q3 = Quaternion:new();
 -- "zxy": roll pitch and yaw, which is the order used in BipedObject. 
 function Quaternion:FromEulerAnglesSequence(angle1,angle2,angle3, rotSeq) 
 	-- same as following code
+	local q1_, q2_, q3_;
 	if(not rotSeq or rotSeq == "zxy") then
 		-- roll(z), pitch(x), yaw(y),  first roll and then pitch and yaw
-		q1:FromAngleAxis(angle1, vector3d.unit_z);
-		q2:FromAngleAxis(angle2, vector3d.unit_x);
-		q3:FromAngleAxis(angle3, vector3d.unit_y);
+		q1_ = angle1~=0 and q1:FromAngleAxis(angle1, vector3d.unit_z);
+		q2_ = angle2~=0 and q2:FromAngleAxis(angle2, vector3d.unit_x);
+		q3_ = angle3~=0 and q3:FromAngleAxis(angle3, vector3d.unit_y);
 	elseif(rotSeq == "yzx") then
-		q1:FromAngleAxis(angle1, vector3d.unit_y);
-		q2:FromAngleAxis(angle2, vector3d.unit_z);
-		q3:FromAngleAxis(angle3, vector3d.unit_x);
+		q1_ = angle1~=0 and q1:FromAngleAxis(angle1, vector3d.unit_y);
+		q2_ = angle2~=0 and q2:FromAngleAxis(angle2, vector3d.unit_z);
+		q3_ = angle3~=0 and q3:FromAngleAxis(angle3, vector3d.unit_x);
 	elseif(rotSeq == "xzy") then
-		q1:FromAngleAxis(angle1, vector3d.unit_x);
-		q2:FromAngleAxis(angle2, vector3d.unit_z);
-		q3:FromAngleAxis(angle3, vector3d.unit_y);
+		q1_ = angle1~=0 and q1:FromAngleAxis(angle1, vector3d.unit_x);
+		q2_ = angle2~=0 and q2:FromAngleAxis(angle2, vector3d.unit_z);
+		q3_ = angle3~=0 and q3:FromAngleAxis(angle3, vector3d.unit_y);
 	elseif(rotSeq == "yxz") then
-		q1:FromAngleAxis(angle1, vector3d.unit_y);
-		q2:FromAngleAxis(angle2, vector3d.unit_x);
-		q3:FromAngleAxis(angle3, vector3d.unit_z);
+		q1_ = angle1~=0 and q1:FromAngleAxis(angle1, vector3d.unit_y);
+		q2_ = angle2~=0 and q2:FromAngleAxis(angle2, vector3d.unit_x);
+		q3_ = angle3~=0 and q3:FromAngleAxis(angle3, vector3d.unit_z);
 	elseif(rotSeq == "xyz") then
-		q1:FromAngleAxis(angle1, vector3d.unit_x);
-		q2:FromAngleAxis(angle2, vector3d.unit_y);
-		q3:FromAngleAxis(angle3, vector3d.unit_z);
+		q1_ = angle1~=0 and q1:FromAngleAxis(angle1, vector3d.unit_x);
+		q2_ = angle2~=0 and q2:FromAngleAxis(angle2, vector3d.unit_y);
+		q3_ = angle3~=0 and q3:FromAngleAxis(angle3, vector3d.unit_z);
 	elseif(rotSeq == "zyx") then
-		q1:FromAngleAxis(angle1, vector3d.unit_z);
-		q2:FromAngleAxis(angle2, vector3d.unit_y);
-		q3:FromAngleAxis(angle3, vector3d.unit_x);
+		q1_ = angle1~=0 and q1:FromAngleAxis(angle1, vector3d.unit_z);
+		q2_ = angle2~=0 and q2:FromAngleAxis(angle2, vector3d.unit_y);
+		q3_ = angle3~=0 and q3:FromAngleAxis(angle3, vector3d.unit_x);
 	end
-	self:set(q3:multiplyInplace(q2:multiplyInplace(q1)));
-	
+	if(q1_) then
+		if(q2_) then
+			if(q3_) then
+				self:set(q3_:multiplyInplace(q2_:multiplyInplace(q1_)));
+			else
+				self:set(q2_:multiplyInplace(q1_));
+			end
+		else
+			if(q3_) then
+				self:set(q3_:multiplyInplace(q1_));
+			else
+				self:set(q1_);
+			end
+		end
+	else
+		if(q2_) then
+			if(q3_) then
+				self:set(q3_:multiplyInplace(q2_));
+			else
+				self:set(q2_);
+			end
+		else
+			if(q3_) then
+				self:set(q3_);
+			else
+				self:identity();
+			end
+		end
+	end
 	return self;
 end
 

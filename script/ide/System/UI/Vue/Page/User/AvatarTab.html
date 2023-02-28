@@ -1,0 +1,104 @@
+<template style="width: 100%; height: 100%;">
+    <div style="width: 100%; height: 40px; display: flex; align-items: center; margin-left: 10px;">
+        <!-- <div onclick="SelectTab('suit')" v-bind:class="GetClass('suit')">
+            <div class="tab-content" style="background: url(Texture/Aries/Creator/keepwork/Avatar/zi_taozhuang1_27X14_32bits.png#0 0 28 14);"></div>
+        </div> -->
+        
+        <div onclick="SelectTab('hair')" v-bind:class="GetClass('hair')">
+            <div class="tab-content" style="background: url(Texture/Aries/Creator/keepwork/Avatar/zi_toushi2_28X14_32bits.png#0 0 28 14);"></div>
+        </div>
+        <div onclick="SelectTab('eye')" v-bind:class="GetClass('eye')">
+            <div class="tab-content" style="background: url(Texture/Aries/Creator/keepwork/Avatar/zi_yanjing1_28X14_32bits.png#0 0 28 14);"></div>
+        </div>
+        <div onclick="SelectTab('mouth')" v-bind:class="GetClass('mouth')">
+            <div class="tab-content" style="background: url(Texture/Aries/Creator/keepwork/Avatar/zi_zuiba2_28X14_32bits.png#0 0 28 14);"></div>
+        </div>
+        <div onclick="SelectTab('shirt')" v-bind:class="GetClass('shirt')">
+            <div class="tab-content" style="background: url(Texture/Aries/Creator/keepwork/Avatar/zi_yifu2_28X14_32bits.png#0 0 28 14);"></div>
+        </div>
+        <div onclick="SelectTab('pants')" v-bind:class="GetClass('pants')">
+            <div class="tab-content" style="background: url(Texture/Aries/Creator/keepwork/Avatar/zi_kuzi2_28X14_32bits.png#0 0 28 14);"></div>
+        </div>
+        <div onclick="SelectTab('right_hand_equipment')" v-bind:class="GetClass('right_hand_equipment')">
+            <div class="tab-content" style="background: url(Texture/Aries/Creator/keepwork/Avatar/zi_shouchi2_28X14_32bits.png#0 0 28 14);"></div>
+        </div>
+        <div onclick="SelectTab('back')" v-bind:class="GetClass('back')">
+            <div class="tab-content" style="background: url(Texture/Aries/Creator/keepwork/Avatar/zi_beibu2_28X14_32bits.png#0 0 28 14);"></div>
+        </div>
+        <div onclick="SelectTab('pet')" v-bind:class="GetClass('pet')">
+            <div class="tab-content" style="background: url(Texture/Aries/Creator/keepwork/Avatar/zi_zuoqi2_28X14_32bits.png#0 0 28 14);"></div>
+        </div>
+    </div>
+
+    <div style="height: 500px;">
+        <PlayerAsset v-show="tabindex == 'suit'"></PlayerAsset>
+        <AvatarItemList v-show="tabindex ~= 'suit'"></AvatarItemList>
+    </div>
+</template>
+
+<script type="text/lua">
+RegisterComponent("PlayerAsset", "%vue%/Page/User/PlayerAsset.html");
+RegisterComponent("AvatarItemList", "%vue%/Page/User/AvatarItemList.html");
+
+tabindex = "hair";               -- 当前选择项
+
+function SelectTab(index)
+    if (index ~= "suit") then
+	    NPL.load("(gl)script/apps/Aries/Creator/Game/Entity/CustomCharItems.lua");
+    	local CustomCharItems = commonlib.gettable("MyCompany.Aries.Game.EntityManager.CustomCharItems");
+        local assetfile = GetGlobalScope():Get("MainAsset");
+        local skin = GetGlobalScope():Get("MainSkin");
+        --if (tabindex == "suit") then
+        if (true) then
+            if (assetfile ~= CustomCharItems.defaultModelFile) then
+                assetfile = CustomCharItems.defaultModelFile;
+                --skin = CustomCharItems:SkinStringToItemIds(CustomCharItems.defaultSkinString);
+                skin = ""
+            end
+            GetGlobalScope():Set("MainAsset", assetfile);
+            GetGlobalScope():Set("MainSkin", skin);
+        end
+
+        GetAvatarItems(index);
+    end
+    tabindex = index;
+end
+
+function GetClass(index)
+    return index .. " tab center " .. (tabindex == index and "active" or "");
+end
+
+GetGlobalScope():Watch("isAuthUser", function(val)
+    if val then
+        SelectTab("hair");
+    end
+    if AvatarDefaulIndex then
+        SelectTab(AvatarDefaulIndex)
+        AvatarDefaulIndex = nil
+    end
+end)
+</script>
+
+<style scoped=true>
+.tab {
+    width: 52px; 
+    height: 30px;
+    margin-right: 10px; 
+    display: inline-flex;
+    background-color: rgb(77,77,77);
+    background:url(Texture/Aries/Creator/keepwork/Avatar/zik2_52X30_32bits.png#0 0 52 30);
+}
+
+.tab-content {
+    margin-top:2px; 
+    width: 28px; 
+    height: 14px; 
+}
+
+.active {
+    background-color: #ffffff;
+}
+.active>.tab-content {
+    background-color: rgb(24,24,24);
+}
+</style>

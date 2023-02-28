@@ -1,0 +1,32 @@
+<template class="container">
+    <WindowTitleBar v-bind:title="title" style="background-color: #000000;"></WindowTitleBar>
+    <div style="position: absolute; top: 40px; bottom: 40px; left: 2px; right: 2px;">
+        <textarea style="width: 100%; height: 100%;" v-model="value"></textarea>
+    </div>
+    <div style="position: absolute; bottom: 2px; height: 36px; left: 2px; right: 2px;">
+        <button onclick=ClickConfirmBtn style="width: 100%; height: 100%;">确定</button>
+    </div>
+</template>
+
+<script type="text/lua">
+RegisterComponent("WindowTitleBar", "%vue%/Components/WindowTitleBar.html");
+
+title = title or ""
+value = text or "";
+
+function ClickConfirmBtn()
+    -- 关闭窗口
+    CloseWindow();
+    -- 确定回调
+    if (type(confirm) == "function") then confirm(value) end
+end
+
+</script>
+
+<style>
+.container {
+    height: 100%; 
+    width: 100%; 
+    background-color: #ffffff;
+}
+</style>

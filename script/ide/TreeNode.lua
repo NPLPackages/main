@@ -532,6 +532,32 @@ function TreeNode:GetNodeNamePath()
 	return path;
 end
 
+function TreeNode:FindNodeByUIName(uiname)
+	if(self.uiname == uiname) then
+		return self;
+	else
+		for i,node in ipairs(self.Nodes) do
+			local result = node:FindNodeByUIName(uiname)
+			if(result) then
+				return result;
+			end
+		end
+	end
+end
+
+function TreeNode:FindVisibleNodeByUIName(uiname)
+	if(self.uiname == uiname and not self.Invisible) then
+		return self;
+	elseif(not self.Invisible and self.Expanded) then
+		for i,node in ipairs(self.Nodes) do
+			local result = node:FindVisibleNodeByUIName(uiname)
+			if(result) then
+				return result;
+			end
+		end
+	end
+end
+
 
 -- get the best matched node that contains the logical point x,y. This function is usually called on the root node. it calls recursively.
 -- @param x,y: logical position 

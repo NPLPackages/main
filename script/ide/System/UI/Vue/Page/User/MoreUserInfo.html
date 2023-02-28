@@ -1,0 +1,202 @@
+<template style="height: 382px;
+                 width: 500px;
+                 background: url(Texture/Aries/Creator/keepwork/Window/dakuang_32bits.png#0 0 440 93:378 43 33 44);">
+    <WindowTitleBar titleStyle="margin-top: 8px;
+                                width: 97px;
+                                height:26px;
+                                background: url(Texture/Aries/Creator/keepwork/ggs/user/gerenziliao/gerenziliao_97X26_32bits.png#0 0 97 26);"></WindowTitleBar>
+    <div class="center"
+         style="height: 50px;
+                font-size: 20px;
+                color: #101010;">*以下资料我们将实行严格保密。</div>
+    <div>
+        <div style="display: inline;
+                    width: 100px;
+                    height: 24px;
+                    margin: 4px 16px;
+                    background: url(Texture/Aries/Creator/keepwork/ggs/user/gerenziliao/zi1_100X24_32bits.png#0 0 100 24);"></div>
+        <input v-model="userinfo.info.name"
+               style="width: 114px;
+                      height: 32px;"></input>
+    </div>
+    <div style="margin-top: 8px;">
+        <div style="display: inline;
+                    width: 100px;
+                    height: 24px;
+                    margin: 4px 16px;
+                    background: url(Texture/Aries/Creator/keepwork/ggs/user/gerenziliao/zi2_100X24_32bits.png#0 0 100 24);"></div>
+        <select v-model="userinfo.sex"
+                style="width: 114px;
+                       height: 32px;"
+                v-bind:options="SexOptions"></select>
+    </div>
+    <div style="margin-top: 8px;">
+        <div style="display: inline;
+                    width: 100px;
+                    height: 24px;
+                    margin: 4px 16px;
+                    background: url(Texture/Aries/Creator/keepwork/ggs/user/gerenziliao/zi3_100X24_32bits.png#0 0 100 24);"></div>
+        <AreaSelect onselect=OnSelectRegion
+                    v-bind:value="userinfo.region"
+                    SelectStyle="height: 32px;
+                                 width: 114px;
+                                 margin-right: 7px;"></AreaSelect>
+    </div>
+    <div style="margin-top: 8px;">
+        <div style="display: inline;
+                    width: 100px;
+                    height: 24px;
+                    margin: 4px 16px;
+                    background: url(Texture/Aries/Creator/keepwork/ggs/user/gerenziliao/zi4_100X24_32bits.png#0 0 100 24);"></div>
+        <div style="display: inline;
+                    width: 357px;">
+            <div>
+                <input v-model="userinfo.info.mailName"
+                       style="width: 174px;
+                              height: 32px;"
+                       placeholder="请输入姓名"></input>
+                <input v-model="userinfo.info.mailPhone"
+                       type="number"
+                       style="width: 174px;
+                              height: 32px;
+                              margin-left: 8px;"
+                       placeholder="请输入电话"></input>
+            </div>
+            <div style="margin-top: 4px;">
+                <AreaSelect onselect=OnSelectMailRegion
+                            v-bind:value="userinfo.info.mailRegion"
+                            SelectStyle="height: 32px;
+                                         width: 114px;
+                                         margin-right: 7px;"></AreaSelect>
+            </div>
+            <div style="margin-top: 4px;">
+                <input v-model="userinfo.info.mailAddress"
+                       style="width: 357px;
+                              height: 32px;"
+                       placeholder="请输入详细地址"></input>
+            </div>
+        </div>
+    </div>
+    <div style="margin-top: 16px;">
+        <div onclick=clickCloseAccount
+             class="btn"
+             style="display: inline-block;
+                    text-align: center;
+                    line-height: 40px;
+                    margin-left: 15px;
+                    width: 105px;
+                    height:40px;
+                    font-size: 20px;
+                    color: #000000;
+                    background: url(Texture/Aries/Creator/keepwork/Window/button/btn_huise_32bits.png#0 0 38 64:16 16 16 16);">账号注销</div>
+        <div onclick=clickCancel
+             class="btn"
+             style="display: inline-block;
+                    text-align: center;
+                    line-height: 40px;
+                    margin-left: 120px;
+                    width:120px;
+                    height:40px;
+                    font-size: 20px;
+                    color: #000000;
+                    background: url(Texture/Aries/Creator/keepwork/Window/button/btn_huise_32bits.png#0 0 38 64:16 16 16 16);">取消</div>
+        <div onclick=clickConfirm
+             class="btn"
+             style="display: inline-block;
+                    text-align: center;
+                    line-height: 40px;
+                    margin-left: 10px;
+                    width: 120px;
+                    height: 40px;
+                    font-size: 20px;
+                    color: #000000;
+                    background: url(Texture/Aries/Creator/keepwork/Window/button/btn_huangse_32bits.png#0 0 38 64:16 16 16 16);">保存</div>
+    </div>
+</template>
+
+<script type="text/lua">
+    local KeepWorkItemManager = NPL.load("(gl)script/apps/Aries/Creator/HttpAPI/KeepWorkItemManager.lua");
+
+    RegisterComponent("AreaSelect", "%vue%/Components/AreaSelect.html");
+
+    SexOptions = {{"男", "M"}, {"女", "F"}, {"保密", "N"}};
+
+    userinfo = {
+        regionId = 1, -- 区域ID
+        region = {}, -- 区域
+        sex = "", -- 性别
+        info = {
+            name = "", -- 用户名
+            mailName = "", -- 邮件姓名
+            mailPhone = "", -- 邮件电话
+            mailRegionId = 1, -- 邮件区域ID
+            mailRegion = {}, -- 邮件区域
+            mailAddress = "", -- 邮件地址
+        },
+    };
+
+    function OnSelectRegion(region)
+        userinfo.regionId = region.regionId;
+    end 
+
+    function OnSelectMailRegion(region)
+        userinfo.info.mailRegionId = region.regionId;
+    end 
+
+    function clickConfirm()
+        local obj = userinfo:ToPlainObject();
+    
+        obj.router_params = {id = userId};
+
+        keepwork.user.setinfo(obj, function(status, msg, data) 
+            CloseWindow();
+
+            if (status < 200 or status >= 300) then return end
+
+            KeepWorkItemManager.LoadProfile(false, function()
+                if (type(OnFinish) == "function") then OnFinish() end
+            end)
+        end);
+    end
+
+    function clickCloseAccount()
+        CloseWindow();
+
+        ShowWindow({
+            OnFinish = function()
+                
+            end,
+        }, {
+            url = "%vue%/Page/User/CloseAccount.html",
+            draggable = false,
+        });
+    end
+
+    function clickCancel()
+        CloseWindow();
+    end 
+
+    function OnReady()
+        local UserDetail = KeepWorkItemManager.GetProfile();
+        userinfo.regionId = UserDetail.regionId;
+        userinfo.region = (UserDetail.region or {}).info or {};
+        userinfo.sex = UserDetail.sex;
+        local UserInfo = UserDetail.info or {};
+        userinfo.info.name = UserInfo.name;
+        userinfo.info.mailName = UserInfo.mailName;
+        userinfo.info.mailPhone = UserInfo.mailPhone;
+        userinfo.info.mailRegionId = UserInfo.mailRegionId;
+        userinfo.info.mailRegion = (UserInfo.mailRegion or {}).info or {};
+        userinfo.info.mailAddress = UserInfo.mailAddress;
+    end
+</script>
+
+<style scoped=true>
+    .btn {
+        background-color: #e6dede;
+    }
+
+    .btn:hover {
+        background-color: #ffffff;
+    }
+</style>

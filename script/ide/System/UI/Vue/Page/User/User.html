@@ -1,0 +1,133 @@
+
+<template style="width: 960px; height: 625px; color:#ffffff; background: url(Texture/Aries/Creator/keepwork/ggs/dialog/dialog_440X93_32bits.png#0 0 440 93:37 43 33 44);">
+    <Title></Title>
+    <div width="100%">
+        <UserInfo v-bind:UserDetail="UserDetail"></UserInfo>
+        <div style="display: inline-block; width: 604px; height: 580px; padding-left: 6px;">
+            <Character v-if="asideTabIndex == 'character'"></Character>
+            <Bag v-if="asideTabIndex == 'bag'"></Bag>
+            <Favorite v-if="asideTabIndex == 'favorite'"></Favorite>
+        </div>
+    </div>
+
+    <div v-if="isAuthUser" style="position: absolute; right: -50px; top: 80px; width: 50px; background: url(Texture/Aries/Creator/keepwork/ggs/user/renwuqiehuan/btn_youqiehuan2_50X44_32bits.png#0 0 50 44:16 16 16 16);">
+        <div onclick="ClickAsideTab('character')" v-bind:class="AsideTabClass('character')">
+            <div class="tab-content"></div>
+        </div>
+        <div onclick="ClickAsideTab('bag')" v-bind:class="AsideTabClass('bag')">
+            <div class="tab-content"></div>
+        </div>
+        <div onclick="ClickAsideTab('favorite')" v-bind:class="AsideTabClass('favorite')">
+            <div class="tab-content"></div>
+        </div>
+    </div>
+</template>
+
+<script type="text/lua" src="%vue%/Page/User/User.lua">
+    RegisterComponent("Title", "%vue%/Page/User/Title.html");
+    RegisterComponent("UserInfo", "%vue%/Page/User/UserInfo.html");
+    RegisterComponent("Character", "%vue%/Page/User/Character.html");
+    RegisterComponent("Favorite", "%vue%/Page/User/Favorite.html");
+    RegisterComponent("Bag", "%vue%/Page/User/Bag.html");
+
+    asideTabIndex = AsideTabIndex or "character";
+
+    function ClickAsideTab(index)
+        if (asideTabIndex == index) then return end
+        asideTabIndex = index;
+        if (index == "character") then
+            SetProjectListType("works");
+        elseif (index == "favorite") then
+            SetProjectListType("favorite");
+        end
+    end
+
+    function AsideTabClass(index)
+        local class = asideTabIndex == index and "active" or "inactive";
+        return string.format("tab %s %s", "tab-" .. class, index .. "-" .. class);
+    end
+</script>
+
+<style>
+
+.tab {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 50px;
+}
+
+.tab-inactive {
+    height: 102px;
+}
+
+.tab-active {
+    height: 139px;
+    background: url(Texture/Aries/Creator/keepwork/ggs/user/renwuqiehuan/btn_youqiehuan1_63X139_32bits.png#0 0 50 135:4 4 20 20);
+}
+
+.tab-active>.tab-content {
+    margin-left: 0px;
+}
+
+.character-inactive>.tab-content {
+    width: 19px;
+    height: 38px;
+    background: url(Texture/Aries/Creator/keepwork/ggs/user/renwuqiehuan/zi_renwu_19X38_32bits.png#0 0 19 38);
+}
+
+.character-active>.tab-content {
+    width: 35;
+    height: 75px;
+    background: url(Texture/Aries/Creator/keepwork/ggs/user/renwuqiehuan/zi_renwu2_35X75_32bits.png#0 0 35 75);
+}
+
+.bag-inactive>.tab-content {
+    width: 19px;
+    height: 38px;
+    background: url(Texture/Aries/Creator/keepwork/ggs/user/renwuqiehuan/zi_beibao_19X38_32bits.png#0 0 19 38);
+}
+
+.bag-active>.tab-content {
+    width: 35px;
+    height: 74px;
+    background: url(Texture/Aries/Creator/keepwork/ggs/user/renwuqiehuan/zi_beibao2_29X74_32bits.png#0 0 35 74);
+}
+
+.favorite-inactive>.tab-content {
+    width: 19px;
+    height: 38px;
+    background: url(Texture/Aries/Creator/keepwork/ggs/user/renwuqiehuan/zi_shouc_19X38_32bits.png#0 0 19 38);
+}
+
+.favorite-active>.tab-content {
+    width: 35px;
+    height: 76px;
+    background: url(Texture/Aries/Creator/keepwork/ggs/user/renwuqiehuan/zi_shouc2_32X76_32bits.png#0 0 35 76);
+}
+
+/* .scroll::scrollbar {
+    background-color: #ffffff00;
+}
+
+.scroll::scrollbar-thumb {
+    min-height: 10px;
+    width: 12px;
+    background: url(Texture/Aries/Creator/keepwork/ggs/dialog/xiala_12X38_32bits.png#0 0 12 38:2 5 2 5);
+} */
+
+.scroll::scrollbar {
+    width: 5px;
+    background-color: #ffffff;
+    background: url(Texture/Aries/Creator/Theme/scroll_track_32bits.png#0 0 5 16);
+}
+
+.scroll::scrollbar-thumb {
+    min-height: 10px;
+    width: 7px;
+    height: 47px;
+    background-color: #ffffff;
+    background: url(Texture/Aries/Creator/Theme/GameCommonIcon_32bits.png#275 126 7 47);
+}
+
+</style>

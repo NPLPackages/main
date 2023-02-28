@@ -15,7 +15,6 @@ if(not Map3DSystem) then
 end
 
 if(not commonlib) then commonlib={}; end
-
 ---------------------------
 -- lua5.1/5.2 compatibility
 ---------------------------
@@ -813,6 +812,14 @@ function commonlib.GetLimitLabel(text, maxCharCount)
     end
 end
 
+function commonlib.GetUnicodeCharNum(text)
+    if text ==nil or text == "" then
+		return 0
+	end
+    local len = ParaMisc.GetUnicodeCharNum(text);
+    return len
+end
+
 -- Use a private proxy environment for the module,
 -- so that the module can access global variables.
 --  + Global assignments inside module get placed in the module
@@ -1064,6 +1071,58 @@ function commonlib.NumberToString(digit)
         return num
     end
     return removeZero(wordDigit)
+end
+
+function commonlib.ParseXmlToString(headon_mcml)
+	return ParaXML.LuaXML_ParseString(headon_mcml)
+end
+
+--判断是否存在中文
+function commonlib.IsUtf8String(str)
+	if type(str) == "string" and string.len(str) ~= ParaMisc.GetUnicodeCharNum(str) then --存在中文
+		return true
+	end
+	return false
+end
+
+--是否文件路径
+function commonlib.IsDirectory(path)
+	local fileInfo = {}
+	if (not ParaIO.GetFileInfo(path, fileInfo)) then
+		return false
+	end
+	if (fileInfo.mode == "directory") then
+		return true
+	end
+end
+
+--比较两个版本号，版本号最多4位
+function commonlib.CompareVer(ver_1,ver_2)
+    local function get_versions(version_str)
+        local result = {};
+        for s in string.gfind(version_str or "", "%d+") do
+            table.insert(result, tonumber(s));
+		end
+        while(#result<4)do 
+            table.insert(result,0)
+        end
+        return result;
+    end
+    local list_1 = get_versions(ver_1)
+    local list_2 = get_versions(ver_2)
+    if(list_1[1] == list_2[1])then
+        if(list_1[2] == list_2[2])then
+			if(list_1[3] == list_2[3])then
+				return list_1[4] - list_2[4]
+			else
+				return list_1[3] - list_2[3]
+			end
+        else
+            return list_1[2] - list_2[2]
+        end
+    else
+        return list_1[1] - list_2[1]
+    end
 end
 
 FooterLoader();

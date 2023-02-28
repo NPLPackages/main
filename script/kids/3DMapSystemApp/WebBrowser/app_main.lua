@@ -209,6 +209,10 @@ local function MCMLWinFrameMSGProc(window, msg)
 		if(not window.isOnCloseCalled) then
 			window.isOnCloseCalled = true;
 		end
+		local winFrame = window:GetWindowFrame();
+		if winFrame then
+			winFrame.CheckShowWindowBgMask(window,false)
+		end
 
 		if(window.DestroyOnClose or msg.bDestroy) then
 			window:DestroyWindowFrame();
@@ -223,6 +227,10 @@ local function MCMLWinFrameMSGProc(window, msg)
 			local msg = { aries_type = "OnMCMLWindowFrameInvisible", name = window.name, wndName = "main"};
 			CommonCtrl.os.hook.Invoke(CommonCtrl.os.hook.HookType.WH_CALLWNDPROCRET, 0, "Aries", msg);
 		end
+
+		if(GameLogic and GameLogic.GetFilters) then
+			GameLogic.GetFilters():apply_filters("File.MCMLWindowFrameClose");
+		end
 	elseif(msg.type == CommonCtrl.os.MSGTYPE.WM_SHOW) then
 		if(msg.param1) then
 			window.isOnCloseCalled = false;
@@ -233,6 +241,10 @@ local function MCMLWinFrameMSGProc(window, msg)
 			if(window.DesignResolutionWidth) then
 				System.Windows.Screen:PopDesignResolution()
 			end
+		end
+		local winFrame = window:GetWindowFrame();
+		if winFrame and (msg.param1~=false) then
+			winFrame.CheckShowWindowBgMask(window,true)
 		end
 		if(window.enable_esc_key) then --  and System.options.isAB_SDK
 			-- esc key logics here
@@ -353,7 +365,7 @@ function Map3DSystem.App.WebBrowser.OnExec(app, commandName, params)
 			if(commonlib.Files.IsAbsolutePath(params.filepath)) then
 				absPath = params.filepath
 			else	
-				absPath = ParaIO.GetCurDirectory(0)..params.filepath;
+				absPath = ParaIO.GetWritablePath() .. params.filepath;
 			end
 			absPath = commonlib.Files.ToCanonicalFilePath(absPath);
 
@@ -430,6 +442,8 @@ function Map3DSystem.App.WebBrowser.OnExec(app, commandName, params)
 				_wnd.DesignResolutionHeight = params.DesignResolutionHeight;
 				_wnd.SelfPaint = params.SelfPaint;
 				_wnd.isPinned = params.isPinned;
+				_wnd.withBgMask = params.withBgMask or false;
+				_wnd.bgMaskOpacity = params.bgMaskOpacity or 0.5;
 				
 				if(params.bToggleShowHide and params.bShow==nil) then
 					if(_wnd.MyPage and _wnd.MyPage.url~=_wnd.url and _wnd.url and _wnd.MyPage.url) then

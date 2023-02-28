@@ -1,0 +1,149 @@
+<template class="container">
+    <div style="position: absolute; top: 0px; left: 0px; width: 100%; height: 100px;">
+        <div style="width:171px;height:58px;background:url(Texture/Aries/Creator/keepwork/RedSummerCamp/courses/courses_32bits.png#7 248 171 58);">
+            <div onclick=CloseWindow style="width: 45px; height: 38px; margin-left:30px;margin-top:10px; background: url(Texture/Aries/Creator/keepwork/RedSummerCamp/works/works_32bits.png#0 65 45 38);"></div>
+        </div>
+        <div onclick=ShowVip style="position: absolute; top: 10px; right: 40px; width: 80px; height: 75px; background: url(Texture/Aries/Creator/keepwork/RedSummerCamp/works/works_32bits.png#298 110 80 75);"></div>
+    </div>
+
+    <div style="width: 1280px; height: 720px; display: flex; justify-content: center; align-items: center;">
+        <div class="content">
+            <div class="title center">
+                ＂神通杯＂ 第一届全国学校联盟中小学计算机编程大赛集训营
+            </div>
+            <div style="display: flex; margin-top: 40px; margin-left: 60px;">
+    
+                <div style="width: 602px; height: 374px; display: flex; align-items: center; justify-content: center; border-radius: 4px; background-color: #ffffff;">
+                    <div style="width: 596px; height: 368px; background: url(Texture/Aries/Creator/keepwork/RedSummerCamp/shentongbei/stb_32bits.png#0 0 602 374);">
+                        <div style="width: 596px; height: 368px; background: url(Texture/Aries/Creator/keepwork/worldshare_32bits.png#394 211 32 32:9 9 9 9)"></div>
+                    </div>
+                </div>
+                <div style="width: 490px; margin-left: 20px;">
+                    <div style="font-size: 30px; font-weight: bold;">开始日期 ：2021.05.09</div>
+                    <div style="font-size: 20px; height: 180px; overflow-y: auto; margin-top: 10px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;＂神通杯第一届全国学校联盟中小学计算机编程大赛＂是由教育部体育卫生与艺术教育司指导，全国学校体育联盟机器人工作委员会联合神州通信集团共同主办的计算机编程大赛，比赛面向全国中小学生公益性开展，以立德树人为根本任务，以社会主义核心价值观为引领，以服务学生全面发展、增强综合素质为目标，坚持健康第一的教育理念，旨在进一步普及计算机编程素质教育教学活动，检验计算机编程素质教育成果，推动青少年文化学习和体育竞赛协调发展，培养德智体美劳全面发展的社会主义建设者和接班人。</div>
+                    <div style="height: 2px; background-color: #212122; margin-top: 18px;"></div>
+                    <div style="margin-top: 16px; display: flex; justify-content: space-between;">
+                        <div onclick=ClickCompetition class="image">
+                            <div style="width: 98px; height: 98px; border-radius: 4px; background: url(Texture/Aries/Creator/keepwork/RedSummerCamp/shentongbei/competition_32bits.png#0 0 99 98);"></div>
+                            <div style="position: absolute; bottom: 2px; left: 2px; right: 2px; height: 24px; line-height: 24px; text-align: center; color: #ffffff; background-color: #00000090;">集训营报名</div>
+                        </div>
+                        <div onclick=ClickConstituion class="image">
+                            <div style="width: 98px; height: 98px; border-radius: 4px; background: url(Texture/Aries/Creator/keepwork/RedSummerCamp/shentongbei/constitution_32bits.png#0 0 99 98);"></div>
+                            <div style="position: absolute; bottom: 2px; left: 2px; right: 2px; height: 24px; line-height: 24px; text-align: center; color: #ffffff; background-color: #00000090;">赛事章程</div>
+                        </div>
+                        <div onclick=ClickCourse class="image">
+                            <div style="width: 98px; height: 98px; border-radius: 4px; background: url(Texture/Aries/Creator/keepwork/RedSummerCamp/shentongbei/course_32bits.png#0 0 99 98);"></div>
+                            <div style="position: absolute; bottom: 2px; left: 2px; right: 2px; height: 24px; line-height: 24px; text-align: center; color: #ffffff; background-color: #00000090;">课程安排</div>
+                        </div>
+                        <div onclick=ClickQualification class="image">
+                            <div style="width: 98px; height: 98px; border-radius: 4px; background: url(Texture/Aries/Creator/keepwork/RedSummerCamp/shentongbei/qualification_32bits.png#0 0 99 98);"></div>
+                            <div style="position: absolute; bottom: 2px; left: 2px; right: 2px; height: 24px; line-height: 24px; text-align: center; color: #ffffff; background-color: #00000090;">赛事资质</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        
+            <div style="display: flex; justify-content: space-between; padding: 40px 80px;">
+                <div onclick=ClickParentGuide style="font-size: 16px; color: #1335A0; font-weight: bold;">&lt;&lt;&lt; 家长指南</div>
+                <div onclick=ClickOpenWorld style="width: 152px; height: 52px; font-weight: bold; font-size:20px; background-color: #ffffffd0; background: url(Texture/Aries/Creator/keepwork/SchoolCenter/btn_qiehuan_32X32_32bits.png#0 0 32 32:8 8 8 8);" class="btn">进入集训营</div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script type="text/lua">
+local Page = NPL.load("Mod/GeneralGameServerMod/UI/Page.lua");
+
+function ShowVip()
+    local VipPage = NPL.load("(gl)script/apps/Aries/Creator/Game/Tasks/User/VipPage.lua");
+    VipPage.ShowPage();
+end 
+
+function ClickParentGuide()
+    local RedSummerCampParentsPage = NPL.load("(gl)script/apps/Aries/Creator/Game/Tasks/RedSummerCamp/RedSummerCampParentsPage.lua");
+    RedSummerCampParentsPage.Show();
+end
+
+function ClickCompetition()
+    ShowWindow(nil, {
+        draggable = false,
+        fixedRootScreenWidth = 1280, fixedRootScreenHeight = 720,
+        url = "%ui%/App/RedSummerCamp/Competition.html", 
+    });
+end
+
+function ClickConstituion()
+    ShowWindow(nil, {
+        draggable = false,
+        fixedRootScreenWidth = 1280, fixedRootScreenHeight = 720,
+        url = "%ui%/App/RedSummerCamp/Constitution.html", 
+    });
+end
+
+function ClickCourse()
+    ShowWindow(nil, {
+        draggable = false,
+        fixedRootScreenWidth = 1280, fixedRootScreenHeight = 720,
+        url = "%ui%/App/RedSummerCamp/Course.html",
+    });
+end
+
+function ClickQualification()
+    ShowWindow(nil, {
+        draggable = false,
+        fixedRootScreenWidth = 1280, fixedRootScreenHeight = 720,
+        url = "%ui%/App/RedSummerCamp/Qualification.html", 
+    });
+end
+
+function ClickOpenWorld()
+    <!-- CloseWindow(); -->
+    local worldId = (IsRlsEnv or IsDevEnv) and 20690 or 72945;
+    GameLogic.RunCommand(string.format("/loadworld -s -force %d", worldId));    
+end
+
+</script>
+
+<style scoped=true>
+.container {
+    width: 100%;
+    height: 100%;
+    display: flex; 
+    justify-content: center; 
+    align-items: center;
+    background-color: #dcdcdc;
+    background: url(Texture/Aries/Creator/keepwork/RedSummerCamp/works/works_32bits.png#380 247 128 257:1 123 126 123);
+}
+.content {
+    margin-top: 80px;
+    width: 1242px;
+    height: 626px;
+    color: #212122;
+    background: url(Texture/Aries/Creator/keepwork/RedSummerCamp/shentongbei/shentongbei_32bits.png#0 0 512 625:150 145 100 150);
+}
+.title {
+    margin-top: 30px;
+    padding-left: 20px;
+    font-size: 40px;
+    color: #212122;
+    font-weight: bold;
+    width: 100%;
+}
+.image {
+    width: 102px;
+    height: 102px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff;
+}
+
+</style>
+
+<!-- 
+local Page = NPL.load("Mod/GeneralGameServerMod/UI/Page.lua");
+local page = Page.Show({}, {url = "%ui%/App/RedSummerCamp/ShenTongBei.html", width = "100%", height = "100%", fixedRootScreenWidth = 1280, fixedRootScreenHeight = 720,});
+ -->
+
+ 

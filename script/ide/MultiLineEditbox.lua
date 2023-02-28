@@ -87,6 +87,8 @@ local MultiLineEditbox = commonlib.inherit(commonlib.gettable("CommonCtrl.TreeVi
 	bUseSystemControl = false,
 	AlwaysShowCurLineBackground = true,
 	InputMethodEnabled = true,
+	isMoveViewWhenAttachWithIME = false,
+	onfocusinFunc = nil,
 }))
 
 -- NPL syntax highlighting rules
@@ -168,6 +170,8 @@ function MultiLineEditbox:Show(bShow)
 				self.ctrlEditbox:Connect("textChanged", self, self.onchange, "UniqueConnection");
 			end
 
+			self.ctrlEditbox:setAutoVirtualKeyboard(self.auto_virtual_keyboard)
+
 			if(not self.InputMethodEnabled) then
 				self.ctrlEditbox:SetInputMethodEnabled(false);
 			end
@@ -179,6 +183,10 @@ function MultiLineEditbox:Show(bShow)
 			end
 			if(self.OnRightClick) then
 				self.ctrlEditbox:Connect("rightClicked", self, self.OnRightClick, "UniqueConnection");
+			end
+
+			if (self.isMoveViewWhenAttachWithIME) then
+				self.ctrlEditbox:setMoveViewWhenAttachWithIME(true)
 			end
 		end
 		if(bShow == nil) then
@@ -308,9 +316,22 @@ function MultiLineEditbox.DrawNodeHandler(_parent, treeNode)
 	end
 	-- text
 	if(treeNode.Selected and not treeNode.TreeView.ReadOnly) then
-		_parent.background = "Texture/alphadot.png"; -- high the selected line. 
+		if treeNode.TreeView.AlwaysShowCurLineBackground then
+			_parent.background = "Texture/alphadot.png"; -- high the selected line. 
+		end
+		
 		_parent.onmousedown="";
 		_this=ParaUI.CreateUIObject("imeeditbox","s", "_fi",left,-1,0,-2);
+		if treeNode.TreeView.isMoveViewWhenAttachWithIME then
+			_this:SetField("MoveViewWhenAttachWithIME", true);
+		end
+
+		if treeNode.TreeView.onfocusinFunc then
+			-- _this:SetScript("onfocusin", treeNode.TreeView.onfocusinFunc, treeNode.TreeView.name, treeNode.index);
+			_this.onfocusin = string.format(";CommonCtrl.MultiLineEditbox.OnFocusIn(%q,%d)", treeNode.TreeView.name, treeNode.index);
+		end
+		
+
 		_this.text=treeNode.Text or "";	
 		if(treeNode.TreeView.fontsize) then
 			_this.font = format("System;%d;norm", treeNode.TreeView.fontsize);
@@ -491,6 +512,13 @@ end
 
 function MultiLineEditbox:Redo()
 	-- TODO: 
+end
+
+function MultiLineEditbox.OnFocusIn(sCtrlName, nLineIndex)
+	local self = CommonCtrl.GetControl(sCtrlName);
+	if self.onfocusinFunc then
+		self.onfocusinFunc(sCtrlName, nLineIndex)
+	end
 end
 
 -- process user key strokes inside the editbox. 

@@ -1,0 +1,53 @@
+<template class="container">
+    <WindowTitleBar title="添加语音字幕"></WindowTitleBar>
+    <div class="dialog-body">
+        <textarea style="width: 100%; height: 100%;" v-model="text" placeholder="请输入语音字幕内容..."></textarea>
+    </div>
+
+    <div>
+        <div onclick=clickConfirm class="btn confirm-btn">保存</div>
+    </div>
+</template>
+
+<script>
+RegisterComponent("WindowTitleBar", "%vue%/Components/WindowTitleBar.html");
+
+text = "";
+function clickConfirm()
+    if (type(_G.OnConfirm) == "function") then 
+        _G.OnConfirm(text);
+    end 
+    CloseWindow();
+end
+</script>
+
+<style scoped=true>
+.container {
+    width: 400px;
+    height: 300px;
+    background: url(Texture/Aries/Creator/keepwork/Window/dakuang2_32bits.png#0 0 64 69:26 44 24 22);
+}
+
+.dialog-body {
+    height: 200px;
+    padding: 10px;
+}
+
+.confirm-btn {
+    display: inline-block; 
+    text-align: center; 
+    margin-top: 5px;
+    margin-left: 10%; 
+    width: 80%; 
+    height:40px; 
+    line-height: 40px;
+    font-size: 20px; 
+    color: #000000;
+    background-color: #cccccc;
+    background: url(Texture/Aries/Creator/keepwork/Window/button/btn_huangse_32bits.png#0 0 38 64:16 16 16 16);
+}
+</style>
+
+<!-- 
+    你好, 我是逍遥.\n哈哈哈哈.
+ -->

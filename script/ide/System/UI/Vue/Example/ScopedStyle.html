@@ -1,0 +1,30 @@
+<template class="container">
+    <WindowTitleBar title="组件局部样式"></WindowTitleBar>
+    <ScopedChildStyle></ScopedChildStyle>
+
+    <div>
+        <div class="test"></div>
+    </div>
+</template>
+
+<script type="text/lua">
+RegisterComponent("WindowTitleBar", "%vue%/Components/WindowTitleBar.html");
+RegisterComponent("ScopedChildStyle", "%vue%/Example/ScopedChildStyle.html");
+</script>
+
+
+<style>
+.container {
+    height: 100%; 
+    width: 100%; 
+    padding: 0px 2px 2px 2px;
+    background: url(Texture/Aries/Creator/keepwork/Window/dakuang_32bits.png#0 0 440 93:378 43 33 44);
+}
+</style>
+<style scoped=true>
+.test  {
+    width: 100px;
+    height: 100px;
+    background-color: #ff0000;
+}
+</style>

@@ -1,0 +1,57 @@
+<template style="height: 39px; width: 100%;">
+    <div class="title" v-bind:style="titleStyle">{{title}}</div>
+    <div v-on:click="close" class="close-btn"></div>
+</template>
+
+<script type="text/lua">
+-- 标题属性
+title = GetAttrValue("title", "", "string");
+titleStyle = GetAttrValue("titleStyle", "", "string");
+
+-- 关闭窗口
+function close()
+    local closeFunc = GetAttrFunctionValue("close");
+    if (type(closeFunc) == "function") then 
+        closeFunc();
+    else
+        CloseWindow();
+    end
+end
+
+-- 组件解析完成
+function OnReady()
+end
+
+-- 监听属性变更
+function OnAttrValueChange(attrName, attrValue)
+    if (attrName == "title") then title = attrValue or "" end
+    if (attrName == "titleStyle") then titleStyle = attrValue or "" end
+end
+
+</script>
+
+<style>
+.title {
+    color: #ffffff;
+    font-size: 16px;
+    line-height: 20px;
+    float: left;
+    margin-left: 16px;
+    margin-top: 10px;
+    width: 200px;
+}
+
+.close-btn {
+    float: right;
+    width: 22px; 
+    height: 22px; 
+    margin-right: 20px; 
+    margin-top: 10px;
+    background-color: #e6e6e6;
+    background: url(Texture/Aries/Creator/keepwork/ggs/dialog/guanbi_22X22_32bits.png#0 0 22 22);
+}
+
+.close-btn:hover {
+    background-color: #ffffff;
+}
+</style>

@@ -1,0 +1,129 @@
+<template style="display: inline-block; padding: 6px; width: 100%; height: 100%;">
+    <div class="scroll" style="width: 100%; height: 100%; overflow-y: auto;">
+        <div v-for="item in AvatarItemList" class="item" onclick="ClickItem(item)">
+            <div v-if="item.gsid"
+                 style="position: absolute;
+                        left: -6px;
+                        top: 2px;
+                        width: 113px;
+                        height: 35px;
+                        font-size: 10px;
+                        padding-left: 12px;
+                        padding-top: 6px;
+                        color: #ffffff;
+                        background: url(Texture/Aries/Creator/keepwork/Avatar/tou_113X35_32bits.png#0 0 113 35);">
+                {{ModelFrom(item) or ""}}
+            </div>
+            <div v-if="ShowVipIcon(item)"
+                 style="position: absolute;
+                        left: -3px;
+                        top: -2px;
+                        width: 48px;
+                        height: 53px;
+                        padding-left: 12px;
+                        padding-top: 12px;
+                        background: url(Texture/Aries/Creator/keepwork/Avatar/VIP_48X53_32bits.png#0 0 48 53);">
+            </div>
+            <div v-if="ShowTryIcon(item)"
+                 style="position: absolute;
+                        left: 93px;
+                        top: 58px;
+                        width: 46px;
+                        height: 46px;
+                        background: url(Texture/Aries/Creator/keepwork/Avatar/btn_shichuan_44X46_32bits.png#0 0 46 46);">
+            </div>
+            <div v-bind:style="ItemStyle(item)"></div>
+            <div class="center" style="height: 30px; color: #000000; font-size: 12px;">{{item.name}}</div>
+        </div>
+    </div>
+</template>
+
+<script type="text/lua">
+    local KeepWorkItemManager = NPL.load("(gl)script/apps/Aries/Creator/HttpAPI/KeepWorkItemManager.lua");
+    local CheckSkin = NPL.load("(gl)Mod/GeneralGameServerMod/UI/Vue/Page/User/CheckSkin.lua");
+    AvatarItemList = {}
+
+    function OnAttrValueChange()
+    end
+
+    function ClickItem(item)
+        NPL.load("(gl)script/apps/Aries/Creator/Game/Movie/CustomSkinPage.lua");
+        local CustomSkinPage = commonlib.gettable("MyCompany.Aries.Game.Movie.CustomSkinPage");
+
+        local index = CustomSkinPage.GetIconIndexFromName(item.category);
+        local avtarIcons = GetGlobalScope():Get("AvatarIcons");
+
+        if (avtarIcons and avtarIcons[index] and avtarIcons[index].id == item.id) then
+            return;
+        end
+
+        NPL.load("(gl)script/apps/Aries/Creator/Game/Entity/CustomCharItems.lua");
+        local CustomCharItems = commonlib.gettable("MyCompany.Aries.Game.EntityManager.CustomCharItems");
+        local assetfile = GetGlobalScope():Get("MainAsset");
+        local skin = GetGlobalScope():Get("MainSkin");
+
+        local currentSkin = CustomCharItems:AddItemToSkin(skin, item);
+
+        if(skin ~= currentSkin) then
+            GetGlobalScope():Set("MainAsset", assetfile);
+            GetGlobalScope():Set("MainSkin", currentSkin);
+        end
+
+        if (avtarIcons[index] and item.id) then
+            avtarIcons[index].id = item.id;
+            avtarIcons[index].name = item.name;
+            avtarIcons[index].icon = item.icon;
+            GetGlobalScope():Set("AvatarIcons", avtarIcons);
+        end
+    end
+
+    function ModelFrom(item)
+        local template = KeepWorkItemManager.GetItemTemplate(item.gsid);
+
+        if (template and template.desc) then
+            return template.desc;
+        end
+    end
+
+    function ShowVipIcon(item)
+        return item.type == CheckSkin.SKIN_ITEM_TYPE.VIP;
+    end
+
+    function ShowTryIcon(item)
+        return (item.gsid and not KeepWorkItemManager.HasGSItem(item.gsid));
+    end
+
+    function ItemStyle(item)
+        return string.format("margin-left:30px;margin-top: 15px; margin-bottom: 15px; width: 64px; height: 64px; background:url(%s)", item.icon);
+    end
+
+    function UpdateAvatarItemList()
+        if (GlobalScope:Get("CharacterTabIndex") == "skin") then
+            AvatarItemList = GlobalScope:Get("AvatarItems");
+        else
+            AvatarItemList = {};
+        end
+    end 
+
+    GetGlobalScope():Watch("AvatarItems", function()
+        UpdateAvatarItemList();
+    end);
+
+    GetGlobalScope():Watch("CharacterTabIndex", function()
+        UpdateAvatarItemList();
+    end);
+
+    function OnReady()
+        UpdateAvatarItemList();
+    end
+</script>
+
+<style>
+    .item {
+        width: 142px;
+        height: 140px;
+        padding: 10px 7px 0px 7px;
+        display: inline-block;
+        background: url(Texture/Aries/Creator/keepwork/ggs/user/renwuqiehuan/wupingbj_146X140_32bits.png#0 0 146 140);
+    }
+</style>

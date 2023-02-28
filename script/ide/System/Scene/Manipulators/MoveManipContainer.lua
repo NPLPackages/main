@@ -29,6 +29,7 @@ MoveManipContainer:Property({"PositionPlugName", "position", auto=true});
 
 MoveManipContainer:Property({"showGrid", false, "IsShowGrid", "SetShowGrid", auto=true});
 MoveManipContainer:Property({"snapToGrid", false, "IsSnapToGrid", "SetSnapToGrid", auto=true});
+MoveManipContainer:Property({"showGroundSnap", false, "IsShowGroundSnap", "SetShowGroundSnap", auto=true});
 MoveManipContainer:Property({"gridSize", 0.1, "GetGridSize", "SetGridSize", auto=true});
 MoveManipContainer:Property({"gridOffset", {0,0,0}, "GetGridOffset", "SetGridOffset", auto=true});
 
@@ -41,6 +42,7 @@ function MoveManipContainer:createChildren()
 	self.translateManip:SetShowGrid(self:IsShowGrid());
 	self.translateManip:SetSnapToGrid(self:IsSnapToGrid());
 	self.translateManip:SetGridSize(self:GetGridSize());
+	self.translateManip:SetShowGroundSnap(self:IsShowGroundSnap());
 end
 
 function MoveManipContainer:connectToDependNode(node)

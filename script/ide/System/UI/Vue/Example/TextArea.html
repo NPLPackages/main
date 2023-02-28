@@ -1,0 +1,187 @@
+<template class="container">
+    <WindowTitleBar title="测试"></WindowTitleBar>
+    <textarea v-bind:value="textareaValue" style="position: absolute; left: 0px; right: 0px; top: 40px; bottom: 0px;"></textarea>
+</template>
+
+<script type="text/lua">
+RegisterComponent("WindowTitleBar", "%vue%/Components/WindowTitleBar.html");
+
+textareaValue = [[
+
+<toolbox>
+	<category name="运动" color="#0078d7">
+		<block type="NPL_moveForward"/>
+		<block type="NPL_turn"/>
+		<block type="NPL_turnTo"/>
+		<block type="NPL_turnToTarget"/>
+		<block type="NPL_move"/>
+		<block type="NPL_moveTo"/>
+		<block type="NPL_moveToTarget"/>
+		<block type="NPL_walk"/>
+		<block type="NPL_walkForward"/>
+		<block type="NPL_attachTo"/>
+		<block type="NPL_velocity"/>
+		<block type="NPL_bounce"/>
+		<block type="NPL_getX"/>
+		<block type="NPL_getY"/>
+		<block type="NPL_getZ"/>
+		<block type="NPL_getPos"/>
+		<block type="NPL_setPos"/>
+		<block type="NPL_getFacing"/>
+	</category>
+	<category name="外观" color="#7abb55">
+		<block type="NPL_sayAndWait"/>
+		<block type="NPL_say"/>
+		<block type="NPL_tip"/>
+		<block type="NPL_show"/>
+		<block type="NPL_hide"/>
+		<block type="NPL_anim"/>
+		<block type="NPL_play"/>
+		<block type="NPL_playAndWait"/>
+		<block type="NPL_playLoop"/>
+		<block type="NPL_playBone"/>
+		<block type="NPL_playSpeed"/>
+		<block type="NPL_stop"/>
+		<block type="NPL_scale"/>
+		<block type="NPL_scaleTo"/>
+		<block type="NPL_focus"/>
+		<block type="NPL_camera"/>
+		<block type="NPL_getScale"/>
+		<block type="NPL_getPlayTime"/>
+		<block type="NPL_setMovie"/>
+		<block type="NPL_isMatchMovie"/>
+		<block type="NPL_playMatchedMovie"/>
+		<block type="NPL_playMovie"/>
+		<block type="NPL_playMovieLoop"/>
+		<block type="NPL_stopMovie"/>
+		<block type="NPL_setMovieProperty"/>
+		<block type="NPL_window"/>
+	</category>
+	<category name="事件" color="#764bcc">
+		<block type="NPL_registerClickEvent"/>
+		<block type="NPL_registerKeyPressedEvent"/>
+		<block type="NPL_registerBlockClickEvent"/>
+		<block type="NPL_registerTickEvent"/>
+		<block type="NPL_registerAnimationEvent"/>
+		<block type="NPL_registerBroadcastEvent"/>
+		<block type="NPL_broadcast"/>
+		<block type="NPL_broadcastAndWait"/>
+		<block type="NPL_broadcastTo"/>
+		<block type="NPL_registerStopEvent"/>
+		<block type="NPL_registerAgentEvent"/>
+		<block type="NPL_registerNetworkEvent"/>
+		<block type="NPL_broadcastNetworkEvent"/>
+		<block type="NPL_sendNetworkEvent"/>
+		<block type="NPL_cmd"/>
+	</category>
+	<category name="控制" color="#d83b01">
+		<block type="NPL_wait"/>
+		<block type="NPL_repeat"/>
+		<block type="NPL_forever"/>
+		<block type="NPL_repeat_count"/>
+		<block type="NPL_repeat_count_step"/>
+		<block type="NPL_repeat_until"/>
+		<block type="NPL_waitUntil"/>
+		<block type="NPL_while_if"/>
+		<block type="NPL_control_if"/>
+		<block type="NPL_if_else"/>
+		<block type="NPL_forKeyValue"/>
+		<block type="NPL_forIndexValue"/>
+		<block type="NPL_run"/>
+		<block type="NPL_exit"/>
+		<block type="NPL_restart"/>
+		<block type="NPL_becomeAgent"/>
+		<block type="NPL_setOutput"/>
+	</category>
+	<category name="声音" color="#8f6d40">
+		<block type="NPL_playNote"/>
+		<block type="NPL_playMusic"/>
+		<block type="NPL_playSound"/>
+		<block type="NPL_stopSound"/>
+		<block type="NPL_playText"/>
+	</category>
+	<category name="感知" color="#69b090">
+		<block type="NPL_isTouching"/>
+		<block type="NPL_setName"/>
+		<block type="NPL_setPhysicsRaidus"/>
+		<block type="NPL_setPhysicsHeight"/>
+		<block type="NPL_registerCollisionEvent"/>
+		<block type="NPL_broadcastCollision"/>
+		<block type="NPL_distanceTo"/>
+		<block type="NPL_calculatePushOut"/>
+		<block type="NPL_askAndWait"/>
+		<block type="NPL_answer"/>
+		<block type="NPL_isKeyPressed"/>
+		<block type="NPL_isMouseDown"/>
+		<block type="NPL_getMousePoint"/>
+		<block type="NPL_mousePickBlock"/>
+		<block type="NPL_getBlock"/>
+		<block type="NPL_setBlock"/>
+		<block type="NPL_timer"/>
+		<block type="NPL_resetTimer"/>
+		<block type="NPL_setMode"/>
+		<block type="NPL_getMode"/>
+	</category>
+	<category name="运算" color="#569138">
+		<block type="NPL_math_op"/>
+		<block type="NPL_math_op_compare_number"/>
+		<block type="NPL_math_op_compare"/>
+		<block type="NPL_random"/>
+		<block type="NPL_not"/>
+		<block type="NPL_join"/>
+		<block type="NPL_lengthOf"/>
+		<block type="NPL_mod"/>
+		<block type="NPL_round"/>
+		<block type="NPL_math_oneop"/>
+		<block type="NPL_table.contains"/>
+		<block type="NPL_table.remove"/>
+	</category>
+	<category name="数据" color="#459197">
+		<block type="NPL_getLocalVariable"/>
+		<block type="NPL_assign"/>
+		<block type="NPL_set"/>
+		<block type="NPL_createLocalVariable"/>
+		<block type="NPL_registerCloneEvent"/>
+		<block type="NPL_clone"/>
+		<block type="NPL_delete"/>
+		<block type="NPL_setActorValue"/>
+		<block type="NPL_getActorValue"/>
+		<block type="NPL_getActor"/>
+		<block type="NPL_getString"/>
+		<block type="NPL_getBoolean"/>
+		<block type="NPL_getNumber"/>
+		<block type="NPL_getColor"/>
+		<block type="NPL_getTableValue"/>
+		<block type="NPL_getArrayValue"/>
+		<block type="NPL_defineFunction"/>
+		<block type="NPL_callFunction"/>
+		<block type="NPL_showVariable"/>
+		<block type="NPL_hideVariable"/>
+		<block type="NPL_log"/>
+		<block type="NPL_echo"/>
+		<block type="NPL_include"/>
+		<block type="NPL_gettable"/>
+		<block type="NPL_inherit"/>
+		<block type="NPL_saveUserData"/>
+		<block type="NPL_loadUserData"/>
+		<block type="NPL_saveWorldData"/>
+		<block type="NPL_loadWorldData"/>
+		<block type="NPL_code_block"/>
+		<block type="NPL_code_comment"/>
+		<block type="NPL_code_comment_full"/>
+	</category>
+</toolbox>
+]]
+function OnReady()
+end
+</script>
+
+<style>
+.container {
+    height: 100%; 
+    width: 100%; 
+    padding: 0px 2px 2px 2px;
+    /* border: 1px solid #ffffff; */
+    background: url(Texture/Aries/Creator/keepwork/Window/dakuang_32bits.png#0 0 440 93:378 43 33 44);
+}
+</style>

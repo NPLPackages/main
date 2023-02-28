@@ -1,0 +1,284 @@
+<template class="container">
+    <div style="width: 957px; height: 556px; margin-top: 44px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/diban_957x556_32bits.png#0 0 957 556);">
+        <div onclick=ClickWinterCampMapWindow style="position: absolute; left: 15px; top: -47px; width: 92px; height: 93px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/ditu_92x93_32bits.png#0 0 92 93);"></div>
+        <div onclick="CloseWindow" style="position: absolute; width: 52px; height: 52px; right: 39px; top: 27px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/guanbi_43x43_32bits.png#0 0 43 43);"></div>
+        <div style="position: absolute; left: 350px; top: -35px; width: 323px; height: 55px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/shouce_323x55_32bits.png#0 0 323 55);"></div>
+
+        <div v-if="CurrentSelect == 'quweibiancheng' or CurrentSelect == 'kuailejianzao' or CurrentSelect == 'jingcaidonghua'" style="width: 100%; height: 100%;">
+            <div style="position: absolute; left: 78px; top: 60px; width: 350px; height: 465px;">
+                <div style="width: 349px; height: 218px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/heiban_349x218_32bits.png#0 0 349 218);">
+                    <div v-bind:style="CourseCoverStyle()"></div>
+                </div>
+                <div style="margin-top: 12px; margin-left: 115px; width: 114px; height: 29px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/dangqian_114x29_32bits.png#0 0 114 29);"></div>
+                <div style="margin-top: 7px; width: 348px; height: 55px; padding-left: 16px; line-height: 55px; color: #333333; font-size: 14px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/shouce_348x55_32bits.png#0 0 348 55);">{{GetKeChengTitle()}}</div>
+                <div style="margin-top: 5px; margin-left: 115px; width: 114px; height: 29px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/kechen_114x29_32bits.png#0 0 114 29);"></div>
+                <div style="margin-top: 5px; width: 348px; height: 55px; padding-left: 16px; line-height: 55px; color: #333333; font-size: 14px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/shouce_348x55_32bits.png#0 0 348 55);">{{GetKeChengSubTitle()}}</div>
+                <div onclick="GoKeChengPlace" style="margin-top: 7px; margin-left: 115px; width: 87px; height: 36px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/shangke_87x36_32bits.png#0 0 87 36);"></div>
+            </div>
+    
+            <div style="position: absolute; left: 475px; top: 60px; width: 380px; height: 465px;">
+                <div v-if="CurrentSelect == 'quweibiancheng'" style="width: 131px; height: 29px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/bianchen_131x29_32bits.png#0 0 131 29);"></div>
+                <div v-if="CurrentSelect == 'kuailejianzao'" style="width: 131px; height: 29px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/jianzao_131x29_32bits.png#0 0 131 29);"></div>
+                <div v-if="CurrentSelect == 'jingcaidonghua'" style="width: 131px; height: 29px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/donhua_131x29_32bits.png#0 0 131 29);"></div>
+                <div style="width: 377px; height: 141px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/jindu_377x141_32bits.png#0 0 377 141);">
+                    <div onclick="ClickLessonItem(index)"  v-for="(item, index) in KeChengTasks[CurrentSelect]" style="width: 75px; height: 66px; display: inline-flex; justify-content: center; padding-top: 6px;">
+                        <div v-bind:style="TiYuJinDuItemStyle(item, index)"></div>
+                        <div style="margin-top: 2px; width: 45px; text-align: center;">{{item.text}}</div>
+                    </div>
+                </div>
+                <div v-if="not CertConfig[CurrentSelect].is_finish"  style="margin-left: 30px; margin-top: 13px; margin-bottom: 13px; width: 319px; height: 33px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/biaoyu_319x33_32bits.png#0 0 319 33);"></div>
+                <div v-if="CertConfig[CurrentSelect].is_finish" style="margin-left: 24px; margin-top: 8px; margin-bottom: 8px; width: 324px; height: 48px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/jianglitishi_324x48_32bits.png#0 0 324 48);"></div>
+                <div style="width: 100%; height: 230px;">
+                    <div style="position: absolute; left: 0px; top: 0px; width: 187px; height: 223px; padding: 4px 8px 8px 4px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/jiangli_187x223_32bits.png#0 0 187 223);">
+                        <image v-bind:src="CertConfig[CurrentSelect].suit_img" style="width: 100%; height: 100%"></image>
+                    </div>
+                    <div style="position: absolute; left: 193px; top: 0px; width: 186px; height: 109px; padding: 4px 8px 8px 4px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/jiangli_186x109_32bits.png#0 0 186 109);">
+                        <image v-bind:src="CertConfig[CurrentSelect].cert_img" style="width: 100%; height: 100%"></image>
+                    </div>
+                    <div style="position: absolute; left: 193px; top: 114px; width: 186px; height: 109px; padding: 4px 8px 8px 4px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/jiangli_186x109_32bits.png#0 0 186 109);">
+                        <image v-bind:src="CertConfig[CurrentSelect].reward_img" style="width: 100%; height: 100%"></image>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="CurrentSelect == 'lajifenlei'" style="width: 100%; height: 100%;">
+            <div style="position: absolute; left: 78px; top: 60px; width: 350px; height: 465px;">
+                <div style="width: 349px; height: 218px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/heiban_349x218_32bits.png#0 0 349 218);">
+                    <image v-bind:src="string.format('Texture/Aries/Creator/keepwork/Activity/wintercamp/moviecover/mc_0%s_349x218_32bits.png#0 0 349 218', MovieIndex)" style="width: 100%; height: 100%;"></image>
+                </div>
+                <div style="margin-top: 20px; width: 100%; height: 170px;">
+                    <div onclick="MovieIndex=1" style="position: absolute; left: 0px; top: 0px; width: 89px; height: 79px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/dianying_89x79_32bits.png#0 0 89 79);">
+                        <div style="width: 100%; height: 100%; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/hlj_128x113_32bits.png#0 0 128 113);"></div>
+                        <div v-if="MovieIndex==1" style="position: absolute; left: 0px; top: 1px; width: 98px; height: 77px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/xuankuang_98x77_32bits.png#0 0 98 77);"></div>
+                    </div>
+                    <div onclick="MovieIndex=2" style="position: absolute; left: 130px; top: 0px; width: 89px; height: 79px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/dianying_89x79_32bits.png#0 0 89 79);">
+                        <div style="width: 100%; height: 100%; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/khsc_128x113_32bits.png#0 0 128 113);"></div>
+                        <div v-if="MovieIndex==2" style="position: absolute; left: 0px; top: 1px; width: 98px; height: 77px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/xuankuang_98x77_32bits.png#0 0 98 77);"></div>
+                    </div>
+                    <div onclick="MovieIndex=3" style="position: absolute; left: 260px; top: 0px; width: 89px; height: 79px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/dianying_89x79_32bits.png#0 0 89 79);">
+                        <div style="width: 100%; height: 100%; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/khs_128x113_32bits.png#0 0 128 113);"></div>
+                        <div v-if="MovieIndex==3" style="position: absolute; left: 0px; top: 1px; width: 98px; height: 77px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/xuankuang_98x77_32bits.png#0 0 98 77);"></div>
+                    </div>
+                    <div onclick="MovieIndex=4" style="position: absolute; left: 65px; top: 49px; width: 89px; height: 79px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/dianying_89x79_32bits.png#0 0 89 79);">
+                        <div style="width: 100%; height: 100%; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/hljc_128x113_32bits.png#0 0 128 113);"></div>
+                        <div v-if="MovieIndex==4" style="position: absolute; left: 0px; top: 1px; width: 98px; height: 77px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/xuankuang_98x77_32bits.png#0 0 98 77);"></div>
+                    </div>
+                    <div onclick="MovieIndex=5" style="position: absolute; left: 195px; top: 49px; width: 89px; height: 79px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/dianying_89x79_32bits.png#0 0 89 79);">
+                        <div style="width: 100%; height: 100%; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/bkhsljc_128x113_32bits.png#0 0 128 113);"></div>
+                        <div v-if="MovieIndex==5" style="position: absolute; left: 0px; top: 1px; width: 98px; height: 77px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/xuankuang_98x77_32bits.png#0 0 98 77);"></div>
+                    </div>
+                    <div onclick="MovieIndex=6" style="position: absolute; left: 0px; top: 96px; width: 89px; height: 79px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/dianying_89x79_32bits.png#0 0 89 79);">
+                        <div style="width: 100%; height: 100%; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/qtlj_128x113_32bits.png#0 0 128 113);"></div>
+                        <div v-if="MovieIndex==6" style="position: absolute; left: 0px; top: 1px; width: 98px; height: 77px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/xuankuang_98x77_32bits.png#0 0 98 77);"></div>
+                    </div>
+                    <div onclick="MovieIndex=7" style="position: absolute; left: 130px; top: 96px; width: 89px; height: 79px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/dianying_89x79_32bits.png#0 0 89 79);">
+                        <div style="width: 100%; height: 100%; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/qtljc_128x113_32bits.png#0 0 128 113);"></div>
+                        <div v-if="MovieIndex==7" style="position: absolute; left: 0px; top: 1px; width: 98px; height: 77px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/xuankuang_98x77_32bits.png#0 0 98 77);"></div>
+                    </div>
+                    <div onclick="MovieIndex=8" style="position: absolute; left: 260px; top: 96px; width: 89px; height: 79px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/dianying_89x79_32bits.png#0 0 89 79);">
+                        <div style="width: 100%; height: 100%; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/bkhslj_128x113_32bits.png#0 0 128 113);"></div>
+                        <div v-if="MovieIndex==8" style="position: absolute; left: 0px; top: 1px; width: 98px; height: 77px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/xuankuang_98x77_32bits.png#0 0 98 77);"></div>
+                    </div>
+                </div>
+                <div onclick="GoMoviePlace" style="margin-left: 100px; margin-top: 12px; width: 151px; height: 36px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/kandianying_151x36_32bits.png#0 0 151 36);"></div>
+            </div>
+    
+            <div style="position: absolute; left: 475px; top: 60px; width: 380px; height: 465px;">
+                <div style="width: 131px; height: 29px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/guankan_131_29_32bits.png#0 0 131 29);"></div>
+                <div style="width: 377px; height: 141px;background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/jindu_377x141_32bits.png#0 0 377 141);">
+                    <div style="width: 300px; margin-left: 38px; height: 100%;">
+                        <div onclick="ClickMovieItem(index)" v-for="index in 8" style="width: 75px; height: 66px; display: inline-flex; justify-content: center; align-items: center; padding-top: 6px;">
+                            <div v-bind:style="TiYuJinDuItemStyle(LaJiFenLeiMovieTasks[index], index)"></div>
+                            <div style="margin-top: 2px; width: 45px; text-align: center;">{{LaJiFenLeiMovieTasks[index].text}}</div>
+                        </div>
+                    </div>
+                </div>
+                <div v-if="not CertConfig[CurrentSelect].is_finish"  style="margin-left: 30px; margin-top: 13px; margin-bottom: 13px; width: 319px; height: 33px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/biaoyu_319x33_32bits.png#0 0 319 33);"></div>
+                <div v-if="CertConfig[CurrentSelect].is_finish" style="margin-left: 24px; margin-top: 8px; margin-bottom: 8px; width: 324px; height: 48px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/jianglitishi_324x48_32bits.png#0 0 324 48);"></div>
+                <div style="width: 100%; height: 230px;">
+                    <div style="position: absolute; left: 0px; top: 0px; width: 187px; height: 223px; padding: 4px 8px 8px 4px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/jiangli_187x223_32bits.png#0 0 187 223);">
+                        <image v-bind:src="CertConfig[CurrentSelect].suit_img" style="width: 100%; height: 100%"></image>
+                    </div>
+                    <div style="position: absolute; left: 193px; top: 0px; width: 186px; height: 109px; padding: 4px 8px 8px 4px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/jiangli_186x109_32bits.png#0 0 186 109);">
+                        <image v-bind:src="CertConfig[CurrentSelect].cert_img" style="width: 100%; height: 100%"></image>
+                    </div>
+                    <div style="position: absolute; left: 193px; top: 114px; width: 186px; height: 109px; padding: 4px 8px 8px 4px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/jiangli_186x109_32bits.png#0 0 186 109);">
+                        <image v-bind:src="CertConfig[CurrentSelect].reward_img" style="width: 100%; height: 100%"></image>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="CurrentSelect == 'tiyujinsai'" style="width: 100%; height: 100%;">
+            <div style="position: absolute; left: 72px; top: 60px; width: 363px; height: 465px;">
+                <div style="width: 100%;">
+                    <div onclick="GameIndex=1" style="display: inline-block; width: 173px; height: 131px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/yundonban_173x131_32bits.png#0 0 173 131);">
+                        <div v-if="GameIndex==1" style="position: absolute; left: 0px; top: 0px; width: 173px; height: 131px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/yundonbanhui_173x131_32bits.png#0 0 173 131);"></div>
+                        <div style="position: absolute; left: 110px; top: 6px; font-size: 17px; color: #ffffff;">跨栏</div>
+                        <div style="position: absolute; left: 45px; top: 100px; font-size: 17px; color: #e2a226;">目标: 20秒</div>
+                        <div style="position: absolute; left: 30px; top: 12px; width: 49px; height: 72px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/kualan_49x72_32bits.png#0 0 49 72);"></div>
+                    </div>
+                    <div onclick="GameIndex=2" style="display: inline-block; margin-left: 13px; width: 173px; height: 131px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/yundonban_173x131_32bits.png#0 0 173 131);">
+                        <div v-if="GameIndex==2" style="position: absolute; left: 0px; top: 0px; width: 173px; height: 131px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/yundonbanhui_173x131_32bits.png#0 0 173 131);"></div>
+                        <div style="position: absolute; left: 110px; top: 6px; font-size: 17px; color: #ffffff;">射箭</div>
+                        <div style="position: absolute; left: 45px; top: 100px; font-size: 17px; color: #e2a226;">目标: 25分</div>
+                        <div style="position: absolute; left: 24px; top: 18px; width: 55px; height: 63px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/shejian_55x63_32bits.png#0 0 55 63);"></div>
+                    </div>
+                    <div onclick="GameIndex=3" style="display: inline-block; margin-top: 13px; width: 173px; height: 131px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/yundonban_173x131_32bits.png#0 0 173 131);">
+                        <div v-if="GameIndex==3" style="position: absolute; left: 0px; top: 0px; width: 173px; height: 131px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/yundonbanhui_173x131_32bits.png#0 0 173 131);"></div>
+                        <div style="position: absolute; left: 96px; top: 6px; font-size: 17px; color: #ffffff;">记忆比拼</div>
+                        <div style="position: absolute; left: 45px; top: 100px; font-size: 17px; color: #e2a226;">目标: 记住所有</div>
+                        <div style="position: absolute; left: 20px; top: 22px; width: 69px; height: 56px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/kapai_69x56_32bits.png#0 0 69 56);"></div>
+                    </div>
+                    <div onclick="GameIndex=4" style="display: inline-block; margin-top: 13px; margin-left: 13px; width: 173px; height: 131px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/yundonban_173x131_32bits.png#0 0 173 131);">
+                        <div v-if="GameIndex==4" style="position: absolute; left: 0px; top: 0px; width: 173px; height: 131px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/yundonbanhui_173x131_32bits.png#0 0 173 131);"></div>
+                        <div style="position: absolute; left: 96px; top: 6px; font-size: 17px; color: #ffffff;">短道竞技</div>
+                        <div style="position: absolute; left: 45px; top: 100px; font-size: 17px; color: #e2a226;">目标: 抵达终点</div>
+                        <div style="position: absolute; left: 28px; top: 22px; width: 63px; height: 58px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/mutouren_63x58_32bits.png#0 0 69 56);"></div>
+                    </div>
+                </div>
+                <div style="margin-top: 12px; width: 131px; height: 29px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/bisaiguize_131_29_32bits.png#0 0 131 29);"></div>
+                <div style="width: 351px; height: 96px; padding: 8px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/bisaiguizekuang_351x96_32bits.png#0 0 351 96);">{{TiYuJingSaiTasks[GameIndex].description}}</div>
+                <div onclick="GoTiYuJingSaiPlace" style="margin-left: 100px; margin-top: 9px; width: 151px; height: 36px; text-align: center; font-weight: bold; padding-top: 8px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/anniudi_151x36_32bits.png#0 0 151 36);">前往 {{TiYuJingSaiTasks[GameIndex].text}} 赛场</div>
+            </div>
+    
+            <div style="position: absolute; left: 475px; top: 60px; width: 380px; height: 465px;">
+                <div style="width: 131px; height: 29px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/guankan_131_29_32bits.png#0 0 131 29);"></div>
+                <div style="width: 377px; height: 141px; display: flex; align-items: center; justify-content: center; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/jindu_377x141_32bits.png#0 0 377 141);">
+                    <div onclick="ClientGameItem(index)" v-for="(item, index) in TiYuJingSaiTasks" style="width: 60px; height: 60px; display: flex; justify-content: center;">
+                        <div v-bind:style="TiYuJinDuItemStyle(item, index)"></div>
+                        <div style="margin-top: 12px;">{{item.text}}</div>
+                    </div>
+                </div>
+                <div v-if="not CertConfig[CurrentSelect].is_finish"  style="margin-left: 30px; margin-top: 13px; margin-bottom: 13px; width: 319px; height: 33px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/biaoyu_319x33_32bits.png#0 0 319 33);"></div>
+                <div v-if="CertConfig[CurrentSelect].is_finish" style="margin-left: 24px; margin-top: 8px; margin-bottom: 8px; width: 324px; height: 48px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/jianglitishi_324x48_32bits.png#0 0 324 48);"></div>
+                <div style="width: 100%; height: 230px;">
+                    <div style="position: absolute; left: 0px; top: 0px; width: 187px; height: 223px; padding: 4px 8px 8px 4px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/jiangli_187x223_32bits.png#0 0 187 223);">
+                        <image v-bind:src="CertConfig[CurrentSelect].suit_img" style="width: 100%; height: 100%"></image>
+                    </div>
+                    <div style="position: absolute; left: 193px; top: 0px; width: 186px; height: 109px; padding: 4px 8px 8px 4px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/jiangli_186x109_32bits.png#0 0 186 109);">
+                        <image v-bind:src="CertConfig[CurrentSelect].cert_img" style="width: 100%; height: 100%"></image>
+                    </div>
+                    <div style="position: absolute; left: 193px; top: 114px; width: 186px; height: 109px; padding: 4px 8px 8px 4px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/jiangli_186x109_32bits.png#0 0 186 109);">
+                        <image v-bind:src="CertConfig[CurrentSelect].reward_img" style="width: 100%; height: 100%"></image>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="position: absolute; right: -68px; top: 55px; width: 103px; height: 540px;">
+            <div onclick="CurrentSelect='quweibiancheng'" v-if="CurrentSelect == 'quweibiancheng'" style="width: 100px; height: 100px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/quwei_103x103_32bits.png#0 0 103 103);"></div>
+            <div onclick="CurrentSelect='quweibiancheng'" v-if="CurrentSelect ~= 'quweibiancheng'" style="width: 100px; height: 100px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/quweihui_97x98_32bit.png#0 0 97 98);"></div>
+            <div onclick="CurrentSelect='kuailejianzao'" v-if="CurrentSelect == 'kuailejianzao'"  style="width: 100px; height: 100px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/kuaile_103x103_32bits.png#0 0 103 103);"></div>
+            <div onclick="CurrentSelect='kuailejianzao'" v-if="CurrentSelect ~= 'kuailejianzao'" style="width: 100px; height: 100px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/kuailehui_97x98_32bits.png#0 0 97 98);"></div>
+            <div onclick="CurrentSelect='jingcaidonghua'" v-if="CurrentSelect == 'jingcaidonghua'"  style="width: 100px; height: 100px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/jinncai_103x103_32bits.png#0 0 103 103);"></div>
+            <div onclick="CurrentSelect='jingcaidonghua'" v-if="CurrentSelect ~= 'jingcaidonghua'" style="width: 100px; height: 100px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/jingcai_97x98_32bits.png#0 0 97 98);"></div>
+            <div onclick="CurrentSelect='lajifenlei'" v-if="CurrentSelect == 'lajifenlei'"  style="width: 100px; height: 100px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/laji_103x103_32bits.png#0 0 103 103);"></div>
+            <div onclick="CurrentSelect='lajifenlei'" v-if="CurrentSelect ~= 'lajifenlei'" style="width: 100px; height: 100px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/lajihui_97x98_32bits.png#0 0 97 98);"></div>
+            <div onclick="CurrentSelect='tiyujinsai'" v-if="CurrentSelect == 'tiyujinsai'"  style="width: 100px; height: 100px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/tiyu_103x103_32bits.png#0 0 103 103);"></div>
+            <div onclick="CurrentSelect='tiyujinsai'" v-if="CurrentSelect ~= 'tiyujinsai'" style="width: 100px; height: 100px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/tiyuhui_97x98_32bits.png#0 0 97 98);"></div>
+        </div>
+    </div>
+</template>
+
+<script type="text/lua">
+CurrentSelect = DefaultTabIndex or "quweibiancheng";
+MovieIndex = Index.lajifenlei;
+GameIndex = Index.tiyujinsai;
+LessonIndex = {
+    quweibiancheng = Index.quweibiancheng,
+    kuailejianzao = Index.kuailejianzao,
+    jingcaidonghua = Index.jingcaidonghua,
+}
+
+_G.SelectCurrentTabIndex = function(tabindex)
+    CurrentSelect = tabindex;
+end
+
+function ClickWinterCampMapWindow()
+    CloseWindow();
+    ShowWinterCampMapWindow();
+end
+
+function GetKeChengTitle()
+    if (CurrentSelect == "quweibiancheng" or CurrentSelect == "kuailejianzao" or CurrentSelect == "jingcaidonghua") then
+        return KeChengTasks[CurrentSelect][LessonIndex[CurrentSelect]].title or "";
+    end
+    return "";
+end
+
+function GetKeChengSubTitle()
+    if (CurrentSelect == "quweibiancheng" or CurrentSelect == "kuailejianzao" or CurrentSelect == "jingcaidonghua") then
+        return KeChengTasks[CurrentSelect][LessonIndex[CurrentSelect]].subtitle or "";
+    end
+    return "";
+end
+
+function CourseCoverStyle()
+    if (CurrentSelect == "quweibiancheng") then
+        return string.format("width: 349px; height: 218px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/biancheng/lp%s_349x218_32bits.png#0 0 349 218);", LessonIndex[CurrentSelect]);
+    elseif (CurrentSelect == "kuailejianzao") then
+        return string.format("width: 349px; height: 218px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/jianzao/lp%s_349x218_32bits.png#0 0 349 218);", LessonIndex[CurrentSelect]);
+    elseif (CurrentSelect == "jingcaidonghua") then
+        return string.format("width: 349px; height: 218px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/donghua/lp%s_349x218_32bits.png#0 0 349 218);", LessonIndex[CurrentSelect]);
+    else 
+        return "width: 349px; height: 218px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/heiban_349x218_32bits.png#0 0 349 218);";
+    end
+end
+
+function TiYuJinDuItemStyle(item, index)
+    local bgname = "";
+    local Index = {quweibiancheng = LessonIndex.quweibiancheng, kuailejianzao = LessonIndex.kuailejianzao, jingcaidonghua = LessonIndex.jingcaidonghua, lajifenlei = MovieIndex, tiyujinsai = GameIndex};
+    local state = Index[CurrentSelect] == index and 2 or item.state;
+    index = index % 2;
+    if (state == 0 and index == 1) then bgname = "huishang_45x40_32bits" end 
+    if (state == 0 and index == 0) then bgname = "huixia_45x40_32bits" end 
+    if (state == 2 and index == 1) then bgname = "lanshang_45x40_32bits" end 
+    if (state == 2 and index == 0) then bgname = "lanxia_45x40_32bits" end 
+    if (state == 1 and index == 1) then bgname = "lvshang_45x40_32bits" end 
+    if (state == 1 and index == 0) then bgname = "lvxia_45x40_32bits" end 
+    return string.format("display: inline-block; width: 45px; height: 40px; background: url(Texture/Aries/Creator/keepwork/Activity/wintercamp/%s.png#0 0 45 40);", bgname);
+end
+
+function ClickLessonItem(index)
+    LessonIndex[CurrentSelect] = index;
+end 
+
+function ClickMovieItem(index)
+    MovieIndex = index;
+end 
+
+function ClientGameItem(index)
+    GameIndex = index;
+end 
+
+function GoMoviePlace()
+    CloseWindow();
+    _G.GoLaJiFenLeiMovieTask(MovieIndex);
+end
+
+function GoTiYuJingSaiPlace()
+    local item = TiYuJingSaiTasks[GameIndex];
+    if (not item) then return end
+    local pos = item.teleportPos;
+    cmd(string.format("/goto %s %s %s", pos[1], pos[2], pos[3]));
+    CloseWindow();
+end
+
+function GoKeChengPlace()
+    local lesson = KeChengTasks[CurrentSelect];
+    if (not lesson) then return end 
+    local pos = lesson[1].teleportPos;
+    cmd(string.format("/goto %s %s %s", pos[1], pos[2], pos[3]));
+    CloseWindow();
+end
+
+</script>
+
+<style scoped="true">
+.container {
+    width: 100%;
+    height: 100%;
+}
+</style>

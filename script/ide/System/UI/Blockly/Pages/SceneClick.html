@@ -1,0 +1,42 @@
+<template class="container">
+    <div onclick=SceneClick class="click-container"></div>
+    <div class="tip">点击目标点完成角度提取</div>
+</template>
+
+<script type="text/lua">
+
+function SceneClick()
+    local event = GetEvent();
+    local x, y = event:GetScreenXY();
+    if (type(_G.OnFinish) == "function") then
+        _G.OnFinish(x, y);
+    end
+    CloseWindow();
+end
+</script>
+
+<style>
+.container {
+    height: 100%; 
+    width: 100%; 
+}
+
+.click-container {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    bottom: 0px;
+    right: 0px;
+}
+
+.tip {
+    margin-top: 100px;
+    margin-left: 100px;
+    height: 60px;
+    width: 100%;
+    line-height: 60px;
+    font-size: 30px;
+    color: #7fffd4;
+}
+</style>
+    

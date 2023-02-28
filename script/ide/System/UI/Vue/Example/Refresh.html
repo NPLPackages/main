@@ -1,0 +1,21 @@
+<template>
+    <div>
+        {{count}}
+    </div>
+    <div onclick=OnClick>click</div>
+</template>
+
+<script type="text/lua">
+_G.count = 1;
+
+function OnClick()
+    _G.count = _G.count + 1;
+    RefreshWindow();
+    if (_G.count > 4) then CloseWindow() end 
+end
+
+</script>
+
+<style scoped=true>
+
+</style>

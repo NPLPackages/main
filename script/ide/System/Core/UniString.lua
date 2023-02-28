@@ -10,19 +10,19 @@ use the lib:
 ------------------------------------------------------------
 NPL.load("(gl)script/ide/System/Core/UniString.lua");
 local UniString = commonlib.gettable("System.Core.UniString");
-local s1 = UniString:new("Ò»¶þÈýËÄÎå");
+local s1 = UniString:new("ä¸€äºŒä¸‰å››äº”");
 echo("cursorToX"..s1:cursorToX(2))
 echo("xToCursor"..s1:xToCursor(10))
 
-assert(s1[3] == "Èý" and s1:at(3) == "Èý", "test index")
+assert(s1[3] == "ä¸‰" and s1:at(3) == "ä¸‰", "test index")
 assert(s1:length() == 5, "test length")
-assert(tostring(s1) == "Ò»¶þÈýËÄÎå", "test eq")
-assert(tostring(s1.."Áù") == "Ò»¶þÈýËÄÎåÁù", "test concat")
-assert(tostring(s1:sub(1,2)) == "Ò»¶þ", "test sub")
+assert(tostring(s1) == "ä¸€äºŒä¸‰å››äº”", "test eq")
+assert(tostring(s1.."å…­") == "ä¸€äºŒä¸‰å››äº”å…­", "test concat")
+assert(tostring(s1:sub(1,2)) == "ä¸€äºŒ", "test sub")
 s1:insert(1,"insert");
-assert(tostring(s1) == "Ò»insert¶þÈýËÄÎå", "test insert")
+assert(tostring(s1) == "ä¸€insertäºŒä¸‰å››äº”", "test insert")
 s1:remove(2, 6);
-assert(tostring(s1) == "Ò»¶þÈýËÄÎå", "test remove")
+assert(tostring(s1) == "ä¸€äºŒä¸‰å››äº”", "test remove")
 ------------------------------------------------------------
 ]]
 local type = type;
@@ -164,13 +164,13 @@ function UniString:findFirstOf(str, initPos, bUseRegularExpression)
 		end
         local byteCount = 1
         if curByte > 239 then
-            byteCount = 4  -- 4×Ö½Ú×Ö·û
+            byteCount = 4  -- 4å­—èŠ‚å­—ç¬¦
         elseif curByte > 223 then
-            byteCount = 3  -- ºº×Ö
+            byteCount = 3  -- æ±‰å­—
         elseif curByte > 128 then
-            byteCount = 2  -- Ë«×Ö½Ú×Ö·û
+            byteCount = 2  -- åŒå­—èŠ‚å­—ç¬¦
         else
-            byteCount = 1  -- µ¥×Ö½Ú×Ö·û
+            byteCount = 1  -- å•å­—èŠ‚å­—ç¬¦
         end
 		if(uniPos >= initPos) then
 			if(i == _start) then
@@ -233,10 +233,15 @@ end
 -- @param s: can be standard string or UniString.
 -- return the string of at most count unicode characters. the return type is same as s parameter.
 function UniString.left(s, count)
+	if type(count)~="number" then
+		return s
+	end
 	if(type(s) == "table") then
 		return UniString:new(ParaMisc.UniSubString(s.text, 1, count));
-	else
+	elseif type(s)=="string" then
 		return ParaMisc.UniSubString(s, 1, count);
+	else
+		return s
 	end
 end
 

@@ -1,0 +1,48 @@
+<template class="container">
+    <BigImage 
+        v-bind:src="url"
+        v-bind:x=x 
+        v-bind:y=y
+        v-bind:w=w
+        v-bind:h=h
+        style="width: 100%; height: 100%;">
+    </BigImage>
+    <div onclick=CloseWindow class="close btn"></div>
+</template>
+
+<script type="text/lua">
+
+function OnReady()
+end
+</script>
+
+<style>
+.container {
+    height: 100%; 
+    width: 100%; 
+    background-color: #ffffff;
+}
+
+.close {
+    position: absolute;
+    right: 40px;
+    top: 40px;
+    width: 40px;
+    height: 40px;
+    background: url(Texture/Aries/Creator/keepwork/ggs/dialog/guanbi_22X22_32bits.png#0 0 22 22);
+}
+
+</style>
+
+
+
+<!-- /open paracraft://cmd/loadworld worlds/DesignHouse/userworlds/71542_https_apicdn_keepwork_com_core_v0_repos_lixizhi_2Fworld_GGSDemo_archive_r.zip -->
+<!-- 
+<BigImage 
+src="Texture/Aries/Creator/keepwork/RedSummerCamp/shentongbei/all_zz.png"
+x=0 
+y=0
+w=1024
+h=6416
+style="width: 100%; height: 100%;">
+</BigImage> -->

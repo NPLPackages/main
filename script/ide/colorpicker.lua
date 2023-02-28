@@ -190,6 +190,10 @@ function ColorPicker:InternalUpdate(r,g,b)
 	r = math.floor(r);
 	g = math.floor(g);
 	b = math.floor(b);
+	if self.version and self.version == 2 then
+		self:InternalUpdateV2(r,g,b)
+		return 
+	end
 	local _this;
 	_this=ParaUI.GetUIObject(self.red_id);
 
@@ -248,9 +252,15 @@ function ColorPicker:InternalUpdate(r,g,b)
 	return true;
 end
 function ColorPicker:Show()
-	if(self.version and self.version == 1) then
-		self:ShowNew();
-		return;
+	if(self.version) then
+		if self.version == 1 then
+			self:ShowNew();
+			return;
+		end
+		if self.version == 2 then
+			self:ShowMobile()
+			return;
+		end
 	end
 	local _this,_parent;
 	if(self.name==nil)then
@@ -439,4 +449,257 @@ function ColorPicker:ShowNew()
 		_guihelper.SetUIColor(_this, self.r.." "..self.g.." "..self.b); 
 		self.colorblock_id = _this.id;
 	end	
+end
+
+--[[ update the r,g,b, values from the control.
+@param sCtrlName: if nil, the current control will be used. if not the given control is updated. ]]
+function ColorPicker:UpdateV2(nValue)
+	local self = CommonCtrl.GetControl(self.name);
+	if(self==nil)then
+		log(string.format([[err getting control %s
+		]],self.name));
+		return;
+	end
+	local _this, value, bColorChanged;
+	if(self.red_ctl)then 
+		value = self.red_ctl:GetValue()
+		if(value~=self.r)then
+			self.r=value
+			bColorChanged = true
+		end	
+	end	
+	
+	if(self.green_ctl)then 
+		value = tonumber(self.green_ctl:GetValue());
+		if(value~=self.g)then
+			self.g=value
+			bColorChanged = true
+		end
+	end	
+	
+	if(self.blue_ctl)then 
+		value = tonumber(self.blue_ctl:GetValue());
+		if(value~=self.b)then
+			self.b=value
+			bColorChanged = true
+		end
+	end	
+	
+	if bColorChanged then
+		self:InternalUpdateV2(self.r,self.g,self.b)
+	end
+	if(bColorChanged and self.onchange~=nil)then
+		if(type(self.onchange) == "string") then
+			NPL.DoString(self.onchange);
+		else
+			self.onchange(self.name, self.r, self.g, self.b);
+		end
+	end
+end
+--[[ update the r,g,b, values from the control.
+@param r,g,b: if nil, the corresponding component will not be updated.]]
+function ColorPicker:InternalUpdateV2(r,g,b)
+	r = math.floor(r);
+	g = math.floor(g);
+	b = math.floor(b);
+	local _this;
+	if(self.red_ctl and r)then 
+		if(r>255) then
+			r=255;
+		end
+		if(r<0) then
+			r=0;
+		end
+		self.r=r;
+		self.red_ctl:SetValue(self.r)
+		
+	end	
+	_this=ParaUI.GetUIObject(self.redtext_id);
+	if(_this:IsValid())then 
+		_this.text=tostring(self.r);
+	end	
+	_this=ParaUI.GetUIObject(self.green_id);
+	if(self.green_ctl and g)then 
+		if(g>255) then
+			g=255;
+		end
+		if(g<0) then
+			g=0;
+		end
+		self.g=g;
+		self.green_ctl:SetValue(self.g)
+	end	
+	_this=ParaUI.GetUIObject(self.greentext_id);
+	if(_this:IsValid())then 
+		_this.text=tostring(self.g);
+	end	
+	_this=ParaUI.GetUIObject(self.blue_id);
+	if(self.blue_ctl and b)then 
+		if(b>255) then
+			b=255;
+		end
+		if(b<0) then
+			b=0;
+		end
+		self.b=b;
+		self.blue_ctl:SetValue(self.b)
+	end	
+	_this=ParaUI.GetUIObject(self.bluetext_id);
+	if(_this:IsValid())then 
+		_this.text=tostring(self.b);
+	end	
+	_this=ParaUI.GetUIObject(self.colorblock_id);
+	if(_this:IsValid())then 
+		_guihelper.SetUIColor(_this, self.r.." "..self.g.." "..self.b); 
+	end;
+	return true;
+end
+function ColorPicker:ShowMobile()
+	if(self.version and self.version == 2) then
+		--the step button size
+		local button_width = 14
+		local button_height = 22
+		local button_bg = "Texture/Aries/Creator/Theme/GameCommonIcon_32bits.png;373 238 7 14:3 4 3 4"
+		--slider_bg
+		local slider_button_green_bg = "Texture/Aries/Creator/keepwork/Mobile/creator/lvtiao_288x14_32bits.png;0 0 288 14"
+		local slider_button_red_bg = "Texture/Aries/Creator/keepwork/Mobile/creator/hongtiao_288x14_32bits.png;0 0 288 14"
+		local slider_button_blue_bg = "Texture/Aries/Creator/keepwork/Mobile/creator/lantiao_288x14_32bits.png;0 0 288 14"
+		local slide_default_bg="Texture/Aries/Creator/Theme/GameCommonIcon_32bits.png;220 274 30 9:10 4 10 4"
+		local _this,_parent;
+		if(self.name==nil)then
+			log("err showing ColorPicker\r\n");
+		end
+		local normalWidth = 396
+		local normalHeight = 288
+		_this=ParaUI.GetUIObject(self.name);
+		if(_this:IsValid()==false)then
+			_this=ParaUI.CreateUIObject("container",self.name, self.alignment,self.left,self.top,normalWidth,normalHeight);
+			_this.background=self.background or "";	
+			-- _this:SetField("ClickThrough", true)
+			if(self.parent==nil) then
+				_this:AttachToRoot();
+			else
+				self.parent:AddChild(_this);
+			end
+			CommonCtrl.AddControl(self.name, self);
+			_parent=_this;
+
+			--显示颜色效果
+			_this=ParaUI.CreateUIObject("button","s","_lt",24,24,90,90); 
+			_parent:AddChild(_this);
+			_this.background="Texture/Aries/Creator/Theme/GameCommonIcon_32bits.png;408 256 13 13:6 6 6 6";
+			_guihelper.SetUIColor(_this, self.r.." "..self.g.." "..self.b); 
+			self.colorblock_id = _this.id;
+
+			-- 红色进度条
+			NPL.load("(gl)script/ide/SliderBar.lua");
+			local ctl = CommonCtrl.SliderBar:new{
+				name = "color_picker_red",
+				uiname = self.name.."color_picker_red",
+				alignment = "_lt",
+				left = 20,
+				top = 144,
+				width = 288,
+				height = 24,
+				parent = _parent,
+			};
+			
+			ctl.button_bg = button_bg
+			ctl.background = slider_button_red_bg
+			ctl.button_width = tonumber(button_width)
+			ctl.button_height = tonumber(button_height)
+			ctl.min = 0
+			ctl.max = 255
+			ctl.stretch = true
+			ctl.min_step = 2.5
+			ctl.value = self.r
+			ctl:Show(true)
+			ctl.onchange = function (value)
+				self:UpdateV2(value)
+			end
+			self.red_ctl = ctl
+
+			_this=ParaUI.CreateUIObject("text","s","_lt",316,144,30,24);
+			_this.autosize=false;
+			_guihelper.SetUIFontFormat(_this, 37);
+			if(self.textcolor) then
+				_guihelper.SetFontColor(_this, self.textcolor);
+			end
+			_parent:AddChild(_this);
+			_this.text=tostring(self.r);
+			self.redtext_id = _this.id;
+
+			-- 绿色进度条 
+			local ctl = CommonCtrl.SliderBar:new{
+				name = "color_picker_green",
+				uiname = self.name.."color_picker_green",
+				alignment = "_lt",
+				left = 20,
+				top = 188,
+				width = 288,
+				height = 24,
+				parent = _parent,
+			};
+			ctl.background = slider_button_green_bg
+			ctl.button_bg = button_bg
+			ctl.button_width = tonumber(button_width)
+			ctl.button_height = tonumber(button_height)
+			ctl.min = 0
+			ctl.max = 255
+			ctl.stretch = true
+			ctl.min_step = 2.5
+			ctl.value = self.g
+			ctl:Show(true)
+			ctl.onchange = function (value)
+				self:UpdateV2(value)
+			end
+			self.green_ctl = ctl
+
+			_this=ParaUI.CreateUIObject("text","s","_lt",316,188,30,24);
+			_this.autosize=false;
+			_guihelper.SetUIFontFormat(_this, 37);
+			if(self.textcolor) then
+				_guihelper.SetFontColor(_this, self.textcolor);
+			end
+			_parent:AddChild(_this);
+			_this.text=tostring(self.g);
+			self.greentext_id = _this.id;
+
+			-- 蓝色进度条
+			local ctl = CommonCtrl.SliderBar:new{
+				name = "color_picker_blue",
+				uiname = self.name.."color_picker_blue",
+				alignment = "_lt",
+				left = 20,
+				top = 232,
+				width = 288,
+				height = 24,
+				parent = _parent,
+			};
+			ctl.min_step = 2.5
+			ctl.button_bg = button_bg
+			ctl.background = slider_button_blue_bg
+			ctl.button_width = tonumber(button_width)
+			ctl.button_height = tonumber(button_height)
+			ctl.min = 0
+			ctl.max = 255
+			ctl.stretch = true
+			ctl.value = self.b
+			ctl:Show(true)
+			ctl.onchange = function (value)
+				self:UpdateV2(value)
+			end
+			self.blue_ctl = ctl
+
+			_this=ParaUI.CreateUIObject("text","s","_lt",316,232,30,24);
+			_this.autosize=false;
+			_guihelper.SetUIFontFormat(_this, 37);
+			if(self.textcolor) then
+				_guihelper.SetFontColor(_this, self.textcolor);
+			end
+			_parent:AddChild(_this);
+			_this.text=tostring(self.b);
+			self.bluetext_id = _this.id;
+		end
+	end
 end

@@ -287,6 +287,7 @@ end
 -- stop a server that is started by StartServer;
 function WebServer:StopServer()
 	self.is_exiting = true;
+	self.is_started = false;
 end
 
 local virtual_dirs = {};

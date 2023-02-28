@@ -67,7 +67,7 @@ function BonesManipContainer:connectToDependNode(node)
 	if(plugPos) then
 		local manipPosPlug = self.BonesManip:findPlug("position");	
 		
-		if(node.GetInnerObject) then
+		if(node.GetInnerObject and node:GetInnerObject()) then
 			self.BonesManip:ShowForObject(node:GetInnerObject());
 		end
 
@@ -109,4 +109,17 @@ function BonesManipContainer:connectToDependNode(node)
 	-- should be called only once after all conversion callbacks to setup real connections
 	self:finishAddingManips();
 	BonesManipContainer._super.connectToDependNode(self, node);
+end
+
+-- force making a new key at the current pos. hot key is usually "K"
+function BonesManipContainer:AddKeyWithCurrentValue()
+	if(self.BonesManip) then
+		return self.BonesManip:AddKeyWithCurrentValue()
+	end
+end
+
+function BonesManipContainer:GetBonesManip()
+	if(self.BonesManip) then
+		return self.BonesManip
+	end
 end

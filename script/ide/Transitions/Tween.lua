@@ -62,6 +62,8 @@ local	Tween = {
 	MotionResume=nil,
 	MotionStart=nil,
 	MotionStop=nil,
+
+	UseCommonlibTimer = false, --使用commonlib.Timer 而不是NPL.SetTimer(自增时有可能跟其他已存在的冲突)
 	}
 CommonCtrl.Tween = Tween;
 function Tween.MotionChange(time,position,self)
@@ -176,32 +178,51 @@ function Tween:SetYoYo()
 end
 
 function Tween:StartEnterFrame()
-	if(self._intervalID)then 
-		NPL.SetTimer(self._intervalID,self.timerInterval, string.format([[;CommonCtrl.Tween.OnEnterFrame("%s","%s");]],self.name,self._intervalID));
+	if self.UseCommonlibTimer then
+		if self._timer then
+			self._timer:Change(0,self.timerInterval)
+		end
+	else
+		if(self._intervalID)then 
+			NPL.SetTimer(self._intervalID,self.timerInterval, string.format([[;CommonCtrl.Tween.OnEnterFrame("%s","%s");]],self.name,self._intervalID));
+		end
 	end
 	self.isPlaying = true;
 end
 
 function Tween:StopEnterFrame()
-	if(self._intervalID)then 
-		NPL.KillTimer(self._intervalID); 
-	end	
+	if self.UseCommonlibTimer then
+		if self._timer then
+			self._timer:Change()
+			self._timer = nil
+		end
+	else
+		if(self._intervalID)then 
+			NPL.KillTimer(self._intervalID); 
+		end	
+	end
 	self.isPlaying = false;
 end
 --Starts the play of a tweened animation from its starting point. This method is used for 
 --restarting a Tween from the beginning of its animation after it stops or has completed 
 --its animation.
 function Tween:Start()
-	if(self._intervalID==nil) then	
+	if self.UseCommonlibTimer then
+		self._timer = commonlib.Timer:new{callbackFunc=function(timer)
+			Tween.OnEnterFrame(self.name,nil,self._timer)
+		end}
+		self.name="Tween_instance_timer_"..tostring(self._timer);
+	elseif(self._intervalID==nil) then	
 		local id=CommonCtrl.TweenUtil.GetIntervalID();
 		self._intervalID=id;
-	end
 		self.name="Tween_instance_"..self._intervalID;
-		local this=CommonCtrl.GetControl(self.name)
-		if(this==nil)then			
-			CommonCtrl.AddControl(self.name,self); 
-		end	
-				
+	end
+		
+	local this=CommonCtrl.GetControl(self.name)
+	if(this==nil)then			
+		CommonCtrl.AddControl(self.name,self); 
+	end	
+
 	self:Rewind();
 	self:StartEnterFrame();
 	self.MotionStart(self._time,self._position,self);
@@ -250,11 +271,18 @@ function Tween:PrevFrame()
 	self:SetTime( self._time - self.timerInterval );
 end
 
-function Tween.OnEnterFrame(name,_intervalID)
+function Tween.OnEnterFrame(name,_intervalID,_self)
 	local self=CommonCtrl.GetControl(name);
 	if(self==nil) then
 		log(string.format("%s is nil \r\n",name));
-		NPL.KillTimer(tonumber(_intervalID)); 
+		if _self and _self.UseCommonlibTimer then
+			if _self._timer then
+				_self._timer:Change()
+				_self._timer = nil
+			end
+		elseif _intervalID then
+			NPL.KillTimer(tonumber(_intervalID)); 
+		end
 	end
 	self:NextFrame();
 end

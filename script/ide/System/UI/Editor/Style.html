@@ -1,0 +1,173 @@
+<template class="style-container">
+    <div class="title">默认样式</div>
+    <div class="style-item">
+        <select AllowCreate=true placeholder="样式名" v-model="styleName" v-bind:options="StyleOptions" onselect=OnStyleNameSelect></select>
+        <select AllowCreate=true placeholder="样式值" v-model="styleValue" v-bind:options="ValueOptions"></select>
+        <div class="style-item-btn" onclick=AddStyle>添加</div>
+    </div>
+    <div class="style-list">
+        <div class="style-list-item" v-for="style, index in styleList">
+            <input readonly=true v-bind:value="GetStyleAliasName(style.styleName)"></input>
+            <input v-model="style.styleValue" onblur="SetStyleValue(style.styleName, style.styleValue)"></input>
+            <div class="style-item-btn" style="height: 30px" onclick="RemoveStyle(style, index)">移除</div>
+        </div>
+    </div>
+    <div class="title">悬浮样式</div>
+    <div class="style-item">
+        <select AllowCreate=true placeholder="样式名" v-model="hoverStyleName" v-bind:options="StyleOptions"></select>
+        <input placeholder="样式值" v-model="hoverStyleValue"></input>
+        <div class="style-item-btn" onclick=AddHoverStyle>添加</div>
+    </div>
+    <div class="style-list">
+        <div class="style-list-item" v-for="style, index in hoverStyleList">
+            <input readonly=true v-bind:value="GetStyleAliasName(style.styleName)"></input>
+            <input v-model="style.styleValue" onblur="SetHoverStyleValue(style.styleName, style.styleValue)"></input>
+            <div class="style-item-btn" style="height: 30px" onclick="RemoveHoverStyle(style, index)">移除</div>
+        </div>
+    </div>
+</template>
+
+<script type="text/lua">
+local GlobalScope = GetGlobalScope();
+
+styleName = "";
+styleValue = "";
+styleList = {};
+ValueOptions = {};
+
+hoverStyleName = "";
+hoverStyleValue = "";
+hoverStyleList = {};
+
+function OnStyleNameSelect(value)
+    ValueOptions = _G.StyleValueOptions[value] or {};
+end 
+
+function GetStyleAliasName(styleName) 
+    for _, item in ipairs(StyleOptions) do
+        if (item[2] == styleName) then return item[1] end
+    end
+    return styleName;
+end 
+
+function AddStyle()
+    if (styleName == "" or styleValue == "") then return end
+     
+    if (not CurrentListItemData.style[styleName]) then
+        table.insert(styleList, {styleName = styleName, styleValue = styleValue});
+    else 
+        for _, item in ipairs(styleList) do 
+            if (item.styleName == styleName) then
+                item.styleValue = styleValue;
+            end
+        end
+    end
+    CurrentListItemData.style[styleName] = styleValue;
+    styleName, styleValue = "", "";    
+    StyleChange();
+end 
+
+function SetStyleValue(styleName, styleValue)
+    if (styleName == "" or styleValue == "") then return end
+    CurrentListItemData.style[styleName] = styleValue;
+    StyleChange();
+end 
+
+function RemoveStyle(item, index)
+    CurrentListItemData.style[item.styleName] = nil;
+    table.remove(styleList, index)
+    StyleChange();
+end
+
+function StyleChange()
+    CurrentElement:SetAttrValue("style", CurrentListItemData.style);
+end 
+
+function AddHoverStyle()
+    if (hoverStyleName == "" or hoverStyleValue == "") then return end
+     
+    if (not CurrentListItemData.hoverStyle[hoverStyleName]) then
+        table.insert(hoverStyleList, {styleName = hoverStyleName, styleValue = hoverStyleValue});
+    else 
+        for _, item in ipairs(hoverStyleList) do 
+            if (item.styleName == hoverStyleName) then
+                item.styleValue = hoverStyleValue;
+            end
+        end
+    end
+    CurrentListItemData.hoverStyle[hoverStyleName] = hoverStyleValue;
+    hoverStyleName, hoverStyleValue = "", "";    
+end 
+
+function RemoveHoverStyle(item, index)
+    CurrentListItemData.hoverStyle[item.styleName] = nil;
+    table.remove(hoverStyleList, index)
+end
+
+function SetHoverStyleValue(styleName, styleValue)
+    if (styleName == "" or styleValue == "") then return end
+    CurrentListItemData.hoverStyle[styleName] = styleValue;
+end 
+
+_G.UpdateCurrentListItemDataStyle = function()
+    StyleChange();
+
+    styleList = {};
+    for key, val in pairs(CurrentListItemData.style) do 
+        table.insert(styleList, {styleName = key, styleValue = val});
+    end
+
+    hoverStyleList = {};
+    for key, val in pairs(CurrentListItemData.hoverStyle) do 
+        table.insert(hoverStyleList, {styleName = key, styleValue = val});
+    end
+end 
+
+GlobalScope:Watch("CurrentElementId", function() 
+    _G.UpdateCurrentListItemDataStyle();
+end);
+
+
+</script>
+
+<style scoped=true>
+
+.style-container {
+    position: absolute;
+    top: 60px;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+    padding-left: 4px;
+}
+
+.title {
+    font-size: 18px;
+    padding: 20px 0px 10px 10px;
+}
+
+.style-item {
+    display: flex;
+    align-items: center;
+    height: 40px;
+}
+
+.style-item-btn {
+    height: 30px;
+    width: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.style-item-btn:hover {
+    background-color: #ffffff;
+}
+
+.style-list-item {
+    display: flex;
+    align-items: center;
+} 
+</style>
+
+

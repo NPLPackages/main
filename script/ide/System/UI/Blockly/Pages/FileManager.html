@@ -1,0 +1,81 @@
+
+<template class="container">
+    <WindowTitleBar title="文件管理器"></WindowTitleBar>
+    <div class="operation-container">
+        <div style="display: flex; align-items: center;">
+            <input v-model="filename" placeholder="请输入文件名..."></input>
+            <div onclick=ClickNew class="btn">新增</div>
+        </div>
+    </div>
+    <div class="filelist-container">
+        <div v-for="file, index in filelist" class="file-container">
+            <div style="width: 200px; height: 100%; display: flex; align-items: center;">{{file.filename}}</div>
+            <div onclick="ClickDelete(file, index)" class="btn">删除</div>
+            <div onclick="ClickEdit(file, index)" class="btn">编辑</div>
+        </div>
+    </div>
+</template>
+
+<script type="text/lua">
+RegisterComponent("WindowTitleBar", "%vue%/Components/WindowTitleBar.html");
+
+filelist = FileManager:GetFileList(); -- 文件列表
+filename = ""; -- 当前文件名
+
+function ClickNew()
+    if (filename == "") then return end
+
+    local file = FileManager:NewFile(filename);
+    if (not file) then return end
+
+    table.insert(filelist, 1, file);
+    filename = "";
+end
+
+function ClickDelete(file, index)
+    table.remove(filelist, index);
+end
+
+function ClickEdit(file, index)
+    FileManager:EditFile(file.filename);
+    CloseWindow();
+end
+
+function OnReady()
+end
+</script>
+
+<style scoped=true>
+.container {
+    height: 100%; 
+    width: 100%; 
+    padding: 0px 2px 2px 2px;
+    background: url(Texture/Aries/Creator/keepwork/Window/dakuang_32bits.png#0 0 440 93:378 43 33 44);
+}
+
+.operation-container {
+    display: flex;
+    justify-content: center;
+    padding: 20px 0px;
+}
+
+.filelist-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.file-container {
+    display: flex;
+    align-items: center;
+    height: 40px;
+}
+.btn {
+    padding: 6px 16px;
+    border-radius: 5px;
+    background-color: #e6e6e6;
+}
+.btn:hover {
+    background-color: #ffffff;
+}
+</style>

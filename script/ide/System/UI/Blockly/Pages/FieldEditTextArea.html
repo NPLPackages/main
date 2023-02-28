@@ -1,0 +1,34 @@
+<template class="container">
+    <WindowTitleBar v-bind:title="title"></WindowTitleBar>
+    <div style="width: 100%; height: 120px;">
+        <!-- <canvas></canvas> -->
+        <textarea style="width: 100%; height: 100%;" v-model="value"></textarea>
+    </div>
+    <div style="width: 100%; height: 38px;">
+        <button onclick=ClickConfirmBtn style="width: 100%; height: 100%; border-radius: 15px;">确定</button>
+    </div>
+</template>
+
+<script type="text/lua">
+RegisterComponent("WindowTitleBar", "%vue%/Components/WindowTitleBar.html");
+
+title = title or "多行文本编辑"
+value = text or "";
+
+function ClickConfirmBtn()
+    -- 关闭窗口
+    CloseWindow();
+    -- 确定回调
+    if (type(confirm) == "function") then confirm(value) end
+end
+
+</script>
+
+<style>
+.container {
+    height: 200px; 
+    width: 440px; 
+    padding: 0px 2px 2px 2px;
+    background: url(Texture/Aries/Creator/keepwork/Window/dakuang_32bits.png#0 0 440 93:378 43 33 44);
+}
+</style>

@@ -31,6 +31,8 @@ function os.GetPlatform()
 			return "linux";
 		elseif(platform == 8) then
 			return "mac";
+		elseif(platform == 10) then
+			return "emscripten";
 		elseif(platform == 13) then
 			return "wp8";
 		elseif(platform == 14) then
@@ -40,6 +42,39 @@ function os.GetPlatform()
 		end
 	end
 	return os.platform;
+end
+
+function os.GetParaEngineVersion()
+	if not os.paraEngineVer then
+		local verStr = ParaEngine.GetVersion()
+		local major,minor = unpack(commonlib.split(verStr,"."))
+		os.paraEngineVer = verStr
+		os.paraEngineMajorVer = tonumber(major)
+		os.paraEngineMinorVer = tonumber(minor)
+	end
+	return os.paraEngineVer,os.paraEngineMajorVer,os.paraEngineMinorVer
+end
+
+function os.CompareParaEngineVersion(ver)
+	local curVer, curMajorVer, curMinorVer = System.os.GetParaEngineVersion();
+
+	local major, minor = unpack(commonlib.split(ver, "."));
+
+	major = tonumber(major);
+	minor = tonumber(minor);
+	
+	-- curVer < ver (smaller) return false
+	-- curVer >= ver (bigger) return true
+
+	if (curMajorVer < major) then
+		return false;
+	else
+		if (curMinorVer < minor) then
+			return false;
+		else
+			return true;
+		end
+	end
 end
 
 local isWindowsXP;
@@ -59,6 +94,9 @@ function os.IsWindowsXP()
 	return isWindowsXP;
 end
 				
+function os.IsEmscripten()
+	return os.GetPlatform() == "emscripten";
+end
 
 -- return true if is mobile device
 function os.IsMobilePlatform()

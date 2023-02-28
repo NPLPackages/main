@@ -23,7 +23,7 @@
   <rules id="simple_rule">
     <rule match='^/?deps/' with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/nplcad3/", nocache=true}'></rule>
     <rule match='^/?_next/' with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/nplcad3/", nocache=true}'></rule>
-    <rule match='^/?pptimg/' with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/", nocache=true}'></rule>
+    <rule match="^/?pptimg/.+%.jpg"  with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/", nocache=false, BrowserCacheExpire=1}'></rule>
 
     <rule match="^/?nplcad3" with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/nplcad3", filename = "nplcad3.html"}'></rule>
     

@@ -1,0 +1,28 @@
+
+<template class="container">
+    <WindowTitleBar title="测试"></WindowTitleBar>
+    <div style="position: absolute; left: 2px; top: 40px; right: 2px; bottom: 2px; background-color: #c8c8c8f0;">
+        <component v-bind:template="TemplateCode"></component>
+    </div>
+</template>
+
+<script type="text/lua">
+RegisterComponent("WindowTitleBar", "%vue%/Components/WindowTitleBar.html");
+
+TemplateCode = [[
+<template style="width:100%; height:40px">
+    <div style="width:100%; height:100%; background-color:#FF0000">{{text}}</div>
+</template>
+]]
+function OnReady()
+end
+</script>
+
+<style>
+.container {
+    height: 100%; 
+    width: 100%; 
+    padding: 0px 2px 2px 2px;
+    background: url(Texture/Aries/Creator/keepwork/Window/dakuang_32bits.png#0 0 440 93:378 43 33 44);
+}
+</style>

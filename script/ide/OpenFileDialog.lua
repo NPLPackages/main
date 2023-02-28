@@ -135,6 +135,8 @@ end
 -- @param isSaveMode: if true, we will use SaveFileDialog instead of OpenFileDialog. default to nil.
 -- @return the filename selected or nil if nothing is selected or user clicked cancel.
 function OpenFileDialog.ShowDialog_Win32(filters, title, initialdir, isSaveMode)
+	if (System.os.GetPlatform() ~= "win32") then return nil end 
+
 	if(initialdir) then
 		if(not commonlib.Files.IsAbsolutePath(initialdir)) then
 			initialdir = ParaIO.GetCurDirectory(0)..initialdir;
@@ -150,6 +152,71 @@ function OpenFileDialog.ShowDialog_Win32(filters, title, initialdir, isSaveMode)
 	if(ParaGlobal.OpenFileDialog(input)) then
 		return input.filename;
 	end
+end
+
+-- use the external dialog
+-- @param filters: nil or {{"All Files (*.*)", "*.*"}, ...} one or more pairs of display text and filter text
+-- To specify multiple filter patterns for a single display string, use a semicolon to separate the patterns (for example, "*.TXT;*.DOC;*.BAK")
+-- @param title: title string or nil
+-- @param initialdir: initial directoy or nil
+-- @param isSaveMode: if true, we will use SaveFileDialog instead of OpenFileDialog. default to nil.
+-- @return the filename selected or nil if nothing is selected or user clicked cancel.
+function OpenFileDialog.ShowDialog_Mac(filters, title, initialdir, isSaveMode)
+	if (System.os.GetPlatform() ~= "mac") then return nil end 
+
+	if(initialdir) then
+		if(not commonlib.Files.IsAbsolutePath(initialdir)) then
+			initialdir = ParaIO.GetCurDirectory(0)..initialdir;
+		end
+		initialdir = initialdir:gsub("/","\\");
+	end
+	local input = {
+			filter = filters, 
+			title = commonlib.Encoding.Utf8ToDefault(title),
+			initialdir = initialdir,
+			save = isSaveMode,
+		};
+	if(ParaGlobal.OpenFileDialog(input)) then
+		return input.filename;
+	end
+end
+
+-- @param filters: "image/*" or "audio/*"  or image/png;image/jpeg... 参考android文件类型过滤
+-- @parram callback: function(filepath) end 
+function OpenFileDialog.ShowDialog_Android(filter, callback)
+	local LuaCallbackHandler = NPL.load("(gl)script/ide/PlatformBridge/LuaCallbackHandler.lua");
+	local filename, callbackid = LuaCallbackHandler.createHandler(function(msg)
+		local filepath = type(msg) == "table" and msg.filepath or "";
+		if (type(callback) == "function") then callback(filepath ~= "" and filepath or nil) end 
+	end)
+	if (type(filter) ~= "string") then
+		filter = "*/*" end 
+	-- filter 必须为android支持的minetype否则会奔溃
+	ParaGlobal.OpenFileDialog({
+		filter = filter, -- "image/*"
+		activate_file = filename,
+		callback_id = callbackid,
+	});
+end
+
+function OpenFileDialog.ShowDialog_iOS(filter, callback)
+	local LuaCallbackHandler = NPL.load("(gl)script/ide/PlatformBridge/LuaCallbackHandler.lua");
+	local filename, callbackid = LuaCallbackHandler.createHandler(function(msg)
+		local filepath = type(msg) == "table" and msg.filepath or "";
+
+		if (callback and type(callback) == "function") then
+			callback(filepath ~= "" and filepath or nil)
+		end 
+	end)
+
+	if (type(filter) ~= "string") then
+		filter = "*/*" end 
+
+	ParaGlobal.OpenFileDialog({
+		filter = filter, -- "image/*"
+		activate_file = filename,
+		callback_id = callbackid,
+	});
 end
 
 -- open folder dialog

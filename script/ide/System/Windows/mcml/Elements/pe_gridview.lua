@@ -73,16 +73,8 @@ function pe_gridview:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	_this:SetVerticalScrollBarStep(self:GetNumber("VerticalScrollBarStep") or css.VerticalScrollBarStep);
 	_this:SetVerticalScrollBarPageSize(self:GetNumber("VerticalScrollBarPageSize") or css.VerticalScrollBarPageSize);
 	_this:SetMouseOverBG(self:GetString("MouseOverBG") or css.MouseOverBG);
-	--_this:SetClickThrough(self:GetBool("ClickThrough"));
-
 
 	self:CreateTreeViewNode();
-	
-
-
-	--self.onclick = self:GetAttributeWithCode("OnClick", nil, true);
-
-	
 
 	-- Extract from datasource if it is already provided in the input. 
 	local ds = self:GetAttributeWithCode("DataSourceID", nil, true);
@@ -139,7 +131,6 @@ function pe_gridview:CreatePagerNode()
 			-- create the top and/or bottom pager panel for page navigation. 
 			-- Usually a pager contains current page index, total items, next and prev page button. 
 			local PagerSettings = {
-				height = 26,
 				-- can be either "Top", "Bottom", or "TopAndBottom"
 				Position = "TopAndBottom",
 				--Position = "Bottom",
@@ -153,8 +144,6 @@ function pe_gridview:CreatePagerNode()
 				PagerSettings.style = node:GetAttribute("style")
 			end
 
-
-			
 			-- create at top and/or bottom
 			local i
 			for i=1, 2 do 
@@ -183,17 +172,13 @@ function pe_gridview:CreatePagerNode()
 						local o = commonlib.copy(pagerTempate);
 						o.name = "pe:pager";
 						node = mcml:createFromXmlNode(o);
---						node = Map3DSystem.mcml.new(nil, pagerTempate:clone());
---						node.name = "pe:pager"
 					else
-						--node = Map3DSystem.mcml.new(nil, {name="pe:pager"});
 						node = mcml:createFromXmlNode({name="pe:pager"});
 						if(PagerSettings.PreviousPageText or PagerSettings.NextPageText) then
 							node:SetAttribute("PreviousPageText", PagerSettings.PreviousPageText);	
 							node:SetAttribute("NextPageText", PagerSettings.NextPageText);	
 						end	
 					end	
-					node:SetAttribute("height", PagerSettings.height);
 					node:SetAttribute("target", self:GetString("name", ""));
 
 					local index = nil;
@@ -213,25 +198,6 @@ function pe_gridview:CreatePagerNode()
 					self:AddChild(node, index);
 				end
 			end	
---		else
---			-- if already created or specified, just use it to create. The position attribute of pe:pager defines where the pager will be located. 
---			local pager;
---			for pager in self:next("pe:pager") do
---				local pagerTop;
---				local pagerHeight = pager:GetNumber("height") or 26;
---				if( pager:GetAttribute("position") == "Top") then
---					pagerTop = top
---					top = top + pagerHeight
---				elseif( pager:GetAttribute("position") == "Bottom") then
---					height = height - pagerHeight
---					pagerTop = height
---				end
---				if(pagerTop) then
---					local myLayout = Map3DSystem.mcml_controls.layout:new();
---					myLayout:reset(left, pagerTop, width, pagerTop + pagerHeight);
---					Map3DSystem.mcml_controls.create(rootName, pager, bindingContext, _parent, left, pagerTop, width, height, nil, myLayout);
---				end
---			end
 		end	
 	end
 end
@@ -419,7 +385,7 @@ function pe_gridview:DataBind(pageInstName)
 			end
 		else
 			-- show data of current page. 
-			--local nFromIndex, nToIndex = 1, nil;
+			local nFromIndex, nToIndex = 1, nil;
 			if(self.AllowPaging and pagesize) then
 				local pageindex = self:GetAttribute("pageindex") or 1;
 				if(pageindex > (self.pagecount or 1)) then
@@ -427,15 +393,16 @@ function pe_gridview:DataBind(pageInstName)
 				end
 				self:SetAttribute("pageindex", pageindex);
 				--self.pageindex = self.pageindex or 1;
-				--nFromIndex = (pageindex-1)*pagesize + 1;
-				--nToIndex = nFromIndex + pagesize - 1;
+				nFromIndex = (pageindex-1)*pagesize + 1;
+				nToIndex = nFromIndex + pagesize - 1;
 			else
-				--nToIndex = pagesize;
+				nToIndex = pagesize;
 			end
 			self.eval_names_ = self.eval_names_ or {};
-			local i = 1;
+			local i = nFromIndex;
 			local LineNode;
-			while (i <= nDataCount) do
+			nFromIndex, nToIndex = 1, nDataCount
+			while (nToIndex==nil or i<=nToIndex) do
 				local row;
 				if(dataSourceType == 0) then
 					row = self.datasource[i];
@@ -557,7 +524,7 @@ function pe_gridview:GotoPage(pageInstName, nPageIndex)
 		if(not DisableIndexChange) then
 			self:SetAttribute("pageindex", nPageIndex);
 			--self.pageindex = nPageIndex;
-			--self:DataBind(pageInstName)
+			-- self:DataBind(pageInstName)
 			self:ScrollToPage(pageInstName, nPageIndex);
 			
 			local OnPageIndexChanged = self:GetAttribute("OnPageIndexChanged");

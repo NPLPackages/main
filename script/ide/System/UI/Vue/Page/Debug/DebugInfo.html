@@ -1,0 +1,23 @@
+<template class="container">
+    <WindowTitleBar title="调试信息"></WindowTitleBar>
+    <div style="height: 450px; padding: 20px;">
+        <div style="white-space: pre; height: 410px; overflow: scroll;">{{text}}</div>
+    </div>
+</template>
+
+<script type="text/lua">
+RegisterComponent("WindowTitleBar", "%vue%/Components/WindowTitleBar.html");
+
+-- 组件解析完成
+function OnReady()
+end
+</script>
+
+<style>
+.container {
+    height: 100%; 
+    width: 100%; 
+    padding: 0px 2px 2px 2px;
+    background: url(Texture/Aries/Creator/keepwork/Window/dakuang_32bits.png#0 0 440 93:378 43 33 44);
+}
+</style>

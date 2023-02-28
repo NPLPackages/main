@@ -23,23 +23,23 @@ function example_callback( str, arg1, arg2 )
 	--(maybe) modify string
 	return str..tostring(arg1)..tostring(arg2);
 end
-filter:add_filter( 'example_filter', example_callback, 10);
+filter:add_filter('example_filter', example_callback, 10);
 
 -- Apply the filters by calling the 'example_callback' function we
 -- "hooked" to 'example_filter' using the add_filter() function above.
 -- - 'example_filter' is the filter hook tag
 -- - 'filter me' is the value being filtered
 -- - arg1 and arg2 are the additional arguments passed to the callback.
-local value = filter:apply_filters( 'example_filter', 'filter me:', "arg1", "arg2");
+local value = filter:apply_filters('example_filter', 'filter me:', "arg1", "arg2");
 assert(value == "filter me:arg1arg2");
 
-filter:add_filter( 'example_filter', function(value) return "unset" end, 11);
-local value = filter:apply_filters( 'example_filter', 'filter me:', "arg1", "arg2");
+filter:add_filter('example_filter', function(value) return "unset" end, 11);
+local value = filter:apply_filters('example_filter', 'filter me:', "arg1", "arg2");
 assert(value == "unset");
 
-filter:add_filter( 'example_filter', function(value) return "unset" end, 11);
-local value = filter:remove_all_filters( 'example_filter');
-local value = filter:apply_filters( 'example_filter', 'filter me:', "arg1", "arg2");
+filter:add_filter('example_filter', function(value) return "unset" end, 11);
+local value = filter:remove_all_filters('example_filter');
+local value = filter:apply_filters('example_filter', 'filter me:', "arg1", "arg2");
 assert(value == "filter me:");
 
 ------------------------------------------------------------
@@ -73,7 +73,7 @@ end
 -- A plugin can modify data by binding a callback to a filter hook. When the filter
 -- is later applied, each bound callback is run in order of priority, and given
 -- the opportunity to modify a value by returning a new value.
-function Filters:add_filter( tag, function_to_add, priority)
+function Filters:add_filter(tag, function_to_add, priority)
 	if(not function_to_add) then
 		LOG.std(nil, "warn", "Filters", "add_filter function not found for filter %s", tag);
 		return;
@@ -159,15 +159,6 @@ local function call_user_func(func, ...)
 	end
 end
 
-function Filters:_wp_call_all_hook(...)
-	if ( self.wp_filter['all'] ) then
-		for func in ipairs(self.wp_filter['all']) do
-			call_user_func(func, ...);
-		end
-	end
-end
-
-
 -- Call the functions added to a filter hook.
 -- The callback functions attached to filter hook tag are invoked by calling
 -- this function. This function can be used to create a new filter hook by
@@ -177,31 +168,25 @@ end
 -- @param value The value on which the filters hooked to <tt>tag</tt> are applied on.
 -- @return mixed The filtered value after all hooked functions are applied to it.
 function Filters:apply_filters( tag, value, ... ) 
-	
-	-- Do 'all' actions first.
-	if ( self.wp_filter['all'] ) then
-		self:_wp_call_all_hook(...);
-	end
-	
 	if ( not self.wp_filter[tag] ) then
-		if ( self.wp_filter['all'] ) then
-			self.wp_current_filter:pop();
-		end
 		return value;
 	end
 
-	if ( not self.wp_filter['all'] ) then
-		self.wp_current_filter:push(tag);
-	end
-
+	self.wp_current_filter:push(tag);
+	
 	-- Sort.
 	if ( not self.merged_filters[tag] ) then
 		self.wp_filter[tag]:ksort();
 		self.merged_filters[tag] = true;
 	end
 
-	for priority, funcs in self.wp_filter[tag]:pairs() do
-		for _, func in ipairs(funcs) do
+	local filters = self.wp_filter[tag]
+	local key_array = filters.key_array
+	local key_map = filters.key_map
+	for k = 1, #key_array do
+		local funcs = key_map[key_array[k]]
+		for i = 1, #funcs do
+			local func = funcs[i]
 			value = call_user_func(func, value, ...);	
 		end
 	end

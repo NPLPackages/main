@@ -1,0 +1,47 @@
+<template class="container">
+    <WindowTitleBar title="测试"></WindowTitleBar>
+
+    <div class=tooltip>
+        <div class="tooltip-content">
+            Hover Content
+        </div>
+    </div>
+</template>
+
+<script type="text/lua">
+RegisterComponent("WindowTitleBar", "%vue%/Components/WindowTitleBar.html");
+
+function OnReady()
+end
+</script>
+
+<style>
+
+.tooltip {
+    width: 100px;
+    height: 100px;
+    background-color: #0000ff;
+}
+
+.tooltip-content {
+    visibility: hidden;
+    position: absolute;
+    right: -110px;
+    bottom: -110px;
+    width: 100px;
+    height: 100px;
+    background-color: #ff0000;
+}
+
+.tooltip:hover .tooltip-content {
+    visibility: visible;
+}
+
+.container {
+    height: 100%; 
+    width: 100%; 
+    padding: 0px 2px 2px 2px;
+    /* border: 1px solid #ffffff; */
+    background: url(Texture/Aries/Creator/keepwork/Window/dakuang_32bits.png#0 0 440 93:378 43 33 44);
+}
+</style>

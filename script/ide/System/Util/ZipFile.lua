@@ -15,6 +15,17 @@ end
 
 ZipFile.GeneratePkgFile("temp/test.zip")
 ZipFile.GeneratePkgFile("temp/test.xml", "temp/test.xml")
+
+--unzip pkg file
+local pkgPath = "D:/ass/01.03_1/main150727(1).pkg"
+
+NPL.load("(gl)script/ide/System/Util/ZipFile.lua");
+local ZipFile = commonlib.gettable("System.Util.ZipFile");
+local zipFile = ZipFile:new();
+if(zipFile:open(pkgPath)) then
+	local num = zipFile:unzip(nil,10000*1000);
+	zipFile:close();
+end
 ------------------------------------------------------------
 ]]
 
@@ -45,6 +56,7 @@ end
 -- so that open file will work with both file encodings in zip archive
 function ZipFile:addUtf8ToDefaultAlias()
 	if(self.zip_archive) then
+		local IsIgnoreCase = self.zip_archive:GetField("IsIgnoreCase",true)
 		-- search just in a given zip archive file
 		local filesOut = {};
 		-- ":.", any regular expression after : is supported. `.` match to all strings. 
@@ -56,8 +68,13 @@ function ZipFile:addUtf8ToDefaultAlias()
 				if(defaultEncodingFilename ~= item.filename) then
 					if(commonlib.Encoding.DefaultToUtf8(defaultEncodingFilename) == item.filename) then
 						-- this item may be utf8 coded and not in ansi code page, we will add an alias
-						self.zip_archive:SetField("AddAliasFrom", defaultEncodingFilename)
-						self.zip_archive:SetField("AddAliasTo", item.filename)
+						if IsIgnoreCase then 
+							self.zip_archive:SetField("AddAliasFrom", string.lower(defaultEncodingFilename))
+							self.zip_archive:SetField("AddAliasTo", string.lower(item.filename))
+						else
+							self.zip_archive:SetField("AddAliasFrom", defaultEncodingFilename)
+							self.zip_archive:SetField("AddAliasTo", item.filename)
+						end
 					end
 				end
 			end
@@ -115,11 +132,24 @@ function ZipFile:unzip(destinationFolder,maxCnt)
 					end
 				end
 
+				do 
+					local patt = "[^/]+/"
+					local temp = ""
+					for k,v in string.gmatch(destFileName,patt) do
+						temp = temp .. k
+						if not ParaIO.DoesFileExist(temp) then
+							ParaIO.CreateDirectory(temp);
+						end
+					end
+				end
+
 				local outFile = ParaIO.open(destFileName, "w")
 				if(outFile:IsValid()) then
 					outFile:WriteString(binData, #binData);
 					outFile:close();
 					fileCount = fileCount + 1;
+				else
+					print("---------unzip error",destFileName)
 				end
 				file:close();
 			end

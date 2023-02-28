@@ -262,7 +262,10 @@ function pe_gridview.create(rootName, mcmlNode, bindingContext, _parent, left, t
 			end
 		end	
 	end
-	
+
+	-- on mouse wheel
+	local OnMouseWheel = mcmlNode:GetString("onmousewheel")
+
 	-- create tree view node for the rows and columns
 	local TreeViewNode = mcmlNode:GetChild("pe:treeview");
 	if( not TreeViewNode ) then
@@ -316,6 +319,10 @@ function pe_gridview.create(rootName, mcmlNode, bindingContext, _parent, left, t
 		local uiname = mcmlNode:GetAttribute("uiname")
 		if(uiname) then
 			TreeViewNode:SetAttribute("uiname", uiname);
+		end
+
+		if (OnMouseWheel and type(OnMouseWheel) == "string") then
+			TreeViewNode:SetAttribute("onmousewheel", OnMouseWheel);
 		end
 
 		mcmlNode:AddChild(TreeViewNode, nil);

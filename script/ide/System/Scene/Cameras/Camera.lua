@@ -71,8 +71,8 @@ function Camera:GetMouseRay(mouse_x, mouse_y, matWorld)
 	end
 	local matProj = self:GetProjMatrix();
 	local viewport = ViewportManager:GetSceneViewport();
-	mouse_x, mouse_y = mouse_x-viewport:GetLeft(), mouse_y-viewport:GetTop();
-	local screenWidth, screenHeight = Screen:GetWidth()-viewport:GetMarginRight(), Screen:GetHeight() - viewport:GetMarginBottom();
+	mouse_x, mouse_y = mouse_x - (viewport:GetLeft() / Screen:GetUIScaling()[1]), mouse_y-(viewport:GetTop() / Screen:GetUIScaling()[2]);
+	local screenWidth, screenHeight = Screen:GetWidth()-(viewport:GetMarginRight() / Screen:GetUIScaling()[1]), Screen:GetHeight() - (viewport:GetMarginBottom() / Screen:GetUIScaling()[2]);
 	-- Compute the vector of the pick ray in screen space
 	local v = {
 		 ( ( ( 2.0 * mouse_x ) / screenWidth  ) - 1 ) / matProj[1],

@@ -106,16 +106,18 @@ function mathlib.WrapAngleTo180(angle)
 end
 
 -- make sure that the angle is in the range (-Pi,Pi]
+local pi_2 = math.pi * 2
+local pi = math.pi
 function mathlib.ToStandardAngle(fAngle)
 	if(fAngle>0) then
-		fAngle = fAngle - 6.28318*(math_floor(fAngle/6.28318));
-		if(fAngle>3.14159) then
-			fAngle = fAngle - 6.28318;
+		fAngle = fAngle - pi_2*(math_floor(fAngle/pi_2));
+		if(fAngle>pi) then
+			fAngle = fAngle - pi_2;
 		end
 	else
-		fAngle = fAngle + 6.28318*(math_floor(-fAngle/6.28318));
-		if(fAngle < -3.14159) then
-			fAngle = fAngle + 6.28318;
+		fAngle = fAngle + pi_2*(math_floor(-fAngle/pi_2));
+		if(fAngle < -pi) then
+			fAngle = fAngle + pi_2;
 		end
 	end
 	return fAngle;

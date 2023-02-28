@@ -191,7 +191,7 @@ local function GetUrlOptions(url, option)
 end
 
 -- return the content of a given url. 
--- e.g.  echo(NPL.GetURL("www.paraengine.com"))
+-- e.g.  System.os.GetUrl("www.paraengine.com", function(rcode, msg, data) end)
 -- @param url: url string or a options table of {url=string, postfields=string, form={key=value}, headers={key=value, "line strings"}, json=bool, qs={}}
 -- .form is optional key, value pair table.
 -- if .json is true, form will be encoded in json.

@@ -1,0 +1,158 @@
+
+<template style="display: inline;">
+    <select id="state" v-bind:style="GetSelectStyle()" v-bind:options="stateOptions" v-bind:value="state and state.name" placeholder="省" onselect=selectState></select>
+    <select id="city" v-bind:style="GetSelectStyle()" v-bind:options="cityOptions" v-bind:value="city and city.name" placeholder="市" onselect=selectCity></select>
+    <select id="county" v-bind:style="GetSelectStyle()" v-bind:options="countyOptions" v-bind:value="county and county.name" placeholder="区 / 县" onselect=selectCounty></select>
+</template>
+
+<script type="text/lua">
+local KeepworkServiceSchoolAndOrg = NPL.load("(gl)Mod/WorldShare/service/KeepworkService/SchoolAndOrg.lua");
+
+state, city, county = {}, {}, {};
+stateOptions = {};
+cityOptions = {};
+countyOptions = {};
+
+function GetSelectStyle()
+    return GetAttrStringValue("SelectStyle", "");
+end 
+
+local function OnSelected()
+    local regionId = county.id or city.id or state.id or 1;
+    CallAttrFunction("onselect", {regionId = regionId, state = state, city = city, county = county});
+end 
+
+local function loadStates(callback)
+    stateOptions, states = {}, {};
+    KeepworkServiceSchoolAndOrg:GetSchoolRegion("province", nil, function(data)
+        if type(data) ~= "table" then return end
+        states = data;
+        for key, item in ipairs(states) do
+            table.insert(stateOptions, {value = item.id, label = item.name});
+        end
+        stateOptions = stateOptions;
+        if (callback) then callback() end
+    end);
+end
+
+local function loadCitys(callback)
+    if (not state.id) then return end
+
+    cityOptions, citys = {}, {};
+    KeepworkServiceSchoolAndOrg:GetSchoolRegion("city", state.id, function(data)
+        if type(data) ~= "table" then return end
+        citys = data;
+        for key, item in ipairs(citys) do
+            table.insert(cityOptions, {value = item.id, label = item.name});
+        end
+        cityOptions = cityOptions;
+        if (callback) then callback() end
+    end)
+end
+
+local function loadCountys(callback)
+    countyOptions, countys = {}, {};
+    KeepworkServiceSchoolAndOrg:GetSchoolRegion("area", city.id, function(data)
+        if type(data) ~= "table" then return end
+        countys = data;
+        for key, item in ipairs(countys) do
+            table.insert(countyOptions, {value = item.id, label = item.name});
+        end
+        countyOptions = countyOptions;
+        if (callback) then callback() end
+    end)
+end
+
+function selectState(value)
+    local stateId = value and tonumber(value);
+    if (state and state.id == stateId) then return end
+    local isExist = false;
+    for _, item in ipairs(states) do 
+        if (item.id == stateId) then
+            state = item;
+            isExist = true;
+            break;
+        end
+    end
+    if (not isExist) then 
+        state = {};
+        OnSelected();
+        return ;
+    end
+
+    loadCitys(function() 
+        selectCity(citys[1] and citys[1].id);
+    end)
+end
+
+function selectCity(value)
+    local cityId = value and tonumber(value);
+    if (city and city.id == cityId) then return end
+    local isExist = false;
+    for _, item in ipairs(citys) do 
+        if (item.id == cityId) then
+            city = item;
+            isExist = true;
+            break;
+        end
+    end
+    if (not isExist) then 
+        city = {};
+        OnSelected();
+        return ;
+    end
+    loadCountys(function() 
+        selectCounty(countys[1] and countys[1].id);
+    end);
+end
+
+function selectCounty(value)
+    local countyId = value and tonumber(value);
+    if (county and county.id == countyId) then  return end
+    local isExist = false;
+    for _, item in ipairs(countys) do 
+        if (item.id == countyId) then
+            county = item;
+            isExist = true;
+            break;
+        end
+    end
+    if (not isExist) then county = {} end
+
+    OnSelected();
+end
+
+loadStates(function() 
+    if (not state or not state.id) then return end
+
+    loadCitys(function() 
+        if (not city or not city.id) then return end
+
+        loadCountys();
+    end)
+end);
+
+local function Init()
+    local region = GetAttrValue("value", {});
+    state, city, county = region.state or {}, region.city or {}, region.county or {};
+    if (state.id) then
+        loadCitys(function()
+            if (city.id) then
+                loadCountys();
+            end
+        end);
+    end
+end
+
+function OnReady()
+    Init();
+end
+
+function OnAttrValueChange()
+    Init();
+end 
+
+</script>
+
+<style>
+</style>

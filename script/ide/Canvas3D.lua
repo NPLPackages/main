@@ -437,6 +437,9 @@ function Canvas3D:ShowModel(obj, bAutoAdjustCamera)
 			if(asset:IsValid())then
 				local bb = {min_x = -0.5, max_x=0.5, min_y = -0.5, max_y=0.5,min_z = -0.5, max_z=0.5,};
 				local scale = obj:GetScale();
+				local pitch = obj:GetField("pitch",0)
+				local yaw = obj:GetFacing()
+				local roll = obj:GetField("roll",0)
 				if(asset:IsLoaded() or (self.LookAtHeight and self.DefaultCameraObjectDist))then
 					bb = asset:GetBoundingBox(bb);
 					bb = ScaleBoundingBox(bb, scale);
@@ -457,7 +460,7 @@ function Canvas3D:ShowModel(obj, bAutoAdjustCamera)
 									if(camInfo~=nil)then
 										self:AdjustCamera(camInfo,bb,self.scale_ or 1);
 									else
-										self:AutoAdjustCameraByBoundingBox(bb);
+										self:AutoAdjustCameraByBoundingBox(bb,pitch,yaw,roll);
 									end
 									self.asset_ = nil;
 								end	
@@ -477,7 +480,7 @@ function Canvas3D:ShowModel(obj, bAutoAdjustCamera)
 					if(camInfo~=nil)then
 						self:AdjustCamera(camInfo,bb,scale);
 					else					
-						self:AutoAdjustCameraByBoundingBox(bb);
+						self:AutoAdjustCameraByBoundingBox(bb,pitch,yaw,roll);
 					end
 				end	
 			end
@@ -489,6 +492,89 @@ function Canvas3D:ShowModel(obj, bAutoAdjustCamera)
 	else
 		commonlib.applog("warning: Canvas3D can not find a miniscene to render to \n")	;
 	end
+	return obj
+end
+
+function CommonCtrl.Canvas3D:Show3dUIWithEntityLiveModelLinkedXmlInfo(_xmlInfo)
+    if _xmlInfo==nil then
+        return
+    end
+    if(ParaUI.GetUIObject(self.name):IsValid() == false) then
+		return
+	end
+
+    local function _getModelValueByXmlInfo(xmlInfo,nodeInfo)
+        nodeInfo = nodeInfo or {
+            x=0,y=0,z=0,
+        }
+		NPL.load("(gl)script/apps/Aries/Creator/Game/Entity/PlayerAssetFile.lua");
+		NPL.load("(gl)script/apps/Aries/Creator/Game/Entity/PlayerSkins.lua");
+		local PlayerAssetFile = commonlib.gettable("MyCompany.Aries.Game.EntityManager.PlayerAssetFile")
+		local PlayerSkins = commonlib.gettable("MyCompany.Aries.Game.EntityManager.PlayerSkins");
+
+		local ReplaceableTextures, CCSInfoStr, CustomGeosets,filepath,scaling,facing,x,y,z;
+		if xmlInfo then
+			local attr = xmlInfo.attr
+			if attr.filename then
+				filepath = PlayerAssetFile:GetValidAssetByString(attr.filename);
+			end
+			if attr.skin then
+				CustomGeosets = attr.skin
+			elseif filepath and (PlayerAssetFile:IsCustomModel(filepath)) then
+				CCSInfoStr = PlayerAssetFile:GetDefaultCCSString()
+			elseif filepath and (PlayerSkins:CheckModelHasSkin(filepath)) then
+				-- TODO:  hard code worker skin here
+				ReplaceableTextures = {[2] = PlayerSkins:GetSkinByID(12)};
+			end
+            scaling = attr.scale or 1
+            facing = attr.facing
+		end
+		local modelVal = {
+			AssetFile = filepath, IsCharacter=true, x=nodeInfo.x, y=nodeInfo.y, z=nodeInfo.z,
+			ReplaceableTextures=ReplaceableTextures, CCSInfoStr=CCSInfoStr, CustomGeosets = CustomGeosets,
+            scaling = scaling,
+            facing= facing
+		}
+
+		if xmlInfo and xmlInfo.attr then
+			modelVal.pitch = xmlInfo.attr.pitch
+			modelVal.roll = xmlInfo.attr.roll
+		end
+
+		return modelVal
+	end
+    
+    local scene = self:PrepareScene()
+	local _showModelByXml;
+	_showModelByXml = function (xml,nodeInfo)
+		local modelInfo = _getModelValueByXmlInfo(xml,nodeInfo)
+        local curObj = nil
+		if nodeInfo==nil then
+			curObj = self:ShowModel(modelInfo)
+            -- curObj:SetField("AnimID",xml.attr.anim)
+		else
+            curObj = ObjEditor.CreateObjectByParams(modelInfo);
+            scene:AddChild(curObj)
+            
+            curObj:SetField("AnimID",xml.attr.anim)
+		end
+		if curObj and curObj:IsValid() and _xmlInfo.wholeScale then
+			curObj:SetScale(modelInfo.scaling * _xmlInfo.wholeScale);
+		end
+
+        local linkedEntities = xml.linkList or {}
+        local num = #linkedEntities
+        local mountPoints = xml[1] --插件点数组
+        for i=1,num do
+            local obj = linkedEntities[i] 
+            local subXml = obj.xmlInfo --挂载的子节点的xml信息
+            local nodeInfo = obj.nodeInfo --节点相对位置
+
+            _showModelByXml(subXml,nodeInfo)
+        end
+	end
+	self:ShowModel(nil)
+	_showModelByXml(_xmlInfo,nil)
 end
 
 -- change background color, alpha channel is supported. 
@@ -519,7 +605,7 @@ end
 
 -- adjust the bounding box so that the camera can best view a given bounding box. 
 -- @param bb: the bounding box {min_x = -0.5, max_x=0.5, min_y = -0.5, max_y=0.5,min_z = -0.5, max_z=0.5,} to be contained in the view. 
-function Canvas3D:AutoAdjustCameraByBoundingBox(bb)
+function Canvas3D:AutoAdjustCameraByBoundingBox(bb,pitch,yaw,roll)
 	if(ParaUI.GetUIObject(self.name):IsValid() == false) then
 		return
 	end
@@ -532,7 +618,13 @@ function Canvas3D:AutoAdjustCameraByBoundingBox(bb)
 			if(dist == 0) then
 				dist = 3;
 			end
-			scene:CameraSetLookAtPos(0,self.LookAtHeight or (bb.max_y + bb.min_y)*0.618,0);
+			local look_x,look_y,look_z = 0,0,0;
+			look_x = (bb.max_x + bb.min_x)*0.5;
+			look_y = self.LookAtHeight or (bb.max_y + bb.min_y)*0.5;
+			look_z = (bb.max_z + bb.min_z)*0.5;
+			
+			look_x,look_y,look_z = mathlib.math3d.vec3RotateByPoint(0,0,0,look_x,look_y,look_z,pitch,yaw,roll)
+			scene:CameraSetLookAtPos(look_x,look_y,look_z);
 			--[[ 
 			local cameradist = (dist+2);
 			if(dist < 0.5) then
@@ -717,7 +809,7 @@ end
 -- @param toTime: default to -1, which is the movie length
 -- @param originX, originY, originZ: origin to play inside the mini scene graph or main 3d scene. default to 0,128,0
 -- @return movieEntity
-function Canvas3D:PlayMovieFile(filename, fromTime, toTime, originX, originY, originZ)
+function Canvas3D:PlayMovieFile(filename, fromTime, toTime, originX, originY, originZ, isLooping)
 	NPL.load("(gl)script/apps/Aries/Creator/Game/Movie/MovieManager.lua");
 	local MovieManager = commonlib.gettable("MyCompany.Aries.Game.Movie.MovieManager");
 	if MovieManager:GetInited() ==nil then--if not in world or is entering world something logic is not Init,so return 
@@ -732,7 +824,7 @@ function Canvas3D:PlayMovieFile(filename, fromTime, toTime, originX, originY, or
 	channel:CreateFromTemplateFile(filename, originX or 0, originY or 128, originZ or 0);
 	channel:SetScene(self.resourceName)
 	channel:Stop()
-	channel:Play(fromTime or 0, toTime or -1)
+	channel:Play(fromTime or 0, toTime or -1, isLooping)
 end
 
 ----------------------------------------------------

@@ -70,6 +70,20 @@ pe_textsprite.Sprites = {
 		["8"] = {rect = "0 0 28 25", width = 28, height = 25, image_path="Texture/Aries/Creator/keepwork/vip/vip_time/8_28x25_32bits.png"},
 		["9"] = {rect = "0 0 28 25", width = 28, height = 25, image_path="Texture/Aries/Creator/keepwork/vip/vip_time/9_28x25_32bits.png"},
 	},
+
+	["ProjectRate"] = {
+		["0"] = {rect = "0 0 16 20", width = 16, height = 20, image_path="Texture/Aries/Creator/keepwork/ggs/user/number/0_16X20_32bits.png"},
+		["1"] = {rect = "0 0 16 20", width = 16, height = 20, image_path="Texture/Aries/Creator/keepwork/ggs/user/number/1_16X20_32bits.png"},
+		["2"] = {rect = "0 0 16 20", width = 16, height = 20, image_path="Texture/Aries/Creator/keepwork/ggs/user/number/2_16X20_32bits.png"},
+		["3"] = {rect = "0 0 16 20", width = 16, height = 20, image_path="Texture/Aries/Creator/keepwork/ggs/user/number/3_16X20_32bits.png"},
+		["4"] = {rect = "0 0 16 20", width = 16, height = 20, image_path="Texture/Aries/Creator/keepwork/ggs/user/number/4_16X20_32bits.png"},
+		["5"] = {rect = "0 0 16 20", width = 16, height = 20, image_path="Texture/Aries/Creator/keepwork/ggs/user/number/5_16X20_32bits.png"},
+		["6"] = {rect = "0 0 16 20", width = 16, height = 20, image_path="Texture/Aries/Creator/keepwork/ggs/user/number/6_16X20_32bits.png"},
+		["7"] = {rect = "0 0 16 20", width = 16, height = 20, image_path="Texture/Aries/Creator/keepwork/ggs/user/number/7_16X20_32bits.png"},
+		["8"] = {rect = "0 0 16 20", width = 16, height = 20, image_path="Texture/Aries/Creator/keepwork/ggs/user/number/8_16X20_32bits.png"},
+		["9"] = {rect = "0 0 16 20", width = 16, height = 20, image_path="Texture/Aries/Creator/keepwork/ggs/user/number/9_16X20_32bits.png"},
+		["."] = {rect = "0 0 7 20", width = 7, height = 20, image_path="Texture/Aries/Creator/keepwork/ggs/user/number/dian_16X20_32bits.png"},
+	},
 }
 Map3DSystem.mcml_controls.pe_textsprite = pe_textsprite;
 

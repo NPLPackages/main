@@ -1,7 +1,8 @@
 --[[
 Title: all controls for editor display controls.
-Author(s): LiXizhi
-Date: 2008/2/15
+Author(s): LiXizhi, big
+CreateDate: 2008.2.15
+ModifyDate: 2022.7.19
 Desc: pe:editor,pe:container(alignment="_ctt") pe:editor-divider, pe:editor-buttonset, pe:editor-button(DefaultButton=true), pe:editor-custom, form
 
 ---++ Button or input tag
@@ -120,82 +121,137 @@ end
 
 -- create editor or pe_container
 function pe_editor.create(rootName, mcmlNode, bindingContext, _parent, left, top, width, height,style, parentLayout)
-	if(mcmlNode:GetAttribute("display") == "none") then return end
+	if (mcmlNode:GetAttribute("display") == "none") then
+		return
+	end
+
 	local instName = mcmlNode:GetAttributeWithCode("uiname", nil, true) or mcmlNode:GetInstanceName(rootName);
-	if(mcmlNode.name == "pe:editor") then
+
+	if (mcmlNode.name == "pe:editor") then
 		-- create a new binding context whenever a pe_editor is met. 
 		bindingContext = pe_editor.NewBinding(instName, bindingContext);
 		bindingContext.formNode_ = mcmlNode;
-	end	
-	
+	end
+
 	local css = mcmlNode:GetStyle(mcml_controls.pe_css.default[mcmlNode.name] or Map3DSystem.mcml_controls.pe_html.css[mcmlNode.name]) or {};
-	
+
+	local scale = 1;
+
+	if (mcmlNode:GetAttribute("scale")) then
+		scale = tonumber(mcmlNode:GetAttribute("scale"));
+	end
+
 	local alignment = mcmlNode:GetAttributeWithCode("alignment", nil, true);
-	if(not alignment) then
-		alignment =  "_lt";
-		if(css.float == "right") then
-			if(css["vertical-align"] and css["vertical-align"] == "bottom") then
+
+	if (not alignment) then
+		alignment = "_lt";
+		
+		if (css.float == "right") then
+			if (css["vertical-align"] and css["vertical-align"] == "bottom") then
 				alignment = "_rb";
 			else
 				alignment = "_rt";
 			end
 		else
-			if(css["vertical-align"] and css["vertical-align"] == "bottom") then
+			if (css["vertical-align"] and css["vertical-align"] == "bottom") then
 				alignment = "_lb";
 			end
 		end		
 	end
-	
-	local padding_left, padding_top, padding_bottom, padding_right = 
-		(css["padding-left"] or css["padding"] or 0),(css["padding-top"] or css["padding"] or 0),
-		(css["padding-bottom"] or css["padding"] or 0),(css["padding-right"] or css["padding"] or 0);
-	local margin_left, margin_top, margin_bottom, margin_right = 
-		(css["margin-left"] or css["margin"] or 0),(css["margin-top"] or css["margin"] or 0),
-		(css["margin-bottom"] or css["margin"] or 0),(css["margin-right"] or css["margin"] or 0);	
+
+	local padding_left,
+	      padding_top,
+		  padding_bottom,
+		  padding_right = 
+			(css["padding-left"] or css["padding"] or 0),
+			(css["padding-top"] or css["padding"] or 0),
+			(css["padding-bottom"] or css["padding"] or 0),
+			(css["padding-right"] or css["padding"] or 0);
+
+	padding_left = padding_left * scale;
+	padding_top = padding_top * scale;
+	padding_bottom = padding_bottom * scale;
+	padding_right = padding_right * scale;
+
+	local margin_left,
+		  margin_top,
+		  margin_bottom,
+		  margin_right = 
+			(css["margin-left"] or css["margin"] or 0),
+			(css["margin-top"] or css["margin"] or 0),
+			(css["margin-bottom"] or css["margin"] or 0),
+			(css["margin-right"] or css["margin"] or 0);
 
 	local availWidth, availHeight = parentLayout:GetPreferredSize();
 	local maxWidth, maxHeight = parentLayout:GetMaxSize();
+
 	local width, height = mcmlNode:GetAttribute("width"), mcmlNode:GetAttribute("height");
-	if(width) then
+
+	if (width and
+        type(width) == "string" and
+		not string.match(width, "^%d+") and
+		not string.match(width, "^%d+px") and
+		not string.match(width, "^%d+%%")) then
+		width = mcmlNode:GetAttributeWithCode("width")
+	end
+
+	if (width) then
 		css.width = tonumber(string.match(width, "%d+"));
-		if(css.width and string.match(width, "%%$")) then
-			css.width=math.floor((maxWidth-margin_left-margin_right)*css.width/100);
-			if(availWidth<(css.width+margin_left+margin_right)) then
-				css.width=availWidth-margin_left-margin_right;
+
+		if (css.width and string.match(width, "%%$")) then
+			css.width = math.floor((maxWidth-margin_left-margin_right)*css.width/100);
+
+			if (availWidth < (css.width + margin_left+margin_right)) then
+				css.width = availWidth-margin_left-margin_right;
 			end
-			if(css.width<=0) then
+
+			if (css.width <= 0) then
 				css.width = nil;
 			end
 		end	
 	end
-	if(height) then
+
+	if (height and
+        type(height) == "string" and
+		not string.match(height, "^%d+") and
+		not string.match(height, "^%d+px") and
+		not string.match(height, "^%d+%%")) then
+		height = mcmlNode:GetAttributeWithCode("height")
+	end
+
+	if (height) then
 		css.height = tonumber(string.match(height, "%d+"));
-		if(css.height and string.match(height, "%%$")) then
-			css.height=math.floor((maxHeight-margin_top-margin_bottom)*css.height/100);
-			if(availHeight<(css.height+margin_top+margin_bottom)) then
-				css.height=availHeight-margin_top-margin_bottom;
+
+		if (css.height and string.match(height, "%%$")) then
+			css.height = math.floor((maxHeight - margin_top - margin_bottom) * css.height / 100);
+
+			if (availHeight < (css.height + margin_top + margin_bottom)) then
+				css.height = availHeight - margin_top - margin_bottom;
 			end
-			if(css.height<=0) then
+
+			if (css.height <= 0) then
 				css.height = nil;
 			end
 		end	
 	end
 
 	-- whether this control takes up space
-	local bUseSpace; 
-	if(css.float) then
-		if(css.width) then
-			if(availWidth<(css.width+margin_left+margin_right)) then
+	local bUseSpace;
+
+	if (css.float) then
+		if (css.width) then
+			if (availWidth < (css.width + margin_left + margin_right)) then
 				parentLayout:NewLine();
 			end
 		end	
 	else
 		parentLayout:NewLine();
 	end
-	
+
 	local myLayout = parentLayout:clone();
 	myLayout:ResetUsedSize();
-	if(css.position == "absolute") then
+
+	if (css.position == "absolute") then
 		-- absolute positioning in parent
 		myLayout:SetPos(css.left, css.top);
 		width,height = myLayout:GetSize();
@@ -208,40 +264,50 @@ function pe_editor.create(rootName, mcmlNode, bindingContext, _parent, left, top
 		myLayout:SetPos(left,top);
 		bUseSpace = true;	
 	end
-	
-	if(css.width) then
-		myLayout:IncWidth(left+margin_left+margin_right+css.width-width)
+
+	if (css.width) then
+		css.width = css.width * scale;
+		myLayout:IncWidth(left + margin_left + margin_right + css.width - width)
 	end
 	
-	if(css.height) then
-		myLayout:IncHeight(top+margin_top+margin_bottom+css.height-height)
+	if (css.height) then
+		css.height = css.height * scale;
+		myLayout:IncHeight(top + margin_top + margin_bottom + css.height - height)
 	end	
 	
 	-- for inner control preferred size
-	myLayout:OffsetPos(margin_left+padding_left, margin_top+padding_top);
-	myLayout:IncWidth(-margin_right-padding_right)
-	myLayout:IncHeight(-margin_bottom-padding_bottom)	
-	
+	myLayout:OffsetPos(margin_left + padding_left, margin_top + padding_top);
+	myLayout:IncWidth(-margin_right - padding_right)
+	myLayout:IncHeight(-margin_bottom - padding_bottom)	
+
 	-- create editor container
 	local parent_left, parent_top, parent_width, parent_height = myLayout:GetPreferredRect();
-	
-	parent_left = parent_left-padding_left;
-	parent_top = parent_top-padding_top;
-	parent_width = parent_width + padding_right
-	parent_height = parent_height + padding_bottom
-	local _this
-	if(alignment == "_fi") then
+
+	parent_left = parent_left - padding_left;
+	parent_top = parent_top - padding_top;
+	parent_width = parent_width + padding_right;
+	parent_height = parent_height + padding_bottom;
+
+	local _this;
+
+	if (alignment == "_fi") then
 		left, top, width, height = parentLayout:GetPreferredRect();
 		_this = ParaUI.CreateUIObject("container", instName, alignment, parent_left, parent_top, width-(parent_width), height-(parent_height))
 	else
 		_this = ParaUI.CreateUIObject("container", instName, alignment, parent_left, parent_top, parent_width-parent_left,parent_height-parent_top)
 	end
+
+	if (css.overflow) then
+		_this.fastrender = false;
+	end
+
 	_parent:AddChild(_this);
 	_parent = _this;
 
-	if(mcmlNode:GetAttributeWithCode("SelfPaint", nil)) then
+	if (mcmlNode:GetAttributeWithCode("SelfPaint", nil)) then
 		_this:SetField("SelfPaint", true);
 	end
+
 	mcmlNode.uiobject_id = _this.id;
 
 	--replaced by leio:2012/08/15
@@ -250,7 +316,8 @@ function pe_editor.create(rootName, mcmlNode, bindingContext, _parent, left, top
 	--end
 	local visible = mcmlNode:GetAttributeWithCode("visible", nil, true);
 	visible = tostring(visible);
-	if(visible and visible == "false")then
+	
+	if (visible and visible == "false")then
 		_this.visible = false;
 	end
 	
@@ -261,85 +328,111 @@ function pe_editor.create(rootName, mcmlNode, bindingContext, _parent, left, top
 	if(mcmlNode:GetNumber("zorder")) then
 		_this.zorder = mcmlNode:GetNumber("zorder");
 	end
+
 	local bClickThrough = mcmlNode:GetAttributeWithCode("ClickThrough")
-	if( bClickThrough==true or bClickThrough == "true") then
+
+	if (bClickThrough == true or bClickThrough == "true") then
 		_this:SetField("ClickThrough", true);
 	end
 
-	if(css["background-color"]) then
+	if (css["background-color"]) then
 		css.background = css.background or "Texture/whitedot.png";
 	end
 
-	if(css.background) then
+	if (css.background) then
 		_this.background = css.background;
-		if(css["background-color"]) then
+
+		if (css["background-color"]) then
 			_guihelper.SetUIColor(_this, css["background-color"]);
 		end
-		if(css["colormask"]) then
+
+		if (css["colormask"]) then
 			_guihelper.SetColorMask(_this, css["colormask"]);
 		end
 	end
-	
+
 	-- create contentLayout, so that they are all relative to the new container.
 	local contentLayout = myLayout:clone();
 	contentLayout:OffsetPos(-parent_left, -parent_top);
-	contentLayout:IncHeight(-parent_top)
-	contentLayout:IncWidth(-parent_left)
-	contentLayout:SetUsedSize(contentLayout:GetAvailablePos())
-	
+	contentLayout:IncHeight(-parent_top);
+	contentLayout:IncWidth(-parent_left);
+	contentLayout:SetUsedSize(contentLayout:GetAvailablePos());
+
 	-- create each child node. 
-	pe_editor.refresh(rootName, mcmlNode, bindingContext, _parent, 
-		{color = css.color, ["font-family"] = css["font-family"],  ["font-size"]=css["font-size"], ["base-font-size"]=css["base-font-size"], ["font-weight"] = css["font-weight"], ["text-align"] = css["text-align"],["line-height"] = css["line-height"], 
-			 ["text-shadow"] = css["text-shadow"], ["shadow-color"]=css["shadow-color"], ["shadow-quality"]=css["shadow-quality"]
-		}, contentLayout)
-	
+	pe_editor.refresh(
+		rootName,
+		mcmlNode,
+		bindingContext,
+		_parent, 
+		{
+			color = css.color,
+			["font-family"] = css["font-family"],
+			["font-size"] = css["font-size"],
+			["base-font-size"] = css["base-font-size"],
+			["font-weight"] = css["font-weight"],
+			["text-align"] = css["text-align"],
+			["line-height"] = css["line-height"], 
+			["text-shadow"] = css["text-shadow"],
+			["shadow-color"] = css["shadow-color"],
+			["shadow-quality"] = css["shadow-quality"],
+			scale = scale,
+		},
+		contentLayout
+	)
+
 	-- calculate used size
 	local width, height = contentLayout:GetUsedSize(); 
-	if(mcmlNode:GetAttribute("valign") == "center") then 
+	
+	if (mcmlNode:GetAttribute("valign") == "center") then 
 		local _, used_height = contentLayout:GetUsedSize();
 		local _, parent_height = contentLayout:GetSize();
-		local offset_y = math.floor((parent_height - used_height)*0.5);
-		if(offset_y > 0) then
+		local offset_y = math.floor((parent_height - used_height) * 0.5);
+
+		if (offset_y > 0) then
 			width = width + offset_y;
 			_parent.y = _parent.y + offset_y;
 		end
 	end
 
-	myLayout:AddObject(width-padding_left, height-padding_top);
-	
+	myLayout:AddObject(width - padding_left, height - padding_top);
+
 	local left, top = parentLayout:GetAvailablePos();
-	width, height = myLayout:GetUsedSize()
-	width = width + padding_right + margin_right
-	height = height + padding_bottom + margin_bottom
-	if(css.width) then
+	width, height = myLayout:GetUsedSize();
+	width = width + padding_right + margin_right;
+	height = height + padding_bottom + margin_bottom;
+
+	if (css.width) then
 		width = left + css.width + margin_left+margin_right;
-	end	
-	if(css.height) then
+	end
+
+	if (css.height) then
 		height = top + css.height + margin_top+margin_bottom;
 	end
+
 	-- resize container
-	if(alignment ~= "_fi") then
-		_parent.height = height-top-margin_top-margin_bottom;
-		_parent.width = width-left-margin_right-margin_left;
+	if (alignment ~= "_fi") then
+		_parent.height = height - top - margin_top - margin_bottom;
+		_parent.width = width - left - margin_right - margin_left;
 	end	
-	
-	if(alignment == "_lt") then
-		if(bUseSpace) then
-			parentLayout:AddObject(width-left, height-top);
-			if(not css.float) then
+
+	if (alignment == "_lt") then
+		if (bUseSpace) then
+			parentLayout:AddObject(width - left, height - top);
+
+			if (not css.float) then
 				parentLayout:NewLine();
 			end	
 		end
-	elseif(alignment == "_rt") then
-		_parent.x = - _parent.width- margin_left - margin_right;
-	elseif(alignment == "_rb") then
-		_parent.x = - _parent.width- margin_left - margin_right;
-		_parent.y = - _parent.height- margin_top - margin_bottom;
-	elseif(alignment == "_lb") then
-		_parent.y = - _parent.height- margin_top - margin_bottom;
+	elseif (alignment == "_rt") then
+		_parent.x = -_parent.width - margin_left - margin_right;
+	elseif (alignment == "_rb") then
+		_parent.x = -_parent.width - margin_left - margin_right;
+		_parent.y = -_parent.height - margin_top - margin_bottom;
+	elseif (alignment == "_lb") then
+		_parent.y = -_parent.height - margin_top - margin_bottom;
 	end	
-	
-	if(css.visible and css.visible== "false") then
+
+	if (css.visible and css.visible == "false") then
 		_parent.visible = false;
 	end
 
@@ -349,77 +442,145 @@ function pe_editor.create(rootName, mcmlNode, bindingContext, _parent, left, top
 	local ontouch;
 
 	onclick = mcmlNode:GetString("onclick");
-	if(onclick == "") then
+
+	if (onclick == "") then
 		onclick = nil;
 	end
+
 	onclick_for = mcmlNode:GetString("for");
-	if(onclick_for == "") then
+
+	if (onclick_for == "") then
 		onclick_for = nil;
 	end
+
 	ontouch = mcmlNode:GetString("ontouch");
-	if(ontouch == "") then
+	
+	if (ontouch == "") then
 		ontouch = nil;
 	end
 
 	local tooltip = mcmlNode:GetAttributeWithCode("tooltip",nil,true);
-	if(tooltip and tooltip~="") then
+
+	if (tooltip and tooltip ~= "") then
 		local tooltip_page = string.match(tooltip or "", "page://(.+)");
 		local tooltip_static_page = string.match(tooltip or "", "page_static://(.+)");
-		if(tooltip_page) then
-			CommonCtrl.TooltipHelper.BindObjTooltip(mcmlNode.uiobject_id, tooltip_page, mcmlNode:GetNumber("tooltip_offset_x"), mcmlNode:GetNumber("tooltip_offset_y"), mcmlNode:GetNumber("show_width"),mcmlNode:GetNumber("show_height"),mcmlNode:GetNumber("show_duration"), mcmlNode:GetBool("enable_tooltip_hover"), nil, mcmlNode:GetBool("tooltip_is_interactive"), mcmlNode:GetBool("is_lock_position"), mcmlNode:GetBool("use_mouse_offset"), mcmlNode:GetNumber("screen_padding_bottom"), nil, nil, nil, mcmlNode:GetBool("offset_ctrl_width"), mcmlNode:GetBool("offset_ctrl_height"));
-		elseif(tooltip_static_page) then
-			CommonCtrl.TooltipHelper.BindObjTooltip(mcmlNode.uiobject_id, tooltip_static_page, mcmlNode:GetNumber("tooltip_offset_x"), mcmlNode:GetNumber("tooltip_offset_y"), mcmlNode:GetNumber("show_width"),mcmlNode:GetNumber("show_height"),mcmlNode:GetNumber("show_duration"),mcmlNode:GetBool("enable_tooltip_hover"),mcmlNode:GetBool("click_through"));
+
+		if (tooltip_page) then
+			CommonCtrl.TooltipHelper.BindObjTooltip(
+				mcmlNode.uiobject_id,
+				tooltip_page,
+				mcmlNode:GetNumber("tooltip_offset_x"),
+				mcmlNode:GetNumber("tooltip_offset_y"),
+				mcmlNode:GetNumber("show_width"),
+				mcmlNode:GetNumber("show_height"),
+				mcmlNode:GetNumber("show_duration"),
+				mcmlNode:GetBool("enable_tooltip_hover"),
+				nil,
+				mcmlNode:GetBool("tooltip_is_interactive"),
+				mcmlNode:GetBool("is_lock_position"),
+				mcmlNode:GetBool("use_mouse_offset"),
+				mcmlNode:GetNumber("screen_padding_bottom"),
+				nil,
+				nil,
+				nil,
+				mcmlNode:GetBool("offset_ctrl_width"),
+				mcmlNode:GetBool("offset_ctrl_height")
+			);
+		elseif (tooltip_static_page) then
+			CommonCtrl.TooltipHelper.BindObjTooltip(
+				mcmlNode.uiobject_id,
+				tooltip_static_page,
+				mcmlNode:GetNumber("tooltip_offset_x"),
+				mcmlNode:GetNumber("tooltip_offset_y"),
+				mcmlNode:GetNumber("show_width"),
+				mcmlNode:GetNumber("show_height"),
+				mcmlNode:GetNumber("show_duration"),
+				mcmlNode:GetBool("enable_tooltip_hover"),
+				mcmlNode:GetBool("click_through")
+			);
 		else
 			_parent.tooltip = tooltip;
 		end
 	end
 
 	local btnName = mcmlNode:GetAttributeWithCode("name")
-	if(onclick_for or onclick or ontouch) then
+
+	if (onclick_for or onclick or ontouch) then
 		-- tricky: we will just prefetch any params with code that may be used in the callback 
-		for i=1,5 do
-			if(not mcmlNode:GetAttributeWithCode("param"..i)) then
+		for i = 1, 5 do
+			if (not mcmlNode:GetAttributeWithCode("param" .. i)) then
 				break;
 			end
 		end
-		if(onclick_for or onclick) then
-			_parent:SetScript("onmouseup", Map3DSystem.mcml_controls.pe_editor_button.on_click, mcmlNode, nil, bindingContext, btnName);
+
+		if (onclick_for or onclick) then
+			_parent:SetScript(
+				"onmouseup",
+				Map3DSystem.mcml_controls.pe_editor_button.on_click,
+				mcmlNode,
+				nil,
+				bindingContext,
+				btnName
+			);
 		end
-		if(ontouch) then
-			_parent:SetScript("ontouch", Map3DSystem.mcml_controls.pe_editor_button.on_touch, mcmlNode, nil, bindingContext, btnName);
+
+		if (ontouch) then
+			_parent:SetScript(
+				"ontouch",
+				Map3DSystem.mcml_controls.pe_editor_button.on_touch,
+				mcmlNode,
+				nil,
+				bindingContext,
+				btnName
+			);
 		end
 	end
 
 	local oncreate_callback = mcmlNode:GetAttributeWithCode("oncreate");
-	if(oncreate_callback) then
+
+	if (oncreate_callback) then
 		Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, oncreate_callback, btnName, mcmlNode)
 	end
 
 	local onsize_callback = mcmlNode:GetAttributeWithCode("onsize");
-	if(onsize_callback) then
-		_parent:SetScript("onsize",  function(uiobj)
-			Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, onsize_callback, btnName, mcmlNode, uiobj)
-		end)
+
+	if (onsize_callback) then
+		_parent:SetScript(
+			"onsize",
+			function(uiobj)
+				Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, onsize_callback, btnName, mcmlNode, uiobj)
+			end
+		)
 	end
 
 	local candrag = mcmlNode:GetAttributeWithCode("candrag");
-	if(candrag==true or candrag == "true") then
+
+	if (candrag == true or candrag == "true") then
 		_parent.candrag = true;
 
 		local onDragBegin_callback = mcmlNode:GetAttributeWithCode("ondragbegin");
-		_parent:SetScript("ondragbegin",  function(uiobj)
-			Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, onDragBegin_callback, btnName, mcmlNode, uiobj)
-		end)
+		_parent:SetScript(
+			"ondragbegin",
+			function(uiobj)
+				Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, onDragBegin_callback, btnName, mcmlNode, uiobj)
+			end
+		)
 
 		local onDragEnd_callback = mcmlNode:GetAttributeWithCode("ondragend");
-		_parent:SetScript("ondragend",  function(uiobj)
-			Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, onDragEnd_callback, btnName, mcmlNode, uiobj)
-		end)
+		_parent:SetScript(
+			"ondragend",
+			function(uiobj)
+				Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, onDragEnd_callback, btnName, mcmlNode, uiobj)
+			end
+		)
 
 		local onDragEnd_callback = mcmlNode:GetAttributeWithCode("ondragmove");
-		_parent:SetScript("ondragmove",  function(uiobj)
-			Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, onDragEnd_callback, btnName, mcmlNode, uiobj)
-		end)
+		_parent:SetScript(
+			"ondragmove",
+			function(uiobj)
+				Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, onDragEnd_callback, btnName, mcmlNode, uiobj)
+			end
+		)
 	end
 end
 
@@ -427,28 +588,36 @@ end
 function pe_editor.refresh(rootName, mcmlNode, bindingContext, _parent, style, contentLayout)
 	-- clear this container
 	_parent:RemoveAll();
-	
+
 	-- create all child nodes UI controls. 
 	local labelwidth = mcmlNode:GetNumber("labelwidth");
 	local _, childnode;
+
 	for childnode in mcmlNode:next() do
 		local left, top, width, height = contentLayout:GetPreferredRect();
-		
-		if((type(childnode) == "table") and 
-			(childnode.name == "pe:editor-text" or childnode.name == "pe:editor-custom" or childnode.name == "pe:editor-buttonset" or childnode.name == "pe:editor-divider"))then
+
+		if ((type(childnode) == "table") and 
+			(childnode.name == "pe:editor-text" or
+			 childnode.name == "pe:editor-custom" or
+			 childnode.name == "pe:editor-buttonset" or
+			 childnode.name == "pe:editor-divider")) then
 			local lableText = childnode:GetAttribute("label");
-			if(lableText and lableText~="") then
-				local _this = ParaUI.CreateUIObject("text", "", "_lt", left, top+3, labelwidth, 16)
+
+			if (lableText and lableText ~= "") then
+				local _this = ParaUI.CreateUIObject("text", "", "_lt", left, top + 3, labelwidth, 16);
 				--_guihelper.SetUIFontFormat(_this, 2 + 32 + 256); -- align to right and single lined. 
 				_this.text = lableText;
 				_parent:AddChild(_this);
 			end
-			
+
 			contentLayout:NewLine();
+
 			local innerLayout = contentLayout:clone();
 			innerLayout:OffsetPos(labelwidth, nil);
 			left, top, width, height = innerLayout:GetPreferredRect();
-			Map3DSystem.mcml_controls.create(rootName, childnode, bindingContext, _parent, left, top, width, height, style, innerLayout)
+
+			Map3DSystem.mcml_controls.create(rootName, childnode, bindingContext, _parent, left, top, width, height, style, innerLayout);
+
 			contentLayout:AddChildLayout(innerLayout);
 			contentLayout:NewLine();
 		else
@@ -760,13 +929,13 @@ function pe_editor_button.create(rootName, mcmlNode, bindingContext, _parent, le
 		if(css["background-rotation"]) then
 			_this.rotation = tonumber(css["background-rotation"])
 		end
-		if(css.color) then
-			_guihelper.SetButtonFontColor(_this, css.color, css.color2);
-		end
 	else
 		if(pe_editor.default_button_offset_y) then
 			_this:SetField("TextOffsetY", pe_editor.default_button_offset_y);
 		end
+	end
+	if(css.color) then
+		_guihelper.SetButtonFontColor(_this, css.color, css.color2);
 	end
 	if(css.background2) then
 		local bg2_color;
@@ -1369,12 +1538,29 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 	
 	local uiname = mcmlNode:GetAttributeWithCode("uiname", nil, true)
 	local instName = uiname or mcmlNode:GetInstanceName(rootName);
-	
+
 	if(rows>1 or mcmlNode.name=="textarea") then
 		-- multiline editbox
 		NPL.load("(gl)script/ide/MultiLineEditbox.lua");
 		local bReadOnly = mcmlNode:GetAttributeWithCode("ReadOnly", nil, true)
 		bReadOnly = (bReadOnly== true or bReadOnly=="true");
+
+		local onfocusin = mcmlNode:GetString("onfocusin");
+		local onfocusinFunc
+		if(onfocusin)then
+			onfocusinFunc = function(sCtrlName, nLineIndex)
+				Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, onfocusin, sCtrlName, nLineIndex);
+			end
+		end
+
+		-- local auto_virtual_keyboard = mcmlNode:GetAttributeWithCode("auto_virtual_keyboard", System.options.auto_virtual_keyboard)
+		-- local enable_ime = mcmlNode:GetBool("enable_ime", true)
+
+		-- 要调起系统键盘的情况 安卓就不自动启用虚拟键盘了
+		-- if enable_ime and System.os.GetPlatform() == "android" then
+		-- 	auto_virtual_keyboard = false
+		-- end
+		
 		local ctl = CommonCtrl.MultiLineEditbox:new{
 			name = instName,
 			alignment = "_lt",
@@ -1396,7 +1582,10 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 			bUseSystemControl = mcmlNode:GetBool("UseSystemControl"),
 			language = mcmlNode:GetAttributeWithCode("language", nil),
 			AlwaysShowCurLineBackground = mcmlNode:GetBool("AlwaysShowCurLineBackground", true),
-			InputMethodEnabled = mcmlNode:GetBool("enable_ime", true),
+			InputMethodEnabled = enable_ime,
+			isMoveViewWhenAttachWithIME = mcmlNode:GetBool("MoveViewWhenAttachWithIME", false),
+			onfocusinFunc = onfocusinFunc,
+			-- auto_virtual_keyboard = auto_virtual_keyboard,
 		};
 		local onkeyup = mcmlNode:GetString("onkeyup");
 		if(onkeyup)then
@@ -1425,9 +1614,9 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 			end
 		end
 	
-		if mcmlNode:GetBool("MoveViewWhenAttachWithIME", false) then
-			ctl:setMoveViewWhenAttachWithIME(true);
-		end
+		-- if mcmlNode:GetBool("MoveViewWhenAttachWithIME", false) then
+		-- 	ctl:setMoveViewWhenAttachWithIME(true);
+		-- end
 
 		local syntax_map = mcmlNode:GetString("syntax_map");
 		if(syntax_map) then
@@ -1580,11 +1769,18 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 				_this:SetField("TextShadowColor", _guihelper.ColorStr_TO_DWORD(css["shadow-color"]));
 			end
 		end
+
+		-- local auto_virtual_keyboard = mcmlNode:GetAttributeWithCode("auto_virtual_keyboard", System.options.auto_virtual_keyboard)
+		-- local enable_ime = mcmlNode:GetBool("enable_ime", true)
+		-- if enable_ime and System.os.GetPlatform() == "android" then
+		-- 	auto_virtual_keyboard = false
+		-- end
 		
-		if(System.options.IsTouchDevice and mcmlNode:GetBool("auto_virtual_keyboard", System.options.auto_virtual_keyboard)) then
-			-- _this:SetField("InputMethodEnabled", false);
-			_this:SetScript("onfocusin", pe_editor_text.onfocusin, mcmlNode, instName, bindingContext, name);
-		end
+		-- if(System.options.IsTouchDevice and auto_virtual_keyboard) then
+		-- 	-- _this:SetField("InputMethodEnabled", false);
+		-- 	_this:SetScript("onfocusin", pe_editor_text.onfocusin, mcmlNode, instName, bindingContext, name);
+		-- 	_this:SetScript("onfocusout", pe_editor_text.onfocusout, mcmlNode, instName, bindingContext, name);
+		-- end
 		
 
 		local text_color = mcmlNode:GetString("textcolor") or css.textcolor;
@@ -1607,22 +1803,6 @@ function pe_editor_text.onactivate(uiobj, mcmlNode, instName, bindingContext, na
 		-- the callback function format is function(name, mcmlNode) end
 		Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, onactivate, name, mcmlNode,uiobj);
 	end
-end
-
-function pe_editor_text.onfocusin(uiobj, mcmlNode, instName, bindingContext, name)
-	if(not mcmlNode or not uiobj) then
-		return
-	end
-
-	if(mcmlNode:GetBool("auto_virtual_keyboard", System.options.auto_virtual_keyboard)) then
-		NPL.load("(gl)script/apps/Aries/Creator/Game/GUI/TouchVirtualKeyboardIcon.lua");
-		local TouchVirtualKeyboardIcon = commonlib.gettable("MyCompany.Aries.Game.GUI.TouchVirtualKeyboardIcon");
-		TouchVirtualKeyboardIcon.GetSingleton():ShowKeyboard(true)
-	end
-
-	local onclick = mcmlNode:GetString("onfocusin") or "";
-	-- the callback function format is function(name, mcmlNode) end
-	Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, onclick, name, mcmlNode,uiobj);
 end
 
 
@@ -1653,6 +1833,13 @@ function pe_editor_text.onfocusin(uiobj, mcmlNode, instName, bindingContext, nam
 	if(not mcmlNode or not uiobj) then
 		return
 	end
+
+	-- if(mcmlNode:GetAttributeWithCode("auto_virtual_keyboard", System.options.auto_virtual_keyboard)) then
+	-- 	NPL.load("(gl)script/apps/Aries/Creator/Game/GUI/TouchVirtualKeyboardIcon.lua");
+	-- 	local TouchVirtualKeyboardIcon = commonlib.gettable("MyCompany.Aries.Game.GUI.TouchVirtualKeyboardIcon");
+	-- 	TouchVirtualKeyboardIcon.GetSingleton():ShowKeyboard(true)
+	-- end
+
 	local onfocusin = mcmlNode:GetString("onfocusin");
 	-- the callback function format is function(name, mcmlNode) end
 	Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, onfocusin, name, mcmlNode, uiobj);
@@ -1663,6 +1850,13 @@ function pe_editor_text.onfocusout(uiobj, mcmlNode, instName, bindingContext, na
 	if(not mcmlNode or not uiobj) then
 		return
 	end
+
+	-- if(mcmlNode:GetAttributeWithCode("auto_virtual_keyboard", System.options.auto_virtual_keyboard)) then
+	-- 	NPL.load("(gl)script/apps/Aries/Creator/Game/GUI/TouchVirtualKeyboardIcon.lua");
+	-- 	local TouchVirtualKeyboardIcon = commonlib.gettable("MyCompany.Aries.Game.GUI.TouchVirtualKeyboardIcon");
+	-- 	TouchVirtualKeyboardIcon.GetSingleton():ShowKeyboard(false)
+	-- end
+	
 	local onfocusout = mcmlNode:GetString("onfocusout");
 	-- the callback function format is function(name, mcmlNode) end
 	Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, onfocusout, name, mcmlNode, uiobj);

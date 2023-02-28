@@ -632,6 +632,54 @@ function WindowFrame:Destroy()
 	WindowFrame.WndSet[self.wnd.app.name][self.wnd.name] = nil;
 end
 
+local _windowMasks = {}
+function WindowFrame.CheckShowWindowBgMask(params,bShow)
+	if type(params)~="table" then
+		return
+	end
+	local name = params.name or ""
+	if not params.withBgMask then
+		return
+	end
+	local width,height = System.Windows.Screen:GetWindowSolution()
+
+	local _mask = ParaUI.GetUIObject("WINDOW_BG_MASK_"..name)
+	
+	if _mask and _mask:IsValid() then
+		for i=#_windowMasks,1,-1 do 
+			if _windowMasks[i].name==_mask.name then
+				table.remove(_windowMasks,i)
+				break
+			end
+		end
+		ParaUI.DestroyUIObject(_mask)
+	end
+
+	if bShow then
+		-- GameLogic.AddBBS("nil","aaaaa")
+		local _mask = ParaUI.CreateUIObject("container", "WINDOW_BG_MASK_"..name, "_fi", 0, 0, 0,0);
+		_mask.background = 'Texture/whitedot.png';
+		_mask.color = "0 0 0 "..math.floor((params.bgMaskOpacity or 0.5)*255);
+		_mask.enabled = true;
+		_mask:AttachToRoot();
+		_mask.zorder = -1
+
+		if params.isTopLevel then
+			_mask:SetTopLevel(true)
+		end
+		for i=#_windowMasks,1,-1 do
+			_windowMasks[i].enabled = false
+		end
+		_windowMasks[#_windowMasks+1] = _mask
+	end
+
+	if #_windowMasks>0 then
+		_windowMasks[#_windowMasks].enabled = true
+	end
+
+	return _mask
+end
+
 --function WindowFrame.PreShowWindowsTab(appName, alignment)
 	---- reset all window above by titleBar height
 	--local k, v;
@@ -1425,7 +1473,8 @@ function WindowFrame.GetTopFrame()
 		local _wndName
 		for appName, map in pairs(WindowFrame.WndSet) do
 			for wndName, wnd in pairs(map) do
-				if wnd:GetWindowUIObject().name == _top_win.name then
+				local ui_object = wnd:GetWindowUIObject()
+				if ui_object and ui_object.name == _top_win.name then
 					_wnd = wnd;
 					_wndName = wndName;
 					break;
@@ -1448,7 +1497,8 @@ function WindowFrame:IsTopFrame()
 		local _active_win = ParaUI.GetUIObject(id);
 		if(_active_win:IsValid()) then
 			log(_active_win.name.."\n");
-			if(_active_win.name == self:GetWindowUIObject().name) then
+			local ui_object = self:GetWindowUIObject()
+			if(ui_object and _active_win.name == ui_object.name) then
 				return true;
 			end
 		end

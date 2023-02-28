@@ -3,7 +3,7 @@
 Title: edit code
 Author: LiXizhi
 Date: 2016/4/18
-Desc: 
+Desc: editcode?src=filename&line=1
 ajax:
   * ajax/editcode?action=save_file&src=
 ]]
@@ -11,6 +11,7 @@ if(not is_admin()) then
   exit("access denied")
 end
 local src = request:get("src");
+local line = request:get("line");
 if(is_ajax()) then
 	add_action('wp_ajax_save_file', function()
         local output = {success = false};
@@ -57,7 +58,7 @@ wp_enqueue_style("jqueryui_css", "/wp-includes/js/jquery/jquery-ui.min.css");
 wp_enqueue_script("easyui", "/wp-includes/js/jeasyui/jquery.easyui.min.js");
 wp_enqueue_script("jqueryui", "/wp-includes/js/jquery/jquery-ui.min.js"); 
 
-echo(format("<script>window.editorInfo = {workspaceDir:'%s', req_src:'%s'};</script>", ParaIO.GetCurDirectory(0), src or ""));
+echo(format("<script>window.editorInfo = {workspaceDir:'%s', req_src:'%s', req_line:'%s'};</script>", ParaIO.GetCurDirectory(0), src or "", line or ""));
 ?>
 <script>
     angular.module('EditCode', ['ngStorage', 'ngSanitize'])
@@ -102,6 +103,9 @@ echo(format("<script>window.editorInfo = {workspaceDir:'%s', req_src:'%s'};</scr
         var req_src = editorInfo.req_src;
         if (req_src != "")
             $scope.$storage.currentFilename = req_src;
+		var req_line = editorInfo.req_line;
+        if (req_line != "")
+			$scope.$storage.currentLine = parseInt(req_line);
 
         $scope.notifications = [];
         // @param type: "success", "info", "warning", "danger"
@@ -400,7 +404,7 @@ echo(format("<script>window.editorInfo = {workspaceDir:'%s', req_src:'%s'};</scr
                 }
             });
             if ($scope.$storage.currentFilename)
-                $scope.openFile($scope.$storage.currentFilename, null, true);
+                $scope.openFile($scope.$storage.currentFilename, $scope.$storage.currentLine, true);
         }
         initEditor();
         if(typeof Page != 'undefined')

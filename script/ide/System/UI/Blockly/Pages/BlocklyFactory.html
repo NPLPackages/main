@@ -1,0 +1,179 @@
+<template class="container">
+    <div style="position: absolute; left: 0px; top: 0px; height: 40px; width: 100%; z-index: 2; display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex;">
+            <div onclick="SetContentType('block')" class="header-btn" v-bind:style="GetHeaderBtnStyle('block')">定制图块</div>
+            <div onclick="SetContentType('blockly')" class="header-btn" v-bind:style="GetHeaderBtnStyle('blockly')">定制图块编辑器</div>
+            <div onclick="SetContentType('toolbox')" class="header-btn" v-bind:style="GetHeaderBtnStyle('toolbox')">定制工具栏</div>
+
+            <select v-bind:options=LangOptions v-model=CurrentLang placeholder="选择图块类别" onselect=OnSelectLang style="width: 160px; margin-left: 60px;"></select>
+            <div onclick=ClickSaveBlockBtn class="btn" style="width: 60px; height: 30px; color: #cccccc; margin-left: 10px;">保存</div>
+        </div>
+        <div onclick=CloseWindow class="close-btn btn"></div>
+    </div>
+    <div v-show="ContentType == 'block'" style="position: absolute; left: 2px; top: 40px; right: 2px; bottom: 2px; z-index: 1;">
+        <Blockly id="BlocklyEditor" ref="BlocklyEditor" class="blockly-editor" language="block" onchange=OnBlocklyEditorChange></Blockly>
+        <Blockly readonly=true ref="BlocklyPreview" class="blockly-preview" isHideToolBox=true isHideIcons="true"></Blockly>
+        <div class="tab">
+            <div class="tab-nav-item" onclick="ClickTabNavItemBtn('block')" v-bind:style="GetTabNavItemStyle('block')">图块</div>
+            <div class="tab-nav-item" onclick="ClickTabNavItemBtn('toolbox')" v-bind:style="GetTabNavItemStyle('toolbox')">工具栏</div>
+            <div class="tab-nav-item" onclick="ClickTabNavItemBtn('code')" v-bind:style="GetTabNavItemStyle('code')">代码</div>
+        </div>
+        <div v-show="TabIndex == 'block'" class="tab-pane">
+            <div style="position: absolute; left: 0px; top: 4px; right: 0px; z-index: 2; display: flex; align-items: center; justify-content: center; height: 40px;">
+                <select v-model="SearchCategoryName" style="width: 80px;" v-bind:options="SearchCategoryOptions" onselect=SelectSearchCategory></select>
+                <input style="width: 300px; margin-left: 5px;" placeholder="图块类型名" onchange=OnSearchBlockTypeChange></input>
+            </div>
+            <div style="position: absolute; z-index: 1; top: 50px; bottom: 0px; left: 0px; right: 0px; overflow-y: scroll;">
+                <div v-for="block in AllBlockList" style="display: flex; align-items: center; justify-content: space-between; height: 30px;">
+                    <div style="display: flex;">
+                        <div style="margin-left: 8px; width: 210px; text-wrap: none; text-overflow: ellipsis;">{{block.type}}</div>
+                        <div style="width: 50px;">{{block.category}}</div>
+                    </div>
+                    <div style="display: flex;">
+                        <div onclick="ClickEditBlockBtn(block.type)" class="btn" style="width: 60px; height: 20px;">编辑</div>
+                        <div onclick="ClickDeleteBlockBtn(block.type)" class="btn" style="width: 60px; height: 20px;">移除</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div v-show="TabIndex == 'toolbox'" class="tab-pane">
+            <div style="position: absolute; left: 0px; right: 0px; top: 0px; bottom: 30px;">
+                <textarea v-model="ToolBoxXmlText" style="width: 100%; height: 100%;"></textarea>
+            </div>
+            <div onclick=ClickUpdateToolBoxXmlText class="btn" style="position: absolute; left: 0px; right: 0px; bottom: 2px; height: 26px;">更新</div>
+        </div>
+        <div v-show="TabIndex == 'code'" class="tab-pane">
+            <textarea v-model="BlockDefineCode" style="width: 100%; height: 100%;" readonly=true></textarea>
+        </div>
+    </div>
+    <div v-show="ContentType == 'blockly'" style="position: absolute; left: 2px; top: 40px; right: 2px; bottom: 2px;">
+        <Blockly ref="Blockly" class="blockly-editor" onchange=OnBlocklyChange v-bind:language="CurrentLang"></Blockly>
+        <div style="position: absolute; left: 802px; top: 0px; right: 0px; bottom: 0px;">
+            <textarea v-bind:value="BlocklyCode" readonly=true style="width: 100%; height: 100%; background-color: #cccccc;"></textarea>
+        </div>
+    </div>
+    <div v-show="ContentType == 'toolbox'" style="position: absolute; left: 2px; top: 40px; right: 2px; bottom: 2px;">
+        <Blockly ref="BlocklyToolBox" class="blockly-editor" v-bind:language="CurrentLang" style="width: 300px;"></Blockly>
+        <div style="position: absolute; left: 302px; top: 0px; right: 0px; bottom: 0px;">
+            <div style="position: absolute; top: 0px; bottom: 0px; left: 0px; right: 402px; overflow-y: scroll; background-color: #cccccc;">
+                <div style="position: absolute; left: 0px; right: 0px; top: 0px; height: 40px; z-index: 2;">
+                    <select style="width: 100%; height: 100%;" v-bind:options="CategoryOptions" v-model="CategoryName" onselect=OnSelectCategoryName></select>
+                </div>
+                <div style="position: absolute; top: 40px; left: 0px; right: 0px; bottom: 0px; overflow-y: scroll;">
+                    <div v-for="block in ToolBoxBlockList" style="display: flex; align-items: center; margin-top: 8px;">
+                        <div style="margin-left: 8px; width: 260px; text-wrap: none; text-overflow: ellipsis; line-height: 30px;">{{block.blockType}}</div>
+                        <div style="width: 80px; line-height: 30px;">{{block.categoryName}}</div>
+                        <input v-model="block.order" type="number" style="width: 60px;" onblur="OnToolBoxBlockOrderChange(block)"></input>
+                        <div class="btn" style="width: 60px; height: 30px; margin-left: 12px;" onclick="SwitchToolBoxBlockVisible(block)">{{block.hideInToolbox and "隐藏" or "显示"}}</div>
+                    </div>
+                </div>
+            </div>
+            <div style="position: absolute; top: 0px; bottom: 0px; right: 0px; width: 400px; overflow-y: scroll; background-color: #cccccc;">
+                <div v-for="category in ToolBoxCategoryList" style="display: flex; align-items: center; height: 30px; margin-top: 8px;">
+                    <div v-bind:style="GetCategoryColorStyle(category)"></div>
+                    <div style="width: 60px; margin-left: 12px; line-height: 30px;">{{category.name}}</div>
+                    <input style="width: 80px; margin-left: 12px;" v-model="category.color" placeholder="#ffffff" onblur="OnToolBoxCategoryColorChange(category)"></input>
+                    <input style="width: 60px; margin-left: 12px;" v-model="category.order" type="number" onblur="OnToolBoxCategoryOrderChange(category)"></input>
+                    <div class="btn" style="width: 60px; height: 30px; margin-left: 12px;" onclick="SwitchToolBoxCategoryVisible(category)">{{category.hideInToolbox and "隐藏" or "显示"}}</div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</template>
+
+<script type="text/lua" src="%ui%/Blockly/Pages/BlocklyFactory.lua.html">
+RegisterComponent("WindowTitleBar", "%vue%/Components/WindowTitleBar.html");
+
+</script>
+
+<style scoped=true>
+.container {
+    width: 1200px;
+    height: 800px;
+    background-color: #191C13;
+    /* background: url(Texture/Aries/Creator/keepwork/Window/dakuang2_32bits.png#0 0 64 69:26 44 24 22); */
+}
+
+.header-btn {
+    width: 120px;
+    height: 30px;
+    line-height: 30px;
+    text-align: center;
+    border-radius: 5px;
+    color: #e6e6e6;
+}
+.header-btn:hover {
+    color: #ffffff;
+}
+
+.close-btn {
+    margin-top: 5px;
+    margin-right: 20px;
+    width: 22px; 
+    height: 22px; 
+    background-color: #e6e6e6;
+    background: url(Texture/Aries/Creator/keepwork/ggs/dialog/guanbi_22X22_32bits.png#0 0 22 22);
+}
+
+.blockly-editor {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    width: 800;
+    bottom: 0px;
+}
+
+.blockly-preview {
+    position: absolute;
+    left: 802px;
+    top: 0px;
+    right: 0px;
+    height: 200px;
+}
+
+.tab {
+    position: absolute;
+    left: 802px;
+    right: 0px;
+    top: 202px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    background-color: #c8c8c8;
+    border-bottom: 1px solid #ffffff;
+}
+
+.tab-nav-item {
+    margin-left: 10px;
+}
+
+.tab-pane {
+    position: absolute;
+    left: 802px;
+    top: 232px;
+    right: 0px;
+    bottom: 0px;
+    background-color: #c8c8c8;
+    padding: 8px 4px;
+}
+
+.block-form {
+    position: absolute;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+    height: 100px;
+    background-color: #c8c8c8;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.ToolBoxBlockItem {
+    display: flex;
+    align-items: center;
+    margin-top: 8px;
+}
+</style>

@@ -343,10 +343,13 @@ local function GetSingletonTipsStack()
 				alignment = "_ctt",
 				left = 0,
 				top = 80,
-				width = 600,
+				width = 846,
 				height = 400,
-				font = "System;14",
-				spacing = 4,
+				font = "System;18",
+				font_size = 18,
+				LineHeight = 45,
+				LineWidth = 846,
+				spacing = 11,
 				zorder = 10,
 			};
 		end

@@ -61,6 +61,7 @@ function Event:use_static_new()
 	self.new = static_new;
 end
 
+-- return event name (type)
 function Event:GetType() 
 	return self.event_type;
 end

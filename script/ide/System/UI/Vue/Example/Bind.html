@@ -1,0 +1,27 @@
+
+<template class="container">
+    <WindowTitleBar title="测试"></WindowTitleBar>
+    <div>{{text}}</div>
+    <div onclick=OnClick>btn</div>
+</template>
+
+<script type="text/lua">
+RegisterComponent("WindowTitleBar", "%vue%/Components/WindowTitleBar.html");
+
+text = "";
+
+function OnClick()
+    text = os.time() .. "test";
+end
+function OnReady()
+end
+</script>
+
+<style>
+.container {
+    height: 100%; 
+    width: 100%; 
+    padding: 0px 2px 2px 2px;
+    background: url(Texture/Aries/Creator/keepwork/Window/dakuang_32bits.png#0 0 440 93:378 43 33 44);
+}
+</style>

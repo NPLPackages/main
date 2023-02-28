@@ -1,0 +1,141 @@
+<template style="padding: 6px; width: 100%; height: 100%;">
+    <div style="width: 100%; height: 100%; overflow-y: auto;" class="scroll">
+        <div v-for="asset, key in AllAssets" v-bind:class="AssetContainerClass(asset)" onclick=ClickPlayerAsset(asset)>
+            <div v-if="asset.modelFrom" style="position: absolute; left: -1px; top: -4px; width: 157px; height: 41px; font-size: 10px; padding-left: 12px; padding-top: 12px; color: #171717; background: url(Texture/Aries/Creator/keepwork/ggs/user/renwuqiehuan/zibj_157X41_32bits.png#0 0 157 41);">
+                {{asset.modelFrom or ""}}
+            </div>
+            <div class="selected" style="position: absolute; left: 3px; top: 3px; width: 168px; height: 224px; background: url(Texture/Aries/Creator/keepwork/ggs/user/renwuqiehuan/renwubj3_168X224_32bits.png#0 0 168 224);"></div>
+            <div v-bind:style="AssetStyle(asset)"></div>
+            <div class="use-btn"></div>
+        </div>
+    </div>
+</template>
+
+<script type="text/lua">
+local EntityManager = commonlib.gettable("MyCompany.Aries.Game.EntityManager");
+
+local function ResetAvatarIcons()
+    NPL.load("(gl)script/apps/Aries/Creator/Game/Movie/CustomSkinPage.lua");
+    local CustomSkinPage = commonlib.gettable("MyCompany.Aries.Game.Movie.CustomSkinPage");
+    local avtarIcons = GetGlobalScope():Get("AvatarIcons") or {};
+	for i = 1, #CustomSkinPage.category_ds do
+		avtarIcons[i] = {id = "", icon = "", name = ""}; 
+	end
+    GetGlobalScope():Set("AvatarIcons", avtarIcons);
+end
+
+local function ChangePlayerAsset(assetfile, skin)
+
+    LOG.std(nil, 'info', 'ChangePlayerAsset');
+    LOG.std(nil, 'info', 'assetfile', assetfile);
+    LOG.std(nil, 'info', 'skin', skin);
+
+    assetfile = EntityManager.PlayerAssetFile:GetValidAssetByString(assetfile);
+
+    local curAssetFile = MyCompany.Aries.Game.PlayerController:GetMainAssetPath()
+    local curSkin = MyCompany.Aries.Game.PlayerController:GetSkinTexture()
+    if (assetfile and (assetfile~=curAssetFile or skin ~= curSkin)) then
+        GetGlobalScope():Set("MainAsset", assetfile);
+        GetGlobalScope():Set("MainSkin", skin);
+        ResetAvatarIcons();
+        GameLogic.options:SetMainPlayerAssetName(assetfile);
+        GameLogic.options:SetMainPlayerSkins(skin); 
+
+        local playerEntity = GameLogic.GetPlayerController():GetPlayer();
+        if playerEntity then
+            local oldAssetFile = playerEntity:GetMainAssetPath()
+            if(playerEntity.SetModelFile) then
+                playerEntity:SetModelFile(assetfile);
+            else
+                playerEntity:SetMainAssetPath(assetfile);
+            end
+
+            playerEntity:SetSkin(skin);
+            if(math.abs(EntityManager.PlayerAssetFile:GetDefaultScale(oldAssetFile) - playerEntity:GetScaling()) < 0.01) then
+                playerEntity:SetScaling(EntityManager.PlayerAssetFile:GetDefaultScale(assetfile))
+            end
+        end
+    end 
+end 
+
+function ClickPlayerAsset(asset)
+    local userinfo = GetGlobalScope():Get("UserDetail");
+    if (not asset.owned) then
+        -- 如果已近是vip或该物品不需要vip直接返回
+        if (userinfo.vip == 1 or not asset.requireVip) then return end 
+        GameLogic.GetFilters():apply_filters("VipNotice", true, "ChangeAvatarSkin", function()
+            local KeepWorkItemManager = NPL.load("(gl)script/apps/Aries/Creator/HttpAPI/KeepWorkItemManager.lua");
+            if (KeepWorkItemManager.IsVip()) then
+                userinfo.vip = 1;
+                GetAllAssets();
+            end
+		end);
+        return 
+    end
+
+    GlobalScope:Set("AssetSkinGoodsItemId", asset.id);
+    ChangePlayerAsset(asset.modelUrl, asset.skin);
+    UpdatePlayerEntityInfo();
+end
+
+function AssetContainerClass(asset) 
+    return "asset-container " .. (asset.id == AssetSkinGoodsItemId and "used-asset-container" or (asset.owned and "unused-asset-container" or ""));
+end
+
+function AssetStyle(asset)
+    local icon = asset.icon;
+    if (not string.match(icon, "#%d+%s+%d+%s+%d+%s+%d+%s*")) then
+        <!-- icon = icon .. "#0 0 108 176"; -->
+        icon = icon .. "#0 0 125 195";
+    end
+    return string.format("width: 108px; height: 176px; background:url(%s)", icon);
+end
+
+function OnReady()
+end 
+
+function OnAttrValueChange()
+end
+</script>
+
+<style>
+.asset-container {
+    display: inline-flex; 
+    justify-content: center;
+    align-items: center;
+    width: 174px; 
+    height: 235px; 
+    margin-right: 20px;
+    background:url(Texture/Aries/Creator/keepwork/ggs/user/renwuqiehuan/renwubj4_174X235_32bits.png#0 0 174 235);
+}
+
+.used-asset-container {
+    background:url(Texture/Aries/Creator/keepwork/ggs/user/renwuqiehuan/renwubj_174X235_32bits.png#0 0 174 235);
+}
+
+.selected {
+    visibility: hidden;
+}
+
+.used-asset-container>.selected {
+    visibility: visible;
+}
+
+.unused-asset-container {
+    background:url(Texture/Aries/Creator/keepwork/ggs/user/renwuqiehuan/renwubj2_174X235_32bits.png#0 0 174 235);
+}
+
+.use-btn {
+    visibility: hidden;
+    position: absolute; 
+    right: 15px; 
+    bottom: 15px; 
+    width: 30px; 
+    height: 14px; 
+    background: url(Texture/Aries/Creator/keepwork/ggs/user/renwuqiehuan/zi_shiyong_30X14_32bits.png#0 0 30 14);
+}
+
+.unused-asset-container .use-btn {
+    visibility: visible;
+}
+</style>

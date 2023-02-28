@@ -234,7 +234,23 @@ function SceneContext:handleMouseEvent(event)
 			self:notify(self, event);
 		end
 	end
-	
+end
+
+-- @param functionName: function name
+-- return true, if the method FunctionName exist and invoked.
+function SceneContext:TryInvokeManipulatorMethod(functionName, ...)
+	local hasInvoked;
+	if(self.manipulators) then
+		for i, manip in pairs(self.manipulators) do
+			if(manip.enabled and type(manip[functionName]) == "function") then
+				hasInvoked = true;
+				if(manip[functionName](manip, ...)) then
+					break;
+				end
+			end
+		end
+	end
+	return hasInvoked
 end
 
 function SceneContext:handleKeyEvent(event)

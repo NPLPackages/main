@@ -1,0 +1,134 @@
+<template>
+    <div style="padding-left:10px; padding-right:20px; height:39px; padding-top: 10px;">
+        <div style="float: left; width:128px; height:64px; margin-top:-28px; background: url(Texture/Aries/Creator/keepwork/ggs/user/biaoti_128X64_32bits.png);"></div>
+        <div onclick=ClickHelp style="float: left; width:32px; height: 32px; margin-top: -6px; margin-left: -16px; background: url(Texture/Aries/Creator/keepwork/Help/btn_32X32_32bits.png#0 0 32 32);"></div>
+        <div onclick=BeforeClose class="btn" style="float: right; background:url(Texture/Aries/Creator/keepwork/ggs/dialog/guanbi_22X22_32bits.png#0 0 22 22); width:20px; height:20px; border-radius: 0px;"></div>
+    </div>
+</template>
+
+<script type="text/lua">
+    local Keepwork = NPL.load("(gl)script/apps/Aries/Creator/HttpAPI/Keepwork.lua");
+    local KeepWorkItemManager = NPL.load("(gl)script/apps/Aries/Creator/HttpAPI/KeepWorkItemManager.lua");
+    NPL.load("(gl)script/apps/Aries/Creator/Game/Entity/CustomCharItems.lua");
+    local CustomCharItems = commonlib.gettable("MyCompany.Aries.Game.EntityManager.CustomCharItems");
+    local CheckSkin = NPL.load("(gl)Mod/GeneralGameServerMod/UI/Vue/Page/User/CheckSkin.lua");
+
+    function ClickHelp()
+        NPL.load("(gl)script/apps/Aries/Creator/Game/Tasks/Help/HelpPage.lua").Show("role");
+    end 
+
+    function ChangeAsset(assetfile, skin)
+        LOG.std(nil, 'info', 'ChangeAsset');
+        LOG.std(nil, 'info', 'assetfile', assetfile);
+        LOG.std(nil, 'info', 'skin', skin);
+        -- 如果原本就是裸装 那就不让变成裸装了
+        local defaul_skin = CustomCharItems:SkinStringToItemIds(CustomCharItems.defaultSkinString) 
+        local user_skin = MyCompany.Aries.Game.PlayerController:GetSkinTexture()
+        local DEFAULT_HEAD_SKIN = "80001;";
+        if (skin == defaul_skin or skin == DEFAULT_HEAD_SKIN) and (user_skin == "" or user_skin == defaul_skin) then
+            return
+        end
+
+        local playerEntity = GameLogic.GetPlayerController():GetPlayer();
+
+        if playerEntity then
+            playerEntity:SetMainAssetPath(assetfile);
+            playerEntity:SetSkin(skin); 
+        end
+
+        GameLogic.options:SetMainPlayerAssetName(assetfile);
+        GameLogic.options:SetMainPlayerSkins(skin);
+        
+        GlobalScope:Set("AssetSkinGoodsItemId", 0);
+        UpdatePlayerEntityInfo();
+    end
+
+    function close()
+        if (isAuthUser) then
+            local assetfile = GetGlobalScope():Get("MainAsset");
+            local skin = GetGlobalScope():Get("MainSkin");
+
+            LOG.std(nil, 'info', 'function close');
+            LOG.std(nil, 'info', 'assetfile', assetfile);
+            LOG.std(nil, 'info', 'skin', skin);
+
+            -- 切换套装的情况直接关闭
+            if (assetfile and skin and skin ~= "" and type(skin) == "string") then
+                if (assetfile == CustomCharItems.defaultModelFile and not CustomCharItems:CheckAvatarExist(skin)) then
+                    skin = CustomCharItems:ChangeSkinStringToItems(skin);
+                    local GameLogic = commonlib.gettable("MyCompany.Aries.Game.GameLogic")
+                
+                    if (Keepwork:IsExperienceVipCloth()) then 
+                        skin = Keepwork:CheckSkin(skin);
+                        ChangeAsset(assetfile, skin)
+                        if skin == CheckSkin.DEFAULT_SKIN then
+                            local defaul_asset = GlobalScope:Get("DefaulMainAsset")
+                            if defaul_asset and defaul_asset ~= "" and defaul_asset ~= CustomCharItems.defaultModelFile then
+                                ChangeAsset(defaul_asset, skin)
+                            end
+                        end
+                        
+                        GameLogic.GetFilters():apply_filters("role_page_close");
+                        CloseWindow();
+                        return ;
+                    end 
+
+                    local isVip = KeepWorkItemManager.IsVip();
+                    if(isVip) then
+                        -- VIP需要清除未拥有的活动商品skin
+                        skin = CheckSkin.RemoveActivityItems(skin);
+                    else
+                        -- 清除未拥有的活动商品skin
+                        skin = CheckSkin.RemoveAllUnvalidItems(skin);
+                    end
+
+                    if (skin ~= nil and skin ~= "") then
+                        ChangeAsset(assetfile, skin)
+                    end
+
+                    -- 默认皮肤
+                    if skin == CheckSkin.DEFAULT_SKIN then
+                        local defaul_asset = GlobalScope:Get("DefaulMainAsset")
+                        if defaul_asset and defaul_asset ~= "" and defaul_asset ~= CustomCharItems.defaultModelFile then
+                            ChangeAsset(defaul_asset, skin)
+                        end
+                    end
+                end
+            end
+        end
+
+        CloseWindow();
+        GameLogic.GetFilters():apply_filters("role_page_close");
+    end
+
+    function CloseWithoutChange()
+        CloseWindow();
+    end;
+
+    function BeforeClose()
+        if(isAuthUser) then
+            local currentSkin = GetGlobalScope():Get("MainSkin");
+
+            if(currentSkin == nil or currentSkin == "") then
+                CloseWindow();
+                GameLogic.GetFilters():apply_filters("role_page_close");
+                return;
+            end;
+
+            LOG.std(nil, 'info', 'GetGlobalScope():Get("MainSkin")', currentSkin);
+            CheckSkin.Show(close, currentSkin, CloseWithoutChange);
+        else
+            CloseWithoutChange()
+        end
+    end;
+</script>
+
+<style>
+    .btn {
+        background-color: #e6e6e6;
+    }
+
+    .btn:hover {
+        background-color: #ffffff;
+    }
+</style>

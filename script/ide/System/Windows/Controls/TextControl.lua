@@ -19,6 +19,7 @@ local UniString = commonlib.gettable("System.Core.UniString");
 local Application = commonlib.gettable("System.Windows.Application");
 local Keyboard = commonlib.gettable("System.Windows.Keyboard");
 local FocusPolicy = commonlib.gettable("System.Core.Namespace.FocusPolicy");
+local Color = commonlib.gettable("System.Core.Color");
 local Point = commonlib.gettable("mathlib.Point");
 
 local TextControl = commonlib.inherit(commonlib.gettable("System.Windows.UIElement"), commonlib.gettable("System.Windows.Controls.TextControl"));
@@ -32,6 +33,7 @@ TextControl:Property({"StaticCursorColor", "#00000033", auto=true})
 TextControl:Property({"EmptyTextColor", "#888888", auto=true})
 TextControl:Property({"SelectedBackgroundColor", "#99c9ef", auto=true})
 TextControl:Property({"CurLineBackgroundColor", "#e5ebf1e0", auto=true})
+TextControl:Property({"FlashLineBackgroundColor", "#ffff00", auto=true})
 TextControl:Property({"AlwaysShowCurLineBackground", true, "isAlwaysShowCurLineBackground", "SetAlwaysShowCurLineBackground", auto=true})
 TextControl:Property({"m_cursor", 0, "cursorPosition", "setCursorPosition"})
 TextControl:Property({"cursorVisible", false, "isCursorVisible", "setCursorVisible"})
@@ -48,6 +50,7 @@ TextControl:Property({"AutoTabToSpaces", true, "IsAutoTabToSpaces", "SetAutoTabT
 TextControl:Property({"EmptyText", nil, "GetEmptyText", "SetEmptyText", auto=true})
 TextControl:Property({"language", nil, "Language", "SetLanguage", auto=true})
 TextControl:Property({"m_bMoveViewWhenAttachWithIME", false, "isMoveViewWhenAttachWithIME", "setMoveViewWhenAttachWithIME"});
+TextControl:Property({"bAutoVirtualKeyboard", false, "isAutoVirtualKeyboard", "setAutoVirtualKeyboard"});
 
 
 --TextControl:Signal("SizeChanged",function(width,height) end);
@@ -143,6 +146,14 @@ function TextControl:isMoveViewWhenAttachWithIME()
 	return self.m_bMoveViewWhenAttachWithIME;
 end
 
+function TextControl:setAutoVirtualKeyboard(bAuto)
+	self.bAutoVirtualKeyboard = bAuto;
+end
+
+function TextControl:isAutoVirtualKeyboard()
+	return self.bAutoVirtualKeyboard;
+end
+
 function TextControl:CursorPos()
 	return {line = self.cursorLine, pos = self.cursorPos};
 end
@@ -183,27 +194,65 @@ function TextControl:PageElement()
 	return self.parent:PageElement();
 end
 
-function TextControl:attachWithIME()
+function TextControl:attachWithIME(force)
 	-- android/ios external keyboard requires IME to work, so we will attach IME, even if IsInputMethodEnabled is false
-	if(self:IsInputMethodEnabled() and System.os.GetPlatform() == "win32") then
+	if (self:IsInputMethodEnabled() and System.os.GetPlatform() == "win32") then
 		return;
 	end
-	
+
+	local sel_start, sel_end = self:GetGloablSelectionPos();
+
 	if (self:isMoveViewWhenAttachWithIME()) then
-		local pos = Point:new_from_pool(0, self:y() + self:height());
-		pos = self:mapToGlobal(pos);
-		
-		Keyboard:attachWithIME(pos:y());
+		if (System.os.CompareParaEngineVersion("1.3.1.0")) then
+			if (self.previousCursorLine ~= self.cursorLine or force) then
+				self.previousCursorLine = self.cursorLine;
+	
+				local ctrlBottom = ((self.cursorLine - 1) * self.lineHeight) + 95;
+				ctrlBottom = ctrlBottom - self:ClipRegion():y();
+	
+				Keyboard:attachWithIME(ctrlBottom, self:GetText(), sel_start, sel_end);
+			end
+		else
+			local pos = Point:new_from_pool(0, self:y() + self:height());
+			pos = self:mapToGlobal(pos);
+
+			Keyboard:attachWithIME(pos:y(),self:GetText(),sel_start,sel_end);
+		end
 	else
-		Keyboard:attachWithIME(nil);
+		Keyboard:attachWithIME(nil, self:GetText(), sel_start, sel_end);
 	end	
+end
+
+--用于在Android环境下，设置selection
+function TextControl:GetGloablSelectionPos()
+	local sel_start = 0;
+	local sel_end = 0
+	if self.m_selPosStart==0 and self.m_selLineEnd==0 and self.m_selPosStart==0 and self.m_selPosEnd==0 then
+		sel_start = self.cursorPos
+		for i=1,self.cursorLine-1 do 
+			sel_start = sel_start + self:GetLineText(i):length() + 1 --多加一个\n的
+		end
+		sel_end = sel_start;
+	else
+		sel_start = self.m_selPosStart;
+		sel_end = self.m_selPosEnd
+		for i=1,self.m_selLineStart-1 do 
+			sel_start = sel_start + self:GetLineText(i):length() + 1 --多加一个\n的
+		end
+		for i=1,self.m_selLineEnd-1 do 
+			sel_end = sel_end + self:GetLineText(i):length() + 1 --多加一个\n的
+		end
+	end
+	
+
+	return sel_start,sel_end
 end
 
 function TextControl:detachWithIME()
 	if (self:isMoveViewWhenAttachWithIME()) then
 		local pos = Point:new_from_pool(0, self:y() + self:height());
 		pos = self:mapToGlobal(pos);
-		
+
 		Keyboard:detachWithIME(pos:y());
 	else
 		Keyboard:detachWithIME(nil);
@@ -213,9 +262,15 @@ end
 -- virtual: 
 function TextControl:focusInEvent(event)
 	self:setCursorVisible(true);
-	self:setCursorBlinkPeriod(Application:cursorFlashTime());
-	
-	self:attachWithIME();
+	self:setCursorBlinkPeriod(Application:cursorFlashTime());	
+
+	if self.bAutoVirtualKeyboard and System.options.IsTouchDevice then
+		NPL.load("(gl)script/apps/Aries/Creator/Game/GUI/TouchVirtualKeyboardIcon.lua");
+		local TouchVirtualKeyboardIcon = commonlib.gettable("MyCompany.Aries.Game.GUI.TouchVirtualKeyboardIcon");
+		TouchVirtualKeyboardIcon.GetSingleton():ShowKeyboard(true)
+	else
+		self:attachWithIME();
+	end
 	
 	TextControl._super.focusInEvent(self, event)
 end
@@ -223,7 +278,13 @@ end
 -- virtual: 
 function TextControl:focusOutEvent(event)
 
-	self:detachWithIME();
+	if self.bAutoVirtualKeyboard and System.options.IsTouchDevice then
+		NPL.load("(gl)script/apps/Aries/Creator/Game/GUI/TouchVirtualKeyboardIcon.lua");
+		local TouchVirtualKeyboardIcon = commonlib.gettable("MyCompany.Aries.Game.GUI.TouchVirtualKeyboardIcon");
+		TouchVirtualKeyboardIcon.GetSingleton():ShowKeyboard(false)
+	else
+		self:detachWithIME();
+	end
 	
 	self:setCursorVisible(false);
 	self:setCursorBlinkPeriod(0);
@@ -539,7 +600,17 @@ function TextControl:mousePressEvent(e)
 		self.isLeftMouseDown = true;
 		
 		if (self:hasFocus() and not e.isDoubleClick) then
-			self:attachWithIME();
+			if self.bAutoVirtualKeyboard and System.options.IsTouchDevice then
+				NPL.load("(gl)script/apps/Aries/Creator/Game/GUI/TouchVirtualKeyboardIcon.lua");
+				local TouchVirtualKeyboardIcon = commonlib.gettable("MyCompany.Aries.Game.GUI.TouchVirtualKeyboardIcon");
+				TouchVirtualKeyboardIcon.GetSingleton():ShowKeyboard(true)
+			else
+				if (System.os.CompareParaEngineVersion("1.3.1.0")) then
+					self:attachWithIME();
+				else
+					self:attachWithIME(true);
+				end
+			end
 		end
 	end
 end
@@ -547,6 +618,26 @@ end
 function TextControl:mouseReleaseEvent(event)
 	self.isLeftMouseDown = false;
 	if(event:button() == "right") then
+		-- move cursor to point
+		if (not self:hasSelectedText()) then
+			local clip = self:ClipRegion();
+			if(clip:contains(event:pos())) then
+				local line = self:yToLine(event:pos():y());
+				local text = self:GetLineText(line);
+				local pos = self:xToPos(text, event:pos():x());
+				if(self:IsAutoTabToSpaces()) then
+					if(text) then
+						local firstWordPos = text:getFirstWordPosition()
+						if(firstWordPos > pos) then
+							pos = firstWordPos;
+						end
+					end
+				end
+				local mark = event.shift_pressed;
+				self:moveCursor(line,pos,mark,true);
+				self:docPos();
+			end
+		end
 		self:rightClicked(event);
 	end
 	event:accept();
@@ -611,6 +702,15 @@ function TextControl:inputMethodEvent(event)
 	end
 
 	local commitString = event:commitString();
+	
+	if (System.os.GetPlatform() == "ios" or
+        System.os.GetPlatform() == "android") then
+		if (commitString == "[#backspace]") then
+			self:backspace();
+			event:ignore();
+			return;
+		end
+	end
 
 	local char1 = string.byte(commitString, 1);
 	if(char1 <= 31) then
@@ -637,8 +737,33 @@ function TextControl:keyPressEvent(event)
 		if(not self:isReadOnly()) then
 			if(self:hasAcceptableInput()) then
 				--self:accepted(); -- emit
+
 				self:newLine(mark);
 				self:userTyped(self);
+
+				if (System.os.CompareParaEngineVersion("1.3.1.0")) then
+					if (System.os.GetPlatform() == "ios" or
+						System.os.GetPlatform() == "android") then
+						if (self.cursorLine == #self.items and
+							#self.items > 1) then
+							self:moveCursor(
+								self.cursorLine - 1,
+								self.items[self.cursorLine - 1].text:length(),
+								false,
+								true
+							);
+	
+							self:newLine(mark);
+							self:userTyped(self);
+						end
+	
+						self.previousCursorLine = self.cursorLine;
+						local ctrlBottom = ((self.cursorLine - 1) * self.lineHeight) + 95;
+						ctrlBottom = ctrlBottom - self:ClipRegion():y();
+	
+						Keyboard:attachWithIME(ctrlBottom, self:GetText(), nil, nil);
+					end
+				end
 			end
 		end
 	elseif(keyname == "DIK_BACKSPACE") then
@@ -940,12 +1065,14 @@ function TextControl:scrollX(offset_x)
 end
 
 function TextControl:scrollY(offset_y)
-	if(offset_y % self.lineHeight ~= 0) then
+	if (offset_y % self.lineHeight ~= 0) then
 		local tmp_offset = math.ceil(math.abs(offset_y) / self.lineHeight) * self.lineHeight;
-		offset_y = if_else(offset_y >0 ,tmp_offset ,-tmp_offset);
+		offset_y = if_else(offset_y > 0 ,tmp_offset ,-tmp_offset);
 	end
+
 	local min_y = self.parent:ViewRegionOffsetY();
-	local y = math.min(min_y,self:y() + offset_y);
+
+	local y = math.min(min_y, self:y() + offset_y);
 	self:setY(y, true);
 end
 
@@ -1381,8 +1508,8 @@ function TextControl:RemoveTextNotAddToCommand(startLine, startPos, endLine, end
 	self:RemoveText(startLine, startPos, endLine, endPos, false, moveCursor);
 end
 
-function TextControl:RemoveText(startLine, startPos, endLine, endPos , addToCommand, moveCursor)
-	if(startLine == endLine and startPos == endPos ) then
+function TextControl:RemoveText(startLine, startPos, endLine, endPos, addToCommand, moveCursor)
+	if (startLine == endLine and startPos == endPos) then
 		return;
 	end
 
@@ -1393,7 +1520,7 @@ function TextControl:RemoveText(startLine, startPos, endLine, endPos , addToComm
 
 	local text = self:scopeText(startLine, startPos, endLine, endPos);
 
-	if(startLine == endLine) then
+	if (startLine == endLine) then
 		self:lineInternalRemove(self:GetLine(startLine), startPos+1, endPos - startPos);
 	else
 		local firstLine = self:GetLine(startLine);
@@ -1401,23 +1528,25 @@ function TextControl:RemoveText(startLine, startPos, endLine, endPos , addToComm
 		local firstLineText = firstLine.text;
 		local lastLineText = lastLine.text;
 		local insertText = "";
+
 		for i = endLine, startLine, -1 do
-			if(i == startLine) then
-				self:lineInternalRemove(firstLine, startPos+1, firstLineText:length() - startPos)
+			if (i == startLine) then
+				self:lineInternalRemove(firstLine, startPos + 1, firstLineText:length() - startPos)
 				self:lineInternalInsert(firstLine, firstLineText:length(), insertText)
-			elseif(i == endLine) then
-				insertText = lastLineText:substr(endPos+1, lastLineText:length());
+			elseif (i == endLine) then
+				insertText = lastLineText:substr(endPos + 1, lastLineText:length());
 				self:RemoveItem(i);
 			else
 				self:RemoveItem(i);
 			end
 		end
 	end
-	if(moveCursor) then
+
+	if (moveCursor) then
 		self:moveCursor(startLine, startPos, false, true);
 	end
 
-	if(addToCommand) then
+	if (addToCommand) then
 		self:addCommand(Command:new():init("Remove", self:CursorPos(), text, selStart, selEnd, moveCursor));
 	end	
 end
@@ -1436,29 +1565,37 @@ function TextControl:backspace()
 		self:separate();
         self:removeSelectedText();
     else
-		if(self:IsAutoTabToSpaces()) then
+		if (self:IsAutoTabToSpaces()) then
 			local text = self:GetLineText(self.cursorLine);
-			if(text and self.cursorPos>0 and self.cursorPos<=text:getFirstWordPosition())then
-				local newCursorPos = math.max(0, self.cursorPos-tab_len);
-				newCursorPos = math.ceil(newCursorPos/tab_len)*tab_len;
-				self:moveCursor(self.cursorLine, newCursorPos, true,true);
+
+			if (text and
+				self.cursorPos > 0 and
+				self.cursorPos <= text:getFirstWordPosition()) then
+				local newCursorPos = math.max(0, self.cursorPos - tab_len);
+				newCursorPos = math.ceil(newCursorPos / tab_len) * tab_len;
+
+				self:moveCursor(self.cursorLine, newCursorPos, true, true);
 				self:del();
 				return;
 			end
 		end
+
 		self:internalDelete(true);
     end
     --self:finishChange(priorState);
 end
 
 function TextControl:internalDelete(wasBackspace)
-	if(self.cursorLine == 1 and self.cursorPos == 0 and wasBackspace) then
+	if (self.cursorLine == 1 and self.cursorPos == 0 and wasBackspace) then
 		return;
 	end
 
 	local lastLineIndex = #self.items;
 	local lastLineLength = self:GetLineText(lastLineIndex):length();
-	if(self.cursorLine == lastLineIndex and self.cursorPos == lastLineLength and not wasBackspace) then
+
+	if (self.cursorLine == lastLineIndex and
+		self.cursorPos == lastLineLength and
+		not wasBackspace) then
 		return;
 	end
 
@@ -1466,17 +1603,28 @@ function TextControl:internalDelete(wasBackspace)
 	local startLine, startPos, endLine, endPos;
 	local anchorLine, anchorPos;
 
-	if(wasBackspace) then
-		if(self.cursorPos > 0) then
+	if (wasBackspace) then
+		if (self.cursorPos > 0) then
 			anchorLine = self.cursorLine;
 			anchorPos = self.cursorPos - 1;
 		else
 			anchorLine = self.cursorLine - 1;
 			anchorPos = self:GetLineText(anchorLine):length();
+
+			if (System.os.CompareParaEngineVersion("1.3.1.0")) then
+				if (System.os.GetPlatform() == "ios" or
+					System.os.GetPlatform() == "android") then
+					local ctrlBottom = (anchorLine * self.lineHeight) + 95;
+					ctrlBottom = ctrlBottom - self:ClipRegion():y();
+	
+					Keyboard:attachWithIME(ctrlBottom, self:GetText(), nil, nil);
+				end
+			end
 		end
 	else
 		local len = self:GetLineText(self.cursorLine):length();
-		if(self.cursorPos < len) then
+
+		if (self.cursorPos < len) then
 			anchorLine = self.cursorLine;
 			anchorPos = self.cursorPos + 1;
 		else
@@ -1485,7 +1633,7 @@ function TextControl:internalDelete(wasBackspace)
 		end
 	end
 
-	if(anchorLine == self.cursorLine) then
+	if (anchorLine == self.cursorLine) then
 		startLine = anchorLine;
 		startPos = math.min(anchorPos, self.cursorPos);
 		endLine = anchorLine;
@@ -1493,7 +1641,8 @@ function TextControl:internalDelete(wasBackspace)
 	else
 		startLine = math.min(anchorLine, self.cursorLine);
 		endLine = math.max(anchorLine, self.cursorLine);
-		if(startLine == anchorLine) then
+
+		if (startLine == anchorLine) then
 			startPos = anchorPos;
 			endPos = self.cursorPos;
 		else
@@ -1901,17 +2050,17 @@ function TextControl:DrawTextScaledWithPosition(painter, x, y, text, font, color
 	painter:DrawTextScaled(x, y, text, scale);
 end
 
-function TextControl:LanguageFormat(lineItem)
+function TextControl:LanguageFormat(lineItem, lineNum)
 	if(self.language and lineItem.changed) then
-		self.syntaxAnalyzer = self.syntaxAnalyzer or SyntaxAnalysis.CreateAnalyzer(self.language);
+		self.syntaxAnalyzer = self.syntaxAnalyzer or SyntaxAnalysis.CreateAnalyzer(self);
 		if(not self.syntaxAnalyzer) then
 			return;
 		end
-
+		
 		lineItem.highlightBlocks = {};
 		
 		local uniStr = lineItem.text;
-		for token in self.syntaxAnalyzer:GetToken(uniStr) do
+		for token in self.syntaxAnalyzer:GetToken(lineItem, lineNum) do
 			if(token.type) then
 				-- we will add non-token to highlight blocks as well. 
 				local count = #(lineItem.highlightBlocks);
@@ -1958,6 +2107,29 @@ function TextControl:ApplyCss(css)
 	self:SetLineHeight(css["line-height"]);
 end
 
+-- @param flash the given line with a duration
+-- @param lineNumber: line number to flash
+-- @param duration: default to 1000 milli seconds. 
+function TextControl:FlashLine(lineNumber, duration)
+	self.flashLineNumber = lineNumber;
+	self.flashLineStartTime = commonlib.TimerManager.GetCurrentTime();
+	self.flashLineDuration = duration or 1000;
+end
+
+-- return current flash line and nil if not exist. 
+-- @return lineNumber, percentage of duration in [0,1] range
+function TextControl:GetFlashLine()
+	if(self.flashLineNumber) then
+		local curTime = commonlib.TimerManager.GetCurrentTime();
+		local percentage = (curTime-self.flashLineStartTime) / self.flashLineDuration
+		if(percentage < 1) then
+			return self.flashLineNumber, percentage
+		else
+			self.flashLineNumber = nil;
+		end
+	end
+end
+
 function TextControl:GetCursorPositionInClient()
 	local cursor_x = self:cursorToX();
 	local cursor_y = (self.cursorLine - 1) * self.lineHeight;
@@ -1966,6 +2138,10 @@ end
 
 function TextControl:GetFromLine()
 	return self.from_line
+end
+
+function TextControl:GetToLine()
+	return self.to_line
 end
 
 function TextControl:SetFromLine(from_line)
@@ -1995,6 +2171,16 @@ function TextControl:paintEvent(painter)
 		-- the curor line backgroud
 		local curline_x, curline_y = 0, (self.cursorLine - 1) * self.lineHeight;
 		painter:SetPen(self:GetCurLineBackgroundColor());
+		painter:DrawRect(self:x() + curline_x, self:y() + curline_y, self:width(), self.lineHeight);
+	end
+
+	local flashLineNumber, flashPercent = self:GetFlashLine()
+	if(flashLineNumber and self.from_line<=flashLineNumber and flashLineNumber<=self.to_line ) then
+		-- the flash line backgroud
+		local curline_x, curline_y = 0, (flashLineNumber - 1) * self.lineHeight;
+		local alpha = 1 - (flashPercent*2-1)^2;
+		local color = Color.ChangeOpacity(self:GetFlashLineBackgroundColor(), math.floor(alpha*255))
+		painter:SetPen(color);
 		painter:DrawRect(self:x() + curline_x, self:y() + curline_y, self:width(), self.lineHeight);
 	end
 
@@ -2075,8 +2261,8 @@ function TextControl:paintEvent(painter)
 			local item = self.items:get(i);	
 			local text = item.text;
 			local next_block;
-
-			self:LanguageFormat(item);
+			
+			self:LanguageFormat(item, i);
 
 			if(item.highlightBlocks and next(item.highlightBlocks)) then
 				-- this line have highlight blocks;				
@@ -2133,4 +2319,8 @@ function TextControl:paintEvent(painter)
 		painter:SetPen(self:GetStaticCursorColor());
 		painter:DrawRect(self:x() + cursor_x, self:y() + cursor_y, self.m_cursorWidth, self.lineHeight);
 	end
+end
+
+function TextControl:GetItems()
+	return self.items
 end

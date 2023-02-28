@@ -1,0 +1,28 @@
+<template class="container" style="width:255px; padding:16px; background: url(Texture/Aries/Creator/keepwork/Window/tooltip/tipbj_32bits.png:14 14 14 14);">
+    <div style="color:#ffffff; font-size:16px; width:100%" class="center">{{goods.name}}</div>
+    <div class="center"><div v-bind:style="GetIconStyle()"></div></div>
+    <div style="margin-top:8px; color:#c7c7c7; font-size:12px; width: 100%; white-space: pre;" class="center">{{goods.desc}}</div>
+</template>
+
+<script type="text/lua">
+
+goods = {};
+
+function GetIconStyle()
+    return string.format("margin-top: 2px; width: 128px; height: 64px; background: url(%s);", goods.icon);
+end 
+
+function OnAttrValueChange()
+    goods = GetAttrValue("goods", {});
+end
+
+</script>
+
+<style scoped=true>
+.goods-tooltip {
+    position: fixed;
+    left: -10000px;
+    top: -10000px;
+    z-index: 100;
+}
+</style>

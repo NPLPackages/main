@@ -102,6 +102,7 @@ function Map3DSystem.init(params)
 	--ParaAudio.EnableAudioBank("Kids");
 	
 	-- TODO: Play back ground music?
+	Map3DSystem.options.InitChannelOptions();
 	return 0;
 end
 				

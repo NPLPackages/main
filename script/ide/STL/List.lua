@@ -10,11 +10,13 @@ Use Lib:
 NPL.load("(gl)script/ide/STL.lua");
 ---+++ List example
 local list = commonlib.List:new();
-list:add({"item1"})
-list:add({"item2"})
-list:add({"item3"})
+list:add({4})
+list:add({3})
+list:add({2})
+list:add({1})
 local item = list:first();
 list:remove(item.next);
+list:sort(function(item1, item2) return item1[1] <= item2[1]; end)
 item = list:first();
 while (item) do
 	commonlib.echo(item[1])
@@ -287,56 +289,29 @@ function List:Clone()
 	return new_list;
 end
 
-local function less(item1, item2)
+local function lessOrEqual(item1, item2)
 	return item1[1] <= item2[1];
 end
 
+-- bubble sort: stable sort algorithm.  
+-- @param compFun: a function that returns true, if two items are in order. Prefer using <= or >=.
 function List:sort(compFun)
-	compFun = compFun or less;
-	local begin_item = self:first();
-	while(begin_item) do
-		local before_begin_item = begin_item.prev;
-		local next_item = self:next(begin_item);
-		while(next_item) do
-			local next_next_item = next_item.next;		
-			if(not compFun(begin_item, next_item)) then
-				self:swap(begin_item, next_item);
-				if(before_begin_item) then
-					begin_item = self:next(before_begin_item);
-				else
-					begin_item = self:first();
-				end
-			end
-			next_item = next_next_item;
-		end
-		begin_item = self:next(begin_item);
-	end
-end
+	compFun = compFun or lessOrEqual;
 
---[[ test and example
-function List:TestMe()
-	-- case1: add, remove
-	commonlib.applog("should export item1 item3")
-	local list = commonlib.List:new();
-	list:add({"item1"})
-	list:add({"item2"})
-	list:add({"item3"})
-	local item = list:first();
-	list:remove(item.next);
-	item = list:first();
-	while (item) do
-		commonlib.echo(item[1])
-		item = list:next(item)
-	end
-	
-	-- case2: clear, size
-	commonlib.applog("should export ok1 and size=1")
-	list:clear();
-	list:add({"ok1"})
-	item = list:first();
-	while (item) do
-		commonlib.echo(item[1])
-		item = list:next(item)
-	end
-	commonlib.echo({size=list:size()})
-end]]
+	local last = self.tail;
+    while (last) do
+		local node = self.head;
+		while (node ~= last) do
+			local next = node.next
+			if (not compFun(node, next)) then -- swap
+				self:swap(node, next);
+				if(next == last) then
+					last = node; -- tricky: break it
+				end
+			else
+				node = next;
+			end
+		end
+		last = last.prev; -- shorten the range that must be bubbled through
+    end
+end

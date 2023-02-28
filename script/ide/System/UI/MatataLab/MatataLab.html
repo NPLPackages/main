@@ -1,0 +1,38 @@
+<template style="width: 100%; height: 100%; background-color: #ffffff00;">
+    <div style="width: 100%; height: 100%;">
+        <matatalab  style="width: 100%; height: 100%;"></matatalab>
+        <div class="title">{{matatalab.title or "月球探索"}}</div>
+        <div class="description">{{matatalab.description or "关卡介绍"}}</div>
+    </div>
+</template>
+
+<script type="text/lua">
+_G.matatalab = _G.matatalab or {};
+</script>
+
+<style scoped="true">
+.title {
+    position: absolute;
+    right: 80px;
+    top: 0px;
+    height: 44px;
+    line-height: 44px;
+    width: 250px;
+    z-index: 1;
+    color: #ffffff;
+    font-size: 30px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.description {
+    position: absolute;
+    right: 60px;
+    top: 80px;
+    height: 70px;
+    width: 280px;
+    z-index: 1;
+    color: #ffffff;
+    font-size: 20px;
+}
+</style>

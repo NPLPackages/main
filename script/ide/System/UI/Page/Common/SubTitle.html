@@ -1,0 +1,83 @@
+
+<template class="container">
+    <div class="SubTitle" v-bind:style="style">
+        {{linetext or ""}}
+    </div>
+</template>
+
+<script type="text/lua">
+local CommonLib = NPL.load("Mod/GeneralGameServerMod/CommonLib/CommonLib.lua");
+
+local texts = nil;
+
+linetext = "";
+
+local function PlayVoiceText(texts, index, callback)
+    index = index or 1;
+    local text = texts[index];
+    if (not text) then 
+        if (type(callback) == "function") then callback() end
+        return ;
+    end
+    linetext = text;
+    CommonLib.PlayVoiceText(text, nil, nil, function(sound_time)
+        if (sound_time == 0) then
+            if (type(callback) == "function") then callback() end
+            return ;
+        end
+        SetTimeout(function()
+            PlayVoiceText(texts, index + 1, callback);
+        end, sound_time)
+    end);
+end
+
+local function ShowText(text, index, callback)
+    index = index or 1;
+    local text = texts[index];
+    if (not text) then 
+        if (type(callback) == "function") then callback() end
+        return ;
+    end
+    linetext = text;
+    SetTimeout(function()
+        ShowText(texts, index + 1, callback);
+    end, interval or 1000);
+
+end
+
+local function Finish()
+    if (not isAutoClose) then return end
+    CloseWindow();
+end
+
+function OnReady()
+    if (not text) then return end
+    texts = commonlib.split(string.gsub(text, "\r", ""), "\n");
+    if (isPlayVoice) then
+        PlayVoiceText(texts, nil, Finish);
+    else 
+        ShowText(texts, nil, Finish);
+    end
+end 
+
+</script>
+
+<style>
+.SubTitle {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-size: 24px;
+    /* font-weight: bold; */
+    background-color: #00000080;
+    height: 80px;
+}
+.container {
+    height: 100%; 
+    width: 100%; 
+    /* padding: 0px 20px; */
+}
+</style>

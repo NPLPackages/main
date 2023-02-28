@@ -1,0 +1,23 @@
+<template style="height: 242px; width: 500px; background: url(Texture/Aries/Creator/keepwork/Window/dakuang_32bits.png#0 0 440 93:378 43 33 44);">
+    <div style="height: 42px;">
+        <div onclick="clickCloseBtn" style="float: right; background:url(Texture/Aries/Creator/keepwork/ggs/dialog/guanbi_22X22_32bits.png#0 0 22 22); width:22px; height:22px; margin-right: 20px; margin-top: 10px;"></div>
+    </div>
+    <div >
+        <div style="margin-top: 80px; text-align: center; font-size: 20px; color: #101010;">{{text or ""}}</div>
+    </div>
+</template>
+
+<script type="text/lua">
+function clickCloseBtn() 
+    CloseWindow();
+end
+
+function clickConfirmBtn()
+    clickCloseBtn();
+
+    if (type(confirm) == "function") then
+        confirm();
+    end
+end
+
+</script>

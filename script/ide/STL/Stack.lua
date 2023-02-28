@@ -1,83 +1,46 @@
 --[[
 Title: a similar implementation as STL (Standard Libaray) in NPL
 Author(s): LiXizhi
-Date: 2007/9/22 (stack)
-Desc: Uses a table as stack, use <table>:push(value) and <table>:pop()
-Lua 5.1 compatible
+Date: 2007/9/22
+Desc: Uses a table as stack, use push and pop(). nil value can not be pushed. 
 Use Lib:
 -------------------------------------------------------
 NPL.load("(gl)script/ide/STL.lua");
----+++ create stack
-stack = commonlib.Stack:Create()
+stack = commonlib.Stack:new()
 -- push values on to the stack
-stack:push("a", "b")
+stack:push("a")
 -- pop values
-commonlib.stack:pop(2)
+stack:pop()
 -------------------------------------------------------
 ]]
-local table_insert = table.insert;
-local table_remove = table.remove;
-local type, ipairs, pairs, unpack = type, ipairs, pairs, unpack;
-
-------------------------------------------------
--- stack
-------------------------------------------------
 local Stack = commonlib.gettable("commonlib.Stack");
 
--- Create a Table with stack functions
-function Stack:Create()
-
-  -- stack table
-  local t = {}
-  -- entry table
-  t._et = {}
-
-  -- push a value on to the stack
-  function t:push(a1,a2,a3,a4,a5)
-    if a1 then
-      local targs = {a1,a2,a3,a4,a5}
-      -- add values
-      for _,v in pairs(targs) do
-        table_insert(self._et, v)
-      end
-    end
-  end
-
-  -- pop a value from the stack
-  function t:pop(num)
-
-    -- get num values from stack
-    local num = num or 1
-
-    -- return table
-    local entries = {}
-
-    -- get values into entries
-    for i = 1, num do
-      -- get last entry
-      if #(self._et) ~= 0 then
-        table_insert(entries, self._et[#(self._et)])
-        -- remove last value
-        table_remove(self._et)
-      else
-        break
-      end
-    end
-    -- return unpacked entries
-    return unpack(entries)
-  end
-
-  -- get entries
-  function t:size()
-    return #(self._et)
-  end
-
-  -- list values
-  function t:list()
-    for i,v in pairs(self._et) do
-      print(i, v)
-    end
-  end
-  return t
+function Stack:new(o)
+	local object = o or {};
+	setmetatable(object, self);
+	self.__index = self;
+	return object;
 end
 
+-- obsoleted: static function. use new() instead. 
+function Stack:Create()
+	return Stack:new()
+end
+
+function Stack:push(v)
+	self[#self + 1] = v;
+end
+
+-- pop and return value
+function Stack:pop()
+	local count = #self;
+	if(count>0) then
+		local v = self[count]
+		self[count] = nil;
+		return v;
+	end
+end
+
+function Stack:size()
+	return #self;
+end

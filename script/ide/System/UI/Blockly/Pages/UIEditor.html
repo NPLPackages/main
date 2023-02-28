@@ -1,0 +1,115 @@
+<template class="container">
+    <div style="position: absolute; left: 0px; top: 0px; height: 40px; width: 100%; z-index: 2; display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex;">
+            <div onclick="ContentType = 'BlocklyHtml'" class="header-btn" v-bind:style="(not ContentType or ContentType == 'BlocklyHtml') and 'border-bottom: 1px solid #ffffff' or ''">HTML</div>
+            <div onclick="ContentType = 'BlocklyLua'" class="header-btn" v-bind:style="ContentType == 'BlocklyLua' and 'border-bottom: 1px solid #ffffff' or ''">LUA</div>
+            <div onclick="ContentType = 'BlocklyCode'" class="header-btn" v-bind:style="ContentType == 'BlocklyCode' and 'border-bottom: 1px solid #ffffff' or ''">CODE</div>
+            <div onclick="ContentType = 'UIManager'" class="header-btn" v-bind:style="ContentType == 'UIManager' and 'border-bottom: 1px solid #ffffff' or ''">{{CurrentUIFileName}}</div>
+			<div onclick=ClickSaveBtn class="btn" style="width: 60px; height: 30px; color: #cccccc; margin-left: 10px;">保存</div>
+        </div>
+        <div onclick=CloseWindow class="btn" style="margin-top: 5px; margin-right: 20px; width: 22px; height: 22px; background-color: #e6e6e6; background: url(Texture/Aries/Creator/keepwork/ggs/dialog/guanbi_22X22_32bits.png#0 0 22 22);"></div>
+    </div>
+    <div v-show="not ContentType or ContentType == 'BlocklyHtml'" style="position: absolute; left: 2px; top: 40px; right: 2px; bottom: 2px; background-color: #c8c8c8;">
+        <Blockly ref="BlocklyHtml" style="width: 100%; height: 100%;" language="SystemUIBlock" onchange=OnBlocklyHtmlChange v-bind:ToolBoxXmlText=BlocklyHtmlToolBoxXmlText></Blockly>
+    </div>
+    <div v-show="ContentType == 'BlocklyLua'" style="position: absolute; left: 2px; top: 40px; right: 2px; bottom: 2px; background-color: #c8c8c8;">
+        <Blockly ref="BlocklyLua" style="width: 100%; height: 100%;" language="SystemLuaBlock" onchange=OnBlocklyLuaChange v-bind:ToolBoxXmlText=BlocklyLuaToolBoxXmlText></Blockly>
+    </div>
+    <div v-show="ContentType == 'BlocklyCode'" style="position: absolute; left: 2px; top: 40px; right: 2px; bottom: 2px; background-color: #c8c8c8; white-space: pre; font-size: 16px; padding: 16px; overflow-y: auto;">
+        {{BlocklyCode}}
+    </div>
+	<div v-show="ContentType == 'UIManager'" style="position: absolute; left: 2px; top: 40px; right: 2px; bottom: 2px; background-color: #c8c8c8;">
+		<UIManager v-bind:CurrentFileName=CurrentUIFileName v-bind:FileNameList=FileNameList v-bind:OnUICreate=OnUICreate v-bind:OnUIEdit=OnUIEdit v-bind:OnUIDelete=OnUIDelete></UIManager>
+    </div>
+</template>
+
+<script type="text/lua" src="%ui%/Blockly/Pages/UIEditor.lua">
+RegisterComponent("UIManager", "%ui%/Blockly/Pages/UIManager.html");
+
+BlocklyHtmlToolBoxXmlText = [[
+<toolbox>
+	<category name="元素" color="#2E9BEF">
+		<block type="UI_Template"/>
+		<block type="UI_Elements"/>
+		<block type="UI_Element"/>
+		<block type="UI_Element_Text"/>
+	</category>
+	<category name="样式" color="#76CE62">
+        <block type="UI_Style"/>
+        <block type="UI_Style_Selector"/>
+		<block type="UI_Style_Layout"/>
+		<block type="UI_Style_Position"/>
+		<block type="UI_Style_Width_Height"/>
+		<block type="UI_Style_Margin"/>
+		<block type="UI_Style_Padding"/>
+		<block type="UI_Style_BG_Color_Image"/>
+		<block type="UI_Style_Font_Size_Color"/>
+		<block type="UI_Style_Item"/>
+    </category>
+</toolbox>
+]]
+
+BlocklyLuaToolBoxXmlText = [[
+<toolbox>
+	<category name="数据" color="#2E9BEF">
+		<block type="Lua_Nil"/>
+		<block type="Lua_Boolean"/>
+		<block type="Lua_Number"/>
+		<block type="Lua_String"/>
+		<block type="Lua_Table"/>
+		<block type="Lua_Var"/>
+		<block type="Lua_Var_Assign"/>
+		<block type="Lua_Var_Define"/>
+		<block type="Lua_Function_Define"/>
+        <block type="Lua_Function_Call"/>
+		<block type="Lua_Function_Call_Return"/>
+	</category>
+	<category name="列表" color="#76CE62">
+        <block type="Lua_List_Create"/>
+		<block type="Lua_List_Get"/>
+		<block type="Lua_List_Insert"/>
+		<block type="Lua_List_InsertByIndex"/>
+		<block type="Lua_List_ReplaceByIndex"/>
+		<block type="Lua_List_DeleteByIndex"/>
+		<block type="Lua_List_DeleteAll"/>
+		<block type="Lua_List_GetByIndex"/>
+		<block type="Lua_List_GetIndexByItem"/>
+		<block type="Lua_List_ContainItem"/>
+		<block type="Lua_List_GetSize"/>
+	</category>
+	<category name="运算" color="#764BCC">
+		<block type="Lua_Not"/>
+		<block type="Lua_Operation"/>
+	</category>
+	<category name="控制" color="#EC522E">
+        <block type="Lua_If"/>
+		<block type="Lua_If_Else"/>
+		<block type="Lua_For_Array"/>
+		<block type="Lua_For_Object"/>
+		<block type="Lua_While"/>
+	</category>
+</toolbox>
+]]
+</script>
+
+<style scoped=true>
+.container {
+    width: 100%;
+    height: 100%;
+    background-color: #191C13;
+}
+
+.header-btn {
+    width: 120px;
+    height: 30px;
+    line-height: 30px;
+    text-align: center;
+    border-radius: 5px;
+    color: #e6e6e6;
+}
+
+.header-btn:hover {
+    color: #ffffff;
+}
+
+</style>

@@ -1,0 +1,155 @@
+<template class="attr-container">
+    <div class="title">静态属性</div>
+    <div class="attr-item">
+        <select AllowCreate=true placeholder="属性名" v-model="attrName" v-bind:options="AttrOptions"></select>
+        <input placeholder="属性值" v-model="attrValue"></input>
+        <div class="attr-item-btn" onclick=AddAttr>添加</div>
+    </div>
+    <div class="attr-list">
+        <div class="attr-list-item" v-for="attr, index in attrList">
+            <input readonly=true v-bind:value="GetAttrAliasName(attr.attrName)"></input>
+            <input placeholder="属性值" v-model="attr.attrValue" onkeydown.enter="SetStaticAttrValue(attr.attrName, attr.attrValue)"></input>
+            <div class="attr-item-btn" style="height: 30px" onclick="RemoveAttr(attr, index)">移除</div>
+        </div>
+    </div>
+    <div class="title">动态属性</div>
+    <div class="attr-item">
+        <select AllowCreate=true placeholder="属性名" v-model="attrDynamicName" v-bind:options="AttrOptions"></select>
+        <input placeholder="属性值" v-model="attrDynamicValue"></input>
+        <div class="attr-item-btn" onclick=AddDynamicAttr>添加</div>
+    </div>
+    <div class="attr-list">
+        <div class="attr-list-item" v-for="attr, index in dynamicAttrList">
+            <input readonly=true v-bind:value="GetAttrAliasName(attr.attrName)"></input>
+            <input placeholder="属性值" v-model="attr.attrValue" onkeydown.enter="SetDynamicAttrValue(attr.attrName, attr.attrValue)"></input>
+            <div class="attr-item-btn" style="height: 30px" onclick="RemoveDynamicAttr(attr, index)">移除</div>
+        </div>
+    </div>
+</template>
+
+<script type="text/lua">
+local GlobalScope = GetGlobalScope();
+
+_G.AttrOptions = {{"鼠标点击", "onclick"}, {"鼠标按下", "onmousedown"}, {"鼠标移动", "onmousemove"}, {"鼠标松开", "onmouseup"}, {"鼠标移入", "onmouseover"}, {"鼠标移出", "onmouseout"}, {"类样式", "class"}};
+
+attrDynamicName = "";
+attrDynamicValue = "";
+dynamicAttrList = {};
+
+attrName = "";
+attrValue = "";
+attrList = {};
+
+function SetStaticAttrValue(attrName, attrValue)
+    CurrentListItemData.attr[attrName] = attrValue;
+end 
+
+function SetDynamicAttrValue(attrName, attrValue)
+    CurrentListItemData.vbind[attrName] = attrValue;
+end 
+
+function GetAttrAliasName(attrName)
+    for _, item in ipairs(AttrOptions) do
+        if (item[2] == attrName) then return item[1] end
+    end
+    return attrName;
+end 
+
+function AddDynamicAttr()
+    if (attrDynamicValue == "" or attrName == "style" or attrDynamicName == "") then return end
+     
+    if (not CurrentListItemData.vbind[attrDynamicName]) then
+        table.insert(dynamicAttrList, {attrName = attrDynamicName, attrValue = attrDynamicValue});
+    else 
+        for _, item in ipairs(dynamicAttrList) do 
+            if (item.attrName == attrDynamicName) then
+                item.attrValue = attrDynamicValue;
+            end
+        end
+    end
+    CurrentListItemData.vbind[attrDynamicName] = attrDynamicValue;
+    attrDynamicName, attrDynamicValue = "", "";    
+end 
+
+function RemoveDynamicAttr(item, index)
+    CurrentListItemData.vbind[item.attrName] = nil;
+    table.remove(dynamicAttrList, index)
+end
+
+function AddAttr()
+    if (attrName == "" or attrName == "style" or attrValue == "") then return end
+
+    if (not CurrentListItemData.attr[attrName]) then
+        table.insert(attrList, {attrName = attrName, attrValue = attrValue});
+    else
+        for _, item in ipairs(attrList) do 
+            if (item.attrName == attrName) then
+                item.attrValue = attrValue;
+            end
+        end
+    end
+    
+    CurrentListItemData.attr[attrName] = attrValue;
+    attrName, attrValue = "", "";    
+end 
+
+function RemoveAttr(item, index)
+    CurrentListItemData.attr[item.attrName] = nil;
+    table.remove(attrList, index)
+end
+
+GlobalScope:Watch("CurrentElementId", function() 
+    dynamicAttrList = {};
+    for key, val in pairs(CurrentListItemData.vbind) do 
+        table.insert(dynamicAttrList, {attrName = key, attrValue = val});
+    end
+    attrList = {};
+    for key, val in pairs(CurrentListItemData.attr) do 
+        table.insert(attrList, {attrName = key, attrValue = val});
+    end
+end);
+
+
+</script>
+
+<style scoped=true>
+
+.attr-container {
+    position: absolute;
+    top: 60px;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+    padding-left: 4px;
+}
+
+.title {
+    font-size: 18px;
+    padding: 20px 0px 10px 10px;
+}
+
+.attr-item {
+    display: flex;
+    align-items: center;
+    height: 40px;
+}
+
+.attr-item-btn {
+    height: 30px;
+    width: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.attr-item-btn:hover {
+    background-color: #ffffff;
+}
+
+.attr-list-item {
+    display: flex;
+    align-items: center;
+} 
+</style>
+
+

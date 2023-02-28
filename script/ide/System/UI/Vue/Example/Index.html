@@ -1,0 +1,26 @@
+<template>
+    title = {{title}} text = {{text}}
+</template>
+
+<script type="text/lua">
+RegisterComponent("WindowTitleBar", "%vue%/Components/WindowTitleBar.html");
+
+title = "我是标题"
+text = "我是文本"
+</script>
+
+<!-- 
+     <SlotDemo>
+        <div>test</div>
+        SlotDemo
+    </SlotDemo>
+    <If></If>
+    <For></For>
+    RegisterComponent("WindowTitleBar", "%ui%/Core/Vue/Components/WindowTitleBar.html");
+RegisterComponent("SlotDemo", "%ui%/Core/Vue/Example/Slot.html");
+RegisterComponent("For", "%ui%/Core/Vue/Example/For.html");
+RegisterComponent("If", "%ui%/Core/Vue/Example/If.html");
+-- 组件解析完成
+function OnReady()
+end
+ -->

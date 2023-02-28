@@ -1,0 +1,69 @@
+<template class="container">
+    <div>
+        <div class="title">＂神通杯＂ 第一届全国学校联盟中小学计算机编程大赛赛事章程</div>
+        <div class="close btn" onclick=CloseWindow></div>
+    </div>
+    <div v-if="region == 'hubei'" style="position: absolute; top: 80px; left: 20px; right: 28px; bottom: 20px; background-color: #ffffff; overflow: auto;">
+        <div style="height: 60px; width: 100%;"></div>
+        <div style="margin-left: 144px; width: 512px; height: 1024px; background: url(Texture/Aries/Creator/keepwork/RedSummerCamp/shentongbei/zc/hubei_01_32bits.png);"></div>
+        <div style="margin-left: 144px; width: 512px; height: 1024px; background: url(Texture/Aries/Creator/keepwork/RedSummerCamp/shentongbei/zc/hubei_02_32bits.png);"></div>
+        <div style="margin-left: 144px; width: 512px; height: 1024px; background: url(Texture/Aries/Creator/keepwork/RedSummerCamp/shentongbei/zc/hubei_03_32bits.png);"></div>
+        <div style="margin-left: 144px; width: 512px; height: 1024px; background: url(Texture/Aries/Creator/keepwork/RedSummerCamp/shentongbei/zc/hubei_04_32bits.png);"></div>
+    </div>
+    <div v-if="region == 'hunan'" style="position: absolute; top: 80px; left: 20px; right: 28px; bottom: 20px; background-color: #ffffff; overflow: auto;">
+        <div style="height: 60px; width: 100%;"></div>
+        <div style="margin-left: 144px; width: 512px; height: 1024px; background: url(Texture/Aries/Creator/keepwork/RedSummerCamp/shentongbei/zc/hunan_01_32bits.png);"></div>
+        <div style="margin-left: 144px; width: 512px; height: 1024px; background: url(Texture/Aries/Creator/keepwork/RedSummerCamp/shentongbei/zc/hunan_02_32bits.png);"></div>
+        <div style="margin-left: 144px; width: 512px; height: 1024px; background: url(Texture/Aries/Creator/keepwork/RedSummerCamp/shentongbei/zc/hunan_03_32bits.png);"></div>
+        <div style="margin-left: 144px; width: 512px; height: 1024px; background: url(Texture/Aries/Creator/keepwork/RedSummerCamp/shentongbei/zc/hunan_04_32bits.png);"></div>
+    </div>
+    <div v-if="region == 'all'" style="position: absolute; top: 80px; left: 20px; right: 28px; bottom: 20px; background-color: #ffffff; overflow: auto;">
+        <div style="height: 60px; width: 100%;"></div>
+        <div style="margin-left: 144px; width: 512px; height: 1024px; background: url(Texture/Aries/Creator/keepwork/RedSummerCamp/shentongbei/zc/all_01_32bits.png);"></div>
+        <div style="margin-left: 144px; width: 512px; height: 1024px; background: url(Texture/Aries/Creator/keepwork/RedSummerCamp/shentongbei/zc/all_02_32bits.png);"></div>
+        <div style="margin-left: 144px; width: 512px; height: 1024px; background: url(Texture/Aries/Creator/keepwork/RedSummerCamp/shentongbei/zc/all_03_32bits.png);"></div>
+        <div style="margin-left: 144px; width: 512px; height: 1024px; background: url(Texture/Aries/Creator/keepwork/RedSummerCamp/shentongbei/zc/all_04_32bits.png);"></div>
+    </div>
+</template>
+
+<script type="text/lua">
+local Keepwork = NPL.load("(gl)script/apps/Aries/Creator/HttpAPI/Keepwork.lua");
+
+region = "all";
+
+Keepwork:GetSchoolRegionId(function(schoolRegionId)
+    if (schoolRegionId == 1886) then
+        region = "hubei"
+    elseif (schoolRegionId == 2002) then
+        region = "hunan"
+    else
+        region = "all"
+    end
+end)
+</script>
+
+<style scoped=true>
+.container {
+    width: 884px;
+    height: 530px;
+    background: url(Texture/Aries/Creator/keepwork/RedSummerCamp/shentongbei/shentongbei_32bits.png#17 629 70 134:25 70 15 15);
+}
+
+.title {
+    font-size: 24px;
+    font-weight: bold;
+    color: #ffffff;
+    margin-top: 18px;
+    margin-left: 60px;
+}
+
+.close {
+    position: absolute;
+    right: 20px;
+    top: 18px;
+    width: 35px;
+    height: 33px;
+    background-color: #cccccc;
+    background: url(Texture/Aries/Creator/keepwork/RedSummerCamp/shentongbei/shentongbei_32bits.png#114 644 35 33);
+}
+</style>

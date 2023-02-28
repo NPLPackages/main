@@ -24,6 +24,8 @@ function AudioSource:ctor()
 	self.stream = false;
 	self.loop = false;
 	self.file = "";
+	self.count_timer = nil
+	self.end_cb = nil
 	--[[ supported properties:
 	{
 		stream = false, 
@@ -66,6 +68,7 @@ function AudioSource:play2d(volume, pitch)
 		end
 		source:play2d(self.loop);
 		AudioEngine.AddToPlayList(self);
+		self:StartPlay()
 	end
 end
 
@@ -154,6 +157,7 @@ function AudioSource:play(source)
 			source:play2d(self.loop);
 		end
 		AudioEngine.AddToPlayList(self);
+		self:StartPlay()
 	end
 end
 
@@ -173,6 +177,18 @@ end
 function AudioSource:stop()
 	if(self.source) then
 		self.source:stop();
+	end
+
+	if self.count_timer then
+		self.count_timer:Change()
+		self.count_timer = nil
+	end
+	
+	self.start_cb = nil
+
+	if self.end_cb then
+		self.end_cb()
+		self.end_cb = nil
 	end
 end
 
@@ -220,6 +236,16 @@ function AudioSource:release()
 		self.source:release();
 		self.source = nil;
 	end
+
+	if self.count_timer then
+		self.count_timer:Change()
+		self.count_timer = nil
+	end
+	
+	if self.end_cb then
+		self.end_cb()
+		self.end_cb = nil
+	end
 end
 
 function AudioSource:getCurrentAudioTime()
@@ -229,9 +255,6 @@ function AudioSource:getCurrentAudioTime()
 end
 
 function AudioSource:SetLastVolume(volume)
-	if volume == 0 then
-		print(commonlib.debugstack())
-	end
 	self.last_volume = volume
 end
 
@@ -269,5 +292,33 @@ function AudioSource:Recover()
 	local last_volume = self:GetLastVolume()
 	if last_volume then
 		source.Volume = last_volume
+	end
+end
+
+function AudioSource:SetPlayEndCb(callback)
+	self.end_cb = callback
+end
+
+function AudioSource:SetPlayStartCb(callback)
+	self.start_cb = callback
+end
+
+function AudioSource:StartPlay()
+	if self.start_cb then
+		self.start_cb()
+		self.start_cb = nil
+	end
+
+	if self.end_cb and not self.loop then
+		self.count_timer = self.count_timer or commonlib.Timer:new({callbackFunc = function(timer)
+			if self.end_cb then
+				self.end_cb()
+				self.end_cb = nil
+			end
+		end})
+
+		local source = self:GetSource()
+		local duration = source.TotalAudioTime
+		self.count_timer:Change(duration * 1000);
 	end
 end

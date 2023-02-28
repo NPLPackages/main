@@ -1,0 +1,110 @@
+<template class="container">
+    <div style="position: absolute; top: 0px; left: 0px; width: 100%; height: 100px;">
+        <div style="width:171px;height:58px;background:url(Texture/Aries/Creator/keepwork/RedSummerCamp/courses/courses_32bits.png#7 248 171 58);">
+            <div onclick=CloseWindow style="width: 45px; height: 38px; margin-left:30px;margin-top:10px; background: url(Texture/Aries/Creator/keepwork/RedSummerCamp/works/works_32bits.png#0 65 45 38);"></div>
+        </div>
+        <div onclick=ShowVip style="position: absolute; top: 10px; right: 40px; width: 80px; height: 75px; background: url(Texture/Aries/Creator/keepwork/RedSummerCamp/works/works_32bits.png#298 110 80 75);"></div>
+    </div>
+
+    <div style="width: 1280px; height: 720px;">
+        <div style="margin-top: 60px;">
+            <div class="title center">
+                教育部门认证
+            </div>
+            <div style="width: 100%; display: flex; justify-content: center;  margin-top: 40px; ">
+                <div style="width: 1180px; font-size: 20px;">
+                    <div>——受教育部门认证的中国原创计算机学习软件</div>
+                    <div>《帕拉卡》使用的计算机语言及相关引擎、软件均由中国人自主研发。根据国家对于培养青少年人工智能素养的需求，对标各年级信息科技和计算机课程教学目标设计。全国超过7300所学校正在使用《帕拉卡》作为校本课进行授课教学。</div>
+                    <div style="display: flex; justify-content: center; margin-top: 30px; font-size: 16px; color: #717275; font-weight: bold;">
+                        <div style="width: 225px;">
+                            <div onclick="big_image_index = 1" style="width: 225px; height: 316px; background: url(Texture/Aries/Creator/keepwork/RedSummerCamp/shentongbei/zz/1_32bits.png#0 0 225 316);"></div>
+                            <div style="width: 100%; margin-top: 16px;">中国教育技术协会专家鉴定意见书</div>
+                        </div>
+                        <div style="width: 225px; margin-left: 20px;">
+                            <div onclick="big_image_index = 2" style="width: 225px; height: 316px; background: url(Texture/Aries/Creator/keepwork/RedSummerCamp/shentongbei/zz/2_32bits.png#0 0 225 316);"></div>
+                            <div style="width: 100%; margin-top: 16px;">中国教育技术协会鉴定证书</div>
+                        </div>
+                        <!-- <div style="width: 225px;">
+                            <div onclick="big_image_index = 3" style="width: 225px; height: 316px; background: url(Texture/Aries/Creator/keepwork/RedSummerCamp/shentongbei/zz/3_32bits.png#0 0 225 316);"></div>
+                            <div style="width: 100%; margin-top: 16px;">湖北省教育厅关于举办“神通杯”计算机编程大赛通知文件</div>
+                        </div>
+                        <div style="width: 225px;">
+                            <div onclick="big_image_index = 4" style="width: 225px; height: 316px; background: url(Texture/Aries/Creator/keepwork/RedSummerCamp/shentongbei/zz/4_32bits.png#0 0 225 316);"></div>
+                            <div style="width: 100%; margin-top: 16px;">湖南省教育厅关于举办“神通杯”计算机编程大赛通知文件</div>
+                        </div>
+                        <div style="width: 225px;">
+                            <div onclick="big_image_index = 5" style="width: 225px; height: 316px; background: url(Texture/Aries/Creator/keepwork/RedSummerCamp/shentongbei/zz/5_32bits.png#0 0 225 316);"></div>
+                            <div style="width: 100%; margin-top: 16px;">全国学校体育联盟机器人工作委员会关于举办“神通杯”计算机编程大赛通知文件</div>
+                        </div> -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div v-if="big_image_index ~= 0" class="big-image" onclick="big_image_index = 0">
+        <div v-bind:style="GetImageStyle()"></div>
+    </div>
+</template>
+
+<script type="text/lua">
+big_image_index = 0;
+
+function ShowVip()
+    local VipPage = NPL.load("(gl)script/apps/Aries/Creator/Game/Tasks/User/VipPage.lua");
+    VipPage.ShowPage();
+end 
+
+function GetImageStyle()
+    if (big_image_index == 5) then
+        return "width:1058px; height: 717px; background: url(Texture/Aries/Creator/keepwork/RedSummerCamp/shentongbei/zz/8_32bits.png#0 0 1058 717);";
+    elseif (big_image_index == 4) then 
+        return "width:1058px; height: 717px; background: url(Texture/Aries/Creator/keepwork/RedSummerCamp/shentongbei/zz/7_32bits.png#0 0 1058 717);";
+    elseif (big_image_index == 3) then 
+        return "width:1058px; height: 717px; background: url(Texture/Aries/Creator/keepwork/RedSummerCamp/shentongbei/zz/6_32bits.png#0 0 1058 717);";
+    elseif (big_image_index == 2) then 
+        return "width:515px; height: 717px; background: url(Texture/Aries/Creator/keepwork/RedSummerCamp/shentongbei/zz/10_32bits.png#0 0 515 717);";
+    elseif (big_image_index == 1) then 
+        return "width:515px; height: 717px; background: url(Texture/Aries/Creator/keepwork/RedSummerCamp/shentongbei/zz/9_32bits.png#0 0 515 717);";
+    else 
+        return "display:none;";
+    end
+end
+
+</script>
+
+<style scoped=true>
+.container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: url(Texture/Aries/Creator/keepwork/RedSummerCamp/works/works_32bits.png#380 247 128 257:1 123 126 123);
+}
+
+.title {
+    font-size: 30px;
+    color: #212122;
+    font-weight: bold;
+    width: 100%;
+}
+
+.big-image {
+    position: absolute;
+    top: 0px;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+</style>
+
+<!-- 
+local Page = NPL.load("Mod/GeneralGameServerMod/UI/Page.lua");
+local page = Page.Show({}, {url = "%ui%/App/RedSummerCamp/ShenTongBei.html", width = "100%", height = "100%", fixedRootScreenWidth = 1280, fixedRootScreenHeight = 720,});
+ -->
+
+ 

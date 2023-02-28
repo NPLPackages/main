@@ -239,6 +239,7 @@ function pe_treeview.create(rootName, mcmlNode, bindingContext, _parent, left, t
 		AllowOverflowScroll = AllowOverflowScroll,
 		VerticalScrollBarWidth = mcmlNode:GetNumber("VerticalScrollBarWidth") or css.VerticalScrollBarWidth or CommonCtrl.TreeView.VerticalScrollBarWidth,
 		ScrollBarTrackWidth = mcmlNode:GetNumber("ScrollBarTrackWidth") or css.ScrollBarTrackWidth or CommonCtrl.TreeView.ScrollBarTrackWidth,
+		onmousewheel = mcmlNode:GetString("onmousewheel"),
 	};
 	mcmlNode.control = ctl;
 
@@ -332,6 +333,7 @@ function pe_treeview.createTreeNode(parentNode, mcmlNode, bindingContext)
 			node.font_weight = css["font-weight"];
 			node.font_size = css["font-size"];
 			node.Icon = mcmlNode:GetAttributeWithCode("icon");
+			node.IconTooltip = mcmlNode:GetAttributeWithCode("icon_tooltip");
 			node.NodeHeight = tonumber(mcmlNode:GetAttributeWithCode("height")) or css["height"];
 			node.indent = tonumber(mcmlNode:GetAttributeWithCode("indent"));
 			local expanded = mcmlNode:GetAttributeWithCode("expanded",nil,true);
@@ -430,6 +432,9 @@ function pe_treeview.DrawNodeHandler(_parent,treeNode)
 		if(treeNode.Icon~=nil and IconSize>0) then
 			_this=ParaUI.CreateUIObject("button","b","_lt", left, (height-IconSize)/2 , IconSize, IconSize);
 			_this.background = treeNode.Icon;
+			if(treeNode.IconTooltip and treeNode.IconTooltip~="") then
+				_this.tooltip = treeNode.IconTooltip
+			end
 			_guihelper.SetUIColor(_this, "255 255 255");
 			_parent:AddChild(_this);
 		end	

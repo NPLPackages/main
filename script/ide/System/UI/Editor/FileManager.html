@@ -1,0 +1,53 @@
+
+<template class="container">
+    <div class="operation-container">
+        <div style="display: flex; align-items: center;">
+            <input v-model="FileName" placeholder="请输入文件名..." style="width: 200px;"></input>
+            <div onclick=ClickNewBtn class="btn">新增</div>
+        </div>
+    </div>
+    <div class="filelist-container">
+        <div v-for="file, index in FileList" class="file-container">
+            <div style="width: 200px; height: 100%; display: flex; align-items: center; color: #000000;">{{file.filename}}</div>
+            <div onclick="ClickEditBtn(file, index)" class="btn">{{file.filename == CurrentFileName and "正在编辑" or "编辑"}}</div>
+            <div v-show="file.filename ~= DefaultFileName" onclick="ClickDeleteBtn(file, index)" class="btn">删除</div>
+        </div>
+    </div>
+</template>
+
+<script type="text/lua"  src="%ui%/Editor/FileManager.lua">
+</script>
+
+<style scoped=true>
+.container {
+    height: 100%; 
+    width: 100%; 
+    padding: 10px;
+}
+
+.operation-container {
+    display: flex;
+}
+
+.filelist-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.file-container {
+    display: flex;
+    align-items: center;
+    height: 40px;
+}
+.btn {
+    height: 30px;
+    border-radius: 5px;
+    width: 120px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.btn:hover {
+    background-color: #ffffff;
+}
+</style>

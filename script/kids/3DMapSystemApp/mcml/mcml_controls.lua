@@ -28,6 +28,7 @@ NPL.load("(gl)script/kids/3DMapSystemApp/mcml/pe_item.lua");
 NPL.load("(gl)script/kids/3DMapSystemApp/mcml/pe_avatar.lua");
 NPL.load("(gl)script/kids/3DMapSystemApp/mcml/pe_map.lua");
 NPL.load("(gl)script/kids/3DMapSystemApp/mcml/pe_markdown.lua");
+NPL.load("(gl)script/kids/3DMapSystemApp/mcml/pe_table.lua");
 NPL.load("(gl)script/kids/3DMapSystemApp/mcml/pe_motion.lua");
 NPL.load("(gl)script/kids/3DMapSystemApp/mcml/pe_storyboard.lua");
 NPL.load("(gl)script/kids/3DMapSystemApp/mcml/pe_gridview.lua");
@@ -119,6 +120,9 @@ local default_control_mapping = {
 	["pe:map-anchor"] = mcml_controls.pe_none,
 
 	["pe:markdown"] = mcml_controls.pe_markdown,
+	["pe:table"] = mcml_controls.pe_table,
+	["tr"] = mcml_controls.pe_tr,
+	["td"] = mcml_controls.pe_td,
 
 	["pe:downlistbutton"] = mcml_controls.pe_downlistbutton,
 

@@ -229,7 +229,7 @@ function BonesManip:UpdateManipRadius(manip)
 		radius = 0.6;
 	end
 	if(manip) then
-		manip.radius = radius * self:GetUIScaling();
+		manip.radius = radius;
 	end
 end
 
@@ -533,6 +533,7 @@ function BonesManip:SetModified()
 end
 
 -- force making a new key at the current pos. 
+-- hot key is usually "K"
 function BonesManip:AddKeyWithCurrentValue()
 	local bone = self.selectedBone;
 	if(bone) then

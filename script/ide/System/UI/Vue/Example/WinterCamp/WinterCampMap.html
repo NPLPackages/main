@@ -1,0 +1,165 @@
+<template style="background:url(@assets/donglingyingyouyuantu_1012X594.png#0 0 1012 594);top:1;left:1;height:594;width:1012;">
+	<div  onclick="ClickAreaBtn" name="北京大学" class="ID_8"  style="position:absolute;top:259px;left:40px;height:32;width:100;"></div>
+	<div  onclick="ClickAreaBtn" name="民俗村" class="ID_6"  style="position:absolute;top:227px;left:177px;height:32;width:100;"></div>
+	<div  onclick="ClickAreaBtn" name="课程体验馆" class="ID_5"  style="position:absolute;top:155px;left:178px;height:32;width:100;"></div>
+	<div  onclick="ClickAreaBtn" name="公园" class="ID_16"  style="position:absolute;top:439px;left:39px;height:32;width:100;"></div>
+	<div  onclick="ClickAreaBtn" name="中国景观" class="ID_9"  style="position:absolute;top:296px;left:39px;height:32;width:100;"></div>
+	<div  onclick="ClickAreaBtn" name="游学集合点" class="ID_7"  style="position:absolute;top:226px;left:40px;height:32;width:100;"></div>
+	<div  onmousemove="OnMouseMove" onmouseout="OnMouseOut" class="ID_31" ref="民俗村"  style="position:absolute;top:206px;left:540px;height:32;width:32;"></div>
+	<div  class="ID_28" v-show="IsHasRGZNWLZXCert"  style="background:url(@assets/yihuode_56X43.png#0 0 56 43);position:absolute;top:473px;left:924px;height:43;width:56;"></div>
+	<div  onmousemove="OnMouseMove" onmouseout="OnMouseOut" class="ID_38" ref="家"  style="position:absolute;top:279px;left:662px;height:32;width:32;"></div>
+	<div  onclick="ClickAreaBtn" name="餐馆" class="ID_14"  style="position:absolute;top:404px;left:39px;height:32;width:100;"></div>
+	<div  onmousemove="OnMouseMove" onmouseout="OnMouseOut" class="ID_32" ref="上课集合点"  style="position:absolute;top:249px;left:556px;height:32;width:32;"></div>
+	<div  class="ID_25" v-show="IsHasCYJTCert"  style="background:url(@assets/yihuode_56X43.png#0 0 56 43);position:absolute;top:468px;left:452px;height:43;width:56;"></div>
+	<div  onmousemove="OnMouseMove" onmouseout="OnMouseOut" class="ID_39" ref="公园"  style="position:absolute;top:251px;left:720px;height:32;width:32;"></div>
+	<div  onmousemove="OnMouseMove" onmouseout="OnMouseOut" class="ID_40" ref="医院"  style="position:absolute;top:275px;left:766px;height:32;width:32;"></div>
+	<div  onclick="ClickAreaBtn" name="核酸检测点" class="ID_12"  style="position:absolute;top:369px;left:40px;height:32;width:100;"></div>
+	<div  onclick="ClickAreaBtn" name="家" class="ID_13"  style="position:absolute;top:369px;left:175px;height:32;width:100;"></div>
+	<div  class="ID_24" onclick="CloseWindow"  style="position:absolute;top:81px;left:954px;height:30;width:30;"></div>
+	<div  onmousemove="OnMouseMove" onmouseout="OnMouseOut" class="ID_44" ref="清华大学"  style="position:absolute;top:398px;left:630px;height:32;width:32;"></div>
+	<div  class="ID_26" v-show="IsHasBCXDRCert"  style="background:url(@assets/yihuode_56X43.png#0 0 56 43);position:absolute;top:469px;left:608px;height:43;width:56;"></div>
+	<div  class="ID_46" ref="tooltip" style="background:url(@assets/qipaokuang_247X90.png#0 0 247 90:30 10 10 50);color:#ffffff;position:absolute;top:629px;left:23px;width:247px;height:90px; padding: 10px 10px 10px 30px;z-index: 10;">{{ToolTipText}}</div>
+	<div  class="ID_27" v-show="IsHasFYXYXCert"  style="background:url(@assets/yihuode_56X43.png#0 0 56 43);position:absolute;top:470px;left:764px;height:43;width:56;"></div>
+	<div  onclick="ClickAreaBtn" name="清华大学" class="ID_10"  style="position:absolute;top:262px;left:177px;height:32;width:100;"></div>
+	<div  class="ID_21" v-show="not IsHasBCXDRCert"  style="background:url(@assets/weihuode_56X43.png#0 0 56 43);position:absolute;top:469px;left:608px;height:43;width:56;"></div>
+	<div  class="ID_45" ref="me"  style="background:url(@assets/wodeweizhi_34X41.png#0 0 34 41);position:absolute;top:153px;left:338px;height:41;width:34;"></div>
+	<div  onclick="ClickAreaBtn" name="医院" class="ID_17"  style="position:absolute;top:439px;left:175px;height:32;width:100;"></div>
+	<div  onmousemove="OnMouseMove" onmouseout="OnMouseOut" class="ID_35" ref="互动小游戏"  style="position:absolute;top:222px;left:624px;height:32;width:32;"></div>
+	<div  onclick="ClickAreaBtn" name="世界景观" class="ID_11"  style="position:absolute;top:296px;left:177px;height:32;width:100;"></div>
+	<div  onmousemove="OnMouseMove" onmouseout="OnMouseOut" class="ID_41" ref="餐馆"  style="position:absolute;top:327px;left:788px;height:32;width:32;"></div>
+	<div  onmousemove="OnMouseMove" onmouseout="OnMouseOut" class="ID_30" ref="课程体验馆"  style="position:absolute;top:289px;left:440px;height:32;width:32;"></div>
+	<div  onmousemove="OnMouseMove" onmouseout="OnMouseOut" class="ID_37" ref="核酸检测点"  style="position:absolute;top:236px;left:670px;height:32;width:32;"></div>
+	<div  onmousemove="OnMouseMove" onmouseout="OnMouseOut" class="ID_34" ref="游学集合点"  style="position:absolute;top:252px;left:604px;height:32;width:32;"></div>
+	<div  onclick="ClickAreaBtn" name="车站" class="ID_15"  style="position:absolute;top:404px;left:175px;height:32;width:100;"></div>
+	<div  class="ID_20" v-show="not IsHasCYJTCert"  style="background:url(@assets/weihuode_56X43.png#0 0 56 43);position:absolute;top:468px;left:452px;height:43;width:56;"></div>
+	<div  onmousemove="OnMouseMove" onmouseout="OnMouseOut" class="ID_43" ref="车站"  style="position:absolute;top:300px;left:875px;height:32;width:32;"></div>
+	<div  onclick="ClickAreaBtn" name="程序员爸爸之家" class="ID_18"  style="position:absolute;top:507px;left:39px;height:32;width:100;"></div>
+	<div  onmousemove="OnMouseMove" onmouseout="OnMouseOut" class="ID_36" ref="中国景观"  style="position:absolute;top:170px;left:668px;height:32;width:32;"></div>
+	<div  onclick="ClickAreaBtn" name="互动小游戏" class="ID_19"  style="position:absolute;top:508px;left:175px;height:32;width:100;"></div>
+	<div  onmousemove="OnMouseMove" onmouseout="OnMouseOut" class="ID_29" ref="北京大学"  style="position:absolute;top:233px;left:374px;height:32;width:32;"></div>
+	<div  class="ID_22" v-show="not IsHasFYXYXCert"  style="background:url(@assets/weihuode_56X43.png#0 0 56 43);position:absolute;top:470px;left:764px;height:43;width:56;"></div>
+	<div  onmousemove="OnMouseMove" onmouseout="OnMouseOut" class="ID_42" ref="世界景观"  style="position:absolute;top:228px;left:844px;height:32;width:32;"></div>
+	<div  class="ID_23" v-show="not IsHasRGZNWLZXCert"  style="background:url(@assets/weihuode_56X43.png#0 0 56 43);position:absolute;top:473px;left:924px;height:43;width:56;"></div>
+	<div  onclick="ClickAreaBtn" name="上课集合点" class="ID_4"  style="position:absolute;top:156px;left:40px;height:32;width:100;"></div>
+	<div  onmousemove="OnMouseMove" onmouseout="OnMouseOut" class="ID_33" ref="程序员爸爸之家"  style="position:absolute;top:229px;left:585px;height:32;width:32;"></div>
+	<div  ref="创意家庭" onmouseout="OnMouseOut" class="ID_47" onmousemove="OnMouseMove"  style="position:absolute;top:475px;left:352px;height:110;width:150;"></div>
+	<div  ref="编程小达人" onmouseout="OnMouseOut" class="ID_48" onmousemove="OnMouseMove"  style="position:absolute;top:475px;left:510px;height:110;width:150;"></div>
+	<div  ref="防疫小英雄" onmouseout="OnMouseOut" class="ID_49" onmousemove="OnMouseMove"  style="position:absolute;top:475px;left:667px;height:110;width:150;"></div>
+	<div  ref="人工智能未来之星" onmouseout="OnMouseOut" class="ID_50" onmousemove="OnMouseMove"  style="position:absolute;top:475px;left:823px;height:110;width:150;"></div>
+</template>
+
+<script type="text/lua">
+local KeepWorkItemManager = NPL.load("(gl)script/apps/Aries/Creator/HttpAPI/KeepWorkItemManager.lua");
+local WinterCampMap = {
+    ["清华大学"] = { blockX = 19337, blockY = 12, blockZ = 19454, blockMinX = 19328, blockMaxX = 19583, blockMinZ = 19328, blockMaxZ = 19583, desc = '清华大学是国内最知名的高等学府之一，被誉为“红色工程师的摇篮”。'},
+    ["课程体验馆"] = { blockX = 19391, blockY = 12, blockZ = 19200, blockMinX = 19328, blockMaxX = 19583, blockMinZ = 19072, blockMaxZ = 19327, desc = '充满科技感的课程体验馆，可以参观往期同学的优秀作品。'},
+    ["北京大学"] = { blockX = 19339, blockY = 12, blockZ = 18943, blockMinX = 19328, blockMaxX = 19583, blockMinZ = 18816, blockMaxZ = 19071, desc = '北京大学是享誉国内外的全国重点大学，有着悠久的建校历史。'},
+    ["民俗村"] = { blockX = 19203, blockY = 12, blockZ = 18944, blockMinX = 19072, blockMaxX = 19327, blockMinZ = 18816, blockMaxZ = 19071, desc = '迎春民俗村是帕拉卡为大家准备的新年活动场所，可以体验各种有年味的过年方式。'},
+    ["上课集合点"] = { blockX = 19253, blockY = 12, blockZ = 19143, blockMinX = 19245, blockMaxX = 19327, blockMinZ = 19072, blockMaxZ = 19199, desc = '冬令营课程开课前的集合点，上课和补课的入口。'},
+    ["程序员爸爸之家"] = { blockX = 19207, blockY = 12, blockZ = 19144, blockMinX = 19200, blockMaxX = 19244, blockMinZ = 19072, blockMaxZ = 19199, desc = '亲子任务点，扫码绑定账号，参与评论后可获得亲子证书。'},
+    ["互动小游戏"] = { blockX = 19144, blockY = 12, blockZ = 19159, blockMinX = 19072, blockMaxX = 19199, blockMinZ = 19072, blockMaxZ = 19199, desc = '益智小游戏，劳逸结合，探索大世界可以找到更多小游戏。'},
+    ["游学集合点"] = { blockX = 19216, blockY = 12, blockZ = 19250, blockMinX = 19200, blockMaxX = 19327, blockMinZ = 19200, blockMaxZ = 19327, desc = '云游学导游所在地，选择景点，立即发车。'},
+    ["核酸检测点"] = { blockX = 19107, blockY = 12, blockZ = 19252, blockMinX = 19072, blockMaxX = 19199, blockMinZ = 19200, blockMaxZ = 19327, desc = '核酸检测点，可以在此处做核酸检测。'},
+    ["家"] = { blockX = 19230, blockY = 12, blockZ = 19382, blockMinX = 19200, blockMaxX = 19327, blockMinZ = 19328, blockMaxZ = 19384, blockMinX2 = 19241, blockMaxX2 = 19327, blockMinZ2 = 19385, blockMaxZ2 = 19455, desc = '抗疫活动中，家所在的位置，内含相关抗疫小任务。'},
+    ["公园"] = { blockX = 19161, blockY = 12, blockZ = 19353, blockMinX = 19072, blockMaxX = 19199, blockMinZ = 19328, blockMaxZ = 19384, blockMinX2 = 19072, blockMaxX2 = 19141, blockMinZ2 = 19385, blockMaxZ2 = 19455, desc = '抗疫活动中，公园所在位置，内含相关抗疫小任务。'},
+    ["医院"] = { blockX = 19181, blockY = 13, blockZ = 19397, blockMinX = 19142, blockMaxX = 19240, blockMinZ = 19385, blockMaxZ = 19486, desc = '抗疫活动中，医院所在位置，内含相关抗疫小任务。'},
+    ["餐馆"] = { blockX = 19259, blockY = 12, blockZ = 19509, blockMinX = 19241, blockMaxX = 19327, blockMinZ = 19456, blockMaxZ = 19583, blockMinX2 = 19200, blockMaxX2 = 19240, blockMinZ2 = 19487, blockMaxZ2 = 19583, desc = '抗疫活动中，餐馆所在位置，内含相关抗疫小任务。'},
+    ["车站"] = { blockX = 19106, blockY = 12, blockZ = 19471, blockMinX = 19072, blockMaxX = 19199, blockMinZ = 19487, blockMaxZ = 19583, blockMinX2 = 19072, blockMaxX2 = 19141, blockMinZ2 = 19456, blockMaxZ2 = 19486, desc = '抗疫活动中，车站所在位置，内含相关抗疫小任务。'},
+    ["世界景观"] = { blockX = 18780, blockY = 12, blockZ = 19328, blockMinX = 18688, blockMaxX = 19071, blockMinZ = 19200, blockMaxZ = 19711, desc = '包含泰姬陵，凯旋门，罗马斗兽场等世界景观。'},
+    ["中国景观"] = { blockX = 18757, blockY = 12, blockZ = 19070, blockMinX = 18688, blockMaxX = 19071, blockMinZ = 18813, blockMaxZ = 19199, desc = '包含中国馆及其他中国特色建筑。'},
+
+    ["创意家庭"] = {desc = '在程序员爸爸之家扫描二维码绑定账号，参与评论后可领取“幻想星球套装”'},
+    ["编程小达人"] = {desc = '冬令营课程全部完成后，即可领取“AI极客套装”'},
+    ["防疫小英雄"] = {desc = '抗疫任务完成后获取，完成后可领取“吉祥如意套装”'},
+    ["人工智能未来之星"] = {desc = '冬令营课程全部完成后，即可获得冬令营结营证书'},
+
+}
+local UserElement = nil;
+local ToolTipElement = nil;
+local UserAreaName = nil;
+
+ToolTipText = "";
+IsHasCYJTCert = false;   -- 创意家庭 亲子证书
+IsHasBCXDRCert = false;  -- 编程小达人 编程证书
+IsHasFYXYXCert = false;  -- 防疫小英雄 抗疫证书
+IsHasRGZNWLZXCert = false; -- 人工智能未来之星  结营证书
+CertDesc = "";
+
+local bagNo = 1006;
+for _, item in ipairs(KeepWorkItemManager.items) do
+    if (item.bagNo == bagNo) then
+        if (item.gsId == 70007) then IsHasBCXDRCert = true end 
+        if (item.gsId == 70003) then IsHasCYJTCert = true end 
+        if (item.gsId == 70001) then IsHasFYXYXCert = true end 
+        if (item.gsId == 70002) then IsHasRGZNWLZXCert = true end 
+    end
+end
+
+local function SetElementLeftTop(element, left, top)
+    element:SetPosition(left, top);
+    element:SetStyleValue("left", left);
+    element:SetStyleValue("top", top);
+end 
+
+function OnReady()
+    UserElement = GetRef("me");
+    ToolTipElement = GetRef("tooltip");
+    SetElementLeftTop(UserElement, -10000, -10000);
+    SetElementLeftTop(ToolTipElement, -10000, -10000);
+    
+    local player = GameLogic.GetPlayerController():GetPlayer();
+    local x, y, z = player:GetBlockPos();
+    UserAreaName = nil;
+    for name, area in pairs(WinterCampMap) do 
+        if (area.blockMinX and x <= area.blockMaxX and x >= area.blockMinX and z <= area.blockMaxZ and z >= area.blockMinZ) then
+            UserAreaName = name;
+            break;
+        end 
+        if (area.blockMinX2 and x <= area.blockMaxX2 and x >= area.blockMinX2 and z <= area.blockMaxZ2 and z >= area.blockMinZ2) then
+            UserAreaName = name;
+            break;
+        end 
+    end
+    if (UserAreaName) then
+        local areaEl = GetRef(UserAreaName);
+        local style = areaEl:GetStyle():GetNormalStyle();
+        local left, top = style.left, style.top;
+        left, top = left, top;
+        SetElementLeftTop(UserElement, left, top);
+    end
+end 
+
+function OnMouseMove()
+    local element = GetEvent():GetElement();
+    local areaname = element:GetAttrStringValue("ref");
+    local area = WinterCampMap[areaname];
+    ToolTipText = area.desc;
+
+    local left, top = GetEvent():GetWindowPos(); 
+    left, top = left + 15, top - 70;
+    ToolTipElement:SetPosition(left, top);
+    ToolTipElement:SetStyleValue("left", left);
+    ToolTipElement:SetStyleValue("top", top);
+    ToolTipElement:SetVisible(true);
+end 
+
+function OnMouseOut()
+    ToolTipElement:SetVisible(false);
+end 
+
+function ClickAreaBtn()
+    local event = GetEvent();
+    local element = event:GetElement();
+    local areaname = element:GetAttrStringValue("name");
+    local data = WinterCampMap[areaname];
+    if (not data) then return end 
+    GameLogic.RunCommand(string.format("/goto %s %s %s", data.blockX, data.blockY, data.blockZ)); 
+end 
+
+</script>
+
+<style scoped=true>
+
+
+</style>
+

@@ -1,0 +1,28 @@
+<template style="padding: 10px;">
+    <div>
+        <input v-model="value"></input>
+        <input v-model="value"></input>
+        <div style="display: inline; line-height: 30px; margin-left: 20px;">{{value}}</div>
+    </div>
+    <radiogroup v-model="radio" style="padding: 10px;">
+        <label for="radioId1"><radio id="radioId1" value="radio1"></radio>radio1</label>
+        <label for="radioId2"><radio id="radioId2" value="radio2"></radio>radio2</label>
+        <div style="display: inline; margin-left: 20px;">v-model = {{radio}}</div>
+    </radiogroup>
+    <checkboxgroup v-model="checkbox" style="padding: 10px;">
+        <label for="checkboxId1"><checkbox id="checkboxId1" value="checkbox1"></checkbox>checkbox1</label>
+        <label for="checkboxId2"><checkbox id="checkboxId2" value="checkbox2"></checkbox>checkbox2</label>
+        <div style="display: inline; margin-left: 20px;">v-model = {{PrintCheckBox()}}</div>
+    </checkboxgroup>
+</template>
+
+<script>
+RegisterComponent("WindowTitleBar", "%vue%/Components/WindowTitleBar.html");
+
+value = "this is model test";  
+radio = "radio1";
+checkbox = {}
+function PrintCheckBox()
+    return table.concat(checkbox, ",");
+end
+</script>

@@ -187,6 +187,12 @@ function ObjEditor.CreateObjectByParams(param)
 		if(param.facing~=nil) then
 			obj:SetFacing(param.facing);
 		end
+		if(param.pitch~=nil) then
+			obj:SetField("pitch",param.pitch)
+		end
+		if(param.roll~=nil) then
+			obj:SetField("roll",param.roll)
+		end
 		if(param.scaling~=nil) then
 			obj:SetScale(param.scaling);
 		end
@@ -198,6 +204,9 @@ function ObjEditor.CreateObjectByParams(param)
 		end
 		if(param.Attribute) then
 			obj:SetAttribute(param.Attribute, true);
+		end
+		if(param.localTransform) then
+			obj:SetField("LocalTransform", param.localTransform)
 		end
 	else
 		-- create static model 

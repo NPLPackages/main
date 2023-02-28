@@ -1,0 +1,68 @@
+
+<template class="container">
+    <div style="display: flex; align-items: center; height: 40px;">
+        <input v-model="filename" placeholder="请输入文件名..." style="width: 200px;"></input>
+        <div onclick=ClickNew class="btn">新增</div>
+    </div>
+    <div style="margin-top: 20px;">
+        <div v-for="filename in filenames" style="display: flex; align-items: center; height: 40px; border-bottom: 1px solid #eeeeee;">
+            <div style="width: 200px; height: 30px; line-height: 30px;">{{filename}}</div>
+            <div onclick="ClickEdit(filename)" class="btn">{{CurrentFileName == filename and "正在编辑" or "编辑"}}</div>
+            <div v-if="filename ~= 'UI'" onclick="ClickDelete(filename)" class="btn">删除</div>
+        </div>
+    </div>
+</template>
+
+<script type="text/lua">
+filenames = {};
+filename = ""; 
+CurrentFileName = "";
+function ClickNew()
+    if (filename == "") then return end
+    table.insert(filenames, 1, filename);
+    CallAttrFunction("OnUICreate", filename);
+    filename = "";
+end
+
+function ClickDelete(filename)
+    for i in ipairs(filenames) do 
+        if (filenames[i] == filename) then
+            table.remove(filenames, i);
+            CallAttrFunction("OnUIDelete", filename);
+            return;
+        end
+    end
+end
+
+function ClickEdit(filename)
+    CallAttrFunction("OnUIEdit", filename);
+end
+
+function OnReady()
+end
+
+function OnAttrValueChange(attrName)
+    if (attrName == "CurrentUIFileName") then
+        filename = GetAttrValue("CurrentUIFileName", "");
+    end
+    if (attrName == "FileNameList") then
+        filenames = GetAttrValue("FileNameList", {});
+    end
+end
+
+</script>
+
+<style scoped=true>
+.container {
+    height: 100%; 
+    width: 100%; 
+    padding: 20px;
+}
+
+.btn {
+    width: 80px;
+    height: 30px;
+    line-height: 30px;
+    margin-left: 10px;
+}
+</style>

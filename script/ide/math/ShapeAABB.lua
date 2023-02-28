@@ -248,6 +248,11 @@ function ShapeAABB:GetExtendValues()
 	return self.mExtents[1], self.mExtents[2], self.mExtents[3];
 end
 
+function ShapeAABB:GetExtendY()
+	return self.mExtents[2];
+end
+
+
 function ShapeAABB:GetMaxExtent()
 	return math.max(math.max(self.mExtents[1], self.mExtents[2]), self.mExtents[3]);
 end

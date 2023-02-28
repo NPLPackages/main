@@ -82,7 +82,7 @@ function SocketIOClient:GetAddressID()
     return self.address_id;
 end
 function SocketIOClient:GetServerAddr()
-	local server_addr = string.format("%s:tcp", self:GetAddressID());
+    local server_addr = string.format("%s:tcp", self:GetAddressID());
     return server_addr;
 end
 --- Build the URL to call for a given transport and a given session id, if
@@ -104,7 +104,7 @@ function SocketIOClient:BuildURL(url, transport, session_id, moreQuery)
     local query = {}
     table.insert(query, "EIO=" .. tostring(packet.ENGINEIO_PROTOCOL_VERSION))
 
-	local now = commonlib.TimerManager.GetCurrentTime();
+    local now = commonlib.TimerManager.GetCurrentTime();
     table.insert(query, string.format("t=%s", tostring(now)))
 
     table.insert(query, "transport=" .. transport)
@@ -130,7 +130,7 @@ end
 -- 3. send "upgrade" msg to server
 function SocketIOClient:Connect_Polling(url,moreQuery)
     local polling_url = self:BuildURL(url, "polling", nil, moreQuery);
-	LOG.std("", "info", "SocketIOClient", "polling_url:%s", polling_url);
+    LOG.std("", "info", "SocketIOClient", "polling_url:%s", polling_url);
     System.os.GetUrl({
         url = polling_url, 
         headers = {
@@ -144,7 +144,7 @@ function SocketIOClient:Connect_Polling(url,moreQuery)
         -- "96:0{\"sid\":\"V9BrbdhptLDBYlkFAAAQ\",\"upgrades\":[\"websocket\"],\"pingInterval\":25000,\"pingTimeout\":5000}2:40"
         local value = string.match(data,"%d:%d{(.+)}")
         if(not value)then
-		    LOG.std("", "error", "SocketIOClient", "pasing sid failed:%s", data);
+            LOG.std("", "error", "SocketIOClient", "pasing sid failed:%s", data);
             return
         end
         value = string.format("{%s}",value);
@@ -163,13 +163,13 @@ end
 function SocketIOClient:Connect(url,sid,moreQuery)
     url = self:BuildURL(url,"websocket",sid,moreQuery);
     local protocol,host,port,uri = tools.parse_url(url);
-	LOG.std("", "info", "SocketIOClient", "Connect:%s", url);
-	LOG.std("", "info", "SocketIOClient pared url", {
-		protocol = protocol,
-		host = host,
-		port = port,
-		uri = uri,
-	});
+    LOG.std("", "info", "SocketIOClient", "Connect:%s", url);
+    LOG.std("", "info", "SocketIOClient pared url", {
+        protocol = protocol,
+        host = host,
+        port = port,
+        uri = uri,
+    });
 
     port = port or 80;
     local key = tools.generate_key();
@@ -190,11 +190,11 @@ function SocketIOClient:Connect(url,sid,moreQuery)
     self.state = "CONNECTING";
 
     NPL.AddPublicFile("script/ide/System/os/network/SocketIO/SocketIOClient.lua", -30);
-	NPL.StartNetServer("0.0.0.0", "0");
-	NPL.AddNPLRuntimeAddress({host = host, port = tostring(port), nid = self:GetAddressID()})
-	
-	LOG.std("", "info", "SocketIOClient req:", req);
-	LOG.std("", "info", "SocketIOClient GetServerAddr:", self:GetServerAddr());
+    NPL.StartNetServer("0.0.0.0", "0");
+    NPL.AddNPLRuntimeAddress({host = host, port = tostring(port), nid = self:GetAddressID()})
+    
+    LOG.std("", "info", "SocketIOClient req:", req);
+    LOG.std("", "info", "SocketIOClient GetServerAddr:", self:GetServerAddr());
 
     if(NPL.activate_async_with_timeout(2, self:GetServerAddr(), req) == 0) then
     end
@@ -206,7 +206,7 @@ end
 -- @param {table} pkt: input msg
 function SocketIOClient:SendPacket(pkt)
     if(not self:IsConnected())then
-	    LOG.std(nil, "error", "SocketIOClient", "can't send packet, the connection is lost");
+        LOG.std(nil, "error", "SocketIOClient", "can't send packet, the connection is lost");
         return
     end
     local ok, pkt = packet.encode(pkt)
@@ -224,7 +224,7 @@ function SocketIOClient:Ping()
     local result = self:SendPacket(pkt);
     if(result ~= 0)then
         self.state = "CLOSED";
-		LOG.std("", "info", "SocketIOClient", "closed by ping");
+        LOG.std("", "info", "SocketIOClient", "closed by ping");
         self:DispatchEvent({type = "OnClose" , from = "ping"});
     end
 end
@@ -273,7 +273,7 @@ end
 function SocketIOClient:KeepAlive()
     if(not self.timer)then
         self.timer = commonlib.Timer:new({callbackFunc = function(timer)
-	        if(self.state == "OPEN")then
+            if(self.state == "OPEN")then
                 self:Ping();
             end
         end})
@@ -291,10 +291,10 @@ function SocketIOClient:IsConnected()
     return self.state == "OPEN";
 end
 local function activate()
-	--LOG.std("", "debug", "SocketIOClient OnMsg", msg);
+    --LOG.std("", "debug", "SocketIOClient OnMsg", msg);
     local nid = msg.nid;
     if(not nid)then
-		LOG.std("", "error", "SocketIOClient", "activate nid is nil");
+        LOG.std("", "error", "SocketIOClient", "activate nid is nil");
         return
     end
     local client = SocketIOClient_Maps[nid];
@@ -306,12 +306,12 @@ local function activate()
     -- waitting for handshake
     if(client.state == "CONNECTING")then
         local headers = handshake.http_headers(response)
-		LOG.std("", "info", "SocketIOClient", "waitting for handshake:%s", client.key);
+        LOG.std("", "info", "SocketIOClient", "waitting for handshake:%s", client.key);
         local expected_accept = handshake.sec_websocket_accept(client.key)
         if (headers["sec-websocket-accept"] ~= expected_accept) then
             -- handshake failed
-	        LOG.std("", "error", "SocketIOClient", "handshake failed");
-	        LOG.std("", "info", "SocketIOClient response", response);
+            LOG.std("", "error", "SocketIOClient", "handshake failed");
+            LOG.std("", "info", "SocketIOClient response", response);
             client:HandleClose(nid)
             return
         end
@@ -319,7 +319,7 @@ local function activate()
     else
         local decoded,fin,opcode = frame.decode(response);
         if(opcode == frame.CLOSE)then
-		    LOG.std("", "info", "SocketIOClient", "closed connection by server");
+            LOG.std("", "info", "SocketIOClient", "closed connection by server");
             client:HandleClose(nid)
             return
         end
@@ -328,10 +328,10 @@ local function activate()
             if(b == true)then
                 client:HandleMsg(response)
             else
-		        LOG.std("", "error", "SocketIOClient", "%s packet.decode failed:%s", nid, decoded);
+                LOG.std("", "error", "SocketIOClient", "%s packet.decode failed:%s", nid, decoded);
             end
         else
-		    LOG.std("", "error", "SocketIOClient", "%s received an unknown msg with opcode:%s", tostring(nid), tostring(opcode));
+            LOG.std("", "error", "SocketIOClient", "%s received an unknown msg with opcode:%s", tostring(nid), tostring(opcode));
         end
     end
     

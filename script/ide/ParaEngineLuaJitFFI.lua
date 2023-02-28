@@ -97,6 +97,8 @@ if(use_ffi) then
 	int ParaTerrain_FindFirstBlock( uint16_t x,uint16_t y,uint16_t z, uint16_t nSide /*= 4*/, uint32_t max_dist /*= 32*/, uint32_t attrFilter /*= 0xffffffff*/, int nCategoryID /*= -1*/ );
 	int ParaTerrain_GetFirstBlock( uint16_t x,uint16_t y,uint16_t z, int nBlockId, uint16_t nSide /*= 5*/, uint32_t max_dist /*= 32*/);
 	
+	int32_t ParaTerrain_GetBlockMaterial(uint16_t x, uint16_t y, uint16_t z, int16_t nFaceId);
+	bool ParaTerrain_SetBlockMaterial(uint16_t x, uint16_t y, uint16_t z, int16_t nFaceId, int32_t nMaterial);
 
 	void ParaBlockWorld_SetBlockId(void* pWorld, uint16_t x, uint16_t y, uint16_t z, uint32_t templateId);
 	uint32_t ParaBlockWorld_GetBlockId(void* pWorld, uint16_t x, uint16_t y, uint16_t z);
@@ -307,6 +309,17 @@ if(use_ffi) then
 					ParaEngineClient.ParaTerrain_LoadBlockAsync(x, y, z, blockId, userData);
 				end
 			end
+			if(ParaTerrain.SetBlockMaterial) then
+				ParaTerrain.SetBlockMaterial = function(x, y, z, nFace, nMaterial)
+					return ParaEngineClient.ParaTerrain_SetBlockMaterial(x, y, z, nFace, nMaterial);
+				end
+				ParaTerrain.GetBlockMaterial = function(x, y, z, nFace)
+					return ParaEngineClient.ParaTerrain_GetBlockMaterial(x, y, z, nFace);
+				end
+			else
+				ParaTerrain.SetBlockMaterial = function() return false; end
+				ParaTerrain.GetBlockMaterial = function() return -1; end
+			end
 
 			--------------------------------------
 			-- ParaBlockWorld
@@ -484,4 +497,15 @@ if(ParaTerrain) then
 	ParaTerrain.GetFirstBlock = function(x,y,z, nBlockID, nSide, max_dist)
 		return ParaTerrain_GetFirstBlock( x,y,z, nBlockID or 0, nSide or 5, max_dist or 32);
 	end
+
+	if(not ParaTerrain.SetBlockMaterial) then
+		ParaTerrain.SetBlockMaterial = function() return false; end
+		ParaTerrain.GetBlockMaterial = function() return -1; end
+	end
+end
+
+if(not ParaAsset.GetBlockMaterial) then
+	ParaAsset.GetBlockMaterial = function() end;
+	ParaAsset.CreateGetBlockMaterial = function() end;
+	ParaAsset.CreateBlockMaterial = function() end;
 end

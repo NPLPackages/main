@@ -1,7 +1,8 @@
 --[[
 Title: WebView
-Author(s): LanZhiHong
-Date: 2018/5/18
+Author(s): LanZhiHong, big
+CreateDate: 2018.5.18
+ModifyDate: 2022.12.23
 Desc: create a view of webbrower
 use the lib:
 ------------------------------------------------------------
@@ -34,7 +35,7 @@ function WebView:init(x, y, w, h, bSub)
 		h = frame_size[2];
 	end
 
-	if bSub then
+	if (bSub) then
 		self._wv = NativeWebView and NativeWebView.createSubViewView(x, y, w, h);
 	else
 		self._wv = NativeWebView and NativeWebView.createWebView(x, y, w, h);
@@ -45,7 +46,37 @@ function WebView:init(x, y, w, h, bSub)
 	return self;
 end
 
+function WebView:EncodeURI(str)
+    if (str) then
+		str = string.gsub(str, '\n', '\r\n');
+		str =
+		    string.gsub(
+		        str,
+		        '([^%w _ %- . ~])',
+			    function (c)
+			        if (c == ":" or
+			            c == "/" or
+			            c == "?" or
+			            c == "=" or
+			            c == "#" or
+			            c == "(" or
+			            c == ")") then
+			            return c;
+			        else
+			            return string.format ('%%%02X', string.byte(c));
+			        end
+		        end
+		    );
+		str = string.gsub(str, ' ', '+');
+	end
+	return str;
+end
+
 function WebView:loadUrl(url, bCleanCachedData)
+	if (System.os.GetPlatform() == "mac") then
+		url = self:EncodeURI(url);
+	end
+
 	if (self._wv) then
 		if (bCleanCachedData) then
 			self._wv:loadUrl(url, true);
@@ -78,6 +109,12 @@ end
 function WebView:HideViewWhenClickBack(bHide)
 	if (self._wv) then
 		self._att:SetField("HideViewWhenClickBack", bHide);
+	end
+end
+
+function WebView:IgnoreCloseWhenClickBack(bHide)
+	if (self._wv) then
+		self._att:SetField("IgnoreCloseWhenClickBack", bHide);
 	end
 end
 

@@ -1,0 +1,86 @@
+<template style="background:url(@assets/rcap.png#0 0 1012 597);top:0;left:0;height:600;width:1000;">
+	<div  class="ID_8"  style="color:#ffd200;font-size:16;position:absolute;top:352px;left:174px;height:20;width:110;">{{lessonName}}</div>
+	<div  class="ID_6"  style="color:#ffd200;font-size:16;position:absolute;top:205px;left:178px;height:20;width:110;">{{lessonName}}</div>
+	<div  class="ID_5"  style="color:#ffd200;font-size:32;position:absolute;top:147px;left:68px;height:26;width:80;">{{curdate}}</div>
+	<div  class="ID_9"  style="color:#ffd200;font-size:16;position:absolute;top:427px;left:175px;height:20;width:110;">{{lessonName}}</div>
+	<div  class="ID_7"  style="color:#ffd200;font-size:16;position:absolute;top:275px;left:175px;height:20;width:110;">{{lessonName}}</div>
+	<div  class="ID_10"  style="color:#ffd200;font-size:16;position:absolute;top:498px;left:175px;height:20;width:110;">{{lessonName}}</div>
+	<div  class="ID_11" onclick="CloseWindow"  style="position:absolute;top:79px;left:946px;height:30;width:30;"></div>
+	<div  class="ID_2" onclick="ClickDateBtn('today')" v-bind:style="GetDateBtnStyle('today')"></div>
+	<div  class="ID_3" onclick="ClickDateBtn('yesterday')" v-bind:style="GetDateBtnStyle('yesterday')"></div>
+	<div  class="ID_4" onclick="ClickDateBtn('tomorrow')" v-bind:style="GetDateBtnStyle('tomorrow')"></div>
+</template>
+<script type="text/lua">
+function GetCurrentDateObject()
+    return os.date("*t", os.time());
+end
+
+local curdateobj = GetCurrentDateObject();
+curdate = string.format("%s.%s", curdateobj.month, curdateobj.day);
+<!-- curdate="1.28"; -->
+
+local LessonNameList = {
+    { date = "1.28", name = "摇曳露营",},
+    { date = "1.29", name = "我的秘密基地",},
+    { date = "1.30", name = "自然之美",},
+    { date = "1.31", name = "堆雪人",},
+    { date = "2.1", name = "旋转木马",},
+    { date = "2.2", name = "瑞雪兆丰年",},
+    { date = "2.3", name = "贴春联",},
+    { date = "2.4", name = "咱们一家人",},
+    { date = "2.5", name = "游园小火车",},
+    { date = "2.6", name = "毕业日",},
+}
+local todayIndex, yesterdayIndex, tomorrowIndex = 0, -1, 1;
+for i, obj in ipairs(LessonNameList) do 
+    if (obj.date == curdate) then 
+        todayIndex = i;
+        yesterdayIndex = i - 1;
+        tomorrowIndex = i + 1;
+    end 
+end
+
+lessonName = LessonNameList[todayIndex] and LessonNameList[todayIndex].name or "暂无课程";
+active = "today";
+
+function GetDateBtnStyle(date)
+    if (active == "today") then
+        if (date == "yesterday") then return  "position: absolute; width: 55px; height: 60px; left: 415px; top: 100px; background: url(@assets/zuotian2.png#0 0 55 60)" 
+        elseif (date == "today") then return "position: absolute; left: 480px; top: 70px; width: 83px; height: 88px; background: url(@assets/jintian1.png#0 0 83 88);"
+        else return "position: absolute; width: 55px; height: 60px; top: 100px; left: 570px; background: url(@assets/mingtian2.png#0 0 55 60);" end 
+    elseif (active == "yesterday") then
+        if (date == "yesterday") then return  "position: absolute; width: 83px; height: 88px; left: 415px; top: 70px; background: url(@assets/zuotian1.png#0 0 83 88)" 
+        elseif (date == "today") then return "position: absolute; left: 505px; top: 100px; width: 56px; height: 60px; background: url(@assets/jintian2.png#0 0 55 60);"
+        else return "position: absolute; width: 55px; height: 60px; top: 100px; left: 570px; background: url(@assets/mingtian2.png#0 0 55 60);" end 
+    else
+        if (date == "yesterday") then return  "position: absolute; width: 55px; height: 60px; left: 415px; top: 100px; background: url(@assets/zuotian2.png#0 0 55 60)" 
+        elseif (date == "today") then return "position: absolute; left: 480px; top: 100px; width: 56px; height: 60px; background: url(@assets/jintian2.png#0 0 55 60);"
+        else return "position: absolute; width: 83px; height: 88px; top: 70px; left: 545px; background: url(@assets/mingtian1.png#0 0 83 88);" end 
+    end
+end
+
+function ClickDateBtn(date)
+    active = date;
+    if (active == "today") then 
+        curdate = LessonNameList[todayIndex] and LessonNameList[todayIndex].date;
+        lessonName = LessonNameList[todayIndex] and LessonNameList[todayIndex].name;
+    elseif (active == "yesterday") then 
+        curdate = LessonNameList[yesterdayIndex] and LessonNameList[yesterdayIndex].date;
+        lessonName = LessonNameList[yesterdayIndex] and LessonNameList[yesterdayIndex].name;
+    else 
+        curdate = LessonNameList[tomorrowIndex] and LessonNameList[tomorrowIndex].date;
+        lessonName = LessonNameList[tomorrowIndex] and LessonNameList[tomorrowIndex].name;
+    end
+    curdate = curdate or string.format("%s.%s", curdateobj.month, curdateobj.day);
+    lessonName = lessonName or "暂无课程";
+end
+</script>
+
+<style scoped=true>
+
+</style>
+
+<!-- 
+   local Page = NPL.load("Mod/GeneralGameServerMod/UI/Page.lua");
+   Page.Show(nil, {url = "@code/Schedule.html", width=1012, height=597}); 
+ -->

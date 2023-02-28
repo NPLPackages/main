@@ -41,8 +41,14 @@ function WebCacheDB.GetDB(db_name)
 		web_db_default = web_db_default or WebCacheDB:new({});
 		return web_db_default;
 	else
+		local kFileName = db_name
+		if not commonlib.Files.IsAbsolutePath(kFileName) then
+			kFileName = string.format("Database/%s.db", kFileName)
+		else
+			kFileName = commonlib.Files.ToCanonicalFilePath(kFileName)
+		end
 		web_db_pools[db_name] = web_db_pools[db_name] or WebCacheDB:new({
-			kFileName = string.format("Database/%s.db", db_name),
+			kFileName = kFileName,
 		});
 		return web_db_pools[db_name];
 	end	

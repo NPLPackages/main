@@ -1,0 +1,208 @@
+<template class="container">
+    <div class="header-container">
+        <div class="title center full-height">UI 编辑器 {{CurrentFileName}}</div>
+        <div style="display: flex; margin-top: 2px;" class="full-height">
+            <div class="header-nav-btn" onclick="ClickHeaderNavBtn('file')">文件</div>
+            <div class="header-nav-btn" onclick="ClickHeaderNavBtn('ui')">界面</div>
+            <div class="header-nav-btn" onclick="ClickHeaderNavBtn('logic')">逻辑</div>
+            <div class="header-nav-btn" onclick="ClickHeaderNavBtn('code')">代码</div>
+            <div class="header-nav-btn" onclick="ClickHeaderNavBtn('exec')">执行</div>
+            <div class="header-nav-btn" onclick=ClickSaveBtn>保存</div>
+        </div>
+        <div class="center full-height" style="width: 22px;">
+            <div onclick=CloseWindow class="btn" style="width: 22px; height: 22px; background: url(Texture/Aries/Creator/keepwork/ggs/dialog/guanbi_22X22_32bits.png#0 0 22 22);"></div>
+        </div>
+    </div>
+    <div class="body-container">
+        <div v-show="HeaderNavIndex == 'file'" class="tab-item">
+            <FileManager></FileManager>
+        </div>
+        <div v-show="HeaderNavIndex == 'ui'" class="tab-item">
+            <div style="position: absolute; left: 2px; top: 0px; bottom: 0px; right: 300px;">
+                <div class="action-container">
+                    <div class="action-btn" onclick=ClickNewElementBtn>新增</div>
+                    <div class="action-btn" onclick=ClickDeleteElementBtn>删除</div>
+                    <div class="action-btn" onclick=ClickCopyElementBtn>复制</div>
+                </div>
+                <div class="window-container">
+                    <div v-bind:id="WindowItemData.id" ref="window" style="width: 100%; height: 100%;" onmouseup=DraggableElementOnMouseUp>
+                        <ProxyElement v-for="item, index in ElementList" 
+                            class="draggable" draggable=true 
+                            v-bind:id="item.id" 
+                            v-bind:style="ListItemDataMap[item.id].style"  
+                            v-bind:is="item.tagname"
+                            onmousedown=DraggableElementOnMouseDown 
+                            onmousemove=DraggableElementOnMouseMove 
+                            onmouseup=DraggableElementOnMouseUp>
+                            <div style="position: absolute; z-index: 1; left: 0px; top: -16px; width: 100px; height: 16px; font-size: 12px;" 
+                                onmousedown=DraggableFlagElementOnMouseDown 
+                                onmousemove=DraggableFlagElementOnMouseMove 
+                                onmouseup=DraggableFlagElementOnMouseUp>
+                                {{item.id}}
+                            </div>
+                            {{item.text}}
+                            <canvas v-if="CurrentElementId == item.id" 
+                                style="position: absolute; z-index: 1; right: -20px; bottom: -20px; width: 20px; height: 20px;" 
+                                onrender=DraggableSizeElementOnRender
+                                onmousedown=DraggableSizeElementOnMouseDown 
+                                onmousemove=DraggableSizeElementOnMouseMove 
+                                onmouseup=DraggableSizeElementOnMouseUp>
+                            </canvas>
+                        </ProxyElement>
+                    </div>
+                </div>
+            </div>
+            <div style="position: absolute; z-index: 3; right: 0px; top: 0px; width: 300px; height: 100%; border: 1px solid #cccccc;">
+                <div class="right-aside-header" style="height: 60px;">
+                    <div style="position: absolute; left: -300px; top:12px; width: 300px; font-size: 18px; color: #cccccc; display: flex;">
+                        <div style="line-height: 30px; height: 30px; padding-right: 20px;">当前元素: </div>
+                        <select v-bind:value="CurrentElementId" v-bind:options="GetIdOptions()" placeholder="元素ID" onselect=SelectCurrentElementId></select>
+                    </div>
+                    <div style="display: flex; margin-top: 12px;">
+                        <div class="action-btn" onclick="ClickRightAsideNavBtn('style')">样式</div>
+                        <div class="action-btn" onclick="ClickRightAsideNavBtn('attr')">属性</div>
+                        <div class="action-btn" onclick="ClickRightAsideNavBtn('set')">设置</div>
+                    </div>
+                </div>
+                <StyleEditor v-show="RightAsideNavIndex == 'style'" ></StyleEditor>
+                <AttrEditor v-show="RightAsideNavIndex == 'attr'"></AttrEditor>
+                <SetEditor v-show="RightAsideNavIndex == 'set'"></SetEditor>
+            </div>
+        </div>
+
+        <div v-show="HeaderNavIndex == 'logic'" class="tab-item">
+            <blockly ref="blockly" style="width: 100%; height: 100%;" type="vue"></blockly>
+        </div>
+
+        <div v-show="HeaderNavIndex == 'code'" class="tab-item text-code">
+            <code></code>
+        </div>
+
+        <div v-show="HeaderNavIndex == 'exec'" class="tab-item text-code">
+            <!-- <component v-bind:template="HeaderNavIndex == 'exec' and AllCode or ''"></component> -->
+        </div>
+    </div>
+</template>
+
+<script type="text/lua" src="%ui%/Editor/UI.lua">
+RegisterComponent("WindowTitleBar", "%vue%/Components/WindowTitleBar.html");
+RegisterComponent("FileManager", "%ui%/Editor/FileManager.html");
+RegisterComponent("StyleEditor", "%ui%/Editor/Style.html");
+RegisterComponent("AttrEditor", "%ui%/Editor/Attr.html");
+RegisterComponent("SetEditor", "%ui%/Editor/Set.html");
+RegisterComponent("Code", "%ui%/Editor/Code.html");
+
+HeaderNavIndex = "ui";                  -- ui logic code exec file
+RightAsideNavIndex = "style";           -- style attr set
+
+local ExecPage = nil;
+function ClickRightAsideNavBtn(index)
+    RightAsideNavIndex = index;
+end
+
+function ClickHeaderNavBtn(index)
+    if (index == "code" or index == "exec") then 
+        local allcode = GenerateCode();
+        if (index == "exec") then
+            if (ExecPage) then ExecPage:CloseWindow() end 
+            ExecPage = ShowWindow({
+                OnClose = function()
+                    ExecPage = nil;
+                end,
+                template = allcode,
+            }, {
+                url = "%ui%/Editor/Exec.html",
+                width = 500,
+                height = 400,
+            });
+        end
+    end
+    
+    HeaderNavIndex = index;
+end 
+
+
+</script>
+
+<style scoped=true>
+.container {
+    height: 100%; 
+    width: 100%; 
+    padding: 2px;
+    background: url(Texture/Aries/Creator/keepwork/Window/dakuang_32bits.png#0 0 440 93:378 43 33 44);
+}
+
+.header-container {
+    display: flex; 
+    justify-content: space-between; 
+    color: #ffffff;
+    height: 37px;
+    width: 100%;
+    font-size: 16px;
+    padding: 0px 20px;
+}
+
+.body-container {
+    position: absolute;
+    top: 40px;
+    bottom: 2px;
+    left: 0px;
+    right: 0px;
+}
+
+.tab-item {
+    width: 100%; 
+    height: 100%;
+}
+
+.window-container {
+    position: absolute;
+    top: 60px;
+    left: 2%;
+    width: 96%;
+    bottom: 20px;
+    border: 1px solid #cccccc;
+}
+
+.action-container {
+    display: flex;
+    padding-top: 12px;
+    padding-left: 20px;
+}
+
+.action-btn {
+    width: 80px;
+    height: 32px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.action-btn:hover {
+    background-color: #ffffff;
+}
+
+.header-nav-btn {
+    width: 100px;
+    height: 32px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.header-nav-btn:hover {
+    color: #cccccc;
+}
+
+.draggable {
+    position: absolute;
+    z-index: 2;
+}
+
+.text-code {
+    white-space: pre;
+    font-size: 16px;
+    padding: 16px;
+    overflow-y: auto;
+}
+</style>

@@ -256,6 +256,9 @@ end
 
 -- convert 32bits color to 16bits
 function Color.convert32_16(rgb)
+	if rgb==nil then
+		return 0
+	end
     local a = rshift(band(rgb, 0xF0000000), 16);
     local r = rshift(band(rgb, 0x00F00000), 12);
     local g = rshift(band(rgb, 0x0000F000),  8);

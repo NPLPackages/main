@@ -143,7 +143,7 @@ function SceneContextManager.OnMouseDown(nCode, appName, msg)
 	if(nCode==nil) then return end
 	
 	if(not SceneContextManager:IsMouseEventEnabled()) then
-		return true;
+		return nil; -- prevent any other hooks
 	end
 
 	local self = SceneContextManager;
@@ -179,7 +179,7 @@ function SceneContextManager.OnMouseMove(nCode, appName, msg)
 	if(nCode==nil) then return end
 	
 	if(not SceneContextManager:IsMouseEventEnabled()) then
-		return true;
+		return nil; -- prevent any other hooks
 	end
 
 	local self = SceneContextManager;
@@ -193,8 +193,7 @@ function SceneContextManager.OnMouseMove(nCode, appName, msg)
 		end
 	end
 	if(self:IsAcceptAllEvents()) then
-		-- prevent any other hooks
-		return nil;
+		return nil; -- prevent any other hooks
 	end
 	return true;
 end
@@ -204,7 +203,7 @@ function SceneContextManager.OnMouseUp(nCode, appName, msg)
 	-- in most cases, if nCode is nil, the hook procedure should do nothing. 
 	if(nCode==nil) then return end
 	if(not SceneContextManager:IsMouseEventEnabled()) then
-		return true;
+		return nil; -- prevent any other hooks
 	end
 
 	local self = SceneContextManager;
@@ -238,7 +237,7 @@ function SceneContextManager.OnMouseWheel(nCode, appName, msg)
 	-- in most cases, if nCode is nil, the hook procedure should do nothing. 
 	if(nCode==nil) then return end
 	if(not SceneContextManager:IsMouseEventEnabled()) then
-		return true;
+		return nil; -- prevent any other hooks
 	end
 
 	local self = SceneContextManager;
@@ -259,7 +258,7 @@ function SceneContextManager.OnKeyDownProc(nCode, appName, msg)
 	-- in most cases, if nCode is nil, the hook procedure should do nothing. 
 	if(nCode==nil) then return end
 	if(not SceneContextManager:IsKeyboardEventEnabled()) then
-		return true;
+		return nil; -- prevent any other hooks
 	end
 
 	local self = SceneContextManager;
@@ -284,7 +283,7 @@ function SceneContextManager.OnKeyUpProc(nCode, appName, msg)
 	-- in most cases, if nCode is nil, the hook procedure should do nothing. 
 	if(nCode==nil) then return end
 	if(not SceneContextManager:IsKeyboardEventEnabled()) then
-		return true;
+		return nil; -- prevent any other hooks
 	end
 
 	local self = SceneContextManager;
@@ -302,6 +301,14 @@ function SceneContextManager.OnKeyUpProc(nCode, appName, msg)
 		return nil;
 	end
 	return true;
+end
+
+
+-- globally enable or disable all mouse and keyboard event
+function SceneContextManager:EnableInput(bEnabled)
+	bEnabled = bEnabled == true;
+	self:SetKeyboardEventEnabled(bEnabled)
+	self:SetMouseEventEnabled(bEnabled)
 end
 
 SceneContextManager:InitSingleton();

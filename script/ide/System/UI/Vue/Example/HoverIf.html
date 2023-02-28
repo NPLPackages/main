@@ -1,0 +1,56 @@
+<template class="container">
+    <WindowTitleBar title="测试"></WindowTitleBar>
+
+    <div v-if="step == 1" class="tooltip">
+        <div>hello world 1</div>
+        <div class="tooltip-content">tooltip 1</div>
+    </div>
+    <div v-if="step == 2" class="tooltip">
+        <div>hello world 2</div>
+        <div class="tooltip-content">tooltip 2</div>
+    </div>
+    <div v-if="step == 3" class="tooltip">
+        <div>hello world 3</div>
+        <div class="tooltip-content">tooltip 3</div>
+    </div>
+
+    <div onclick=ClickBtn>btn</div>
+</template>
+
+<script type="text/lua">
+RegisterComponent("WindowTitleBar", "%vue%/Components/WindowTitleBar.html");
+
+step = 2;
+
+function ClickBtn()
+    step = step + 1;
+    step = step == 4 and 1 or step;
+end
+</script>
+
+<style>
+.container {
+    height: 100%; 
+    width: 100%; 
+    padding: 0px 2px 2px 2px;
+    /* border: 1px solid #ffffff; */
+    background: url(Texture/Aries/Creator/keepwork/Window/dakuang_32bits.png#0 0 440 93:378 43 33 44);
+}
+
+.tooltip {
+    position: absolute;
+    left: 100px;
+    top: 100px;
+}
+.tooltip-content {
+    visibility: hidden;
+    position: absolute;
+    left: 100px;
+}
+.tooltip:hover .tooltip-content {
+    visibility: visible;
+}
+</style>
+
+
+<!-- RegisterComponent("WindowTitleBar", "%ui%/Core/Vue/Components/WindowTitleBar.html"); -->

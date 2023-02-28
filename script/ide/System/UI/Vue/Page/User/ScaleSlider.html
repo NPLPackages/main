@@ -1,0 +1,92 @@
+<template style="width: 20px; padding-left:10px;">
+    <div onclick=ClickAddStep class="btn" style="width:11px; height: 11px; background:url(Texture/Aries/Creator/keepwork/ggs/user/btn_jia_11X11_32bits.png#0 0 11 11)"></div>
+    <div onclick=clickSelectStep style="width:10px; height:130px; background:url(Texture/Aries/Creator/keepwork/ggs/user/btn_ladongdi_10x130_32bits.png#0 0 10 130); margin-top: 2px; margin-bottom: 2px;">
+        <div ref="sliderbar" style="margin-left:-6px; width:22px; height:8px; background:url(Texture/Aries/Creator/keepwork/ggs/user/btn_ladong_20X8_32bits.png#0 0 22 8);"></div>
+    </div>
+    <div onclick=ClickSubStep class="btn" style="margin-top: 2px; width:10px; height: 3px; background:url(Texture/Aries/Creator/keepwork/ggs/user/btn_jian_10X3_32bits.png#0 0 10 3)"></div>
+</template>
+
+<script type="text/lua">
+local Total = 220;
+local Height = 130 - 8;
+local scale = 1;
+
+function clickSelectStep(event)
+    local event = GetEvent();
+    local element = event and event:GetElement();
+    if(event and element)then
+        local elementX, elementY = element:GetRelPoint(event.x, event.y);
+        local height = math.max(elementY or 0, 0);
+        height = math.min(height, Height);
+        scale = 1.2 - height /  Height * 0.2 
+        OnScaleChange(true);
+    end
+    
+end
+
+function ClickAddStep()
+    scale = scale + 0.02;
+    OnScaleChange(true);
+end
+
+function ClickSubStep()
+    scale = scale - 0.02;
+    OnScaleChange(true);
+end
+
+function OnScaleChange(isUpdateUserInfo)
+    scale = scale > 1.2 and 1.2 or (scale < 1 and 1 or scale);
+    local sliderbarEl = GetRef("sliderbar");
+    if (not sliderbarEl) then return end
+    local marginTop = Height * (1.2 - scale) / 0.2;
+    sliderbarEl:SetStyleValue("margin-top", math.floor(marginTop));
+    sliderbarEl:UpdateLayout();
+
+    local onscale = GetAttrValue("onscale");
+    if (type(onscale) == "function") then onscale(scale) end
+     
+    if (not isUpdateUserInfo) then return end
+    local player = GameLogic.GetPlayerController():GetPlayer();
+    if (player) then player:SetScaling(scale) end
+
+    if (not isAuthUser) then return end
+    -- 更新用户信息
+    local extra = UserDetail.extra or {};
+    extra.ParacraftPlayerEntityInfo = extra.ParacraftPlayerEntityInfo or {};
+    extra.ParacraftPlayerEntityInfo.scale = scale;
+    keepwork.user.setinfo({
+        router_params = {id = AuthUserId},
+        extra = extra,
+    }, function(status, msg, data) 
+        if (status < 200 or status >= 300) then return echo("更新玩家实体信息失败") end
+    end);
+end
+
+function OnReady()
+    local extra = UserDetail.extra or {};
+    extra.ParacraftPlayerEntityInfo = extra.ParacraftPlayerEntityInfo or {};
+    scale = extra.ParacraftPlayerEntityInfo.scale or 1;
+    OnScaleChange(false);
+end 
+
+GetGlobalScope():Watch("UserDetail", OnReady);
+</script>
+
+<!-- 
+    <sliderbar 
+        ref="sliderbar"
+        v-on:change="Change"
+        min=100
+        max=120
+        v-bind:value="value"
+        min_step=2
+        direction="vertical" 
+        style="height: 130px; width: 10px; margin-top: 2px;" 
+        background_width=10
+        background_height=130
+        background="Texture/Aries/Creator/keepwork/ggs/user/btn_ladongdi_10x130_32bits.png#0 0 10 130"
+        button_width=22 
+        button_height=8
+        button_bg="Texture/Aries/Creator/keepwork/ggs/user/btn_ladong_20X8_32bits.png#0 0 22 8">
+    </sliderbar>
+ -->

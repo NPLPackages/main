@@ -1,0 +1,242 @@
+<template style="height: 100%;">
+    <div ref="workslist" onscroll=OnScroll style="position: absolute; top: 6px; bottom: 6px; left: 0px; right: 0px; overflow-y: auto;" class="scroll">
+        <div v-if="table.len(Projects) == 0 and ProjectListLoadFinish" class="center" style="width: 100%; height: 100%;">
+            <div v-bind:style="NullProjectStyle()"></div>
+        </div>
+        <Loading v-if="table.len(Projects) == 0 and not ProjectListLoadFinish"></Loading>
+        <div v-for="project in Projects" class="project btn" v-bind:id="index" v-bind:style="GetProjectStyle(project)" onclick=ClickProject(project)>
+            <div v-bind:style="GetImageStyle(project.extra)">
+                <Username v-bind:UserInfo="project.user" style="height: 30px; width: 264px; position: absolute; top: 104px;"></Username>
+            </div>
+            <div style="font-size:16px; color: #522b2b; margin-top: 10px; margin-left:10px; height: 16px; line-height: 16px; display: flex; align-items: center;">
+                <div v-if="GetProjectStatusStyle(project.status)" class="status" style="display:inline-block; width: 16px; height: 16px;" v-bind:style="GetProjectStatusStyle(project.status)"></div>
+                <div style="display: inline; min-width: 150px;">{{GetProjectName(project.name)}}</div>
+                <div style="display: inline; margin-left: 10px; color: #999999">{{"#" .. tostring(project.id)}}</div>
+            </div>
+            <div style="font-size:12px; color: #999999; margin-top: 10px; margin-left:8px; height: 12px; line-height: 12px;">
+                <div style="float: left;">{{GetCreateTime(project.createdAt)}}</div>
+                <div style="float: right; margin-right: 16px;">{{GetUpdatedTime(project.updatedAt)}}</div>
+            </div>
+            <div style="margin-top: 12px; margin-left: 8px; font-size:12px; color: #999999; ">
+                <div style="display:inline; height: 16px;">
+                    <div valign="center" style="display:inline; width: 16px; height: 12px; background: url(Texture/Aries/Creator/keepwork/ggs/user/icon_liulan_16X12_32bits.png#0 0 16 12);"></div>
+                    <div style="display:inline; line-height: 16px; height: 16px; padding-left: 5px; padding-right: 5px;">{{project.visit or 0}}</div>
+                </div>
+                <div style="display:inline; height: 16px;">
+                    <div style="display:inline; width: 16px; height: 16px; background: url(Texture/Aries/Creator/keepwork/ggs/user/icon_dianzan_16X16_32bits.png#0 0 16 16);"></div>
+                    <div style="display:inline; line-height: 16px; height: 16px; padding-left: 5px; padding-right: 5px;">{{project.star or 0}}</div>
+                </div>
+                <div style="display:inline; height: 16px;">
+                    <div style="display:inline; width: 18px; height: 16px; background: url(Texture/Aries/Creator/keepwork/ggs/user/icon_xinxi_18X16_32bits.png#0 0 18 16);"></div>
+                    <div style="display:inline; line-height: 16px; height: 16px; padding-left: 5px; padding-right: 5px;">{{project.comment or 0}}</div>
+                </div>
+            </div>
+            <div style="margin-top: 10px; width: 250px;">
+                <div style="float: right;">
+                    <div v-if="AuthUserId > 0 and AuthUserId ~= project.userId and project.isFavorite" onclick=ClickUnfavoriteWorld(project.id) style="display: inline; margin-left:6px; width: 36px; height: 36px; background: url(Texture/Aries/Creator/keepwork/ggs/user/renwuqiehuan/btn_yishoucang_40X40_32bits.png#0 0 40 40);"></div>
+                    <div v-if="AuthUserId > 0 and AuthUserId ~= project.userId and not project.isFavorite" onclick=ClickfavoriteWorld(project.id) style="display: inline; margin-left:6px; width: 36px; height: 36px; background: url(Texture/Aries/Creator/keepwork/ggs/user/renwuqiehuan/btn_shoucang_40X40_32bits.png#0 0 40 40);"></div>
+                    <div onclick=ClickShareWorld(project.id) style="display: inline; margin-left:6px; width: 36px; height: 36px; background: url(Texture/Aries/Creator/keepwork/worldshare_32bits.png#109 459 40 40);"></div>
+                    <div onclick=ClickOpenWorld(project) style="display: inline; margin-left:6px; width: 36px; height: 36px; background: url(Texture/Aries/Creator/keepwork/ggs/user/btn_jingru_40X40_32bits.png#0 0 40 40);"></div>
+                </div>
+            </div>
+            <Rate v-if="project.rate and project.rate > 0" style="position: absolute; left: 0px;" v-bind:rate="project.rate"></Rate>
+            <div v-if="project.visibility == 1" style="position: absolute; top: 5px; right: 5px; width: 28px; height: 31px; background: url(Texture/Aries/Creator/keepwork/ggs/user/suosi_28X31_32bits.png#0 0 28 31);"></div>
+        </div>
+    </div>
+</template>
+
+<script type="text/lua">
+RegisterComponent("Rate", "%vue%/Page/User/Rate.html");
+RegisterComponent("Username", "%vue%/Page/User/Username.html");
+
+local WorldList = NPL.load("(gl)Mod/WorldShare/cellar/UserConsole/WorldList.lua");
+local KeepworkServiceWorld = NPL.load("(gl)Mod/WorldShare/service/KeepworkService/World.lua");
+local UniString = commonlib.gettable("System.Core.UniString");
+local selectedProject = nil;
+Projects = {};
+
+local GlobalScope = GetGlobalScope();
+function UpdateProjectList()
+    if (GetAttrValue("type") ~= GlobalScope:Get("ProjectListType")) then return end 
+    if (GlobalScope:Get("CharacterTabIndex") == "works") then
+        Projects = GlobalScope:Get("ProjectList");
+    else
+        Projects = {};
+    end
+end
+
+GetGlobalScope():Watch("ProjectListType", function()
+    UpdateProjectList();
+end);
+
+GetGlobalScope():Watch("CharacterTabIndex", function()
+    UpdateProjectList();
+end);
+
+function OnReady()
+    UpdateProjectList();
+end
+
+function OnAttrValueChange(attrName, attrValue)
+end
+
+function OnScroll(scroll)
+    if (scroll.scrollTop < (scroll.scrollMaxTop - 200)) then return end
+    if (type(NextPageProjectList) == "function") then NextPageProjectList() end
+end
+
+function ClickProject(project)
+    if (selectedProject) then selectedProject.selected = false end
+    selectedProject = project;
+    selectedProject.selected = true;
+end 
+
+function NullProjectStyle()
+    if (GlobalScope:Get("ProjectListType") == "favorite") then
+        return "width: 213px; height: 88px; background: url(Texture/Aries/Creator/keepwork/ggs/user/zi_zanshi_213X88_32bits.png#0 0 213 88);";
+    else
+        return "width: 332px; height: 50px; background: url(Texture/Aries/Creator/keepwork/ggs/user/tixingzi_332X50_32bits.png#0 0 332 50);";
+    end
+end 
+
+function GetProjectStatusStyle(index)
+    if(index == 1) then
+        return 'background:url(Texture/Aries/Creator/keepwork/worldshare_32bits.png#72 104 16 16);';
+    end
+
+    if(index == 2) then
+        return 'background:url(Texture/Aries/Creator/keepwork/worldshare_32bits.png#98 104 16 16);';
+    end
+
+    if(index == 3) then
+        return 'background:url(Texture/Aries/Creator/keepwork/worldshare_32bits.png#20 104 16 16);';
+    end
+
+    if(index == 4) then
+        return 'background:url(Texture/Aries/Creator/keepwork/worldshare_32bits.png#46 104 16 16);';
+    end
+
+    if(index == 5) then
+        return 'background:url(Texture/Aries/Creator/keepwork/worldshare_32bits.png#124 104 16 16);';
+    end
+end
+
+function GetProjectStyle(project)
+    if (project.selected) then
+        return "background: url(Texture/Aries/Creator/keepwork/ggs/user/zuopkuang_selected_32X32_32bits.png#0 0 32 32:14 14 14 14);";
+    else
+        return "background: url(Texture/Aries/Creator/keepwork/ggs/user/zuopkuang_32X32_32bits.png#0 0 32 32:14 14 14 14);";
+    end
+end 
+
+function IsSelected(projectId)
+    return isAuthUser and selectedProjectId == projectId;
+end 
+
+function GetImageStyle(extra)
+    local url = extra and extra.imageUrl or "https://keepwork.com/public/img/project_default_cover_new.af774e7d.png"; 
+    return string.format("position: relative; width: 264px; height: 134px; background: url(%s);", url);
+end
+
+function GetProjectName(text)
+    if type(text) ~= 'string' then
+        return ''
+    end
+
+    text = MyCompany.Aries.Chat.BadWordFilter.FilterString(text)
+
+    local utf8Text = UniString:new(text)
+
+    if _guihelper.GetTextWidth(text) > 112 then
+        return utf8Text:sub(1, 8).text .. '...'
+    else
+        return text
+    end
+end
+
+function GetCreateTime(datetime)
+    local datestr, timestr = string.match(datetime, "(%d+%D%d+%D%d+)%D*(%d+%D%d+)");
+    return datestr .. " " .. timestr;
+end
+
+function GetUpdatedTime(datetime)
+    local year,month,day,hour,min,sec = string.match(datetime, "(%d+)%D(%d+)%D(%d+)%D+(%d+)%D(%d+)%D(%d+)");
+    local dateTime = string.format("%s-%s-%s %s:%s:%s", year,month,day,hour,min,sec);
+    local date,time = commonlib.timehelp.GetLocalTime();
+    local curDateTime = string.format("%s %s", date, string.gsub(time, "-", ":"));
+    local day,hours,minutes,seconds,time_str = commonlib.GetTimeStr_BetweenToDate(curDateTime, dateTime);
+    local year = math.floor(day / 365);
+    local month = math.floor(day / 30);
+    if (year > 0) then return tostring(year) .. " 年前更新" end
+    if (month > 0) then return tostring(month) .. " 月前更新" end
+    if (day > 0) then return tostring(day) .. " 天前更新" end
+    if (hours > 0) then return tostring(hours) .. " 小时前更新" end 
+    if (minutes > 0) then return tostring(minutes) .. " 分钟前更新" end 
+    if (seconds > 0) then return tostring(seconds) .. " 秒前更新" end 
+    return time_str;
+end
+
+function ClickUnfavoriteWorld(projectId)
+    if (type(UnfavoriteProject) == "function") then UnfavoriteProject(projectId) end
+end 
+
+function ClickfavoriteWorld(projectId)
+    if (type(FavoriteProject) == "function") then FavoriteProject(projectId) end
+end 
+
+-- 点击打开世界
+function ClickOpenWorld(project)
+    CloseWindow();
+    GameLogic.RunCommand(string.format("/loadworld %d", project.id));    
+end
+
+-- 点击分享世界
+function ClickShareWorld(worldId)
+    local ShareWorld = NPL.load("(gl)Mod/WorldShare/cellar/ShareWorld/ShareWorld.lua")
+    ShareWorld:ShowWorldCode(worldId)
+end 
+
+function ClickWorldDelete(projectId)
+    KeepworkServiceWorld:SetWorldInstanceByPid(projectId, function()
+        WorldList:DeleteWorld();
+    end);
+end
+
+function ClickWorldSync(projectId)
+    KeepworkServiceWorld:SetWorldInstanceByPid(projectId, function() 
+        WorldList:Sync();
+    end)
+end
+
+-- 打开世界目录
+function ClickOpenWorldDir(projectName)
+    -- ParaIO.GetCurDirectory(0) .. GameLogic.GetWorld():GetWorldPath();
+    local path = ParaIO.GetCurDirectory(0) .. "worlds/DesignHouse/" .. projectName .. "/";
+    ParaGlobal.ShellExecute("open", commonlib.Encoding.Utf8ToDefault(path), "", "", 1);
+end
+
+</script>
+
+<style type="text/css">  
+.project {
+    position: relative;
+    display: inline-block; 
+    margin: 0px 3px 6px 3px; 
+    padding: 8px 10px 9px 10px; 
+    color:white;
+    width: 284px;
+    height: 274px;
+    background: url(Texture/Aries/Creator/keepwork/ggs/user/zuopkuang_32X32_32bits.png#0 0 32 32:14 14 14 14);
+}
+
+.status {
+    width: 16px;
+    height: 16px;
+    margin-left: -2px;
+    margin-top: 2px;
+    margin-right: 4px;
+}
+
+</style>
+
+<!-- background: url(Texture/Aries/Creator/keepwork/ggs/user/zuopkuang_32X32_32bits.png#0 0 32 32:14 14 14 14); -->

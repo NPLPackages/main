@@ -21,6 +21,7 @@ manip:SetPosition(x,y,z);
 ]]
 NPL.load("(gl)script/ide/System/Scene/Manipulators/Manipulator.lua");
 NPL.load("(gl)script/ide/math/Plane.lua");
+local SelectionManager = commonlib.gettable("MyCompany.Aries.Game.SelectionManager");
 local Color = commonlib.gettable("System.Core.Color");
 local Plane = commonlib.gettable("mathlib.Plane");
 local vector3d = commonlib.gettable("mathlib.vector3d");
@@ -30,15 +31,10 @@ local TranslateManip = commonlib.inherit(commonlib.gettable("System.Scene.Manipu
 TranslateManip:Property({"Name", "TranslateManip", auto=true});
 TranslateManip:Property({"radius", 1});
 TranslateManip:Property({"showArrowHead", true});
+TranslateManip:Property({"showGroundSnap", false, "IsShowGroundSnap", "SetShowGroundSnap", auto=true});
+TranslateManip:Property({"groundSnapColor", "#00ffff"});
 TranslateManip:Property({"showGrid", false, "IsShowGrid", "SetShowGrid", auto=true});
 TranslateManip:Property({"snapToGrid", false, "IsSnapToGrid", "SetSnapToGrid", auto=true});
-TranslateManip:Property({"showXPlane", false, "IsShowXPlane", "SetShowXPlane", auto=true});
-TranslateManip:Property({"showYPlane", false, "IsShowYPlane", "SetShowYPlane", auto=true});
-TranslateManip:Property({"showZPlane", false, "IsShowZPlane", "SetShowZPlane", auto=true});
-TranslateManip:Property({"planeSize", 10, "GetPlaneSize", "SetPlaneSize", auto=true});
-TranslateManip:Property({"planeColor", 0x20ffffff, "GetPlaneColor", "SetPlaneColor", auto=true});
-TranslateManip:Property({"planeGridColor", 0x20000000, "GetPlainLineColor", "SetPlainLineColor", auto=true});
-
 
 TranslateManip:Property({"gridSize", 0.1, "GetGridSize", "SetGridSize", auto=true});
 TranslateManip:Property({"gridOffset", {0,0,0}, "GetGridOffset", "SetGridOffset", auto=true});
@@ -100,6 +96,8 @@ function TranslateManip:mousePressEvent(event)
 		self.selectedAxis = "y"
 	elseif(name == self.names.z) then
 		self.selectedAxis = "z"
+	elseif(name == self.names.xyz) then
+		self.selectedAxis = "xyz";
 	else
 		self.selectedAxis = nil;
 		self.drag_offset = nil;
@@ -115,53 +113,82 @@ function TranslateManip:mousePressEvent(event)
 		self.old_position[2] = y;
 		self.old_position[3] = z;
 	end
+	self.from_worldPosition = self:CalculateWorldOrigin();
+	
 	self.drag_offset = {x=0,y=0,z=0};
 
 	-- calculate everything in view space. 
-	local vecList = self:TransformVectorsInViewSpace({vector3d:new(0,0,0), moveDir:clone()});
-	self.moveDir = vecList[2] - vecList[1];
-	self.moveOrigin = vecList[1];
-	-- final a virtual plane, containing the selected axis. 
-	local planeVec;
-	if(math.abs(self.moveDir[2]) < 0.6) then
-		planeVec = vector3d:new(0,1,0);
+	if(moveDir) then
+		local vecList = self:TransformVectorsInViewSpace({vector3d:new(0,0,0), moveDir:clone()});
+		self.moveDir = vecList[2] - vecList[1];
+		self.moveOrigin = vecList[1];
+		-- final a virtual plane, containing the selected axis. 
+		local planeVec;
+		if(math.abs(self.moveDir[2]) < 0.6) then
+			planeVec = vector3d:new(0,1,0);
+		else
+			planeVec = vector3d:new(1,0,0);
+		end
+		self.virtualPlane = Plane:new():redefine(self.moveDir*planeVec, self.moveOrigin);
+		-- screenSpaceDir
+		local vecList = self:TransformVectorsInScreenSpace({vector3d:new(0,0,0), moveDir:clone()});
+		self.screenSpaceDir = vecList[2] - vecList[1];
+		self.screenSpaceDir:normalize();
 	else
-		planeVec = vector3d:new(1,0,0);
+		self.moveDir = nil;
+		self.moveOrigin = nil;
 	end
-	self.virtualPlane = Plane:new():redefine(self.moveDir*planeVec, self.moveOrigin);
-	-- screenSpaceDir
-	local vecList = self:TransformVectorsInScreenSpace({vector3d:new(0,0,0), moveDir:clone()});
-	self.screenSpaceDir = vecList[2] - vecList[1];
-	self.screenSpaceDir:normalize();
 end
 
 -- virtual: 
 function TranslateManip:mouseMoveEvent(event)
 	if(self.selectedAxis) then
 		event:accept();
-		
-		-- get the mouse position for mouse ray casting. 
-		local mouseMoveDir = vector3d:new(event.x - self.last_mouse_x, event.y-self.last_mouse_y, 0);
-		local dist = mouseMoveDir:dot(self.screenSpaceDir);
-		local mouse_x = self.last_mouse_x + self.screenSpaceDir[1] * dist;
-		local mouse_y = self.last_mouse_y + self.screenSpaceDir[2] * dist;
-		if(not self.pressPoint) then
-			mouse_x = self.last_mouse_x;
-			mouse_y = self.last_mouse_y;
-		end
-		-- ray cast to virtual plane to obtain the mouse picking point. 
-		local point = vector3d:new();
-		local result, dist = self:MouseRayIntersectPlane(mouse_x, mouse_y, self.virtualPlane, point);
-		if(result == 1) then
+		if(self.selectedAxis == "xyz") then
+			-- ray cast on ground based on mouse position. 
+			if(self.from_worldPosition and SelectionManager.MousePickBlock) then
+				local result = SelectionManager:MousePickBlock(nil, nil, nil, nil, event.x, event.y);
+				if(result and result.x) then
+					local x, y, z = result:GetPhysicalPos()
+					if(x) then
+						self.drag_offset.x = x - self.from_worldPosition[1]
+						self.drag_offset.y = y - self.from_worldPosition[2]
+						self.drag_offset.z = z - self.from_worldPosition[3]
+						if(not self.pressDist) then
+							self.pressDist = 1;
+							self:BeginModify();
+						else
+							if(self:IsRealTimeUpdate()) then
+								self:GrabValues();
+							end
+						end
+					end
+				end
+			end
+		else
+			-- get the mouse position for mouse ray casting. 
+			local mouseMoveDir = vector3d:new(event.x - self.last_mouse_x, event.y-self.last_mouse_y, 0);
+			local dist = mouseMoveDir:dot(self.screenSpaceDir);
+			local mouse_x = self.last_mouse_x + self.screenSpaceDir[1] * dist;
+			local mouse_y = self.last_mouse_y + self.screenSpaceDir[2] * dist;
 			if(not self.pressPoint) then
-				self.pressPoint = point;
-				self.pressDist = dist;
-				self:BeginModify();
-			else
-				local dist = (point - self.pressPoint):dot(self.moveDir);
-				self.drag_offset[self.selectedAxis] = dist;
-				if(self:IsRealTimeUpdate()) then
-					self:GrabValues();
+				mouse_x = self.last_mouse_x;
+				mouse_y = self.last_mouse_y;
+			end
+			-- ray cast to virtual plane to obtain the mouse picking point. 
+			local point = vector3d:new();
+			local result, dist = self:MouseRayIntersectPlane(mouse_x, mouse_y, self.virtualPlane, point);
+			if(result == 1) then
+				if(not self.pressPoint) then
+					self.pressPoint = point;
+					self.pressDist = dist;
+					self:BeginModify();
+				else
+					local dist = (point - self.pressPoint):dot(self.moveDir);
+					self.drag_offset[self.selectedAxis] = dist;
+					if(self:IsRealTimeUpdate()) then
+						self:GrabValues();
+					end
 				end
 			end
 		end
@@ -180,6 +207,7 @@ function TranslateManip:mouseReleaseEvent(event)
 	self.pressPoint = nil;
 	self.pressDist = nil;
 	self.old_position = nil;
+	self.from_worldPosition = nil;
 	if(self:IsUpdatePosition()) then
 		local x, y, z = unpack(self:GetField("position", {0,0,0}));
 		if(x) then
@@ -221,7 +249,7 @@ end
 function TranslateManip:keyPressEvent(key_event)
 end
 
--- @param axis: "x", "y", "z"
+-- @param axis: "x", "y", "z", "xyz"
 -- @param name: current active name. if nil, it will load current active name
 function TranslateManip:IsAxisHighlighted(axis, name)
 	if(self.selectedAxis) then
@@ -235,7 +263,8 @@ end
 function TranslateManip:HasPickingName(pickingName)
 	return self.names.x == pickingName
 		or self.names.y == pickingName
-		or self.names.z == pickingName;
+		or self.names.z == pickingName
+		or self.names.xyz == pickingName;
 end
 
 function TranslateManip:paintEvent(painter)
@@ -276,9 +305,11 @@ function TranslateManip:paintEvent(painter)
 					local offset_x, offset_y, offset_z = new_x-old_x, new_y-old_y, new_z-old_z;
 					local gridSize = self:GetGridSize();
 					local moveDir = self:GetMoveDirByAxis();
-					for i=-5, 5 do
-						local x, y, z = moveDir[1]*(i*gridSize) + offset_x, moveDir[2]*(i*gridSize) + offset_y, moveDir[3]*(i*gridSize) + offset_z;
-						ShapesDrawer.DrawCube(painter, x, y, z, 0.02);
+					if(moveDir) then
+						for i=-5, 5 do
+							local x, y, z = moveDir[1]*(i*gridSize) + offset_x, moveDir[2]*(i*gridSize) + offset_y, moveDir[3]*(i*gridSize) + offset_z;
+							ShapesDrawer.DrawCube(painter, x, y, z, 0.02);
+						end
 					end
 				end
 			end
@@ -299,15 +330,19 @@ function TranslateManip:paintEvent(painter)
 
 	self:paintPlanes(painter);
 
-	local x_name, y_name, z_name;
+	local x_name, y_name, z_name, xyz_name;
 	if(isDrawingPickable) then
 		x_name = self:GetNextPickingName();
 		y_name = self:GetNextPickingName();
 		z_name = self:GetNextPickingName();
+		xyz_name = self:GetNextPickingName();
 	end
 	
+
 	local name = self:GetActivePickingName();
 	local radius = self.radius;
+	local from_length = self.showGroundSnap and (radius / 5) or 0;
+
 	if(self:IsAxisHighlighted("x", name)) then 
 		self:SetColorAndName(painter, self.selectedColor, x_name);
 	else
@@ -317,7 +352,7 @@ function TranslateManip:paintEvent(painter)
 			self:SetColorAndName(painter, Color.ChangeOpacity(self.xColor, 32), x_name);
 		end
 	end
-	ShapesDrawer.DrawLine(painter, 0,0,0, radius,0,0);
+	ShapesDrawer.DrawLine(painter, from_length,0,0, radius,0,0);
 	if(self.showArrowHead) then
 		ShapesDrawer.DrawArrowHead(painter, radius,0,0, "x", arrow_radius, nil, 8);
 	end
@@ -330,7 +365,7 @@ function TranslateManip:paintEvent(painter)
 			self:SetColorAndName(painter, Color.ChangeOpacity(self.yColor, 32), y_name);
 		end
 	end
-	ShapesDrawer.DrawLine(painter, 0,0,0, 0,radius,0);
+	ShapesDrawer.DrawLine(painter, 0,from_length,0, 0,radius,0);
 	if(self.showArrowHead) then
 		ShapesDrawer.DrawArrowHead(painter, 0,radius,0, "y", arrow_radius, nil, 8);
 	end
@@ -343,55 +378,28 @@ function TranslateManip:paintEvent(painter)
 			self:SetColorAndName(painter, Color.ChangeOpacity(self.zColor, 32), y_name);
 		end
 	end
-	ShapesDrawer.DrawLine(painter, 0,0,0, 0,0,radius);
+	ShapesDrawer.DrawLine(painter, 0,0,from_length, 0,0,radius);
 	if(self.showArrowHead) then
 		ShapesDrawer.DrawArrowHead(painter, 0,0,radius, "z", arrow_radius, nil, 8);
+	end
+
+	if(self.showGroundSnap) then
+		-- center cross line
+		if(self:IsAxisHighlighted("xyz", name)) then 
+			self:SetColorAndName(painter, self.selectedColor, xyz_name);
+		else
+			self:SetColorAndName(painter, self.groundSnapColor, xyz_name);
+		end
+		ShapesDrawer.DrawLine(painter, 0,0,0, from_length,0,0);
+		ShapesDrawer.DrawLine(painter, 0,0,0, 0,from_length,0);
+		ShapesDrawer.DrawLine(painter, 0,0,0, 0,0,from_length);
 	end
 
 	if(isDrawingPickable) then
 		self.names.x = x_name;
 		self.names.y = y_name;
 		self.names.z = z_name;
-	end
-end
-
-
-function TranslateManip:paintPlanes(painter)
-	if(self:IsPickingPass()) then
-		return
-	end
-	if(self:IsShowXPlane() or self:IsShowYPlane() or self:IsShowZPlane()) then
-		local size = math.floor(self:GetPlaneSize() / 2);
-		if(self.planeColor and self.planeColor~=0) then
-			painter:SetBrush(self.planeColor);
-			if(self:IsShowXPlane()) then
-				ShapesDrawer.DrawAABB(painter, 0, -size, -size, 0, size, size, true);
-			end
-			if(self:IsShowYPlane()) then
-				ShapesDrawer.DrawAABB(painter, -size, 0, -size, size, 0, size, true);
-			end
-			if(self:IsShowZPlane()) then
-				ShapesDrawer.DrawAABB(painter, -size, -size, 0, size, size, 0, true);
-			end
-		end
-		
-		if(self.planeGridColor and self.planeGridColor~=0) then
-			painter:SetBrush(self.planeGridColor);
-			for i=-size, size do
-				if(self:IsShowXPlane()) then
-					ShapesDrawer.DrawLine(painter, 0, i, -size, 0, i, size)
-					ShapesDrawer.DrawLine(painter, 0, -size, i, 0, size, i)
-				end
-				if(self:IsShowYPlane()) then
-					ShapesDrawer.DrawLine(painter, i, 0, -size, i, 0, size)
-					ShapesDrawer.DrawLine(painter, -size, 0, i, size, 0, i)
-				end
-				if(self:IsShowZPlane()) then
-					ShapesDrawer.DrawLine(painter, i, -size, 0, i, size, 0)
-					ShapesDrawer.DrawLine(painter, -size, i, 0, size, i, 0)
-				end
-			end
-		end
+		self.names.xyz = xyz_name;
 	end
 end
 

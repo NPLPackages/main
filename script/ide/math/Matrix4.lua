@@ -58,6 +58,11 @@ function Matrix4:identity()
 	return self:set(Matrix4.IDENTITY);
 end
 
+-- @return true if this is an identity matrix.
+function Matrix4:isIdentity()
+	return self:equals(Matrix4.IDENTITY);
+end
+
 function Matrix4:equals(mat)
 	for i=1,16 do
 		if(self[i] ~= mat[i]) then
@@ -111,12 +116,30 @@ function Matrix4:offsetTrans(tx, ty, tz)
 	return self;
 end
 
+function Matrix4:addTranslation(tx, ty, tz)
+	self[13] = self[13]+tx;  self[14] = self[14]+ty;  self[15] = self[15]+tz;
+	return self;
+end
+
+function Matrix4:addScaling(sx, sy, sz)
+	local m = Matrix4:new():identity()
+	m:setScale(sx, sy, sz);
+	return self:multiply(m);
+end
+
 function Matrix4:setScale(sx, sy, sz)
 	self[1] = sx or 1;  	self[6] = sy or 1;  self[11] = sz or 1;
 end
 
 function Matrix4:setTrans(tx, ty, tz)
 	self[13] = tx or 0;  self[14] = ty or 0;  self[15] = tz or 0;
+end
+
+function Matrix4:ApplyScaling(sx, sy, sz)
+	self[1] = self[1] * sx;		self[2] = self[2] * sx;		self[3] = self[3] * sx;
+	self[5] = self[5] * sy;		self[6] = self[6] * sy;		self[7] = self[7] * sy;
+	self[9] = self[9] * sz;		self[10] = self[10] * sz;	self[11] = self[11] * sz;
+	return self;
 end
 
 function Matrix4:RemoveScaling(Tolerance)
@@ -258,6 +281,58 @@ end
 function Matrix4.scaling(v)
     return Matrix4:new({v[1], 0, 0, 0, 0, v[2], 0, 0, 0, 0, v[3], 0, 0, 0, 0, 1});
 end
+
+-- decompose affine matrix into scale, rotation and translation
+-- @param outscale, outrotation, outtranslation: can be nil or output table objects 
+-- @return outscale, outrotation, outtranslation: may return nil, if input m is not affine. 
+function Matrix4:Decompose(outscale, outrotation, outtranslation)
+	local m = self;
+	outscale = outscale or mathlib.vector3d:new();
+	outrotation = outrotation or mathlib.Quaternion:new();
+	outtranslation = outtranslation or mathlib.vector3d:new();
+	local normalized = Matrix4:new():identity();
+	local vec = mathlib.vector3d:new();
+	
+	-- Compute the scaling part.
+	vec[1]=m[1];
+	vec[2]=m[2];
+	vec[3]=m[3];
+	outscale[1]=vec:length();
+	
+	vec[1]=m[5];
+	vec[2]=m[6];
+	vec[3]=m[7];
+	outscale[2] = vec:length();
+	
+	vec[1]=m[9];
+	vec[2]=m[10];
+	vec[3]=m[11];
+	outscale[3]=vec:length();
+	
+	-- Compute the translation part.
+	outtranslation[1]=m[13];
+	outtranslation[2]=m[14];
+	outtranslation[3]=m[15];
+	
+	-- Let's calculate the rotation now
+	if ( (outscale[1] == 0) or (outscale[2] == 0) or (outscale[3] == 0) ) then
+		return
+	end
+	
+	normalized[1]=m[1]/outscale[1];
+	normalized[2]=m[2]/outscale[1];
+	normalized[3]=m[3]/outscale[1];
+	normalized[5]=m[5]/outscale[2];
+	normalized[6]=m[6]/outscale[2];
+	normalized[7]=m[7]/outscale[2];
+	normalized[9]=m[9]/outscale[3];
+	normalized[10]=m[10]/outscale[3];
+	normalized[11]=m[11]/outscale[3];
+	
+	outrotation:FromRotationMatrix(normalized);
+	return outscale, outrotation, outtranslation;
+end
+
 -- right multiply by another 4x4 matrix:
 function Matrix4:multiply(m)
 	local m1 = self;
@@ -299,6 +374,64 @@ function Matrix4:transpose( )
 	self[13], self[14], self[15], self[16] = m03,m13,m23,m33;
 	return self;
 end
+
+-- string is a commar separated numbers like "1, 0, 0, ..."
+function Matrix4:toString()
+	return table.concat(self, ",");
+end
+
+-- return self;
+function Matrix4:fromString(str)
+	self:identity();
+	if(str) then
+		local index = 1;
+		for v in str:gmatch("[^, ]+") do
+			self[index] = tonumber(v);
+			index = index + 1;
+		end
+	end
+	return self;
+end
+
+function Matrix4:MatrixOrthoLH(Width, Height, zNearPlane, zFarPlane)
+	self:identity();
+    self[1] = 1.0 / Width;
+	self[6] = 1.0 / Height;
+	self[11] = 1.0 / (zFarPlane - zNearPlane);
+	self[15] = -zNearPlane / (zFarPlane - zNearPlane);
+	return self;
+end
+
+function Matrix4:MakeOrthoOffCenter(left, right, bottom, top, zNearPlane, zFarPlane)
+	if(System.os.GetPlatform()=="win32") then
+		return self:MakeOrthoOffCenterLH(left, right, bottom, top, zNearPlane, zFarPlane)
+	else
+		return self:MatrixOrthoOffCenterOpenGL(left, right, bottom, top, zNearPlane, zFarPlane)
+	end
+end
+
+function Matrix4:MakeOrthoOffCenterLH(left, right, bottom, top, zNearPlane, zFarPlane)
+	self:identity();
+    self[1] = 2.0 / (right - left);
+    self[6] = 2.0 / (top - bottom);
+    self[11] = 1.0 / (zFarPlane - zNearPlane);
+    self[13] = -1.0 -2.0 * left / (right - left);
+    self[14] = 1.0 + 2.0 * top / (bottom - top);
+    self[15] = zNearPlane / (zNearPlane - zFarPlane);
+    return self;
+end
+
+function Matrix4:MatrixOrthoOffCenterOpenGL(left, right, bottom, top, zNearPlane, zFarPlane)
+	self:identity();
+	self[1] = 2 / (right - left);
+	self[6] = 2 / (top - bottom);
+	self[11] = 2 / (zNearPlane - zFarPlane);
+	self[13] = (left + right) / (left - right);
+	self[14] = (top + bottom) / (bottom - top);
+	self[15] = (zNearPlane + zFarPlane) / (zNearPlane - zFarPlane);
+	return self;
+end
+
 
 -- const static identity matrix. 
 Matrix4.IDENTITY = Matrix4:new({1, 0, 0, 0,        0, 1, 0, 0,        0, 0, 1, 0,        0, 0, 0, 1 });

@@ -117,8 +117,8 @@ function EventSystem:AddEventListener(type,func,funcHolder, listener_name)
 		sinks = {};
 		self.event_pools[type] = sinks;
 	end
-	local index, handler;
-	for index, handler in ipairs(sinks) do
+	for index = 1, #sinks do
+		local handler = sinks[index];
 		if(listener_name and handler.name == listener_name) then
 			handler.func = func;
 			handler.funcHolder = funcHolder;
@@ -142,8 +142,8 @@ function EventSystem:RemoveEventListener(type, func, funcHolder)
 	else
 		local sinks = self.event_pools[type];
 		if(sinks) then
-			local index, handler;
-			for index, handler in ipairs(sinks) do
+			for index = 1, #sinks do
+				local handler = sinks[index];
 				if(handler.func == func and handler.funcHolder == funcHolder ) then
 					commonlib.removeArrayItem(sinks, index);
 					return
@@ -163,7 +163,8 @@ function EventSystem:HasEventListener(type, func, funcHolder)
 		else
 			local sinks = self.event_pools[type];
 			if(sinks) then
-				for index, handler in ipairs(sinks) do
+				for index = 1, #sinks do
+					local handler = sinks[index];
 					if(handler.func == func and handler.funcHolder == funcHolder ) then
 						return true
 					end
@@ -193,8 +194,8 @@ function EventSystem:DispatchEvent(event, ...)
 	local sinks = self.event_pools[event.type];
 	if(sinks) then
 		local return_value;
-		local index, handler;
-		for index, handler in ipairs(sinks) do
+		for index = 1, #sinks do
+			local handler = sinks[index];
 			return_value = handler.func(handler.funcHolder, event, ...) or return_value;
 		end
 		return return_value;
@@ -216,8 +217,8 @@ function EventSystem:DispatchEventByType(event_type, event, ...)
 	if(not event)then return end
 	local sinks = self.event_pools[event_type];
 	if(sinks) then
-		local index, handler;
-		for index, handler in ipairs(sinks) do
+		for index = 1, #sinks do
+			local handler = sinks[index];
 			handler.func(handler.funcHolder, event, ...)
 		end
 	end
