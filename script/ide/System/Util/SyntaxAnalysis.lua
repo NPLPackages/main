@@ -122,7 +122,8 @@ local function nextIdentifier(uniStr, len, pos)
 	local is_identifier = false;
 	while(pos <= len) do
 		local c = uniStr[pos];
-		local c_num = string.byte(c);
+		local c_num = string.byte(c) or 0;
+		
 		local is_letter = (c_num > 64 and c_num < 91) or  (c_num >96 and c_num < 123);
 		if(not start_pos) then
 			if(is_letter or c == "_") then
@@ -202,7 +203,7 @@ function SyntaxAnalysis:GetToken(lineItem, lineIndex)
 						-- 这里得多一层判断 判断注释类型是否匹配 是“[[”类型的 还是"[==["类型
 						lineItem.in_multi_comment = true
 						local last_item = self:GetLastNoEmptyItems(self.text_ctrl:GetItems(), lineIndex)
-						if equal_symbol == last_item.equal_symbol then
+						if last_item and equal_symbol == last_item.equal_symbol then
 							
 							lineItem.is_multi_comment_end = true
 							self:SetItemInMultiConmet(lineIndex + 1, nil, false)

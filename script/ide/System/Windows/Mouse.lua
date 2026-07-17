@@ -10,6 +10,12 @@ NPL.load("(gl)script/ide/System/Windows/Mouse.lua");
 local Mouse = commonlib.gettable("System.Windows.Mouse");
 Mouse:Capture(uiElement);
 Mouse:SetCursorFromFile(filename, offsetX, offsetY)
+
+-- for WebXR emulation, we can send virtual mouse events.
+Mouse:SendMouseButtonEvent(500, 500, "left", "down")
+Mouse:SendMouseMoveEvent(500, 500)
+Mouse:SendMouseButtonEvent(500, 500, "left", "up")
+Mouse:SendMouseWheelEvent(120)
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/System/Core/ToolBase.lua");
@@ -94,6 +100,38 @@ function Mouse:SetCursorFromFile(filename, offsetX, offsetY)
 	else
 		root_.cursor = filename;
 	end
+end
+
+function Mouse:SetMousePosition(x, y)
+	ParaUI.SetMousePosition(x, y);
+end
+
+-- sending virtual mouse events
+-- @param button: "left", "right", "middle"
+-- @param button_state: "down", "up" or "press" "release"
+function Mouse:SendMouseButtonEvent(x, y, button, button_state)
+	if(button == "left") then
+		button = 0;
+	elseif(button == "right") then
+		button = 1;
+	elseif(button == "middle") then
+		button = 2;
+	end
+	if(button_state == "down" or button_state == "press") then
+		button_state = 0;
+	elseif(button_state == "up" or button_state == "release") then
+		button_state = 1;
+	end
+	if(not x or not y) then
+		x, y = self:GetMousePosition();
+	end
+	Screen:GetGUIRoot():SetField("SendMouseButtonEvent", {x, y, button or 0, button_state or 0});
+end
+function Mouse:SendMouseMoveEvent(x, y)
+	Screen:GetGUIRoot():SetField("SendMouseMoveEvent", {x, y});
+end
+function Mouse:SendMouseWheelEvent(delta)
+	Screen:GetGUIRoot():SetField("SendMouseWheelEvent", delta);
 end
 
 -- this is a singleton class

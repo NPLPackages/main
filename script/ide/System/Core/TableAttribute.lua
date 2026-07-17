@@ -66,7 +66,7 @@ function TableAttribute:SyncObject()
 					child_fieldnames[name] = #child_fields-1;
 				else
 					fields[#fields+1] = name;
-					fieldnames[name] = #fields-1;
+					fieldnames[name] = #fields;
 				end
 			end
 		end
@@ -224,21 +224,22 @@ function TableAttribute:GetFieldNum()
 end
 
 -- get field at the specified index. "" will be returned if index is out of range.
+-- @param nIndex: 0 based index
 function TableAttribute:GetFieldName(nIndex)
 	local fields = self:GetDataFields();
-	return fields[nIndex] or "";
+	return fields[nIndex + 1] or "";
 end
 
 -- get field index of a given field name. -1 will be returned if name not found. 
 -- @param sFieldname 
--- @return index or -1
+-- @return 0 based index or -1
 function TableAttribute:GetFieldIndex(sFieldname)
 	local fields = self:GetChildFields();
-	return self.fieldnames[sFieldname] or -1;
+	return (self.fieldnames[sFieldname] or 0) - 1;
 end
 
 -- get the field type as string
--- @param nIndex : index of the field
+-- @param nIndex : index of the field, 0 based
 -- @return one of the following type may be returned 
 -- "void" "bool" "string" "int" "float" "float_float" "float_float_float" "double" "vector2" "vector3" "vector4" "enum" "deprecated" ""
 function TableAttribute:GetFieldType(nIndex)

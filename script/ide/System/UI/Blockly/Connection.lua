@@ -5,12 +5,12 @@ Date: 2020/6/30
 Desc: G
 use the lib:
 -------------------------------------------------------
-local Connection = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Blockly/Connection.lua");
+local Connection = NPL.load("script/ide/System/UI/Blockly/Connection.lua");
 -------------------------------------------------------
 ]]
 
 local Connection = commonlib.inherit(commonlib.gettable("System.Core.ToolBase"), NPL.export());
-local ConnectionDebug = GGS.Debug.GetModuleDebug("ConnectionDebug").Enable();   --Enable  Disable
+local ConnectionDebug = System.Util.Debug.GetModuleDebug("ConnectionDebug").Enable();   --Enable  Disable
 
 Connection:Property("Connection");        -- 连接的链接 
 Connection:Property("Block");             -- 所属块

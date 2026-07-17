@@ -1,0 +1,78 @@
+<template class="container">
+    <WindowTitleBar v-bind:title="window_title or '对象编辑器'" titleStyle="color: #000000ff;"></WindowTitleBar>
+    <div style="height: 560px; background-color: #eeeeeeff; padding-top: 10px;">
+        <div class="all_field_editor_container">
+            <FieldEditor v-for="field_config in field_config_list" 
+                style="width: 100%" 
+                onclick="OnClickField(field_config)"
+                v-on:selected="OnClickField(field_config)"
+                v-bind:change="OnFieldValueChange" 
+                v-bind:field_key="field_config.key"
+                v-bind:field_name="field_config.title or field_config.name" 
+                v-bind:field_value="field_config.default" 
+                v-bind:field_type="field_config.type">
+            </FieldEditor>
+        </div>
+        <div class="field_detail">
+            {{field_detail}}
+        </div>
+        <div style="padding: 0px 7px;">
+            <button onclick="OnClickSave" style="width: 100%;">保存</button>
+        </div>
+    </div>
+</template>
+
+<script type="text/lua">
+RegisterComponent("WindowTitleBar", "%vue%/Components/WindowTitleBar.html");
+RegisterComponent("FieldEditor", "%ui%/TableEditor/FieldEditor.html");
+
+field_detail = "";
+
+function OnFieldValueChange(field_key, field_value)
+    print("OnFieldValueChange", field_key, field_value);
+    if (type(_G.setfield) == "function") then 
+        _G.setfield(field_key, field_value);
+    end
+end
+
+function OnClickField(field_config)
+    field_detail = field_config.description or "";
+end
+
+function OnClickSave()
+    SetTimeout(function()
+        if (type(_G.onsave) == "function") then 
+            _G.onsave();
+        end
+        CloseWindow();
+    end, 10);
+end
+
+function OnReady()
+    -- echo(field_config_list, true)
+end
+</script>
+
+<style>
+.container {
+    height: 100%; 
+    width: 100%; 
+    padding: 0px 2px 2px 2px;
+    background-color: #eeeeeeff;
+    /* background: url(Texture/Aries/Creator/keepwork/Window/dakuang_32bits.png#0 0 440 93:378 43 33 44); */
+}
+
+.all_field_editor_container {
+    height: 460px;
+    width: 100%;
+    overflow-y: scroll;
+    /* background-color: #ffffffff; */
+}
+
+.field_detail {
+    height: 50px;
+    border-top: 1px solid #c8c8c8;
+    padding: 8px 8px 8px 8px;
+    /* background-color: #ffffffff; */
+}
+</style>

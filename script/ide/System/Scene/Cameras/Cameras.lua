@@ -20,6 +20,12 @@ function Cameras:GetCurrent()
 	return self.Current or AutoCamera;
 end
 
+-- @param cam: if nil, it will be the default AutoCamera.
 function Cameras:SetCurrent(cam)
+	if(self.Current~=cam and self.Current) then
+		if(self.Current.OnDeactivate) then
+			self.Current:OnDeactivate();
+		end
+	end
 	self.Current = cam;
 end

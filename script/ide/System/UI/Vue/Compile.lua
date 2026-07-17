@@ -13,7 +13,7 @@ local Helper = NPL.load("./Helper.lua");
 local Scope = NPL.load("./Scope.lua");
 local Table = NPL.load("./Table.lua");
 local Compile = commonlib.inherit(commonlib.gettable("System.Core.ToolBase"), NPL.export());
-local CompileDebug = GGS.Debug.GetModuleDebug("CompileDebug").Enable();   --Enable  Disable
+local CompileDebug = System.Util.Debug.GetModuleDebug("CompileDebug").Enable();   --Enable  Disable
 
 local BeginTime, EndTime = Helper.BeginTime, Helper.EndTime;
 -- local EventNameMap = {["onclick"] = true, ["onmousedown"] = true, ["onmousemove"] = true, ["onmouseup"] = true};
@@ -186,6 +186,7 @@ local function ExecCode(code, func, element, watch)
                 
                 -- 不同触发回调
                 watch(newVal, oldVal);
+                element:Refresh();
                 -- print(string.format("依赖监控, code = %s 耗时: %sms", code, ParaGlobal.timeGetTime() - BeginTime));
             end
         end
@@ -633,6 +634,7 @@ end
 
 -- v-bind
 function Compile:VBind(element)
+    local __self__ = self;
     local xmlNode = element:GetXmlNode();
     if (type(xmlNode) ~= "table" or not xmlNode.attr) then return end
     -- CompileDebug.If(xmlNode.attr.id == "test", xmlNode.attr);
@@ -645,6 +647,10 @@ function Compile:VBind(element)
                 if (Scope:__is_scope__(realVal)) then realVal = realVal:ToPlainObject() end
                 -- if (type(realVal) == "table" and realVal.ToPlainObject) then realVal = realVal:ToPlainObject() end
                 element:SetAttrValue(realKey, realVal);
+
+                if (realKey == "ref") then
+                    __self__:GetComponent():SetRef(realVal, element);
+                end
                 -- CompileDebug.If(realKey == "NextPagePorjectList", element:GetAttrValue("NextPagePorjectList"));
             end, true);
         end

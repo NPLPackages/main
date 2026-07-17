@@ -11,6 +11,10 @@ NPL.load("(gl)script/kids/ParaWorldCore.lua");
 System.SystemInfo.SetField("name", "Aries")
 ------------------------------------------------------------
 ]]
+NPL.load("(gl)script/ide/commonlib.lua");
+
+NPL.PostLoad(function()
+
 NPL.load("(gl)script/ide/IDE.lua");
 NPL.load("(gl)script/ide/System/System.lua");
 NPL.load("(gl)script/ide/Debugger/IPCDebugger.lua");
@@ -27,6 +31,7 @@ NPL.load("(gl)script/kids/3DMapSystemUI/loadworld.lua");
 NPL.load("(gl)script/ide/WindowFrame.lua");
 NPL.load("(gl)script/kids/3DMapSystemAnimation/AnimationManager.lua");
 
+end)
 local User = commonlib.gettable("Map3DSystem.User");
 local options = commonlib.gettable("Map3DSystem.options");
 
@@ -109,41 +114,7 @@ end
 -- reset the scene
 -- @param bPerserveUI: if true, UI and timers are not cleared. default to nil
 function Map3DSystem.reset(bPerserveUI)
-	if(not bPerserveUI) then
-		-- kill all timers.
-		NPL.KillTimer(-1);
-		-- kill all virtual timers. 
-		if(commonlib.TimerManager) then
-			commonlib.TimerManager.Clear();
-		end	
-	end	
-	ParaScene.Reset();
-	if(not bPerserveUI) then
-		ParaUI.ResetUI();
-	end	
-	ParaAsset.GarbageCollect();
-	ParaGlobal.SetGameStatus("disable");
-	if(_AI~=nil and _AI.temp_memory~=nil) then
-		_AI.temp_memory = {}
-	end
-	if(Map3DSystem.ResetState) then
-		Map3DSystem.ResetState();
-	end
-	
-	-- TODO: reset recorder and movie box. 
-	
-	collectgarbage();
-	log("scene has been reset\n");
-
-	if(IPCDebugger) then
-		IPCDebugger.Start();
-	end	
-
-	-- clear all entity cache . This is defined in NPL.load("(gl)script/ide/IPCBinding/EntityHelper.lua");
-	local clear_cache_func = commonlib.getfield("IPCBinding.EntityHelper.ClearAllCachedObject");
-	if(type(clear_cache_func) == "function") then
-		clear_cache_func();
-	end
+	System.Core.Scene:Reset(bPerserveUI)
 end
 
 -- close current world

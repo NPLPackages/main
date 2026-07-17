@@ -11,7 +11,7 @@ local Helper = NPL.load("script/ide/System/UI/Vue/Helper.lua");
 
 local Helper = (NPL and NPL.export) and NPL.export() or {};
 
--- 路径简写
+-- such as %ui% when including file
 local PathAliasMap = {
     ["ggs"] = "Mod/GeneralGameServerMod/",
     ["ui"] = "script/ide/System/UI",
@@ -24,13 +24,8 @@ local PathAliasMap = {
 }; 
 
 local function ToCanonicalFilePath(filename)
-	if(System.os.GetPlatform()=="win32") then
-        filename = string.gsub(filename, "/+", "\\");
-		filename = string.gsub(filename, "\\+", "\\");
-	else
-		filename = string.gsub(filename, "\\+", "/");
-        filename = string.gsub(filename, "/+", "/");
-	end
+	filename = string.gsub(filename, "\\+", "/");
+    filename = string.gsub(filename, "//+", "/");
 	return filename;
 end
 
@@ -54,24 +49,25 @@ end
 
 -- 获取脚本文件
 function Helper.ReadFile(filename)
-	filename = commonlib.Encoding.Utf8ToDefault(filename);
+	-- filename = commonlib.Encoding.Utf8ToDefault(filename);
     filename = ToCanonicalFilePath(Helper.FormatFilename(filename));
     if (not filename or filename ==  "") then return end
     if (not IsDevEnv and FileCacheMap[filename]) then return FileCacheMap[filename] end
     
     -- GGS.INFO("读取文件: " .. filename);
-    
-    local text = nil;
-	local file = ParaIO.open(filename, "r");
-    if(file:IsValid()) then
-        text = file:GetText(0, -1);
+    local filepath = NPL.GetScriptDiskFilepath(filename)
+    if(filepath) then
+        local text;
+	    local file = ParaIO.open(filepath, "r");
+        if(file:IsValid()) then
+            text = file:GetText(0, -1);
+            file:close();
+        end
+        FileCacheMap[filename] = text;
+        return text;
     else
         echo(string.format("ERROR: read file failed: %s ", filename));
     end
-    file:close();
-
-    FileCacheMap[filename] = text;
-    return text;
 end
 
 local BeginTime = 0;
@@ -86,7 +82,7 @@ function Helper.EndTime(action, isResetBeginTime)
 end
 
 
--- local Page = NPL.load("Mod/GeneralGameServerMod/UI/Page.lua", true);
+-- local Page = NPL.load("script/ide/System/UI/Page.lua");
 -- --Page.ShowVueTestPage(nil, { url = "@/code/ui/测试.html", draggable=false, width = "80%",  height = "80%" });
 -- Page.ShowVueTestPage({}, { url = "%vue%/Example/Canvas.html",  });
 

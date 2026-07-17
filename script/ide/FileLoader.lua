@@ -23,8 +23,8 @@ local download_list = {
 	{ filename = "Texture/Aries/Books/FashionMagazine_v1/cloth_pic05.png" },
 }
 local fileLoader = CommonCtrl.FileLoader:new{
-	download_list = download_list,--下载文件列表
-	logname = "log/magazine_loader",--log文件地址
+	download_list = download_list,
+	logname = "log/magazine_loader",
 }
 fileLoader:AddEventListener("start",function(self,event)
 	commonlib.echo("=======test start");
@@ -82,6 +82,83 @@ local FileLoader = commonlib.inherit({
 local npl_profiler = commonlib.gettable("commonlib.npl_profiler");
 
 local loaders = {};
+
+-- cache for single file async load
+local asyncLoadCache = {};
+
+-- static function to async load a single asset file with caching
+-- you can invoke this function multiple times with the same filename, and only one actual loading will be performed.
+-- @param filename: the asset file to load
+-- @param callback: function(bIsSuccess, filename) called when file is loaded or failed
+function FileLoader.AsyncLoadAsset(filename, callback)
+	if not filename then
+		if callback then
+			callback(false, filename);
+		end
+		return;
+	end
+	
+	-- check if already cached (previously loaded successfully)
+	if asyncLoadCache[filename] == true then
+		if callback then
+			callback(true, filename);
+		end
+		return;
+	end
+	
+	-- check if currently loading, add callback to pending list
+	if type(asyncLoadCache[filename]) == "table" then
+		if callback then
+			local callbacks = asyncLoadCache[filename];
+			-- max 30 callbacks, remove oldest ones if exceeded
+			while #callbacks >= 30 do
+				table.remove(callbacks, 1);
+			end
+			table.insert(callbacks, callback);
+		end
+		return;
+	end
+	
+	-- check if file is already downloaded
+	local r = ParaIO.CheckAssetFile(filename);
+	if r == 1 or r == -4 then
+		-- already downloaded or not an asset file
+		asyncLoadCache[filename] = true;
+		if callback then
+			callback(true, filename);
+		end
+		return;
+	elseif r == -1 then
+		-- failed to download
+		if callback then
+			callback(false, filename);
+		end
+		return;
+	end
+	
+	-- start loading, create pending callback list
+	asyncLoadCache[filename] = callback and {callback} or {};
+	
+	-- create a simple loader for this single file
+	local loader = FileLoader:new{
+		logname = "", -- no logging for single file
+	};
+	loader:AddFile(filename, 1, function(bSuccess, fname)
+		local callbacks = asyncLoadCache[filename];
+		if bSuccess then
+			asyncLoadCache[filename] = true;
+		else
+			asyncLoadCache[filename] = nil;
+		end
+		if type(callbacks) == "table" then
+			for _, cb in ipairs(callbacks) do
+				cb(bSuccess, fname);
+			end
+		end
+	end);
+	loader:Start();
+end
+
 -- static global function: create get a loader with a given asset preload filename
 -- @param filename: xml preloader file
 function FileLoader.CreateGetLoader(filename)

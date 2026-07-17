@@ -105,8 +105,6 @@ local GraphHelp = commonlib.gettable("commonlib.GraphHelp");
 GraphHelp.Test(30042,30414)
 --]]
 ----------------------------------------------
-NPL.load("(gl)script/ide/ExternalInterface.lua");
-
 local GraphHelp = commonlib.gettable("commonlib.GraphHelp");
 
 NPL.load("(gl)script/ide/STL.lua");
@@ -444,8 +442,10 @@ function GraphHelp.FindPath_Handle(waypoint_path,start_id,goal_id)
 				table.insert(result,list[i]);
 			end
 			commonlib.echo(result);
+			if(not ExternalInterface) then
+				NPL.load("(gl)script/ide/ExternalInterface.lua");
+			end
 			ExternalInterface.Call("GraphHelp.FindPath_Result",result);
-
 		end
 	end
 end

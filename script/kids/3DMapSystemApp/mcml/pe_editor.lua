@@ -424,9 +424,12 @@ function pe_editor.create(rootName, mcmlNode, bindingContext, _parent, left, top
 			end	
 		end
 	elseif (alignment == "_rt") then
-		_parent.x = -_parent.width - margin_left - margin_right;
+		_parent.x = -_parent.width - margin_right;
+		if (bUseSpace) then
+			parentLayout:AddObject(0, height - top);
+		end
 	elseif (alignment == "_rb") then
-		_parent.x = -_parent.width - margin_left - margin_right;
+		_parent.x = -_parent.width - margin_right;
 		_parent.y = -_parent.height - margin_top - margin_bottom;
 	elseif (alignment == "_lb") then
 		_parent.y = -_parent.height - margin_top - margin_bottom;
@@ -873,7 +876,7 @@ function pe_editor_button.create(rootName, mcmlNode, bindingContext, _parent, le
 		_this:SetField("Padding", css.padding)
 	end
 
-	local icon = mcmlNode:GetAttribute("icon");
+	local icon = mcmlNode:GetAttributeWithCode("icon",nil,true) or mcmlNode:GetAttribute("icon");
 	local icon_obj
 	if icon then
 		local icon_width = tonumber(mcmlNode:GetAttribute("icon_width")) or 0
@@ -1065,6 +1068,36 @@ function pe_editor_button.create(rootName, mcmlNode, bindingContext, _parent, le
 		_this.name = force_ui_name;
 	end
 	
+	local candrag = mcmlNode:GetAttributeWithCode("candrag");
+
+	if (candrag == true or candrag == "true") then
+		_this.candrag = true;
+
+		local onDragBegin_callback = mcmlNode:GetAttributeWithCode("ondragbegin");
+		_this:SetScript(
+			"ondragbegin",
+			function(uiobj)
+				Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, onDragBegin_callback, btnName, mcmlNode, uiobj)
+			end
+		)
+
+		local onDragEnd_callback = mcmlNode:GetAttributeWithCode("ondragend");
+		_this:SetScript(
+			"ondragend",
+			function(uiobj)
+				Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, onDragEnd_callback, btnName, mcmlNode, uiobj)
+			end
+		)
+
+		local onDragEnd_callback = mcmlNode:GetAttributeWithCode("ondragmove");
+		_this:SetScript(
+			"ondragmove",
+			function(uiobj)
+				Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, onDragEnd_callback, btnName, mcmlNode, uiobj)
+			end
+		)
+	end
+
 	-- create a default button for the container to allow enter in text input to directly invoke submit call
 	local btnType = mcmlNode:GetString("type");
 	if(btnType == "submit") then
@@ -1484,15 +1517,15 @@ Map3DSystem.mcml_controls.pe_editor_text = pe_editor_text;
 -- the control takes up (22*rows) pixels in height, and editbox itself is 22 pixel height. 
 function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left, top, width, height, style, parentLayout)
 	local name = mcmlNode:GetAttributeWithCode("name",nil,true);
-	local text =  mcmlNode:GetAttribute("text") or mcmlNode:GetAttributeWithCode("value",nil,true) or mcmlNode:GetInnerText();
-	local rows =  tonumber(mcmlNode:GetAttributeWithCode("rows", 1, true));
-	
+	local text = mcmlNode:GetAttribute("text") or mcmlNode:GetAttributeWithCode("value",nil,true) or mcmlNode:GetInnerText();
+	local rows = tonumber(mcmlNode:GetAttributeWithCode("rows", 1, true));
+
 	local css = mcmlNode:GetStyle(mcml_controls.pe_css.default["pe:editor-text"] or mcml_controls.pe_html.css["pe:editor-text"]);
-	
+
 	local margin_left, margin_top, margin_bottom, margin_right = 
 		(css["margin-left"] or css["margin"] or 0),(css["margin-top"] or css["margin"] or 0),
 		(css["margin-bottom"] or css["margin"] or 0),(css["margin-right"] or css["margin"] or 0);	
-		
+
 	local left, top, width, height = parentLayout:GetPreferredRect();
 	local fontsize = mcmlNode:GetAttributeWithCode("fontsize", nil, true)
 	if(fontsize) then
@@ -1526,12 +1559,12 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 	end
 
 	width, height = width-left-margin_left-margin_right, css.height or ((lineheight or 20)*rows + (css["padding-top"] or 0) + (css["padding-bottom"] or 0));
-	if(css.width and (rows==1 or css.width<width)) then
+	if (css.width and (rows==1 or css.width<width)) then
 		width = css.width
 	end
-	if(css.height and (rows==1 or css.height<height)) then
+	if (css.height and (rows==1 or css.height<height)) then
 		height = css.height;
-	end	
+	end
 	parentLayout:AddObject(width+margin_left+margin_right, margin_top+margin_bottom+height);
 	left=left+margin_left;
 	top=top+margin_top
@@ -1560,7 +1593,8 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 		-- if enable_ime and System.os.GetPlatform() == "android" then
 		-- 	auto_virtual_keyboard = false
 		-- end
-		
+		local isMoveView = mcmlNode:GetAttributeWithCode("MoveViewWhenAttachWithIME", nil, false)
+		local moveViewOffset = tonumber(mcmlNode:GetAttributeWithCode("MoveViewOffset", 0, false))
 		local ctl = CommonCtrl.MultiLineEditbox:new{
 			name = instName,
 			alignment = "_lt",
@@ -1583,7 +1617,8 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 			language = mcmlNode:GetAttributeWithCode("language", nil),
 			AlwaysShowCurLineBackground = mcmlNode:GetBool("AlwaysShowCurLineBackground", true),
 			InputMethodEnabled = enable_ime,
-			isMoveViewWhenAttachWithIME = mcmlNode:GetBool("MoveViewWhenAttachWithIME", false),
+			isMoveViewWhenAttachWithIME = (isMoveView == true or isMoveView == "true"),
+			moveViewOffset = moveViewOffset or 0,
 			onfocusinFunc = onfocusinFunc,
 			-- auto_virtual_keyboard = auto_virtual_keyboard,
 		};
@@ -1636,15 +1671,22 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 	else
 		-- single line editbox
 		local _this;
-		if(("password" == mcmlNode:GetString("type")) or mcmlNode:GetString("PasswordChar")) then
-			if (System.os.GetPlatform() == "android" or System.os.GetPlatform() == "ios") then
+		if (("password" == mcmlNode:GetString("type")) or mcmlNode:GetString("PasswordChar")) then
+			if (System.os.GetPlatform() == "android" or
+				System.os.GetPlatform() == "ios" or
+				System.options.IsTouchDevice or
+				(mcmlNode:GetString("enable_ime") == "true" and System.os.GetPlatform() ~= "win32")) then
 				_this = ParaUI.CreateUIObject("imeeditbox", instName, "_lt", left, top, width, height);
 			else
 				_this = ParaUI.CreateUIObject("editbox", instName, "_lt", left, top, width, height);
 			end
 			_this.text = text;
 			_this.background = css.background;
-			_this.PasswordChar = mcmlNode:GetString("PasswordChar") or "*";
+
+			if (mcmlNode:GetString("ShowPassword") ~= "true") then
+				_this.PasswordChar = mcmlNode:GetString("PasswordChar") or "*";
+			end
+
 			_parent:AddChild(_this);
 		else
 			if(mcmlNode:GetString("enable_ime") ~= "false") then
@@ -1666,13 +1708,16 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 		end	
 		
 		if(_this) then
-			if mcmlNode:GetBool("ReadOnly") then
+			local isReadOnly = mcmlNode:GetAttributeWithCode("ReadOnly",false,true);
+			if isReadOnly then
 				_this.enabled = false;
 			end
-			
-			if mcmlNode:GetBool("MoveViewWhenAttachWithIME") then
+			local isMoveView = mcmlNode:GetAttributeWithCode("MoveViewWhenAttachWithIME", nil, false)
+			if isMoveView == true or isMoveView == "true" then
 				_this:SetField("MoveViewWhenAttachWithIME", true);
 			end
+
+			_this:SetField("InputType", mcmlNode:GetString("type"));
 		end
 		mcmlNode.uiobject_id = _this.id;
 
@@ -1725,10 +1770,7 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 			_this:SetField("EmptyTextColor", _guihelper.ColorStr_TO_DWORD(emptyTextColor));
 		end
 
-
-		if(mcmlNode:GetBool("autofocus")) then
-			_this:Focus();
-		end
+		
 		local tooltip = mcmlNode:GetAttributeWithCode("tooltip")
 		if(tooltip) then
 			_this.tooltip = tooltip;
@@ -1739,7 +1781,7 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 			_this.spacing = spacing;
 		end
 		
-		if(mcmlNode:GetString("onkeyup")) then
+		if(mcmlNode:GetAttributeWithCode("onkeyup")) then
 			_this:SetScript("onkeyup", pe_editor_text.onkeyup, mcmlNode, instName, bindingContext, name);
 		end
 		if(mcmlNode:GetString("onmodify") or mcmlNode:GetString("onchange") or uiname) then
@@ -1753,6 +1795,12 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 		end
 		if(mcmlNode:GetString("onfocusout")) then
 			_this:SetScript("onfocusout", pe_editor_text.onfocusout, mcmlNode, instName, bindingContext, name);
+		end
+		if(mcmlNode:GetString("onmouseenter")) then
+			_this:SetScript("onmouseenter", pe_editor_text.onmouseenter, mcmlNode, instName, bindingContext, name);
+		end
+		if(mcmlNode:GetString("onmouseleave")) then
+			_this:SetScript("onmouseleave", pe_editor_text.onmouseleave, mcmlNode, instName, bindingContext, name);
 		end
 
 		local CaretColor = mcmlNode:GetString("CaretColor") or css.CaretColor;
@@ -1770,6 +1818,10 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 			end
 		end
 
+		if(mcmlNode:GetBool("autofocus")) then
+			_this:Focus();
+			_this:SetCaretPosition(-1);
+		end
 		-- local auto_virtual_keyboard = mcmlNode:GetAttributeWithCode("auto_virtual_keyboard", System.options.auto_virtual_keyboard)
 		-- local enable_ime = mcmlNode:GetBool("enable_ime", true)
 		-- if enable_ime and System.os.GetPlatform() == "android" then
@@ -1781,7 +1833,6 @@ function pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left
 		-- 	_this:SetScript("onfocusin", pe_editor_text.onfocusin, mcmlNode, instName, bindingContext, name);
 		-- 	_this:SetScript("onfocusout", pe_editor_text.onfocusout, mcmlNode, instName, bindingContext, name);
 		-- end
-		
 
 		local text_color = mcmlNode:GetString("textcolor") or css.textcolor;
 		if(text_color) then
@@ -1858,6 +1909,26 @@ function pe_editor_text.onfocusout(uiobj, mcmlNode, instName, bindingContext, na
 	-- end
 	
 	local onfocusout = mcmlNode:GetString("onfocusout");
+	-- the callback function format is function(name, mcmlNode) end
+	Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, onfocusout, name, mcmlNode, uiobj);
+end
+
+function pe_editor_text.onmouseenter(uiobj, mcmlNode, instName, bindingContext, name)
+	if(not mcmlNode or not uiobj) then
+		return
+	end	
+	local onfocusout = mcmlNode:GetString("onmouseenter");
+	-- the callback function format is function(name, mcmlNode) end
+	Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, onfocusout, name, mcmlNode, uiobj);
+end
+
+
+function pe_editor_text.onmouseleave(uiobj, mcmlNode, instName, bindingContext, name)
+	if(not mcmlNode or not uiobj) then
+		return
+	end
+	
+	local onfocusout = mcmlNode:GetString("onmouseleave");
 	-- the callback function format is function(name, mcmlNode) end
 	Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, onfocusout, name, mcmlNode, uiobj);
 end

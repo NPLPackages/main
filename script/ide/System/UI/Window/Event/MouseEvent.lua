@@ -5,7 +5,7 @@ Date: 2020/6/30
 Desc: Event
 use the lib:
 -------------------------------------------------------
-local MouseEvent = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Window/Event/MouseEvent.lua");
+local MouseEvent = NPL.load("script/ide/System/UI/Window/Event/MouseEvent.lua");
 -------------------------------------------------------
 ]]
 
@@ -127,6 +127,11 @@ end
 -- 鼠标滚动距离
 function MouseEvent:GetDelta()
     return self.mouse_wheel or 0;
+end
+
+-- 设置滚动 delta
+function MouseEvent:SetDelta(delta)
+    self.mouse_wheel = delta;
 end
 
 -- 是否鼠标左键按下

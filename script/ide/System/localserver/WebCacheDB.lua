@@ -875,7 +875,10 @@ end
 function WebCacheDB:FindEntry(version_id, url) 
 	if(not url) then return end
 
-	local stmt = assert(self._db:prepare([[SELECT * FROM Entries WHERE VersionID=? AND Url=?]]));
+	local stmt = self._db:prepare([[SELECT * FROM Entries WHERE VersionID=? AND Url=?]]);
+	if(not stmt) then
+		return
+	end
 	stmt:bind(version_id, url);
 
 	local entry;

@@ -5,13 +5,13 @@ Date: 2020/6/30
 Desc: 样式管理类
 use the lib:
 -------------------------------------------------------
-local StyleManager = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Window/StyleManager.lua");
+local StyleManager = NPL.load("script/ide/System/UI/Window/StyleManager.lua");
 -------------------------------------------------------
 ]]
 
-local DefaultStyle = NPL.load("./DefaultStyle.lua", IsDevEnv);
-local Style = NPL.load("./Style.lua", IsDevEnv);
-local StyleSheet = NPL.load("./StyleSheet.lua", IsDevEnv);
+local DefaultStyle = NPL.load("./DefaultStyle.lua");
+local Style = NPL.load("./Style.lua");
+local StyleSheet = NPL.load("./StyleSheet.lua");
 
 local StyleManager = commonlib.inherit(nil, NPL.export());
 

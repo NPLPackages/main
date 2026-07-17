@@ -56,14 +56,16 @@ function Keyboard:EnableIME(bEnabled)
 	Screen:GetGUIRoot():SetField("EnableIME", bEnabled == true);
 end
 
-function Keyboard:attachWithIME(ctrlBottom, curText, SelStart, SelEnd)
+function Keyboard:attachWithIME(ctrlBottom, curText, SelStart, SelEnd, inputType)
 	ctrlBottom = ctrlBottom or 0;
+	inputType = inputType or "text";
 
 	local root = Screen:GetGUIRoot();
 	root:SetField("CurEditString", curText or "");
 	root:SetField("SelStart", SelStart or 0);
 	root:SetField("SelEnd", SelEnd or 0);
 	root:SetField("ControlBottom", ctrlBottom);
+	root:SetField("InputType", inputType);
 	root:SetField("IMEKeyboardState", true);
 end
 
@@ -101,8 +103,19 @@ function Keyboard:GetKeyFocus()
 	end
 end
 
-
-
-
+NPL.this(function()
+	if msg.msg and type(msg.msg) == "string" then
+		local screenStr = msg.msg
+		if screenStr and screenStr ~= "" then
+			GameLogic.GetFilters():apply_filters("OnRecvScreenSize",{screen = screenStr})
+		end
+	end
+	if msg.msg and type(msg.msg) == "table" then
+		local recvMsg = msg.msg
+		if recvMsg.type == "keyEvent" then
+			GameLogic.GetFilters():apply_filters("OnRecvKeyState",recvMsg)
+		end
+	end
+end,{filename="Keyboard.lua"})
 -- this is a singleton class
 Keyboard:InitSingleton();

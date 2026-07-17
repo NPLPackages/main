@@ -11,6 +11,7 @@ script/ide/commonlib.lua
 script/ide/oo.lua
 script/ide/Encoding.lua
 script/ide/timer.lua
+script/ide/Files.lua
 script/ide/NPLExtension.lua
 script/ide/serialization.lua
 script/ide/System/os/os.lua

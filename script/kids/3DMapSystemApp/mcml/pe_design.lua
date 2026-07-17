@@ -1087,15 +1087,14 @@ function pe_canvas3d.create(rootName, mcmlNode, bindingContext, _parent, left, t
 	ctl.zorder = mcmlNode:GetNumber("zorder");
 	ctl.rotSpeed = mcmlNode:GetNumber("rotSpeed");
 	ctl.panSpeed = mcmlNode:GetNumber("panSpeed");
-	ctl.rotSpeed = mcmlNode:GetNumber("rotSpeed");
 	ctl.cameraName = mcmlNode:GetString("cameraName");
 	ctl.maxLiftupAngle = mcmlNode:GetNumber("maxLiftupAngle");
 	ctl.maxZoomDist = mcmlNode:GetNumber("maxZoomDist");
 	ctl.minZoomDist = mcmlNode:GetNumber("minZoomDist");
 	ctl.RenderTargetSize = mcmlNode:GetNumber("RenderTargetSize");
-	ctl.DefaultCameraObjectDist = mcmlNode:GetNumber("DefaultCameraObjectDist");
+	ctl.DefaultCameraObjectDist = tonumber(mcmlNode:GetAttributeWithCode("DefaultCameraObjectDist"));
 	ctl.DefaultLiftupAngle = mcmlNode:GetNumber("DefaultLiftupAngle");
-	ctl.DefaultRotY = mcmlNode:GetNumber("DefaultRotY");
+	ctl.DefaultRotY = tonumber(mcmlNode:GetAttributeWithCode("DefaultRotY"));
 	ctl.LookAtHeight = mcmlNode:GetNumber("LookAtHeight");
 	ctl.ExternalOffsetX	= tonumber(mcmlNode:GetAttributeWithCode("ExternalOffsetX"));
 	ctl.ExternalOffsetY	= tonumber(mcmlNode:GetAttributeWithCode("ExternalOffsetY"));
@@ -1104,7 +1103,7 @@ function pe_canvas3d.create(rootName, mcmlNode, bindingContext, _parent, left, t
 	ctl.background = css.background;
 	ctl.IgnoreExternalCamera = mcmlNode:GetAttribute("IgnoreExternalCamera") == "true";
 	ctl.mask_texture = mcmlNode:GetAttributeWithCode("MaskTexture");
-	local xmlInfo = mcmlNode:GetAttributeWithCode("xmlInfo")
+	local xmlInfo = mcmlNode:GetAttributeWithCode("xmlInfo",nil,true)
 	if xmlInfo then
 		ctl.xmlInfo = commonlib.LoadTableFromString(xmlInfo)
 	end

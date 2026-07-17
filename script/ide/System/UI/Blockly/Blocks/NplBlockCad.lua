@@ -313,7 +313,7 @@ local all_block_list = {
 
     {
         type = "cone", 
-        message = "%1 圆锥体 顶部半径 %2 底部半径 %3 高 %4 %5",
+        message = "%1 圆台 顶部半径 %2 底部半径 %3 高 %4 %5",
         arg = {
             {
                 name = "op",
@@ -1011,6 +1011,42 @@ local all_block_list = {
     },
 
     {
+        type = "scaleNode", 
+        message = L"缩放对象 %1 %2 %3 %4",
+        arg = {
+            {
+                name = "name",
+                type = "field_variable",
+                vartype = "object",
+                text = "object",
+            },
+            {
+                name = "x",
+                type = "input_value",
+                shadow = { type = "math_number", value = 1,},
+                text = 1, 
+            },
+            {
+                name = "y",
+                type = "input_value",
+                shadow = { type = "math_number", value = 1,},
+                text = 1, 
+            },
+            {
+                name = "z",
+                type = "input_value",
+                shadow = { type = "math_number", value = 1,},
+                text = 1, 
+            },
+            
+        },
+        category = "ShapeOperators", 
+        code_description = 'scaleNode("${name}",${x},${y},${z})',
+        previousStatement = true,
+        nextStatement = true,
+    },
+
+    {
         type = "rotateNode", 
         message = L"旋转对象 %1 %2 %3 度",
         arg = {
@@ -1162,7 +1198,7 @@ local all_block_list = {
     
     {
         type = "fillet", 
-        message0 = L"圆角 %1 半径 %2",
+        message = L"圆角 %1 半径 %2",
         arg = {
             {
                 name = "axis_axis_plane",
@@ -1740,8 +1776,8 @@ local all_block_list = {
 
     {
         type = "newEmptyTable", 
-        message0 = L"{%1}",
-        arg0 = {
+        message = L"{%1}",
+        arg = {
             {
                 name = "value",
                 type = "input_value_list",

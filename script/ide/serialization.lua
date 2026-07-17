@@ -30,14 +30,14 @@ local log = ParaGlobal.WriteToLogFile;
 -- if true, table recursion is handled. it may cause stack overflow if set to nil with recursive table
 -- Internally it uses commonlib.dump which handles recursive tables.
 function commonlib.echo(p1, handleRecursion)
-	log("echo:")
+	commonlib.log("echo:")
 	if(handleRecursion) then
 		commonlib.log.log_long(commonlib.dump(p1,nil, not handleRecursion))
 	else
 		-- commonlib.log.log_long(commonlib.serialize(p1)); 
 		commonlib.log.log_long(commonlib.serialize_compact(p1)); -- this will print in a single line(good for log search)
 	end
-	log("\n")
+	commonlib.log("\n")
 end
 -- shortcut
 echo = commonlib.echo;

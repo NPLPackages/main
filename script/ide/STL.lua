@@ -9,6 +9,10 @@ Use Lib:
 NPL.load("(gl)script/ide/STL.lua");
 -------------------------------------------------------
 ]]
+-- tricky: all NPL.load in this file will be loaded after this file function is returned to prevent too deep call stack depth, on emscripten js. 
+local IsRecursiveLoadFile = __rts__:GetField("IsRecursiveLoadFile", true);
+__rts__:SetField("IsRecursiveLoadFile", false);
+
 NPL.load("(gl)script/ide/STL/Stack.lua");
 NPL.load("(gl)script/ide/STL/Queue.lua");
 NPL.load("(gl)script/ide/STL/List.lua");
@@ -19,3 +23,6 @@ NPL.load("(gl)script/ide/STL/UnorderedArraySet.lua");
 NPL.load("(gl)script/ide/STL/OrderedArraySet.lua");
 NPL.load("(gl)script/ide/STL/RingBuffer.lua");
 NPL.load("(gl)script/ide/STL/ArrayMap.lua");
+NPL.load("(gl)script/ide/STL/Octree.lua");
+
+__rts__:SetField("IsRecursiveLoadFile", IsRecursiveLoadFile);

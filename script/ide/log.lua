@@ -65,7 +65,7 @@ commonlib.servicelog.GetLogger(""):SetLogFile("log/log_2016.5.19.txt");
 if(not commonlib) then commonlib={}; end
 
 local commonlib = commonlib;
-local WriteToLogFile = ParaGlobal.WriteToLogFile;
+local WriteToLogFile_ = ParaGlobal.WriteToLogFile;
 local type, table, string, assert, tostring = type, table, string, assert, tostring
 local string_gsub = string.gsub;
 local string_sub = string.sub;
@@ -83,17 +83,24 @@ local nLastTime = 0;
 local nLastDateTime = 0;
 local date_str = ParaGlobal.GetDateFormat("yyyy-MM-dd");
 local time_str = ParaGlobal.GetTimeFormat(nil);
+local callbackWriteLog;
+
+local function WriteToLogFile(text)
+	WriteToLogFile_(text)
+	if(callbackWriteLog) then
+		callbackWriteLog(text);
+	end	
+end
 
 -- replace the native log with advanced log 
 -- Please note there is maximum length of 2048 bytes to be logged. 
 -- to print longer log, please use `echo` or `commonlib.log`
 -- @param text: table or string, table recursion is checked
-function log(text)
-	if(	type(text) == "string" ) then
-		WriteToLogFile(text);
-	else
-		WriteToLogFile(commonlib.serialize_compact(text));
+function _G.log(text)
+	if(	type(text) ~= "string" ) then
+		text = commonlib.serialize_compact(text);
 	end
+	WriteToLogFile(text);
 end
 
 -- get the standard time format string. 
@@ -112,6 +119,14 @@ local function GetLogTimeString()
 end
 
 commonlib.log.GetLogTimeString = GetLogTimeString;
+
+function commonlib.log.SetWriteLogCallback(callbackFunc)
+	callbackWriteLog = callbackFunc;
+end
+
+function commonlib.log.GetWriteLogCallback()
+	return callbackWriteLog;
+end
 
 -- it support logging string longer than 1024 bytes by deviding input into multiple sections.
 -- By default: log(string) longer than 1024 is cut. Use this function if u want to log something really long

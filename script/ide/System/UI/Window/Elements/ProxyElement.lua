@@ -4,7 +4,7 @@ Author(s): wxa
 Date: 2020/8/14
 Desc: ProxyElement 元素
 -------------------------------------------------------
-local ProxyElement = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Window/Elements/ProxyElement.lua");
+local ProxyElement = NPL.load("script/ide/System/UI/Window/Elements/ProxyElement.lua");
 -------------------------------------------------------
 ]]
 

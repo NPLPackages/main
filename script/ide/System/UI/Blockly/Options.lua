@@ -5,7 +5,7 @@ Date: 2020/6/30
 Desc: Const
 use the lib:
 -------------------------------------------------------
-local Options = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Blockly/Options.lua");
+local Options = NPL.load("script/ide/System/UI/Blockly/Options.lua");
 -------------------------------------------------------
 ]]
 
@@ -109,8 +109,51 @@ Options.isTouchingOptions = function()
     local actor_options = GetActorNameOptions();
     table.insert(actor_options, 1, { L"某个方块id", "-1" });
     table.insert(actor_options, 1, { L"附近玩家", "@a" });
+    table.insert(actor_options, 1, { L"墙壁", "wall" });
     table.insert(actor_options, 1, { L"方块", "block" });
     return actor_options;
+end
+
+Options.localModelList = function()
+    NPL.load("(gl)script/apps/Aries/Creator/Game/GUI/OpenAssetFileDialog.lua");
+    local OpenAssetFileDialog = commonlib.gettable("MyCompany.Aries.Game.GUI.OpenAssetFileDialog");
+    OpenAssetFileDialog.filters = OpenAssetFileDialog.GetFilters("model");
+    local files = OpenAssetFileDialog.UpdateExistingFiles();
+    local options = {};
+    for index, file in ipairs(files) do
+        local filepath = file.attr.filename;
+        options[index] = {filepath, filepath};
+    end
+    table.insert(options, {L"选择模型...", function(old_value, callback)
+        OpenAssetFileDialog.ShowPage("", function(new_value)
+            if (type(callback) == "function") then
+                callback(new_value == nil and old_value or new_value);
+            end
+        end, commonlib.Encoding.Utf8ToDefault(old_value), L"选择模型文件", "model");
+    end});
+    return options;
+end
+
+Options.localImageList = function()
+    NPL.load("(gl)script/apps/Aries/Creator/Game/GUI/OpenAssetFileDialog.lua");
+    local OpenAssetFileDialog = commonlib.gettable("MyCompany.Aries.Game.GUI.OpenAssetFileDialog");
+    OpenAssetFileDialog.filters = OpenAssetFileDialog.GetFilters("texture");
+    local files = OpenAssetFileDialog.UpdateExistingFiles();
+    local options = {};
+    for index, file in ipairs(files) do
+        local filepath = file.attr.filename;
+        options[index] = {filepath, filepath};
+    end
+    table.insert(options, {L"选择图片...", function(old_value, callback)
+        NPL.load("(gl)script/apps/Aries/Creator/Game/GUI/OpenImageDialog.lua");
+        local OpenImageDialog = commonlib.gettable("MyCompany.Aries.Game.GUI.OpenImageDialog");
+        OpenImageDialog.ShowPage("选择图片...", function(new_value)
+            if (type(callback) == "function") then
+                callback(new_value == nil and old_value or new_value);
+            end
+        end, old_value, true);
+    end});
+    return options;
 end
 
 Options.actorBoneNameOptions = GetActorBoneOptions;
@@ -199,6 +242,8 @@ Options.networkEventTypes = function()
         { L"ps_服务器启动", "ps_server_started" },
         { L"ps_服务器关闭", "ps_server_shutdown" },
         { L"用户加入", "connect" },
+        { L"ble:myBluetooth", "ble:myBluetooth" },
+        { L"udp:8099", "udp:8099" },
     }
 end
 
@@ -207,6 +252,7 @@ Options.cmdExamples = function()
         { L"/tip", "/tip" },
         { L"改变时间[-1,1]", "/time"},
         { L"加载世界:项目id", "/loadworld"},
+        { L"主角跳转到", "/goto"},
         { L"设置真实光影[1|2|3]", "/shader"},
         { L"设置光源颜色[0,2] [0,2] [0,2]", "/light"},
         { L"设置太阳颜色[0,2] [0,2] [0,2]", "/sun"},
@@ -224,10 +270,11 @@ Options.cmdExamples = function()
         { L"设置最小人物出现距离", "/property -scene MinPopUpDistance 100"},
         { L"设置最大人物多边形数目", "/property -scene MaxCharTriangles 500000"},
         { L"禁用自动人物细节", "/lod off"},
-        { L"关闭自动等待", "/autowait false"},
         { L"隐藏物品栏", "/hide quickselectbar"},
         { L"显示物品栏", "/show quickselectbar"},
         { L"激活方块", "/activate" },
+        { L"显示虚拟摇杆", "/show rocker" },
+        { L"隐藏虚拟摇杆", "/hide rocker" },
     }
 end
 
@@ -623,5 +670,6 @@ Options.voiceNarratorOption = function()
         {L"云龍(粤语)", "20016"},
         {L"晓臻", "20017"},
         {L"晓雨", "20018"},
+        {L"晓雨女(AI模型)", "20021"},
     }
 end

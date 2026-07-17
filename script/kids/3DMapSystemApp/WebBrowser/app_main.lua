@@ -64,6 +64,7 @@ the second param can be a table with following field
 | DesignResolutionWidth | |
 | DesignResolutionHeight | |
 | SelfPaint | use a render texture to paint on  |
+| SelfPaintTextureName | one should always specify a unique SelfPaintTextureName if possible. |
 | [win frame parameters] | all windowsframe property are support. |
 
 Return values are via input params table.
@@ -286,6 +287,7 @@ local function MCMLWinFrameShow(bShow, _parent, parentWindow)
 		parentWindow.MyPage = Map3DSystem.mcml.PageCtrl:new({url=parentWindow.url});
 		if(parentWindow.SelfPaint) then
 			parentWindow.MyPage.SelfPaint = true;
+			parentWindow.MyPage.SelfPaintTextureName = parentWindow.SelfPaintTextureName;
 		end
 		if(_parent:GetField("ClickThrough", false)) then
 			parentWindow.MyPage.click_through = true;
@@ -388,6 +390,10 @@ function Map3DSystem.App.WebBrowser.OnExec(app, commandName, params)
 						end);
 					else
 						_guihelper.MessageBox(string.format(L"您确定要使用文件浏览器打开文件 %s?", commonlib.Encoding.DefaultToUtf8(absPath)), function()
+							if (System.os.GetPlatform() == "emscripten") then
+								_guihelper.MessageBox(L"Web端暂时不支持此功能，请安装客户端");
+								return;
+							end
 							ParaGlobal.ShellExecute("open", "explorer.exe", absPath, "", 1); 
 						end);
 					end
@@ -441,6 +447,7 @@ function Map3DSystem.App.WebBrowser.OnExec(app, commandName, params)
 				_wnd.DesignResolutionWidth = params.DesignResolutionWidth;
 				_wnd.DesignResolutionHeight = params.DesignResolutionHeight;
 				_wnd.SelfPaint = params.SelfPaint;
+				_wnd.SelfPaintTextureName = params.SelfPaintTextureName;
 				_wnd.isPinned = params.isPinned;
 				_wnd.withBgMask = params.withBgMask or false;
 				_wnd.bgMaskOpacity = params.bgMaskOpacity or 0.5;

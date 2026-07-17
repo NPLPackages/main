@@ -11,9 +11,11 @@ Desc:
 ]]
 if(is_ajax()) then
   local function convert_to_row(path, data, nFieldIndex)
-    local row = {};
     local sName = data:GetFieldName(nFieldIndex);
-		local sType = data:GetFieldType(nFieldIndex);  
+    if(not sName) then
+        return
+    end
+	local sType = data:GetFieldType(nFieldIndex);  
     local sSchematics = data:GetSchematicsType(nFieldIndex);
     local value;
     
@@ -46,7 +48,7 @@ if(is_ajax()) then
       local objpath = ObjectPath:new():init(obj_path);
       local data = objpath:data();
       if(data and data.GetFieldNum) then
-        for nFieldIndex = 0, data:GetFieldNum() - 1 do
+        for nFieldIndex = 0, data:GetFieldNum() do
           local row = convert_to_row(path, data, nFieldIndex);
           if(row) then
             rows[#rows+1] = row;
@@ -75,7 +77,7 @@ if(is_ajax()) then
       local name;
       obj_path, name = obj_path:match("(.*)/([%w%_]+)$");
       local root_name = obj_path:match("^/(%w+)")
-			if(allowed_root_names[root_name or ""]) then
+	  if(true or allowed_root_names[root_name or ""]) then
         local objpath = ObjectPath:new():init(obj_path);
         local value = request:get("value");
         if(name and value) then
@@ -211,7 +213,7 @@ scalable webserver and distributed software frameworks. It is cross-platform, hi
               }
             }
             else{
-              alert("operation now allowed!" + JSON.stringify(data));
+              alert("operation not allowed!" + JSON.stringify(data));
               refresh();
             }
           });

@@ -356,15 +356,15 @@ function ToolBase:GetFieldIndex(name)
 	return self._propertyfields:getIndex(name);
 end
 
-function ToolBase:GetFieldName(valueIndex)
-	local field = self._propertyfields:at(valueIndex);
+function ToolBase:GetFieldName(nIndex)
+	local field = self._propertyfields:at(nIndex);
 	if(field) then
 		return field.name;
 	end
 end
 
 function ToolBase:GetFieldType(nIndex)
-	local field = self._propertyfields:at(valueIndex);
+	local field = self._propertyfields:at(nIndex);
 	if(field) then
 		return field.type;
 	end

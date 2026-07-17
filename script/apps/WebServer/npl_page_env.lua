@@ -13,7 +13,7 @@ Following objects and functions can be used inside page script:
 	_GLOBAL: the _G itself
 
 following are exposed via meta class:
-	include(filename, bReload):  inplace include another script
+	include(filename, bReload, bAutoRefresh):  inplace include another script
 	include_once(filename):  include only once, mostly for defining functions
 	gettable(tabNames): similar to commonlib.gettable() but in page scope.
 	createtable(tabNames, init_params): similar to commonlib.createtable() but in page scope.
@@ -269,13 +269,22 @@ end
 -- @param filename: if no parent directory is specified, we will assume it is from the containing file's parent directory. 
 --      if filename begins with "/", it will append the web root directory. 
 -- @param bReload: true to reload the file. default to nil. files will be loaded only once.
+-- @param bAutoRefresh: true to refresh only when file size or modification date changed. default to nil.
+--      if nil, it falls back to env variable AUTO_REFRESH_INCLUDE.
 -- @return: result of the included function. 
-function env_imp:include(filename, bReload)
+function env_imp:include(filename, bReload, bAutoRefresh)
 	filename = env_imp.getfilepath(self, filename);
+	bAutoRefresh = bAutoRefresh or self["AUTO_REFRESH_INCLUDE"];
 	local page, bNewlyLoaded = self.page.page_manager:get(filename);
 	if(page) then
-		if(bReload and not bNewlyLoaded) then
-			self.page.page_manager:refresh(filename);
+		if(not bNewlyLoaded) then
+			if(bReload) then
+				-- explicit reload always refreshes
+				self.page.page_manager:refresh(filename);
+			elseif(bAutoRefresh) then
+				-- AUTO_REFRESH_INCLUDE only refreshes when file size or modification date changed
+				self.page.page_manager:refresh_if_changed(filename);
+			end
 		end
 		env_imp.add_include_file(self, filename);
 		if(not page:get_error_msg()) then

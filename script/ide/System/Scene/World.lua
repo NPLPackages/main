@@ -50,7 +50,9 @@ function World:LoadWorldImmediate(worldpath, bPerserveUI, bHideProgressUI, OnPro
 	if(worldpath) then
 		worldpath = string.gsub(worldpath, "[/\\]+$", "")
 	end	
-	if(string.find(worldpath, ".*%.zip$")~=nil or string.find(worldpath, ".*%.pkg$")~=nil) then
+	local fileExt = string.match(worldpath, "%.(%w%w%w)$");
+
+	if(fileExt == "zip" or fileExt == "pkg" or fileExt == "p3d") then
 		-- open zip archive with relative path
 		if(self.worldzipfile and self.worldzipfile~= worldpath) then
 			ParaAsset.CloseArchive(self.worldzipfile); -- close last world archive

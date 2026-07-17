@@ -1,0 +1,59 @@
+<?npl
+--[[
+Title: Serve a disk image file over HTTP
+Author: LiXizhi
+Date: 2026/2/20
+Desc: Streams a local image file (jpg/png/gif/webp) to the browser.
+  Only files under the ParaEngine working directory "temp/" folder are allowed.
+  Usage:  /wp-content/pages/disk_image.page?filename=temp/scene_vision/foo.jpg
+  Also accepts absolute paths that start with the working dir.
+]]
+
+local function ends_with(s, suffix)
+    return s:sub(-#suffix):lower() == suffix:lower();
+end
+
+local function get_mime(path)
+    if ends_with(path, ".jpg") or ends_with(path, ".jpeg") then return "image/jpeg" end
+    if ends_with(path, ".png")  then return "image/png"  end
+    if ends_with(path, ".gif")  then return "image/gif"  end
+    if ends_with(path, ".webp") then return "image/webp" end
+    return "application/octet-stream";
+end
+
+local filename = request:get("filename") or "";
+
+-- Normalise: strip absolute working-dir prefix so we always work with a relative path
+local workdir = ParaIO.GetCurDirectory(0);  -- e.g. "C:/lxzsrc/ParaEngine/ParaWorld/"
+-- Normalise slashes
+filename = filename:gsub("\\", "/");
+workdir  = workdir:gsub("\\",  "/");
+-- Strip leading working dir if present (absolute path supplied)
+if filename:sub(1, #workdir):lower() == workdir:lower() then
+    filename = filename:sub(#workdir + 1);
+end
+
+if filename == "" then
+    response:SetReturnCode("not_found");
+    response:send("filename required");
+    return;
+end
+
+-- Read the file
+local file = ParaIO.open(filename, "r");
+if not file or not file:IsValid() then
+    response:SetReturnCode("not_found");
+    response:send("not found: " .. filename);
+    return;
+end
+
+local size = file:GetFileSize();
+local data = file:GetText(0, size);
+file:close();
+
+response:set_header("Content-Type", get_mime(filename));
+response:set_header("Cache-Control", "max-age=60");
+response:SetContent(data);
+response:finish();
+response:End();
+?>

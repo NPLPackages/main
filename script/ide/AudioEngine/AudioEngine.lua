@@ -59,6 +59,29 @@ commonlib.TimerManager.SetTimeout(function()
 		echo("succeed")
 	end
 end, 5000)
+
+-- audio recording with live data stream
+AudioEngine.StartRecording(function(data)
+	local i = 1;
+	while(i<=#data) do
+		local lowByte = string.byte(data, i)
+		local highByte = string.byte(data, i+1)
+		-- convert from two bytes to int16 with signs
+		local value 
+		if(highByte > 127) then
+			highByte = 255 - highByte;
+			lowByte = 255 - lowByte;
+			value = -(lowByte + highByte*256);
+		else
+			value = lowByte + highByte*256;
+		end
+		log(","..value)
+		i = i + 2
+	end
+	-- AudioEngine.SaveRecording("temp/capture.wav", data)
+	log("\n")
+end)
+commonlib.TimerManager.SetTimeout(AudioEngine.StopRecording, 5000)
 -------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/XPath.lua");
@@ -67,6 +90,7 @@ NPL.load("(gl)script/apps/Aries/Creator/Game/Sound/BackgroundMusic.lua");
 local BackgroundMusic = commonlib.gettable("MyCompany.Aries.Game.Sound.BackgroundMusic");
 
 local AudioEngine = commonlib.gettable("AudioEngine");
+commonlib.AudioEngine = AudioEngine;
 local AudioSource = commonlib.gettable("AudioEngine.AudioSource");
 local LOG = LOG;
 -- true for debug audio engine by writing more logs
@@ -295,16 +319,19 @@ end
 -- use CreateGet() instead of Get(), so that we can all audio source functions without validations.
 -- such as AudioEngine.CreateGet("bg_theme_alien"):play();
 function AudioEngine.CreateGet(sound_name)
-	local audio_src = instance_map[sound_name];
-	if(not audio_src) then
-		audio_src = AudioSource:new({name = sound_name});
-		instance_map[sound_name] = audio_src;
+	if(sound_name) then
+		local audio_src = instance_map[sound_name];
+		if(not audio_src) then
+			audio_src = AudioSource:new({name = sound_name});
+			instance_map[sound_name] = audio_src;
+		end
+		return audio_src;	
 	end
-	return audio_src;
 end
 
 -- play a sound by a given name from loaded wave banks using the default parameter.
 function AudioEngine.PlayUISound(sound_name)
+	if(not sound_name) then return end
 	local audio_src = AudioEngine.Get(sound_name)
 	if(audio_src) then
 		audio_src:play();
@@ -360,26 +387,117 @@ function AudioEngine.ResetAudioDevice(value)
 	end
 end
 
-function AudioEngine.StartRecording()
-	ParaAudio.StartRecording()
+-- @param callbackFunc: nil or function(data) end, to receive the audio data.
+-- if callbackFunc is provided, then SaveRecording should not be called. 
+function AudioEngine.StartRecording(callbackFunc)
+	if (System.os.GetPlatform() == "ios" and System.os.CompareParaEngineVersion('1.7.1.0')) then
+		ParaAudioiOS.StartRecording()
+	else
+		ParaAudio.StartRecording()
+	end
+	AudioEngine.callbackFunc = callbackFunc;
+	if(callbackFunc) then
+		AudioEngine.captureTimer = AudioEngine.captureTimer or commonlib.Timer:new({callbackFunc = function(timer)
+			local data = AudioEngine.GetCapturedAudio();
+			if(AudioEngine.callbackFunc and data and #data > 0) then
+				AudioEngine.callbackFunc(data);
+			end
+		end})
+		AudioEngine.captureTimer:Change(30, 30);
+		AudioEngine.callbackFunc = callbackFunc;
+	else
+		if(AudioEngine.captureTimer) then
+			AudioEngine.captureTimer:Change();
+			AudioEngine.captureTimer = nil;
+		end
+	end
 end
 
 function AudioEngine.StopRecording()
-	ParaAudio.StopRecording()
+	if (System.os.GetPlatform() == "ios" and System.os.CompareParaEngineVersion('1.7.1.0')) then
+		ParaAudioiOS.StopRecording()
+	else
+		ParaAudio.StopRecording()
+	end
+	if(AudioEngine.captureTimer) then
+		AudioEngine.captureTimer:Change();
+		AudioEngine.captureTimer = nil;
+	end
+	if(AudioEngine.callbackFunc) then
+		AudioEngine.callbackFunc = nil;
+	end
+end
+
+-- @param nSize: the max size of the buffer to get. -1 to get all
+-- @return buffer of string read, it can be "" if no data is available.
+function AudioEngine.GetCapturedAudio(nSize)
+	if (ParaAudio.GetCapturedAudio) then
+		return ParaAudio.GetCapturedAudio(nSize or -1);
+	end
 end
 
 -- it will stop recording and save current recording to ogg audio file. 
 -- @param filename: if nil, default to "temp/capture.ogg"
+-- @param buffer: if nil, it will stop save raw recording. If it is binary string, 
+-- it is usually the buffer data received in AudioEngine.StartRecording callback
 -- @param quality: if nil, default to 0.1.  [0.1, 1], 0.1 is lowest quality, 1 is best quality. 
 -- @return absolute filename that the audio is saved to.
-function AudioEngine.SaveRecording(filename, quality)
+function AudioEngine.SaveRecording(filename, buffer, quality)
 	filename = filename or "temp/capture.ogg";
-	if(not commonlib.Files.IsAbsolutePath(filename)) then
-		filename = ParaIO.GetWritablePath()..filename;
+	if (not commonlib.Files.IsAbsolutePath(filename)) then
+		filename = ParaIO.GetWritablePath() .. filename;
+	end
+	if(type(buffer) == "number") then
+		buffer = nil
+		quality = buffer
 	end
 	quality = quality or 0.1;
-	ParaEngine.GetAttributeObject():GetChild("AudioEngine"):SetField("CaptureAudioQuality", quality);
-	if(ParaAudio.SaveRecording(filename)) then
-		return filename;
+
+	if (System.os.GetPlatform() == "ios" and System.os.CompareParaEngineVersion('1.7.1.0')) then
+		if (ParaAudioiOS.SaveRecording(filename, quality)) then
+			return filename;
+		end
+	else
+		ParaEngine.GetAttributeObject():GetChild("AudioEngine"):SetField("CaptureAudioQuality", quality);
+		if(buffer) then
+			if (ParaAudio.SaveRecording(filename, buffer, #buffer)) then
+				return filename;
+			end
+		else
+			if (ParaAudio.SaveRecording(filename)) then
+				return filename;
+			end
+		end
 	end
+end
+
+-- return array of audio playback device names
+function AudioEngine.GetAudioDevices()
+	local deviceList = {};
+	local devices = ParaEngine.GetAttributeObject():GetChild("AudioEngine"):GetField("AudioDeviceNames", "");
+	if (devices and devices ~= "") then
+		local names = commonlib.split(devices, ";");
+		for i = 1, #names do
+			deviceList[#deviceList + 1] = {text = commonlib.Encoding.DefaultToUtf8(names[i]), value = names[i]};
+		end
+	end
+	return deviceList;
+end
+
+-- return array of audio record device names
+function AudioEngine.GetAudioRecordDevices()
+	local deviceList = {};
+	local devices = ParaEngine.GetAttributeObject():GetChild("AudioEngine"):GetField("AudioRecordDeviceNames", "");
+	if (devices and devices ~= "") then
+		local names = commonlib.split(devices, ";");
+		for i = 1, #names do
+			deviceList[#deviceList + 1] = {text = commonlib.Encoding.DefaultToUtf8(names[i]), value = names[i]};
+		end
+	end
+	return deviceList;
+end
+
+-- change record device to the given value
+function AudioEngine.ResetAudioRecordDevice(value)
+	ParaEngine.GetAttributeObject():GetChild("AudioEngine"):SetField("RecordDeviceName", value or "");
 end

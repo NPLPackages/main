@@ -49,13 +49,21 @@ local attr = ParaXModelAttr:new():initFromAssetFile("character/bmax/test_multian
 	local nCount = attr:GetObjectNumCData().nVertices;
 	for i=0, nCount-1 do
 		echo({vertices[i].pos.x, vertices[i].pos.y, vertices[i].pos.z})
+		-- one can modify cdata directly like below:
+		vertices[i].normal.x = 0;
+		vertices[i].normal.y = 1;
+		vertices[i].normal.z = 0;
 	end
+	-- attr:RecalculateSmoothNormals(true)
 end)
 attr:SaveToDisk("temp/test_multianim.x");
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/timer.lua");
-local ffi = require('ffi');
+local ffi;
+if(ParaEngine.hasFFI) then
+	ffi = require('ffi');
+end
 local ParaXModelAttr = commonlib.inherit(nil, commonlib.gettable("System.Scene.Assets.ParaXModelAttr"));
 
 function ParaXModelAttr:ctor()
@@ -67,6 +75,7 @@ function ParaXModelAttr.StaticInit()
 		return
 	end
 	ParaXModelAttr.inited = true;
+	if(not ffi) then return end
 
 	ffi.cdef([[
 	struct ParaXModelObjNum{
@@ -247,6 +256,7 @@ end
 -- local nVertices = result.nVertices;
 -- @return objnum cdata object
 function ParaXModelAttr:GetObjectNumCData()
+	if(not ffi) then return end
 	if(self.m_objNumCData) then
 		return self.m_objNumCData;
 	end
@@ -261,6 +271,7 @@ end
 
 -- it will cache the last result. so calling this function multiple times is fast. 
 function ParaXModelAttr:GetObjectNum()
+	if(not ffi) then return end
 	if(self.m_objNum) then
 		return self.m_objNum;
 	end
@@ -305,6 +316,7 @@ end
 -- echo(result[0].pos.y)
 -- @return vertices* cdata object
 function ParaXModelAttr:GetAnimationsCData()
+	if(not ffi) then return end
 	if(self.m_animsCData) then
 		return self.m_animsCData;
 	end
@@ -322,6 +334,29 @@ function ParaXModelAttr:GetAnimations()
 	if(self.m_anims) then
 		return self.m_anims;
 	end
+	if(not ffi) then 
+		local animations_ = {};
+		self.m_anims = animations_;
+		if(self.attr) then
+			local anims = self.attr:GetField("strAnimIds", "0;4")
+			if(anims) then
+				for id in anims:gmatch("%d+") do
+					if(id) then
+						animations_[#animations_+1] = {
+							animID = tonumber(id),
+							timeStart = 0,
+							timeEnd = 0,
+							moveSpeed = 4,
+							loopType = true,
+							flags = 0,
+						};
+					end
+				end
+			end
+		end
+		return self.m_anims
+	end
+
 	if(self.attr) then
 		local animations = self:GetAnimationsCData();
 		if(animations) then
@@ -350,6 +385,7 @@ end
 -- echo(result[0].pos.y)
 -- @return vertices* cdata object
 function ParaXModelAttr:GetVerticesCData()
+	if(not ffi) then return end
 	if(self.m_origVerticesCData) then
 		return self.m_origVerticesCData;
 	end
@@ -364,6 +400,7 @@ end
 
 -- it will cache result
 function ParaXModelAttr:GetVertices()
+	if(not ffi) then return end
 	if(self.m_origVertices) then
 		return self.m_origVertices;
 	end
@@ -396,6 +433,7 @@ end
 -- echo(result[0])
 -- @return indices* cdata object
 function ParaXModelAttr:GetIndicesCData()
+	if(not ffi) then return end
 	if(self.m_indicesCData) then
 		return self.m_indicesCData;
 	end
@@ -410,6 +448,7 @@ end
 
 -- it will cache result
 function ParaXModelAttr:GetIndices()
+	if(not ffi) then return end
 	if(self.m_indices) then
 		return self.m_indices;
 	end
@@ -433,6 +472,7 @@ end
 -- echo(result[0])
 -- @return renderpass* cdata object
 function ParaXModelAttr:GetRenderPassesCData()
+	if(not ffi) then return end
 	if(self.m_passesCData) then
 		return self.m_passesCData;
 	end
@@ -447,6 +487,7 @@ end
 
 -- it will cache result
 function ParaXModelAttr:GetRenderPasses()
+	if(not ffi) then return end
 	if(self.m_passes) then
 		return self.m_passes;
 	end
@@ -484,6 +525,7 @@ end
 -- echo(result[0])
 -- @return ModelGeoset* cdata object
 function ParaXModelAttr:GetGeosetsCData()
+	if(not ffi) then return end
 	if(self.m_geosetsCData) then
 		return self.m_geosetsCData;
 	end
@@ -498,6 +540,7 @@ end
 
 -- it will cache result
 function ParaXModelAttr:GetGeosets()
+	if(not ffi) then return end
 	if(self.m_geosets) then
 		return self.m_geosets;
 	end
@@ -532,6 +575,7 @@ end
 
 -- this function emulate drawing the static 3d object using text output. 
 function ParaXModelAttr:DrawStaticAsText()
+	if(not ffi) then return end
 	if(not self:IsValid()) then
 		LOG.std(nil, "warn", "ParaXModelAttr", "invalid paraxmodel");
 		return;
@@ -618,4 +662,143 @@ function ParaXModelAttr:SaveToGltf(filename)
 			mytimer:Change(0, 300);
 		end
 	end
+end
+
+
+-- Recalculate smooth normals for all vertices in the model
+-- This function averages face normals for vertices shared by multiple triangles
+function ParaXModelAttr:RecalculateSmoothNormals(bAverageSamePositionVertices)
+	if(not ffi) then return end
+	if(not self:IsValid()) then
+		LOG.std(nil, "warn", "ParaXModelAttr", "invalid paraxmodel");
+		return;
+	end	
+
+	local origVertices = self:GetVerticesCData();
+	local indices = self:GetIndicesCData();
+	local nNumVertices = self:GetObjectNum().nVertices;
+	local nNumIndices = self:GetObjectNum().nIndices;
+	
+	if(not origVertices or not indices or nNumVertices == 0 or nNumIndices == 0) then
+		LOG.std(nil, "warn", "ParaXModelAttr", "no vertices or indices to calculate normals");
+		return;
+	end
+
+	-- Create a table to accumulate normals for each vertex
+	local vertexNormals = {};
+	for i = 0, nNumVertices - 1 do
+		vertexNormals[i] = {x = 0, y = 0, z = 0, count = 0};
+	end
+
+	-- Calculate face normals and accumulate them for each vertex
+	local numFaces = math.floor(nNumIndices / 3);
+	for i = 0, numFaces - 1 do
+		local idx0 = indices[i * 3 + 0];
+		local idx1 = indices[i * 3 + 1];
+		local idx2 = indices[i * 3 + 2];
+
+		-- Get the three vertices of the triangle
+		local v0 = origVertices[idx0].pos;
+		local v1 = origVertices[idx1].pos;
+		local v2 = origVertices[idx2].pos;
+
+		-- Calculate edge vectors
+		local edge1_x = v1.x - v0.x;
+		local edge1_y = v1.y - v0.y;
+		local edge1_z = v1.z - v0.z;
+
+		local edge2_x = v2.x - v0.x;
+		local edge2_y = v2.y - v0.y;
+		local edge2_z = v2.z - v0.z;
+
+		-- Calculate face normal using cross product
+		local normal_x = edge1_y * edge2_z - edge1_z * edge2_y;
+		local normal_y = edge1_z * edge2_x - edge1_x * edge2_z;
+		local normal_z = edge1_x * edge2_y - edge1_y * edge2_x;
+
+		-- Accumulate face normal to all three vertices
+		for _, idx in ipairs({idx0, idx1, idx2}) do
+			vertexNormals[idx].x = vertexNormals[idx].x + normal_x;
+			vertexNormals[idx].y = vertexNormals[idx].y + normal_y;
+			vertexNormals[idx].z = vertexNormals[idx].z + normal_z;
+			vertexNormals[idx].count = vertexNormals[idx].count + 1;
+		end
+	end
+
+	-- Normalize and assign the averaged normals back to vertices
+	for i = 0, nNumVertices - 1 do
+		local normal = vertexNormals[i];
+		if(normal.count > 0) then
+			-- Calculate length
+			local length = math.sqrt(normal.x * normal.x + normal.y * normal.y + normal.z * normal.z);
+			
+			if(length > 0.0001) then
+				-- Normalize
+				origVertices[i].normal.x = normal.x / length;
+				origVertices[i].normal.y = normal.y / length;
+				origVertices[i].normal.z = normal.z / length;
+			else
+				-- Degenerate normal, use default up vector
+				origVertices[i].normal.x = 0;
+				origVertices[i].normal.y = 1;
+				origVertices[i].normal.z = 0;
+			end
+		else
+			-- Vertex not referenced by any face, use default up vector
+			origVertices[i].normal.x = 0;
+			origVertices[i].normal.y = 1;
+			origVertices[i].normal.z = 0;
+		end
+	end
+
+	-- Final pass: if bAverageSamePositionVertices is true, average normals for vertices 
+	-- that share the same position
+	if(bAverageSamePositionVertices) then
+		-- Build a position map: key = "x,y,z", value = list of vertex indices
+		local positionMap = {};
+		local epsilon = 0.0001; -- tolerance for position comparison
+		
+		for i = 0, nNumVertices - 1 do
+			local pos = origVertices[i].pos;
+			-- Round to avoid floating point precision issues
+			local key = string.format("%.6f,%.6f,%.6f", pos.x, pos.y, pos.z);
+			
+			if(not positionMap[key]) then
+				positionMap[key] = {};
+			end
+			table.insert(positionMap[key], i);
+		end
+
+		-- For each group of vertices sharing the same position, average their normals
+		for key, vertexIndices in pairs(positionMap) do
+			if(#vertexIndices > 1) then
+				-- Accumulate normals from all vertices at this position
+				local avgNormal = {x = 0, y = 0, z = 0};
+				for _, idx in ipairs(vertexIndices) do
+					avgNormal.x = avgNormal.x + origVertices[idx].normal.x;
+					avgNormal.y = avgNormal.y + origVertices[idx].normal.y;
+					avgNormal.z = avgNormal.z + origVertices[idx].normal.z;
+				end
+				
+				-- Normalize the averaged normal
+				local length = math.sqrt(avgNormal.x * avgNormal.x + avgNormal.y * avgNormal.y + avgNormal.z * avgNormal.z);
+				if(length > 0.0001) then
+					avgNormal.x = avgNormal.x / length;
+					avgNormal.y = avgNormal.y / length;
+					avgNormal.z = avgNormal.z / length;
+					
+					-- Assign the averaged normal to all vertices at this position
+					for _, idx in ipairs(vertexIndices) do
+						origVertices[idx].normal.x = avgNormal.x;
+						origVertices[idx].normal.y = avgNormal.y;
+						origVertices[idx].normal.z = avgNormal.z;
+					end
+				end
+			end
+		end
+		
+		LOG.std(nil, "info", "ParaXModelAttr", "Averaged normals for vertices sharing same position");
+	end
+
+	LOG.std(nil, "info", "ParaXModelAttr", "Recalculated smooth normals for %d vertices in %d faces", nNumVertices, numFaces);
 end

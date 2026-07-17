@@ -10,7 +10,7 @@ local QRCode = NPL.load("script/ide/System/UI/Window/Elements/QRCode.lua");
 NPL.load("(gl)script/apps/Aries/Creator/Game/Movie/QREncode.lua");
 local QREncode = commonlib.gettable("MyCompany.Aries.Game.Movie.QREncode");
 
-local Element = NPL.load("../Element.lua", IsDevEnv);
+local Element = NPL.load("../Element.lua");
 local QRCode = commonlib.inherit(Element, NPL.export());
 
 QRCode:Property("Name", "QRCode");

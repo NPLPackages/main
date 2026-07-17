@@ -73,7 +73,7 @@ function CssSelectorItem:match(pageElement)
 		if(classes) then
 			for i = 1,#self.classes do
 				local class = self.classes[i];
-				if(not string.find(classes,class)) then
+				if(not string.find(classes, class, 1, true)) then
 					return false;
 				end
 			end

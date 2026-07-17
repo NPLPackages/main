@@ -220,7 +220,7 @@ end
 function TranslateManip:GrabValues()
 	if(self.drag_offset and self.old_position) then
 		local x, y, z = unpack(self.old_position);
-		if(x) then
+		if(x and y and z) then
 			local new_x, new_y, new_z = x + self.drag_offset.x, y + self.drag_offset.y, z + self.drag_offset.z;
 			self:SetNewPosition(new_x, new_y, new_z)
 		end

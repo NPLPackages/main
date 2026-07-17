@@ -1,0 +1,201 @@
+<?npl
+-- page layout (must be on top)
+PAGE_NO_HEADER = true; 
+PAGE_NO_SIDE_BAR = true;
+
+--[[
+Title: WebSocket Demo Client
+Desc: Demo page for bidirectional WebSocket communication.
+  Open multiple browser tabs to see broadcast in action.
+  http://localhost:8099/demos/websocket_client
+  Endpoint: ws://<host>/ajax/demos/websocket_client?action=handshake
+]]
+
+if(is_ajax()) then
+    add_action('wp_ajax_handshake', function()
+        -- Compute Sec-WebSocket-Accept
+        NPL.load("(gl)script/ide/System/Encoding/sha1.lua");
+        local Encoding = commonlib.gettable("System.Encoding");
+
+        local key = request:header("Sec-WebSocket-Key");
+        if not key or key == "" then
+            response:status(400):send("missing Sec-WebSocket-Key");
+            return;
+        end
+
+        key = key .. "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+        key = Encoding.sha1(key, "base64");
+
+        -- Send 101 Switching Protocols
+        response.headers = {};
+        response:add_header("status", "101 Switching Protocols");
+        response:set_header("Connection", "Upgrade");
+        response:set_header("Upgrade", "websocket");
+        response:set_header("Sec-WebSocket-Accept", key);
+        response:send_headers();
+
+        -- Promote the raw TCP connection to WebSocket protocol
+        local tid = request.nid;
+        local nid = "ws_demo_" .. tostring(tid);
+        
+        NPL.load("(gl)script/ide/System/os/network/WebSocket/WebSocketServer.lua");
+        local WebSocketServer = commonlib.gettable("System.os.network.WebSocketServer");
+        WebSocketServer:AddClient(tid, nid);
+        WebSocketServer:Broadcast({type = "system", text = nid .. " joined"}, nid);
+        WebSocketServer:Send(nid, {type = "greeting", text = "Welcome!"});
+    end)
+    return;
+end
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WebSocket Demo</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #1e1e2e; color: #cdd6f4; height: 100vh; display: flex; flex-direction: column; }
+  header { padding: 12px 16px; background: #282840; border-bottom: 1px solid #45475a; display: flex; align-items: center; gap: 12px; }
+  header h1 { font-size: 1rem; font-weight: 600; color: #cba6f7; }
+  #status { font-size: 0.75rem; padding: 2px 8px; border-radius: 999px; font-weight: 600; }
+  #status.connected    { background: #a6e3a133; color: #a6e3a1; }
+  #status.disconnected { background: #f38ba833; color: #f38ba8; }
+  #status.connecting   { background: #f9e2af33; color: #f9e2af; }
+  #log { flex: 1; overflow-y: auto; padding: 12px 16px; display: flex; flex-direction: column; gap: 6px; }
+  .msg { padding: 6px 10px; border-radius: 6px; font-size: 0.85rem; max-width: 80%; word-break: break-word; }
+  .msg.echo    { background: #89b4fa22; border: 1px solid #89b4fa44; align-self: flex-end; color: #89b4fa; }
+  .msg.message { background: #2a2a3e;   border: 1px solid #45475a;   align-self: flex-start; }
+  .msg.system  { align-self: center; color: #6c7086; font-size: 0.75rem; font-style: italic; }
+  .msg .from   { font-size: 0.7rem; color: #6c7086; margin-bottom: 2px; }
+  #inputbar { display: flex; gap: 8px; padding: 10px 16px; background: #282840; border-top: 1px solid #45475a; }
+  #txt  { flex: 1; background: #1a1a2e; border: 1px solid #45475a; border-radius: 6px; padding: 8px 12px; color: #cdd6f4; font-size: 0.875rem; outline: none; }
+  #txt:focus { border-color: #89b4fa; }
+  #txt:disabled { opacity: 0.4; cursor: not-allowed; }
+  #btn  { padding: 8px 20px; background: #89b4fa; color: #1e1e2e; border: none; border-radius: 6px; font-weight: 600; font-size: 0.875rem; cursor: pointer; }
+  #btn:hover    { opacity: 0.85; }
+  #btn:disabled { opacity: 0.4; cursor: not-allowed; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>&#x1F50C; WebSocket Demo</h1>
+  <span id="status" class="connecting">Connecting…</span>
+  <span id="count" style="margin-left:auto;font-size:0.75rem;color:#6c7086"></span>
+</header>
+
+<div id="log"></div>
+
+<div id="inputbar">
+  <input id="txt" type="text" placeholder="Type a message and press Enter…" disabled autocomplete="off">
+  <button id="btn" disabled>Send</button>
+</div>
+
+<script>
+(function () {
+    var log    = document.getElementById('log');
+    var txt    = document.getElementById('txt');
+    var btn    = document.getElementById('btn');
+    var status = document.getElementById('status');
+    var count  = document.getElementById('count');
+    var ws;
+    var reconnectTimer = null;
+    var reconnectDelay = 1000;   // starts at 1 s, doubles up to 30 s
+    var MAX_DELAY      = 30000;
+    var destroyed      = false;  // set true on page unload to stop reconnecting
+
+    window.addEventListener('beforeunload', function () { destroyed = true; if (ws) ws.close(); });
+
+    function scheduleReconnect() {
+        if (destroyed || reconnectTimer) return;
+        setStatus('disconnected', 'Reconnecting in ' + (reconnectDelay / 1000).toFixed(0) + ' s…');
+        reconnectTimer = setTimeout(function () {
+            reconnectTimer = null;
+            if (!destroyed) connect();
+        }, reconnectDelay);
+        reconnectDelay = Math.min(reconnectDelay * 2, MAX_DELAY);
+    }
+
+    function appendMsg(type, text, from) {
+        var div = document.createElement('div');
+        div.className = 'msg ' + type;
+        if (from) {
+            var f = document.createElement('div');
+            f.className = 'from';
+            f.textContent = from;
+            div.appendChild(f);
+        }
+        var t = document.createElement('div');
+        t.textContent = text;
+        div.appendChild(t);
+        log.appendChild(div);
+        log.scrollTop = log.scrollHeight;
+    }
+
+    function setStatus(s, label) {
+        status.className = s;
+        status.textContent = label;
+    }
+
+    function setConnected(ok) {
+        txt.disabled = !ok;
+        btn.disabled = !ok;
+        if (ok) txt.focus();
+    }
+
+    function connect() {
+        var proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+        var url   = proto + '//' + location.host + '/ajax/demos/websocket_client?action=handshake';
+        setStatus('connecting', 'Connecting…');
+        ws = new WebSocket(url);
+
+        ws.onopen = function () {
+            reconnectDelay = 1000;  // reset backoff on successful connect
+            setStatus('connected', 'Connected');
+            setConnected(true);
+            appendMsg('system', 'Connected to server');
+            count.textContent = '';
+        };
+
+        ws.onmessage = function (e) {
+            var data;
+            try { data = JSON.parse(e.data); } catch(_) { appendMsg('system', 'Bad JSON: ' + e.data); return; }
+
+            if (data.type === 'system') {
+                appendMsg('system', data.text);
+            } else if (data.text !== undefined) {
+                appendMsg('message', data.text);
+            }
+        };
+
+        ws.onclose = function () {
+            setConnected(false);
+            appendMsg('system', 'Disconnected.');
+            scheduleReconnect();
+        };
+
+        ws.onerror = function () {
+            // onclose fires immediately after onerror; scheduleReconnect guards against double-scheduling
+            appendMsg('system', 'Connection error.');
+        };
+    }
+
+    function send() {
+        var text = txt.value.trim();
+        if (!text || !ws || ws.readyState !== WebSocket.OPEN) return;
+        ws.send(JSON.stringify({ 
+            filename : "script/apps/WebServer/admin/wp-content/pages/demos/websocket_demo_server.lua",
+            text: text
+            }));
+        txt.value = '';
+    }
+
+    btn.onclick = send;
+    txt.onkeydown = function (e) { if (e.key === 'Enter') send(); };
+
+    connect();
+})();
+</script>
+</body>
+</html>

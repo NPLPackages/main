@@ -10,6 +10,7 @@ HTML<select AllowUserEdit="false"> and <option>, where AllowUserEdit default to 
 | IsReadonly | bool|
 | onclick | on select event, function(name,value) end|
 | onselect | same as onclick.|
+| onBeforeClickDropDownButton | one can modify data source in this function and drop down tree view will be refreshed. |
 | DataSource | the data source table array of {{value="0", text="zero"},{value="1"}}, where the each sub item is attr table of option node.  |
 <verbatim>
 	<select name="blood" AllowUserEdit="false">
@@ -110,19 +111,19 @@ Map3DSystem.mcml_controls.pe_input = pe_input;
 
 function pe_input.create(rootName, mcmlNode, bindingContext, _parent, left, top, width, height,style, parentLayout)
 	local type = mcmlNode:GetString("type");
-	if(type == nil or type == "text") then
-		Map3DSystem.mcml_controls.pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left, top, width, height,style, parentLayout);	
-	elseif(type == "password") then
-		Map3DSystem.mcml_controls.pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left, top, width, height,style, parentLayout);	
-	elseif(type == "radio") then
-		Map3DSystem.mcml_controls.pe_editor_radio.create(rootName, mcmlNode, bindingContext, _parent, left, top, width, height,style, parentLayout);
-	elseif(type == "checkbox") then
-		Map3DSystem.mcml_controls.pe_editor_checkbox.create(rootName, mcmlNode, bindingContext, _parent, left, top, width, height,style, parentLayout);
-	elseif(type == "hidden") then
-		Map3DSystem.mcml_controls.pe_editor_hidden.create(rootName, mcmlNode, bindingContext, _parent, left, top, width, height,style, parentLayout);
-	elseif(type == "submit" or type == "button" or type == "reset" ) then
+	if (type == nil or type == "text") then
+		Map3DSystem.mcml_controls.pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left, top, width, height, style, parentLayout);
+	elseif (type == "password" or type == "email" or type == "number" or type == "phone" or type == "url") then
+		Map3DSystem.mcml_controls.pe_editor_text.create(rootName, mcmlNode, bindingContext, _parent, left, top, width, height, style, parentLayout);
+	elseif (type == "radio") then
+		Map3DSystem.mcml_controls.pe_editor_radio.create(rootName, mcmlNode, bindingContext, _parent, left, top, width, height, style, parentLayout);
+	elseif (type == "checkbox") then
+		Map3DSystem.mcml_controls.pe_editor_checkbox.create(rootName, mcmlNode, bindingContext, _parent, left, top, width, height, style, parentLayout);
+	elseif (type == "hidden") then
+		Map3DSystem.mcml_controls.pe_editor_hidden.create(rootName, mcmlNode, bindingContext, _parent, left, top, width, height, style, parentLayout);
+	elseif (type == "submit" or type == "button" or type == "reset" ) then
 		Map3DSystem.mcml_controls.pe_editor_button.create(rootName, mcmlNode, bindingContext, _parent, left, top, width, height, style, parentLayout)
-	elseif(type == "file") then
+	elseif (type == "file") then
 		Map3DSystem.mcml_controls.pe_fileupload.create(rootName, mcmlNode, bindingContext, _parent, left, top, width, height, style, parentLayout)
 	else
 		-- TODO: others types
@@ -144,7 +145,7 @@ function pe_input.GetValue(mcmlNode)
 				return Map3DSystem.mcml_controls.pe_editor_text.GetValue(mcmlNode);
 			end
 		end
-	elseif(type == "password") then
+	elseif(type == "password" or type == "email" or type == "number" or type == "phone" or type == "url") then
 		return Map3DSystem.mcml_controls.pe_editor_text.GetValue(mcmlNode);
 	elseif(type == "radio") then
 		return Map3DSystem.mcml_controls.pe_editor_radio.GetValue(mcmlNode);
@@ -166,7 +167,7 @@ function pe_input.SetValue(mcmlNode, value)
 	local type = mcmlNode:GetString("type");
 	if(type == nil or type == "text") then
 		Map3DSystem.mcml_controls.pe_editor_text.SetValue(mcmlNode, value);
-	elseif(type == "password") then
+	elseif(type == "password" or type == "email" or type == "number" or type == "phone" or type == "url") then
 		Map3DSystem.mcml_controls.pe_editor_text.SetValue(mcmlNode, value);
 	elseif(type == "radio") then
 		Map3DSystem.mcml_controls.pe_editor_radio.SetValue(mcmlNode, value);
@@ -183,36 +184,42 @@ function pe_input.SetValue(mcmlNode, value)
 	end
 end
 
+
+
 -- get the UI value on the node
 function pe_input.GetUIValue(mcmlNode, pageInstName)
 	local type = mcmlNode:GetString("type");
-	if(type == nil or type == "text") then
-		local originValue = Map3DSystem.mcml_controls.pe_editor_text.GetUIValue(mcmlNode, pageInstName)
+	if (type == nil or type == "text") then
+		local originValue = Map3DSystem.mcml_controls.pe_editor_text.GetUIValue(mcmlNode, pageInstName);
+		local preValue = originValue
 		if not originValue then
-			originValue = ""
+			originValue = "";
 		end
 		if (mcmlNode:GetBool("RemoveSpaces")) then
-			originValue = string.gsub(originValue, " ", "");
+			originValue = string.gsub(originValue, "%s", "");
+			if preValue ~= originValue then
+				pe_input.SetUIValue(mcmlNode, pageInstName, originValue)
+			end
 		end
-
 		if (mcmlNode:GetBool("SkipAutoBadWordFilter") or mcmlNode:GetBool("UseSystemControl")) then
 			return originValue;
 		else
 			-- bad word filter for Aries project
-			if(commonlib.getfield("MyCompany.Aries.Chat.BadWordFilter")) then
-
+			if (commonlib.getfield("MyCompany.Aries.Chat.BadWordFilter")) then
 				return MyCompany.Aries.Chat.BadWordFilter.FilterString(originValue);
 			else
 				return originValue;
 			end
 		end
-	elseif(type == "file") then
+	elseif (type == "password" or type == "email" or type == "number" or type == "phone" or type == "url") then
+		return Map3DSystem.mcml_controls.pe_editor_text.GetUIValue(mcmlNode, pageInstName);
+	elseif (type == "file") then
 		return Map3DSystem.mcml_controls.pe_fileupload.GetUIValue(mcmlNode, pageInstName);
-	elseif(type == "submit" or type == "button" or type == "reset" ) then
+	elseif (type == "submit" or type == "button" or type == "reset" ) then
 		return Map3DSystem.mcml_controls.pe_editor_button.GetUIValue(mcmlNode, pageInstName);
-	elseif(type == "checkbox") then	
+	elseif (type == "checkbox") then	
 		return Map3DSystem.mcml_controls.pe_editor_checkbox.GetUIValue(mcmlNode, pageInstName);
-	elseif(type == "radio") then
+	elseif (type == "radio") then
 		return Map3DSystem.mcml_controls.pe_editor_radio.GetUIValue(mcmlNode, pageInstName);
 	end	
 end
@@ -221,6 +228,8 @@ end
 function pe_input.SetUIValue(mcmlNode, pageInstName, value)
 	local type = mcmlNode:GetString("type");
 	if(type == nil or type == "text") then
+		Map3DSystem.mcml_controls.pe_editor_text.SetUIValue(mcmlNode, pageInstName, value);
+	elseif(type == "password" or type == "email" or type == "number" or type == "phone" or type == "url") then
 		Map3DSystem.mcml_controls.pe_editor_text.SetUIValue(mcmlNode, pageInstName, value);
 	elseif(type == "file") then
 		Map3DSystem.mcml_controls.pe_fileupload.SetUIValue(mcmlNode, pageInstName, value);
@@ -813,6 +822,8 @@ function pe_select.create(rootName, mcmlNode, bindingContext, _parent, left, top
 	local dropX = mcmlNode:GetAttributeWithCode("dropX",nil,true); --下拉列表三角按钮位置X
 	local dropY = mcmlNode:GetAttributeWithCode("dropY",nil,true); --下拉列表三角按钮位置Y
 	local contentBg = mcmlNode:GetAttributeWithCode("contentBg",nil,true); --下拉列表显示框背景
+	local listBg = mcmlNode:GetAttributeWithCode("listBg",nil,true); --下拉列表背景
+	local fontColor = mcmlNode:GetAttributeWithCode("fontcolor","#000000",true); --输入框字体颜色
 	local rows = mcmlNode:GetNumber("size") or 1;
 	local css = mcmlNode:GetStyle(Map3DSystem.mcml_controls.pe_html.css["input-select"]);
 	local margin_left, margin_top, margin_bottom, margin_right = 
@@ -821,6 +832,8 @@ function pe_select.create(rootName, mcmlNode, bindingContext, _parent, left, top
 		
 	local left, top, width, height = parentLayout:GetPreferredRect();
 	width, height  = width-left-margin_left-margin_right, (css.lineheight or 20)*rows;
+
+	local font_size = css["font-size"] or 12;
 
 	if(css.width and css.width<width) then
 		width = css.width
@@ -835,15 +848,8 @@ function pe_select.create(rootName, mcmlNode, bindingContext, _parent, left, top
 
 	local instName = mcmlNode:GetInstanceName(rootName);
 	
-	local ds = mcmlNode:GetAttributeWithCode("DataSource",nil,true);
-	if(ds) then
-		pe_select.SetDataSource(mcmlNode, rootName, ds)
-	end
-	
-	if(mcmlNode.datasource) then
-		-- instantiate child nodes from data source 
-		pe_select.DataBind(mcmlNode, rootName, false);
-	end
+	-- instantiate child nodes from data source 
+	pe_select.DataBind(mcmlNode, rootName, false);
 
 	local onremove = mcmlNode:GetAttributeWithCode("onremove", nil, true);
 	local emptyText = mcmlNode:GetAttributeWithCode("EmptyText", "", true);
@@ -891,6 +897,14 @@ function pe_select.create(rootName, mcmlNode, bindingContext, _parent, left, top
 		elseif(preferredWidth<width) then
 			width = preferredWidth;
 		end
+		local onBeforeClickDropDownButton;
+		if(mcmlNode:GetString("onBeforeClickDropDownButton")) then
+			onBeforeClickDropDownButton = function(ctl)
+				Map3DSystem.mcml_controls.OnPageEvent(mcmlNode, mcmlNode:GetString("onBeforeClickDropDownButton"))
+				pe_select.DataBind(mcmlNode, rootName, true);
+				ctl.dropdownheight = math.min(math.max((height - 2) * table.getn(ctl.items), (height - 2) * 3), 300)
+			end
+		end
 
 		NPL.load("(gl)script/ide/dropdownlistbox.lua");
 		local ctl = CommonCtrl.dropdownlistbox:new{
@@ -905,8 +919,13 @@ function pe_select.create(rootName, mcmlNode, bindingContext, _parent, left, top
 			parent = _parent,
 			editbox_bg = pe_select.editbox_bg,
 			dropdownbutton_bg = dropBg and string.gsub(dropBg,"#",";") or pe_select.dropdownBtn_bg,
+			dropdownbutton_width = dropWidth,
+			dropdownbutton_height = dropHeight,
+			dropdownbutton_X = dropX,
+			dropdownbutton_Y = dropY,
 			container_bg = contentBg and string.gsub(contentBg,"#",";") or pe_select.container_bg,
-			listbox_bg = pe_select.listbox_bg,
+			listbox_bg = listBg and string.gsub(listBg,"#",";") or pe_select.listbox_bg,
+			listbox_container_bg = listBg and string.gsub(listBg,"#",";"),
 			dropdownbutton_width = dropWidth and tonumber(dropWidth) or pe_select.dropdownbutton_width,
 			dropdownbutton_height = dropHeight and tonumber(dropHeight)  or pe_select.dropdownbutton_height,
 			dropdownbutton_X = tonumber(dropX),
@@ -916,7 +935,11 @@ function pe_select.create(rootName, mcmlNode, bindingContext, _parent, left, top
 			AllowUserEdit = mcmlNode:GetBool("AllowUserEdit"),
 			IsReadonly = mcmlNode:GetBool("IsReadonly"),
 			onremove = onremove,
+			onBeforeClickDropDownButton = onBeforeClickDropDownButton,
 			emptyText = emptyText,
+			fontColor = fontColor,
+			useTooltip = mcmlNode:GetBool("useTooltip"),
+			fontSize = font_size,
 		};
 		ctl:Show();
 		mcmlNode.control = ctl;
@@ -983,9 +1006,14 @@ end
 
 -- Public method: rebind (refresh) the data.
 function pe_select.DataBind(mcmlNode, pageInstName, bRefreshUI)
+	local ds = mcmlNode:GetAttributeWithCode("DataSource",nil,true);
+	if(ds) then
+		pe_select.SetDataSource(mcmlNode, rootName, ds)
+	end
 	if(not mcmlNode.datasource) then
 		return 
 	end
+	
 	-- clear all children
 	mcmlNode:ClearAllChildren();
 	local inTable = mcmlNode.datasource;
@@ -995,6 +1023,31 @@ function pe_select.DataBind(mcmlNode, pageInstName, bRefreshUI)
 		for i, childNode in ipairs(inTable) do
 			local sub_node = Map3DSystem.mcml.new(nil, {name="option", attr=childNode, childNode.text});
 			mcmlNode:AddChild(sub_node);
+		end
+	end
+
+	if(bRefreshUI and mcmlNode.control) then
+		local ctl = mcmlNode.control;
+		local rows = mcmlNode:GetNumber("size") or 1;
+		if rows == 1 then
+			local items = {};
+			for childnode in mcmlNode:next("option") do
+				local text = childnode:GetInnerText();
+				if(text == "") then
+					text = childnode:GetString("value") or "";
+				end
+				local value = childnode:GetString("value");
+				table.insert(items, text);
+				if(text~=value) then
+					if(not items.values) then
+						items.values = {};
+					end	
+					items.values[text] = value;
+				end
+			end
+			ctl.items = items;
+		else
+			-- TODO
 		end
 	end
 end

@@ -195,7 +195,6 @@ function _guihelper.MessageBox(content,MsgBoxClick_CallBack, buttons, icon, mcml
 		_guihelper.CloseMessageBox();
 		return true;
 	end
-
 	if _guihelper.MessageBoxLockHide then
 		return
 	end

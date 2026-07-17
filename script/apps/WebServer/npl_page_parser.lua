@@ -103,7 +103,7 @@ function npl_page_parser:page_to_npl(text)
 				ni,j = string.find(text, "[%%%?]>\r?\n?", j+1)
 				html_text = string.sub(text, i, (j or 0)-1);
 				if(html_text) then
-					o[#o+1] = "echo[["..html_text.."]];";
+					o[#o+1] = "echo[=["..html_text.."]=];";
 				end
 				if(ni) then
 					i = j + 1;
@@ -120,10 +120,9 @@ function npl_page_parser:page_to_npl(text)
 				html_text = string.sub(text, i, -1);
 			end
 			if(html_text) then
-				o[#o+1] = "echo[[";
-				-- TODO: escape unmatched [[ ]], since [[]] allow nesting, we will ignore for performance. 
+				o[#o+1] = "echo[=[";
 				o[#o+1] = html_text; 
-				o[#o+1] = "]];";
+				o[#o+1] = "]=];";
 			end
 		end
 

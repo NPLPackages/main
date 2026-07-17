@@ -4,14 +4,14 @@ Author(s): wxa
 Date: 2020/8/14
 Desc: 颜色拾取器, 目前为blockly field_color 定制元素 可以移至blockly相关目录中
 -------------------------------------------------------
-local ColorPicker = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Window/Elements/ColorPicker.lua");
+local ColorPicker = NPL.load("script/ide/System/UI/Window/Elements/ColorPicker.lua");
 -------------------------------------------------------
 ]]
 
 NPL.load("(gl)script/ide/System/Core/Color.lua");
 local Color = commonlib.gettable("System.Core.Color");
 
-local Element = NPL.load("../Element.lua", IsDevEnv);
+local Element = NPL.load("../Element.lua");
 local ColorPicker = commonlib.inherit(Element, NPL.export());
 
 ColorPicker:Property("Name", "ColorPicker");

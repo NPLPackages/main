@@ -75,16 +75,29 @@ function LocalStorageUtil._flushWithLS(ls)
 	end
 end
 
+function LocalStorageUtil.GetSubDirectory()
+	local path = "/Paracraft/"
+	if System.options.channelId_431 or System.options.isShenzhenAi5 then
+		path = "/Palaka/"
+	elseif System.options.isPapaAdventure then
+		path = "/PapaAdventure/"
+	end
+	return path
+end
+
 --因为存储位置改变，需要做一些迁移工作
 function LocalStorageUtil.CheckFristInit()
     local bUserdbMoved = LocalStorageUtil.Load_localserver("bUserdbMoved",false,true)
     if not bUserdbMoved then --将原本的直接复制
         local name = if_else(System.options.version == "teen", "userdata.teen", "userdata")
         local fromPath = string.format("Database/%s.db",name)
-        local toPath = string.format("%s/Database/%s.db",commonlib.Files.GetAppDataDirectory(), name)
+        local toPath = string.format("%s/Database/%s.db",commonlib.Files.GetAppDataDirectory(LocalStorageUtil.GetSubDirectory()), name)
         if ParaIO.DoesFileExist(fromPath) and not ParaIO.DoesFileExist(toPath) then
-            ParaIO.CopyFile(fromPath,toPath,true)
-            LocalStorageUtil.Save_localserver("bUserdbMoved",true,true)
+            local bCopySuc = ParaIO.CopyFile(fromPath,toPath,true)
+			LocalStorageUtil.Save_localserver("bUserdbMoved",true,true)
+			if not bCopySuc then
+				LOG.std(nil,"info","copy userdb file error ============")
+			end
         end
     end
 
@@ -124,9 +137,17 @@ function LocalStorageUtil.CheckFristInit()
 end
 
 function LocalStorageUtil.CreateUserDataStore()
-    local dbPath = if_else(System.options.version == "teen", "userdata.teen", "userdata")
-    dbPath = string.format("%s/Database/%s.db",commonlib.Files.GetAppDataDirectory(), dbPath)
+    local dbName = if_else(System.options.version == "teen", "userdata.teen", "userdata")
+	local appdata_path = commonlib.Files.GetAppDataDirectory(LocalStorageUtil.GetSubDirectory())
+    local dbPath = string.format("%s/Database/%s.db",appdata_path, dbName)
 	local ls = System.localserver.CreateStore(nil, 3, dbPath);
+	if not ParaIO.DoesFileExist(dbPath) then
+		dbPath = string.format("%s/Database/%s.db",ParaIO.GetWritablePath(), dbName)
+		ls = System.localserver.CreateStore(nil, 3, dbPath);
+	end
+	if not ls then
+		LOG.std(nil,"info","LocalStorageUtil","LocalStorageUtil.CreateUserDataStore failed")
+	end
     return ls
 end
 

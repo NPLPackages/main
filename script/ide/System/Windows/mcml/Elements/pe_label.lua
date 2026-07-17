@@ -32,8 +32,6 @@ function pe_label:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	_this:SetText(tostring(self:GetAttributeWithCode("value", nil, true) or ""));
 	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
 
-	self:UpdateGetters();
-
 	pe_label._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
 end
 
@@ -42,6 +40,8 @@ function pe_label:OnAddGetter(name, func, bindingContext)
 		bindingContext:AddGetter(self.control, "SetText", func)
 	elseif(name == "tooltip") then
 		bindingContext:AddGetter(self.control, "SetTooltip", func)
+	else
+		pe_label._super.OnAddGetter(self, name, func, bindingContext);
 	end
 end
 

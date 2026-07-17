@@ -249,7 +249,7 @@ function LoadUserInfo()
     local id = "kp" .. Encoding.base64(commonlib.Json.Encode(payload));
     -- 获取用户信息
     keepwork.user.getinfo({
-        cache_policy = "access plus 0",
+        cache_policy = "access plus 10 seconds",
         router_params = {id = id},
     }, function(status, msg, data) 
         if (status ~= 200) then return echo("获取用户详情失败...") end

@@ -73,11 +73,11 @@ function WebView:EncodeURI(str)
 end
 
 function WebView:loadUrl(url, bCleanCachedData)
-	if (System.os.GetPlatform() == "mac") then
-		url = self:EncodeURI(url);
-	end
+	-- if (System.os.GetPlatform() == "mac") then
+	-- 	url = self:EncodeURI(url);
+	-- end
 
-	if (self._wv) then
+	if (self._wv and url) then
 		if (bCleanCachedData) then
 			self._wv:loadUrl(url, true);
 		else
@@ -140,4 +140,20 @@ function WebView:bringToTop()
 	end
 
 	self._att:CallField("bringToTop")
+end
+
+function WebView:activate(filepath, msg)
+	if (self._wv) then
+		if (self._wv.activate) then
+			self._wv:activate(filepath, msg);
+		end
+	end
+end
+
+function WebView:IsSupportFullWebview()
+	local webViewVersion = ParaEngine.GetAttributeObject():GetField("WebViewVersion", -1);
+	if(webViewVersion and tonumber(webViewVersion) > 0) then
+		return true;
+	end
+	return false
 end

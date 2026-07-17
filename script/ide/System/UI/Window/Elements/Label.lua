@@ -4,11 +4,11 @@ Author(s): wxa
 Date: 2020/8/14
 Desc: Label
 -------------------------------------------------------
-local Label = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Window/Elements/Label.lua");
+local Label = NPL.load("script/ide/System/UI/Window/Elements/Label.lua");
 -------------------------------------------------------
 ]]
 
-local Element = NPL.load("../Element.lua", IsDevEnv);
+local Element = NPL.load("../Element.lua");
 local Label = commonlib.inherit(Element, NPL.export());
 
 Label:Property("Name", "Label");

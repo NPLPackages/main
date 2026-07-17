@@ -5,7 +5,7 @@ Date: 2020/6/30
 Desc: 元素UI基类, 主要实现元素绘制相关功能
 use the lib:
 -------------------------------------------------------
-local ElementUI = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Window/ElementUI.lua");
+local ElementUI = NPL.load("script/ide/System/UI/Window/ElementUI.lua");
 -------------------------------------------------------
 ]]
 
@@ -17,7 +17,7 @@ local Mouse = commonlib.gettable("System.Windows.Mouse");
 local MouseEvent = commonlib.gettable("System.Windows.MouseEvent");
 local Simulator = NPL.load("./Event/Simulator.lua");
 
-local Animation = NPL.load("./Animation.lua", IsDevEnv);
+local Animation = NPL.load("./Animation.lua");
 local ElementUI = commonlib.inherit(commonlib.gettable("System.Core.ToolBase"), NPL.export());
 
 ElementUI:Property("Active", false, "IsActive");            -- 是否激活
@@ -31,9 +31,9 @@ ElementUI:Property("Animation");                            -- 元素动画
 ElementUI:Property("EnableIME", false, "IsEnableIME");      -- 元素动画
 ElementUI:Property("MoveViewWhenAttachWithIME", true, "IsMoveViewWhenAttachWithIME");  -- 是否自动上移
 
-local ElementUIDebug = GGS.Debug.GetModuleDebug("ElementUIDebug");
-local ElementHoverDebug = GGS.Debug.GetModuleDebug("ElementHoverDebug").Disable(); 
-local ElementFocusDebug = GGS.Debug.GetModuleDebug("ElementFocusDebug").Disable();
+local ElementUIDebug = System.Util.Debug.GetModuleDebug("ElementUIDebug");
+local ElementHoverDebug = System.Util.Debug.GetModuleDebug("ElementHoverDebug").Disable(); 
+local ElementFocusDebug = System.Util.Debug.GetModuleDebug("ElementFocusDebug").Disable();
 
 function ElementUI:ctor()
     self.winX, self.winY = 0, 0;                         -- 窗口坐标
@@ -716,13 +716,13 @@ function ElementUI:OnMouseUp(event)
 	self.isMouseDown = false;
 end
 
-function ElementUI:OnMouseLeave()
-    if (self.MouseWheel.isStartWheel) then self.MouseWheel.isStartWheel = false end
+function ElementUI:OnMouseLeave(event)
+    if (self.MouseWheel and self.MouseWheel.isStartWheel) then self.MouseWheel.isStartWheel = false end
 
     self:CallAttrFunction("onmouseleave", nil, self, event);
 end
 
-function ElementUI:OnMouseEnter()
+function ElementUI:OnMouseEnter(event)
     self:CallAttrFunction("onmouseenter", nil, self, event);
 end
 
@@ -743,7 +743,7 @@ function ElementUI:Hover(event, isUpdateLayout, zindex, isParentElementHover, is
         if (element:IsHover()) then
             element:SetHover(false);
             isChangeHoverState = true
-            element:OnMouseLeave();
+            element:OnMouseLeave(event);
             element:OnHover(false);
         end
         for child in element:ChildElementIterator() do
@@ -785,7 +785,7 @@ function ElementUI:Hover(event, isUpdateLayout, zindex, isParentElementHover, is
             self:SetHover(true);
             isChangeHoverState = true
             self:OnHover(true);
-            self:OnMouseEnter();
+            self:OnMouseEnter(event);
         end
     else 
         if (self:IsHover()) then
@@ -793,7 +793,7 @@ function ElementUI:Hover(event, isUpdateLayout, zindex, isParentElementHover, is
             self:SetHover(false);
             isChangeHoverState = true
             self:OnHover(false);
-            self:OnMouseLeave();
+            self:OnMouseLeave(event);
         end
     end
 
@@ -879,20 +879,28 @@ function ElementUI:GetMouseHoverElement(event, zindex, isParentElementHover, isP
     return hoverElement, maxZIndex, zindex;
 end
 
+function ElementUI:GetInputType()
+    return "text";
+end
+
 function ElementUI:AttachWithIME()
-    if (not self:IsTouchMode() or not self:IsEnableIME()) then return end
+    if ((not System.os.IsEmscripten() and not self:IsTouchMode()) or not self:IsEnableIME()) then return end
+    local IsMobileUIEnabled = GameLogic.GetFilters():apply_filters('MobileUIRegister.IsMobileUIEnabled',false)
+    if IsMobileUIEnabled and GameLogic.Macros:IsPlaying() then --移动端宏示教不弹出系统键盘
+        return
+    end
 	if (self:IsMoveViewWhenAttachWithIME()) then
         local winX, winY = self:GetWindowPos();
         local winW, winH = self:GetWindowSize();
         local ScreenX, ScreenY = self:WindowPointToScreenPoint(winX + winW, winY + winH); 
-		Keyboard:attachWithIME(ScreenY);
+		Keyboard:attachWithIME(ScreenY, nil, nil, nil, self:GetInputType());
 	else
 		Keyboard:attachWithIME(nil);
 	end
 end
 
 function ElementUI:DetachWithIME()
-    if (not self:IsTouchMode() or not self:IsEnableIME()) then return end
+    if ((not System.os.IsEmscripten() and not self:IsTouchMode()) or not self:IsEnableIME()) then return end
     if (self:IsMoveViewWhenAttachWithIME()) then
         local winX, winY = self:GetWindowPos();
         local winW, winH = self:GetWindowSize();
@@ -969,11 +977,21 @@ end
 
 -- 鼠标滚动事件
 function ElementUI:OnMouseWheel(event)
+    event:SetDelta(event:GetDelta() * self:GetMouseWheelScaleDelta());
+    
     if (self:GetLayout():IsCanScrollY()) then 
         if (self.verticalScrollBar) then
             self.verticalScrollBar:OnMouseWheel(event);
         end
     end
+end
+
+function ElementUI:SetMouseWheelScaleDelta(scale_delta)
+    self.m_mouse_wheel_scale_delta = scale_delta;
+end
+
+function ElementUI:GetMouseWheelScaleDelta()
+    return self.m_mouse_wheel_scale_delta or 1;
 end
 
 function ElementUI:OnKeyDown(event)
@@ -1062,7 +1080,7 @@ end
 
 function ElementUI:IsTouchMode()
     -- if (IsDevEnv) then return true end 
-    return GameLogic.options:HasTouchDevice();
+    return System.options.IsTouchDevice or GameLogic.options:HasTouchDevice();
     -- return System.os.IsTouchMode();
 end
 
@@ -1132,7 +1150,29 @@ function ElementUI:HandleMouseEventAfter(event)
 end
 
 function ElementUI:Refresh()
-    for _, element in ipairs(self.childrens) do
-        element:Refresh();
-    end
+    local window = self:GetWindow();
+    if (window) then window:SetRefresh(true) end
+end
+
+function ElementUI:cursorFlashTime()
+	local window = self:GetWindow()
+	if(window and (window.isSelfPaintInParent or window.m_self_paint)) then
+		return 0
+	else
+		return 30
+	end
+end
+
+-- Update unless the element is hidden.
+-- This function does not cause an immediate repaint; instead it schedules a paint event for processing 
+-- when system returns to the main event loop. This permits us to optimize for more speed and less 
+-- flicker than a call to repaint() does. Calling update() several times normally results in just one paintEvent() call.
+function ElementUI:Update()
+    if (not self:isVisible()) then
+		return;
+	end
+	local window = self:GetWindow();
+	if(window) then
+		window:markDirty();
+	end
 end

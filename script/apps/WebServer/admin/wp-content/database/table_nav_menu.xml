@@ -14,6 +14,8 @@
             {id="package_maker", title="Package Maker", url="package_maker", menu_item_parent = "Tools"},
             {id="db_manager", title="DB Manager", url="db_manager", menu_item_parent = "Tools"},
             {id="debugger", title="NPL Debugger", url="debugger", menu_item_parent = "Tools"},
+            {id="bg_agent", title="Background Agent", url="raw?file=script/apps/Aries/Creator/Game/Tasks/EasyBuilder/Copilot/bg_agent.page", menu_item_parent = "Tools"},
+            {id="chat_log_debug", title="Chat Log Debug View", url="raw?file=script/apps/Aries/Creator/Game/Common/ChatLogDebugView.page", menu_item_parent = "Tools"},
             
           {id="Help", title="Help", url="#", },
             {id="wiki", title="NPL Wiki...", url="https://github.com/LiXizhi/NPLRuntime/wiki", menu_item_parent = "Help"},

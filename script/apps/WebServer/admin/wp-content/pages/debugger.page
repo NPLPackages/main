@@ -145,6 +145,40 @@ echo(format("<script>window.debuggerInfo = {workspaceDir:'%s', devDir:'%s'};</sc
 		$scope.workspaceDir = workspaceDir;
         var pollTimer;
 
+        // convert string str, replacing all none-alpha numic and _ chars with "_x%02x" hex string
+        function toHexString(str){
+            var ret = "";
+            for(var i = 0; i < str.length; i++){
+                var c = str.charCodeAt(i);
+                if((c >= 48 && c <= 57) || (c >= 65 && c <= 90) || (c >= 97 && c <= 122)){
+                    ret += str[i];
+                }
+                else{
+                    ret += "_x" + c.toString(16) + "x";
+                }
+            }
+            return ret;
+        }
+        function fromHexString(str){
+            var ret = "";
+            for(var i = 0; i < str.length; i++){
+                if(str[i] == "_" && i < (str.length - 4)){
+                    if(str[i + 1] == "x" && str[i + 4] == "x"){
+                        var c = parseInt(str.substr(i + 2, 2), 16);
+                        ret += String.fromCharCode(c);
+                        i += 4;
+                    }
+                    else{
+                        ret += str[i];
+                    }
+                }
+                else{
+                    ret += str[i];
+                }
+            }
+            return ret;
+        }
+
         function uploadBreakpoints() {
             for (var i = 0; i < $scope.$storage.breakpoints.length; i++) {
                 $http.get("ajax/debugger?action=addbreakpoint&filename=" + encodeURIComponent($scope.$storage.breakpoints[i].filename) + "&line=" + encodeURIComponent($scope.$storage.breakpoints[i].line)).then(function (response) { });
@@ -602,8 +636,9 @@ echo(format("<script>window.debuggerInfo = {workspaceDir:'%s', devDir:'%s'};</sc
             
             $('#filedir').treegrid({
                 onClickRow: function (row) {
-                    var filename = row.id.replace(/#/g, "/");
-                    if (filename.endsWith(".lua"))
+                    // var filename = row.id.replace(/#/g, "/");
+                    var filename = fromHexString(row.id);
+                    if (row.filesize > 0 || filename.endsWith(".lua"))
                         $scope.gotoSourceLine(filename, -1);
                     else {
                         if(row.state == "closed")

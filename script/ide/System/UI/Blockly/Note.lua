@@ -165,7 +165,7 @@ function Note:Render(painter)
     if (blockly.isHideToolBox) then
         painter:SetClipRegion(0, 0, w, h);
     else
-        painter:SetClipRegion(Const.ToolBoxWidth, 0, w - Const.ToolBoxWidth, h);
+        painter:SetClipRegion(blockly.ToolBoxWidth, 0, w - blockly.ToolBoxWidth, h);
     end
     painter:Scale(scale, scale);
     painter:Translate(blockly.offsetX, blockly.offsetY);

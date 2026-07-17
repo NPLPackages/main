@@ -62,6 +62,10 @@ local function RunWithResult(output)
 	local filename = request:get("src");
 	if(not filename or filename == "") then
 		filename = SaveCode();
+	elseif(filename:match("[/\\]%.codeblock[/\\]")) then
+		NPL.load("(gl)script/apps/Aries/Creator/Game/Code/CodeBlockFileSync.lua");
+		local CodeBlockFileSync = commonlib.gettable("MyCompany.Aries.Game.Code.CodeBlockFileSync");
+		CodeBlockFileSync:SyncFileToEntity(filename)
 	end
 
 	if(not request:get("btnRunPage")) then

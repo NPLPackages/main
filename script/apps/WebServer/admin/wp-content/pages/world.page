@@ -50,33 +50,59 @@ end
 -- if no files to serve, list all files in world directory
 -------------------------------------
 if(is_ajax()) then
+  local codeblockFolderName = "_codeblocks_"
   local function encode_css_id(id)
-  	return id:gsub("/", "#");
+  	return commonlib.Encoding.toValidName(id) -- id:gsub("/", "#");
   end
   local function decode_css_id(id)
-  	return id:gsub("#", "/");
+  	return commonlib.Encoding.fromValidName(id) -- id:gsub("#", "/");
   end
   add_action('wp_ajax_get_world_files', function()
 	
     local output = {}
     local curPath = decode_css_id(commonlib.Encoding.Utf8ToDefault(request:get("id") or ""));
     local path = WP_WORLD_DIR..curPath;
-    if(curPath ~= "") then
+    if(curPath:match("^"..codeblockFolderName)) then
+        if(codeblockFolderName == curPath) then
+            local entities = GameLogic.EntityManager.FindEntities({category="b", type="EntityCode"});
+            if(entities) then
+                for _, entity in ipairs(entities) do
+                    local name = entity:GetBlockName()
+                    output[#output+1] = {filesize = entity:GetCodeSize(), filename = (entity:GetDisplayName() or name), id = encode_css_id(name)};
+                    commonlib.echo(output[#output])
+                end
+            end
+        end
+        wp_send_json(output, true);
+        return
+    end
+
+    if(curPath == "") then
+        output[#output+1] = {filesize = 0, state = "closed", filename = codeblockFolderName, id = encode_css_id(codeblockFolderName)};
+    else
       curPath = curPath.."/"
     end
+    
 	curPath = commonlib.Encoding.DefaultToUtf8(curPath);
     NPL.load("(gl)script/ide/Files.lua");
 
-	local result = commonlib.Files.Find({}, path, 0, 500, "*.");
+    local whereToFind;
+    if(System.World.worldzipfile and WP_WORLD_DIR == ParaWorld.GetWorldDirectory()) then
+        whereToFind = System.World.worldzipfile
+    end
+
+	local result = commonlib.Files.Find({}, path, 0, 500, "*.", whereToFind);
     for _, item in ipairs(result) do
       if(item.filesize == 0) then
         item.state = "closed"; -- this is a folder
 		item.filename = commonlib.Encoding.DefaultToUtf8(item.filename);
+        item.filename = item.filename:gsub("[/\\]$", "")
         item.id = encode_css_id(curPath..(item.filename or ""));
         output[#output+1] = item;
       end
     end
-	local result = commonlib.Files.Find({}, path, 0, 500, request:get("filter") or "*.*");
+
+    local result = commonlib.Files.Find({}, path, 0, 500, request:get("filter") or "*.*", whereToFind);
     for _, item in ipairs(result) do
       if(item.filesize ~= 0) then
 		item.filename = commonlib.Encoding.DefaultToUtf8(item.filename);

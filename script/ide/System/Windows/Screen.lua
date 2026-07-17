@@ -18,11 +18,14 @@ local Screen = commonlib.inherit(commonlib.gettable("System.Core.ToolBase"), com
 Screen:Property({"Name", "Screen"});
 Screen:Property({"m_width", nil, "GetWidth"});
 Screen:Property({"m_height", nil, "GetHeight"});
+Screen:Property({"m_SafeAreaLeft", 0, "GetSafeAreaLeft", "SetSafeAreaLeft", auto=true});
+Screen:Property({"m_SafeAreaRight", 0, "GetSafeAreaRight", "SetSafeAreaRight", auto=true});
 
 Screen:Signal("sizeChanged", function(width, height) end)
 
 function Screen:ctor()
 	commonlib.EventSystem.getInstance():AddEventListener("RendererRecreated", function(self)
+		LOG.std(nil,"info","Screen", "RendererRecreated width:%d height:%d,last_width:%d, last_height:%d", self:GetWidth(), self:GetHeight(), self.last_width, self.last_height);
 		self:OnSizeChange(self:GetWidth(), self:GetHeight());
 	end, self);
 end
@@ -46,6 +49,7 @@ function Screen:OnSizeChange(width, height)
 	if(self.last_width ~= width or self.last_height~=height) then
 		self.last_width, self.last_height = width, height;
 		self:GetUIScaling(true);
+		echo("signal function sizeChange called==============")
 		self:sizeChanged(width, height);
 	end
 end
@@ -141,21 +145,13 @@ function Screen:AutoAdjustUIScalingImp()
 				winHeight >= minHeight * 2) then
 				-- user is using 2K or 4K monitor, we will scale by 2 or 4. 
 				local ultraDisplayFactor = math.min(winWidth / minWidth, winHeight / minHeight);
-
-				if (System.os.GetPlatform() == "mac") then
-					if (ultraDisplayFactor >= 2) then
-						ultraDisplayFactor = 2;
-					elseif (ultraDisplayFactor >= 4) then
-						ultraDisplayFactor = 4;
-					end
+	
+				if (ultraDisplayFactor > 2.2 and ultraDisplayFactor < 4.4) then
+					ultraDisplayFactor = 2; -- 2k monitor
 				else
-					if (ultraDisplayFactor > 2.2 and ultraDisplayFactor < 4.4) then
-						ultraDisplayFactor = 2; -- 2k monitor
-					else
-						ultraDisplayFactor = 4; -- 4k monitor
-					end
+					ultraDisplayFactor = 4; -- 4k monitor
 				end
-
+	
 				UIScaling = ultraDisplayFactor;
 			end
 		else

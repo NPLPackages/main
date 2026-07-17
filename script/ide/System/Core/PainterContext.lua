@@ -226,7 +226,7 @@ function painter:DrawText(x, y, w, h, sText, textOption)
 	if(h and sText) then
 		ParaPainter.DrawText(x, y, w, h, sText, textOption);
 	else
-		ParaPainter.DrawText(x, y, w);
+		ParaPainter.DrawText(x, y, 5000, 100, w, 0x20); -- 0x20 DT_SINGLELINE 不自动换行
 	end
 end
 
@@ -278,7 +278,7 @@ function painter:DrawTextScaledEx(x, y, width, height, text, alignment, scale)
 			self:Save();
 			self:Translate(x,y);
 			self:Scale(scale, scale);
-			self:DrawText(0,0, width, height, text, alignment);
+			self:DrawText(0,0, width, height, tostring(text), alignment);
 			self:Restore();
 		else
 			self:DrawText(x,y, width, height, text, alignment);

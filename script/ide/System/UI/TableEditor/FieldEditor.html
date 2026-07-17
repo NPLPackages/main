@@ -1,0 +1,86 @@
+<template class="field_editor_container">
+    <div class="name">{{field_name .. ": "}}</div>
+    <div class="value" v-if="field_type == 'string' or field_type == 'number'">
+        <input ref="field_input" style="width: 100%;"
+            v-bind:value="field_value" 
+            v-bind:type="field_type"
+            onfocus="FieldSelected"
+            onblur="FieldValueChange">
+        </input>
+    </div>
+</template>
+
+<script type="text/lua">
+-- 标题属性
+field_key = GetAttrValue("field_key", "", "string");
+field_name = GetAttrValue("field_name", "", "string");
+field_value = GetAttrValue("field_value", "", "string");
+field_type = GetAttrValue("field_type", "", "string");
+field_input = nil;
+
+-- 字段值更新
+function FieldValueChange()
+    if (not field_input) then return end
+    local value = field_input:GetValue();
+    if (tostring(field_value) == tostring(value)) then return end
+    -- print(field_key, field_value, value);
+    field_value = value;
+    local onchange = GetAttrFunctionValue("change");
+    if (type(onchange) == "function") then 
+        onchange(field_key, field_value);
+    end
+end
+
+-- 字段选中
+function FieldSelected()
+    local onselected = GetAttrFunctionValue("onselected");
+    if (type(onselected) == "function") then 
+        onselected();
+    end
+end
+
+-- 组件解析完成
+function OnReady()
+    field_input = GetRef("field_input");
+end
+
+-- 监听属性变更
+function OnAttrValueChange(attrName, attrValue)
+    if (attrName == "field_key") then field_key = attrValue or "" end
+    if (attrName == "field_name") then field_name = attrValue or "" end
+    if (attrName == "field_value") then field_value = attrValue or "" end
+    if (attrName == "field_type") then field_type = attrValue or "" end
+end
+
+</script>
+
+<style>
+.field_editor_container {
+    height: 40px; 
+    width: 100%; 
+    display: flex; 
+    justify-content: space-between; 
+    /* background-color: #ff0000ff; */
+}
+
+.name {
+    position: absolute;
+    left: 10px;
+    top: 5px;
+    bottom: 5px;
+    width: 120px;
+    color: #131111;
+    font-size: 16px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+.value {
+    position: absolute;
+    left: 140px;
+    top: 5px;
+    right: 18px;
+    bottom: 5px;
+    /* background-color: #00ff00ff; */
+}
+</style>

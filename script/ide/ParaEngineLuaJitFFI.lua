@@ -2,7 +2,9 @@
 Title: ParaEngine API with Luajit FFI
 Author(s): LiXizhi
 Date: 2013/11/22
-Desc: When luajit is enabled, we will replace some frequently used ParaEngine API with LuaJit FFI, which is usually 20 times faster.
+Desc: Call this function at the very beginning of the program to set jit & ffi.
+Currently jit is off for android and ios. And ffi is off for iOS. 
+When luajit is enabled, we will replace some frequently used ParaEngine API with LuaJit FFI, which is usually 20 times faster.
 Calls to C functions can be inlined in JIT-compiled code.
 Use Lib: 
 
@@ -39,7 +41,6 @@ if(ParaEngine.hasFFI) then
 end
 -------------------------------------------------------
 ]]
-NPL.load("(gl)script/ide/commonlib.lua");
 local is64BitsSystem = ParaEngine.GetAttributeObject():GetField("Is64BitsSystem", false);
 local platform = ParaEngine.GetAttributeObject():GetField("Platform", 0);
 
@@ -64,6 +65,7 @@ if(use_ffi) then
 	if(platform == 1 or platform == 2)  then
 		-- android with jit on is slower than jit off. 
 		jit.off();
+		jit.flush();
 		ParaGlobal.WriteToLogFile("JIT is turned off on mobile devices\r\n");
 	end
 

@@ -4,7 +4,7 @@ Author(s): wxa
 Date: 2020/8/14
 Desc: Div 元素
 -------------------------------------------------------
-local Div = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Window/Elements/Div.lua");
+local Div = NPL.load("script/ide/System/UI/Window/Elements/Div.lua");
 -------------------------------------------------------
 ]]
 

@@ -4,11 +4,11 @@ Author(s): wxa
 Date: 2020/8/14
 Desc: Html 根元素
 -------------------------------------------------------
-local Html = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Window/Elements/Html.lua");
+local Html = NPL.load("script/ide/System/UI/Window/Elements/Html.lua");
 -------------------------------------------------------
 ]]
 
-local Element = NPL.load("../Element.lua", IsDevEnv);
+local Element = NPL.load("../Element.lua");
 local Html= commonlib.inherit(Element, NPL.export());
 
 function Html:ctor()

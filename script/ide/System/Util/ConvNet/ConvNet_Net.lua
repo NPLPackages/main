@@ -204,6 +204,7 @@ function Net:fromJSON(json)
 	for i = 1, #json.layers do
 		local Lj = json.layers[i];
 		local t = Lj.layer_type;
+		local L;
 		if(t == "input") then
 			L = ConvNet.InputLayer:new()
 		elseif(t == "relu") then

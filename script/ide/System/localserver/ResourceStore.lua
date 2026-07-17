@@ -79,7 +79,7 @@ function ResourceStore:GetFile(Cache_policy, urls, callbackFunc, callbackContext
 				url = url.url;
 			end
 			local entry = self:GetItem(url);
-			if(entry) then
+			if(entry and entry.payload) then
 				local expireTime = (entry.payload:GetCacheMaxAge() or 0) + entry.payload.creation_date;
 
 				if(Cache_policy:IsExpired(expireTime)) then

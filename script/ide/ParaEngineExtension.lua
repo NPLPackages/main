@@ -200,7 +200,7 @@ end
 function ParaCamera.GetDummyObject()
 	local player = ParaScene.GetObject("invisible camera");
 	if(player:IsValid() == false) then
-		player = ParaScene.CreateCharacter("invisible camera", "", "", true, 0, 0, 0);
+		player = ParaScene.CreateCharacter("invisible camera", "character/CC/02human/Camera/Camera.x", "", true, 0, 0, 0);
 		--player:GetAttributeObject():SetField("SentientField", 0);--senses nobody
 		player:GetAttributeObject():SetField("SentientField", 65535);--senses everybody
 		--player:SetAlwaysSentient(true);--senses everybody
@@ -277,6 +277,33 @@ end
 function ParaAsset.GetRemoteTexture_callback(entry)
 	if(entry and entry.entry and entry.entry.url and entry.payload and entry.payload.cached_filepath) then
 		local asset = ParaAsset.LoadTexture("", entry.entry.url, 1);
+		--if(asset:IsValid()) then -- TODO: shall we: and asset:GetFileName() ~= entry.payload.cached_filepath ?
+			asset:Refresh(entry.payload.cached_filepath);
+		--end
+	end
+end
+
+-- It is called automatically when the ParaEngine Core detects that a paraX Model is a remote file. 
+-- An internal ResourceStore (local server) called "_default_" is used to serve http models. 
+-- @param cache_policy: please note for http object, cache-control: max-age is always added to the cache_policy
+-- by default cache_policy is 1 hour plus cache-control max-age. 
+function ParaAsset.GetRemoteParaX(url, cache_policy, callback, expiredCallback)
+	local ls = System.localserver.CreateStore();
+	if(not ls) then
+		log("error: failed creating local server resource store \n")
+		return
+	end
+	-- please note for http object, cache-control: max-age is always added to the cache_policy
+	if(callback) then
+		ls:GetFile(cache_policy or ParaAsset.RemoteTexture_cache_policy, url, callback, nil, nil, expiredCallback);
+	else
+		ls:GetFile(cache_policy or ParaAsset.RemoteTexture_cache_policy, url, ParaAsset.GetRemoteParaX_callback, nil, nil, ParaAsset.GetRemoteParaX_callback);
+	end
+end
+
+function ParaAsset.GetRemoteParaX_callback(entry)
+	if(entry and entry.entry and entry.entry.url and entry.payload and entry.payload.cached_filepath) then
+		local asset = ParaAsset.LoadParaX("", entry.entry.url);
 		--if(asset:IsValid()) then -- TODO: shall we: and asset:GetFileName() ~= entry.payload.cached_filepath ?
 			asset:Refresh(entry.payload.cached_filepath);
 		--end
@@ -585,13 +612,13 @@ if(ParaGlobal.ShellExecute) then
 	local ShellExecute_old = ParaGlobal.ShellExecute;
 	ParaGlobal.ShellExecute = function(Operation, sFile, sParameters, sDirectory, nShowCmd)
 		if(Operation == "open") then
-			if(sFile == "iexplore.exe" and sParameters:match("^http")) then
+			if(sFile and sFile == "iexplore.exe" and sParameters:match("^http")) then
 				if(not ShellExecute_old(Operation, sFile, sParameters, sDirectory, nShowCmd) ) then
 					-- try opening http directly if iexplore failed
 					return ShellExecute_old(Operation, sParameters, "", sDirectory, nShowCmd);
 				end
 				return true;
-			elseif(sFile:match("^http") and sParameters=="") then
+			elseif(sFile and sFile:match("^http") and sParameters=="") then
 				if(not ShellExecute_old(Operation, sFile, sParameters, sDirectory, nShowCmd) ) then
 					-- try opening iexplore if open http directly failed
 					return ShellExecute_old(Operation, "iexplore.exe", sFile, sDirectory, nShowCmd);
@@ -599,7 +626,7 @@ if(ParaGlobal.ShellExecute) then
 				return true;
 			end
 		end
-		return ShellExecute_old(Operation, sFile, sParameters, sDirectory, nShowCmd);
+		return ShellExecute_old(Operation, (sFile or ""), sParameters, sDirectory, nShowCmd);
 	end
 end
 -- obsoleted API functions

@@ -1,7 +1,7 @@
 # 神通杯
 
 ```lua
-local Page = NPL.load("Mod/GeneralGameServerMod/UI/Page.lua");
+local Page = NPL.load("script/ide/System/UI/Page.lua");
 
 -- 赛事报名
 Page.Show(nil, {

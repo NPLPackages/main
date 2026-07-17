@@ -6,7 +6,7 @@ Date: 2020/6/30
 Desc: Event
 use the lib:
 -------------------------------------------------------
-local Simulator = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Window/Event/Simulator.lua");
+local Simulator = NPL.load("script/ide/System/UI/Window/Event/Simulator.lua");
 -------------------------------------------------------
 ]]
 
@@ -15,7 +15,7 @@ NPL.load("(gl)script/apps/Aries/Creator/Game/Macros/MacroPlayer.lua");
 local MacroPlayer = commonlib.gettable("MyCompany.Aries.Game.Tasks.MacroPlayer");
 local Macros = commonlib.gettable("MyCompany.Aries.Game.GameLogic.Macros");
 
-local Params = NPL.load("./Params.lua", IsDevEnv);
+local Params = NPL.load("./Params.lua");
 local Simulator = commonlib.inherit(commonlib.gettable("System.Core.ToolBase"), NPL.export());
 
 local ConvertToWebMode = NPL.load("(gl)script/apps/Aries/Creator/Game/Macros/ConvertToWebMode/ConvertToWebMode.lua");

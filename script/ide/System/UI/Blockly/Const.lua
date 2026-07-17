@@ -5,7 +5,7 @@ Date: 2020/6/30
 Desc: Const
 use the lib:
 -------------------------------------------------------
-local Const = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Blockly/Const.lua");
+local Const = NPL.load("script/ide/System/UI/Blockly/Const.lua");
 -------------------------------------------------------
 ]]
 
@@ -36,6 +36,11 @@ Const.ToolBoxCategoryHeight = 60;                 -- 分类高
 Const.MiniMapWidth = 150 
 Const.MiniMapHeight = 150;
 Const.MiniMapMargin = 20;    
+
+Const.Indent = "    ";
+
+Const.ImageWidth = Const.UnitSize * Const.LineHeightUnitCount;
+Const.ImageHeight = Const.ImageWidth;
 
 -- 图块颜色
 Const.Colors = {"#2E9BEF", "#76CE62", "#764BCC", "#EC522E", "#C38A3F", "#69B090", "#569138", "#459197", "#FF8C1A"};

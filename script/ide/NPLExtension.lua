@@ -11,11 +11,88 @@ NPL.AddCookieVariable(url, "user_id", "1234")
 NPL.CallWebservice(url, {op="get"})
 ------------------------------------------------------------
 ]]
+if(not NPL) then NPL={}; end
+
+-- tricky: all NPL.load will be loaded after this file function is returned to prevent too deep call stack depth, on emscripten js. 
+function NPL.PostLoad(func)
+	local IsRecursiveLoadFile = __rts__:GetField("IsRecursiveLoadFile", true);
+	__rts__:SetField("IsRecursiveLoadFile", false);
+	func()
+	__rts__:SetField("IsRecursiveLoadFile", IsRecursiveLoadFile);
+end
+
+local platform = ParaEngine.GetAttributeObject():GetField("Platform", 0);
+if(false and platform == 10) then -- "emscripten"
+	-- tricky: set this to true on emscripten build to prevent too many recursive wasm/js NPL.load
+	-- js stack size is pretty small on iOS 18.2 and 18.3. but this is not helping. 
+	__rts__:SetField("IsLoadFileInScript", true);
+end
+
+if(__rts__:GetField("IsLoadFileInScript", false)) then
+	log("@note: NPL runtime IsLoadFileInScript enabled without pcall\n")
+
+	--log("@note: NPL pcall replaced with standard call\n")
+	--local old_pcall = pcall;
+	--pcall = function(func, ...)
+	--	return true, func(...)
+	--end
+	
+	local NPL_load = NPL.load;
+	NPL.load = function(filename, ...)
+		local res = NPL_load(filename, ...)
+		if(_npl_load_function) then
+			local func = _npl_load_function;
+			local filepath = _npl_load_filename
+			_npl_load_function = nil;
+			_npl_load_filename = nil;
+			__rts__:SetField("PushFilename", filepath);
+			__rts__:SetField("SetFileLoadStatus", -1000); -- NPL_FILE_MODULE_START_LOADING == -1000
+			local ok, err = pcall(func, filepath);
+			
+			local result_num = 0;
+			if(ok) then
+				_file_mod_ = _file_mod_ or {};
+				local filepath_noext = filepath:gsub("%....$", "")
+				if(err ~= nil) then
+					_file_mod_[filepath_noext] = err;
+				else
+					err = _file_mod_[filepath_noext]
+				end
+				result_num = err ~= nil and 1 or 0
+				res = err or res;
+			else
+				err = err.." <Runtime error>\r\n" -- just make it compatible with C++ version
+				res = false;
+				if(__npl_error_callback) then
+					__npl_error_callback(err);
+				else
+					log(err);
+				end
+			end
+			__rts__:SetField("SetFileLoadStatus", result_num);
+			__rts__:SetField("PopFilename", true);
+			-- log("> NPL.load:"..filepath.."\n");
+		end
+		return res
+	end
+end
+
 NPL.load("(gl)script/ide/commonlib.lua");
 NPL.load("(gl)script/ide/FlashExternalInterface.lua");
 NPL.load("(gl)script/ide/Debugger/NPLCompiler.lua");
 
-if(not NPL) then NPL={}; end
+
+
+local currentThreadName = __rts__:GetName();
+-- return true if we are executing on the main thread. 
+function NPL.IsMainThread()
+    return currentThreadName == "main";
+end
+
+-- default thread is main
+function NPL.GetThreadName()
+	return currentThreadName;
+end
 
 -- @param returnCode: default to 0
 function exit(returnCode)
@@ -69,10 +146,15 @@ end
 -- this function just repeatedly calls NPL.activate() until either the message is successfully sent out or timeout_seconds is reached. 
 -- Internally, it will wait 0.1, 0.2, 0.4, 0.8, ... between unsuccessfull activation.
 -- @param timeout_seconds: the number of seconds to wait. if 0, it will only try once.
+-- @param onCallbackFunc: 
 -- @return the last NPL.activate call result
-function NPL.activate_async_with_timeout(timeout_seconds, filename, msg)
+function NPL.activate_async_with_timeout(timeout_seconds, filename, msg, onCallbackFunc)
 	local res = NPL.activate(filename, msg);
-	if(res ~= 0 and timeout_seconds > 0) then
+	if(res == 0) then
+		if(onCallbackFunc) then
+			onCallbackFunc(true);
+		end
+	elseif(timeout_seconds > 0) then
 		local time_left = timeout_seconds;
 		local time_interval = 100;
 		local timer = commonlib.Timer:new({callbackFunc = function(timer)
@@ -84,6 +166,13 @@ function NPL.activate_async_with_timeout(timeout_seconds, filename, msg)
 					timer:Change(time_interval, nil);
 				else
 					LOG.std(nil, "warn", "NPL", "NPL.activate_async_with_timeout unable to send message to %s, res is %d", filename, res);
+					if(onCallbackFunc) then
+						onCallbackFunc(false);
+					end
+				end
+			else
+				if(onCallbackFunc) then
+					onCallbackFunc(true);
 				end
 			end
 		end})
@@ -260,6 +349,21 @@ function NPL.DoesFileExist(filename)
 	return (ParaIO.DoesFileExist(filename, true) or ParaIO.DoesFileExist("bin/"..string.gsub(filename, "lua$", "o"), true) )
 end
 
+-- get disk file path of a script. it will also check precompiled bin folder. 
+-- return nil if no disk file is found
+function NPL.GetScriptDiskFilepath(filename)
+	if(ParaIO.DoesFileExist(filename, true)) then
+		return filename;
+	else
+		local binScriptFile = string.gsub(filename, "lua$", "o");
+		if(binScriptFile ~= filename) then
+			binScriptFile = "bin/"..binScriptFile;
+			if(ParaIO.DoesFileExist(binScriptFile, true)) then
+				return binScriptFile;
+			end
+		end
+	end
+end
 
 -- load public NPL file to id map from XML file. 
 -- @param filename: if nil, it defaults to config/NPLPublicFiles.xml
@@ -317,3 +421,52 @@ NPL.DoString = function(sCode)
 	end
 end
 ]]
+
+-- in iOS emscripten, calling c function(lua with throw_error or longjmp) from C++ function, 
+-- will generate a try/catch code on javascript, leading to js stack size issue(1-2MB), so need to prevent too many nested NPL.load calls. 
+-- here we can force NPL.load to a max nested depth
+local maxDepth = 5;
+-- local maxDepth = 16;
+__rts__:SetField("MaxLoadFileRecursionDepth", maxDepth);
+log("NPL.load MaxLoadFileRecursionDepth is set to "..tostring(maxDepth).."\n")
+
+
+-- In emscripten, try/catch or throw will generate js try/catch call that lead to js stack size issue (1-2MB). 
+-- in iOS, max stack size is limited, so need to prevent too many nested NPL.load calls. 
+-- set to true to debug load file order on stack. 
+if(false) then
+	local NPL_load = NPL.load;
+	local fileLoaded = {};
+	local loadFileStack = {};
+	NPL.load = function(filename, ...)
+		if(not fileLoaded[filename]) then
+			fileLoaded[filename] = true;
+			loadFileStack[#loadFileStack + 1] = filename;
+			if(#loadFileStack > 5) then
+				LOG.std(nil, "info", "NPL.load", "(%d):%s", #loadFileStack, filename);
+				if(#loadFileStack >= 5) then
+					echo(__rts__:GetField("CurrentStackFiles", ""))
+				end
+			end
+
+			--[[
+			NPL_load("(gl)script/ide/debug.lua");
+			local count = commonlib.debug.GetStackDepth()
+			-- iOS 18.3 will exceed max call stack if count is bigger than 50
+			if(count > 35) then
+				LOG.std(nil, "info", "NPL", "(%d):%s", count, filename);
+				if(count >= 48) then
+					-- print all stack
+					-- commonlib.log.log_long(commonlib.debugstack(2, 5, 1))
+				end
+			end
+			]]
+
+			local res = NPL_load(filename, ...)
+			loadFileStack[#loadFileStack] = nil;
+			return res
+		else
+			return NPL_load(filename, ...)
+		end
+	end
+end

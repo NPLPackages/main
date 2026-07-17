@@ -6,7 +6,7 @@ Desc: Time series contains a group of relate variables. Each variable is an inst
 Use Lib: 
 -------------------------------------------------------
 NPL.load("(gl)script/ide/TimeSeries/TimeSeries.lua");
-local ctl = TimeSeries:new{name = "TimeSeries1",};
+local ctl = commonlib.TimeSeries:new{name = "TimeSeries1",};
 ctl:CreateVariable({name = "x", type="Linear"});
 ctl:CreateVariable({name = "talk", type="Discrete"});
 
@@ -20,7 +20,7 @@ ctl["x"]:getValue(anim_id, cur_time);
 NPL.load("(gl)script/ide/commonlib.lua");
 NPL.load("(gl)script/ide/TimeSeries/AnimBlock.lua");
 
-if(not TimeSeries) then TimeSeries = {}; end
+if(not TimeSeries) then TimeSeries = commonlib.gettable("commonlib.TimeSeries"); end
 if(not TimeSeries.AllObjects) then TimeSeries.AllObjects = {}; end
 TimeSeries.AutoCounter = 1;
 
@@ -97,7 +97,7 @@ end
 -- @param params: {name="", type="Linear"|"Discrete"}. It is actually passed to the new function of AnimBlock. More info see AnimBlock. 
 function TimeSeries:CreateVariable(params)
 	if(params.name == nil) then return end
-	self[params.name] = AnimBlock:new(params);
+	self[params.name] = commonlib.AnimBlock:new(params);
 end
 
 -- @param varName: variable name

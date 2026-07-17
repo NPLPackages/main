@@ -17,7 +17,7 @@ pe_img:Property({"class_name", "pe:img"});
 function pe_img:ctor()
 end
 
-function pe_img:OnLoadComponentAfterChild(parentElem, parentLayout, css)
+function pe_img:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	css.float = css.float or true;
 
 	local width = self:GetAttributeWithCode("width",nil, true) or css.width;
@@ -50,9 +50,7 @@ function pe_img:OnLoadComponentAfterChild(parentElem, parentLayout, css)
 
 	_this:ApplyCss(css);
 
-	self:UpdateGetters();
-
-	--pe_img._super.OnLoadComponentAfterChild(self, parentElem, parentLayout, css);
+	--pe_img._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css);
 end
 
 function pe_img:OnAddGetter(name, func, bindingContext)
@@ -70,6 +68,8 @@ function pe_img:OnAddGetter(name, func, bindingContext)
 		end
 	elseif(name == "tooltip") then
 		bindingContext:AddGetter(self.control, "SetTooltip", func)
+	else
+		pe_img._super.OnAddGetter(self, name, func, bindingContext);
 	end
 end
 

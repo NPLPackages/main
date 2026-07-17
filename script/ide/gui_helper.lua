@@ -206,7 +206,12 @@ end
 -- @return  the width of text of a given font
 function _guihelper.GetTextWidth(text, fontName)
 	if(not text or text=="") then 
-		return 0 
+		return 0
+	end
+	text = tostring(text);
+	if(#text > 500) then
+		-- only estimate for very long text. 
+		return (#text) * 10;
 	end
 	local cache = GetTextWidthCache(fontName)
 	local item = cache:get(text)

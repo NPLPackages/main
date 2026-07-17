@@ -169,8 +169,10 @@ function sqlite3.open(filename)
   local status, handle = api.open(filename)
   
   if is_error(status) then
-    local errmsg = errmsg(handle)
-    api.close(handle)
+    if (handle) then
+      local errmsg = errmsg(handle)
+      api.close(handle)
+    end
     return nil, errmsg
   end
   

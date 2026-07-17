@@ -124,8 +124,12 @@ local TreeView = commonlib.inherit(nil, commonlib.createtable("CommonCtrl.TreeVi
 	NodeUIContainers = {},
 	AllowOverflowScroll = false,
 	onmousewheel = nil,
+	CustomScrollBar = nil,
+	TrackBg = "", -- the background of the track of the scroll bar
+	UpLeftBg = "", -- the background of the up left corner of the scroll bar
+	DownRightBg = "", -- the background of the down right corner of the scroll bar
+	ThumbBg = "", -- the background of the thumb of the scroll bar
 }));
-
 -- constructor
 function TreeView:ctor()
 	-- create the root node
@@ -332,6 +336,26 @@ function TreeView:Update(bShowLastElement, ShowNode, DisableRecursive)
 			end
 			if(self.HideVerticalScrollBar) then
 				VScrollBar.visible = false;
+			end
+
+			if self.CustomScrollBar and System.options.mc then
+				local scrollbar_track = "Texture/Aries/Creator/Theme/scroll_track_32bits.png;0 0 5 16";
+				local scrollbar_thumb = "Texture/Aries/Creator/Theme/GameCommonIcon_32bits.png;275 126 7 47"; 
+				local scrollbar_upleft = "Texture/Aries/Creator/Theme/GameCommonIcon_32bits.png;0 0 0 0";
+				local scrollbar_downright = "Texture/Aries/Creator/Theme/GameCommonIcon_32bits.png;0 0 0 0";
+				if not self.TrackBg or self.TrackBg == "" then
+					self.TrackBg = scrollbar_track;
+				end
+				if not self.UpLeftBg or self.UpLeftBg == "" then
+					self.UpLeftBg = scrollbar_upleft;
+				end
+				if not self.DownRightBg or self.DownRightBg == "" then
+					self.DownRightBg = scrollbar_downright;
+				end
+				if not self.ThumbBg or self.ThumbBg == "" then
+					self.ThumbBg = scrollbar_thumb;
+				end
+				_guihelper.UpdateScrollBar(VScrollBar, self.TrackBg, self.UpLeftBg, self.DownRightBg, self.ThumbBg);
 			end
 			
 			-- update track range and thumb location.

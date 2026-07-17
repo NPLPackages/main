@@ -5,19 +5,19 @@ Date: 2020/6/30
 Desc: G
 use the lib:
 -------------------------------------------------------
-local BlockInputField = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Blockly/BlockInputField.lua");
+local BlockInputField = NPL.load("script/ide/System/UI/Blockly/BlockInputField.lua");
 -------------------------------------------------------
 ]]
-local DivElement = NPL.load("../Window/Elements/Div.lua", IsDevEnv);
-local InputElement = NPL.load("../Window/Elements/Input.lua", IsDevEnv);
-local SelectElement = NPL.load("../Window/Elements/Select.lua", IsDevEnv);
-local ColorPickerElement = NPL.load("../Window/Elements/ColorPicker.lua", IsDevEnv);
-local TextAreaElement = NPL.load("../Window/Elements/TextArea.lua", IsDevEnv);
+local DivElement = NPL.load("../Window/Elements/Div.lua");
+local InputElement = NPL.load("../Window/Elements/Input.lua");
+local SelectElement = NPL.load("../Window/Elements/Select.lua");
+local ColorPickerElement = NPL.load("../Window/Elements/ColorPicker.lua");
+local TextAreaElement = NPL.load("../Window/Elements/TextArea.lua");
 
 local Const = NPL.load("./Const.lua");
 local Options = NPL.load("./Options.lua");
 local Shape = NPL.load("./Shape.lua");
-local Validator = NPL.load("./Validator.lua", IsDevEnv);
+local Validator = NPL.load("./Validator.lua");
 
 local BlockInputField = commonlib.inherit(commonlib.gettable("System.Core.ToolBase"), NPL.export());
 
@@ -30,6 +30,7 @@ BlockInputField:Property("Color", "#ffffff");                    -- 颜色
 BlockInputField:Property("BackgroundColor", "#ffffff");          -- 背景颜色
 BlockInputField:Property("Edit", false, "IsEdit");               -- 是否在编辑
 BlockInputField:Property("Validator", nil);                      -- 验证器
+BlockInputField:Property("FieldCode", nil);                      -- 字段代码生成
 BlockInputField:Property("Value", "");                           -- 值
 BlockInputField:Property("DefaultValue", "");                    -- 默认值
 BlockInputField:Property("Label", "");                           -- 显示值
@@ -53,19 +54,27 @@ end
 
 function BlockInputField:Init(block, option)
     option = option or {};
-
     self:SetBlock(block);
-    self:SetOption(option or {});
+    self:SetOption(option);
     self:SetName(option.name);
     self:SetType(option.type);
     self:SetSelectType(option.selectType);
     self:SetValidator(option.validator);
-    self:SetValue(self:GetOptionText());
+    self:SetFieldCode(option.fieldcode);
+    
+    local text = self:GetOptionText();
+    -- 解析值
+    text = string.gsub(text or "", "@(.-)@", function(alias)
+        if (alias == "username") then return System.User.username or "" end
+        return "";
+    end);
+
+    self:SetValue(text);
     self:SetLabel(tostring(option.label or self:GetValue()));
     self:SetDefaultValue(self:GetValue());
     self:SetDefaultLabel(self:GetLabel());
-    -- 解析颜色值
 
+    -- 解析颜色值
     if (option["background-color"]) then 
         local bgColor = option["background-color"];
         self:SetBackgroundColor(self:TrimString(bgColor)); 
@@ -100,7 +109,8 @@ end
 function BlockInputField:GetCategoryColor()
     local blockOption = self:GetBlock():GetOption();
     local CategoryColor = self:GetBlock():GetBlockly().CategoryColor;
-    return CategoryColor[blockOption.category] or blockOption.color;
+    return blockOption.color or CategoryColor[blockOption.category] or "#2E9BEF";
+    -- return CategoryColor[blockOption.category] or blockOption.color;
 end
 
 function BlockInputField:GetOptions(bRefresh)
@@ -136,7 +146,7 @@ end
 function BlockInputField:GetLabelByValue(value, defaultLabel)
     local options = self:GetOptions();
     for _, option in ipairs(options) do
-        if (option[2] == value or option.value == value) then return option[1] or option.label end
+        if ((option[2] ~= nil and tostring(option[2]) == tostring(value)) or (option.value ~= nil and tostring(option.value) == tostring(value))) then return option[1] or option.label end
     end
     if (self:IsAllowNewSelectOption()) then return defaultLabel or value end 
     return options[1] and (options[1][1] or options[1].label) or defaultLabel or value;
@@ -180,7 +190,7 @@ end
 
 function BlockInputField:IsInputType(typ)
     typ = typ or self:GetInputFieldType();
-    return typ == "field_input" or typ == "field_text" or typ == "text";
+    return typ == "field_input" or typ == "field_text" or typ == "text" or typ == "field_password";
 end
 
 function BlockInputField:IsTextType(typ)
@@ -191,6 +201,11 @@ end
 function BlockInputField:IsSelectType(typ)
     typ = typ or self:GetInputFieldType();
     return typ == "field_dropdown" or typ == "field_select" or typ == "select";
+end
+
+function BlockInputField:IsTextAreaType(typ)
+    typ = typ or self:GetInputFieldType();
+    return typ == "field_textarea" or typ == "textarea";
 end
 
 function BlockInputField:IsCodeType(typ)
@@ -340,7 +355,6 @@ function BlockInputField:OnMouseDown(event)
 
     block = block:GetProxyBlock() or block;
     block:OnMouseDown(event);
-
     if ((self == block or block:IsToolBoxBlock()) and blockly:IsTouchMode()) then
         blockly:CaptureMouse(block);
         blockly:SetCurrentBlock(block);
@@ -505,7 +519,6 @@ function BlockInputField:GetFieldSelectEditElement(parentElement)
         self:SetLabel(self:GetLabelByValue(label, label));
         self:UpdateEditAreaSize();
     end);
-
     SelectEditElement:SetAttrValue("onselect", function(value, label)
         local oldValue = self:GetValue();
         if (oldValue == value) then return end
@@ -513,6 +526,7 @@ function BlockInputField:GetFieldSelectEditElement(parentElement)
         self:SetLabel(label);
         self:FocusOut();
         self:OnValueChanged(value, oldValue);
+        self:GetBlock():GetBlockly():OnChange();
     end);
 
     return SelectEditElement;
@@ -558,8 +572,21 @@ function BlockInputField:UpdateEditAreaSize()
 
     self:GetTopBlock():UpdateLayout();
     local blockly = self:GetBlock():GetBlockly();
+
     local editor = self:GetEditorElement();
     local offsetX, offsetY = 0, 0;
+
+    if (System.os.GetPlatform() == "android" or
+        System.os.GetPlatform() == "ios") then
+        local left, top = self.left + blockly.offsetX, self.top + blockly.offsetY;
+        local width = blockly:GetWidth();
+        local height = blockly:GetHeight();
+    
+        if (top > (height * 0.7)) then
+            offsetY = -220;
+        end
+    end
+
     -- local scale = blockly:GetScale();
     local left = self.left + (self.maxWidth - self.width) / 2 + blockly.offsetX + offsetX;
     local top = self.top + (self.maxHeight - self.height) / 2 + blockly.offsetY + offsetY;
@@ -605,7 +632,8 @@ end
 
 function BlockInputField:BeginEdit()
     if (not self:IsCanEdit()) then return end
-
+    local draggFilter = GameLogic.GetFilters():apply_filters('CodeBlockWindow.IsDragable')
+    if draggFilter == false then return end
     -- 获取编辑器元素
     local editor = self:GetEditorElement();
     -- 清空旧编辑元素
@@ -683,6 +711,10 @@ function BlockInputField:GetLanguage()
     return self:GetBlock():GetBlockly():GetLanguage();
 end
 
+function BlockInputField:GetLanguageType()
+    return self:GetBlock():GetBlockly():GetLanguageType() or "npl";
+end
+
 function BlockInputField:GetNumberValue()
     local value = self:GetValue();
     value = string.gsub(value, ' ', '');
@@ -719,4 +751,14 @@ function BlockInputField:TextToXmlInnerNode(text)
 	else
 		return text;
 	end
+end
+
+function BlockInputField:DisableRun()
+end
+
+function BlockInputField:EnableRun()
+end
+
+function BlockInputField:GetText()
+    return self:GetLabel();
 end

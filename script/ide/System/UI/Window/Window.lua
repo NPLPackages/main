@@ -5,7 +5,7 @@ Date: 2020/6/30
 Desc: UI Window
 use the lib:
 -------------------------------------------------------
-local Window = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Window/Window.lua");
+local Window = NPL.load("script/ide/System/UI/Window/Window.lua");
 -------------------------------------------------------
 ]]
 -- Window
@@ -16,18 +16,21 @@ local PainterContext = commonlib.gettable("System.Core.PainterContext");
 local SizeEvent = commonlib.gettable("System.Windows.SizeEvent");
 local FocusPolicy = commonlib.gettable("System.Core.Namespace.FocusPolicy");
 
-local G = NPL.load("./G.lua", IsDevEnv);
-local StyleManager = NPL.load("./Style/StyleManager.lua", IsDevEnv);
-local Simulator = NPL.load("./Event/Simulator.lua", IsDevEnv);
-local DefaultSimulator = NPL.load("./Event/DefaultSimulator.lua", IsDevEnv);
-local Event = NPL.load("./Event/Event.lua", IsDevEnv);
+local G = NPL.load("./G.lua");
+local StyleManager = NPL.load("./Style/StyleManager.lua");
+local Simulator = NPL.load("./Event/Simulator.lua");
+local DefaultSimulator = NPL.load("./Event/DefaultSimulator.lua");
+local Event = NPL.load("./Event/Event.lua");
 
-local Element = NPL.load("./Element.lua", IsDevEnv);
-local ElementManager = NPL.load("./ElementManager.lua", IsDevEnv);
+local IsRecursiveLoadFile = __rts__:GetField("IsRecursiveLoadFile", true);
+__rts__:SetField("IsRecursiveLoadFile", false);
+local ElementManager = NPL.load("./ElementManager.lua");
+__rts__:SetField("IsRecursiveLoadFile", IsRecursiveLoadFile);
 
+local Element = NPL.load("./Element.lua");
 local Window = commonlib.inherit(Element, NPL.export());
-local WindowDebug = GGS.Debug.GetModuleDebug("WindowDebug").Enable();
-local MouseDebug = GGS.Debug.GetModuleDebug("MouseDebug").Disable();  -- Enable  Disable
+local WindowDebug = System.Util.Debug.GetModuleDebug("WindowDebug").Enable();
+local MouseDebug = System.Util.Debug.GetModuleDebug("MouseDebug").Disable();  -- Enable  Disable
 local EventElementList = {};
 
 local windowId = 0;
@@ -49,6 +52,7 @@ Window:Property("3DWindow", false, "Is3DWindow");   -- 是否是3D窗口
 Window:Property("Destroy", false, "IsDestroy");     -- 是否销毁窗口
 Window:Property("EnableMouseWheelSimulate", true, "IsEnableMouseWheelSimulate");         -- 是否开启鼠标滚动模拟
 Window:Property("EnableSimulator", true, "IsEnableSimulator");                           -- 是否开启事件模拟器
+Window:Property("Refresh", true, "IsRefresh");      -- 是否刷新
 
 local function GetSceneViewport()
     NPL.load("(gl)script/ide/System/Scene/Viewports/ViewportManager.lua");
@@ -187,6 +191,7 @@ function Window.Show(self, params)
     self:SetParams(params);
     self:SetNativeWindow(self:Is3DWindow() and self:Create3DNativeWindow() or self:CreateNativeWindow());
     self:SetDestroy(false);
+    
     -- 初始化
     self:Init();
     -- 文档化
@@ -211,6 +216,7 @@ function Window:CloseWindow()
     self:SetNativeWindow(nil);
     self:SetVisible(false);
     self:SetDestroy(true);
+    self:SetFocus(nil);
     local G = self:GetG();
     if (type(rawget(G, "OnClose")) == "function") then G.OnClose(G) end
 end
@@ -334,6 +340,57 @@ function Window:InitWindowPosition()
     return self.screenX, self.screenY, self.screenWidth, self.screenHeight;
 end
 
+function Window:EnableSelfPaint(bSelfPaint)
+    if(bSelfPaint == nil) then
+        bSelfPaint = true
+    end
+    self.m_self_paint = bSelfPaint;
+    local native_window = self:GetNativeWindow();
+    if (native_window) then 
+        native_window:SetField("SelfPaint", self.m_self_paint);
+
+        -- if self paint parent API is not supported(Engine is not up to date), we will not use self paint. 
+        if(self.m_self_paint and not native_window:GetField("SelfPaintInParent", false)) then
+            native_window:SetField("SelfPaint", false);
+            self.m_self_paint = false;
+        end
+    end
+end
+
+function Window:DisableSelfPaint()
+    local native_window = self:GetNativeWindow();
+    if (not native_window) then return end
+    native_window:SetField("SelfPaint", false);
+    self.m_self_paint = false;
+end
+
+-- force repaint in the next frame.
+function Window:repaint()
+    self.isRepaintScheduled = true;
+    
+    if (self.m_self_paint or self.isSelfPaintInParent) then 
+        local native_window = self:GetNativeWindow();
+        if(native_window) then
+            native_window:SetField("IsDirty", true);
+        end
+    else
+		-- it will be repainted anyway, so do nothing. 
+	end
+end
+
+-- Updates the widget unless updates are disabled or the widget is hidden.
+-- This function does not cause an immediate repaint; instead it schedules a paint in the next frame.
+function Window:Update()
+	self:markDirty();
+end
+
+-- causing a repaint
+function Window:markDirty()
+	if(not self.isRepaintScheduled) then
+		self:repaint();
+	end
+end
+
 -- 创建原生窗口
 function Window:CreateNativeWindow()
     if (self:GetNativeWindow()) then return self:GetNativeWindow() end
@@ -352,6 +409,13 @@ function Window:CreateNativeWindow()
     if (params.isTopLevel ~= nil) then native_window.isTopLevel = params.isTopLevel end
     if (params.isPinned ~= nil) then native_window.isPinned = params.isPinned end 
     if (params.isClickThrough ~= nil) then native_window:GetAttributeObject():SetField("ClickThrough", params.isClickThrough) end
+
+    if(self.m_self_paint ~= nil) then
+        self:EnableSelfPaint(self.m_self_paint);
+    end
+    if(params.parent) then
+        self.isSelfPaintInParent = params.parent:GetField("SelfPaintInParent", false)
+    end
 
     -- 加到有效窗口上
     if(params.parent) then
@@ -414,6 +478,11 @@ function Window:HandleEvent(event)
     elseif (event_type == "ondestroy") then self:HandleDestroyEvent()
     end
 
+    if (event_type ~= "ondraw" and event.accepted) then
+        -- only update when we accepted the event
+        self:Update();
+    end
+
     -- 事件模拟生成机制
     if (self:IsCanSimulateEvent() and not Simulator:IsSimulated()) then Simulator:GetDefaultSimulator():Simulate(event, self) end
 end
@@ -444,10 +513,18 @@ end
 function Window:HandleRender()
     if (not self:GetNativeWindow()) then return end
     local painter = self:GetPainterContext();
+
+	-- painter:EnableCmdMode();
+    self.isRepaintScheduled = false;
     painter:Scale(self.scaleX, self.scaleY);
     self:Render(painter);
     painter:Scale(1 / self.scaleX, 1 / self.scaleY);
     painter:Flush();
+
+	-- painter:FlushCmdList();
+	-- painter:DisableCmdMode();
+    
+    self:SetRefresh(false);
 end
 
 -- 获取方法名通过事件名
@@ -550,7 +627,7 @@ function Window:HandleMouseEvent(event)
     local el = hoverElement;
     -- while (el and el:IsContainPoint(event.x, event.y)) do -- 不再识别是否为在元素内, 否则无法为元素事件处理添加过滤处理
     while (el) do
-        table.insert(EventElementList, el);
+        EventElementList[#EventElementList+1] = el;
         el = el:GetParentElement();
     end
     -- WindowDebug.FormatIf(eventType == "mousePressEvent", "获取元素列表 耗时 %sms", ParaGlobal.timeGetTime() - BeginTime);
@@ -603,7 +680,7 @@ function Window:HandleMouseEvent(event)
 
     -- WindowDebug.FormatIf(eventType == "mousePressEvent", "冒泡事件 耗时 %sms", ParaGlobal.timeGetTime() - BeginTime);
     -- 清空列表
-    for i = 1, EventElementCount, 1 do EventElementList[i] = nil end
+    for i = EventElementCount, 1, -1 do EventElementList[i] = nil end
     -- WindowDebug.FormatIf(eventType == "mousePressEvent", "清除元素列表 耗时 %sms", ParaGlobal.timeGetTime() - BeginTime);
     -- 聚焦目标元素  聚焦与事件是否处理无关
     -- if (event:IsAccepted()) then return end

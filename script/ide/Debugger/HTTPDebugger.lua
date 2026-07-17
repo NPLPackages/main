@@ -126,6 +126,14 @@ function HTTPDebugger.DetachAsync()
 	HTTPDebugger.Detach()
 end
 
+function HTTPDebugger.ExecuteAsync(code)
+	if (not code or code == "") then
+		return;
+	end
+
+	NPL.DoString(code);
+end
+
 -- this is only called when program is not paused. 
 local function activate()
 	HTTPDebugger.SetDebugger(HTTPDebugger);
@@ -143,7 +151,7 @@ local function activate()
 	elseif(command == "listb") then
 		HTTPDebugger.ListBreakpoints();
 	elseif(command == "exec") then
-		-- TODO: evaluate when still running
+		HTTPDebugger.ExecuteAsync(msg.code);
 	elseif(command == "Detach") then
 		HTTPDebugger.DetachAsync()
 	end

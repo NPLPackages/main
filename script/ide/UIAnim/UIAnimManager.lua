@@ -35,7 +35,7 @@ function UIAnimManager.AddFile(FileName, file)
 		AllFiles[FileName] = file;
 		file.FileName = FileName;
 	else
-		log("warning: file :"..FileName.." already exists in animation manager.\r\n");
+		-- log("warning: file :"..FileName.." already exists in animation manager.\r\n");
 	end
 end
 

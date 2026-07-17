@@ -5,7 +5,7 @@ Date: 2020/6/30
 Desc: Event
 use the lib:
 -------------------------------------------------------
-local InputMethodEvent = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Window/Event/InputMethodEvent.lua");
+local InputMethodEvent = NPL.load("script/ide/System/UI/Window/Event/InputMethodEvent.lua");
 -------------------------------------------------------
 ]]
 

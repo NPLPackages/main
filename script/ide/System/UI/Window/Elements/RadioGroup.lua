@@ -4,11 +4,11 @@ Author(s): wxa
 Date: 2020/8/14
 Desc: 按钮组
 -------------------------------------------------------
-local RadioGroup = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Window/Elements/RadioGroup.lua");
+local RadioGroup = NPL.load("script/ide/System/UI/Window/Elements/RadioGroup.lua");
 -------------------------------------------------------
 ]]
 
-local Element = NPL.load("../Element.lua", IsDevEnv);
+local Element = NPL.load("../Element.lua");
 local RadioGroup = commonlib.inherit(Element, NPL.export());
 
 RadioGroup:Property("Name", "RadioGroup");

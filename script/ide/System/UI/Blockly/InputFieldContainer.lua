@@ -5,14 +5,14 @@ Date: 2020/6/30
 Desc: G
 use the lib:
 -------------------------------------------------------
-local InputFieldContainer = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Blockly/InputFieldContainer.lua");
+local InputFieldContainer = NPL.load("script/ide/System/UI/Blockly/InputFieldContainer.lua");
 -------------------------------------------------------
 ]]
 
 local Const = NPL.load("./Const.lua");
 local Shape = NPL.load("./Shape.lua");
-local FieldSpace = NPL.load("./Fields/Space.lua", IsDevEnv);
-local BlockInputField = NPL.load("./BlockInputField.lua", IsDevEnv);
+local FieldSpace = NPL.load("./Fields/Space.lua");
+local BlockInputField = NPL.load("./BlockInputField.lua");
 
 local InputFieldContainer = commonlib.inherit(BlockInputField, NPL.export());
 

@@ -32,6 +32,10 @@ opts = {
     {"J", "J"},
     {"K", "K"},
     {"L", "L"},
+    {"选择", function(old_value, callback)
+        print("========>>");
+        callback(old_value);
+end,}
 
 }
 GetGlobalScope():Set("value", "");

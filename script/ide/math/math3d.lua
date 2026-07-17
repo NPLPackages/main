@@ -172,10 +172,10 @@ function math3d.Vector4MultiplyMatrix(r, v, m)
 	if(not r) then
 		r = mathlib.vector3d:new();
 	end
-	local x,y,z = v[1], v[2], v[3], v[4] or 1;
-	r[1] = x*m[1] + y*m[5] + z*m[9]  + m[13];
-	r[2] = x*m[2] + y*m[6] + z*m[10] + m[14];
-	r[3] = x*m[3] + y*m[7] + z*m[11] + m[15];
-	r[4] = x*m[3] + y*m[7] + z*m[11] + m[15];
+	local x,y,z, w = v[1], v[2], v[3], v[4] or 1;
+	r[1] = x*m[1] + y*m[5] + z*m[9]  + w * m[13];
+	r[2] = x*m[2] + y*m[6] + z*m[10] + w * m[14];
+	r[3] = x*m[3] + y*m[7] + z*m[11] + w * m[15];
+	r[4] = x*m[4] + y*m[8] + z*m[12] + w * m[16];
 	return r;
 end

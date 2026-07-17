@@ -29,6 +29,10 @@ NPL.load("(gl)script/ide/System/Core/Event.lua");
 NPL.load("(gl)script/ide/math/Point.lua");
 NPL.load("(gl)script/ide/gui_helper.lua");
 NPL.load("(gl)script/ide/System/Core/SceneContextManager.lua");
+
+NPL.load("(gl)script/apps/Aries/Creator/Game/Code/CodeContext2d.lua");
+local CodeContext2d = commonlib.gettable("MyCompany.Aries.Game.Code.CodeContext2d")
+
 local SceneContextManager = commonlib.gettable("System.Core.SceneContextManager");
 local Point = commonlib.gettable("mathlib.Point");
 local Event = commonlib.gettable("System.Core.Event");
@@ -80,7 +84,7 @@ function Window:Show(name_or_params, parent, alignment, left, top, width, height
 			top = top,
 			width = width,
 			height = height,
-			zorder = zorder,
+			zorder = zorder or self.zorder,
 		};
 	end
 	return self:ShowWithParams(params);
@@ -156,6 +160,13 @@ function Window:ShowWithParams(params)
 			if(not nativeWnd.parent:IsValid()) then
 				local parent = params.parent or ParaUI.GetUIObject("root");
 				parent:AddChild(nativeWnd);
+				self.isSelfPaintInParent = parent:GetField("SelfPaintInParent", false)
+				if(self.isSelfPaintInParent) then
+					local page = self:Page();
+					if(page) then
+						page.SelfPaint = true;
+					end
+				end
 			end
 			-- reposition/attach to parent
 			local left, top, width, height, alignment = params.left, params.top, params.width, params.height, params.alignment or "_lt";
@@ -269,6 +280,7 @@ function Window:create_sys(native_window, initializeWindow, destroyOldWindow)
 		self:SetAutoClearBackground(self.AutoClearBackground);
 	end
 
+	-- local HandleRenderCoroutine = self:CreateRenderCoroutine();
 	_this:GetAttributeObject():SetDynamicField("isWindow", true)
 	-- redirect events from native ParaUI object to this object. 
 	_this:SetScript("onsize", function()
@@ -347,6 +359,33 @@ function Window:create_sys(native_window, initializeWindow, destroyOldWindow)
 	_this:SetScript("ondestroy", function()
 		self:handleDestroy_sys();
 	end);
+
+	-- note tricky: we will disable mouse wheel emulation in windows' touch devices
+	-- otherwise drag move event will not be detected such as in some painter UI. 
+	if(not System.os.IsTouchMode()) then
+		_this:SetField("TouchTranslationAtt", 1);
+	end
+end
+
+-- set bitwise field whether will apply touch to mouse event translation. 
+-- long hold to translate to right button operation
+-- touch_translate_rightbutton = 0x0000001,
+-- click and drag to translate to scroll operation when the container is scrollable or has mouse wheel event
+-- touch_translate_scroll = 0x0000002,
+-- some gestures like pinch with two figures to translate to mouse wheel. 
+-- touch_translate_gestures = 0x0000004,
+-- @param attr: if 0xff or true to enable all touch translation, such as long hold to simulate right click, 
+-- drag to simulate mouse wheel, etc. if 0 or false, to disable all translations, so that each touch is translated to click immediately. 
+function Window:SetTouchTranslation(attr)
+	local wnd = self:GetNativeWindow()
+	if(wnd) then
+		if(attr == true) then
+			attr = 0xff;
+		elseif(not attr) then
+			attr = 0;
+		end
+		wnd:SetField("TouchTranslationAtt", attr);
+	end
 end
 
 function Window:handleGeometryChangeEvent()
@@ -497,9 +536,26 @@ end
 
 -- set whether the window will paint on its own render target. default is false. 
 function Window:EnableSelfPaint(bSelfPaint)
+	if(bSelfPaint == nil) then
+        bSelfPaint = true
+    end
 	self.bSelfPaint = bSelfPaint;
 	if(self.native_ui_obj) then
 		self.native_ui_obj:SetField("SelfPaint", self.bSelfPaint);
+	end
+	if(self.bSelfPaint or self.isSelfPaintInParent) then
+		local page = self:Page();
+		if(page) then
+			page.SelfPaint = true;
+		end
+	end
+end
+
+-- get render target image name, usually used else where in 3d GUI.
+function Window:GetSelfPaintTextureName()
+	local wnd = self:GetNativeWindow()
+	if(wnd) then
+		return "_miniscenegraph_"..wnd.name
 	end
 end
 
@@ -507,7 +563,7 @@ end
 function Window:repaint()
 	self.isRepaintScheduled = true;
 			
-	if(self.bSelfPaint) then
+	if(self.bSelfPaint or self.isSelfPaintInParent) then
 		if(self.native_ui_obj) then
 			self.native_ui_obj:SetField("IsDirty", true);
 		end
@@ -563,17 +619,168 @@ function Window:markDirty()
 	end
 end
 
+function Window:EnableCmdPainter(enable_full_render_build_cmd, enable_yield_render_build_cmd)
+	self.m_enable_cmd_painter = true;
+	self.m_enable_full_render_build_cmd = enable_full_render_build_cmd;   -- 先获取全部cmd再分帧编译cmd
+	self.m_enable_yield_render_build_cmd = enable_yield_render_build_cmd; -- 分帧获取cmd并编译cmd 需要解除屏蔽 UIElement:drawWidget(painterContext, offset) 函数的第一行注释 -- self:GetWindow():CheckRenderYield();
+	self.m_old_painter_context = self.painterContext;
+	self.m_render_coroutine_wrap = enable_yield_render_build_cmd and self:CreateRenderCoroutine() or (function() end); 
+	
+	NPL.load("(gl)script/ide/System/Core/PainterContext2.lua");
+	local PainterContext = commonlib.gettable("System.Core.PainterContext2");
+	self.painterContext = PainterContext:new():init(self);
+end
+
+function Window:DisableCmdPainter()
+	self.m_enable_cmd_painter = false;
+	self.painterContext = self.m_old_painter_context or System.Core.PainterContext:new():init(self);
+end
+
+
+-- 返回是否绘制
+function Window:CheckRenderYield(force_yield)
+	if (not self.m_enable_yield_render_build_cmd) then return end
+	
+	local curtime = os.clock();
+	local usetime = (curtime - self.m_painted_time) * 1000;
+	if (not force_yield and usetime <= 4) then 
+		self.m_painted_count = self.m_painted_count + 1;
+		return 
+	end
+	
+	local cmds = self.painterContext.m_cmds;
+	local cmds_size = self.painterContext.m_cmds_size;
+	for i = 1, cmds_size do
+		local cmd = cmds[i];
+		self.m_painter_cmds[self.m_painter_cmds_size + i] = type(cmd) == "string" and cmd or string.format(unpack(cmd));
+	end
+	self.m_painter_cmds_size = self.m_painter_cmds_size + cmds_size;
+
+	self.m_total_painted_time = self.m_total_painted_time + usetime;
+	self.m_total_painted_count = self.m_total_painted_count + self.m_painted_count;
+	-- print("yield render", usetime, self.m_painted_count, self.m_total_painted_count, cmds_size);
+
+	self.painterContext:DisableCmdMode();
+	coroutine.yield();
+	self.painterContext:FlushCmdList(self.m_painter_cmds_text);
+	self.painterContext:EnableCmdMode();
+
+	self.m_painted_time = os.clock();   -- 需要重新调用, 间隔了一帧
+	self.m_painted_count = 1;           -- 当前元素
+end
+
+function Window:CreateRenderCoroutine()
+	return coroutine.wrap(function()
+		while (true) do
+			self.m_painter_cmds = {};
+			self.m_painter_cmds_size = 0;
+			self.m_total_painted_time = 0;
+			self.m_total_painted_count = 0;
+			self.m_painted_time = os.clock();
+			self.m_painted_count = 0;
+			-- handleRender Begin
+			-- self:handleRender(); 
+			local page = self:Page();
+			if(page and page.bindingContext) then
+				page.bindingContext:ApplyGetters();
+			end
+			self.isRepaintScheduled = false;
+			self:Render(self.painterContext);
+			if(self.bSelfPaint) then
+				-- for some reason, opengl sprites needs to be flushed in order to paint
+				self.painterContext:Flush();
+			end
+			-- handleRender End
+			-- print("total paint time", self.m_total_painted_time, "ms", "total paint count", self.m_total_painted_count);
+			self:CheckRenderYield(true);
+			self.m_painter_cmds_text = table.concat(self.m_painter_cmds, "\n");
+			-- local begin_time = os.clock();
+			self.painterContext:FlushCmdList(self.m_painter_cmds_text);
+			-- print("flush cmd list use time", (os.clock() - begin_time) * 1000);
+		end
+	end);
+end
+
 -- handle ondraw callback from system ParaUI object. 
 function Window:handleRender()
 	local page = self:Page();
 	if(page and page.bindingContext) then
 		page.bindingContext:ApplyGetters();
 	end
+	
+	if (self.m_enable_cmd_painter) then
+		if (self.m_enable_yield_render_build_cmd) then
+			self.m_render_coroutine_wrap();
+			return;
+		end
+		if (self.m_enable_full_render_build_cmd) then
+			-- local begin_time = os.clock();
+			local cmds_index = self.m_painter_cmds_index or 0;
+			local cmds_size = self.m_painter_cmds_size or 0;
+			local cmds_text = self.m_painter_cmds_text or "";
+			if (cmds_size > 0) then
+				local cmds = self.m_painter_cmds or {};
+				local string_format = string.format;
+				if (cmds_index < cmds_size) then
+					local step_size = math.ceil(cmds_size / 5);  -- 分 5 帧计算
+					step_size = step_size > 1000 and math.ceil(cmds_size / 10) or step_size; -- 最长分 10 帧计算
+					local next_cmds_index = cmds_index + step_size;
+					next_cmds_index = next_cmds_index > cmds_size and cmds_size or next_cmds_index;
+					for i = cmds_index + 1, next_cmds_index do
+						local cmd = cmds[i];
+						cmds_text = cmds_text .. (type(cmd) == "string" and cmd or string_format(unpack(cmd))) .. "\n";
+					end
+					self.m_painter_cmds_index = next_cmds_index;
+					self.m_painter_cmds_text = cmds_text;
+				end
+				-- local tmp = os.clock();
+				if (self.m_painter_cmds_index >= cmds_size) then
+					self.painterContext:FlushCmdList(self.m_painter_cmds_text);
+					self.m_painter_cmds_last_text = self.m_painter_cmds_text;
+					self.m_painter_cmds = nil;
+					self.m_painter_cmds_size = 0;
+					self.m_painter_cmds_index = 0;
+					self.m_painter_cmds_text = "";
+				else 
+					self.painterContext:FlushCmdList(self.m_painter_cmds_last_text);
+				end
+				-- local end_time = os.clock();
+				-- print("Window:handleRender cmd mode cost:", (end_time - begin_time) * 1000, (end_time - tmp) * 1000, self.m_painter_cmds_index, self.m_painter_cmds_size);
+				return;
+			end
+			self.painterContext:EnableCmdMode();
+		else 
+			-- 不分帧模式
+			self.painterContext:EnableCmdMode();
+		end
+	end
+	
 	self.isRepaintScheduled = false;
 	self:Render(self.painterContext);
 	if(self.bSelfPaint) then
 		-- for some reason, opengl sprites needs to be flushed in order to paint
 		self.painterContext:Flush();
+	end
+	
+	if (self.m_enable_cmd_painter) then
+		if (self.m_enable_full_render_build_cmd) then 
+			self.m_painter_cmds = self.painterContext.m_cmds;
+			self.m_painter_cmds_size = self.painterContext.m_cmds_size;
+			self.m_painter_cmds_index = 0;
+			self.m_painter_cmds_text = "";
+			self.painterContext:DisableCmdMode();
+		else 
+			-- 不分帧模式
+			local painter_cmds = self.painterContext.m_cmds;
+			local painter_cmds_size = self.painterContext.m_cmds_size;
+			local cmds_text = "";
+			for i = 1, painter_cmds_size do
+				local cmd = painter_cmds[i];
+				cmds_text = cmds_text .. (type(cmd) == "string" and cmd or string.format(unpack(cmd))) .. "\n";
+			end
+			self.painterContext:FlushCmdList(cmds_text);
+			self.painterContext:DisableCmdMode();
+		end
 	end
 end
 
@@ -808,9 +1015,42 @@ function Window:OnViewportSizeChange()
 		end
 	end
 end
+
 function Window:SetClickThrough(v)
 	local nativeWnd = self:GetNativeWindow()
 	if(nativeWnd)then
 		nativeWnd:GetAttributeObject():SetField("ClickThrough", v);
 	end
+end
+
+function Window:Render(painterContext)
+	self:RenderContext2D(painterContext);
+	return Window._super.Render(self, painterContext);
+end
+
+function Window:RenderContext2D(painterContext)
+	if(self.context2d) then
+		local ok, msg = pcall(self.context2d.Render, self.context2d, painterContext)
+		if(not ok and msg) then
+			return
+		end
+	end
+end
+
+function Window:prepareCodeContext()
+	if(self.context2d) then
+		return
+	end
+	self:EnableSelfPaint(true);
+	self:SetAutoClearBackground(false);
+
+	self.context2d = CodeContext2d:new();
+	self.context2d:SetWindow(self);
+	self.context2d:clearRect();
+end
+
+-- @param name: default to "2d"
+function Window:getContext(name)
+	self:prepareCodeContext()
+	return self.context2d;
 end

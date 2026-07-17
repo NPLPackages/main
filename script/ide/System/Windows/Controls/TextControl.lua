@@ -51,6 +51,7 @@ TextControl:Property({"EmptyText", nil, "GetEmptyText", "SetEmptyText", auto=tru
 TextControl:Property({"language", nil, "Language", "SetLanguage", auto=true})
 TextControl:Property({"m_bMoveViewWhenAttachWithIME", false, "isMoveViewWhenAttachWithIME", "setMoveViewWhenAttachWithIME"});
 TextControl:Property({"bAutoVirtualKeyboard", false, "isAutoVirtualKeyboard", "setAutoVirtualKeyboard"});
+TextControl:Property({"canPaste", true, "IsCanPaste", "SetCanPaste"});
 
 
 --TextControl:Signal("SizeChanged",function(width,height) end);
@@ -158,6 +159,15 @@ function TextControl:CursorPos()
 	return {line = self.cursorLine, pos = self.cursorPos};
 end
 
+-- if no text is selected it is the cursor position, otherwise it is select start position
+function TextControl:GetInsertPos()
+	if(self.m_selPosStart and self.m_selPosStart < self.m_selPosEnd) then
+		return self:SelStart()
+	else
+		return self:CursorPos()
+	end
+end
+
 function TextControl:SelStart()
 	return {line = self.m_selLineStart, pos = self.m_selPosStart};
 end
@@ -186,7 +196,7 @@ function TextControl:setReadOnly(bReadOnly)
 	if (bReadOnly) then
         self:setCursorBlinkPeriod(0);
     else
-        self:setCursorBlinkPeriod(Application:cursorFlashTime());
+        self:setCursorBlinkPeriod(self:cursorFlashTime());
 	end
 end
 
@@ -207,7 +217,7 @@ function TextControl:attachWithIME(force)
 			if (self.previousCursorLine ~= self.cursorLine or force) then
 				self.previousCursorLine = self.cursorLine;
 	
-				local ctrlBottom = ((self.cursorLine - 1) * self.lineHeight) + 95;
+				local ctrlBottom = ((self.cursorLine - 1) * self.lineHeight) + self.parent.moveViewOffset;
 				ctrlBottom = ctrlBottom - self:ClipRegion():y();
 	
 				Keyboard:attachWithIME(ctrlBottom, self:GetText(), sel_start, sel_end);
@@ -216,7 +226,7 @@ function TextControl:attachWithIME(force)
 			local pos = Point:new_from_pool(0, self:y() + self:height());
 			pos = self:mapToGlobal(pos);
 
-			Keyboard:attachWithIME(pos:y(),self:GetText(),sel_start,sel_end);
+			Keyboard:attachWithIME(pos:y(),self:GetText(), sel_start, sel_end);
 		end
 	else
 		Keyboard:attachWithIME(nil, self:GetText(), sel_start, sel_end);
@@ -262,7 +272,7 @@ end
 -- virtual: 
 function TextControl:focusInEvent(event)
 	self:setCursorVisible(true);
-	self:setCursorBlinkPeriod(Application:cursorFlashTime());	
+	self:setCursorBlinkPeriod(self:cursorFlashTime());	
 
 	if self.bAutoVirtualKeyboard and System.options.IsTouchDevice then
 		NPL.load("(gl)script/apps/Aries/Creator/Game/GUI/TouchVirtualKeyboardIcon.lua");
@@ -339,7 +349,7 @@ function TextControl:SetText(text)
 	self.m_history:clear();
 	self.m_undoState = 0;
 	self:internalDeselect();
-	local line_text, breaker_text;
+	
 	for line_text, breaker_text in string.gfind(text or "", "([^\r\n]*)(\r?\n?)") do
 		-- DONE: the current one will not ignore empty lines. such as \r\n\r\n. Empty lines are recognised.  
 		if(breaker_text ~= "" or line_text~="") then
@@ -442,11 +452,8 @@ function TextControl:InsertItem(pos, text)
 		self.items:insert(pos, item);
 	end
 
-	-- TODO: optimize this to avoid width calculation
-	local width = self:GetLineWidth(item);
-	if(width > self:GetRealWidth()) then
-		self:SetRealWidth(width);
-	end
+	-- Mark that we need to recompute the text width
+	self.needRecomputeTextWidth = true;
 	self.needRecomputeTextHeight = true;
 end
 
@@ -490,16 +497,32 @@ end
 
 -- recompute real width (total text width, the longest line)
 function TextControl:RecomputeTextWidth()
-	local width = 0;
 	for i = 1, self.items:size() do
-		local itemText = self.items:get(i).text;
-		local itemWidth = math.floor(self:naturalTextWidth(itemText)+0.5) + 1;
-		if(itemWidth > width) then
-			width = itemWidth;
-		end
+		local item = self.items:get(i)
+		self:UpdateLineItemWidth(item)
 	end
-	self:SetRealWidth(width);
 end
+
+function TextControl:RecomputeVisibleTextWidth()
+	for i = self.from_line, self.to_line do
+		local item = self.items:get(i)
+		self:UpdateLineItemWidth(item)
+	end
+end
+
+-- @param forceUpdate: force update the text width, even if it has already calculated before.
+function TextControl:UpdateLineItemWidth(item, forceUpdate)
+	if(item) then
+		if(forceUpdate or not item.textWidth) then
+			item.textWidth = self:GetTextWidth(item.text) or 0;
+		end
+		if(self:GetRealWidth() < item.textWidth) then
+			self:SetRealWidth(item.textWidth);
+		end
+		return item.textWidth
+	end
+end
+
 
 function TextControl:setX(x, emitSignal)
 	if(x == self:x()) then
@@ -713,7 +736,7 @@ function TextControl:inputMethodEvent(event)
 	end
 
 	local char1 = string.byte(commitString, 1);
-	if(char1 <= 31) then
+	if(char1 and char1 <= 31) then
 		-- ignore control characters
 		event:ignore();
 		return;
@@ -758,7 +781,7 @@ function TextControl:keyPressEvent(event)
 						end
 	
 						self.previousCursorLine = self.cursorLine;
-						local ctrlBottom = ((self.cursorLine - 1) * self.lineHeight) + 95;
+						local ctrlBottom = ((self.cursorLine - 1) * self.lineHeight) + self.parent.moveViewOffset;
 						ctrlBottom = ctrlBottom - self:ClipRegion():y();
 	
 						Keyboard:attachWithIME(ctrlBottom, self:GetText(), nil, nil);
@@ -1081,6 +1104,7 @@ function TextControl:updatePos(hscroll, vscroll)
 	local y = -vscroll * self.lineHeight + self.parent:ViewRegionOffsetY();
 	self:setX(x);
 	self:setY(y);
+	self:update();
 end
 
 function TextControl:ScrollLineForward()
@@ -1157,14 +1181,21 @@ end
 function TextControl:LineEnd(mark)
 	local pos = self:GetCurrentLine().text:length();
 	self:moveCursor(self.cursorLine, pos, mark,true);
-	--self:moveCursor(self.m_text:length(), mark);
 end
 
 function TextControl:DocEnd(mark)
+	self:updateGeometry()
 	local line = #self.items;
 	local pos = self:GetLineText(line):length();
-	self:moveCursor(line, pos, mark,true);
-	--self:moveCursor(self.m_text:length(), mark);
+	self:moveCursor(line, pos, mark, true);
+end
+
+-- goto first char in last line
+function TextControl:DocLastLine(mark)
+	self:updateGeometry()
+	local line = #self.items;
+	local pos = 0;
+	self:moveCursor(line, pos, mark, true);
 end
 
 function TextControl:GetRow()
@@ -1313,7 +1344,18 @@ function TextControl:del(mark)
     --self:finishChange(priorState);
 end
 
+function TextControl:SetCanPaste(canPaste)
+	self.canPaste = canPaste;
+end
+
+function TextControl:IsCanPaste()
+	return self.canPaste;
+end
+
 function TextControl:paste(mode)
+	if not self:IsCanPaste() then
+		return;
+	end
 	local clip = ParaMisc.GetTextFromClipboard();
 	if(clip and self:IsAutoTabToSpaces()) then
 		clip = clip:gsub("\t", TAB_CHAR);
@@ -1437,6 +1479,8 @@ function TextControl:InsertText(text, line, pos, addToCommand, moveCursor)
 
 	if(moveCursor) then
 		self:moveCursor(cursorLine,cursorPos, false, true);
+	else
+		self:update();
 	end
 
 	local after_pos = {line = cursorLine, pos = cursorPos};
@@ -1544,6 +1588,8 @@ function TextControl:RemoveText(startLine, startPos, endLine, endPos, addToComma
 
 	if (moveCursor) then
 		self:moveCursor(startLine, startPos, false, true);
+	else
+		self:update();
 	end
 
 	if (addToCommand) then
@@ -1611,10 +1657,11 @@ function TextControl:internalDelete(wasBackspace)
 			anchorLine = self.cursorLine - 1;
 			anchorPos = self:GetLineText(anchorLine):length();
 
+			-- TODO: remove this line when the exe is updated.
 			if (System.os.CompareParaEngineVersion("1.3.1.0")) then
 				if (System.os.GetPlatform() == "ios" or
 					System.os.GetPlatform() == "android") then
-					local ctrlBottom = (anchorLine * self.lineHeight) + 95;
+					local ctrlBottom = (anchorLine * self.lineHeight) + (self.parent.moveViewOffset or 0);
 					ctrlBottom = ctrlBottom - self:ClipRegion():y();
 	
 					Keyboard:attachWithIME(ctrlBottom, self:GetText(), nil, nil);
@@ -1656,13 +1703,9 @@ end
 
 function TextControl:lineInternalRemove(line, pos, count)
 	local text = line.text;
-	local width = self:GetLineWidth(line);
+	self:UpdateLineItemWidth(line, true)
 	line.changed = true;
 	text:remove(pos, count);
-	
-	if(width >= self:GetRealWidth()) then
-		self.needRecomputeTextWidth = true;
-	end
 end
 
 -- @param line: if nil, it means the current line. 
@@ -1721,10 +1764,7 @@ function TextControl:lineInternalInsert(line, pos, s)
         lineText:insert(pos, s);
 		line.changed = true;
 
-		local width = self:GetLineWidth(line);
-		if(width > self:GetRealWidth()) then
-			self:SetRealWidth(width);
-		end
+		self:UpdateLineItemWidth(line, true);
 		return s;
     end
 	return nil;
@@ -1878,6 +1918,7 @@ function TextControl:moveCursor(line, pos, mark, adjustCursor)
 	if(adjustCursor) then
 		self:adjustCursor();
 	end
+	self:update();
 end
 
 function TextControl:internalDeselect()
@@ -1890,6 +1931,22 @@ end
 
 function TextControl:GetCurrentLine()
 	return self.items:get(self.cursorLine);
+end
+
+-- @param pos: position in the current line, if nil, the x returned is always 0. 
+-- @return x, y: relative to the current control
+function TextControl:LinePosToXY(line, pos)
+	line = line or 1
+	pos = pos or 0;
+	local x = 0;
+	local y = self.lineHeight * (line - 1) - self:ClipRegion():y();
+	if(pos > 0) then
+		local text = self:GetLineText(line);
+		if(text) then
+			x = math.floor(text:cursorToX(pos, self:GetFont()) + 0.5) - self:ClipRegion():x();
+		end
+	end
+	return x, y;
 end
 
 function TextControl:yToLine(y)
@@ -2005,7 +2062,7 @@ end
 
 function TextControl:updateGeometry()
 	if(self.needRecomputeTextWidth) then
-		self:RecomputeTextWidth();	
+		self:RecomputeVisibleTextWidth();	
 		self.needRecomputeTextWidth = false;
 	end
 
@@ -2060,26 +2117,29 @@ function TextControl:LanguageFormat(lineItem, lineNum)
 		lineItem.highlightBlocks = {};
 		
 		local uniStr = lineItem.text;
-		for token in self.syntaxAnalyzer:GetToken(lineItem, lineNum) do
-			if(token.type) then
-				-- we will add non-token to highlight blocks as well. 
-				local count = #(lineItem.highlightBlocks);
-				if(count == 0) then
-					if(token.spos > 1) then
-						self:AddHighLightBlock(lineItem, 1, token.spos);
+		if(#(uniStr:GetText()) < 300) then
+			-- skip highlighting for very long text. 
+			for token in self.syntaxAnalyzer:GetToken(lineItem, lineNum) do
+				if(token.type) then
+					-- we will add non-token to highlight blocks as well. 
+					local count = #(lineItem.highlightBlocks);
+					if(count == 0) then
+						if(token.spos > 1) then
+							self:AddHighLightBlock(lineItem, 1, token.spos-1);
+						end
+					else
+						local lastItem = lineItem.highlightBlocks[count];
+						if((lastItem.end_pos + 1) < token.spos) then
+							self:AddHighLightBlock(lineItem, lastItem.end_pos + 1, token.spos-1);
+						end
 					end
-				else
-					local lastItem = lineItem.highlightBlocks[count];
-					if((lastItem.end_pos + 1) < token.spos) then
-						self:AddHighLightBlock(lineItem, lastItem.end_pos + 1, token.spos-1);
-					end
-				end
 
-				local font = self:GetFont();
-				if(token.bold) then
-					font = string.gsub(font,"(%a+;%d+;)(%a+)","%1bold")
+					local font = self:GetFont();
+					if(token.bold) then
+						font = string.gsub(font,"(%a+;%d+;)(%a+)","%1bold")
+					end
+					self:AddHighLightBlock(lineItem, token.spos, token.epos, font, token.color, nil);
 				end
-				self:AddHighLightBlock(lineItem, token.spos, token.epos, font, token.color, nil);
 			end
 		end
 		local count = #(lineItem.highlightBlocks);
@@ -2289,6 +2349,7 @@ function TextControl:paintEvent(painter)
 			else
 				self:DrawTextScaledWithPosition(painter, self:x(), self:y() + self.lineHeight * (i - 1), item.text:GetText());
 			end
+			self:UpdateLineItemWidth(item);
 		end
 	else
 		local EmptyText = self:GetEmptyText();
@@ -2323,4 +2384,38 @@ end
 
 function TextControl:GetItems()
 	return self.items
+end
+
+function TextControl:DropTextAtCurrentLine(code, forceOnNewLine)
+	local text = self:GetLineText(self.cursorLine);
+	if(text) then
+		text = tostring(text);
+		local pos = self:CursorPos();
+		local headingSpaces = self:GetHeadingSpaces(pos.line)
+					
+		if(forceOnNewLine) then
+			local newText = "";
+			if(text:match("%S")) then
+				-- always start a new line if current line is not empty
+				self:LineEnd(false);
+				self:InsertTextInCursorPos("\n"..(headingSpaces or ""));
+			end
+		end
+		if(headingSpaces) then
+			code = code:gsub("(\n)([^\r\n]+)", "%1"..headingSpaces.."%2");
+			if(code:match("\n$")) then
+				code = code .. headingSpaces;
+			end
+		end
+		self:InsertTextInCursorPos(code);
+		self:userTyped(self);
+
+		-- set focus to control. 
+		local window = self:GetWindow();
+		if(window) then
+			window:SetFocus_sys(FocusPolicy.StrongFocus);
+			window:handleActivateEvent(true)
+		end
+		return true;
+	end
 end

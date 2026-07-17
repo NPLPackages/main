@@ -13,7 +13,7 @@ IPCBinding.EntityBase:new("script/ide/IPCBinding/Entity/StaticMesh.xml")
 NPL.load("(gl)script/ide/IPCBinding/BindableObject.lua");
 NPL.load("(gl)script/ide/IPCBinding/EntityHelperSerializer.lua");
 
-local EntityBase = commonlib.inherit(IPCBinding.BindableObject, commonlib.gettable("IPCBinding.EntityBase"));
+local EntityBase = commonlib.inherit(commonlib.gettable("IPCBinding.BindableObject"), commonlib.gettable("IPCBinding.EntityBase"));
 
 local InstanceView = commonlib.gettable("IPCBinding.InstanceView");
 local EntityHelper = commonlib.gettable("IPCBinding.EntityHelper");

@@ -205,13 +205,9 @@ local function tostring(pkt)
     return table.concat(t)
 end
 
+packet.encode = encode
+packet.decode = decode
+packet.tostring = tostring
+packet.ENGINEIO_PROTOCOL_VERSION = ENGINEIO_PROTOCOL_VERSION
 
-
-NPL.export({
-    encode = encode,
-    decode = decode,
-    tostring = tostring,
-
-    ENGINEIO_PROTOCOL_VERSION = ENGINEIO_PROTOCOL_VERSION,
-})
 

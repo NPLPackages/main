@@ -7,6 +7,7 @@ Use Lib:
 -------------------------------------------------------
 NPL.load("(gl)script/ide/debug.lua");
 commonlib.echo(commonlib.debugstack(2, 5, 1))
+commonlib.debug.CheckGlobalVariableAssignment("your_global_var_name")
 -------------------------------------------------------
 ]]
 if(not commonlib) then commonlib={}; end
@@ -91,6 +92,23 @@ function commonlib.debugstack(level, count1, count2)
 		count = count + 1
     end
     return res;
+end
+
+-- print stack to log. 
+function commonlib.debug.PrintStack(level, count1, count2)
+	log(commonlib.debugstack(level, count1, count2));
+end
+
+function commonlib.debug.GetStackDepth()
+    local depth = 0
+    while true do
+        if debug.getinfo(depth + 1) then
+            depth = depth + 1
+        else
+            break
+        end
+    end
+    return depth
 end
 
 -- get formated file, line number, function info
@@ -207,3 +225,34 @@ function commonlib.debug.SetNPLRuntimeDebugTraceLevel(level)
 		__rts__:SetField("DebugTraceLevel", level);
 	end
 end
+
+-- Check for global variable assignment and print callstack when it happens
+-- @param varName: string name of the global variable to watch
+function commonlib.debug.CheckGlobalVariableAssignment(varName)
+	if not varName or type(varName) ~= "string" then
+		return
+	end
+	
+	local mt = getmetatable(_G) or {}
+	local original_newindex = mt.__newindex
+	
+	mt.__newindex = function(table, key, value)
+		if key == varName then
+			log(string_format("Global variable '%s' assigned to value: %s\n", varName, tostring(value)))
+			log("Assignment callstack:\n")
+			log(commonlib.debugstack(2))
+			log("\n")
+		end
+		
+		if original_newindex then
+			original_newindex(table, key, value)
+		else
+			rawset(table, key, value)
+		end
+	end
+	
+	setmetatable(_G, mt)
+end
+
+-- Uncomment the following line to enable global variable assignment checking for the variable "item"
+-- commonlib.debug.CheckGlobalVariableAssignment("item")

@@ -5,7 +5,7 @@ Date: 2020/6/30
 Desc: G
 use the lib:
 -------------------------------------------------------
-local Shape = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Blockly/Shape.lua");
+local Shape = NPL.load("script/ide/System/UI/Blockly/Shape.lua");
 -------------------------------------------------------
 ]]
 

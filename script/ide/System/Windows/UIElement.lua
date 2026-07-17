@@ -87,11 +87,11 @@ UIElement:Property({"uiName", nil, "GetUIName", "SetUIName"});
 UIElement:Property({"clip", false, "IsClip", "SetClip", auto=true});
 UIElement:Property({"InputMethodEnabled", true, "IsInputMethodEnabled", "SetInputMethodEnabled", auto=true});
 
-UIElement:Property({"TranslationX", 0, auto=true});
-UIElement:Property({"TranslationY", 0, auto=true});
-UIElement:Property({"ScalingX", 1, auto=true});
-UIElement:Property({"ScalingY", 1, auto=true});
-UIElement:Property({"Rotation", 0, auto=true});
+UIElement:Property({"TranslationX", 0, "GetTranslationX", "SetTranslationX"});
+UIElement:Property({"TranslationY", 0, "GetTranslationY", "SetTranslationY"});
+UIElement:Property({"ScalingX", 1, "GetScalingX", "SetScalingX"});
+UIElement:Property({"ScalingY", 1, "GetScalingY", "SetScalingY"});
+UIElement:Property({"Rotation", 0, "GetRotation", "SetRotation"});
 UIElement:Property({"Color", "#ffffffff", auto=true});
 
 -- number of posted events
@@ -150,15 +150,10 @@ end
 function UIElement:SetParent(parent)
 	local newParent = (self.parent ~= parent);
 	if(newParent) then
-		local oldWindow = self:GetWindow();
 		if (newParent and self:isAncestorOf(self:focusWidget())) then
 			self:focusWidget():clearFocus();
 		end
-		if(parent) then
-			self.window = parent:GetWindow();
-		else
-			self.window = nil;
-		end
+		self.window = parent and parent:GetWindow()
 		self:setParent_helper(parent);
 	end
 end
@@ -473,20 +468,22 @@ function UIElement:repaint()
 	end
 end
 
--- Updates the widget unless updates are disabled or the widget is hidden.
 -- This function does not cause an immediate repaint; instead it schedules a paint event for processing 
 -- when system returns to the main event loop. This permits us to optimize for more speed and less 
 -- flicker than a call to repaint() does. Calling update() several times normally results in just one paintEvent() call.
 function UIElement:update()
-    if (not self:isVisible() or not self:updatesEnabled()) then
-		return;
-	end
+	-- @Note by Xizhi: since mcml page control refresh does not call show() recursively for all of its control, we will update regardless if it is visible or not. 
+	-- Updates the widget unless updates are disabled or the widget is hidden.
+    -- if (not self:isVisible() or not self:updatesEnabled()) then
+	-- 	return;
+	-- end
 	if (self:testAttribute("WA_WState_InPaintEvent")) then
         Application:postEvent(self, Event:new_static("UpdateLaterEvent"));
         return;
     end
-	if(self.window) then
-		self.window:markDirty();
+	local window = self:GetWindow();
+	if(window) then
+		window:markDirty();
 	end
 end
 
@@ -578,14 +575,6 @@ function UIElement:clearFocus()
     end
 end
 
--- Updates the widget unless updates are disabled or the widget is hidden.
--- This function does not cause an immediate repaint; instead it schedules a paint in the next frame.
-function UIElement:Update()
-	if(self.window) then
-		self.window:Update();
-	end
-end
-
 -- get the style object
 function UIElement:GetStyle()
 	-- TODO: the css object. 
@@ -643,6 +632,8 @@ end
 -- draw with offset and its child recursively
 -- @param offset: Point of offset. 
 function UIElement:drawWidget(painterContext, offset)
+	-- self:GetWindow():CheckRenderYield();
+	
 	if (not self:updatesEnabled() or self:isHidden()) then
 		return;
 	end
@@ -1254,3 +1245,98 @@ function UIElement:SetInputMethodEnabled(enabled)
 	end
 end
 
+function UIElement:cursorFlashTime()
+	if(self:IsSelfPaint()) then
+		-- do not blink in self painted windows
+		return 0
+	else
+		return Application:cursorFlashTime()
+	end
+end
+
+-- if the window or its parent container is self-painted.
+function UIElement:IsSelfPaint()
+	local window = self:GetWindow()
+	if(window and window.bSelfPaint or window.isSelfPaintInParent) then
+		return true
+	end
+end
+
+function UIElement:GetTranslationX()
+	return self.transform and (self.transform.translate and self.transform.translate[1] or 0) or 0;
+end
+
+function UIElement:SetTranslationX(value)
+	if(value and value ~= 0) then
+		self.transform = self.transform or {};
+		self.transform.translate = self.transform.translate or {0,0};
+		self.transform.translate[1] = value;
+	else
+		if(self.transform and self.transform.translate) then
+			self.transform.translate[1] = 0;
+		end
+	end
+end
+
+function UIElement:GetTranslationY()
+	return self.transform and (self.transform.translate and self.transform.translate[2] or 0) or 0;
+end
+
+function UIElement:SetTranslationY(value)
+	if(value and value ~= 0) then
+		self.transform = self.transform or {};
+		self.transform.translate = self.transform.translate or {0,0};
+		self.transform.translate[2] = value;
+	else
+		if(self.transform and self.transform.translate) then
+			self.transform.translate[2] = 0;
+		end
+	end
+end
+
+function UIElement:GetScalingX()
+	return self.transform and (self.transform.scale and self.transform.scale[1] or 1) or 1;
+end
+
+function UIElement:SetScalingX(value)
+	if(value and value ~= 1) then
+		self.transform = self.transform or {};
+		self.transform.scale = self.transform.scale or {1,1};
+		self.transform.scale[1] = value;
+	else
+		if(self.transform and self.transform.scale) then
+			self.transform.scale[1] = 1;
+		end
+	end
+end
+
+function UIElement:GetScalingY()
+	return self.transform and (self.transform.scale and self.transform.scale[2] or 1) or 1;
+end
+
+function UIElement:SetScalingY(value)
+	if(value and value ~= 1) then
+		self.transform = self.transform or {};
+		self.transform.scale = self.transform.scale or {1,1};
+		self.transform.scale[2] = value;
+	else
+		if(self.transform and self.transform.scale) then
+			self.transform.scale[2] = 1;
+		end
+	end
+end
+
+function UIElement:GetRotation()
+	return self.transform and (self.transform.rotate or 0) or 0;
+end
+
+function UIElement:SetRotation(value)
+	if(value and value ~= 0) then
+		self.transform = self.transform or {};
+		self.transform.rotate = value;
+	else
+		if(self.transform) then
+			self.transform.rotate = 0;
+		end
+	end
+end

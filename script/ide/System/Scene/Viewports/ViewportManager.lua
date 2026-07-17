@@ -7,6 +7,8 @@ use the lib:
 ------------------------------------------------------------
 NPL.load("(gl)script/ide/System/Scene/Viewports/ViewportManager.lua");
 local ViewportManager = commonlib.gettable("System.Scene.Viewports.ViewportManager");
+ViewportManager:RemoveAllUserDefinedViewports();
+
 local viewport = ViewportManager:GetSceneViewport();
 viewport:SetMarginBottom(100)
 viewport:SetPosition("_fi", 100,200, 100,100)
@@ -19,15 +21,15 @@ function ViewportManager:ctor()
 	self.viewports = {};
 	NPL.load("(gl)script/ide/System/Scene/Viewports/Viewport.lua");
 	local Viewport = commonlib.gettable("System.Scene.Viewports.Viewport");
-	self.viewports["GUI"]  = Viewport:new():init("GUI");
-
+	Viewport:new():init("GUI")
+	
 	NPL.load("(gl)script/ide/System/Scene/Viewports/SceneViewport.lua");
 	local SceneViewport = commonlib.gettable("System.Scene.Viewports.SceneViewport");
-	self.viewports["scene"]  = SceneViewport:new():init("scene");
+	SceneViewport:new():init("scene")
 
     NPL.load("(gl)script/ide/System/Scene/Viewports/SceneViewport.lua");
 	local SceneViewport = commonlib.gettable("System.Scene.Viewports.SceneViewport");
-	self.viewports["visual_scene_editor"]  = SceneViewport:new():init("visual_scene_editor");
+	SceneViewport:new():init("visual_scene_editor")
 end
 
 function ViewportManager:GetGUIViewport()
@@ -40,6 +42,28 @@ end
 
 function ViewportManager:GetVisualSceneEditorViewport()
 	return self.viewports["visual_scene_editor"];
+end
+
+function ViewportManager:GetViewport(name)
+	return self.viewports[name];
+end
+
+function ViewportManager:AddViewport(viewport)
+	self.viewports[viewport:GetKey()] = viewport;
+end
+
+-- this is usually called when world is unloaded. 
+function ViewportManager:RemoveAllUserDefinedViewports()
+	local keys = {};
+	for key, viewport in pairs(self.viewports) do
+		if(viewport:IsUserDefined()) then
+			viewport:Destroy();
+			keys[#keys+1] = key; 
+		end
+	end
+	for _, key in ipairs(keys) do
+		self.viewports[key] = nil;
+	end
 end
 
 ViewportManager:InitSingleton();

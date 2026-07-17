@@ -38,27 +38,31 @@ function System.localserver.CreateStore(name, serverType, db_name)
 		NPL.load("(gl)script/ide/System/localserver/ResourceStore.lua");
 		
 		serverStore = System.localserver.ResourceStore:new({db_name = db_name});
-		-- TODO: using origin of the login user's server domain, currently it is just paraengine.com 
-		-- TODO: use user info for cookies.  
-		if(serverStore:CreateOrOpen("http://paraengine.com", name, "")) then
-		end
 	elseif(serverType == 2) then
 		NPL.load("(gl)script/ide/System/localserver/WebserviceStore.lua");
 		serverStore = System.localserver.WebserviceStore:new({db_name = db_name});
-		if(serverStore:CreateOrOpen("http://paraengine.com", name, "")) then
-		end
+		
 	elseif(serverType == 3) then
 		NPL.load("(gl)script/ide/System/localserver/URLResourceStore.lua");
 		serverStore = System.localserver.URLResourceStore:new({db_name = db_name});
-		if(serverStore:CreateOrOpen("http://paraengine.com", name, "")) then
-		end	
 	elseif(serverType == 0)	then
 		NPL.load("(gl)script/ide/System/localserver/ManagedResourceStore.lua");
 		serverStore = System.localserver.ManagedResourceStore:new({db_name = db_name});
-		if(serverStore:CreateOrOpen("http://paraengine.com", name, "")) then
-		end
 	end	
 	
+	if(serverStore) then
+		-- TODO: using origin of the login user's server domain, currently it is just paraengine.com 
+		-- TODO: use user info for cookies.  
+		local ok, result = pcall(function()
+			if(serverStore:CreateOrOpen("http://paraengine.com", name, "")) then
+				return true;
+			end
+		end)
+		if(not ok) then
+			LOG.std(nil, "error", "localserver", "failed creating local server %s, %s", name, tostring(result));
+		end
+	end
+
 	if(serverStore and serverStore.is_initialized_) then
 		-- add to memory cache, so that the next time the store is returned from the cache. 
 		if(db_name == nil) then

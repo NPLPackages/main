@@ -232,3 +232,7 @@ end
 function mathlib.FloatToInt(value) 
 	return math.floor(value >=0 and value or (value + 1))
 end
+
+function mathlib.degrees(x) 
+	return x * 180 / math.pi;
+end

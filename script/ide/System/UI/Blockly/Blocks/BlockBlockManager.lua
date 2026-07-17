@@ -105,6 +105,24 @@ local AllBlockList = {
         end,
     },
     {
+        type = "set_block_group_name",
+        message = "图块-组名 %1",
+        arg = {
+            {
+                name = "group_name",
+                type = "field_input",
+                text = "",
+            }
+        },
+        category = "BlockAttr",
+        previousStatement = true,
+	    nextStatement = true,
+        ToCode = function(block)
+            local group_name = block:GetFieldValue("group_name");
+            return string.format('group = "%s";\n', group_name);
+        end,
+    },
+    {
         type = "set_field_text",
         message = "字段-文本 %1",
         arg = {
@@ -212,6 +230,9 @@ local AllBlockList = {
                     {"按钮", "field_button"},
                     {"数据", "field_value"},
                     {"代码", "field_code"},
+                    {"密码", "field_password"},
+                    {"图标", "field_image"},
+                    {"常量", "field_label"},
                 }
             },
         },
@@ -227,6 +248,52 @@ local AllBlockList = {
                 message = message .. " %%" .. field_count;
                 arg[field_count] = {name = "%s", type = "%s", text = [[%s]]};
                 ]==], field_name, field_type, field_value);
+        end,
+    },
+    {
+        type = "set_field_image",
+        message = "字段-图片 路径 %1 宽 %2 高 %3 颜色 %4",
+        arg = {
+            {
+                name = "field_name",
+                type = "field_input",
+                text = "名称",
+            },
+            {
+                name = "field_image",
+                type = "field_input",
+                text = "图片路径",
+            },
+            {
+                name = "field_width",
+                type = "field_input",
+                text = "30",
+            },
+            {
+                name = "field_height",
+                type = "field_input",
+                text = "30",
+            },
+            {
+                name = "field_color",
+                type = "field_input",
+                text = "#ffffffff",
+            },
+        },
+        category = "BlockField",
+        previousStatement = true,
+	    nextStatement = true,
+        ToCode = function(block)
+            local field_name = block:GetFieldValue("field_name");
+            local field_image = block:GetFieldValue("field_image");
+            local field_width = block:GetFieldValue("field_width");
+            local field_height = block:GetFieldValue("field_height");
+            local field_color = block:GetFieldValue("field_color");
+            return string.format([==[
+                field_count = field_count + 1;
+                message = message .. " %%" .. field_count;
+                arg[field_count] = {name = "%s", type = "field_image", text = [[%s]], width = "%s", height = "%s", color = "%s"};
+                ]==], field_name, field_image, field_width, field_height, field_color);
         end,
     },
     {
@@ -350,6 +417,8 @@ local AllBlockList = {
                     {"数字", "field_number"},
                     {"颜色", "field_color"},
                     {"代码", "field_code"},
+                    {"多行文本", "field_textarea"},
+                    {"表", "field_table"},
                 },
                 check = "System_Lua_String",
             },
@@ -360,12 +429,13 @@ local AllBlockList = {
         ToCode = function(block)
             local input_name = block:GetFieldValue("input_name");
             local input_value = block:GetFieldValue("input_value");
-            local input_type = block:GetValueAsString("input_type");
+            local shadow_type = block:GetFieldValue("input_type");
+            local input_type = shadow_type == "field_table" and "input_value_list" or "input_value";
             return string.format([==[
                 field_count = field_count + 1;
                 message = message .. " %%" .. field_count;
-                arg[field_count] = {name = "%s", type = "input_value", text = [[%s]], shadowType = %s};
-                ]==], input_name, input_value, input_type);
+                arg[field_count] = {name = "%s", type = "%s", text = [[%s]], shadowType = "%s"};
+                ]==], input_name, input_type, input_value, shadow_type);
         end,
     },
 
@@ -461,14 +531,59 @@ local AllBlockList = {
     --     end,
     -- },
 
+    -- {
+    --     type = "set_input_statement",
+    --     message = "输入-语句 %1",
+    --     arg = {
+    --         {
+    --             name = "input_name",
+    --             type = "field_input",
+    --             text = "名称",
+    --         },
+    --     },
+    --     category = "BlockInput",
+    --     previousStatement = true,
+	--     nextStatement = true,
+    --     ToCode = function(block)
+    --         local input_name = block:GetFieldValue("input_name");
+    --         return string.format([[
+    --             field_count = field_count + 1;
+    --             message = message .. " %%" .. field_count;
+    --             arg[field_count] = {name = "%s", type = "input_statement"};
+    --             ]], input_name);
+    --     end,
+    -- },
     {
         type = "set_input_statement",
-        message = "输入-语句 %1",
+        message = "输入-语句 %1 折叠 %2 拖拽 %3 值 %4",
         arg = {
             {
                 name = "input_name",
                 type = "field_input",
                 text = "名称",
+            },
+            {
+                name = "is_folded",
+                type = "field_dropdown",
+                text = "ture",
+                options = {
+                    {"是", "true"},
+                    {"否", "false"},
+                },
+            },
+            {
+                name = "is_folded_draggable",
+                type = "field_dropdown",
+                text = "false",
+                options = {
+                    {"是", "true"},
+                    {"否", "false"},
+                },
+            },
+            {
+                name = "input_value",
+                type = "field_textarea",
+                text = "",
             },
         },
         category = "BlockInput",
@@ -476,11 +591,14 @@ local AllBlockList = {
 	    nextStatement = true,
         ToCode = function(block)
             local input_name = block:GetFieldValue("input_name");
+            local input_value = block:GetFieldValue("input_value");
+            local is_folded = block:GetFieldValue("is_folded");
+            local is_folded_draggable = block:GetFieldValue("is_folded_draggable");
             return string.format([[
                 field_count = field_count + 1;
                 message = message .. " %%" .. field_count;
-                arg[field_count] = {name = "%s", type = "input_statement"};
-                ]], input_name);
+                arg[field_count] = {name = "%s", type = "input_statement", is_folded = %s, is_folded_draggable= %s, xml_text = [====[%s]====]};
+                ]], input_name, is_folded, is_folded_draggable, input_value);
         end,
     },
     {
@@ -523,6 +641,9 @@ local AllBlockList = {
                 options = {
                     {"背景颜色", "background-color"},
                     {"提示文本", "placeholder"},
+                    {"值转换", "fieldcode"},
+                    {"缩进次数", "indent_count"},
+                    {"点击事件", "OnClick"},
                 },
             },
             {
@@ -570,7 +691,33 @@ local AllBlockList = {
             return string.format('connections[%s] = "%s";\n', connection_name, connection_type);
         end
     },
+    {
+        type = "set_header_code_description",
+        message = "代码-头部引用 %1 %2",
+        arg = {
+            {
+                name = "code_description",
+                type = "field_textarea",
+                text = "${VALUE}",
+            },
+            {
+                name = "code_zorder",
+                type = "field_input",
+                text = "0",
+            },
 
+        },
+        category = "BlockCode",
+        previousStatement = true,
+	    nextStatement = true,
+        ToCode = function(block)
+            local code_description = block:GetFieldValue("code_description");
+            local code_zorder = block:GetFieldValue("code_zorder");
+            return string.format([==[
+                headers[(#headers) + 1] = {text = [====[%s]====], zorder = %s};
+            ]==], code_description, code_zorder);
+        end,
+    },
     {
         type = "set_code_description",
         message = "代码-格式 %1",
@@ -581,6 +728,7 @@ local AllBlockList = {
                 -- type = "field_input",
                 text = "${VALUE}",
             },
+
         },
         category = "BlockCode",
         previousStatement = true,
@@ -590,7 +738,31 @@ local AllBlockList = {
             return string.format('code_description = [====[%s]====];\n', code_description);
         end,
     },
-
+    {
+        type = "set_code_description_language",
+        message = "代码-格式 %1 语言 %2",
+        arg = {
+            {
+                name = "code_description",
+                type = "field_textarea",
+                -- type = "field_input",
+                text = "${VALUE}",
+            },
+            {
+                name = "code_language",
+                type = "field_input",
+                text = "python",
+            }
+        },
+        category = "BlockCode",
+        previousStatement = true,
+	    nextStatement = true,
+        ToCode = function(block)
+            local code_description = block:GetFieldValue("code_description");
+            local code_language = block:GetFieldValue("code_language");
+            return string.format('code_description_%s = [====[%s]====];\n', code_language, code_description);
+        end,
+    },
     {
         type = "set_code",
         message = "图块自定义代码 %1",
@@ -609,7 +781,44 @@ local AllBlockList = {
             return string.format('code = [====[%s]====];\n', code_description);
         end,
     },
-
+    {
+        type = "set_folded_xml_text",
+        message = "图块XML 折叠 %1 拖拽 %2 值 %3",
+        arg = {
+            {
+                name = "is_folded",
+                type = "field_dropdown",
+                text = "ture",
+                options = {
+                    {"是", "true"},
+                    {"否", "false"},
+                },
+            },
+            {
+                name = "is_folded_draggable",
+                type = "field_dropdown",
+                text = "false",
+                options = {
+                    {"是", "true"},
+                    {"否", "false"},
+                },
+            },
+            {
+                name = "folded_xml_text",
+                type = "field_textarea",
+                text = "",
+            },
+        },
+        category = "BlockCode",
+        previousStatement = true,
+	    nextStatement = true,
+        ToCode = function(block)
+            local folded_xml_text = block:GetFieldValue("folded_xml_text");
+            local is_folded = block:GetFieldValue("is_folded");
+            local is_folded_draggable = block:GetFieldValue("is_folded_draggable");
+            return string.format('folded_xml_text = [====[%s]====];\nis_folded = %s;\nis_folded_draggable = %s;\n', folded_xml_text, is_folded, is_folded_draggable);
+        end,
+    },
     {
         type = "string",
         message = '" %1 "',

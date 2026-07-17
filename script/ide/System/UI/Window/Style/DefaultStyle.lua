@@ -5,7 +5,7 @@ Date: 2020/6/30
 Desc: 样式管理类
 use the lib:
 -------------------------------------------------------
-local DefaultStyle = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Window/Style/DefaultStyle.lua");
+local DefaultStyle = NPL.load("script/ide/System/UI/Window/Style/DefaultStyle.lua");
 -------------------------------------------------------
 ]]
 

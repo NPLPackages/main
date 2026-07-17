@@ -5,12 +5,12 @@ Date: 2020/6/30
 Desc: 标签字段
 use the lib:
 -------------------------------------------------------
-local Label = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Blockly/Fields/Label.lua");
+local Label = NPL.load("script/ide/System/UI/Blockly/Fields/Label.lua");
 -------------------------------------------------------
 ]]
 
 local Const = NPL.load("../Const.lua");
-local Field = NPL.load("./Field.lua", IsDevEnv);
+local Field = NPL.load("./Field.lua");
 local Label = commonlib.inherit(Field, NPL.export());
 
 Label:Property("Color", "#ffffff");                    -- 颜色

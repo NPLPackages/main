@@ -5,15 +5,15 @@ Date: 2020/6/30
 Desc: Event
 use the lib:
 -------------------------------------------------------
-local Event = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Window/Event/Event.lua");
+local Event = NPL.load("script/ide/System/UI/Window/Event/Event.lua");
 -------------------------------------------------------
 ]]
 
-local BaseEvent = NPL.load("./BaseEvent.lua", IsDevEnv);
-local InputMethodEvent = NPL.load("./InputMethodEvent.lua", IsDevEnv);
-local KeyEvent = NPL.load("./KeyEvent.lua", IsDevEnv);
-local MouseEvent = NPL.load("./MouseEvent.lua", IsDevEnv);
-local ActivateEvent = NPL.load("./ActivateEvent.lua", IsDevEnv);
+local BaseEvent = NPL.load("./BaseEvent.lua");
+local InputMethodEvent = NPL.load("./InputMethodEvent.lua");
+local KeyEvent = NPL.load("./KeyEvent.lua");
+local MouseEvent = NPL.load("./MouseEvent.lua");
+local ActivateEvent = NPL.load("./ActivateEvent.lua");
 
 local Event = commonlib.inherit(commonlib.gettable("System.Core.ToolBase"), NPL.export());
 

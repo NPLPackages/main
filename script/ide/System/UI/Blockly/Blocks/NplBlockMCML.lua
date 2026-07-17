@@ -19,7 +19,6 @@ local all_categorie_list = {
     {name = "McmlData", text = L"数据", color="#459197", blocktypes = {"mcml_data_vlaue_px", "mcml_data_vlaue_percent", "mcml_data_align", "mcml_data_label", "mcml_data_string", "mcml_data_number", "mcml_data_boolean", "mcml_data_color"}},
 };
 
-
 local all_block_list = {
 -----------------------
 {
@@ -60,8 +59,8 @@ local all_block_list = {
 
 {
 	type = "mcml_button", 
-	message0 = "<button  %1/>",
-	arg0 = {
+	message = "<button  %1/>",
+	arg = {
         {
             name = "attr",
             type = "input_value_list",
@@ -76,8 +75,8 @@ local all_block_list = {
 
 {
     type = "mcml_label", 
-	message0 = "<label  %1/>",
-	arg0 = {
+	message = "<label  %1/>",
+	arg = {
         {
             name = "attr",
             type = "input_value_list",
@@ -92,8 +91,8 @@ local all_block_list = {
 
 {
     type = "mcml_text", 
-	message0 = "<text  %1/>",
-	arg0 = {
+	message = "<text  %1/>",
+	arg = {
         {
             name = "attr",
             type = "input_value_list",
@@ -108,8 +107,8 @@ local all_block_list = {
 
 {
     type = "mcml_checkbox", 
-	message0 = "<checkbox  %1/>",
-	arg0 = {
+	message = "<checkbox  %1/>",
+	arg = {
         {
             name = "attr",
             type = "input_value_list",
@@ -124,8 +123,8 @@ local all_block_list = {
 
 {
     type = "mcml_progressbar", 
-	message0 = "<progressbar  %1/>",
-	arg0 = {
+	message = "<progressbar  %1/>",
+	arg = {
         {
             name = "attr",
             type = "input_value_list",
@@ -140,8 +139,8 @@ local all_block_list = {
 
 {
     type = "mcml_sliderbar", 
-	message0 = "<sliderbar  %1/>",
-	arg0 = {
+	message = "<sliderbar  %1/>",
+	arg = {
         {
             name = "attr",
             type = "input_value_list",
@@ -156,8 +155,8 @@ local all_block_list = {
 
 {
     type = "mcml_br", 
-	message0 = "<br/>",
-	arg0 = {
+	message = "<br/>",
+	arg = {
 	},
 	category = "McmlControls", 
 	previousStatement = true,
@@ -165,6 +164,22 @@ local all_block_list = {
     code_description = [[<br />]]
 },
 
+{
+	type = "mcml_attrs_databinding_text", 
+	message = L"动态绑定全局变量%1",
+	arg = {
+        {
+			name = "value",
+			type = "input_value",
+			shadow = { type = "text"},
+			text = "var",
+		},
+	},
+	category = "McmlControls", 
+	previousStatement = true,
+	nextStatement = true,
+	code_description = [[<pe:label value="<%=${value}%>" getter="value"/>]],
+},
 
 ------------------------------------------------attrs---------------------------------------------------------
 {
@@ -266,6 +281,52 @@ local all_block_list = {
     output = true,
 	category = "McmlAttrs", 
 	code_description = [[${key}="${value}"]]
+},
+
+{
+	type = "mcml_attrs_databinding_getter", 
+	message = "属性%1从全局变量%2动态读取",
+	arg = {
+        {
+			name = "key",
+			type = "field_dropdown",
+			options = {
+				{ "value", "value"},
+			},
+		},
+        {
+			name = "value",
+			type = "input_value",
+			shadow = { type = "text"},
+			text = "var",
+		},
+	},
+    output = true,
+	category = "McmlAttrs", 
+	code_description = [[${key}="<%=${value}%>" getter="${key}"]],
+},
+
+{
+	type = "mcml_attrs_databinding_setter", 
+	message = L"属性%1动态写入全局变量%2",
+	arg = {
+        {
+			name = "key",
+			type = "field_dropdown",
+			options = {
+				{ "value", "value"},
+			},
+		},
+        {
+			name = "value",
+			type = "input_value",
+			shadow = { type = "text"},
+			text = "var",
+		},
+	},
+    output = true,
+	category = "McmlAttrs", 
+	code_description = [[setter="${key}:${value}"]],
 },
 
 ------------------------------------------------------------------style-------------------------------------------------

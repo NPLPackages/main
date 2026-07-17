@@ -8,6 +8,8 @@ Use Lib:
 NPL.load("(gl)script/ide/commonlib.lua");
 -------------------------------------------------------
 ]]
+NPL.load("(gl)script/ide/ParaEngineLuaJitFFI.lua");
+
 if(not Map3DSystem) then 
 	-- for backward compatibility: create deprecated Map3DSystem namespace
 	System = System or {};
@@ -15,6 +17,56 @@ if(not Map3DSystem) then
 end
 
 if(not commonlib) then commonlib={}; end
+
+-- if luajit is not available, such as in emscripten, we need to replace string.format in lua51 to handle nil in string.format as in luajit. 
+if (not jit) then
+	local string_format = string.format;
+	_G.lua_string_format = string_format;
+	string.format = function(...)
+		local n = select("#", ...);
+		local list = {};
+		for i = 1, n do
+			list[i] = select(i, ...);
+			if (list[i] == nil) then list[i] = "" end
+		end
+		return string_format(unpack(list));
+	end
+end
+commonlib.select = select;
+
+-- remove an item from a table. The table size will be minored by 1. 
+-- @param t: table array.
+-- @param nIndex: 1 based index, at which to remove the item
+function commonlib.removeArrayItem(t, nIndex)
+	local nSize = #t;
+	for k=nIndex, nSize do
+		t[k] = t[k+1];
+	end
+end
+
+-- insert an array item to a table array. The table size will be increased by 1. 
+-- @param t: table array.
+-- @param nIndex: 1 based index, at which to insert the item. if nil, it will inserted to the end
+-- @return return 1 based index at which the item is inserted
+function commonlib.insertArrayItem(t, nIndex, item)
+	local nSize = #t;
+	if(nIndex == nil) then
+		nIndex = nSize+1;
+		t[nIndex] = item;
+	elseif(nIndex > nSize) then
+		t[nIndex] = item;
+	else
+		local tmp = item;
+		for k=nIndex, nSize+1 do
+			--local tmp1 = t[k];
+			--t[k] = tmp;
+			--tmp = tmp1;
+			t[k], tmp = tmp, t[k]
+		end	
+	end
+	return nIndex;
+end
+
 ---------------------------
 -- lua5.1/5.2 compatibility
 ---------------------------
@@ -22,10 +74,32 @@ if(not commonlib) then commonlib={}; end
 -- this is useful when using luajit2 dll instead of lua51. 
 if(not table.setn) then
 	table.setn = function(t, n)
-		t.n = n
+		for i = #t, n+1, -1 do
+			t[i] = nil;
+		end
 	end
 	table.getn = function(t)
-		return t.n or #t
+		return #t
+	end
+else
+	-- fix lua51's table.insert will append after nil element. 
+	table.insert = function (t, nIndex, item)
+		if(item == nil) then
+			t[#t + 1] = nIndex;
+		else
+			commonlib.insertArrayItem(t, nIndex, item)
+		end
+	end
+	table.remove = function (t, nIndex)
+		if(nIndex == nil) then
+			local removedItem = t[#t]
+			t[#t] = nil;
+			return removedItem
+		else
+			local removedItem = t[nIndex]
+			commonlib.removeArrayItem(t, nIndex)
+			return removedItem
+		end
 	end
 end
 
@@ -64,7 +138,7 @@ function if_else(bStatement, true_value, false_value)
 	end
 end
 
-NPL.load("(gl)script/ide/ParaEngineLuaJitFFI.lua");
+NPL.load("(gl)script/ide/math/bit.lua");
 NPL.load("(gl)script/ide/oo.lua");
 NPL.load("(gl)script/ide/log.lua");
 NPL.load("(gl)script/ide/LibStub.lua");
@@ -141,8 +215,8 @@ function algorithm.sort_by_predicate(input, predicate_func)
 	end
 end
 
---in-place quicksort by LXZ
--- @param compareFunc: by default it is function(a, b) return a<b end
+--in-place stable quicksort, while table.sort in not stable. 
+-- @param compareFunc: by default it is function(a, b) return a<=b end
 -- it does not change the original order if compareFunc(left, right) is true.
 -- it only swap a, b if compareFunc(a, b) is FALSE. 
 local function quicksort(t, compareFunc, start, endi)
@@ -150,8 +224,13 @@ local function quicksort(t, compareFunc, start, endi)
 	--partition w.r.t. first element
 	if(endi <= start) then return t end
 	local pivot = start
+
+	if(not compareFunc) then
+		compareFunc = function(a, b) return a<=b end
+	end
+
 	for i = start + 1, endi do
-		if( (compareFunc and not compareFunc(t[pivot], t[i]) ) or (not compareFunc and t[i] <= t[pivot]) ) then
+		if(not compareFunc(t[pivot], t[i])) then
 			local temp = t[pivot + 1]
 			t[pivot + 1] = t[pivot]
 			if(i == pivot + 1) then
@@ -231,13 +310,24 @@ function commonlib.setfield(f, v, rootEnv)
 	end
 end
 
+-- same as commonlib.gettable, except that raw table is used. 
+function commonlib.gettableRaw(f, rootEnv)
+	if(not f) then return end
+    local t = rootEnv or _G
+    for w in string.gmatch(f, "([%w_]+).?") do
+        t[w] = rawget(t, w) or {}
+        t = t[w]
+    end
+    return t;
+end
+
 -- get a table f, where f is a string
 -- @param f: f is a string like "a.b.c.d"
 -- @param rootEnv: it can be a table from which to search for f, if nil, the global table _G is used. 
 function commonlib.gettable(f, rootEnv)
 	if(not f) then return end
 	local t = rootEnv or _G    -- start with the table of globals
-	for w, d in string_gfind(f, "([%w_]+)(.?)") do
+	for w in string_gfind(f, "([%w_]+).?") do
 		t[w] = t[w] or {}   -- create table if absent
 		t = t[w]            -- get the table
 	end
@@ -452,39 +542,6 @@ function table.resize(t, size, v)
 	end
 end
 
--- remove an item from a table. The table size will be minored by 1. 
--- @param t: table array.
--- @param nIndex: 1 based index, at which to remove the item
-function commonlib.removeArrayItem(t, nIndex)
-	local nSize = table_getn(t);
-	for k=nIndex, nSize do
-		t[k] = t[k+1];
-	end
-end
-
--- insert an array item to a table array. The table size will be increased by 1. 
--- @param t: table array.
--- @param nIndex: 1 based index, at which to insert the item. if nil, it will inserted to the end
--- @return return 1 based index at which the item is inserted
-function commonlib.insertArrayItem(t, nIndex, item)
-	local nSize = table_getn(t);
-	if(nIndex == nil) then
-		nIndex = nSize+1;
-		t[nIndex] = item;
-	elseif(nIndex > nSize) then
-		t[nIndex] = item;
-	else
-		local tmp = item;
-		for k=nIndex, nSize+1 do
-			--local tmp1 = t[k];
-			--t[k] = tmp;
-			--tmp = tmp1;
-			t[k], tmp = tmp, t[k]
-		end	
-	end
-	return nIndex;
-end
-
 -- remove all items that matches a certain criteria from an array table
 -- e.g. 
 --  commonlib.removeArrayItems({1,2,3,4,5,6}, function(i, item) return (i%2==0); end); --> {1,3,5}
@@ -532,57 +589,29 @@ function commonlib.moveArrayItem(t, nIndex1, nIndex2)
 	end
 end
 
-function commonlib.moveArrayItemWithNum(t, nNum) --用时间换空间O(n^2)
-	local tNum = table_getn(t)
-	local moveNum = math.abs(nNum)
-	if moveNum >= tNum then
+-- Function purpose: Quickly move array elements by a specified offset
+-- Parameter description:
+--   t: The array to be moved
+--   nNum: The offset for moving elements, positive for moving right, negative for moving left
+function commonlib.quickMoveArrayItemWithNum(t, nNum)
+	local nNum = nNum or 0;
+	if type(t) ~= "table" or nNum == 0 then
 		return
 	end
-	if nNum < 0 then
-		for i=1,moveNum do
-			local temp = t[1]
-			for j=1,tNum do
-				t[j] = t[j+1]
-			end
-			t[tNum] = temp
-		end
-	else
-		for i=1,moveNum do
-			local temp = t[tNum]
-			for j=tNum,1,-1 do
-				t[j] = t[j - 1]
-			end
-			t[1] = temp
-		end
-	end
+	local tNum = #t
+    local moveNum = nNum % tNum  -- 处理负数情况
+    if moveNum == 0 then
+        return
+    end
+    local tempArray = {}
+    for i = 1, tNum do
+        local newIndex = (i + moveNum - 1) % tNum + 1
+        tempArray[newIndex] = t[i]
+    end
+    for i = 1, tNum do
+        t[i] = tempArray[i]
+    end
 end
-
-function commonlib.quickMoveArrayItemWithNum(t, nNum) --用空间换时间O(n)
-	local tNum = table_getn(t)
-	local moveNum = math.abs(nNum)
-	if moveNum >= tNum then
-		return
-	end
-	local move_index = nNum < 0 and moveNum or tNum - moveNum
-	local tempArray = {}
-	local tempArray1 = {} 
-	for i=1,tNum do
-		if i<= move_index then
-			tempArray[#tempArray + 1] = t[i]
-		else
-			tempArray1[#tempArray1 + 1] = t[i]
-		end
-	end
-	local tempIndex = #tempArray1
-	for i=1,tNum do
-		if i<= tempIndex then
-			t[i] = tempArray1[i]
-		else
-			t[i] = tempArray[i - tempIndex]
-		end
-	end
-end
-
 
 -- empty a given table
 commonlib.cleartable = table.clear;
@@ -801,15 +830,31 @@ function commonlib.GetRandomIndex(range,excludeindex)
 	return r;
 end
 
-function commonlib.GetLimitLabel(text, maxCharCount)
+function commonlib.GetLimitLabel(text, maxCharCount,bIgnoreChildDot)
     maxCharCount = maxCharCount or 13;
     local len = ParaMisc.GetUnicodeCharNum(text);
     if(len >= maxCharCount)then
-	    text = ParaMisc.UniSubString(text, 1, maxCharCount-2) or "";
-        return text .. "...";
+	    text = ParaMisc.UniSubString(text, 1, (bIgnoreChildDot and maxCharCount or maxCharCount-2)) or "";
+        return text .. (bIgnoreChildDot and "" or "...");
     else
         return text;
     end
+end
+
+function commonlib.GetLimitLabelByTextWidth(text,maxWidth,fontName,bIgnoreChildDot)
+	if(text ==nil or text == "" or not maxWidth or maxWidth == 0)then
+		return text
+	end
+	local fontName = fontName or "System;12;norm"
+	local isUtfStr = commonlib.IsUtf8String(text);
+	local textWith = _guihelper.GetTextWidth(text)
+	if textWith <= maxWidth then
+		return text
+	end
+	if isUtfStr then
+		return _guihelper.TrimUtf8TextByWidth(text, maxWidth, fontName) .. (bIgnoreChildDot and "" or "...")
+	end
+	return _guihelper.AutoTrimTextByWidth(text, maxWidth, fontName) .. (bIgnoreChildDot and "" or "...")
 end
 
 function commonlib.GetUnicodeCharNum(text)
@@ -888,6 +933,47 @@ function commonlib.split_by_str(str, delimiter)
 	end
 
 	return split_array
+end
+
+-- returns a shallow copy of a portion of an array table into a new array table object. 
+-- It takes two parameters: the beginning index and the end index (inclusive). 
+-- If the end index is not provided, it will slice till the end of the array.
+-- @param fromIndex, toIndex: if index < 0, it will be treated as index = #obj + index + 1
+-- @param bIsInplace: true to replace inplace instead of generating a new table.
+-- e.g. 
+-- commonlib.slice({1,2,3,4,5}, 2, 4, true) -- returns {2,3,4}
+-- commonlib.slice({1,2,3,4,5}, -2) -- returns {4, 5}
+function commonlib.slice(obj, fromIndex, toIndex, bIsInplace)
+	local nCount = #(obj);
+	if(fromIndex < 0) then
+		fromIndex = nCount + fromIndex + 1;
+		if(fromIndex < 1) then
+			fromIndex = 1
+		end
+	end
+	if(not toIndex or toIndex > nCount) then
+		toIndex = nCount;
+	elseif(toIndex < 0) then
+		toIndex = nCount + toIndex + 1;
+		if(toIndex < 1) then
+			toIndex = 1
+		end
+	end
+	if(not bIsInplace) then
+		local result = {};
+		for i = fromIndex, toIndex do
+			result[#result+1] = obj[i];
+		end
+		return result;
+	else
+		local n = 1;
+		for i = fromIndex, toIndex do
+			obj[n] = obj[i];
+			n = n + 1;
+		end
+		commonlib.resize(obj, n-1);
+		return obj;
+	end
 end
 
 --- TODO self?
@@ -1076,6 +1162,8 @@ end
 function commonlib.ParseXmlToString(headon_mcml)
 	return ParaXML.LuaXML_ParseString(headon_mcml)
 end
+-- expose ParaXML interface via commonlib
+commonlib.ParaXML = ParaXML;
 
 --判断是否存在中文
 function commonlib.IsUtf8String(str)
@@ -1083,6 +1171,11 @@ function commonlib.IsUtf8String(str)
 		return true
 	end
 	return false
+end
+
+function commonlib.GetAppCommandLineByParam(key,default_value)
+	local value = ParaEngine.GetAppCommandLineByParam(key, default_value)
+	return value
 end
 
 --是否文件路径
@@ -1123,6 +1216,14 @@ function commonlib.CompareVer(ver_1,ver_2)
     else
         return list_1[1] - list_2[1]
     end
+end
+
+function commonlib.loadstring(code, filename)
+	return loadstring(code, filename)
+end
+
+function commonlib.GetTextFromClipboard()
+	return ParaMisc.GetTextFromClipboard() or "",ParaMisc
 end
 
 FooterLoader();

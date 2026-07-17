@@ -398,7 +398,6 @@ function pe_gridview:DataBind(pageInstName)
 			else
 				nToIndex = pagesize;
 			end
-			self.eval_names_ = self.eval_names_ or {};
 			local i = nFromIndex;
 			local LineNode;
 			nFromIndex, nToIndex = 1, nDataCount
@@ -455,35 +454,31 @@ function pe_gridview:DataBind(pageInstName)
 					-- set row index and all other column data in the row 
 					-- so that in rowNode it can reference them via page scope Eval(), such as <%=Eval("index")%>
 					local envCode = format("index=%d", i);
-					for n,v in pairs(self.eval_names_) do
-						if(n~="__index") then
-							self.eval_names_[n] = false;
-						end
-					end
+					
+					local postCode = "";
 					for n,v in pairs(row) do
 						if(n~="__index") then
-							self.eval_names_[n] = true;
 							local typeV = type(v)
 							if(typeV == "number") then
 								envCode = format("%s\n%s=%s", envCode, n, tostring(v));
+								postCode = format("%s\n%s=nil", postCode, n);
 							elseif(typeV == "string") then
-								---v = string.gsub(v, "\r\n", "\\r\\n");
-								envCode = format("%s\n%s=\"%s\"", envCode, n, v);
+								envCode = string.format("%s\n%s=%q", envCode, n, v);
+								postCode = format("%s\n%s=nil", postCode, n);
 							elseif(typeV == "boolean" or typeV == "nil") then
 								envCode = format("%s\n%s=%s", envCode, n, tostring(v));
+								postCode = format("%s\n%s=nil", postCode, n);
 							elseif(typeV == "table") then
 								envCode = format("%s\n%s=%s", envCode, n, commonlib.serialize_compact(v));
+								postCode = format("%s\n%s=nil", postCode, n);
 							end
 						end
 					end
-					for n,v in pairs(self.eval_names_) do
-						if(not v) then
-							envCode = format("%s\n%s=nil", envCode, n);
-						end
-					end
+					
 					rowNode:SetPreValue("this", row);
 					-- set prescript attribute of pe:bindingblock
 					rowNode:SetAttribute("prescript", envCode);
+					rowNode:SetAttribute("postscript", postCode);
 					i = i + 1;
 				else
 					break;	

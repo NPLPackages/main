@@ -1,0 +1,765 @@
+<html>
+    <body> 
+        <pe:mcml>
+            <script type="text/npl">
+                <![CDATA[
+                    local WebXRCamera = commonlib.gettable("System.Scene.Cameras.WebXRCamera");
+                    local Quaternion = commonlib.gettable("mathlib.Quaternion");
+                    local page = document:GetPageCtrl();
+                    local curLimbs = "2";
+                    local curKey1 = "0";
+                    local curKey2 = "0";
+                    local headOrientation = { 0, 0, 0 };
+                    local leftHandOrientation = { 0, 0, 0 };
+                    local rightHandOrientation = { 0, 0, 0 };
+
+                    function OnShortCutKey(key)
+                        local limbs;
+
+                        if (key == "DIK_1") then
+                            page:SetValue("limbs", "1");
+                            limbs = "1";
+                        elseif (key == "DIK_2") then
+                            page:SetValue("limbs", "2");
+                            limbs = "2";
+                        elseif (key == "DIK_3") then
+                            page:SetValue("limbs", "3");
+                            limbs = "3"
+                        else
+                            limbs = key;
+                        end
+
+                        curLimbs = limbs;
+                    end
+
+                    local begin = 0;
+                    function OnChangeUpDown(value)
+                        WebXRCamera.isMouseSimStopped = true;
+
+                        if (value == "DIK_I") then
+                            if (curLimbs == "1") then
+                                value = page:GetValue("updown");
+                                value = tonumber(value) - 1;
+
+                                if (value <= -90) then
+                                    value = -90;
+                                end
+
+                                SetLeftHandOrientation("updown", -value);
+                                page:SetUIValue("updown", value);
+                            elseif (curLimbs == "2") then
+                                value = page:GetValue("updown");
+                                value = tonumber(value) - 1;
+
+                                if (value <= -90) then
+                                    value = -90;
+                                end
+
+                                SetHeadOrientation("updown", -value);
+                                page:SetUIValue("updown", value);
+                            elseif (curLimbs == "3") then
+                                value = page:GetValue("updown");
+                                value = tonumber(value) - 1;
+
+                                if (value <= -90) then
+                                    value = -90;
+                                end
+
+                                SetRightHandOrientation("updown", -value);
+                                page:SetUIValue("updown", value);
+                            end
+                        elseif (value == "DIK_K") then
+                            if (curLimbs == "1") then
+                                value = page:GetValue("updown");
+                                value = tonumber(value) + 1;
+
+                                if (value >= 90) then
+                                    value = 90;
+                                end
+
+                                SetLeftHandOrientation("updown", -value);
+                                page:SetUIValue("updown", value);
+                            elseif (curLimbs == "2") then
+                                value = page:GetValue("updown");
+                                value = tonumber(value) + 1;
+
+                                if (value >= 90) then
+                                    value = 90;
+                                end
+
+                                SetHeadOrientation("updown", -value);
+                                page:SetUIValue("updown", value);
+                            elseif (curLimbs == "3") then
+                                value = page:GetValue("updown");
+                                value = tonumber(value) + 1;
+
+                                if (value >= 90) then
+                                    value = 90;
+                                end
+
+                                SetRightHandOrientation("updown", -value);
+                                page:SetUIValue("updown", value);
+                            end
+                        else
+                            if (begin < 5) then
+                                begin = begin + 1;
+                                return;
+                            end
+
+                            if (curLimbs == "1") then
+                                SetLeftHandOrientation("updown", -value);
+                            elseif (curLimbs == "2") then
+                                SetHeadOrientation("updown", -value);
+                            elseif (curLimbs == "3") then
+                                SetRightHandOrientation("updown", -value);
+                            end
+                        end
+                    end
+
+                    function OnChangeLeftRight(value)
+                        WebXRCamera.isMouseSimStopped = true;
+
+                        if (value == "DIK_J") then
+                            if (curLimbs == "1") then
+                                value = page:GetValue("leftright");
+                                value = tonumber(value) - 1;
+
+                                if (value <= -90) then
+                                    value = -90;
+                                end
+
+                                SetLeftHandOrientation("leftright", -value);
+                                page:SetUIValue("leftright", value);
+                            elseif (curLimbs == "2") then
+                                value = page:GetValue("leftright");
+                                value = tonumber(value) - 1;
+
+                                if (value <= -90) then
+                                    value = -90;
+                                end
+
+                                SetHeadOrientation("leftright", -value);
+                                page:SetUIValue("leftright", value);
+                            elseif (curLimbs == "3") then
+                                value = page:GetValue("leftright");
+                                value = tonumber(value) - 1;
+
+                                if (value <= -90) then
+                                    value = -90;
+                                end
+
+                                SetRightHandOrientation("leftright", -value);
+                                page:SetUIValue("leftright", value);
+                            end
+                        elseif (value == "DIK_L") then
+                            if (curLimbs == "1") then
+                                value = page:GetValue("leftright");
+                                value = tonumber(value) + 1;
+
+                                if (value >= 90) then
+                                    value = 90;
+                                end
+
+                                SetLeftHandOrientation("leftright", -value);
+                                page:SetUIValue("leftright", value);
+                            elseif (curLimbs == "2") then
+                                value = page:GetValue("leftright");
+                                value = tonumber(value) + 1;
+
+                                if (value >= 90) then
+                                    value = 90;
+                                end
+
+                                SetHeadOrientation("leftright", -value);
+                                page:SetUIValue("leftright", value);
+                            elseif (curLimbs == "3") then
+                                value = page:GetValue("leftright");
+                                value = tonumber(value) + 1;
+
+                                if (value >= 90) then
+                                    value = 90;
+                                end
+
+                                SetRightHandOrientation("leftright", -value);
+                                page:SetUIValue("leftright", value);
+                            end
+                        else
+                            if (begin < 5) then
+                                begin = begin + 1;
+                                return;
+                            end
+
+                            if (curLimbs == "1") then
+                                SetLeftHandOrientation("leftright", -value);
+                            elseif (curLimbs == "2") then
+                                SetHeadOrientation("leftright", -value);
+                            elseif (curLimbs == "3") then
+                                SetRightHandOrientation("leftright", -value);
+                            end
+                        end
+                    end
+
+                    local sliderbarChangeTimer = commonlib.Timer:new({callbackFunc = function(timer)
+                        if (not ParaUI.IsMousePressed(0)) then
+                            WebXRCamera.isMouseSimStopped = false;
+                            begin = 0;
+                        end
+                    end});
+
+                    sliderbarChangeTimer:Change(0, 100);
+
+                    function OnClose()
+                        sliderbarChangeTimer:Change();
+                    end
+
+                    page.OnClose = OnClose;
+
+                    function OnSelectButton1(name, value)
+                        curKey1 = value;
+                    end
+
+                    function OnSelectButton2(name, value)
+                        curKey2 = value;
+                    end
+
+                    function OnPressButton1(value)
+                        local status;
+
+                        if (value == "DIK_Z") then
+                            page:SetValue("button1", "1");
+                            status = "1";
+                        elseif (value == "DIK_X") then
+                            page:SetValue("button1", "2");
+                            status = "2";
+                        else
+                            status = value;
+                        end
+
+                        if (status == "1") then
+                            if (curLimbs == "1") then
+                                if (curKey1 == "0") then
+                                    WebXRCamera.leftHandKey0Emulate = true;
+                                elseif (curKey1 == "1") then
+                                    WebXRCamera.leftHandKey1Emulate = true;
+                                elseif (curKey1 == "2") then
+                                    WebXRCamera.leftHandKey2Emulate = true;
+                                elseif (curKey1 == "3") then
+                                    WebXRCamera.leftHandKey3Emulate = true;
+                                elseif (curKey1 == "4") then
+                                    WebXRCamera.leftHandKey4Emulate = true;
+                                elseif (curKey1 == "5") then
+                                    WebXRCamera.leftHandKey5Emulate = true;
+                                elseif (curKey1 == "6") then
+                                    WebXRCamera.leftHandKey6Emulate = true;
+                                end
+                            elseif (curLimbs == "3") then
+                                if (curKey1 == "0") then
+                                    WebXRCamera.rightHandKey0Emulate = true;
+                                elseif (curKey1 == "1") then
+                                    WebXRCamera.rightHandKey1Emulate = true;
+                                elseif (curKey1 == "2") then
+                                    WebXRCamera.rightHandKey2Emulate = true;
+                                elseif (curKey1 == "3") then
+                                    WebXRCamera.rightHandKey3Emulate = true;
+                                elseif (curKey1 == "4") then
+                                    WebXRCamera.rightHandKey4Emulate = true;
+                                elseif (curKey1 == "5") then
+                                    WebXRCamera.rightHandKey5Emulate = true;
+                                elseif (curKey1 == "6") then
+                                    WebXRCamera.rightHandKey6Emulate = true;
+                                end
+                            end
+                        else
+                            if (curLimbs == "1") then
+                                if (curKey1 == "0") then
+                                    WebXRCamera.leftHandKey0Emulate = false;
+                                elseif (curKey1 == "1") then
+                                    WebXRCamera.leftHandKey1Emulate = false;
+                                elseif (curKey1 == "2") then
+                                    WebXRCamera.leftHandKey2Emulate = false;
+                                elseif (curKey1 == "3") then
+                                    WebXRCamera.leftHandKey3Emulate = false;
+                                elseif (curKey1 == "4") then
+                                    WebXRCamera.leftHandKey4Emulate = false;
+                                elseif (curKey1 == "5") then
+                                    WebXRCamera.leftHandKey5Emulate = false;
+                                elseif (curKey1 == "6") then
+                                    WebXRCamera.leftHandKey6Emulate = false;
+                                end
+                            elseif (curLimbs == "3") then
+                                if (curKey1 == "0") then
+                                    WebXRCamera.rightHandKey0Emulate = false;
+                                elseif (curKey1 == "1") then
+                                    WebXRCamera.rightHandKey1Emulate = false;
+                                elseif (curKey1 == "2") then
+                                    WebXRCamera.rightHandKey2Emulate = false;
+                                elseif (curKey1 == "3") then
+                                    WebXRCamera.rightHandKey3Emulate = false;
+                                elseif (curKey1 == "4") then
+                                    WebXRCamera.rightHandKey4Emulate = false;
+                                elseif (curKey1 == "5") then
+                                    WebXRCamera.rightHandKey5Emulate = false;
+                                elseif (curKey1 == "6") then
+                                    WebXRCamera.rightHandKey6Emulate = false;
+                                end
+                            end
+                        end
+                    end
+
+                    function OnPressButton2(value)
+                        local status;
+
+                        if (value == "DIK_C") then
+                            page:SetValue("button2", "1");
+                            status = "1";
+                        elseif (value == "DIK_V") then
+                            page:SetValue("button2", "2");
+                            status = "2";
+                        else
+                            status = value;
+                        end
+
+                        if (status == "1") then
+                            if (curLimbs == "1") then
+                                if (curKey2 == "0") then
+                                    WebXRCamera.leftHandKey0Emulate = true;
+                                elseif (curKey2 == "1") then
+                                    WebXRCamera.leftHandKey1Emulate = true;
+                                elseif (curKey2 == "2") then
+                                    WebXRCamera.leftHandKey2Emulate = true;
+                                elseif (curKey2 == "3") then
+                                    WebXRCamera.leftHandKey3Emulate = true;
+                                elseif (curKey2 == "4") then
+                                    WebXRCamera.leftHandKey4Emulate = true;
+                                elseif (curKey2 == "5") then
+                                    WebXRCamera.leftHandKey5Emulate = true;
+                                elseif (curKey2 == "6") then
+                                    WebXRCamera.leftHandKey6Emulate = true;
+                                end
+                            elseif (curLimbs == "3") then
+                                if (curKey2 == "0") then
+                                    WebXRCamera.rightHandKey0Emulate = true;
+                                elseif (curKey2 == "1") then
+                                    WebXRCamera.rightHandKey1Emulate = true;
+                                elseif (curKey2 == "2") then
+                                    WebXRCamera.rightHandKey2Emulate = true;
+                                elseif (curKey2 == "3") then
+                                    WebXRCamera.rightHandKey3Emulate = true;
+                                elseif (curKey2 == "4") then
+                                    WebXRCamera.rightHandKey4Emulate = true;
+                                elseif (curKey2 == "5") then
+                                    WebXRCamera.rightHandKey5Emulate = true;
+                                elseif (curKey2 == "6") then
+                                    WebXRCamera.rightHandKey6Emulate = true;
+                                end
+                            end
+                        else
+                            if (curLimbs == "1") then
+                                if (curKey2 == "0") then
+                                    WebXRCamera.leftHandKey0Emulate = false;
+                                elseif (curKey2 == "1") then
+                                    WebXRCamera.leftHandKey1Emulate = false;
+                                elseif (curKey2 == "2") then
+                                    WebXRCamera.leftHandKey2Emulate = false;
+                                elseif (curKey2 == "3") then
+                                    WebXRCamera.leftHandKey3Emulate = false;
+                                elseif (curKey2 == "4") then
+                                    WebXRCamera.leftHandKey4Emulate = false;
+                                elseif (curKey2 == "5") then
+                                    WebXRCamera.leftHandKey5Emulate = false;
+                                elseif (curKey2 == "6") then
+                                    WebXRCamera.leftHandKey6Emulate = false;
+                                end
+                            elseif (curLimbs == "3") then
+                                if (curKey2 == "0") then
+                                    WebXRCamera.rightHandKey0Emulate = false;
+                                elseif (curKey2 == "1") then
+                                    WebXRCamera.rightHandKey1Emulate = false;
+                                elseif (curKey2 == "2") then
+                                    WebXRCamera.rightHandKey2Emulate = false;
+                                elseif (curKey2 == "3") then
+                                    WebXRCamera.rightHandKey3Emulate = false;
+                                elseif (curKey2 == "4") then
+                                    WebXRCamera.rightHandKey4Emulate = false;
+                                elseif (curKey2 == "5") then
+                                    WebXRCamera.rightHandKey5Emulate = false;
+                                elseif (curKey2 == "6") then
+                                    WebXRCamera.rightHandKey6Emulate = false;
+                                end
+                            end
+                        end
+                    end
+
+                    function OnPressStereoMode(mode)
+                        if (mode == "on") then
+                            GameLogic.options:EnableStereoMode(2);
+                        else
+                            GameLogic.options:EnableStereoMode(0);
+                        end
+                    end
+
+                    function Reset()
+                        WebXRCamera.webXRLeftPositionEmulate = {0, 1.6, 0};
+                        WebXRCamera.webXRRightPositionEmulate = {0, 1.6, 0};
+                        WebXRCamera.webXRLeftOrientationEmulate = {0, 0, 0, 1};
+                        WebXRCamera.webXRRightOrientationEmulate = {0, 0, 0, 1};
+                        WebXRCamera.webXRLeftHandPositionEmulate = {-0.5, 1.5, -1};
+                        WebXRCamera.webXRRightHandPositionEmulate = {0.5, 1.5, -1};
+                        WebXRCamera.webXRLeftHandOrientationEmulate = {0, 0, 0, 1};
+                        WebXRCamera.webXRRightHandOrientationEmulate = {0, 0, 0, 1};
+                        WebXRCamera.leftHandKey0Emulate = false;
+                        WebXRCamera.leftHandKey1Emulate = false;
+                        WebXRCamera.leftHandKey2Emulate = false;
+                        WebXRCamera.leftHandKey3Emulate = false;
+                        WebXRCamera.leftHandKey4Emulate = false;
+                        WebXRCamera.leftHandKey5Emulate = false;
+                        WebXRCamera.leftHandKey6Emulate = false;
+                        WebXRCamera.rightHandKey0Emulate = false;
+                        WebXRCamera.rightHandKey1Emulate = false;
+                        WebXRCamera.rightHandKey2Emulate = false;
+                        WebXRCamera.rightHandKey3Emulate = false;
+                        WebXRCamera.rightHandKey4Emulate = false;
+                        WebXRCamera.rightHandKey5Emulate = false;
+                        WebXRCamera.rightHandKey6Emulate = false;
+                        WebXRCamera.webXRLeftAxesEmulate = {0, 0, 0, 0};
+                        WebXRCamera.webXRRightAxesEmulate = {0, 0, 0, 0};
+
+                        headOrientation = { 0, 0, 0 };
+                        leftHandOrientation = { 0, 0, 0 };
+                        rightHandOrientation = { 0, 0, 0 };
+
+                        page:SetUIValue("updown", "0");
+                        page:SetUIValue("leftright", "0");
+                    end
+
+                    function Exit()
+                        GameLogic.RunCommand("/stereo -s off");
+                    end
+
+                    button1KeyList = {
+                        { text = "Key0", value = "0", selected = "true" },
+                        { text = "Key1", value = "1" },
+                        { text = "Key2", value = "2" },
+                        { text = "Key3", value = "3" },
+                        { text = "Key4", value = "4" },
+                        { text = "key5", value = "5" },
+                        { text = "key6", value = "6" },
+                    }
+
+                    button2KeyList = {
+                        { text = "Key0", value = "0", selected = "true" },
+                        { text = "Key1", value = "1" },
+                        { text = "Key2", value = "2" },
+                        { text = "Key3", value = "3" },
+                        { text = "Key4", value = "4" },
+                        { text = "key5", value = "5" },
+                        { text = "key6", value = "6" },
+                    }
+
+                    function SetHeadOrientation(mode, offset)
+                        offset = offset * (math.pi / 180);
+                        if (mode == "updown") then
+                            headOrientation[2] = offset;
+                            local q = Quaternion:new():FromEulerAnglesSequence(
+                                headOrientation[1],
+                                headOrientation[2],
+                                headOrientation[3],
+                                "zxy"
+                            );
+
+                            WebXRCamera.webXRLeftOrientationEmulate = q;
+                            WebXRCamera.webXRRightOrientationEmulate = q;
+                        elseif (mode == "leftright") then
+                            headOrientation[3] = offset;
+                            local q = Quaternion:new():FromEulerAnglesSequence(
+                                headOrientation[1],
+                                headOrientation[2],
+                                headOrientation[3],
+                                "zxy"
+                            );
+
+                            WebXRCamera.webXRLeftOrientationEmulate = q;
+                            WebXRCamera.webXRRightOrientationEmulate = q;
+                        end
+                    end
+
+                    function SetLeftHandOrientation(mode, offset)
+                        offset = offset * (math.pi / 180);
+                        if (mode == "updown") then
+                            leftHandOrientation[2] = offset;
+                            local q = Quaternion:new():FromEulerAnglesSequence(
+                                leftHandOrientation[1],
+                                leftHandOrientation[2],
+                                leftHandOrientation[3],
+                                "zxy"
+                            );
+                            WebXRCamera.webXRLeftHandOrientationEmulate = q;
+                        elseif (mode == "leftright") then
+                            leftHandOrientation[3] = offset;
+                            local q = Quaternion:new():FromEulerAnglesSequence(
+                                leftHandOrientation[1],
+                                leftHandOrientation[2],
+                                leftHandOrientation[3],
+                                "zxy"
+                            );
+                            WebXRCamera.webXRLeftHandOrientationEmulate = q;
+                        end
+                    end
+
+                    function SetRightHandOrientation(mode, offset)
+                        offset = offset * (math.pi / 180);
+                        if (mode == "updown") then
+                            rightHandOrientation[2] = offset;
+                            local q = Quaternion:new():FromEulerAnglesSequence(
+                                rightHandOrientation[1],
+                                rightHandOrientation[2],
+                                rightHandOrientation[3],
+                                "zxy"
+                            );
+                            WebXRCamera.webXRRightHandOrientationEmulate = q;
+                        elseif (mode == "leftright") then
+                            rightHandOrientation[3] = offset;
+                            local q = Quaternion:new():FromEulerAnglesSequence(
+                                rightHandOrientation[1],
+                                rightHandOrientation[2],
+                                rightHandOrientation[3],
+                                "zxy"
+                            );
+                            WebXRCamera.webXRRightHandOrientationEmulate = q;
+                        end
+                    end
+                ]]>
+            </script>
+            <style type="text/mcss">
+                {
+                    limbs_radio = {
+                        ["margin-top"] = 6,
+                        ["margin-left"] = 6,
+                        ["margin-right"] = 6,
+                    },
+                    limbs_item = {
+                        ["margin-bottom"] = 20,
+                    },
+                    limbs_button = {
+                        ["font-size"] = 16,
+                        ["base-font-size"] = 16,
+                        width = 92,
+                        height = 40,
+                        float = "left",
+                        color = "#ffffff",
+                        ["background-color"] = "#404BF5", 
+                        background = "Texture/Aries/Creator/keepwork/community_32bits.png#778 146 32 32:14 14 14 14)"
+                    },
+                    limbs_name = {
+                        ["float"] = "left",
+                    }
+                }
+            </style>
+            <pe:container alignment="_lt"
+                          style="width: 430px;
+                                 height: 340px;
+                                 margin-left: 10px;
+                                 margin-top: 10px;
+                                 position: relative;
+                                 color: white;
+                                 font-size: 16px;
+                                 base-font-size: 16px;
+                                 padding: 10px;
+                                 background-color: #3838388e;">
+                <div class="limbs_item">
+                    <pe:hotkey hotkey="DIK_1" onclick="OnShortCutKey"/>
+                    <input type="radio"
+                           name="limbs"
+                           id="limbs_left_hand"
+                           value="1"
+                           class="limbs_radio"
+                           style="margin-left: 0px;"
+                           onclick="OnShortCutKey" />
+                    <div for="limbs_left_hand"
+                         class="limbs_name">左手</div>
+                    <pe:hotkey hotkey="DIK_2" onclick="OnShortCutKey" />
+                    <input type="radio"
+                           name="limbs"
+                           id="limbs_head"
+                           value="2"
+                           class="limbs_radio"
+                           checked="checked"
+                           onclick="OnShortCutKey" />
+                    <div for="limbs_head"
+                         class="limbs_name">头部</div>
+                    <pe:hotkey hotkey="DIK_3" onclick="OnShortCutKey" />
+                    <input type="radio"
+                           name="limbs"
+                           id="limbs_right_hand"
+                           value="3"
+                           class="limbs_radio"
+                           onclick="OnShortCutKey" />
+                    <div for="limbs_right_hand"
+                          class="limbs_name">右手</div>
+                    <b style="margin-left: 10px;">快捷键1，2，3</b>
+                </div>
+                <div class="limbs_item">
+                    <div>上下</div>
+                    <div style="position: relative;
+                                top: -20px;
+                                left: 40px;">
+                        <pe:hotkey hotkey="DIK_I" onclick="OnChangeUpDown" />
+                        <pe:hotkey hotkey="DIK_K" onclick="OnChangeUpDown" />
+                        <pe:sliderbar tooltip="拖动滑块调整上下"
+                                      style="width: 150px;
+                                             height: 20px;"
+                                      name="updown"
+                                      value="0"
+                                      min="-90"
+                                      max="90"
+                                      min_step="1"
+                                      direction="horizontal"
+                                      onchange="OnChangeUpDown" />
+                        <b style="margin-top: -6px;
+                                    margin-left: 6px;">
+                            快捷键I，K
+                        </b>
+                    </div>
+                </div>
+                <div class="limbs_item">
+                    <div>左右</div>
+                    <div style="position: relative;
+                                top: -20px;
+                                left: 40px;">
+                        <pe:hotkey hotkey="DIK_J" onclick="OnChangeLeftRight" />
+                        <pe:hotkey hotkey="DIK_L" onclick="OnChangeLeftRight" />
+                        <pe:sliderbar tooltip="拖动滑块调整左右"
+                                        style="width:150px;
+                                               height:20px;"
+                                        name="leftright"
+                                        value="0"
+                                        min="-90"
+                                        max="90"
+                                        min_step="1"
+                                        direction="horizontal"
+                                        onchange="OnChangeLeftRight" />
+                        <b style="margin-top: -6px;
+                                  margin-left: 6px;">
+                            快捷键J，L
+                        </b>
+                    </div>
+                </div>
+                <div class="limbs_item">
+                    <div>按键1</div>
+                    <div style="position: relative;
+                                top: -20px;
+                                left: 50px;">
+                        <select name="select1"
+                                AllowUserEdit="false"
+                                onselect="OnSelectButton1"
+                                DataSource="<%= button1KeyList %>" 
+                                value="0"
+                                fontcolor="#333333" 
+                                style="width: 138px;
+                                       height: 30px;">
+                        </select>
+                    </div>
+                    <div style="position: relative;
+                                top: -25px;
+                                left: 190px;">
+                        <pe:hotkey hotkey="DIK_Z" onclick="OnPressButton1" />
+                        <pe:hotkey hotkey="DIK_X" onclick="OnPressButton1" />
+                        <input type="radio"
+                               name="button1"
+                               id="button1_press"
+                               value="1"
+                               class="limbs_radio"
+                               onclick="OnPressButton1" />
+                        <div for="button1_press"
+                             class="limbs_name">按下</div>
+                        <input type="radio"
+                               name="button1"
+                               id="button1_release"
+                               value="2"
+                               class="limbs_radio"
+                               checked="checked"
+                               onclick="OnPressButton1" />
+                        <div for="button1_release"
+                             class="limbs_name">抬起</div>
+                        &nbsp;快捷键Z，X
+                    </div>
+                </div>
+                <div class="limbs_item">
+                    <pe:hotkey hotkey="DIK_C" onclick="OnPressButton2" />
+                    <pe:hotkey hotkey="DIK_V" onclick="OnPressButton2" />
+                    <div>按键2</div>
+                    <div style="position: relative;
+                                top: -20px;
+                                left: 50px;">
+                        <select name="select2" 
+                                AllowUserEdit="false" 
+                                onselect="OnSelectButton2" 
+                                DataSource="<%= button2KeyList %>" 
+                                value="0"
+                                fontcolor="#333333" 
+                                style="width: 138px;
+                                       height: 30px;">
+                        </select>
+                    </div>
+                    <div style="position: relative;
+                                top: -25px;
+                                left: 190px;">
+                        <input type="radio"
+                               name="button2"
+                               id="button2_press"
+                               value="1"
+                               class="limbs_radio"
+                               onclick="OnPressButton2" />
+                        <div for="button2_press"
+                             class="limbs_name">按下</div>
+                        <input type="radio"
+                               name="button2"
+                               id="button2_release"
+                               value="2"
+                               class="limbs_radio"
+                               checked="checked"
+                               onclick="OnPressButton2" />
+                        <div for="button2_release"
+                             class="limbs_name">抬起</div>
+                        &nbsp;快捷键C，V
+                    </div>
+                </div>
+                <div class="limbs_item"
+                     style="margin-top: 5px;">
+                    是否开启双目视觉 &nbsp;
+                    <input type="radio"
+                           name="stereo_mode"
+                           id="stereo_mode_on"
+                           value="on"
+                           class="limbs_radio"
+                           onclick="OnPressStereoMode" />
+                    <div for="stereo_mode_on"
+                         class="limbs_name">开启</div>
+                    <input type="radio"
+                           name="stereo_mode"
+                           id="stereo_mode_off"
+                           value="off"
+                           class="limbs_radio"
+                           checked="checked"
+                           onclick="OnPressStereoMode" />
+                    <div for="stereo_mode_off"
+                         class="limbs_name">关闭</div>
+                </div>
+                <div class="limbs_item">
+                    <input type="button"
+                           class="limbs_button"
+                           name="limbs_reset"
+                           onclick="Reset"
+                           value="重置" />
+                    <input type="button"
+                           class="limbs_button"
+                           style="margin-left: 10px;
+                                  background-color: #333333;"
+                           name="limbs_exit"
+                           onclick="Exit"
+                           value="退出" />
+                </div>
+            </pe:container>
+        </pe:mcml>
+    </body>
+</html>

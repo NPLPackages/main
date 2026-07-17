@@ -12,7 +12,7 @@ local FileManager = NPL.load("script/ide/System/UI/Blockly/Pages/FileManager.lua
 local FileManager = commonlib.inherit(commonlib.gettable("System.Core.ToolBase"), NPL.export());
 
 local lfs = commonlib.Files.GetLuaFileSystem();
-local Page = NPL.load("Mod/GeneralGameServerMod/UI/Page.lua");
+local Page = NPL.load("script/ide/System/UI/Page.lua");
 
 FileManager:Property("Directory", "");  -- 目录
 FileManager:Property("FileName", "");   -- 当前文件名

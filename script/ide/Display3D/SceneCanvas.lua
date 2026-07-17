@@ -4,7 +4,7 @@ Author(s): Leio
 Date: 2009/11/4
 Desc: Scene canvas is a scene manager container that can process mouse events. 
 use the lib:
-SceneCanvas Ö÷Òª·â×°ÁËÊó±êÊÂ¼ş£¬MouseDown MouseUp Ö»Ö§³Ö×ó¼ü
+SceneCanvas ä¸»è¦å°è£…äº†é¼ æ ‡äº‹ä»¶ï¼ŒMouseDown MouseUp åªæ”¯æŒå·¦é”®
 ------------------------------------------------------------
 NPL.load("(gl)script/ide/Display3D/SceneCanvas.lua");
 NPL.load("(gl)script/ide/Display3D/SceneManager.lua");
@@ -114,19 +114,19 @@ local SceneCanvas = {
 	rootNode = nil,
 	sceneManager = nil,
 	event_pools = nil,
-	objIDWithMouse = nil,--Êó±ê¼ì²âµ½µÄÎïÌåµÄid
-	selectedObjID = nil,--Ñ¡ÖĞµÄÎïÌåµÄid
-	dragMirrorNode = true,--ÍÏ×§µÄÎïÌåÊÇ·ñÊÇ¾µÏñ
-	mirrorSceneManager = nil,--¾µÏñ³¡¾°¹ÜÀí
-	mirrorRootNode = nil,--¾µÏñnode¸ù½Úµã
-	bReallyDrag = nil,--ÊÇ·ñÊÇÕæÊµÍÏ×§
-	reallyNode = nil,--¼ÇÂ¼ÍÏ×§µÄÕæÊµnode
+	objIDWithMouse = nil,--é¼ æ ‡æ£€æµ‹åˆ°çš„ç‰©ä½“çš„id
+	selectedObjID = nil,--é€‰ä¸­çš„ç‰©ä½“çš„id
+	dragMirrorNode = true,--æ‹–æ‹½çš„ç‰©ä½“æ˜¯å¦æ˜¯é•œåƒ
+	mirrorSceneManager = nil,--é•œåƒåœºæ™¯ç®¡ç†
+	mirrorRootNode = nil,--é•œåƒnodeæ ¹èŠ‚ç‚¹
+	bReallyDrag = nil,--æ˜¯å¦æ˜¯çœŸå®æ‹–æ‹½
+	reallyNode = nil,--è®°å½•æ‹–æ‹½çš„çœŸå®node
 	picking_filter = nil, -- the picking filter to use
 	
 	globalHookEnabled = false,
-	HookList = {},--È«¾Öhook
+	HookList = {},--å…¨å±€hook
 	
-	--ÊÂ¼şµÄ·¢ËÍÕßcurrentTargetÖ»ÊÇÒ»¸ösingle node,ËüÊÇÒ»¸öentityµÄÃèÊö
+	--äº‹ä»¶çš„å‘é€è€…currentTargetåªæ˜¯ä¸€ä¸ªsingle node,å®ƒæ˜¯ä¸€ä¸ªentityçš„æè¿°
 	MOUSE_DOWN = "mouse_down",
 	MOUSE_UP = "mouse_up",
 	MOUSE_OVER = "mouse_over",
@@ -137,8 +137,8 @@ local SceneCanvas = {
 	
 	STAGE_MOUSE_DOWN = "stage_mouse_down",
 	STAGE_MOUSE_UP = "stage_mouse_up",
-	--STAGE_MOUSE_OVER = "stage_mouse_over",--TODO:ĞèÒªÖªµÀÊó±êÊÇ·ñ ³¬³ö±ß½ç
-	--STAGE_MOUSE_OUT = "stage_mouse_out",--TODO:ĞèÒªÖªµÀÊó±êÊÇ·ñ ³¬³ö±ß½ç
+	--STAGE_MOUSE_OVER = "stage_mouse_over",--TODO:éœ€è¦çŸ¥é“é¼ æ ‡æ˜¯å¦ è¶…å‡ºè¾¹ç•Œ
+	--STAGE_MOUSE_OUT = "stage_mouse_out",--TODO:éœ€è¦çŸ¥é“é¼ æ ‡æ˜¯å¦ è¶…å‡ºè¾¹ç•Œ
 	STAGE_MOUSE_MOVE = "stage_mouse_move",
 }
 commonlib.setfield("CommonCtrl.Display3D.SceneCanvas",SceneCanvas);
@@ -154,19 +154,19 @@ function SceneCanvas:Init()
 	local uid = ParaGlobal.GenerateUniqueID();
 	if(not self.globalHookEnabled)then
 		self.globalHookEnabled = true;
-		--Æô¶¯È«¾Öhook
+		--å¯åŠ¨å…¨å±€hook
 		self.GlobalRegHook();
 	end
-	--Ê¹Êó±êÊÂ¼şÓĞĞ§
+	--ä½¿é¼ æ ‡äº‹ä»¶æœ‰æ•ˆ
 	self:RegHook();
-	--¾µÏñnode¹ÜÀí£¬ÔÚdragÊ±ÓÃµ½
+	--é•œåƒnodeç®¡ç†ï¼Œåœ¨dragæ—¶ç”¨åˆ°
 	self.mirrorSceneManager = CommonCtrl.Display3D.SceneManager:new{
 		type = "miniscene" --"scene" or "miniscene"
 	};
 	self.mirrorRootNode = CommonCtrl.Display3D.SceneNode:new{
 		root_scene = self.mirrorSceneManager,
 	}
-	--ÊÂ¼ş³Ø×Ó
+	--äº‹ä»¶æ± å­
 	self.event_pools = {};
 end
 function SceneCanvas:ClearAll()
@@ -188,26 +188,26 @@ function SceneCanvas:SetPickingFilter(filter)
 end
 
 -------------------------------------
---ÊÂ¼şº¯Êı
+--äº‹ä»¶å‡½æ•°
 -------------------------------------
---×¢²áÒ»¸öÊÂ¼ş
---@param type:ÊÂ¼şÀàĞÍ
---@param func:¼àÌıº¯Êı
---@param funcHolder:¼àÌıº¯ÊıµÄÓµÓĞÕß£¬¿ÉÒÔÎª¿Õ
+--æ³¨å†Œä¸€ä¸ªäº‹ä»¶
+--@param type:äº‹ä»¶ç±»å‹
+--@param func:ç›‘å¬å‡½æ•°
+--@param funcHolder:ç›‘å¬å‡½æ•°çš„æ‹¥æœ‰è€…ï¼Œå¯ä»¥ä¸ºç©º
 function SceneCanvas:AddEventListener(type,func,funcHolder)
 	if(not type or not func)then return end		
 	if(self.event_pools)then
 		self.event_pools[type] = {func = func,funcHolder = funcHolder};
 	end
 end
---È¡ÏûÒ»¸öÊÂ¼ş
+--å–æ¶ˆä¸€ä¸ªäº‹ä»¶
 function SceneCanvas:RemoveEventListener(type)
 	if(not type)then return end
 	if(self.event_pools)then
 		self.event_pools[type] = nil;
 	end
 end
---ÊÇ·ñÒÑ¾­×¢²áÁËÊÂ¼ş
+--æ˜¯å¦å·²ç»æ³¨å†Œäº†äº‹ä»¶
 function SceneCanvas:HasEventListener(type)
 	if(not type)then return end
 	if(self.event_pools)then
@@ -216,8 +216,8 @@ function SceneCanvas:HasEventListener(type)
 		end
 	end
 end
---´¥·¢ÊÂ¼ş
---@param event:ÊÂ¼ş²ÎÊı event = {type = "mousedown" ,args = ...};
+--è§¦å‘äº‹ä»¶
+--@param event:äº‹ä»¶å‚æ•° event = {type = "mousedown" ,args = ...};
 function SceneCanvas:DispatchEvent(event)
 	if(not event)then return end
 	if(self.event_pools)then
@@ -230,7 +230,7 @@ function SceneCanvas:DispatchEvent(event)
 		end
 	end
 end
---Çå¿ÕËùÓĞµÄÊÂ¼ş
+--æ¸…ç©ºæ‰€æœ‰çš„äº‹ä»¶
 function SceneCanvas:ClearEventPools()
 	self.event_pools = {};
 end
@@ -241,7 +241,7 @@ end
 function SceneCanvas:UnHook()
 	self.HookList[self] = nil;
 end
---Ö±½Ó·¢ËÍ nodeÑ¡ÖĞÊÂ¼ş
+--ç›´æ¥å‘é€ nodeé€‰ä¸­äº‹ä»¶
 function SceneCanvas:DirectDispatchChildSelectedEvent(node)
 	if(node)then
 		--diapatch event
@@ -266,9 +266,9 @@ function SceneCanvas:DirectDispatchChildSelectedEvent(node)
 		end
 	end
 end
---´¦ÀíÊó±êÊÂ¼ş
+--å¤„ç†é¼ æ ‡äº‹ä»¶
 function SceneCanvas:OnMouseUp(msg,canReturn)
-	--Ö»Ö§³Ö×ó¼ü, right click is now supported but without object picking. 
+	--åªæ”¯æŒå·¦é”®, right click is now supported but without object picking. 
 	if(not msg)then return end
 	if(msg.mouse_button ~= "left") then
 		-------------------------------------
@@ -277,7 +277,7 @@ function SceneCanvas:OnMouseUp(msg,canReturn)
 		self:DispatchEvent({
 			type = "stage_mouse_up_right",
 			msg = msg,
-			canReturn = canReturn,--canReturn.value = true or false,ÅĞ¶ÏÊÇ·ñÍ¨¹ımouse hook
+			canReturn = canReturn,--canReturn.value = true or false,åˆ¤æ–­æ˜¯å¦é€šè¿‡mouse hook
 		});
 
 	elseif(self.sceneManager and self.rootNode)then
@@ -332,13 +332,13 @@ function SceneCanvas:OnMouseUp(msg,canReturn)
 		self:DispatchEvent({
 			type = "stage_mouse_up",
 			msg = msg,
-			canReturn = canReturn,--canReturn.value = true or false,ÅĞ¶ÏÊÇ·ñÍ¨¹ımouse hook
+			canReturn = canReturn,--canReturn.value = true or false,åˆ¤æ–­æ˜¯å¦é€šè¿‡mouse hook
 			currentTarget = node,
 		});
 	end
 	
 end
---´¦ÀíÊó±êÊÂ¼ş
+--å¤„ç†é¼ æ ‡äº‹ä»¶
 function SceneCanvas:OnMouseMove(msg)
 	if(not msg)then return end
 	if(self.sceneManager and self.rootNode)then
@@ -400,9 +400,9 @@ function SceneCanvas:OnMouseMove(msg)
 	});
 end
 
---´¦ÀíÊó±êÊÂ¼ş
+--å¤„ç†é¼ æ ‡äº‹ä»¶
 function SceneCanvas:OnMouseDown(msg,canReturn)
-	--Ö»Ö§³Ö×ó¼ü, right button is supported via a different event handler "stage_mouse_down_right"
+	--åªæ”¯æŒå·¦é”®, right button is supported via a different event handler "stage_mouse_down_right"
 	if(not msg)then return end
 	if(self.sceneManager and self.rootNode)then
 		local newObjID = self.sceneManager:MousePickID(self.picking_filter);
@@ -425,14 +425,14 @@ function SceneCanvas:OnMouseDown(msg,canReturn)
 			self:DispatchEvent({
 				type = "stage_mouse_down",
 				msg = msg,
-				canReturn = canReturn,--canReturn.value = true or false,ÅĞ¶ÏÊÇ·ñÍ¨¹ımouse hook
+				canReturn = canReturn,--canReturn.value = true or false,åˆ¤æ–­æ˜¯å¦é€šè¿‡mouse hook
 				currentTarget = node,
 			});
 		else
 			self:DispatchEvent({
 					type = "stage_mouse_down_right",
 					msg = msg,
-					canReturn = canReturn,--canReturn.value = true or false,ÅĞ¶ÏÊÇ·ñÍ¨¹ımouse hook
+					canReturn = canReturn,--canReturn.value = true or false,åˆ¤æ–­æ˜¯å¦é€šè¿‡mouse hook
 					currentTarget = node,
 				});
 		end
@@ -440,43 +440,43 @@ function SceneCanvas:OnMouseDown(msg,canReturn)
 	
 end
 -------------------------------------
---ÍÏ×§
+--æ‹–æ‹½
 -------------------------------------
---@param reallyNode: ¿ÉÒÔÊÇsingle or container
---@param bReallyDrag: Ä¬ÈÏÎªnil£¬¼´¾µÏñÍÏ×§
+--@param reallyNode: å¯ä»¥æ˜¯single or container
+--@param bReallyDrag: é»˜è®¤ä¸ºnilï¼Œå³é•œåƒæ‹–æ‹½
 function SceneCanvas:StartDrag(reallyNode,bReallyDrag)
 	if(not reallyNode)then return end
-	--¼ÇÂ¼±»dragµÄ¶ÔÏó
+	--è®°å½•è¢«dragçš„å¯¹è±¡
 	self.reallyNode = reallyNode;
-	--ÊÇ·ñÊÇÕæÊµÍÏ×§
+	--æ˜¯å¦æ˜¯çœŸå®æ‹–æ‹½
 	self.bReallyDrag = bReallyDrag;
 	local dragNode;
-	--Èç¹ûÊÇ¾µÏñÍÏ×§
+	--å¦‚æœæ˜¯é•œåƒæ‹–æ‹½
 	if(not bReallyDrag)then
-		--Çå¿ÕÒÑÓĞµÄ¾µÏñnodes
+		--æ¸…ç©ºå·²æœ‰çš„é•œåƒnodes
 		self.mirrorRootNode:Detach();
 		dragNode = reallyNode:Clone();
 		if(self.mirrorRootNode and dragNode)then
 			self.mirrorRootNode:AddChild(dragNode);
 		end
-		--Òş²ØÕæÊµµÄnode
+		--éšè—çœŸå®çš„node
 		reallyNode:SetVisible(false);
 	else
 		dragNode = reallyNode;
 	end
 	self.dragNode = dragNode;
 end
---Í£Ö¹µ±Ç°µÄÍÏ×§
+--åœæ­¢å½“å‰çš„æ‹–æ‹½
 function SceneCanvas:StopDrag()
 	if(self.dragNode)then
-		--Èç¹ûÊÇ¾µÏñÍÏ×§
+		--å¦‚æœæ˜¯é•œåƒæ‹–æ‹½
 		if(not self.bReallyDrag)then
 			if(self.mirrorRootNode)then
 				local x,y,z = self.dragNode:GetPosition();
 				self.dragNode:Detach();
-				--ÕæÊµµÄnode
+				--çœŸå®çš„node
 				if(self.reallyNode and x and y and z)then
-					--¸üĞÂpostion
+					--æ›´æ–°postion
 					self.reallyNode:SetPosition(x,y,z);
 					self.reallyNode:SetVisible(true);
 				end
@@ -490,7 +490,7 @@ end
 -------------------------------------
 --systyem hook
 -------------------------------------
---È«¾ÖhookÊó±êÊÂ¼ş
+--å…¨å±€hooké¼ æ ‡äº‹ä»¶
 function SceneCanvas.GlobalRegHook()
 	local hookType = CommonCtrl.os.hook.HookType.WH_CALLWNDPROC;
 	local o = {hookType = hookType, 		 
@@ -506,7 +506,7 @@ function SceneCanvas.GlobalRegHook()
 			o.callback = SceneCanvas.GlobalOnMouseUp;
 	CommonCtrl.os.hook.SetWindowsHook(o);
 end
---È«¾ÖunhookÊó±êÊÂ¼ş
+--å…¨å±€unhooké¼ æ ‡äº‹ä»¶
 function SceneCanvas.GlobalUnHook()
 	local hookType = CommonCtrl.os.hook.HookType.WH_CALLWNDPROC;
 	CommonCtrl.os.hook.UnhookWindowsHook({hookName = "SceneCanvas_mouse_down_hook", hookType = hookType});

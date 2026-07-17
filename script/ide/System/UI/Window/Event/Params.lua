@@ -6,7 +6,7 @@ Date: 2020/6/30
 Desc: Event
 use the lib:
 -------------------------------------------------------
-local Params = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Window/Event/Params.lua");
+local Params = NPL.load("script/ide/System/UI/Window/Event/Params.lua");
 -------------------------------------------------------
 ]]
 

@@ -67,7 +67,7 @@ MultiLineEditbox:Property({"m_readOnly", false, "isReadOnly", "setReadOnly"})
 MultiLineEditbox:Property({"lineWrap", nil, "GetLineWrap", "SetLineWrap", auto=true})
 MultiLineEditbox:Property({"ItemHeight",20, auto=true, "GetItemHeight", "SetItemHeight"})
 -- if nil, its value depends on whether self.InputMethodEnabled is true.
-MultiLineEditbox:Property({"isAlwaysShowIMEButton", nil})
+MultiLineEditbox:Property({"isAlwaysShowIMEButton", true})
 MultiLineEditbox:Property({"m_bMoveViewWhenAttachWithIME", false, "isMoveViewWhenAttachWithIME", "setMoveViewWhenAttachWithIME"});
 MultiLineEditbox:Property({"bAutoVirtualKeyboard", false, "isAutoVirtualKeyboard", "setAutoVirtualKeyboard"});
 
@@ -107,6 +107,7 @@ end
 function MultiLineEditbox:attachSearchBox()
 	if(not self.searchbox.parent) then
 		self.searchbox:SetParent(self);
+		self.searchbox:show()
 	end
 end
 
@@ -359,11 +360,10 @@ function MultiLineEditbox:setEchoMode(mode)
 		return;
 	end
     self.m_echoMode = mode;
-	self:Update();
+	self:update();
 end
 
 function MultiLineEditbox:reset()
-
 end
 
 --function MultiLineEditbox:SetRows(value)
@@ -582,39 +582,60 @@ function MultiLineEditbox:mousePressEvent(e)
 	end
 end
 
+local LineNumberControl = commonlib.inherit(commonlib.gettable("System.Windows.UIElement"));
+function LineNumberControl:paintEvent(painter)
+	local self = self.parent;
+	painter:SetPen(self:GetLineNumberBackgroundColor());
+	painter:DrawRectTexture(0, self.topTextMargin, self:LineNumberWidth(), self:height()- self.topTextMargin - self.bottomTextMargin, self:GetLineNumberBackground());
+
+	local lineHeight = self.viewport:GetLineHeight();
+
+	local bShowIME;
+	if(self.viewport and self:IsHavingFocus() and not self.viewport:isReadOnly()) then
+		-- draw the cursor line bg
+		painter:SetPen(self.viewport:GetCurLineBackgroundColor());
+		painter:DrawRect(0, self.topTextMargin + lineHeight * (self.viewport.cursorLine-self.viewport.from_line), self:LineNumberWidth(), lineHeight);
+
+		-- draw input method tip
+		if(self:GetWindow() and not self:GetWindow():IsInputMethodEnabled()) then
+			bShowIME = true;
+		else
+			bShowIME = self.isAlwaysShowIMEButton;
+		end
+	end
+	self:ShowIMEButton(bShowIME);
+
+	painter:SetPen(self:GetLineNumberColor());
+	painter:SetFont(self:GetFont());
+	local scale = self:GetScale();
+	local lineNumWidth = self:LineNumberWidth()-5; -- add some padding
+	for i = 0, self.viewport.to_line - self.viewport.from_line do
+		painter:DrawTextScaledEx(0, lineHeight * i + self.topTextMargin, lineNumWidth, lineHeight, tostring(self.viewport.from_line + i), self:GetLineNumberAlignment(), scale);
+	end
+end
+
+function MultiLineEditbox:ShowLineNumberControl(bShow)
+	if(bShow) then
+		if(not self.elemLineNumber) then
+			self.elemLineNumber = LineNumberControl:new():init(self);
+			-- tricky: self.elemLineNumber must be rendered after self.viewport in order to render correctly
+			-- here we ensure this by creating it after self.viewport(text control)
+		end
+		if(not self.elemLineNumber:isVisible()) then
+			self.elemLineNumber:show()
+		end
+	elseif(self.elemLineNumber) then
+		if(self.elemLineNumber:isVisible()) then
+			self.elemLineNumber:hide();
+		end
+	end
+end
+
 function MultiLineEditbox:paintEvent(painter)
 	self:updateScrollGeometry();
 	painter:SetPen(self:GetBackgroundColor());
 	painter:DrawRectTexture(self:x(), self:y(), self:width(), self:height(), self:GetBackground());
 
-	if(self.showLineNumber) then
-		painter:SetPen(self:GetLineNumberBackgroundColor());
-		painter:DrawRectTexture(self:x(), self:y() + self.topTextMargin, self:LineNumberWidth(), self:height()- self.topTextMargin - self.bottomTextMargin, self:GetLineNumberBackground());
-
-		local lineHeight = self.viewport:GetLineHeight();
-
-		local bShowIME;
-		if(self.viewport and self:IsHavingFocus() and not self.viewport:isReadOnly()) then
-			-- draw the cursor line bg
-			painter:SetPen(self.viewport:GetCurLineBackgroundColor());
-			painter:DrawRect(self:x(), self:y() + self.topTextMargin + lineHeight * (self.viewport.cursorLine-self.viewport.from_line), self:LineNumberWidth(), lineHeight);
-
-			-- draw input method tip
-			if(self:GetWindow() and not self:GetWindow():IsInputMethodEnabled()) then
-				bShowIME = true;
-			else
-				bShowIME = self.isAlwaysShowIMEButton;
-			end
-		end
-		self:ShowIMEButton(bShowIME);
-
-		painter:SetPen(self:GetLineNumberColor());
-		painter:SetFont(self:GetFont());
-		local scale = self:GetScale();
-		local lineNumWidth = self:LineNumberWidth()-5; -- add some padding
-		for i = 0, self.viewport.to_line - self.viewport.from_line do
-			painter:DrawTextScaledEx(self:x(), self:y() + lineHeight * i + self.topTextMargin, lineNumWidth, lineHeight, tostring(self.viewport.from_line + i), self:GetLineNumberAlignment(), scale);
-		end
-	end
+	self:ShowLineNumberControl(self.showLineNumber)
 end
 

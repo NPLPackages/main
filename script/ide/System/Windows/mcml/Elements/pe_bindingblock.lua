@@ -21,6 +21,12 @@ function pe_bindingblock:LoadComponent(parentElem, parentLayout, styleItem)
 	if(prescript) then
 		System.Windows.mcml.Elements.pe_script.DoPageCode(prescript, self:GetPageCtrl())
 	end
+	
 	pe_bindingblock._super.LoadComponent(self, parentElem, parentLayout, css);
+	
+	local postscript = self:GetAttribute("postscript");
+	if(postscript) then
+		System.Windows.mcml.Elements.pe_script.DoPageCode(postscript, self:GetPageCtrl())
+	end
 end
-
+	

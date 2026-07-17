@@ -20,6 +20,6 @@ character/CC/05effect/fireglowingcircle.x
 [ ] 局域网活动模型同步
 
 
-local Page = NPL.load("Mod/GeneralGameServerMod/UI/Page.lua");
+local Page = NPL.load("script/ide/System/UI/Page.lua");
 
 Page.ShowVueTestPage(nil, {width = 1024, height = 600, url = "%ui%/App/WinterCamp/CoursePanel.html"})

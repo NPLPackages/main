@@ -9,8 +9,8 @@ local G = NPL.load("script/ide/System/UI/Blockly/Sandbox/G.lua");
 -------------------------------------------------------
 ]]
 
-local Log = NPL.load("./Log.lua", IsDevEnv);
-local Event = NPL.load("./Event.lua", IsDevEnv);
+local Log = NPL.load("./Log.lua");
+local Event = NPL.load("./Event.lua");
 local G = commonlib.inherit(commonlib.gettable("System.Core.ToolBase"), NPL.export());
 
 G:Property("G");

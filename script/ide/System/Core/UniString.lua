@@ -61,10 +61,16 @@ function UniString:GetText()
 end
 
 function UniString:length()
+	if type(self.text) ~= "string" then
+		return 0
+	end
 	return ParaMisc.GetUnicodeCharNum(self.text);
 end
 
 function UniString:size()
+	if not self.text then
+		return 0
+	end
 	return ParaMisc.GetUnicodeCharNum(self.text);
 end
 
@@ -84,6 +90,9 @@ end
 -- @param cursor: cursor position
 -- @param font: if nil, it is the default font. 
 function UniString:cursorToX(cursor, font)
+	if not cursor or not self.text or self.text == "" then
+		return 0
+	end
 	if(cursor <= 0) then
 		return 0;
 	end
@@ -227,7 +236,8 @@ end
 -- public static method: number of unicode chars in s
 -- @param s: s can be standard string or UniString.
 function UniString.GetTextLength(s)
-	return ParaMisc.GetUnicodeCharNum(tostring(s));
+	local s = tostring(s) or ""
+	return ParaMisc.GetUnicodeCharNum(s);
 end
 
 -- @param s: can be standard string or UniString.

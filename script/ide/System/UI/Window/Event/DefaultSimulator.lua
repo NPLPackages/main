@@ -6,7 +6,7 @@ Date: 2020/6/30
 Desc: Event
 use the lib:
 -------------------------------------------------------
-local DefaultSimulator = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Window/Event/DefaultSimulator.lua");
+local DefaultSimulator = NPL.load("script/ide/System/UI/Window/Event/DefaultSimulator.lua");
 -------------------------------------------------------
 ]]
 
@@ -48,6 +48,7 @@ function DefaultSimulator:TriggerVirtualEvent(virtualEventType, virtualEventPara
 end
 
 function DefaultSimulator:HandlerVirtualEvent(virtualEventType, virtualEventParams, window)
+    window:Update();
     if (virtualEventType == "UIWindowClickEvent") then
         return self:UIWindowClick(virtualEventParams, window);
     elseif (virtualEventType == "UIWindowWheelEvent") then

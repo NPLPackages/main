@@ -575,6 +575,11 @@ Sys_Event = {
 	SYS_WM_SETTINGCHANGE = AutoEnum(),
 	--
 	SYS_RENDERER_RECREATED = AutoEnum(),
+	-- App life cycle events (Android/iOS/Mobile)
+	SYS_APP_PAUSE = AutoEnum(), -- Android: onPause, iOS: applicationWillResignActive
+	SYS_APP_RESUME = AutoEnum(), -- Android: onResume, iOS: applicationDidBecomeActive
+	SYS_APP_STOP = AutoEnum(), -- Android: onStop, iOS: applicationDidEnterBackground
+	SYS_APP_DESTROY = AutoEnum(), -- Android: onDestroy, iOS: applicationWillTerminate
 };
 
 -- NPL return code. it is also the NPL network event code

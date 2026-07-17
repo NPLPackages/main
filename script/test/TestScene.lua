@@ -313,3 +313,148 @@ function TestParaScene:test_PostRenderQueueOrder()
 	player:GetEffectParamBlock():SetBoolean("ztest", false);
 	ParaScene.Attach(player);
 end
+
+function TestParaScene:test_ParaVoxelMesh()
+	--local model = GetEntity():GetInnerObject():GetPrimaryAsset():GetAttributeObject():GetChildAt(0):GetChild("VoxelModel")
+	local model = ParaScene.GetPlayer():GetPrimaryAsset():GetAttributeObject():GetChildAt(0):GetChild("VoxelModel")
+	model:SetField("MinVoxelPixelSize", 4);
+
+	local function SetModelblock(x, y, z, level, color)
+		model:SetField("SetBlock", format("%d,%d,%d,%d,%d", x, y, z, level, color or -1));
+	end
+	local function PaintModelblock(x, y, z, level, color)
+		model:SetField("PaintBlock", format("%d,%d,%d,%d,%d", x, y, z, level, color or -1));
+	end
+	local function DumpModel()
+		model:CallField("DumpOctree");
+	end
+	model:SetField("SetBlock", "0,0,0,1,-1");
+
+	-- test case1£º 
+	for x=0,0 do
+		for z = 0,2 do
+			SetModelblock(x, 0, z, 8, 0xffff)
+			SetModelblock(x, 1, z, 8, 0xffff)
+		end
+	end
+	SetModelblock(1, 0, 0, 8, 0xffff)
+	SetModelblock(1, 1, 0, 8, 0xffff)
+	SetModelblock(1, 0, 1, 8, 0xffff)
+
+	SetModelblock(1, 1, 1, 8, 0xffff)
+
+	
+	-- test case: split a block
+	SetModelblock(3, 0, 4, 8, 0xff0000)
+	SetModelblock(8, 0, 8, 16, 0xff0000)
+	SetModelblock(0, 0, 0, 2, 0xffff)
+	SetModelblock(1, 0, 0, 2, 0xffff)
+
+	-- test case: cube merge
+	for y=0,7 do
+		for x = 0,7 do
+			for z = 0,7 do
+				SetModelblock(x, y, z, 8, 0xffff)
+			end
+			--wait(0.1)
+		end
+	end
+
+	-- test case: paint blocks
+	for y=0,63 do
+		for x = 0,63 do
+			for z = 0,0 do
+				SetModelblock(x, y, z, 64, 0xffffff)
+			end
+		end
+	end
+	for y=32,32 do
+		for x = 0,1 do
+			for z = 0,0 do
+				PaintModelblock(x, y, z, 64, 2*x*256+2*y)
+			end
+		end
+	end
+
+	-- test case: color LOD merge
+	for y=8,15 do
+		for x = 0,7 do
+			for z = 0,0 do
+				SetModelblock(x, y, z, 64, 0x0)
+			end
+		end
+	end
+	for y=4,7 do
+		for x = 0,3 do
+			for z = 0,0 do
+				PaintModelblock(x, y, z, 32, 0xff0000)
+			end
+		end
+	end
+
+	-- test case: load/save to file
+	SetModelblock(1, 1, 1, 4, 0xffffff)
+	model:SetField("SaveToFile", "temp/voxel.bin");
+	model:SetField("LoadFromFile", "temp/voxel.bin"); 
+
+	-- test case: run cmd list
+	model:SetField("RunCommandList", "setblock 0,0,0,4,255");
+
+	-- test case: setrect and paintrect
+	model:SetField("run", "color 0;level 64;setrect 0,0,0,63,63,0");
+	model:SetField("run", "level=4;paintrect 0,0,0:2,0,0:#ff0000#00ff00#ff");
+	model:SetField("run", "level=4;paintrect 2,1,0:0,1,0:#ff0000#00ff00#ff");
+	-- also able to load png or jpg files directly from base64 encoded string.
+	-- this makes forwarding data from camera or mp4 to bmax faster. 
+	-- model:SetField("run", "paintrect 0,0,0,64,64,0,data:image/png;base64,.............");
+	
+
+	-- test case: print noise with setrect and paintrect
+	local width, height, z = 64, 64, 31
+	local level = 64
+	model:SetField("run", format("level %d setrect %d,%d,%d,%d,%d,%d", level, 0,0, z, width-1, height-1, z));
+	local data = {};
+	for x = 0, width-1 do
+		for y = 0, height-1 do
+			data[#data+1] = math.random(0, 0xffffff)
+		end
+	end
+	local imageData = table.concat(data," ")
+	model:SetField("run", string.format("level %d paintrect %d,%d,%d,%d,%d,%d %s", level, width-1, height-1, z, 0, 0, z, imageData));
+
+	model:SetField("run", "setblock 0,0,0,1,-1 level 8 color #ff0000 set 0,0,0,1,1,1,0,1,0");
+	model:SetField("run", "offset 4,4,4 level 8 color #ff0000 setwithoffset");
+	model:SetField("run", "0,0,0,1,1,1,0,1,0");
+	-- , ; # are all valid separators
+	model:SetField("run", "setxyzcolor 6,6,6,#ff,6 6 7#00ffff");
+	
+	
+	-- test case2£º 
+	log("clear model to empty\n")
+	model:SetField("SetBlock", "0,0,0,1,-1");
+	model:CallField("DumpOctree");
+	log("set depth 3 to 7/8\n")
+	model:SetField("SetBlock", "7,7,6,8,254");
+	model:SetField("SetBlock", "7,6,6,8,254");
+	model:SetField("SetBlock", "7,6,7,8,254");
+	model:SetField("SetBlock", "6,7,7,8,254");
+	model:SetField("SetBlock", "6,7,6,8,254");
+	model:SetField("SetBlock", "6,6,6,8,254");
+	model:SetField("SetBlock", "6,6,7,8,254");
+	model:CallField("DumpOctree");
+	log("set depth 3 to 8/8, should merge depth3 to depth 2\n")
+	model:SetField("SetBlock", "7,7,7,8,254");
+	model:CallField("DumpOctree");
+	log("clear a block on depth 3, since block colors are the same, it should remain on depth 2 only blockmask changes\n")
+	model:SetField("SetBlock", "7,7,7,8,-1");
+	model:CallField("DumpOctree");
+	log("set a block with different color on depth 3, should generate depth3 node, but depth 2 retains its last color.\n")
+	model:SetField("SetBlock", "7,7,7,8,123123");
+	model:CallField("DumpOctree");
+	log("paint blocks on depth 2 to the same color, should collapse to depth 2.\n")
+	model:SetField("PaintBlock", "3,3,3,4,123");
+	model:CallField("DumpOctree");
+	log("paint blocks on depth 1 to the same new color, should collapse to depth 2.\n")
+	model:SetField("PaintBlock", "0,0,0,1,456");
+	model:CallField("DumpOctree");
+end

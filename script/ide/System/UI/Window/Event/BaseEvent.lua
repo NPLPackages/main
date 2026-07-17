@@ -5,7 +5,7 @@ Date: 2020/6/30
 Desc: Event
 use the lib:
 -------------------------------------------------------
-local BaseEvent = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Window/Event/BaseEvent.lua");
+local BaseEvent = NPL.load("script/ide/System/UI/Window/Event/BaseEvent.lua");
 -------------------------------------------------------
 ]]
 

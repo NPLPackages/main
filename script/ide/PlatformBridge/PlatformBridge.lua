@@ -14,7 +14,7 @@ local PlatformBridge = NPL.export()
 --获取设备信息
 function PlatformBridge.getDeviceInfo()
     local out={};
-    if not ParaMisc.LuaCallNative then
+    if not ParaMisc.LuaCallNative or not PlatformBridge.IsAgreePrivacy() then
         return out
     end
 
@@ -124,4 +124,24 @@ end
 --同意了用户协议和隐私政策
 function PlatformBridge.onAgreeUserPrivacy()
     PlatformBridge.call_native("onAgreeUserPrivacy")
+end
+
+function PlatformBridge.IsAgreePrivacy()
+    NPL.load("(gl)script/ide/System/localserver/LocalStorageUtil.lua");
+    local LocalStorageUtil = commonlib.gettable("System.localserver.LocalStorageUtil");
+    local has_agree_userUserPrivacy = LocalStorageUtil.Load_localserver("has_agree_userUserPrivacy","false",true)
+    return has_agree_userUserPrivacy == "true" or has_agree_userUserPrivacy == true 
+end
+
+--判断设备权限
+function PlatformBridge.GetDevicePermission(strPermission)
+    if System.os.GetPlatform() ~= "android" then
+        return true
+    end
+    if strPermission and strPermission:find("android.permission.") then
+        local ret = PlatformBridge.call_native("getDevicePermission",{permission = strPermission})
+        LOG.std(nil,"info","PlatformBridge","get permisssion========%s,value=%s",strPermission,tostring(ret))
+        return (ret == true or ret == "true")
+    end
+    return false
 end

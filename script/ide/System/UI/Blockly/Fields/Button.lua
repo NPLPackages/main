@@ -5,7 +5,8 @@ Date: 2020/6/30
 Desc: 按钮字段
 use the lib:
 -------------------------------------------------------
-local Button = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Blockly/Fields/Button.lua");
+
+local Button = NPL.load("script/ide/System/UI/Blockly/Fields/Button.lua");
 -------------------------------------------------------
 ]]
 
@@ -14,7 +15,13 @@ local Field = NPL.load("./Field.lua");
 
 local Button = commonlib.inherit(Field, NPL.export());
 
-Button:Property("BackgroundColor", "#cccccc");
+function Button:Init(block, option)
+    Button._super.Init(self, block, option);
+
+    self:SetBackgroundColor(option.color or "#cccccc");
+    
+    return self;
+end
 
 function Button:IsCanEdit()
     return false;

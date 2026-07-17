@@ -5,11 +5,11 @@ Date: 2020/6/30
 Desc: G
 use the lib:
 -------------------------------------------------------
-local Value = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Blockly/Inputs/Value.lua");
+local Value = NPL.load("script/ide/System/UI/Blockly/Inputs/Value.lua");
 -------------------------------------------------------
 ]]
 
-local InputElement = NPL.load("../../Window/Elements/Input.lua", IsDevEnv);
+local InputElement = NPL.load("../../Window/Elements/Input.lua");
 local Const = NPL.load("../Const.lua");
 local Shape = NPL.load("../Shape.lua");
 local Connection = NPL.load("../Connection.lua");
@@ -21,6 +21,7 @@ local TextMarginUnitCount = Const.TextMarginUnitCount;     -- 文本边距
 Value:Property("ClassName", "InputValue");                 -- 类名
 Value:Property("Value", "");                               -- 值
 Value:Property("Color", "#000000");
+Value:Property("IsPassword", false);
 Value:Property("ValueListItem", false, "IsValueListItem"); -- 是否是值列表项
 
 function Value:ctor()
@@ -37,6 +38,9 @@ function Value:Init(block, opt)
     self.inputConnection:SetType("input_connection");
 
     local shadowType = self:GetShadowType();
+    if(self:GetPasswordType()) then
+        self:SetIsPassword(true)
+    end
     if (not self:IsNumberType(shadowType) and not self:IsTextType(shadowType)) then
         local shadowBlock = self:GetBlockly():GetBlockInstanceByType(shadowType);
         if (shadowBlock and shadowBlock.outputConnection) then
@@ -78,15 +82,21 @@ function Value:Render(painter)
         Shape:SetBrush(self:GetBackgroundColor());
         Shape:DrawInputValue(painter, self.widthUnitCount, self.heightUnitCount);
         painter:SetFont(self:GetFont());
-        if (self:GetShowText() == "") then
+        local text = self:GetShowText()
+
+        if(text and text ~= "" and self:GetIsPassword() and not self:IsEdit()) then
+            text = (#text <= 6) and "*" or "******";
+        end
+
+        if (text == "") then
             painter:SetPen("#66666680");
             painter:DrawText((Const.BlockEdgeWidthUnitCount + TextMarginUnitCount) * UnitSize, (self.height - self:GetSingleLineTextHeight()) / 2, self:GetPlaceholder());
         else
             painter:SetPen(self:GetColor());
-            painter:DrawText((Const.BlockEdgeWidthUnitCount + TextMarginUnitCount) * UnitSize, (self.height - self:GetSingleLineTextHeight()) / 2, self:GetShowText());
+            painter:DrawText((Const.BlockEdgeWidthUnitCount + TextMarginUnitCount) * UnitSize, (self.height - self:GetSingleLineTextHeight()) / 2, text);
         end
 
-        if (self:IsInputType() and self:GetShowText() ~= "") then
+        if (self:IsInputType() and text ~= "") then
             painter:SetPen("#cccccc");
             painter:DrawText((Const.BlockEdgeWidthUnitCount + TextMarginUnitCount) * UnitSize - 10, (self.height - self:GetSingleLineTextHeight()) / 2, '＂');
             painter:DrawText(self.width - (Const.BlockEdgeWidthUnitCount + TextMarginUnitCount) * UnitSize - 2, (self.height - self:GetSingleLineTextHeight()) / 2, '＂');
@@ -143,6 +153,7 @@ function Value:ConnectionBlock(block)
                 block:GetBlockly():AddBlock(inputConnectionConnectionBlock, true);
             end
         end
+        if (self:GetBlock():IsDisableRun() and not block.isShadowBlock) then block:DisableRun(true) end
         return true;
     end
 
@@ -165,6 +176,11 @@ function Value:GetShadowType()
     return option.shadowType or (option.shadow and option.shadow.type) or "";
 end
 
+function Value:GetPasswordType()
+    local option = self:GetOption();
+    return option.isPassWord or (option.shadow and option.shadow.isPassWord) or self:GetShadowType() == "field_password";
+end
+
 function Value:IsColorShadowType()
     return self:GetShadowType() == "field_color";
 end
@@ -173,21 +189,24 @@ function Value:GetFieldEditType()
     local shadowType = self:GetShadowType();
     if (shadowType == "field_dropdown") then return "select" end
     if (shadowType == "field_color") then return "color" end
+    if (shadowType == "field_textarea") then return "textarea" end
     return "input";
 end
 
-function Value:GetValueAsString()
+function Value:GetValueAsString(field_value)
     local value = self:GetValue();
     if (not self:GetInputBlock()) then 
         if (self:IsNumberType()) then
             return string.format('%s', tonumber(value) or 0);
         elseif (self:IsCodeType()) then
             return string.format('%s', value == "" and "nil" or value);
+        elseif (self:IsTextAreaType()) then
+            return string.format("[[%s]]", value);
         else 
             return string.format("'%s'", value);   -- 虚拟一个图块
         end
     end
-    return self:GetInputBlock():GetCode();
+    return field_value or self:GetInputBlock():GetCode();
 end
 
 function Value:GetFieldValue() 

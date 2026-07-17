@@ -3,7 +3,7 @@ Title: file handler
 Author: LiXizhi
 Date: 2015/6/8
 Desc: disk file is served first, then files in zip/pkg. 
-by default, all static files are served asynchrnously in a separate thread and cached in memory. 
+by default, all static files are served asynchronously in a separate thread and cached in memory. 
 if file is over 12KB, it will be compressed if its mimetype is plain text. 
 -----------------------------------------------
 NPL.load("(gl)script/apps/WebServer/npl_file_handler.lua");
@@ -24,6 +24,8 @@ NPL.load("(gl)script/apps/WebServer/mimetypes.lua");
 NPL.load("(gl)script/apps/WebServer/npl_request.lua");
 NPL.load("(gl)script/apps/WebServer/npl_common_handlers.lua");
 NPL.load("(gl)script/apps/WebServer/mem_cache.lua");
+NPL.load("(gl)script/ide/Encoding.lua");
+local Encoding = commonlib.gettable("commonlib.Encoding");
 local mem_cache = commonlib.gettable("WebServer.mem_cache");
 local common_handlers = commonlib.gettable("WebServer.common_handlers");
 local request = commonlib.gettable("WebServer.request");
@@ -124,7 +126,7 @@ end
 
 local fileInfo = {};
 -- main handler
-local function filehandler(req, res, baseDir, nocache, BrowserCacheExpire, filename)
+local function filehandler(req, res, baseDir, nocache, BrowserCacheExpire, filename, add_headers)
 	if req.cmd_mth ~= "GET" and req.cmd_mth ~= "HEAD" then
 		return WebServer.common_handlers.err_405(req, res)
 	end
@@ -134,14 +136,18 @@ local function filehandler(req, res, baseDir, nocache, BrowserCacheExpire, filen
 	end
 	local path;
     if(filename)then
-        path = baseDir .. filename;
+		path = filename;
     else
-        if(baseDir == "") then
-		    path = req.relpath:gsub("^/", "");
-	    else
-		    path = baseDir..req.relpath:gsub("^/", "");
-	    end
+        path = req.relpath:gsub("^/", "");
     end
+	-- remove ~*/ prefix
+	path = path:gsub("^~[^/]*/", ""); 
+	path = Encoding.url_decode(path)
+
+	if(baseDir ~= "" and baseDir) then
+		path = baseDir..path;
+	end
+
 	res.headers["Content-Type"] = mimetypes:guess_type(path);
 	
 	--if(nocache) then
@@ -162,6 +168,12 @@ local function filehandler(req, res, baseDir, nocache, BrowserCacheExpire, filen
 		res.headers["Location"] = url.build(req.parsed_url)
 		res.content = "redirect"
 		return res
+	end
+
+	if(add_headers) then
+		for n, v in pairs(add_headers) do
+			res.headers[n] = v;
+		end
 	end
 
 	-- no need to send content if not modified
@@ -275,8 +287,10 @@ local nplThreadLoaded;
 local function CheckLoadFileThread()
 	if(not nplThreadLoaded) then
 		nplThreadLoaded = true;
-		NPL.CreateRuntimeState(handlerThreadName, 0):Start();
-		LOG.std(nil, "info", "npl_file_handler", "npl file handler thread(%s) is started", handlerThreadName);
+		if(handlerThreadName ~= "main") then
+			NPL.CreateRuntimeState(handlerThreadName, 0):Start();
+			LOG.std(nil, "info", "npl_file_handler", "npl file handler thread(%s) is started", handlerThreadName);
+		end
 	end
 end
 
@@ -290,18 +304,19 @@ function WebServer.filehandler(baseDir_input)
 	local nocache;
 	local BrowserCacheExpire = WebServer.config.CacheDefaultExpire;
     local filename;
+	local add_headers;
 	if type(baseDir_input) == "table" then 
 		nocache = baseDir_input.nocache;
 		baseDir = baseDir_input.baseDir;
 		BrowserCacheExpire = baseDir_input.BrowserCacheExpire or BrowserCacheExpire;
 		filename = baseDir_input.filename;
+		add_headers = baseDir_input.add_headers;
 	end
 	local bReplaceWorldDir;
 	if(type(baseDir) == "string") then
 		if(baseDir:match("^%%world%%")) then
 			bReplaceWorldDir = true;
-		end
-		if( baseDir~="" and not baseDir:match("/$") ) then
+		elseif( baseDir~="" and not baseDir:match("/$") ) then
 			baseDir = baseDir .. "/";
 		end
 	end
@@ -324,6 +339,7 @@ function WebServer.filehandler(baseDir_input)
 				nocache = nocache, 
 				BrowserCacheExpire = BrowserCacheExpire, 
 				filename = filename_, 
+				add_headers = add_headers, 
 			};
 			NPL.activate(targetFile, msg);
 		end
@@ -332,7 +348,7 @@ end
 
 local function activate()
 	local req = request:new():init(msg.req);
-	local result = filehandler(req, req.response, msg.baseDir, msg.nocache, msg.BrowserCacheExpire, msg.filename);
+	local result = filehandler(req, req.response, msg.baseDir, msg.nocache, msg.BrowserCacheExpire, msg.filename, msg.add_headers);
 	req.response:finish();
 end
 NPL.this(activate)

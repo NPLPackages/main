@@ -8,11 +8,11 @@ local MatataLab = commonlib.inherit(Element, NPL.export());
 ElementManager:RegisterByTagName("MatataLab", MatataLab);
 
 
-local Match = NPL.load("./Match.lua", IsDevEnv);
-local Block = NPL.load("./Block.lua", IsDevEnv);
-local NumberBlock = NPL.load("./NumberBlock.lua", IsDevEnv);
-local ToolBox = NPL.load("./ToolBox.lua", IsDevEnv);
-local Workspace = NPL.load("./Workspace.lua", IsDevEnv);
+local Match = NPL.load("./Match.lua");
+local Block = NPL.load("./Block.lua");
+local NumberBlock = NPL.load("./NumberBlock.lua");
+local ToolBox = NPL.load("./ToolBox.lua");
+local Workspace = NPL.load("./Workspace.lua");
 
 MatataLab:Property("BlockWidth"); 
 MatataLab:Property("BlockHeight");

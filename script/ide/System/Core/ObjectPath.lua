@@ -255,7 +255,7 @@ function ObjectPath:GetFieldStr(name)
 end
 
 local isNumberMap = {
-	["int"] = true, ["float"] = true, ["double"] = true, ["DWORD"] = true, ["enum"] = true, 
+	["int"] = true, ["float"] = true, ["double"] = true, ["DWORD"] = true, ["enum"] = true, ["number"] = true,  
 }
 
 -- @param value: string value, such as "10", "{1,2,3}"
@@ -266,12 +266,16 @@ function ObjectPath:SetFieldStr(name, value)
 		if(nFieldIndex>=0) then
 			local sType = data:GetFieldType(nFieldIndex);  
 			local sSchematics = data:GetSchematicsType(nFieldIndex);
-			if(isNumberMap[sType]) then
+			if(sType and isNumberMap[sType]) then
 				value = tonumber(value);
 				data:SetField(name, value);
 			elseif(sType == "string") then
 				if(type(value) == "string") then
 					data:SetField(name, value);
+				elseif(type(value) == "number") then
+					data:SetField(name, tostring(value));
+				else
+					data:SetField(name, "");
 				end
 			elseif(sType == "vector3") then
 				value = CmdParser.ParseNumberList(value);

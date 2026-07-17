@@ -185,6 +185,9 @@ end
 -- -3:The intersection occurs behind the ray's origin.
 function Manipulator:MouseRayIntersectPlane(mouse_x, mouse_y, plane, point)
 	local mouseRay = Cameras:GetCurrent():GetMouseRay(mouse_x, mouse_y);
+	if(not mouseRay) then
+		return -1;
+	end
 	local result, t = mouseRay:IntersectPlane(plane, point);
 	if(result == -2) then
 		local result2, t2 = mouseRay:IntersectPlane(plane:clone():inverse(), point);
@@ -287,14 +290,16 @@ function Manipulator:GetFieldType(nIndex)
 	end
 end
 
-function Manipulator:SetField(name, value)
+function Manipulator:SetField(name, value, fireValueChanged)
 	local field = self.valueFields:get(name);
 	if(field) then
 		if(not commonlib.partialcompare(value, field.value)) then
 			field.preValue = field.value;
 			field.value = value;
-			self:OnValueChange(name, value);
-			self:SetModified();
+			if(fireValueChanged ~= false) then
+				self:OnValueChange(name, value);
+				self:SetModified();
+			end
 		end
 	end
 end

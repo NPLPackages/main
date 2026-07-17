@@ -5,7 +5,7 @@ Date: 2020/6/30
 Desc: G
 use the lib:
 -------------------------------------------------------
-local Field = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Blockly/Fields/Field.lua");
+local Field = NPL.load("script/ide/System/UI/Blockly/Fields/Field.lua");
 -------------------------------------------------------
 ]]
 
@@ -20,9 +20,20 @@ local TextMarginUnitCount = Const.TextMarginUnitCount;    -- 文本边距
 Field:Property("ClassName", "Field");
 Field:Property("Type");                     -- label text, value
 Field:Property("Color", "#000000");
+Field:Property("IsPassword", false);
 Field:Property("BackgroundColor", "#ffffff");
 
 function Field:ctor()
+end
+
+function Field:Init(block, option)
+    option = option or {};
+
+    Field._super.Init(self, block, option);
+    
+    self:SetIsPassword(self:GetType() == "field_password" or option.isPassWord or (option.shadow and option.shadow.isPassWord));
+
+    return self;
 end
 
 function Field:Render(painter)
@@ -50,12 +61,17 @@ function Field:RenderContent(painter)
 
     -- input
     painter:SetFont(self:GetFont());
-    if (self:GetShowText() == "") then
+    local text = self:GetShowText()
+    if ( text == "") then
         painter:SetPen("#66666680");
         painter:DrawText((Const.BlockEdgeWidthUnitCount + TextMarginUnitCount) * UnitSize, (self.height - self:GetSingleLineTextHeight()) / 2, self:GetPlaceholder());
     else
         painter:SetPen(self:GetColor());
-        painter:DrawText((Const.BlockEdgeWidthUnitCount + TextMarginUnitCount) * UnitSize, (self.height - self:GetSingleLineTextHeight()) / 2, self:GetShowText());
+
+        if(self:GetIsPassword() and not self:IsEdit()) then
+            text = (#text <= 6) and "*" or "******";
+        end
+        painter:DrawText((Const.BlockEdgeWidthUnitCount + TextMarginUnitCount) * UnitSize, (self.height - self:GetSingleLineTextHeight()) / 2, text);
     end
 end
 
@@ -99,6 +115,8 @@ function Field:GetValueAsString()
         return string.format('%s', tonumber(value) or 0);
     elseif (self:IsCodeType()) then
         return string.format('%s', value == "" and "nil" or value);
+    elseif (self:IsTextAreaType()) then
+        return string.format("[[%s]]", value);
     else 
         return string.format("'%s'", value);  
     end
@@ -148,5 +166,19 @@ function Field:LoadFromXmlNode(xmlNode)
     if (self:IsSelectType()) then
         self:SetLabel(self:GetLabelByValue(self:GetValue(), self:GetLabel()));
         self:SetValue(self:GetValueByLablel(self:GetLabel(), self:GetValue()));
+    end 
+end
+
+function Field:Save()
+    return tostring(self:GetValue());
+end
+
+function Field:Load(value)
+    self:SetValue(tostring(value));
+
+    if (self:IsSelectType()) then
+        self:SetLabel(tostring(self:GetLabelByValue(self:GetValue(), self:GetValue())));
+    else
+        self:SetLabel(tostring(self:GetValue()));
     end 
 end

@@ -54,7 +54,7 @@ UI 是写 2D 窗口界面 UI 库, 使用方式与写 web 前端相似, 使用 ht
 
 ```lua
 -- 外部显示窗口函数
-local Page = NPL.load("Mod/GeneralGameServerMod/UI/Page.lua");
+local Page = NPL.load("script/ide/System/UI/Page.lua");
 local page = Page.Show({
     -- html 中 lua 执行环境的全局表
 }, {

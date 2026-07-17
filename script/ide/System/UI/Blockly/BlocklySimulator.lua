@@ -15,8 +15,8 @@ NPL.load("(gl)script/apps/Aries/Creator/Game/Macros/Macros.lua");
 NPL.load("(gl)script/apps/Aries/Creator/Game/Macros/MacroPlayer.lua");
 local MacroPlayer = commonlib.gettable("MyCompany.Aries.Game.Tasks.MacroPlayer");
 local Macros = commonlib.gettable("MyCompany.Aries.Game.GameLogic.Macros");
-
 local Simulator = NPL.load("../Window/Event/Simulator.lua");
+local DefaultSimulator = NPL.load("../Window/Event/DefaultSimulator.lua");
 local Const = NPL.load("./Const.lua");
 
 local BlocklySimulator = commonlib.inherit(Simulator, NPL.export());
@@ -44,6 +44,45 @@ function BlocklySimulator:ctor()
     self:RegisterSimulator();
 end
 
+function BlocklySimulator:AddNewBlockVirtualEvent(block_type)
+    local params = self:GetVirtualEventParams();
+    params.block_type = block_type;
+    self:AddVirtualEvent("BlocklySimulator.AddNewBlock", params);
+    self:SetSimulated(true);
+end
+
+function BlocklySimulator:HandleNewBlockVirtualEvent(blockly, virtualEventParams)
+    local block_type = virtualEventParams.block_type;
+    local block = blockly:GetToolBox():GetToolBoxBlockByBlockType(block_type);
+    if (not block) then
+        return DefaultSimulator:UIWindowClick(virtualEventParams, blockly:GetWindow());
+    end
+    local sx, sy = block:GetScreenXY();
+    sx = sx + BlockOffsetX;
+    sy = sy + BlockOffsetY;
+    local wx, wy = blockly:ScreenPointToWindowPoint(sx, sy);
+    local up_sx, up_sy = blockly:WindowPointToScreenPoint(virtualEventParams.up_mouse_window_x, virtualEventParams.up_mouse_window_y);
+    virtualEventParams.down_mouse_window_x = wx;
+    virtualEventParams.down_mouse_window_y = wy;
+    virtualEventParams.mouse_down_up_distance = math.max(math.abs(up_sx - sx), math.abs(up_sy - sy));
+    return DefaultSimulator:UIWindowClick(virtualEventParams, blockly:GetWindow());
+end
+
+function BlocklySimulator:TriggerNewBlockVirtualEvent(blockly, virtualEventParams)
+    local block_type = virtualEventParams.block_type;
+    local block = blockly:GetToolBox():GetToolBoxBlockByBlockType(block_type);
+    if (not block) then return DefaultSimulator:UIWindowClickTrigger(virtualEventParams, blockly:GetWindow()) end
+    local sx, sy = block:GetScreenXY();
+    sx = sx + BlockOffsetX;
+    sy = sy + BlockOffsetY;
+    local wx, wy = blockly:ScreenPointToWindowPoint(sx, sy);
+    local up_sx, up_sy = blockly:WindowPointToScreenPoint(virtualEventParams.up_mouse_window_x, virtualEventParams.up_mouse_window_y);
+    virtualEventParams.down_mouse_window_x = wx;
+    virtualEventParams.down_mouse_window_y = wy;
+    virtualEventParams.mouse_down_up_distance = math.max(math.abs(up_sx - sx), math.abs(up_sy - sy));
+    return DefaultSimulator:UIWindowClickTrigger(virtualEventParams, blockly:GetWindow());
+end
+
 function BlocklySimulator:SetBlockPos(blockly, params)
     local blockType = params.blockType;
     local block = blockly:GetBlockInstanceByType(blockType);
@@ -67,8 +106,14 @@ function BlocklySimulator:SetInputValue(blockly, params)
 end
 
 function BlocklySimulator:HandlerVirtualEvent(virtualEventType, virtualEventParams, window)
+    window:Update();
     local blockly = GetBlocklyElement(virtualEventParams, window);
     if (not blockly) then return end
+
+    if (virtualEventType == "BlocklySimulator.AddNewBlock") then
+        return self:HandleNewBlockVirtualEvent(blockly, virtualEventParams);
+    end
+
     local action = virtualEventParams.action;
     local toolbox = blockly:GetToolBox();
     if (action == "SetBlocklyEnv") then
@@ -178,6 +223,10 @@ end
 function BlocklySimulator:TriggerVirtualEvent(virtualEventType, virtualEventParams, window)
     local blockly = GetBlocklyElement(virtualEventParams, window);
     if (not blockly) then return end
+    
+    if (virtualEventType == "BlocklySimulator.AddNewBlock") then
+        return self:TriggerNewBlockVirtualEvent(blockly, virtualEventParams);
+    end
 
     local action = virtualEventParams.action;
     if (action == "SetBlocklyEnv") then

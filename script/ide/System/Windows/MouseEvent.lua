@@ -54,6 +54,15 @@ function MouseEvent:isClick()
 	end
 end
 
+function MouseEvent:casualClickCheck(dist)
+	dist = dist or 10;
+	if(self:GetDragDist() < dist) then
+		return true;
+	elseif(self:GetDragDist() < dist * 2 and self:isClick()) then
+		return true;
+	end
+end
+
 -- this may return nil if no touch session is available. 
 function MouseEvent:GetTouchSession()
 	return self.touchSession

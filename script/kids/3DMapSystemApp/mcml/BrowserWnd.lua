@@ -218,8 +218,19 @@ end
 -- create get v1 page
 function BrowserWnd:GetPageRenderer(pageType)
 	pageType = pageType or self.pageType;
-	if(pageType ~= "mcml2") then
-		-- v1
+	if(pageType == "mcml2") then
+		-- mcml v2
+		self:CloseRendererV1(true)
+		if(not self.windowCtrl) then
+			self.windowCtrl = System.Windows.Window:new();
+			self.windowCtrl:Show({url="", alignment="_fi", left=0, top=self.clientTop or 0, width=0, height=0, allowDrag=false, parent = ParaUI.GetUIObject(self.name)});
+			self.windowCtrl:Connect("urlChanged", self, function()
+				BrowserWnd.OnPage_CallBack(self.name);
+			end, "UniqueConnection");
+		end
+		return self.windowCtrl;
+	else
+		-- mcml v1
 		self:CloseRendererV2(true)
 		if(not self.pageCtrl ) then
 			NPL.load("(gl)script/kids/3DMapSystemApp/mcml/PageCtrl.lua");
@@ -231,17 +242,6 @@ function BrowserWnd:GetPageRenderer(pageType)
 			self.pageCtrl:Create(self.name.."_pageCtrl", ParaUI.GetUIObject(self.name), "_fi", 0, self.clientTop or 0, 0, 0);
 		end
 		return self.pageCtrl;
-	else
-		-- v2
-		self:CloseRendererV1(true)
-		if(not self.windowCtrl) then
-			self.windowCtrl = System.Windows.Window:new();
-			self.windowCtrl:Show({url="", alignment="_fi", left=0, top=self.clientTop or 0, width=0, height=0, allowDrag=false, parent = ParaUI.GetUIObject(self.name)});
-			self.windowCtrl:Connect("urlChanged", self, function()
-				BrowserWnd.OnPage_CallBack(self.name);
-			end, "UniqueConnection");
-		end
-		return self.windowCtrl;
 	end
 end
 
@@ -276,9 +276,14 @@ end
 -- go to a given url, refresh
 -- @param url: if nil it will clear the browser. it can also be string "backward", "forward" which opens last page and forward page. 
 function BrowserWnd:Goto(url, cache_policy, bRefresh)
+	self.lastUrl = url;
 	local protocol = url and url:match("^(mcml%d?)://");
 	if(protocol) then
 		url = url:gsub("^(mcml%d?://)", "");
+	end
+	if(url:match("^https?://")) then
+		protocol = "http"
+		url = "script/apps/Aries/Creator/Game/NplBrowser/pe_nplbrowser_template.html?noTitle=true&url="..url
 	end
 	self.pageType = protocol;
 	if(protocol == "mcml2") then
@@ -292,6 +297,8 @@ end
 function BrowserWnd:GetUrl()
 	if(self.pageType == "mcml2") then
 		return "mcml2://"..(self:GetPageRenderer().url or "");
+	elseif(self.pageType == "http") then
+		return self.lastUrl or "";
 	else
 		return "mcml1://"..(self:GetPageRenderer().url or "");
 	end

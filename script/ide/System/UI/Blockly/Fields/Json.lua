@@ -5,21 +5,19 @@ Date: 2020/6/30
 Desc: 对象字段
 use the lib:
 -------------------------------------------------------
-local Json = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Blockly/Fields/Json.lua");
+local Json = NPL.load("script/ide/System/UI/Blockly/Fields/Json.lua");
 -------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/Json.lua");
 
-local Const = NPL.load("../Const.lua");
-local Field = NPL.load("./Field.lua", IsDevEnv);
-
-local Page = NPL.load("Mod/GeneralGameServerMod/UI/Page.lua");
-
 local Json = commonlib.inherit(Field, NPL.export());
 
 function Json:OnBeginEdit()
+    local Const = NPL.load("../Const.lua");
+    local Field = NPL.load("./Field.lua");
     local text = self:GetText();
 
+    local Page = NPL.load("script/ide/System/UI/Page.lua");
     Page.Show({
         title = "Json 编辑",
         text = text == "" and self:GetValue() or self:GetText(),

@@ -384,10 +384,12 @@ function WebCacheDB:CreateOrUpgradeDatabase()
 		self._db:close();
 	end
 	-- create the database. 
+	ParaIO.DeleteFile(self.kFileName);
 	local err;
-	self._db, err = sqlite3.open( self.kFileName);
+	self._db, err = sqlite3.open(self.kFileName);
 	if( self._db == nil)then
 		LOG.std("", "error", "localserver", "error: failed connecting to localserver db"..tostring(err));
+		return
 	end
 	-- drop all tables. 
 	System.localserver.SqlDb.DropAllObjects(self._db);

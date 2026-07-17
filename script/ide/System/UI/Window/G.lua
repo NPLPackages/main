@@ -5,15 +5,14 @@ Date: 2020/6/30
 Desc: G
 use the lib:
 -------------------------------------------------------
-local G = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Window/G.lua");
+local G = NPL.load("script/ide/System/UI/Window/G.lua");
 -------------------------------------------------------
 ]]
 
-local Storage = NPL.load("./Storage.lua", IsDevEnv);
-local Http = NPL.load("./Api/Http.lua", IsDevEnv);
-local Promise = NPL.load("./Api/Promise.lua", IsDevEnv);
-local Date = NPL.load("./Date.lua", IsDevEnv);
-local Debug = NPL.load("Mod/GeneralGameServerMod/Core/Common/Debug.lua", IsDevEnv);
+local Storage = NPL.load("./Storage.lua");
+local Http = NPL.load("./Api/Http.lua");
+local Promise = NPL.load("./Api/Promise.lua");
+local Date = NPL.load("./Date.lua");
 
 local G = commonlib.inherit(commonlib.gettable("System.Core.ToolBase"), NPL.export());
 
@@ -41,7 +40,7 @@ function G.New(window, g)
         end
     end
 
-    g.Log = Debug.GetModuleDebug("UI");
+    g.Log = System.Util.Debug.GetModuleDebug("UI");
     g.Promise = Promise;
     g.Http = Http;
     g.Date = Date;

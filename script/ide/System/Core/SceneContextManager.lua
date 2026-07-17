@@ -28,6 +28,8 @@ SceneContextManager:Property({"enableMouseEvent", true, "IsMouseEventEnabled", "
 SceneContextManager:Property({"enableKeyboardEvent", true, "IsKeyboardEventEnabled", "SetKeyboardEventEnabled", auto=true});
 SceneContextManager:Signal("contextUnselected");
 SceneContextManager:Signal("contextSelected");
+SceneContextManager:Signal("mousePressed");
+SceneContextManager:Signal("mouseReleased");
 
 local registered_contexts = {};
 local current_context;
@@ -151,6 +153,7 @@ function SceneContextManager.OnMouseDown(nCode, appName, msg)
 	if(context) then
 		local event = MouseEvent:init("mousePressEvent");
 		context:handleMouseEvent(event);
+		self:mousePressed(event);
 		if(event:isAccepted()) then
 			if(context:isCaptureMouse()) then
 				ParaEngine.GetAttributeObject():SetField("CaptureMouse", true);
@@ -162,7 +165,6 @@ function SceneContextManager.OnMouseDown(nCode, appName, msg)
 				SceneContextManager.restoreCameraMouseLeftDrag = true;
 				attr:SetField("EnableMouseLeftDrag", false);
 			end
-
 			return nil;
 		end
 	end
@@ -212,13 +214,14 @@ function SceneContextManager.OnMouseUp(nCode, appName, msg)
 		local event = MouseEvent:init("mouseReleaseEvent");
 		event.dragDist = msg.dragDist or 0;
 		context:handleMouseEvent(event);
+		self:mouseReleased(event);
 		ParaEngine.GetAttributeObject():SetField("CaptureMouse", false);
 
 		if(SceneContextManager.restoreCameraMouseLeftDrag) then
 			SceneContextManager.restoreCameraMouseLeftDrag = nil;
 			ParaCamera.GetAttributeObject():SetField("EnableMouseLeftDrag", true);
 		end
-
+		
 		if(event:isAccepted() or context:IsAcceptAllEvents()) then
 			-- prevent any other hooks
 			return nil;

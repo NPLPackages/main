@@ -17,9 +17,8 @@ array[3] = "3";
 assert(array[10] == "10");
 assert(array:at(2) == "10");
 -- auto create multi-dimentional array. 
-local v = array:createget(5);
-v[1] = "51"
-v[2] = "52"
+array:createget(5)[1] = "51";
+array[5][2] = "52";
 assert(array[5][1] == "51");
 array[5] = nil;
 array:add("4"); -- add with default index
@@ -28,6 +27,14 @@ array:ksort(); -- sort by key
 for key, value in array:pairs() do
 	echo({key, value})
 end
+
+-- preallocated multi-dimentional array map. 
+NPL.load("(gl)script/ide/STL.lua");
+local array = commonlib.ArrayMap:new():initMulti(10,10,10);
+array[2][3][4] = 234;
+array[0][0][0] = "0 index";
+array[10][10][10] = "1 index";
+assert(array[0][0][0] == "0 index")
 
 -- sorting
 NPL.load("(gl)script/ide/STL.lua");
@@ -59,6 +66,16 @@ function ArrayMap:new(o)
 	o.key_array = {};
 	setmetatable(o, self);
 	return o;
+end
+
+-- init multi-dementional array, it can be either 0 based or 1 based index. 
+function ArrayMap:initMulti(p1, p2, p3, p4)
+	if(p2) then
+		for i = 0, p1 do
+			self:createget(i):initMulti(p2, p3, p4);
+		end
+	end
+	return self;
 end
 
 -- do not modify the returned array
@@ -128,6 +145,11 @@ function ArrayMap:at(index)
 	end
 end
 
+-- return key at index
+function ArrayMap:getKeyAt(index)
+	return self.key_array[index];
+end
+
 function ArrayMap:first()
 	return self:at(1);
 end
@@ -142,9 +164,10 @@ end
 -- it will replace old key value pair
 -- @param key: if no key is provided, the key is the last index. 
 -- @param value: if value is nil, value is key, and key is (self:size()+1)
+-- @param index: if nil, it will be appended. if 1 it is prepended. index not modifed, if key already exists.
 -- e.g.  
 --		self:add(nil, value) is same as self:add(value) or self:add(self:size()+1, value)
-function ArrayMap:add(key, value)
+function ArrayMap:add(key, value, index)
 	if(not key) then
 		key = self:size() + 1;
 	end
@@ -157,6 +180,15 @@ function ArrayMap:add(key, value)
 			local idx = #self.key_array+1;
 			self.key_array[idx] = key;
 			self.key_index_map[key] = idx;
+			if(index and index < idx) then
+				for i = idx, index+1, -1 do
+					local lastKey = self.key_array[i-1]
+					self.key_array[i] = lastKey;
+					self.key_index_map[lastKey] = i;
+				end
+				self.key_array[index] = key;
+				self.key_index_map[key] = index;
+			end
 		end
 		self.key_map[key] = value;
 	end

@@ -141,6 +141,30 @@ function pe_script.create(rootName, mcmlNode, bindingContext, _parent, left, top
 	-- call the code in a module environment, so that global functions defined in the file is stored in a local _PAGESCRIPT table on its PageCtrl node. 
 	-- More info, please see http://lua-users.org/wiki/LuaModuleFunctionCritiqued 
 	local code = mcmlNode:GetPureText();
+
+	if (System.options.httpdebug and not string.find(code, "^%%=")) then
+		local filePath = mcmlNode:GetRequestURL() or "";
+		local file = ParaIO.open(filePath, "r");
+		local content = "";
+
+		if file:IsValid() then
+			content = file:GetText(0, -1)
+			file:close()
+		end
+
+		local lineCount = 0
+		for _ in string.gmatch(content, "([^\n]*)\n?") do
+			lineCount = lineCount + 1
+			if string.find(_, "<script") then
+				break
+			end
+		end
+
+		for i = 1, lineCount do
+			code = "\r\n" .. code
+		end
+	end
+
 	local code_original = code;
 	local code_func;
 	if(mcmlNode.code_code__ == code) then
@@ -168,6 +192,7 @@ function pe_script.create(rootName, mcmlNode, bindingContext, _parent, left, top
 				mcmlNode.code_code__ = code_original;
 				local errormsg;
 				code_func, errormsg = loadstring(code, url);
+
 				if(not code_func) then
 					LOG.std(nil, "error", "pe_script", "<Runtime error> syntax error while loading code in url:%s\n%s", url, tostring(errormsg));
 				else

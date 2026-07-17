@@ -198,6 +198,7 @@ function PageElement:LoadComponent(parentElem, parentLayout, styleItem)
 	css.background = css.background or self:GetAttribute("background", nil);
 
 	self:OnLoadComponentBeforeChild(parentElem, parentLayout, css);
+	self:UpdateGetters();
 
 	self:OnLoadChildrenComponent(parentElem, parentLayout, css);
 	
@@ -1973,5 +1974,20 @@ function PageElement:OnAddGetter(name, func, bindingContext)
 --	if(name == "visible") then
 --		bindingContext:AddGetter(self.control, "setVisible", func)
 --	end
+	if(self.control) then
+		if(name == "scalingX")then
+			bindingContext:AddGetter(self.control, "SetScalingX", func)
+		elseif(name == "scalingY")then
+			bindingContext:AddGetter(self.control, "SetScalingY", func)
+		elseif(name == "translationX")then
+			bindingContext:AddGetter(self.control, "SetTranslationX", func)
+		elseif(name == "translationY")then
+			bindingContext:AddGetter(self.control, "SetTranslationY", func)
+		elseif(name == "rotation")then
+			bindingContext:AddGetter(self.control, "SetRotation", func)
+		elseif(name == "color")then
+			bindingContext:AddGetter(self.control, "SetColor", func)
+		end
+	end
 end
 

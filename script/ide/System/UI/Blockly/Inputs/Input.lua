@@ -5,7 +5,7 @@ Date: 2020/6/30
 Desc: G
 use the lib:
 -------------------------------------------------------
-local Input = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Blockly/Inputs/Input.lua");
+local Input = NPL.load("script/ide/System/UI/Blockly/Inputs/Input.lua");
 -------------------------------------------------------
 ]]
 
@@ -50,8 +50,8 @@ function Input:GetFieldValue()
     return self:GetInputBlock():GetAllCode();
 end
 
-function Input:GetValueAsString()
-    return self:GetFieldValue();
+function Input:GetValueAsString(field_value)
+    return field_value or self:GetFieldValue();
 end
 
 -- 获取xmlNode
@@ -64,9 +64,6 @@ function Input:SaveToXmlNode()
     attr.value = self:GetValue();
 
     local inputBlock = self:GetInputBlock();
-
-    if (not inputBlock and self:GetType() == "input_statement") then return nil end
-    
     if (inputBlock) then table.insert(xmlNode, inputBlock:SaveToXmlNode()) end
 
     return xmlNode;
@@ -77,6 +74,7 @@ function Input:LoadFromXmlNode(xmlNode)
 
     self:SetLabel(attr.label);
     self:SetValue(attr.value);
+    self.inputConnection:Disconnection();
     
     if (self:IsSelectType()) then
         self:SetLabel(self:GetLabelByValue(self:GetValue(), self:GetLabel()));
@@ -85,6 +83,7 @@ function Input:LoadFromXmlNode(xmlNode)
 
     local inputBlockXmlNode = xmlNode[1];
     if (not inputBlockXmlNode) then return end
+
     local inputBlock = self:GetBlock():GetBlockly():GetBlockInstanceByXmlNode(inputBlockXmlNode);
     if (not inputBlock) then return end
     if (self:GetType() == "input_value") then
@@ -104,5 +103,74 @@ function Input:ForEach(callback)
     local inputBlock = self:GetInputBlock();
     if (inputBlock) then
         inputBlock:ForEach(callback);
+    end
+end
+
+function Input:DisableRun()
+    local block = self:GetInputBlock();
+    if (not block) then return end
+    block:DisableRun(true);
+end
+
+function Input:EnableRun()
+    local block = self:GetInputBlock();
+    if (not block) then return end
+    block:EnableRun(true);
+end
+
+function Input:Save()
+    local input_block = self:GetInputBlock();
+
+    if (input_block) then return {block = input_block:Save()} end
+
+    if (self:GetType() == "input_value") then
+        if (self:IsNumberType()) then
+            return {block = {type = "math_number", fields = {NUM = tonumber(self:GetValue()) or 0}}};
+        elseif (self:IsSelectType()) then
+            local options = self:GetOptions();
+            local value = self:GetValue();
+            for _, option in ipairs(options) do
+                if (tostring(option[2]) == tostring(value) or tostring(option.value) == tostring(value)) then
+                    return {block = {type = self:GetName() .. "Options", fields = {TEXT = tostring(value)}}};
+                end
+            end
+            return {block = {type = "text", fields = {TEXT = self:GetValue() or ""}}};
+        else
+            return {block = {type = "text", fields = {TEXT = self:GetValue() or ""}}};
+        end
+    end
+end
+
+function Input:Load(input_field)
+    if (not input_field) then return end
+    local block = input_field.block or {};
+    local options_block_type = self:GetName() .. "Options";
+    if (block.type == "math_number") then
+        self:SetValue(tostring(block.fields.NUM));
+        if (self:IsSelectType()) then
+            self:SetLabel(self:GetLabelByValue(self:GetValue(), self:GetValue()));
+        else
+            self:SetLabel(self:GetValue());
+        end 
+    elseif (block.type == "text" or block.type == options_block_type) then
+        self:SetValue(tostring(block.fields.TEXT));
+        if (self:IsSelectType()) then
+            self:SetLabel(self:GetLabelByValue(self:GetValue(), self:GetValue()));
+        else
+            self:SetLabel(self:GetValue());
+        end 
+    else
+        local inputBlock = self:GetBlock():GetBlockly():GetBlockInstanceByType(block.type);
+        if (not inputBlock) then return end
+        inputBlock:Load(block);
+        if (self:GetType() == "input_value") then
+            self.inputConnection:Connection(inputBlock.outputConnection);
+        else
+            self.inputConnection:Connection(inputBlock.previousConnection);
+        end
+        if (inputBlock:IsInputShadowBlock()) then
+            inputBlock:SetProxyBlock(self:GetBlock());
+            self:SetInputShadowBlock(inputBlock);
+        end
     end
 end

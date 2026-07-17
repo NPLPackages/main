@@ -9,7 +9,7 @@ local BlockElement = NPL.load("script/ide/System/UI/Blockly/BlockElement.lua");
 -------------------------------------------------------
 ]]
 
-local Element = NPL.load("../Window/Element.lua", IsDevEnv);
+local Element = NPL.load("../Window/Element.lua");
 local Block = NPL.load("./Block.lua")
 local BlocklyElement = commonlib.inherit(Element, NPL.export());
 

@@ -5,16 +5,16 @@ Date: 2020/6/30
 Desc: 布局类
 use the lib:
 -------------------------------------------------------
-local Layout = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Window/Layout/Layout.lua");
+local Layout = NPL.load("script/ide/System/UI/Window/Layout/Layout.lua");
 -------------------------------------------------------
 ]]
 
-local BaseLayout = NPL.load("./BaseLayout.lua", IsDevEnv);
-local Flex = NPL.load("./Flex.lua", IsDevEnv);
+local BaseLayout = NPL.load("./BaseLayout.lua");
+local Flex = NPL.load("./Flex.lua");
 
 local Layout = commonlib.inherit(BaseLayout, NPL.export());
 
-local LayoutDebug = GGS.Debug.GetModuleDebug("LayoutDebug").Disable(); --Enable  Disable
+local LayoutDebug = System.Util.Debug.GetModuleDebug("LayoutDebug").Disable(); --Enable  Disable
 
 -- 初始化
 function Layout:Init(element)
@@ -136,8 +136,8 @@ function Layout:PrepareLayout()
     LayoutDebug.If(
 		self:GetElement():GetAttrValue("id") == "debug",
         "PrepareLayout TagName = " .. self:GetTagName() ..  " ElementName = " .. self:GetName(), 
-        string.format("Element nid = %s, width = %s, height = %s", self.nid, width, height),
-        parentLayout and string.format("ParentElement nid = %s, width = %s, height = %s", parentLayout.nid, parentWidth, parentHeight)
+        string.format("Element nid = %s, width = %s, height = %s", self.nid, width or "", height or ""),
+        parentLayout and string.format("ParentElement nid = %s, width = %s, height = %s", parentLayout.nid, parentWidth or "", parentHeight or "")
     );
 end
 

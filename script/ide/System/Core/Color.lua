@@ -134,6 +134,11 @@ function Color.rgb2hsl(r, g, b)
 	return h, s, l
 end
 
+-- @param r, g, b: each in [0,255]
+function Color.RGB_TO_DWORD(r, g, b)
+	return r*256*256 + g*256 + b;
+end
+
 -- @param r, g, b, a: each in [0,255]
 function Color.RGBA_TO_DWORD(r, g, b, a)
 	local c=0;
@@ -173,10 +178,12 @@ end
 
 
 --@param colorStr: "#ffffff" or "#ffffffff"
---@param colorFloats: array of {r,g,b,a} where r in range [0, 255]
+--@param colorFloats: if nil, an empty array is created. 
+--@return colorFloats: array of {r,g,b,a} where r in range [0, 255]
 function Color.ColorStrToValues(colorStr, colorFloats)
 	local r,g,b,a = colorStr:match("(%x%x)(%x%x)(%x%x)(%x?%x?)")
 	if(r) then
+		colorFloats = colorFloats or {}
 		colorFloats[1] = tonumber(r, 16);
 		colorFloats[2] = tonumber(g, 16);
 		colorFloats[3] = tonumber(b, 16);
@@ -185,6 +192,7 @@ function Color.ColorStrToValues(colorStr, colorFloats)
 		else
 			colorFloats[4] = nil;
 		end
+		return colorFloats;
 	end
 end
 
@@ -317,7 +325,7 @@ end
 function Color.ToValue(color)
 	if(type(color) == "string") then
 		color = color:gsub("^#", "0x");
-		color = tonumber(color);
+		color = tonumber(color) or 0;
 	end
 	return color;
 end

@@ -25,8 +25,9 @@ local Style = commonlib.inherit(nil, commonlib.gettable("System.Windows.mcml.Sty
 function Style:ctor()
 	self.items = {};
 	self.references = {};
-	self.css_items = {};
-	self.css_references = {};
+	-- css_items and css_references are lazy-initialized when needed
+	self.css_items = nil;
+	self.css_references = nil;
 
 	self.page = nil;
 end
@@ -71,17 +72,22 @@ end
 
 -- apply to styleItem for all matching classes
 function Style:ApplyCssStyleToStyleItem(styleItem, pageElement)
-	local references = self.css_references;
-	for i=1, #(references) do
-		references[i]:ApplyCssStyleToStyleItem(styleItem, pageElement);
+	if(self.css_references) then
+		local references = self.css_references;
+		for i=1, #(references) do
+			references[i]:ApplyCssStyleToStyleItem(styleItem, pageElement);
+		end
 	end
-	for i = 1,#self.css_items do
-		local css_item = self.css_items[i];
-		local selectors = css_item.selectors;
-		for j = 1,#selectors do
-			local selector = selectors[j];
-			if(selector:match(pageElement)) then
-				styleItem:Merge(css_item.style);
+	if(self.css_items) then
+		local css_items = self.css_items;
+		for i = 1,#css_items do
+			local css_item = css_items[i];
+			local selectors = css_item.selectors;
+			for j = 1,#selectors do
+				local selector = selectors[j];
+				if(selector:match(pageElement)) then
+					styleItem:Merge(css_item.style);
+				end
 			end
 		end
 	end
@@ -113,6 +119,8 @@ function Style:LoadFromString(code, type)
 			local styles = commonlib.LoadTableFromString(code);
 			if(styles) then
 				self:LoadFromTable(styles);
+			else
+				self:LoadCssFromString(code);
 			end
 		else
 			self:LoadCssFromString(code);
@@ -166,12 +174,19 @@ end
 
 -- it does not copy and merge items in the given style, it simply add a reference to the given style
 function Style:AddReference(style, type)
-	local references = if_else(not type or type == "mcss", self.references, self.css_references);
 	if(style) then
-		--local references = self.references;
+		local references;
+		if(not type or type == "mcss") then
+			references = self.references;
+		else
+			if(not self.css_references) then
+				self.css_references = {};
+			end
+			references = self.css_references;
+		end
 		for i=1, #(references) do
 			if(references[i] == style) then
-				break;
+				return;
 			end
 		end
 		references[#references+1] = style;
@@ -180,15 +195,22 @@ end
 
 -- remove a given reference
 function Style:RemoveReference(style, type)
-	local references = if_else(not type or type == "mcss", self.references, self.css_references);
-	local index;
-	for i=1, #(references) do
-		if(references[i] == style) then
-			index = i;
-			break;
-		end
+	local references;
+	if(not type or type == "mcss") then
+		references = self.references;
+	else
+		references = self.css_references;
 	end
-	commonlib.removeArrayItem(references, index);
+	if(references) then
+		local index;
+		for i=1, #(references) do
+			if(references[i] == style) then
+				index = i;
+				break;
+			end
+		end
+		commonlib.removeArrayItem(references, index);
+	end
 end
 
 function Style:parseSelectors(selectorsString)
@@ -209,6 +231,9 @@ function Style:LoadCssFromString(code)
 		local selectors = self:parseSelectors(selector_str);
 		local style = StyleItem:new():init(self);
 		style:AddString(declaration_str);
+		if(not self.css_items) then
+			self.css_items = {};
+		end
 		self.css_items[#self.css_items + 1] = {
 			["selectors"] = selectors,
 			["style"] = style,

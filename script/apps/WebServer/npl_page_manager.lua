@@ -25,6 +25,19 @@ local npl_page_manager = commonlib.inherit(nil, commonlib.gettable("WebServer.np
 
 function npl_page_manager:ctor()
 	self.pages = {};
+	-- mapping from filename to {size, modification} for tracking file changes
+	self.file_info = {};
+end
+
+-- private: save current file info (size and modification date) for change detection
+function npl_page_manager:save_file_info(filename)
+	local fileInfo = {};
+	if(ParaIO.GetFileInfo(filename, fileInfo)) then
+		self.file_info[filename] = {
+			size = fileInfo.size,
+			modification = fileInfo.modification,
+		};
+	end
 end
 
 -- create get a given file
@@ -36,6 +49,7 @@ function npl_page_manager:get(filename)
 		page = npl_page_parser:new():init(self);
 		page:parse(filename);
 		self.pages[filename] = page;
+		self:save_file_info(filename);
 		bNewlyLoaded = true;
 	end
 	return page, bNewlyLoaded;
@@ -72,7 +86,30 @@ function npl_page_manager:refresh(filename)
 	local page = self.pages[filename];
 	if(page) then
 		page:parse(filename);
+		self:save_file_info(filename);
 	end
+end
+
+-- only refresh if file size or modification date has changed.
+-- @return true if actually refreshed
+function npl_page_manager:refresh_if_changed(filename)
+	local page = self.pages[filename];
+	if(page) then
+		local lastInfo = self.file_info[filename];
+		local fileInfo = {};
+		if(ParaIO.GetFileInfo(filename, fileInfo)) then
+			if(not lastInfo or lastInfo.size ~= fileInfo.size or lastInfo.modification ~= fileInfo.modification) then
+				LOG.std(nil, "info", "npl_page_manager", "auto refresh file: %s", filename);
+				page:parse(filename);
+				self.file_info[filename] = {
+					size = fileInfo.size,
+					modification = fileInfo.modification,
+				};
+				return true;
+			end
+		end
+	end
+	return false;
 end
 
 -- file extension

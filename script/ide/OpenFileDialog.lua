@@ -133,8 +133,9 @@ end
 -- @param title: title string or nil
 -- @param initialdir: initial directoy or nil
 -- @param isSaveMode: if true, we will use SaveFileDialog instead of OpenFileDialog. default to nil.
+-- @param Multiple: if true, we will allow multiple selection. default to nil.
 -- @return the filename selected or nil if nothing is selected or user clicked cancel.
-function OpenFileDialog.ShowDialog_Win32(filters, title, initialdir, isSaveMode)
+function OpenFileDialog.ShowDialog_Win32(filters, title, initialdir, isSaveMode,Multiple)
 	if (System.os.GetPlatform() ~= "win32") then return nil end 
 
 	if(initialdir) then
@@ -143,11 +144,13 @@ function OpenFileDialog.ShowDialog_Win32(filters, title, initialdir, isSaveMode)
 		end
 		initialdir = initialdir:gsub("/","\\");
 	end
+	local isMultiple = type(Multiple) == "boolean" and Multiple or false;
 	local input = {
 			filter = GetFilterString(filters), 
 			title = commonlib.Encoding.Utf8ToDefault(title),
 			initialdir = initialdir,
 			save = isSaveMode,
+			multi = isMultiple,
 		};
 	if(ParaGlobal.OpenFileDialog(input)) then
 		return input.filename;

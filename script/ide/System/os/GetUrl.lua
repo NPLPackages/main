@@ -8,8 +8,23 @@ However, this function can be useful to get URL headers only for large HTTP file
 use the lib:
 ------------------------------------------------------------
 NPL.load("(gl)script/ide/System/os/GetUrl.lua");
--- down file or making standard request
+-- download file or making standard request
 System.os.GetUrl("https://github.com/LiXizhi/HourOfCode/archive/master.zip", echo);
+-- streaming file or url request like HTTP event stream
+System.os.GetUrl({dataStreaming=true, url="https://github.com/LiXizhi/HourOfCode/archive/master.zip"}, function(err, msg)
+	if(msg.data ~= "") then
+		if(msg.header) then
+			echo(msg.header) -- first callback contains headers
+		end
+		echo(msg.data) -- subsequent callbacks contains data just received
+	end
+end);
+-- with AbortController signal, you can terminate during a big or streaming event
+local signal = System.os.AbortController:new();
+System.os.GetUrl({signal=signal, dataStreaming=true, url="https://github.com/LiXizhi/HourOfCode/archive/master.zip"}, function(err, msg)
+	echo(msg)
+	signal:Abort();
+end);
 -- get headers only with "-I" option. 
 System.os.GetUrl("https://github.com/LiXizhi/HourOfCode/archive/master.zip", 
 	function(err, msg, data)  echo(msg) end, "-I");
@@ -60,6 +75,15 @@ System.os.GetUrl({
 	form = {filecontent = "binary string here", }
 }, function(err, msg, data)		echo(data)  end);
 
+-- Get url with http proxy
+System.os.GetUrl({
+	url="https://google.com",
+    options = {
+		CURLOPT_PROXY = "127.0.0.1:8080",
+		-- CURLOPT_PROXYUSERPWD = "username:password", -- URL encoded, for example a colon in the user name you should encode it as %3A
+	},
+}, function(err, msg, data)		echo(data)  end);
+
 -- synchronous API in current NPL thread
 local err, msg, data = System.os.GetUrl({url = "http://www.baidu.com", form = {key="value",} });
 echo({err, msg, data})
@@ -72,6 +96,7 @@ local npl_thread_name = __rts__:GetName();
 if(npl_thread_name == "main") then
 	npl_thread_name = "";
 end
+
 
 local function GetUrlSync(url)
 	local c = cURL.easy_init()
@@ -87,6 +112,24 @@ local function GetUrlSync(url)
 			end	
 			end})
 	return result;
+end
+
+----------------------------------------
+-- AbortController is used to terminate a streaming or big request
+----------------------------------------
+local AbortController = commonlib.inherit(nil, commonlib.gettable("System.os.AbortController"));
+function AbortController:ctor()
+	self.isAborted = false;
+	AbortController.lastIndex = (AbortController.lastIndex or 0) + 1
+	self.name = tostring(AbortController.lastIndex);
+end
+
+-- call this function to terminate
+function AbortController:Abort()
+	local asyncloader = System.Core.DOM.GetDOM("AsyncLoader");
+	if(asyncloader) then
+		asyncloader:SetField("AbortRequest", self.name);
+	end
 end
 
 ----------------------------------------
@@ -133,9 +176,16 @@ end
 
 function Request:SetResponse(msg)
 	self.response = msg;
-	if(msg and msg.data) then
+	self.isStreaming = nil;
+	if(msg and msg.type == "stream") then
+		self.isStreaming = msg.data and msg.data ~= ""
+	elseif(msg and msg.data) then
 		if(type(msg.header) == "string") then
-			local input_type_lower = msg.header:lower():match("content%-type:%s*([^\r\n]+)");
+			-- just in case there is multiple content-type headers such as HTTP 301 moved to another location, such as redirecting from http to https protocol.  
+			local input_type_lower;
+			for value in msg.header:lower():gmatch("content%-type:%s*([^\r\n]+)") do
+				input_type_lower = value;
+			end
 			if(input_type_lower) then
 				if(input_type_lower:find("application/json", 1, true)) then
 					if(type(msg.data) == "string") then
@@ -165,7 +215,9 @@ function CallbackURLRequest__(id)
 			request:SetResponse(msg);
 			request:InvokeCallback();
 		end
-		requests[id] = nil;
+		if(not request.isStreaming) then
+			requests[id] = nil;
+		end
 	end
 end
 
@@ -180,6 +232,13 @@ local function GetUrlOptions(url, option)
 	if(option) then
 		url = option.." "..url;
 	end
+	if (System.os.IsEmscripten()) then
+		url = string.gsub(url, "http://api%-dev%.kp%-para%.cn", "https://api-dev.kp-para.cn");
+	end
+	if(options.signal and type(options.signal) == "table") then
+		options.signalVariable = options.signal.name;
+		options.signal = nil;
+	end
 	options.url = url;
 	if(options.method and options.method~="GET" and options.method~="POST") then
 		local method = options.method;
@@ -187,23 +246,35 @@ local function GetUrlOptions(url, option)
 		options.options = options.options or {};
 		options.options["CURLOPT_CUSTOMREQUEST"] = method;
 	end
+	if(options.dataStreaming) then
+		-- if streaming api is used, we will disable timeout
+		options.options = options.options or {};
+		options.options["CURLOPT_TIMEOUT"] = options.options["CURLOPT_TIMEOUT"] or 0;
+		options.options["CURLOPT_TCP_KEEPALIVE"] = options.options["CURLOPT_TCP_KEEPALIVE"] or 1;
+	end
 	return options;
 end
 
 -- return the content of a given url. 
 -- e.g.  System.os.GetUrl("www.paraengine.com", function(rcode, msg, data) end)
--- @param url: url string or a options table of {url=string, postfields=string, form={key=value}, headers={key=value, "line strings"}, json=bool, qs={}}
+-- @param url: url string or a options table of {url=string, postfields=string, form={key=value}, headers={key=value, "line strings"}, json=bool, qs={}, dataStreaming=false}
 -- .form is optional key, value pair table.
 -- if .json is true, form will be encoded in json.
 -- if .method is optinal or "PUT|DELETE", by default it is get/post request
 -- if .qs is query string table
 -- if .postfields is a binary string to be passed in the request body. If this is present, form parameter will be ignored. 
 -- if .headers is a table, it contains additional http request headers to be added
+-- if .dataStreaming is true, callbackFunc will be called multiple times whenever data is received, 
+-- msg.type="stream" is set in all callbacks.
+--     the first callback contains msg.headers and some partial msg.data. 
+--     the intermediary callback contains contains subsequent partial msg.data received. You need to manually concatenate and parse data.
+--     the last callback contains msg.data = "", which indicates the end of data stream.
 -- if .options is a table, it contains additional curl options, 
---    such as {CURLOPT_CAINFO = string, CURLOPT_SSLCERT = string, CURLOPT_SSLKEY = string, etc}, see curl doc for more information. 
+--    such as {CURLOPT_PROXY="ip:port", CURLOPT_CAINFO = string, CURLOPT_SSLCERT = string, CURLOPT_SSLKEY = string, etc}, see curl doc for more information. 
 -- @param callbackFunc: a function(rcode, msg, data) end, if nil, the function will not return until result is returned(sync call).
 --  `rcode` is http return code, such as 200 for success, which is same as `msg.rcode`
---  `msg` is the raw HTTP message {header, code=0, rcode=200, data}
+--     rcode is nil, when url.dataStreaming is true except for the last end of stream message. 
+--  `msg` is the raw HTTP message {header, code=0, rcode=200, data, type}
 --  `data` contains the translated response data if data format is a known format like json
 --    or it contains the binary response body from server, which is same as `msg.data`
 -- @param option: mostly nil. "-I" for headers only

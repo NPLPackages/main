@@ -1771,16 +1771,18 @@ function pe_item.create(rootName, mcmlNode, bindingContext, _parent, left, top, 
 					local quality_background = "";
 					local gsItem = Map3DSystem.Item.ItemManager.GetGlobalStoreItemInMemory(gsid);
 					local _this;
-					if(gsItem.template.stats[99] and gsItem.template.stats[99] == 1) then
-					-- this is a gold or diamond card, draw an overlay. 
-						quality_background = "Texture/Aries/Desktop/ItemOutline/gold_border_smaller_32bits.png: 12 12 12 12";
-						_this = ParaUI.CreateUIObject("container", "quality_tag", "_lt", left-3, top-3, width-left+6, height-top+6);
-					else
-						quality_background = GetOutlineFromQualityAndSize(gsItem.template.stats[221] or 0, math.min(width-left, height-top));
-						--if(not gsItem.template.stats[221] or gsItem.template.stats[221] == 0) then
-							--quality_background = ""
-						--end
-						 _this = ParaUI.CreateUIObject("container", "quality_tag", "_lt", left-2, top-2, width-left+4, height-top+4);
+					if gsItem and gsItem.template and gsItem.template.stats then
+						if(gsItem.template.stats[99] and gsItem.template.stats[99] == 1) then
+						-- this is a gold or diamond card, draw an overlay. 
+							quality_background = "Texture/Aries/Desktop/ItemOutline/gold_border_smaller_32bits.png: 12 12 12 12";
+							_this = ParaUI.CreateUIObject("container", "quality_tag", "_lt", left-3, top-3, width-left+6, height-top+6);
+						else
+							quality_background = GetOutlineFromQualityAndSize(gsItem.template.stats[221] or 0, math.min(width-left, height-top));
+							--if(not gsItem.template.stats[221] or gsItem.template.stats[221] == 0) then
+								--quality_background = ""
+							--end
+							_this = ParaUI.CreateUIObject("container", "quality_tag", "_lt", left-2, top-2, width-left+4, height-top+4);
+						end
 					end
 					-- show the item copies in on the item slot
 					--local _this = ParaUI.CreateUIObject("container", "quality_tag", "_lt", left-1, top-1, width-left+2, height-top+2);

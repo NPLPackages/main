@@ -21,15 +21,7 @@ function Canvas:ctor()
 end
 
 function Canvas:paintEvent(painter)
-	painter:Rotate(self:GetRotation() / math.pi * 180);
-	painter:Scale(self:GetScalingX(), self:GetScalingY());
-	painter:Translate(self:GetTranslationX(), self:GetTranslationY());
-
 	local color = Color.Multiply(self:GetBackgroundColor(), self:GetColor());
 	painter:SetPen(color);
 	painter:DrawRectTexture(self:x(), self:y(), self:width(), self:height(), self:GetBackground());
-
-	painter:Translate(-self:GetTranslationX(), -self:GetTranslationY());
-	painter:Scale(1, 1);
-	painter:Rotate(0);
 end

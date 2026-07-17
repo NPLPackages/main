@@ -4,11 +4,11 @@ Author(s): wxa
 Date: 2020/8/14
 Desc: 按钮
 -------------------------------------------------------
-local Radio = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Window/Elements/Radio.lua");
+local Radio = NPL.load("script/ide/System/UI/Window/Elements/Radio.lua");
 -------------------------------------------------------
 ]]
 
-local Element = NPL.load("../Element.lua", IsDevEnv);
+local Element = NPL.load("../Element.lua");
 local Radio = commonlib.inherit(Element, NPL.export());
 
 Radio:Property("Name", "Radio");

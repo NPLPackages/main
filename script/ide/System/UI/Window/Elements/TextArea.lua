@@ -4,7 +4,7 @@ Author(s): wxa
 Date: 2020/8/14
 Desc: 文本编辑器
 -------------------------------------------------------
-local TextArea = NPL.load("Mod/GeneralGameServerMod/App/UI/Window/Elements/TextArea.lua");
+local TextArea = NPL.load("script/ide/System/UI/Window/Elements/TextArea.lua");
 
 cursorAt 取值为 [0, text:length()] 光标处于指定位置字符后面, 故插入字符位置为 cursorAt + 1
 -------------------------------------------------------
@@ -17,17 +17,17 @@ local Keyboard = commonlib.gettable("System.Windows.Keyboard");
 local FocusPolicy = commonlib.gettable("System.Core.Namespace.FocusPolicy");
 local Point = commonlib.gettable("mathlib.Point");
 
-local Element = NPL.load("../Element.lua", IsDevEnv);
+local Element = NPL.load("../Element.lua");
 
 local TextArea = commonlib.inherit(Element, NPL.export());
 
-local TextAreaDebug = GGS.Debug.GetModuleDebug("TextAreaDebug").Disable();   --Enable  Disable
+local TextAreaDebug = System.Util.Debug.GetModuleDebug("TextAreaDebug").Disable();   --Enable  Disable
 local CursorShowHideMaxTickCount = 30;
 
 TextArea:Property("Value");                                    -- 文本值
 TextArea:Property("RowCount", 2);                              -- 行数
 TextArea:Property("AutoWrap", true, "IsAutoWrap");             -- 是否自动换行
-
+TextArea:Property("cursorBlinkPeriod", 30, "GetCursorBlinkPeriod", "SetCursorBlinkPeriod");
 TextArea:Property("ShowCursor", false, "IsShowCursor");
 TextArea:Property("BaseStyle", {
     NormalStyle = {
@@ -181,7 +181,7 @@ function TextArea:handleRedo()
 end
 
 function TextArea:handleSelectAll()
-    self.selectStartAt, self.selectEndAt = 1, self.text:length() + 1;
+    self.selectStartAt, self.selectEndAt = 0, self.text:length() + 1;
     TextAreaDebug.Format("handleSelectAll selectStartAt = %s, selectEndAt = %s", self.selectStartAt, self.selectEndAt);
 end
 
@@ -205,9 +205,36 @@ function TextArea:handlePaste()
     self:InsertTextCmd(clip)
 end
 
-function TextArea:handleHome()
+function TextArea:handleHome(event, bselected)
+    if (bselected) then
+        local cursorLine = self:GetCursorLine();
+        self.selectStartAt = cursorLine.startAt;
+        self.selectEndAt = self.cursorAt;
+    else
+        local cursorLine = self:GetCursorLine();
+        local offset = self.cursorAt - cursorLine.startAt + 1;
+        self:AdjustCursorAt(-offset);
+    end
 end
-function TextArea:handleEnd()
+
+function TextArea:handPageUp(event)
+    self:AdjustCursorAt(-self.cursorAt);
+end
+
+function TextArea:handPageDown(event)
+    self:AdjustCursorAt(self.text:length() + 1 - self.cursorAt);
+end
+
+function TextArea:handleEnd(event, bselected)
+    if (bselected) then
+        local cursorLine = self:GetCursorLine();
+        self.selectStartAt = self.cursorAt;
+        self.selectEndAt = cursorLine.endAt - 1;
+    else
+        local cursorLine = self:GetCursorLine();
+        local offset = cursorLine.endAt - 1 - self.cursorAt;
+        self:AdjustCursorAt(offset);
+    end
 end
 
 function TextArea:handleMoveToPrevLine()
@@ -241,11 +268,31 @@ function TextArea:handleMoveToNextChar()
 end
 
 function TextArea:handleSelectToPrevLine()
-    
+    self.selectStartAt = self.selectStartAt or self.cursorAt;
+    self.selectEndAt = self.selectEndAt or self.cursorAt;
+    self:handleMoveToPrevLine();
+    if(self.cursorAt < self.selectStartAt) then
+        self.selectStartAt = self.cursorAt;
+    else 
+        self.selectEndAt = self.cursorAt;
+    end
+    if (self.selectStartAt > self.selectEndAt) then
+        self.selectStartAt, self.selectEndAt = self.selectEndAt, self.selectStartAt;
+    end
 end
 
 function TextArea:handleSelectToNextLine()
-    
+    self.selectStartAt = self.selectStartAt or self.cursorAt;
+    self.selectEndAt = self.selectEndAt or self.cursorAt;
+    self:handleMoveToNextLine();
+    if(self.cursorAt > self.selectEndAt) then
+        self.selectEndAt = self.cursorAt;
+    else
+        self.selectStartAt = self.cursorAt;
+    end
+    if (self.selectStartAt > self.selectEndAt) then
+        self.selectStartAt, self.selectEndAt = self.selectEndAt, self.selectStartAt;
+    end
 end
 
 -- 左开右闭
@@ -292,6 +339,8 @@ function TextArea:OnKeyDown(event)
 	elseif (event:IsKeySequence("Copy")) then self:handleCopy(event)
 	elseif (event:IsKeySequence("Paste")) then self:handlePaste(event, "Clipboard");
 	elseif (event:IsKeySequence("Cut")) then self:handleCut(event)
+    elseif (event:IsKeySequence("MoveToStart")) then return self:handPageUp(event)
+    elseif (event:IsKeySequence("MoveToEnd")) then return self:handPageDown(event)
 	elseif (event:IsKeySequence("MoveToStartOfLine") or event:IsKeySequence("MoveToStartOfBlock")) then self:handleHome(event, false)
     elseif (event:IsKeySequence("MoveToEndOfLine") or event:IsKeySequence("MoveToEndOfBlock")) then self:handleEnd(event, false)
     elseif (event:IsKeySequence("SelectStartOfLine") or event:IsKeySequence("SelectStartOfBlock")) then self:handleHome(event, true)
@@ -312,6 +361,8 @@ function TextArea:OnKeyDown(event)
     elseif (event:IsFunctionKey() or event.ctrl_pressed) then 
     else -- 处理普通输入
 	end
+
+    event:Accept();
 end
 
 function TextArea:OnKey(event)
@@ -319,6 +370,15 @@ function TextArea:OnKey(event)
     if (self:IsReadOnly()) then return end
 
     local commitString = event:GetCommitString();
+
+    event:Accept();
+    if (System.os.GetPlatform() == "ios" or
+        System.os.GetPlatform() == "android") then
+		if (commitString == "[#backspace]") then
+			self:handleBackspace();
+			return;
+		end
+	end
 
     -- 忽略控制字符
     local char1 = string.byte(commitString, 1);
@@ -384,7 +444,7 @@ function TextArea:UpdateLineInfo()
         local linetext = linetexts[i];
         local trimtext, remaintext = _guihelper.TrimUtf8TextByWidth(linetext, w, self:GetFont());
         local startAt, endAt = at + 1, at + self:GetTextLength(trimtext);
-        TextAreaDebug.Format("UpdateLineInfo line = %s, at = %s, startAt = %s, endAt = %s, trimtext = %s, remaintext = %s", line, at, startAt, endAt, trimtext, remaintext);
+        TextAreaDebug.Format("UpdateLineInfo line = %s, at = %s, startAt = %s, endAt = %s, trimtext = %s, remaintext = %s", line, at, startAt, endAt, trimtext or "", remaintext or "");
         line = line + 1;
         at = endAt;
         table.insert(lines, {line = line, startAt = startAt, endAt = endAt});
@@ -393,7 +453,7 @@ function TextArea:UpdateLineInfo()
             startAt, endAt = at + 1, at + self:GetTextLength(trimtext);
             line = line + 1;
             at = endAt;
-            TextAreaDebug.Format("UpdateLineInfo line = %s, at = %s, startAt = %s, endAt = %s, trimtext = %s, remaintext = %s", line, at, startAt, endAt, trimtext, remaintext);
+            TextAreaDebug.Format("UpdateLineInfo line = %s, at = %s, startAt = %s, endAt = %s, trimtext = %s, remaintext = %s", line, at, startAt, endAt, trimtext or "", remaintext or "");
             table.insert(lines, {line = line, startAt = startAt, endAt = endAt});
         end
 
@@ -420,9 +480,9 @@ function TextArea:DeleteTextCmd(startAt, count)
     if (endAt < 1) then return end
     startAt = math.max(startAt, 1);
     table.insert(self.undoCmds, {startAt = startAt, endAt = endAt, action = "delete", text = self.text:sub(startAt, endAt)});
-    TextAreaDebug.Format("DeleteTextCmd before cursorAt = %s, startAt = %s, endAt = %s, text = %s", self.cursorAt, startAt, endAt, self:GetValue());
+    TextAreaDebug.Format("DeleteTextCmd before cursorAt = %s, startAt = %s, endAt = %s, text = %s", self.cursorAt, startAt, endAt, self:GetValue() or "");
     self:DeleteText(startAt, endAt);
-    TextAreaDebug.Format("DeleteTextCmd after cursorAt = %s, startAt = %s, endAt = %s, text = %s", self.cursorAt, startAt, endAt, self:GetValue());
+    TextAreaDebug.Format("DeleteTextCmd after cursorAt = %s, startAt = %s, endAt = %s, text = %s", self.cursorAt, startAt, endAt, self:GetValue() or "");
 end
 
 
@@ -476,7 +536,13 @@ end
 
 function TextArea:FocusIn()
     TextArea._super.FocusIn(self);
+    self:ResetCursor()
+end
+
+function TextArea:ResetCursor()
     self.cursorShowHideTickCount = 0;
+    self:SetCursorBlinkPeriod(self:cursorFlashTime())
+    self:SetShowCursor(true);
 end
 
 function TextArea:RenderCursor(painter)
@@ -486,8 +552,11 @@ function TextArea:RenderCursor(painter)
     local line = self:GetLineByAt(self.cursorAt);
     local LineHeight = self:GetStyle():GetLineHeight(); 
 
-    self.cursorShowHideTickCount = self.cursorShowHideTickCount + 1;
-    if (self.cursorShowHideTickCount > CursorShowHideMaxTickCount) then 
+    local cursorBlinkPeriod = self:GetCursorBlinkPeriod();
+    if(cursorBlinkPeriod > 0) then
+        self.cursorShowHideTickCount = self.cursorShowHideTickCount + 1;
+    end
+    if (self.cursorShowHideTickCount > cursorBlinkPeriod) then 
         self.cursorShowHideTickCount = 0;
         self:SetShowCursor(not self:IsShowCursor());
     end
@@ -588,12 +657,14 @@ function TextArea:GetAtByPos(x, y)
         lineNo = lineNo + 1;
     end
     local startAt = self.text:length();
+    if (startAt == 0) then startAt = 1 end
     if (self.lines[lineNo]) then startAt = self.lines[lineNo].startAt end
     local text = _guihelper.AutoTrimTextByWidth(self:GetLineText(lineNo):GetText(), x, self:GetFont());
     local textlen = ParaMisc.GetUnicodeCharNum(text);
     local textWidth = _guihelper.GetTextWidth(text, self:GetFont());
     
-    if (x > textWidth) then return startAt + textlen end
+    if (textlen == 0) then textlen = 1 end
+    if (x > textWidth) then return startAt + textlen - 1 end
 
     while (textWidth > x and textlen > 0) do
         textlen = textlen - 1;
@@ -603,6 +674,7 @@ function TextArea:GetAtByPos(x, y)
 
     TextAreaDebug.Format("GetAtByPos, lineNo = %s, x = %s, textWidth = %s textlen = %s, cursorAt = %s", lineNo, x, textWidth, textlen, startAt + textlen);
 
+    if (textlen == 0) then textlen = 1 end
     return startAt + textlen - 1;
 end
 
@@ -633,6 +705,7 @@ end
 
 function TextArea:OnMouseMove(event)
     if (not self.mouseDown or not event:IsLeftButton() or not event:IsMove()) then return end
+    event:Accept();
     local x, y = event.x, event.y;
     if (not self:IsContainPoint(x, y)) then return self:OnMouseUp() end
     local cursorAt = self:GetAtByPos(self:GloablToContentGeometryPos(x, y));
@@ -641,9 +714,10 @@ function TextArea:OnMouseMove(event)
 end
 
 function TextArea:OnMouseUp(event)
+    event:Accept();
     self:ReleaseMouseCapture();
     self.mouseDown = false;
     if (not self:IsSelected()) then
         self:ClearSelected();
-    end 
+    end
 end

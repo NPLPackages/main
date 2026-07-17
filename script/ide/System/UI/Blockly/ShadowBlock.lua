@@ -5,7 +5,7 @@ Date: 2020/6/30
 Desc: G
 use the lib:
 -------------------------------------------------------
-local ShadowBlock = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Blockly/ShadowBlock.lua");
+local ShadowBlock = NPL.load("script/ide/System/UI/Blockly/ShadowBlock.lua");
 -------------------------------------------------------
 ]]
 

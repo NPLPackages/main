@@ -18,8 +18,8 @@
 <script type="text/lua">
 RegisterComponent("WindowTitleBar", "%vue%/Components/WindowTitleBar.html");
 
-local FileManager = NPL.load("script/ide/System/UI/Blockly/Pages/FileManager.lua", IsDevEnv);
-local Sandbox = NPL.load("script/ide/System/UI/Blockly/Sandbox/Sandbox.lua", IsDevEnv);
+local FileManager = NPL.load("script/ide/System/UI/Blockly/Pages/FileManager.lua");
+local Sandbox = NPL.load("script/ide/System/UI/Blockly/Sandbox/Sandbox.lua");
 
 local BlocklyEl = nil;
 local BroadcastHelper = commonlib.gettable("CommonCtrl.BroadcastHelper");

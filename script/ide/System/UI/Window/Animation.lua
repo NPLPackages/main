@@ -5,13 +5,13 @@ Date: 2020/6/30
 Desc: Animation
 use the lib:
 -------------------------------------------------------
-local Animation = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Window/Animation.lua");
+local Animation = NPL.load("script/ide/System/UI/Window/Animation.lua");
 -------------------------------------------------------
 ]]
 
 local Animation = commonlib.inherit(commonlib.gettable("System.Core.ToolBase"), NPL.export());
 
-local AnimationDebug = GGS.Debug.GetModuleDebug("AnimationDebug");
+local AnimationDebug = System.Util.Debug.GetModuleDebug("AnimationDebug");
 
 Animation:Property("Element");     -- 元素
 Animation:Property("KeyFrames");   -- 关键帧

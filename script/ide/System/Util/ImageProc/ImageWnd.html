@@ -1,0 +1,24 @@
+<pe:mcml>
+    <script refresh="false" type="text/npl" src=""><![CDATA[
+NPL.load("(gl)script/ide/System/Util/ImageProc/Image.lua");
+local Image = commonlib.gettable("System.Util.ImageProc.Image");
+Image._pages[Page:GetRequestParam("name")] = document.GetPageCtrl();
+
+    function ClosePage()
+        Page:CloseWindow();
+    end
+    function GetImageStyle()
+        local filename = Page:GetRequestParam("filename") or "";
+        local style = format("width:256px;height:256px;background:url(%s)", filename)
+        return style
+    end
+    ]]></script>
+<div style="padding:2px;background-color:#80808080;">
+<div style="height:26px;">
+    <input type="button" zorder="1" value="X" style="position:relative;width:24px;height:24px;margin-top:0px" align="right" onclick="ClosePage()" />
+    <span style="margin-left:5px;"><%=string.format("%s (%d*%d)", Page:GetRequestParam("filename"), Page:GetRequestParam("width"), Page:GetRequestParam("height"))%></span>
+</div>
+<div style="<%=GetImageStyle()%>">
+</div>
+</div>
+</pe:mcml>

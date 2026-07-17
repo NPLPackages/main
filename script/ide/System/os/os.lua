@@ -55,6 +55,27 @@ function os.GetParaEngineVersion()
 	return os.paraEngineVer,os.paraEngineMajorVer,os.paraEngineMinorVer
 end
 
+-- params string:"1.4.1.0" --测试使用
+function os.SetParaEngineVersion(strVertion)
+	local strVertion = strVertion or "";
+	local major, minor ,product_major, product_minor= unpack(commonlib.split(strVertion, "."));
+	if major and minor  and product_major and product_minor then
+		os.paraEngineVer = strVertion
+		os.paraEngineMajorVer = tonumber(major)
+		os.paraEngineMinorVer = tonumber(minor)
+		GameLogic.AddBBS(nil,L"引擎版本号修改成功")
+	end
+end
+
+-- @return "DirectX" or "OpenGL"
+function os.GetRendererName()
+	if not os.rendererName then
+		os.rendererName = ParaEngine.GetAttributeObject():GetField("RendererName", "DirectX");
+	end
+	return os.rendererName;
+end
+
+
 function os.CompareParaEngineVersion(ver)
 	local curVer, curMajorVer, curMinorVer = System.os.GetParaEngineVersion();
 
@@ -77,6 +98,11 @@ function os.CompareParaEngineVersion(ver)
 	end
 end
 
+function os.GetAndroidFlavor()
+	local androidFlavor = ParaEngine.GetAppCommandLineByParam("android_flavor", "");
+	return string.lower(androidFlavor);
+end
+
 local isWindowsXP;
 -- if it is old system
 function os.IsWindowsXP()
@@ -93,9 +119,26 @@ function os.IsWindowsXP()
 	end
 	return isWindowsXP;
 end
-				
+
+function os.IsWin32()
+	return os.GetPlatform() == "win32";
+end
+
+-- obsoleted: use os.IsWin32() instead
+function os.IsWindow()
+	return os.GetPlatform() == "win32";
+end
+
 function os.IsEmscripten()
 	return os.GetPlatform() == "emscripten";
+end
+
+local WebOS = nil;
+function os.GetWebOS()
+	if (not WebOS) then
+		WebOS = ParaEngine.GetAppCommandLineByParam("webOS", "");
+	end
+	return WebOS;
 end
 
 -- return true if is mobile device
@@ -113,6 +156,18 @@ function os.IsTouchMode()
 		return true;
 	else
 		return false;
+	end
+end
+
+-- whether the device support touch event
+-- whenever we receive a mouse down click, this function return false, whenever we receive a touch down event, it return true. 
+-- call this function periodically to check if the most recent click is coming from click or touch. 
+-- this function is useful for windows platform with touch screen. 
+function os.IsLastTouchMode()
+	if(os.IsMobilePlatform()) then
+		return true;
+	else
+		return ParaEngine.GetAttributeObject():GetField("IsTouchInputting", false);
 	end
 end
 

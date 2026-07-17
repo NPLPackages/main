@@ -37,6 +37,18 @@ ScaleManip:Property({"UniformScaling", false, "IsUniformScaling", "SetUniformSca
 ScaleManip:Property({"RealTimeUpdate", true, "IsRealTimeUpdate", "SetRealTimeUpdate", auto=true});
 -- whether to update the manipulator's real position according to "position" variable.
 ScaleManip:Property({"UpdatePosition", true, "IsUpdatePosition", "SetUpdatePosition", auto=true});
+-- whether to show X axis manipulator
+ScaleManip:Property({"showXAxis", true, "IsShowXAxis", "SetShowXAxis", auto=true});
+-- whether to show Y axis manipulator
+ScaleManip:Property({"showYAxis", true, "IsShowYAxis", "SetShowYAxis", auto=true});
+-- whether to show Z axis manipulator
+ScaleManip:Property({"showZAxis", true, "IsShowZAxis", "SetShowZAxis", auto=true});
+-- whether to invert Y axis direction
+ScaleManip:Property({"invertYAxis", false, "IsInvertYAxis", "SetInvertYAxis", auto=true});
+-- whether axis lines are pickable (if false, only end cubes are pickable)
+ScaleManip:Property({"canPickAxisLine", true, "IsCanPickAxisLine", "SetCanPickAxisLine", auto=true});
+-- whether to show axis lines
+ScaleManip:Property({"showAxisLine", true, "IsShowAxisLine", "SetShowAxisLine", auto=true});
 
 
 function ScaleManip:ctor()
@@ -65,7 +77,13 @@ local axis_dirs = {
 -- @param axis: "x|y|z". default to current
 -- @return vector3d
 function ScaleManip:GetMoveDirByAxis(axis)
-	return axis_dirs[axis or self.selectedAxis];
+	local selectedAxis = axis or self.selectedAxis;
+	local dir = axis_dirs[selectedAxis];
+	if(selectedAxis == "y" and self:IsInvertYAxis()) then
+		return vector3d:new({0,-1,0});
+	else
+		return dir;
+	end
 end
 
 -- virtual: 
@@ -217,70 +235,101 @@ function ScaleManip:paintEvent(painter)
 			-- draw dragging path
 			ShapesDrawer.DrawCube(painter, 0,0,0, cube_radius);
 			local moveDir = self:GetMoveDirByAxis();
-			ShapesDrawer.DrawLine(painter, 0,0,0, moveDir[1]*radius, moveDir[2]*radius, moveDir[3]*radius);
+			if(self:IsShowAxisLine()) then
+				ShapesDrawer.DrawLine(painter, 0,0,0, moveDir[1]*radius, moveDir[2]*radius, moveDir[3]*radius);
+			end
 			ShapesDrawer.DrawCube(painter, moveDir[1]*radius, moveDir[2]*radius, moveDir[3]*radius, cube_radius);
 		end
 	end
 	
 	local x_name, y_name, z_name;
 	if(isDrawingPickable) then
-		x_name = self:GetNextPickingName();
-		y_name = self:GetNextPickingName();
-		z_name = self:GetNextPickingName();
+		if(self:IsShowXAxis()) then
+			x_name = self:GetNextPickingName();
+		end
+		if(self:IsShowYAxis()) then
+			y_name = self:GetNextPickingName();
+		end
+		if(self:IsShowZAxis()) then
+			z_name = self:GetNextPickingName();
+		end
 	end
 
 	local name = self:GetActivePickingName();
 	
 
 	local offsetX, offsetY, offsetZ = 0,0,0;
-	if(self:IsAxisHighlighted("x", name)) then 
-		self:SetColorAndName(painter, self.selectedColor, x_name);
-		if(self.drag_offset) then
-			offsetX, offsetY, offsetZ = self.drag_offset.x, self.drag_offset.y, self.drag_offset.z;
-		end
-	else
-		if(not self.selectedAxis) then
-			self:SetColorAndName(painter, self.xColor, x_name);
+	if(self:IsShowXAxis()) then
+		if(self:IsAxisHighlighted("x", name)) then 
+			self:SetColorAndName(painter, self.selectedColor, x_name);
+			if(self.drag_offset) then
+				offsetX, offsetY, offsetZ = self.drag_offset.x, self.drag_offset.y, self.drag_offset.z;
+			end
 		else
-			self:SetColorAndName(painter, Color.ChangeOpacity(self.xColor, 32), x_name);
+			if(not self.selectedAxis) then
+				self:SetColorAndName(painter, self.xColor, x_name);
+			else
+				self:SetColorAndName(painter, Color.ChangeOpacity(self.xColor, 32), x_name);
+			end
 		end
+		if(self:IsShowAxisLine() and (not isDrawingPickable or self:IsCanPickAxisLine())) then
+			ShapesDrawer.DrawLine(painter, 0,0,0, radius+offsetX,0+offsetY,0+offsetZ);
+		end
+		ShapesDrawer.DrawCube(painter, radius+offsetX,0+offsetY,0+offsetZ, cube_radius);
 	end
-	ShapesDrawer.DrawLine(painter, 0,0,0, radius+offsetX,0+offsetY,0+offsetZ);
-	ShapesDrawer.DrawCube(painter, radius+offsetX,0+offsetY,0+offsetZ, cube_radius);
 	offsetX, offsetY, offsetZ = 0,0,0;
-	if(self:IsAxisHighlighted("y", name)) then 
-		self:SetColorAndName(painter, self.selectedColor, y_name);
-		if(self.drag_offset) then
-			offsetX, offsetY, offsetZ = self.drag_offset.x, self.drag_offset.y, self.drag_offset.z;
-		end
-	else
-		if(not self.selectedAxis) then
-			self:SetColorAndName(painter, self.yColor, y_name);
+	if(self:IsShowYAxis()) then
+		local yDirection = self:IsInvertYAxis() and -radius or radius;
+		if(self:IsAxisHighlighted("y", name)) then 
+			self:SetColorAndName(painter, self.selectedColor, y_name);
+			if(self.drag_offset) then
+				offsetX, offsetY, offsetZ = self.drag_offset.x, self.drag_offset.y, self.drag_offset.z;
+				-- Invert Y offset when Y axis is inverted
+				if(self:IsInvertYAxis()) then
+					offsetY = -offsetY;
+				end
+			end
 		else
-			self:SetColorAndName(painter, Color.ChangeOpacity(self.yColor, 32), y_name);
+			if(not self.selectedAxis) then
+				self:SetColorAndName(painter, self.yColor, y_name);
+			else
+				self:SetColorAndName(painter, Color.ChangeOpacity(self.yColor, 32), y_name);
+			end
 		end
+		if(self:IsShowAxisLine() and (not isDrawingPickable or self:IsCanPickAxisLine())) then
+			ShapesDrawer.DrawLine(painter, 0,0,0, 0+offsetX,yDirection+offsetY,0+offsetZ);
+		end
+		ShapesDrawer.DrawCube(painter, 0+offsetX,yDirection+offsetY,0+offsetZ, cube_radius);
 	end
-	ShapesDrawer.DrawLine(painter, 0,0,0, 0+offsetX,radius+offsetY,0+offsetZ);
-	ShapesDrawer.DrawCube(painter, 0+offsetX,radius+offsetY,0+offsetZ, cube_radius);
 	offsetX, offsetY, offsetZ = 0,0,0;
-	if(self:IsAxisHighlighted("z", name)) then 
-		self:SetColorAndName(painter, self.selectedColor, z_name);
-		if(self.drag_offset) then
-			offsetX, offsetY, offsetZ = self.drag_offset.x, self.drag_offset.y, self.drag_offset.z;
-		end
-	else
-		if(not self.selectedAxis) then
-			self:SetColorAndName(painter, self.zColor, z_name);
+	if(self:IsShowZAxis()) then
+		if(self:IsAxisHighlighted("z", name)) then 
+			self:SetColorAndName(painter, self.selectedColor, z_name);
+			if(self.drag_offset) then
+				offsetX, offsetY, offsetZ = self.drag_offset.x, self.drag_offset.y, self.drag_offset.z;
+			end
 		else
-			self:SetColorAndName(painter, Color.ChangeOpacity(self.zColor, 32), y_name);
+			if(not self.selectedAxis) then
+				self:SetColorAndName(painter, self.zColor, z_name);
+			else
+				self:SetColorAndName(painter, Color.ChangeOpacity(self.zColor, 32), z_name);
+			end
 		end
+		if(self:IsShowAxisLine() and (not isDrawingPickable or self:IsCanPickAxisLine())) then
+			ShapesDrawer.DrawLine(painter, 0,0,0, 0+offsetX,0+offsetY,radius+offsetZ);
+		end
+		ShapesDrawer.DrawCube(painter, 0+offsetX,0+offsetY,radius+offsetZ, cube_radius);
 	end
-	ShapesDrawer.DrawLine(painter, 0,0,0, 0+offsetX,0+offsetY,radius+offsetZ);
-	ShapesDrawer.DrawCube(painter, 0+offsetX,0+offsetY,radius+offsetZ, cube_radius);
 
 	if(isDrawingPickable) then
-		self.names.x = x_name;
-		self.names.y = y_name;
-		self.names.z = z_name;
+		if(self:IsShowXAxis()) then
+			self.names.x = x_name;
+		end
+		if(self:IsShowYAxis()) then
+			self.names.y = y_name;
+		end
+		if(self:IsShowZAxis()) then
+			self.names.z = z_name;
+		end
 	end
 end

@@ -4,11 +4,11 @@ Author(s): wxa
 Date: 2020/8/14
 Desc: 复选框
 -------------------------------------------------------
-local CheckBox = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Window/Elements/CheckBox.lua");
+local CheckBox = NPL.load("script/ide/System/UI/Window/Elements/CheckBox.lua");
 -------------------------------------------------------
 ]]
 
-local Element = NPL.load("../Element.lua", IsDevEnv);
+local Element = NPL.load("../Element.lua");
 local CheckBox = commonlib.inherit(Element, NPL.export());
 
 local pen = {width = 2, color = "#000000"};
@@ -38,9 +38,20 @@ function CheckBox:Init(xmlNode, window, parent)
     return self;
 end
 
+function CheckBox:OnAttrValueChange(attrName, attrValue, oldAttrValue)
+    if (attrName == "checked") then 
+        self:SetChecked(self:GetAttrBoolValue("checked", false));
+    end
+end
+
+function CheckBox:SetChecked(checked)
+    self.checked = checked;
+end
+
 function CheckBox:OnClick(event)
     self.checked = not self.checked;
     CheckBox._super.OnClick(self, event);
+    self:OnChange(self.checked);
 
     local groupElement = self:GetGroupElement();
     if (groupElement) then 

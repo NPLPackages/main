@@ -53,8 +53,6 @@ function pe_checkbox:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 		self:setChecked(checked);
 	end
 
-	self:UpdateGetters();
-
 	self.buttonName = self:GetAttributeWithCode("name",nil,true);
 	_this:Connect("clicked", self, self.OnClick, "UniqueConnection");
 
@@ -66,6 +64,8 @@ function pe_checkbox:OnAddGetter(name, func, bindingContext)
 		bindingContext:AddGetter(self.control, "setChecked", func)
 	elseif(name == "tooltip") then
 		bindingContext:AddGetter(self.control, "SetTooltip", func)
+	else
+		pe_checkbox._super.OnAddGetter(self, name, func, bindingContext);
 	end
 end
 

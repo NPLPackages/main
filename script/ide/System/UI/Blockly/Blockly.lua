@@ -9,27 +9,36 @@ use the lib:
 local Blockly = NPL.load("script/ide/System/UI/Blockly/Blockly.lua");
 -------------------------------------------------------
 ]]
+local IsRecursiveLoadFile = __rts__:GetField("IsRecursiveLoadFile", true);
+__rts__:SetField("IsRecursiveLoadFile", false);
+
 NPL.load("(gl)script/ide/System/Windows/mcml/css/StyleColor.lua");
 NPL.load("(gl)script/apps/Aries/Creator/Game/Sound/BlockSound.lua");
+
 local BlockSound = commonlib.gettable("MyCompany.Aries.Game.Sound.BlockSound");
 local StyleColor = commonlib.gettable("System.Windows.mcml.css.StyleColor");
-local Helper = NPL.load("./Helper.lua", IsDevEnv);
-local BlockManager = NPL.load("./Blocks/BlockManager.lua", IsDevEnv);
-local ToolBoxXmlText = NPL.load("./Blocks/ToolBoxXmlText.lua", IsDevEnv);
-local BlockOptionGlobal = NPL.load("./Blocks/BlockOptionGlobal.lua", IsDevEnv);
-local Options = NPL.load("./Options.lua", IsDevEnv);
-local Const = NPL.load("./Const.lua", IsDevEnv);
-local Shape = NPL.load("./Shape.lua", IsDevEnv);
-local LuaFmt = NPL.load("./LuaFmt.lua", IsDevEnv);
-local Element = NPL.load("../Window/Element.lua", IsDevEnv);
-local ToolBox = NPL.load("./ToolBox.lua", IsDevEnv);
-local ContextMenu = NPL.load("./ContextMenu.lua", IsDevEnv);
-local Block = NPL.load("./Block.lua", IsDevEnv);
-local ShadowBlock = NPL.load("./ShadowBlock.lua", IsDevEnv);
-local BlocklyEditor = NPL.load("./BlocklyEditor.lua", IsDevEnv);
-local Note = NPL.load("./Note.lua", IsDevEnv);
-local BlocklySimulator = NPL.load("./BlocklySimulator.lua", IsDevEnv);
-local ScrollBar = NPL.load("./ScrollBar.lua", IsDevEnv);
+local BlockManager = NPL.load("./Blocks/BlockManager.lua");
+local Helper = NPL.load("./Helper.lua");
+local ToolBoxXmlText = NPL.load("./Blocks/ToolBoxXmlText.lua");
+local BlockOptionGlobal = NPL.load("./Blocks/BlockOptionGlobal.lua");
+local Options = NPL.load("./Options.lua");
+local Const = NPL.load("./Const.lua");
+local Shape = NPL.load("./Shape.lua");
+NPL.load("./Block.lua"); -- preload to prevent recursion
+local LuaFmt = NPL.load("./LuaFmt.lua");
+local Element = NPL.load("../Window/Element.lua");
+local ToolBox = NPL.load("./ToolBox.lua");
+local ContextMenu = NPL.load("./ContextMenu.lua");
+local Block = NPL.load("./Block.lua");
+local ShadowBlock = NPL.load("./ShadowBlock.lua");
+local FoldedBlock = NPL.load("./FoldedBlock.lua");
+local BlocklyEditor = NPL.load("./BlocklyEditor.lua");
+local Note = NPL.load("./Note.lua");
+local BlocklySimulator = NPL.load("./BlocklySimulator.lua");
+local ScrollBar = NPL.load("./ScrollBar.lua");
+
+__rts__:SetField("IsRecursiveLoadFile", IsRecursiveLoadFile);
+
 local Blockly = commonlib.inherit(Element, NPL.export());
 
 local ConnectionBlockSound = BlockSound:new():Init({"cloth1", "cloth2", "cloth3",});
@@ -45,6 +54,8 @@ Blockly:Property("FocusUI");                  -- 聚焦UI
 Blockly:Property("CurrentBlock");             -- 当前拽块
 Blockly:Property("RunningBlock");             -- 运行块
 Blockly:Property("Language");                 -- 语言
+Blockly:Property("LanguageType");             -- 语言类型
+Blockly:Property("LanguageText");             -- 语言问题
 Blockly:Property("FileManager");              -- 文件管理器
 Blockly:Property("ToolBox");                  -- 工具栏
 Blockly:Property("ShadowBlock");              -- 占位块
@@ -55,6 +66,7 @@ Blockly:Property("ToCodeCache");              -- 生成代码的时缓存对象
 Blockly:Property("RunBlockId", 0);            -- 运行块ID
 Blockly:Property("ShowMiniMap", false, "IsShowMiniMap");  -- 是否显示小地图
 Blockly:Property("Version", "1.0.0");         -- 当前版本
+Blockly:Property("CustomBlocklyFactory", false, "IsCustomBlocklyFactory");         -- 是否是定制工具
 
 function Blockly.PlayCreateBlockSound()
     ConnectionBlockSound:play2d();
@@ -69,17 +81,10 @@ function Blockly.PlayDestroyBlockSound()
 end
 
 function Blockly:ctor()
-    self:Reset();
     self.BlockMap, self.CategoryList, self.CategoryMap, self.CategoryColor = {}, {}, {}, {};
+    self:Reset();
     self:SetToolBox(ToolBox:new():Init(self));
     self:SetOptionGlobal(BlockOptionGlobal:new():Init());
-
-    local IsMobileUIEnabled = GameLogic.GetFilters():apply_filters('MobileUIRegister.IsMobileUIEnabled',false)
-	if (IsMobileUIEnabled and not GameLogic.Macros:IsRecording() and not GameLogic.Macros:IsPlaying()) then
-        Const.UnitSize = 4;
-    else 
-        Const.UnitSize = 3;
-    end
 end
 
 function Blockly:Reset()
@@ -95,7 +100,23 @@ function Blockly:Reset()
     self.__offset_x_unit_count__, self.__offset_y_unit_count__ = 0, 0;
     self.__horizontal_scroll_bar__ = ScrollBar:new():Init(self, "horizontal");
     self.__vertical_scroll_bar__ = ScrollBar:new():Init(self, "vertical");
+    self.Const = Const;
+    self.ToolBoxWidth = Const.ToolBoxWidth;
+    self.ToolBoxBlockMap = {};
+    self.init_workspace_xml = "";
+    self:ResetExtendBlockAndCategory();
     self:SetScale(1);
+end
+
+function Blockly:ResetExtendBlockAndCategory()
+    self.ExtendCategory = { name = "扩展", text = "扩展", color = "#FF8C1A", blocktypes = {}};
+    self.ExtendBlockMap = {};
+    self.CategoryColor[self.ExtendCategory.name] = self.ExtendCategory.color;
+    self.CategoryColor[self.ExtendCategory.text] = self.ExtendCategory.color;
+end
+
+function Blockly:GetExtendCategory()
+    return self.ExtendCategory;
 end
 
 function Blockly:Init(xmlNode, window, parent)
@@ -125,7 +146,9 @@ function Blockly:Init(xmlNode, window, parent)
 
     self:SetShadowBlock(ShadowBlock:new():Init(self));
 
+    self:SetCustomBlocklyFactory(self:GetAttrStringValue("CustomBlocklyFactory") == "true");
     self:SetLanguage(self:GetAttrStringValue("language"));
+    self:SetLanguageType(self:GetAttrStringValue("LanguageType"));
     self:LoadBlockMap();
     self.CategoryList, self.CategoryMap = BlockManager.GetCategoryListAndMap(self:GetLanguage());
     self:OnToolBoxXmlTextChange(self:GetAttrStringValue("ToolBoxXmlText"));
@@ -141,16 +164,19 @@ end
 function Blockly:OnToolBoxXmlTextChange(toolboxXmlText)
     local xmlNode = ParaXML.LuaXML_ParseString(toolboxXmlText);
     local toolboxNode = xmlNode and commonlib.XPath.selectNode(xmlNode, "//toolbox");
+    local all_category_map = BlockManager.GetCustomCurrentBlockAllCategoryMap();
+    local all_block_map = BlockManager.GetCustomCurrentBlockAllBlockMap();
     if (toolboxNode) then
         local categorylist, categorymap = {}, {};
         for _, categoryNode in ipairs(toolboxNode) do
             if (categoryNode.attr and categoryNode.attr.name) then
                 local category_attr = categoryNode.attr;
-                local default_category = self.CategoryMap[category_attr.name] or {};
+                local default_category = self.CategoryMap[category_attr.name] or all_category_map[category_attr.name] or {};
                 local category = categorymap[category_attr.name] or {};
                 category.name = category.name or category_attr.name or default_category.name;
                 category.text = category.text or category_attr.text or default_category.text;
                 category.color = category.color or category_attr.color or default_category.color;
+                default_category.color = default_category.color or category.color;
                 -- local hideInToolbox = if_else(category_attr.hideInToolbox ~= nil, category_attr.hideInToolbox == "true", default_category.hideInToolbox and true or false);
                 -- category.hideInToolbox = if_else(category.hideInToolbox ~= nil, category.hideInToolbox, hideInToolbox);
                 category.hideInToolbox = category_attr.hideInToolbox == "true";
@@ -159,7 +185,8 @@ function Blockly:OnToolBoxXmlTextChange(toolboxXmlText)
                         local blocktype = blockTypeNode.attr.type;
                         local disabled = blockTypeNode.attr.disabled == "true";
                         local hideInToolbox = blockTypeNode.attr.hideInToolbox == "true";
-                        table.insert(category, {blocktype = blocktype, hideInToolbox = hideInToolbox, disabled = disabled});
+                        local color = blockTypeNode.color;
+                        table.insert(category, {blocktype = blocktype, hideInToolbox = hideInToolbox, disabled = disabled, color = color});
                     end
                 end
                 if (not categorymap[category.name]) then
@@ -170,39 +197,125 @@ function Blockly:OnToolBoxXmlTextChange(toolboxXmlText)
         end
         self.CategoryList = categorylist;
     end
+    self.ToolBoxBlockMap = {};
     for _, category in ipairs(self.CategoryList) do
-        for _, block in ipairs(category) do
-            local option = self.BlockMap[block.blocktype];
+        for _, blocktype in ipairs(category.blocktypes or {}) do
+            local option = self.BlockMap[blocktype];
             if (option) then  
                 option.category = category.name; 
                 option.color = category.color;
+                self.ToolBoxBlockMap[blocktype] = option;
+            else
+                print("================block undefined:", blocktype);
+            end
+        end
+        for _, block in ipairs(category) do
+            local blocktype = block.blocktype;
+            local option = self.BlockMap[blocktype] or all_block_map[blocktype];
+            if (option) then  
+                option.category = category.name; 
+                option.color = category.color;
+                self.ToolBoxBlockMap[blocktype] = option;
+            else
+                print("================block undefined:", blocktype);
             end
         end
         self.CategoryColor[category.name] = category.color;
         self.CategoryColor[category.text or category.name] = category.color;
     end
+
+    self:ResetExtendBlockAndCategory();
+    if (self:IsCustomLanguage()) then
+        if (#(self.CategoryList) == 0) then
+            local all_block_map = BlockManager.GetCustomCurrentBlockAllBlockMap();
+            local all_category_map = BlockManager.GetCustomCurrentBlockAllCategoryMap();
+            local category_map = {};
+            for block_type, block in pairs(all_block_map) do
+                local category_name = block.category;
+                local category = category_map[category_name];
+                if (not category) then
+                    local default_category = all_category_map[category_name] or {};
+                    category = { color = default_category.color, name = default_category.name, text = default_category.text, blocktypes = {} };
+                end
+                table.insert(category.blocktypes, #category.blocktypes + 1, block_type);
+                block.color = block.color or category.color;
+                block.group = block.group or category.name or "";
+                self.ToolBoxBlockMap[block_type] = block;
+            end
+            for _, category in pairs(all_category_map) do
+                table.insert(self.CategoryList, #self.CategoryList + 1, category);  
+            end
+        end
+    else
+        local all_block_map = BlockManager.GetCustomCurrentBlockAllBlockMap();
+        local all_category_map = BlockManager.GetCustomCurrentBlockAllCategoryMap();
+        for block_type, block in pairs(all_block_map) do
+            if (block_type ~= "" and not self.ExtendBlockMap[block_type] and not self.ToolBoxBlockMap[block_type]) then
+                local extend_block = commonlib.deepcopy(block);
+                local extend_category = all_category_map[extend_block.category] or {};
+                extend_block.color = extend_block.color or extend_category.color;
+                extend_block.group = extend_block.group or extend_category.name or "";
+                self.ExtendBlockMap[block_type] = extend_block;
+                self.ToolBoxBlockMap[block_type] = extend_block;
+                table.insert(self.ExtendCategory.blocktypes, #(self.ExtendCategory.blocktypes) + 1, block_type);
+                self:SortExtendBlocks();
+            end
+        end
+    end
+
     self:GetToolBox():SetCategoryList(self.CategoryList);
+end
+
+function Blockly:SortExtendBlocks()
+    local __self__ = self;
+    table.sort(self.ExtendCategory.blocktypes, function(block_type_1, block_type_2)
+        local block_1 = __self__.ExtendBlockMap[block_type_1] or __self__.ToolBoxBlockMap[block_type_1];
+        local block_2 = __self__.ExtendBlockMap[block_type_2] or __self__.ToolBoxBlockMap[block_type_2];
+        local group_1 = (block_1 and block_1.group or "") or "";
+        local group_2 = (block_2 and block_2.group or "") or "";
+        return group_1 < group_2 or (group_1 == group_2 and block_type_1 < block_type_2);
+    end);
 end
 
 function Blockly:IsOnlyGenerateStartBlockCode()
     return self:GetAttrBoolValue("OnlyGenerateStartBlockCode", false);
 end
 
+function Blockly:IsCustomLanguage()
+    local language = self:GetLanguage();
+    return language == "CustomWorldBlock" or CustomWorldBlock == "CustomCurrentBlock";
+end
+
 function Blockly:OnAttrValueChange(attrName, attrValue, oldAttrValue)
     if (attrName == "ToolBoxXmlText") then
-        self:OnToolBoxXmlTextChange(self:GetAttrStringValue("ToolBoxXmlText"));
-    elseif (attrName == "language") then
+            -- self:OnToolBoxXmlTextChange(self:GetAttrStringValue("ToolBoxXmlText"));
+        self.m_on_toolbox_xml_text_change_timer = self.m_on_toolbox_xml_text_change_timer or commonlib.TimerManager.SetTimeout(function()  
+            self:OnToolBoxXmlTextChange(self:GetAttrStringValue("ToolBoxXmlText"));
+            self.m_on_toolbox_xml_text_change_timer = nil;
+        end,  10);
+    elseif (attrName == "language" or attrName == "LanguageText") then
         self:SetLanguage(self:GetAttrStringValue("language"));
+        self:SetLanguageText(self:GetAttrStringValue("LanguageText", "{}"));
+        local CustomCurrentBlockLanguage = self:GetLanguage();
+        BlockManager.LoadCustomCurrentBlockEntity();
         self:LoadBlockMap();
-        self.CategoryList, self.CategoryMap = BlockManager.GetCategoryListAndMap(self:GetLanguage());
-        self:OnToolBoxXmlTextChange(self:GetAttrStringValue("ToolBoxXmlText"));
+        self.CategoryList, self.CategoryMap = BlockManager.GetCategoryListAndMap(CustomCurrentBlockLanguage);
+        -- self:OnToolBoxXmlTextChange(self:GetAttrStringValue("ToolBoxXmlText"));
+        self:SetShowCategory(not BlockManager.IsHideCategory(CustomCurrentBlockLanguage));
+        self:SetToolBoxWidth(BlockManager.GetToolBoxWidth(CustomCurrentBlockLanguage));
+        self.m_on_toolbox_xml_text_change_timer = self.m_on_toolbox_xml_text_change_timer or commonlib.TimerManager.SetTimeout(function()  
+            self:OnToolBoxXmlTextChange(self:GetAttrStringValue("ToolBoxXmlText"));
+            self.m_on_toolbox_xml_text_change_timer = nil;
+        end,  10);
+    elseif (attrName == "LanguageType") then
+        self:SetLanguageType(self:GetAttrStringValue("LanguageType"));
     end
 end
 
 function Blockly:LoadBlockMap()
-    local BlockMap = BlockManager.GetBlockMap(self:GetLanguage());
+    local block_count = 0;
     self.BlockMap = {};
-
+    local BlockMap = BlockManager.GetBlockMap(self:GetLanguage());
     local optionGlobal = self:GetOptionGlobal();
     for blockType, blockOption in pairs(BlockMap) do
         local option = commonlib.deepcopy(blockOption);
@@ -210,7 +323,7 @@ function Blockly:LoadBlockMap()
             commonlib.mincopy(option, optionGlobal:GetDefaultOption(blockType));
             commonlib.partialcopy(option, optionGlobal:GetOverWriteOption(blockType));
         end
-        
+        block_count = block_count + 1;
         self.BlockMap[blockType] = option;
         optionGlobal:DefineGlobalOption(blockType, option);
 
@@ -227,6 +340,7 @@ function Blockly:LoadBlockMap()
         -- 调用初始化回调
         if (type(option.OnInit) == "function") then option.OnInit(option) end 
     end 
+    -- print("===========LoadBlockMap===============", self:GetLanguage(), block_count);
 end
 
 -- 添加一个注释
@@ -312,70 +426,38 @@ end
 
 -- 操作
 function Blockly:Do(cmd)
-    local block = cmd.block;
-    cmd.startLeftUnitCount = block.startLeftUnitCount;
-    cmd.startTopUnitCount = block.startTopUnitCount;
-    cmd.endLeftUnitCount = block.leftUnitCount;
-    cmd.endTopUnitCount = block.topUnitCount;
-    table.insert(self.undos, cmd);
+    cmd = cmd or {};
+    cmd.workspace_xml_text = self:SaveToXmlNodeText();
+
+    local last_cmd = self.undos[#self.undos];
+    if (last_cmd and last_cmd.workspace_xml_text == cmd.workspace_xml_text) then return end
+
+    table.insert(self.undos, #self.undos + 1, cmd);
+    self.redos = {}
     self:OnChange();
+    -- 如果超过50个，删除第一个
+    if (#self.undos > 50) then
+        table.remove(self.undos, 1);
+    end
 end
 
 -- 撤销命令
 function Blockly:Undo()
-    local cmd = self.undos[#self.undos];
-    if (not cmd) then return end
+    if (#self.undos == 0) then return end
+    table.insert(self.redos, #self.redos + 1, self.undos[#self.undos]);
     table.remove(self.undos, #self.undos);
-    local action, block, blockCount = cmd.action, cmd.block, cmd.blockCount;
-    local tmpBlock = block;
-    local blocks = {};
-    local index = 1;
-    for index = 1, blockCount do
-        if (tmpBlock) then
-            blocks[index] = tmpBlock;
-            blocks[index]:Disconnection();
-            tmpBlock = tmpBlock:GetNextBlock();
-            if (index > 1 and blocks[index-1].nextConnection) then
-                blocks[index-1].nextConnection:Connection(blocks[index].previousConnection);
-            end
-            index = index + 1;
-        end
-    end
-    if (action == "DeleteBlock" or action == "MoveBlock") then
-        self:AddBlock(block);
-        block:SetLeftTopUnitCount(cmd.startLeftUnitCount, cmd.startTopUnitCount);
-        block:UpdateLeftTopUnitCount();
-        block:TryConnectionBlock();
-    elseif (action == "NewBlock") then
-        self:RemoveBlock(block);
-    end
-    table.insert(self.redos, cmd);
+    local cmd = self.undos[#self.undos];
+    self:LoadFromXmlNodeText(cmd and cmd.workspace_xml_text or self.init_workspace_xml);
     self:OnChange();
 end
 
 -- 恢复
 function Blockly:Redo()
+    if (#self.redos == 0) then return end
     local cmd = self.redos[#self.redos];
-    if (not cmd) then return end
     table.remove(self.redos, #self.redos);
-    local action, block = cmd.action, cmd.block;
-    local connection = block and block:GetConnection();
-
-    if (connection) then
-        connection:Disconnection();
-        connection:GetBlock():GetTopBlock():UpdateLayout();
-    end
-
-    if (action == "NewBlock" or action == "MoveBlock") then
-        self:AddBlock(block);
-        block:SetLeftTopUnitCount(cmd.endLeftUnitCount, cmd.endTopUnitCount);
-        block:UpdateLeftTopUnitCount();
-        block:TryConnectionBlock();
-    elseif (action == "DeleteBlock") then
-        self:RemoveBlock(block);
-    end
-
-    table.insert(self.undos, cmd);
+    table.insert(self.undos, #self.undos + 1, cmd);
+    self:LoadFromXmlNodeText(cmd.workspace_xml_text);
     self:OnChange();
 end
 
@@ -386,19 +468,83 @@ end
 -- 定义块
 function Blockly:DefineBlock(block)
     self.BlockMap[block.type] = block;
+    self.ToolBoxBlockMap[block.type] = block;
+end
+
+function Blockly:GetBlockOptionByType(blocktype)
+    return self.ToolBoxBlockMap[blocktype] or self.BlockMap[blocktype];
 end
 
 -- 获取块
-function Blockly:GetBlockInstanceByType(typ, isToolBoxBlock)
-    local opts = self.BlockMap[typ] or BlockManager.GetBlockOption(typ, self:GetLanguage());
-    if (not opts) then return nil end
-    return Block:new():Init(self, opts, isToolBoxBlock);
+function Blockly:GetBlockInstanceByType(blockType, isToolBoxBlock, source_all_block_map)
+    if (blockType == "") then return nil end
+    local LangBlockMap = BlockManager.GetBlockMap(self:GetLanguage());
+    local options = self.ToolBoxBlockMap[blockType] or self.ExtendBlockMap[blockType] or LangBlockMap[blockType];
+    if (not self:IsCustomLanguage()) then
+        options = options or self.BlockMap[blockType];
+    end
+    if (options == nil) then 
+        if (type(source_all_block_map) == "table") then options = source_all_block_map[blockType] end
+        options = options or BlockManager.GetBlockOption(blockType, self:GetLanguage());
+        if (options == nil) then return nil end
+        options.category = self.ExtendCategory.name;
+        self.ExtendBlockMap[blockType] = options;
+        self.ToolBoxBlockMap[blockType] = options;
+        table.insert(self.ExtendCategory.blocktypes, #(self.ExtendCategory.blocktypes) + 1, blockType);
+        self:SortExtendBlocks();
+        self:GetToolBox():SetCategoryList(self.CategoryList);
+
+        -- 保存到当前块的文件中
+        local all_block_map = BlockManager.GetCustomCurrentBlockAllBlockMap();
+        if (not all_block_map[blockType] and not BlockManager.GetSystemBlockOption(blockType)) then
+            all_block_map[blockType] = options;
+            BlockManager.SetWorldAllCustomCurrentBlockCategoryAndBlockMapChange(true);
+            print("===========New Extend Block:", blockType);
+        end
+    end 
+    local block = Block:new():Init(self, options, isToolBoxBlock);
+
+    if (isToolBoxBlock) then
+        local block_option = block:GetOption();
+        local folded_xmlnode = Helper.XmlString2Lua(block_option.folded_xml_text or "");
+        if (type(folded_xmlnode) == "table" and folded_xmlnode[1]) then
+            local next_block = self:GetBlockInstanceByXmlNode(folded_xmlnode[1]);
+            if (next_block and block_option.is_folded_draggable == false) then
+                next_block:DisableDraggable(true);
+            end
+            if (next_block and next_block.previousConnection and block.nextConnection) then
+                block.nextConnection:Connection(next_block.previousConnection);
+                if (block_option.is_folded ~= false) then
+                    block = FoldedBlock:new():Init(self, block);
+                    block:SetType(block_option.type);
+                end
+            end
+        end
+    end
+
+    return block;
 end
 
 -- 获取块
-function Blockly:GetBlockInstanceByXmlNode(xmlNode)
-    local block = self:GetBlockInstanceByType(xmlNode.attr.type);
-    if (not block) then return nil end
+function Blockly:GetBlockInstanceByXmlNode(xmlNode, source_all_block_map)
+    if (type(xmlNode) ~= "table" or xmlNode.name ~= "Block" or type(xmlNode.attr) ~= "table" or not xmlNode.attr.type) then return end
+    local isFoldedBlock = xmlNode.attr.isFoldedBlock == "true";
+    if (isFoldedBlock) then 
+        for _, childXmlNode in ipairs(xmlNode) do
+            if (childXmlNode.name == "FoldedBlock" and childXmlNode[1]) then
+                local folded_block = self:GetBlockInstanceByXmlNode(childXmlNode[1]);
+                local block = FoldedBlock:new():Init(self, folded_block);
+                block:LoadFromXmlNode(xmlNode);
+                return block;
+            end
+        end
+    end
+
+    local block = self:GetBlockInstanceByType(xmlNode.attr.type, false, source_all_block_map);
+    if (not block) then 
+        print("block: " .. xmlNode.attr.type .. " undefined");
+        return nil 
+    end
     block:LoadFromXmlNode(xmlNode);
     return block;
 end
@@ -470,7 +616,7 @@ end
 function Blockly:IsInnerViewPort(block)
     local x, y, w, h = self:GetContentGeometry();
     local hw, hh = w / 2, h / 2;
-    local cx, cy = Const.ToolBoxWidth + self.offsetX + hw, self.offsetY + hh;
+    local cx, cy = self.ToolBoxWidth + self.offsetX + hw, self.offsetY + hh;
     local b_x, b_y, b_hw, b_hh = block.left, block.top, block.width / 2, block.height / 2;
     local b_cx, b_cy = b_x + b_hw, b_y + b_hh;
     return math.abs(b_cx - cx) <= (hw + b_hw) and math.abs(b_cy - cy) <= (hh + b_hh);
@@ -484,7 +630,7 @@ function Blockly:GetMousePosIndex(mouseMoveX, mouseMoveY)
     if (10 <= mx and mx <= 42 and 0 <= my and my <= 32) then return 1 end
     if (10 <= mx and mx <= 42 and 42 <= my and my <= 74) then return 2 end
     if (10 <= mx and mx <= 42 and 84 <= my and my <= 116) then return 3 end
-    if (0 <= mx and mx <= 42 and 148 <= my and my <= 193) then return 4 end
+    if (0 <= mx and mx <= 42 and 148 <= my and my <= 193 and self:GetCurrentBlock() and self:GetCurrentBlock():IsDragging()) then return 4 end
     return 0;
 end
 
@@ -541,13 +687,8 @@ function Blockly:RenderContent(painter)
     -- 设置绘图类
     -- Shape:SetPainter(painter);
     local DraggingBlock = nil;
-    local toolboxWidth = Const.ToolBoxWidth;
+    local toolboxWidth = self.ToolBoxWidth;
     painter:Translate(x, y);
-    if (not self.isHideToolBox) then 
-        self:GetToolBox():Render(painter);
-        painter:Flush();
-    end 
-
     Shape:SetUnitSize(UnitSize);
     painter:Save();
     if (self.isHideToolBox) then
@@ -574,6 +715,11 @@ function Blockly:RenderContent(painter)
     painter:Scale(1 / scale, 1 / scale);
     painter:Restore();
 
+    if (not self.isHideToolBox) then 
+        self:GetToolBox():Render(painter);
+        painter:Flush();
+    end 
+    
     if (DraggingBlock) then
         painter:Save();
         painter:SetClipRegion(0, 0, w, h);
@@ -707,6 +853,19 @@ function Blockly:GetMouseDownUI(event)
     return ui;
 end
 
+function Blockly:CloseFieldEditorAndContextMenu()
+    local focusUI = self:GetFocusUI();
+    if (focusUI ~= nil and type(focusUI.OnFocusOut) == "function") then 
+        focusUI:OnFocusOut();
+    end
+    self:SetFocusUI(nil);
+
+    local contextmenu = self:GetContextMenu();
+    if (contextmenu ~= nil) then
+        contextmenu:Hide();
+    end
+end
+
 -- 鼠标按下事件
 function Blockly:OnMouseDown(event)
     event:Accept();
@@ -716,7 +875,7 @@ function Blockly:OnMouseDown(event)
     
     -- 失去焦点
     local focusUI = self:GetFocusUI();
-    if (focusUI ~= ui and focusUI) then 
+    if (focusUI ~= ui and focusUI and type(focusUI.OnFocusOut) == "function") then 
         focusUI:OnFocusOut();
         self:SetFocusUI(nil);
     end
@@ -770,7 +929,7 @@ end
 function Blockly:AdjustCenter(targetBlock)
     local left, top = nil, nil;
     local offsetX, offsetY = self.offsetX, self.offsetY;
-    if (not self.isHideToolBox) then offsetX = offsetX - Const.ToolBoxWidth end 
+    if (not self.isHideToolBox) then offsetX = offsetX - self.ToolBoxWidth end 
     if (targetBlock) then
         -- 以目标块为基准块
         left, top = targetBlock.left, targetBlock.top;
@@ -786,12 +945,12 @@ function Blockly:AdjustCenter(targetBlock)
     
     if (not left) then return end
     local width, height = self:GetSize();
-    if (not self.isHideToolBox) then width = width - Const.ToolBoxWidth end
+    if (not self.isHideToolBox) then width = width - self.ToolBoxWidth end
     local viewLeft, viewTop = math.floor(width / 3),  math.floor(height / 4);
     if (self.isHideToolBox) then 
         self.offsetX, self.offsetY = viewLeft - left, viewTop - top;
     else
-        self.offsetX, self.offsetY = viewLeft - left + Const.ToolBoxWidth, viewTop - top;
+        self.offsetX, self.offsetY = viewLeft - left + self.ToolBoxWidth, viewTop - top;
     end
     self:OnOffsetChange();
 end
@@ -824,17 +983,28 @@ end
 
 -- 鼠标移动事件
 function Blockly:OnMouseMove(event)
-    event:Accept();
     self.mouseMoveX, self.mouseMoveY = Blockly._super.GetRelPoint(self, event.x, event.y);
+    if (not self.isHideToolBox) then
+        local toolbox = self:GetToolBox();
+        if (self.mouseMoveX > 0 and self.mouseMoveX < self.ToolBoxWidth) then
+            toolbox:OnMouseEnter(event);
+        else 
+            toolbox:OnMouseLeave(event);
+        end
+    end
     if (not event:IsLeftButton() and self:GetMouseCaptureUI() == nil) then return end
 
     local UnitSize = self:GetUnitSize();
     local x, y = self:GetLogicAbsPoint(event);
     local logicViewX, logicViewY = self:GetLogicViewPoint(event);
     local ui = self:GetMouseUI(x, y, event);
-    if (ui and ui ~= self) then return ui:OnMouseMove(event) end
+    if (ui and ui ~= self) then 
+        return ui:OnMouseMove(event) 
+    end
     
     if (not self.isMouseDown or not event:IsLeftButton()) then return end
+    
+    event:Accept();
     local offsetX = math.floor((logicViewX - self.startX) / UnitSize) * UnitSize;
     local offsetY = math.floor((logicViewY - self.startY) / UnitSize) * UnitSize;
     if (not self.isDragging) then
@@ -870,7 +1040,7 @@ function Blockly:OnMouseUp(event)
 
     if (event:IsLeftButton()) then
         local focusUI = self:GetFocusUI();  -- 获取焦点
-        if (focusUI ~= ui and focusUI) then focusUI:OnFocusOut() end
+        if (focusUI ~= ui and focusUI and focusUI.OnFocusOut) then focusUI:OnFocusOut() end
         if (ui ~= self) then ui:OnMouseUp(event) end
         if (self.mouse_down_ui == ui) then
             if (type(ui.OnClick) == "function") then
@@ -885,14 +1055,13 @@ function Blockly:OnMouseUp(event)
         end
     end
     
-    if (event:IsRightButton() and not self:IsInnerToolBox(event) and not self:IsReadOnly()) then
-        local contextmenu = self:GetContextMenu();
-        local absX, absY = Blockly._super.GetRelPoint(self, event.x, event.y);  -- 相对坐标为窗口的缩放后坐标
-        -- local absX, absY = self:GetLogicViewPoint(event);
+    if (event:IsRightButton() and not self:IsReadOnly()) then
         local menuType = "block";
-        contextmenu:SetStyleValue("left", absX);
-        contextmenu:SetStyleValue("top", absY);
-        if (ui == self or (type(ui) == "table" and type(ui.GetClassName) == "function" and ui:GetClassName() == "Blockly")) then 
+        if (self:IsInnerToolBox(event)) then
+            -- menuType = "toolbox";
+            -- self:SetCurrentBlock(nil);
+            return;
+        elseif (ui == self or (type(ui) == "table" and type(ui.GetClassName) == "function" and ui:GetClassName() == "Blockly")) then 
             menuType = "blockly";
             self:SetCurrentBlock(nil);
         elseif (type(ui) == "table" and type(ui.GetBlock) == "function") then
@@ -901,6 +1070,23 @@ function Blockly:OnMouseUp(event)
         else
             return;
         end
+        local contextmenu = self:GetContextMenu();
+        contextmenu:SetMenuType(menuType);
+        local absX, absY = Blockly._super.GetRelPoint(self, event.x, event.y);  -- 相对坐标为窗口的缩放后坐标
+        -- local absX, absY = self:GetLogicViewPoint(event);
+        local x, y, w, h = self:GetGeometry();
+        local menuitem_count = contextmenu:GetMenuItemCount();
+        local menuitem_width = contextmenu:GetMenuItemWidth();
+        local menuitem_height = contextmenu:GetMenuItemHeight() * menuitem_count;
+        if ((absX + menuitem_width) > (x + w)) then
+            absX = x + w - menuitem_width;
+        end
+        if ((absY + menuitem_height) > (y + h)) then
+            absY = y + h - menuitem_height;
+        end
+
+        contextmenu:SetStyleValue("left", absX);
+        contextmenu:SetStyleValue("top", absY);
         self:GetContextMenu():Show(menuType);
         self.__context_menu_x__, self.__context_menu_y__ = event:GetScreenXY();
     end
@@ -909,7 +1095,7 @@ end
 function Blockly:AdjustContentSize()
     local width, height = self:GetSize();
     local UnitSize = self:GetUnitSize();
-    self.__toolbox_unit_count__ = self.isHideToolBox and 0 or math.floor(Const.ToolBoxWidth / UnitSize);
+    self.__toolbox_unit_count__ = self.isHideToolBox and 0 or math.floor(self.ToolBoxWidth / UnitSize);
     self.__width_unit_count__, self.__height_unit_count__ = math.ceil(width / UnitSize), math.ceil(height / UnitSize);
     self.__offset_x_unit_count__, self.__offset_y_unit_count__ = math.floor(self.offsetX / UnitSize), math.floor(self.offsetY / UnitSize);
     local left, top, right, bottom = nil, nil, nil, nil;
@@ -1000,6 +1186,7 @@ end
 
 -- 鼠标滚动事件
 function Blockly:OnMouseWheel(event)
+    event:Accept();
     if (self:IsInnerToolBox(event)) then return self:GetToolBox():OnMouseWheel(event) end
     if (self:IsEditing()) then return end 
     local delta = event:GetDelta();             -- 1 向上滚动  -1 向下滚动
@@ -1012,7 +1199,7 @@ end
 -- 键盘事件
 function Blockly:OnKeyDown(event)
     if (not self:IsFocus()) then return end
-
+    event:Accept();
 	local keyname = event.keyname;
 	if (keyname == "DIK_RETURN") then 
 	elseif (event:IsKeySequence("Undo")) then self:Undo()
@@ -1032,7 +1219,7 @@ function Blockly:handleDelete()
     self:RemoveBlock(block);
     self:OnDestroyBlock(block);
     self:SetCurrentBlock(nil);
-    self:OnChange();
+    self:Do();
 end
 
 function Blockly:CopyBlock(targetBlock, cloneBlock, isCloneAllBlock)
@@ -1043,7 +1230,7 @@ function Blockly:CopyBlock(targetBlock, cloneBlock, isCloneAllBlock)
     if (BlocklySimulator:IsRecordingOrPlaying()) then
         local leftUnitCount, topUnitCount = block:GetLeftTopUnitCount();
         cloneBlock:SetLeftTopUnitCount(leftUnitCount + 4, topUnitCount + 4);
-        cloneBlock:UpdateLeftTopUnitCount();
+        cloneBlock:UpdateLayout();
 
         self:AddBlock(cloneBlock);
         self:SetCurrentBlock(cloneBlock);
@@ -1051,7 +1238,7 @@ function Blockly:CopyBlock(targetBlock, cloneBlock, isCloneAllBlock)
     else
         local leftUnitCount, topUnitCount = self:GetMouseLeftTopUnitCount();
         cloneBlock:SetLeftTopUnitCount(leftUnitCount - 4, topUnitCount - 4);
-        cloneBlock:UpdateLeftTopUnitCount();
+        cloneBlock:UpdateLayout();
         cloneBlock:OnMouseDown();
         cloneBlock:SetDragging(true);
         self:SetCurrentBlock(cloneBlock);
@@ -1059,11 +1246,27 @@ function Blockly:CopyBlock(targetBlock, cloneBlock, isCloneAllBlock)
         self:AddBlock(cloneBlock);
         self:GetShadowBlock():Shadow(cloneBlock);
     end
+
+    local xmlText = Helper.Lua2XmlString(cloneBlock:SaveToXmlNode(), true);
+    ParaMisc.CopyTextToClipboard(xmlText);
 end
 
 -- 复制当前块
 function Blockly:handlePaste()
-    self:CopyBlock(self:GetCurrentBlock(), nil, nil);
+    local block = self:GetCurrentBlock();
+    if (not block) then
+        -- local text = ParaMisc.GetTextFromClipboard();
+        -- local workspace = commonlib.Json.Decode(text);
+        -- if (type(workspace) == "table") then
+        --     self:Load({
+        --         blocks = workspace.blocks.blocks,
+        --     });
+        -- end
+        -- self:Do();
+    else
+        self:CopyBlock(self:GetCurrentBlock(), nil, nil);
+        self:Do();
+    end
 end
 
 -- 复制整块
@@ -1076,7 +1279,9 @@ function Blockly:handleDeleteAll()
     local block = self:GetCurrentBlock();
     if (not block) then return end
     if (block.previousConnection) then
+        local connectionBlock = block.previousConnection:GetConnectionBlock();
         block.previousConnection:Disconnection();
+        if (connectionBlock) then connectionBlock:UpdateLayout() end
     end
     local nextBlock = block;
     while (nextBlock) do
@@ -1085,7 +1290,66 @@ function Blockly:handleDeleteAll()
     end
     self:RemoveBlock(block);
     self:SetCurrentBlock(nil);
-    self:OnChange();
+    self:Do();
+end
+
+-- 禁用块
+function Blockly:HandleDisableBlock()
+    local block = self:GetCurrentBlock();
+    if (not block) then return end
+    block:DisableRun();
+    self:Do();
+end
+
+-- 启用块
+function Blockly:HandleEnableBlock()
+    local block = self:GetCurrentBlock();
+    if (not block) then return end
+
+    local prevBlock = block:GetPrevBlock() or block:GetOutputBlock();
+    while (prevBlock and prevBlock:IsDisableRun()) do
+        block = prevBlock;
+        prevBlock = block:GetPrevBlock() or block:GetOutputBlock();
+    end
+
+    block:EnableRun();
+    self:Do();
+end
+
+-- 折叠块
+function Blockly:HandleFoldedBlock()
+    local block = self:GetCurrentBlock();
+    if (not block) then return end
+    block:Folded();
+    self:Do();
+end
+
+-- 展开块
+function Blockly:HandleExpandBlock()
+    local block = self:GetCurrentBlock();
+    if (not block) then return end
+    block:Expand();
+    self:Do();
+end
+
+function Blockly:HandleDisableEnableBlock()
+    local block = self:GetCurrentBlock();
+    if (not block) then return end
+    if (block:IsDisableRun()) then
+        self:HandleEnableBlock();
+    else
+        self:HandleDisableBlock();
+    end
+end
+
+function Blockly:HandleFoldedExpandBlock()
+    local block = self:GetCurrentBlock();
+    if (not block) then return end
+    if (block:IsFoldedBlock()) then
+        self:HandleExpandBlock();
+    else
+        self:HandleFoldedBlock();
+    end
 end
 
 function Blockly:GetPrettyCode(code)
@@ -1104,11 +1368,69 @@ function Blockly:GetPrettyCode(code)
     return prettyCode;
 end
 
+-- @param order: if nil, it default to 0, and will be appended. the larger the order, the later it will be inserted to code header.
+-- @return index of the added text
+function Blockly:AddUniqueHeader(headerText, zorder)
+    if(headerText and self.uniqueHeaders) then
+        if(not self.uniqueHeaders:contains(headerText)) then
+            self.uniqueHeaders:add(headerText, zorder or 0);
+        end
+        return self.uniqueHeaders:getIndex(headerText)
+    end
+end
+-- fixed typo
+Blockly.AddUnqiueHeader = Blockly.AddUniqueHeader
+
+-- check if a unique header exist
+function Blockly:HasUniqueHeader(headerText)
+    if(headerText and self.uniqueHeaders) then
+        if(self.uniqueHeaders:contains(headerText)) then
+            return true;
+        end
+    end
+end
+
+-- reset nextId when calling GetCode()
+function Blockly:GetNextId()
+    self.nextId = (self.nextId or 0) + 1;
+    return self.nextId;
+end
+
+function Blockly:ResetNextId()
+    self.nextId = 0;
+end
+
+function Blockly:UpdateAllVariables()
+    -- just make it dirty until we call GetAllVariables()
+    -- since in most languages, this is not necessary, however, python need to predefine global variables in every function. 
+    self.variables = nil;
+end
+
+-- get all variables in blocks as array of names
+function Blockly:GetAllVariables()
+    if(not self.variables) then 
+        local variables = {};
+        local exist = {};
+        self:ForEachUI(function(blockInputField)
+            if (not blockInputField:IsField() or blockInputField:GetType() ~= "field_variable") then return end
+            local varname = blockInputField:GetValue();
+            if (varname and varname ~= "" and not exist[varname]) then
+                variables[#variables+1] = varname
+                exist[varname] = true;
+            end
+        end);
+        self.variables = variables;
+    end
+    return self.variables;
+end
+
 -- 获取代码
 function Blockly:GetCode()
     -- print("=============GetCode==================")
     self.__block_id_map__ = {};
     self.__running_block_id_stack__ = {};
+    self.uniqueHeaders = commonlib.ArrayMap:new();
+    self:ResetNextId();
     local only_generate_start_block_code = self:IsOnlyGenerateStartBlockCode();
     local blocks, lastStartIndex = {}, 1;
     for _, block in ipairs(self.blocks) do
@@ -1124,27 +1446,91 @@ function Blockly:GetCode()
             -- print("顶层输出块不产生代码");
         end
     end
+    self:UpdateAllVariables();
 
     self:SetToCodeCache({});  -- 设置缓存对象
 
     local code = "";
+    local lines = {};
     for _, block in ipairs(blocks) do
-        local blockCode = "";
         local nextBlock = block;
         if (only_generate_start_block_code and nextBlock:IsStart()) then
             blockCode = nextBlock:GetCode();
         else
             while (nextBlock) do
-                blockCode = blockCode .. nextBlock:GetCode();
+                lines[#lines+1] = nextBlock:GetCode()
                 nextBlock = nextBlock:GetNextBlock();
             end
         end
-        code = code .. blockCode .. "\n";
+        lines[#lines+1] = "\n"
     end
+
+    if(self.uniqueHeaders:size() > 0) then
+        self.uniqueHeaders:valueSort(function(a, b) return a <= b end);
+		for i = 1, self.uniqueHeaders:size() do
+            table.insert(lines, i, self.uniqueHeaders:getKeyAt(i) .. "\n")
+		end
+	end
+
+    -- post process code
+    for _, block in ipairs(blocks) do
+        while (block) do
+            local option = block:GetOption();
+            if(option and option.PostProcess) then
+                lines = option.PostProcess(block, lines) or lines;
+            end
+            block = block:GetNextBlock();
+        end
+    end
+
+    -- for _, block in ipairs(self.blocks) do
+    --     local option = block:GetOption();
+    --     if(option and option.PostProcess) then
+    --         lines = option.PostProcess(block, lines) or lines;
+    --     end
+    -- end
+    code = table.concat(lines)
 
     self:SetToCodeCache(nil); -- 清除缓存
     
+    code = self:PostProcessCode(code);
+
     return code, self:GetPrettyCode(code);
+end
+
+function Blockly:PostProcessCode(code)
+    NPL.load("(gl)script/apps/Aries/Creator/Game/Code/CodeHelpWindow.lua");
+    local CodeHelpWindow = commonlib.gettable("MyCompany.Aries.Game.Code.CodeHelpWindow");
+    NPL.load("(gl)script/apps/Aries/Creator/Game/Code/LanguageConfigurations.lua");
+    local LanguageConfigurations = commonlib.gettable("MyCompany.Aries.Game.Code.LanguageConfigurations");
+    local filename = CodeHelpWindow.GetLanguageConfigFile();
+    local langConfig = LanguageConfigurations:LoadConfigByFilename(filename);
+    if (type(langConfig) == "table" and type(langConfig.PostProcessBlocklyCode) == "function") then
+        code = langConfig.PostProcessBlocklyCode(self, code);
+    end
+    return code;
+end
+
+function Blockly:Save()
+    local blockly = { blocks = {} };
+
+    for _, block in ipairs(self.blocks) do
+        table.insert(blockly.blocks, block:Save());
+    end
+
+    return blockly;
+end
+
+function Blockly:Load(blockly)
+    for _, block in ipairs(blockly.blocks) do
+        local block_type = block.type;
+        local block_inst = self:GetBlockInstanceByType(block_type);
+        if (block_inst) then
+            block_inst:Load(block);
+            block_inst:UpdateLayout();
+            self:AddBlock(block_inst);
+        end
+    end
 end
 
 -- 转换成xml
@@ -1199,8 +1585,8 @@ function Blockly:LoadFromXmlNodeText(text)
     self:ClearBlocks();
     self:ClearNotes();
     local xmlNode = Helper.XmlString2Lua(text);
-    if (not xmlNode) then return end
-    local blocklyXmlNode = xmlNode and commonlib.XPath.selectNode(xmlNode, "//Blockly");
+    if (type(xmlNode) ~= "table") then return end
+    local blocklyXmlNode = commonlib.XPath.selectNode(xmlNode, "//Blockly");
     self:LoadFromXmlNode(blocklyXmlNode);
 
     self:EmitUI("LoadXmlTextToWorkspace");
@@ -1270,4 +1656,26 @@ function Blockly:PopRunBlockId()
     self.__running_block_id_stack__[stack_top_index] = nil;
     stack_top_index = math.max(stack_top_index - 1, 1);
     return self.__running_block_id_stack__[stack_top_index] or 0;
+end
+
+function Blockly:SetToolBoxWidth(width)
+    self.ToolBoxWidth = width;
+    self:GetToolBox().ToolBoxWidth = self.ToolBoxWidth;
+    self:UpdateLayout();
+end
+
+function Blockly:SetShowCategory(bShow)
+    if (self:GetToolBox():IsShowCategory() == bShow) then return end
+    self:GetToolBox():SetShowCategory(bShow);
+    self:GetToolBox():SetCategoryList(self.CategoryList);
+end
+
+function Blockly:SetInitWorkspaceXml(xml_text)
+    if (self.m_on_toolbox_xml_text_change_timer) then
+        self.m_on_toolbox_xml_text_change_timer:Change();
+        self.m_on_toolbox_xml_text_change_timer = nil;
+        self:OnToolBoxXmlTextChange(self:GetAttrStringValue("ToolBoxXmlText"));
+    end
+    self.init_workspace_xml = xml_text;
+    self:LoadFromXmlNodeText(xml_text);
 end

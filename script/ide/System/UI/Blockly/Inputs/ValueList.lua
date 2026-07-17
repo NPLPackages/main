@@ -5,7 +5,7 @@ Date: 2020/6/30
 Desc: 按钮字段
 use the lib:
 -------------------------------------------------------
-local ValueList = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Blockly/Inputs/ValueList.lua");
+local ValueList = NPL.load("script/ide/System/UI/Blockly/Inputs/ValueList.lua");
 -------------------------------------------------------
 ]]
 
@@ -110,4 +110,16 @@ function ValueList:GetValueAsString()
     end
     
     return table.concat(list, option.separator or ",");
+end
+
+function ValueList:DisableRun()
+    for _, inputValue in ipairs(inputValues) do
+        inputValue:DisableRun();
+    end
+end
+
+function ValueList:EnableRun()
+    for _, inputValue in ipairs(inputValues) do
+        inputValue:EnableRun();
+    end
 end

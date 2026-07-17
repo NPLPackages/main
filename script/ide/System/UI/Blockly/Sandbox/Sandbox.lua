@@ -9,7 +9,7 @@ local Sandbox = NPL.load("script/ide/System/UI/Blockly/Sandbox/Sandbox.lua");
 -------------------------------------------------------
 ]]
 
-local G = NPL.load("./G.lua", IsDevEnv);
+local G = NPL.load("./G.lua");
 local FileManager = NPL.load("../Pages/FileManager");
 local Blockly = NPL.load("../Blockly.lua");
 

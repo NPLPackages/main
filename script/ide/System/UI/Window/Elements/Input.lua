@@ -4,7 +4,7 @@ Author(s): wxa
 Date: 2020/8/14
 Desc: 输入框
 -------------------------------------------------------
-local Input = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Window/Elements/Input.lua");
+local Input = NPL.load("script/ide/System/UI/Window/Elements/Input.lua");
 -------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/System/Core/UniString.lua");
@@ -15,14 +15,15 @@ local Keyboard = commonlib.gettable("System.Windows.Keyboard");
 local FocusPolicy = commonlib.gettable("System.Core.Namespace.FocusPolicy");
 local Point = commonlib.gettable("mathlib.Point");
 
-local Element = NPL.load("../Element.lua", IsDevEnv);
+local Element = NPL.load("../Element.lua");
 local Input = commonlib.inherit(Element, NPL.export());
-local InputDebug = GGS.Debug.GetModuleDebug("InputDebug").Disable(); --Enable  Disable
-local CursorShowHideMaxTickCount = 30;
+local InputDebug = System.Util.Debug.GetModuleDebug("InputDebug").Disable(); --Enable  Disable
 
 Input:Property("Name", "Input");
 Input:Property("Value", "");                                -- 按钮文本值
 Input:Property("ShowCursor", false, "IsShowCursor");
+Input:Property("cursorBlinkPeriod", 30, "GetCursorBlinkPeriod", "SetCursorBlinkPeriod");
+
 Input:Property("BaseStyle", {
     NormalStyle = {
         ["display"] = "inline-size",
@@ -235,6 +236,8 @@ end
 function Input:OnKeyDown(event)
     if (not self:IsFocus() or self:IsDisabled()) then return end
     if (self:IsReadOnly()) then return end
+    
+    event:Accept();
 
 	local keyname = event.keyname;
 	if (keyname == "DIK_RETURN") then self:handleReturn(event) 
@@ -267,12 +270,22 @@ end
 function Input:OnKey(event)
     if (not self:IsFocus() or self:IsDisabled()) then return end
     if (self:IsReadOnly()) then return end
-    -- 输入串
+
+    event:Accept();
+
     local commitString = event:GetCommitString();
+
+    if (System.os.GetPlatform() == "ios" or
+        System.os.GetPlatform() == "android") then
+		if (commitString == "[#backspace]") then
+			self:handleBackspace();
+			return;
+		end
+	end
 
     -- 忽略控制字符
     local char1 = string.byte(commitString, 1);
-	if(char1 <= 31) then return end
+	if(not char1 or char1 <= 31) then return end
     
     -- 添加新文本
     self:InsertTextCmd(commitString);
@@ -285,6 +298,10 @@ function Input:CheckInputText(text)
         return string.match(text, "^[%-%d%.]*$");
     end
     return true;
+end
+
+function Input:GetInputType() 
+    return self:GetAttrStringValue("type", "text");
 end
 
 function Input:InsertTextCmd(text, startAt)
@@ -412,6 +429,7 @@ end
 
 function Input:ResetCursor()
     self.cursorShowHideTickCount = 0;
+    self:SetCursorBlinkPeriod(self:cursorFlashTime())
     self:SetShowCursor(true);
 end
 
@@ -425,8 +443,11 @@ function Input:RenderCursor(painter)
     local cursorY = self.cursorY or 0;
     self.cursorX, self.cursorY, self.cursorWidth, self.cursorHeight = cursorX, cursorY, cursorWidth, cursorHeight;
     
-    self.cursorShowHideTickCount = self.cursorShowHideTickCount + 1;
-    if (self.cursorShowHideTickCount > CursorShowHideMaxTickCount) then 
+    local cursorBlinkPeriod = self:GetCursorBlinkPeriod();
+    if(cursorBlinkPeriod > 0) then
+        self.cursorShowHideTickCount = self.cursorShowHideTickCount + 1;
+    end
+    if (self.cursorShowHideTickCount > cursorBlinkPeriod) then 
         self.cursorShowHideTickCount = 0;
         self:SetShowCursor(not self:IsShowCursor());
     end
@@ -529,7 +550,7 @@ end
 function Input:OnMouseMove(event)
     if (not self.mouseDown) then return end
     local x, y = event.x, event.y;
-    if (not self:IsContainPoint(x, y) or not event:IsLeftButton()) then return self:OnMouseUp() end
+    if (not self:IsContainPoint(x, y) or not event:IsLeftButton()) then return self:OnMouseUp(event) end
 
     if (not self.mouseMove) then
         if (math.abs(x - self.mouseDownX) < self:GetFontSize() / 2) then return end
@@ -539,6 +560,7 @@ function Input:OnMouseMove(event)
     local cursorAt = self:GetAtByPos(self:GloablToContentGeometryPos(x, y));
     self.selectStartAt = cursorAt < self.cursorAt and self.cursorAt - 1 or self.cursorAt;
     self.selectEndAt = cursorAt;
+    event:Accept();
 end
 
 function Input:OnMouseUp(event)
@@ -548,4 +570,7 @@ function Input:OnMouseUp(event)
     if (not self:IsSelected()) then
         self:ClearSelected();
     end 
+    if(event) then
+        event:Accept();
+    end
 end

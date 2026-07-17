@@ -77,14 +77,14 @@ end
 
 -- get UI value: get the value on the UI object with current node
 -- @param instName: the page instance name. 
-function pe_textarea:GetUIValue(pageInstName)
+function pe_textarea:GetUIValue()
 	if(self.control) then
 		return self.control:GetText();
 	end
 end
 
 -- set UI value: set the value on the UI object with current node
-function pe_textarea:SetUIValue(pageInstName, value)
+function pe_textarea:SetUIValue(value)
 	if(self.control) then
 		return self.control:SetText(value);
 	end

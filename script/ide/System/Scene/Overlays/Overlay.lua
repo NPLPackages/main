@@ -542,7 +542,7 @@ function Overlay:SetColorAndName(painter, color, pickingColor)
 		else
 			if(type(pickingColor) == "number") then
 				-- add alpha channel.
-				if(pickingColor < 0xff000000) then
+				if(pickingColor < 0x01000000) then
 					pickingColor = pickingColor + 0xff000000;
 				end
 			end

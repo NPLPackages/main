@@ -372,6 +372,18 @@ function pe_gridview.create(rootName, mcmlNode, bindingContext, _parent, left, t
 			end
 			height = top + nHeight;
 		end
+		
+		if mcmlNode:GetBool("CustomScrollBar", false) then
+			TreeViewNode:SetAttribute("CustomScrollBar", true);
+			local TrackBg = mcmlNode:GetString("TrackBg")
+			local UpLeftBg = mcmlNode:GetString("UpLeftBg")
+			local DownRightBg = mcmlNode:GetString("DownRightBg")
+			local ThumbBg = mcmlNode:GetString("ThumbBg")
+			TreeViewNode:SetAttribute("TrackBg", TrackBg)
+			TreeViewNode:SetAttribute("UpLeftBg", UpLeftBg)
+			TreeViewNode:SetAttribute("DownRightBg", DownRightBg)
+			TreeViewNode:SetAttribute("ThumbBg", ThumbBg)
+		end
 
 		local myLayout = Map3DSystem.mcml_controls.layout:new();
 		myLayout:reset(left, top, width, height);
@@ -510,7 +522,6 @@ function pe_gridview.DataBind(mcmlNode, pageInstName, bDoNotRefreshUI)
 			else
 				nToIndex = pagesize;
 			end
-			mcmlNode.eval_names_ = mcmlNode.eval_names_ or {};
 			local i = nFromIndex;
 			local LineNode;
 			while (nToIndex==nil or i<=nToIndex) do
@@ -563,35 +574,30 @@ function pe_gridview.DataBind(mcmlNode, pageInstName, bDoNotRefreshUI)
 					-- so that in rowNode it can reference them via page scope Eval(), such as <%=Eval("index")%>
 					local envCode = format("index=%d", i);
 					
-					for n,v in pairs(mcmlNode.eval_names_) do
-						if(n~="__index") then
-							mcmlNode.eval_names_[n] = false;
-						end
-					end
+					local postCode = "";
 					for n,v in pairs(row) do
 						if(n~="__index") then
-							mcmlNode.eval_names_[n] = true;
 							local typeV = type(v)
 							if(typeV == "number") then
 								envCode = format("%s\n%s=%s", envCode, n, tostring(v));
+								postCode = format("%s\n%s=nil", postCode, n);
 							elseif(typeV == "string") then
 								envCode = string_format("%s\n%s=%q", envCode, n, v);
+								postCode = format("%s\n%s=nil", postCode, n);
 							elseif(typeV == "boolean" or typeV == "nil") then
 								envCode = format("%s\n%s=%s", envCode, n, tostring(v));
+								postCode = format("%s\n%s=nil", postCode, n);
 							elseif(typeV == "table") then
 								envCode = format("%s\n%s=%s", envCode, n, commonlib.serialize_compact(v));
+								postCode = format("%s\n%s=nil", postCode, n);
 							end
-						end
-					end
-					for n,v in pairs(mcmlNode.eval_names_) do
-						if(not v) then
-							envCode = format("%s\n%s=nil", envCode, n);
 						end
 					end
 					
 					rowNode:SetPreValue("this", row);
 					-- set prescript attribute of pe:bindingblock
 					rowNode:SetAttribute("prescript", envCode);
+					rowNode:SetAttribute("postscript", postCode);
 					i = i + 1;
 				else
 					break;	
@@ -683,6 +689,11 @@ function pe_bindingblock.create(rootName, mcmlNode, bindingContext, _parent, lef
 
 	-- just use the standard style to create the control	
 	Map3DSystem.mcml_controls.pe_simple_styles.create(rootName, mcmlNode, bindingContext, _parent, left, top, width, height, style, parentLayout);
+
+	local postscript = mcmlNode:GetAttribute("postscript");
+	if(postscript) then
+		Map3DSystem.mcml_controls.pe_script.DoPageCode(postscript, mcmlNode:GetPageCtrl())
+	end
 end
 
 -----------------------------------

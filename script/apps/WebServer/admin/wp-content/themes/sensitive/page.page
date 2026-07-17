@@ -2,6 +2,7 @@
 if(not ABSPATH) then die() end
 
 -- if it is nplide.page, use fullsize in window.
+-- also returns true if the content page file contains a PAGE_NO_HEADER marker in its first 512 bytes.
 local function is_fullsize()
 	local source_path = commonlib.Encoding.DefaultToUtf8(page_path() or __FILE__);
 	if(source_path)then
@@ -10,7 +11,18 @@ local function is_fullsize()
 			return true;
 		end
 	end
-
+	-- Peek at the content file to check for PAGE_NO_HEADER without executing it
+	local content_path = page_path();
+	if(content_path) then
+		local f = ParaIO.open(content_path, "r");
+		if(f:IsValid()) then
+			local header_bytes = f:GetText(0, 512);
+			f:close();
+			if(header_bytes and header_bytes:find("PAGE_NO_HEADER")) then
+				return true;
+			end
+		end
+	end
 end
 local PAGE_CONTENT_FULLSIZE = is_fullsize();
 ?>

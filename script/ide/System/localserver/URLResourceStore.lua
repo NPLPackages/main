@@ -80,7 +80,7 @@ function URLResourceStore:GetURL(Cache_policy, url, callbackFunc, callbackContex
 	-- never retrieve from local server if ExpireTime is 0. 
 	if(Cache_policy.ExpireTime > 0) then
 		local entry = self:GetItem(url);
-		if(entry) then
+		if(entry and entry.payload) then
 			local bIsExpired = Cache_policy:IsExpired(entry.payload.creation_date);
 			if(bUseExpire or not bIsExpired) then
 				if(callbackFunc) then

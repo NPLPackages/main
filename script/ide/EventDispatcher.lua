@@ -196,7 +196,10 @@ function EventSystem:DispatchEvent(event, ...)
 		local return_value;
 		for index = 1, #sinks do
 			local handler = sinks[index];
-			return_value = handler.func(handler.funcHolder, event, ...) or return_value;
+			-- handler may be deleted during previous handler.func, so we double check it here.
+			if(handler) then
+				return_value = handler.func(handler.funcHolder, event, ...) or return_value;
+			end
 		end
 		return return_value;
 	end
@@ -219,7 +222,9 @@ function EventSystem:DispatchEventByType(event_type, event, ...)
 	if(sinks) then
 		for index = 1, #sinks do
 			local handler = sinks[index];
-			handler.func(handler.funcHolder, event, ...)
+			if(handler) then
+				handler.func(handler.funcHolder, event, ...)
+			end
 		end
 	end
 end

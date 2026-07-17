@@ -256,13 +256,18 @@ function System.localserver.ProcessFile_result(request_id, index)
 			end
 			if (not DestFile or DestFile == "") then
 				local filename = string.gsub(url, ".*/", "");
+				local fileExt = string.match(filename, "(%.%w%w?%w?%w?)$");
 				filename = string.gsub(filename, "[%?#].*$", "");
+				fileExt = string.match(filename, "(%.%w%w?%w?%w?)$") or fileExt;
 				filename = string.gsub(filename, "[^%w_%-]", "");
 
 				if (#filename > 15) then
 					filename = string.sub(filename, 1, 15);
 				end
-
+				-- preserve possible file extension found in url like *.bmax, *.jpg, *.fbx, *.x, etc
+				if(fileExt) then
+					filename = filename..fileExt;
+				end
 				DestFile = string.format("%s%s-%s", dataDir, ParaGlobal.GenerateUniqueID(), filename);
 			end
 			-- copy temp to local store's data directory. 

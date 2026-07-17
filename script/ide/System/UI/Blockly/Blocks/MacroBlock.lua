@@ -63,7 +63,7 @@ local NPL_Macro_SceneClick = {};
 local function NPL_Macro_SceneClick_Angle_Field_Click_Callback(field)
     local oldValue, oldLabel = field:GetValue(), field:GetLabel();
     local value = GetPlayerAndCaremaMacroText();
-    local Page = NPL.load("Mod/GeneralGameServerMod/UI/Page.lua");
+    local Page = NPL.load("script/ide/System/UI/Page.lua");
     Page.Show({
         OnFinish = function(x, y)
             GameLogic.Macros:Init();

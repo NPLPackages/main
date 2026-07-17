@@ -151,6 +151,10 @@ end
 
 function SceneContext:FetchPickingResult()
 	local bHasPicking;
+	if(self:GetPickingRenderFrame() == commonlib.TimerManager.GetCurrentTime()) then
+		-- prevent redraw picking buffer in the same render frame.
+		return;
+	end
 	self:SetPickingRenderFrame(commonlib.TimerManager.GetCurrentTime());
 	if(self.manipulators) then
 		for i, manip in pairs(self.manipulators) do
@@ -377,6 +381,16 @@ end
 
 function SceneContext:HasManipulators()
 	return self.manipulators~=nil and self.manipulators:size() > 0;
+end
+
+-- Enable or disable all manipulators
+-- @param bEnable: true to enable all manipulators, false to disable them
+function SceneContext:EnableAllManipulators(bEnable)
+	if(self.manipulators) then
+		for i, manip in pairs(self.manipulators) do
+			manip.enabled = bEnable;
+		end
+	end
 end
 
 -- virtual function: implement this function to create a context with manipulators, and call it when selection changed. 

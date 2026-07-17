@@ -4,7 +4,7 @@ Author(s): wxa
 Date: 2020/8/14
 Desc: DateTimeText 元素
 -------------------------------------------------------
-local DateTimeText = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Window/Elements/DateTimeText.lua");
+local DateTimeText = NPL.load("script/ide/System/UI/Window/Elements/DateTimeText.lua");
 -------------------------------------------------------
 ]]
 

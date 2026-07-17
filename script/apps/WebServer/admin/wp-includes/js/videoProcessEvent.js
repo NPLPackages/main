@@ -11,6 +11,7 @@ const courseIdentity =
   document.getElementById("CurCourseName").innerText +
   "-" +
   document.getElementById("SelectLessonIndex").innerText;
+
 const user = document.getElementById("currentUserId");
 const title = document.title;
 const userId = user && parseInt(user.innerText);
@@ -71,7 +72,7 @@ function videoAllFinishRequest({ userId, courseIdentity, status }) {
     success: function (data) {
       console.log(
         `${courseIdentity} all video accomplished sent to remote: \n` +
-          JSON.stringify(data)
+        JSON.stringify(data)
       );
     },
   });
@@ -114,7 +115,6 @@ if (userId) {
       //加载数据
       //视频的总长度
       duration = elevideo.duration;
-      console.log(elevideo.duration);
       clearInterval(timer);
     });
 
@@ -130,7 +130,6 @@ if (userId) {
 
     elevideo.addEventListener("playing", () => {
       //播放中
-      console.log(id, "播放中");
       let process = parseFloat(elevideo.currentTime) / duration;
 
       timer = setInterval(() => {
@@ -138,28 +137,24 @@ if (userId) {
         map[id] = map[id] || {};
 
         if (!map[id].videoStart && process > 0 && isElementInViewport(elevideo)) {
-          console.log(id, "上报完成 视频开始");
           map[id].videoStart = 1;
 
           videoAllFinishRequest({ userId, courseIdentity, status: "videoStart" });
         }
 
         if (!map[id].started && process > 0.01 && isElementInViewport(elevideo)) {
-          console.log(id, "上报完成0.01");
           map[id].started = 1;
 
           videoAllFinishRequest({ userId, courseIdentity, status: "start" });
         }
 
         if (!map[id].finish && process > 0.75 && isElementInViewport(elevideo)) {
-          console.log(id, "上报完成0.75");
           map[id].finish = 1;
 
           videoAllFinishRequest({ userId, courseIdentity, status: "finish" });
         }
 
         if (!map[id].videoEnd && process > 0.99 && isElementInViewport(elevideo)) {
-          console.log(id, "上报完成 完成");
           map[id].videoEnd = 1;
 
           if (courseIdentity && isAllVideoFinished() && !videoSentFlag) {
@@ -197,9 +192,13 @@ if (userId) {
 
     elevideo.addEventListener("pause", () => {
       //暂停开始执行的函数
-      console.log("暂停播放");
+      videoAllFinishRequest({ userId, courseIdentity, status: "videoEnd" });
       clearInterval(timer);
     });
+
+    window.onbeforeunload = () => {
+      videoAllFinishRequest({ userId, courseIdentity, status: "videoEnd" });
+    }
   }
 }
 

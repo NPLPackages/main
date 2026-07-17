@@ -4,12 +4,12 @@ Author(s): wxa
 Date: 2020/8/14
 Desc: 滚动条
 -------------------------------------------------------
-local ScrollBar = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Window/Controls/ScrollBar.lua");
+local ScrollBar = NPL.load("script/ide/System/UI/Window/Controls/ScrollBar.lua");
 -------------------------------------------------------
 ]]
 
-local Element = NPL.load("../Element.lua", IsDevEnv);
-local ScrollBarDebug = GGS.Debug.GetModuleDebug("ScrollBarDebug").Disable();  -- Enable() Disable;
+local Element = NPL.load("../Element.lua");
+local ScrollBarDebug = System.Util.Debug.GetModuleDebug("ScrollBarDebug").Disable();  -- Enable() Disable;
 
 local defaultScrollBarSize = 10;
 
@@ -154,7 +154,7 @@ function ScrollBarThumb:SetThumbWidthHeight(width, height, scrollBarWidth, scrol
         self.top = (self.maxHeight - self.height) / 2;
     else
         self.width = GetPxValue(style["width"]) or (width > 2 and (width - 2) or width);
-        self.height = GetPxValue(style["height"]) or height;
+        self.height = height;
         self.maxTop = math.max(scrollBarHeight - self.height, 1);
         self.left = (self.maxWidth - self.width) / 2;
         self.top = math.min(scrollTop * self.maxTop / (scrollBar.scrollHeight - scrollBar.contentHeight), self.maxTop);
@@ -270,7 +270,7 @@ function ScrollBar:SetScrollWidthHeight(clientWidth, clientHeight, contentWidth,
     if (clientWidth < 0 or clientHeight < 0 or contentWidth < 0 or contentHeight < 0 or scrollWidth < 0 or scrollHeight < 0) then return end
     
     self.clientWidth, self.clientHeight, self.contentWidth, self.contentHeight, self.scrollWidth, self.scrollHeight = clientWidth or 0, clientHeight or 0, contentWidth or 0, contentHeight or 0, scrollWidth or 0, scrollHeight or 0;
-    ScrollBarDebug.Format("id = %s, SetScrollWidthHeight clientWidth = %s, clientHeight = %s, contentWidth = %s, contentHeight = %s, scrollWidth = %s, scrollHeight = %s", self:GetParentElement():GetAttrStringValue("id"), clientWidth, clientHeight, contentWidth, contentHeight, scrollWidth, scrollHeight);
+    ScrollBarDebug.Format("id = %s, SetScrollWidthHeight clientWidth = %s, clientHeight = %s, contentWidth = %s, contentHeight = %s, scrollWidth = %s, scrollHeight = %s", self:GetParentElement():GetAttrStringValue("id") or "", clientWidth, clientHeight, contentWidth, contentHeight, scrollWidth, scrollHeight);
 
     local style = self:GetStyle();
     local thumbSize, defaultScrollBarSize = 0, self:GetDefaultWidth();
@@ -317,7 +317,7 @@ function ScrollBar:SetScrollWidthHeight(clientWidth, clientHeight, contentWidth,
 
     ScrollBar._super.UpdateLayout(self, true);
 
-    ScrollBarDebug.Format("SetScrollWidthHeight direction = %s, width = %s, height = %s, thumbSize = %s, isPosition = %s", self:GetDirection(), self.width, self.height, thumbSize, self:GetLayout():IsPositionElement());
+    ScrollBarDebug.Format("SetScrollWidthHeight direction = %s, width = %s, height = %s, thumbSize = %s, isPosition = %s", self:GetDirection(), self.width, self.height, thumbSize, tostring(self:GetLayout():IsPositionElement()));
 end
 
 -- 滚动位置计算
@@ -357,6 +357,7 @@ function ScrollBar:OnMouseWheel(event)
     if (not self.thumb) then return end
     -- self.thumb:ScrollByDelta(delta);
     self:ScrollTo(self.scrollTop - self.height * delta / 10);
+    event:Accept();
 end
 
 -- 鼠标点击事件
@@ -376,6 +377,14 @@ function ScrollBar:ScrollTo(val)
     end
 end
 
+-- 滚动到末尾
+function ScrollBar:ScrollToEnd()
+    if (self:IsHorizontal()) then 
+        self.thumb:ScrollTo(self.thumb.maxLeft, nil);
+    else 
+        self.thumb:ScrollTo(nil, self.thumb.maxTop);
+    end
+end
 
 --[[
 selector::scrollbar {

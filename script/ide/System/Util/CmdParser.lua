@@ -75,6 +75,15 @@ function CmdParser.ParseString(cmd_text)
 	return nil, cmd_text;
 end
 
+-- parse any string url value without white space. 
+function CmdParser.ParseUrl(cmd_text)
+	local str, cmd_text_remain = cmd_text:match("^%s*([^%s]+)%s*(.*)$");
+	if(cmd_text_remain) then
+		return str, cmd_text_remain;
+	end
+	return nil, cmd_text;
+end
+
 -- it could be string without spaces, or it could be "file name with space"
 function CmdParser.ParseFilename(cmd_text)
 	local str, cmd_text_remain = cmd_text:match("^%s*([^%s\"=]+)%s*(.*)$");
@@ -124,7 +133,7 @@ function CmdParser.ParseOption(cmd_text, bTextOnly)
 end
 
 -- @param bTextOnly: default to fales. if true, option can only start with non-number
--- return options: -[options]
+-- return options: {}
 function CmdParser.ParseOptions(cmd_text, bTextOnly)
 	local options = {};
 	local option, cmd_text_remain = nil, cmd_text;
@@ -132,6 +141,36 @@ function CmdParser.ParseOptions(cmd_text, bTextOnly)
 		option, cmd_text_remain = CmdParser.ParseOption(cmd_text_remain, bTextOnly);
 		if(option) then
 			options[option] = true;
+		else
+			break;
+		end
+	end
+	return options, cmd_text_remain;
+end
+
+local function ParseOptionNameValue(cmd_text)
+	local value, cmd_text_remain = cmd_text:match("^%s*%-([%w_]+%S+)%s*(.*)$");
+	if(value) then
+		return value, cmd_text_remain;
+	end
+	return nil, cmd_text;
+end
+
+-- parse options in name value pairs like "-name=value -name2=value2"
+function CmdParser.ParseOptionsNameValue(cmd_text)
+	local options = {};
+	local option, cmd_text_remain = nil, cmd_text;
+	while(cmd_text_remain) do
+		option, cmd_text_remain = ParseOptionNameValue(cmd_text_remain);
+		if(option) then
+			key, value = option:match("([%w_]+)=?(%S*)");
+			if (value == "true" or key == option) then 
+				options[key] = true;
+			elseif (value == "false") then 
+				options[key] = false;
+			else
+				options[key] = value;
+			end
 		else
 			break;
 		end

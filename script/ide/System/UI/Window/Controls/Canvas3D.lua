@@ -4,7 +4,7 @@ Author(s): wxa
 Date: 2020/8/14
 Desc: 文本
 -------------------------------------------------------
-local Canvas3D = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Window/Controls/Canvas3D.lua");
+local Canvas3D = NPL.load("script/ide/System/UI/Window/Controls/Canvas3D.lua");
 -------------------------------------------------------
 ]]
 
@@ -19,7 +19,7 @@ local EntityManager = commonlib.gettable("MyCompany.Aries.Game.EntityManager");
 local PlayerAssetFile = commonlib.gettable("MyCompany.Aries.Game.EntityManager.PlayerAssetFile")
 local PlayerSkins = commonlib.gettable("MyCompany.Aries.Game.EntityManager.PlayerSkins")
 
-local Element = NPL.load("../Element.lua", IsDevEnv);
+local Element = NPL.load("../Element.lua");
 local Canvas3D = commonlib.inherit(Element, NPL.export());
 
 Canvas3D:Property("Name", "Canvas3D");
@@ -693,6 +693,7 @@ function Canvas3D:mouseWheelEvent(event)
 		-- 2D image
 		--
 	end	
+	event:Accept();
 end
 
 -- manually draw the miniscene graph, in case active rendering is disabled. 

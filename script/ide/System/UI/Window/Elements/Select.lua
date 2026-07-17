@@ -4,11 +4,11 @@ Author(s): wxa
 Date: 2020/8/14
 Desc: 按钮
 -------------------------------------------------------
-local Select = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Window/Elements/Select.lua");
+local Select = NPL.load("script/ide/System/UI/Window/Elements/Select.lua");
 -------------------------------------------------------
 ]]
 local Simulator = NPL.load("../Event/Simulator.lua");
-local Element = NPL.load("../Element.lua", IsDevEnv);
+local Element = NPL.load("../Element.lua");
 local InputElement = NPL.load("./Input.lua");
 
 -- SelectSimulator
@@ -123,14 +123,41 @@ end
 function Option:OnMouseDown(event)
     Option._super.OnMouseDown(self, event);
     local select = self:GetSelectElement();
-    select:OnSelect(self);
+    local function on_mouse_down()
+        select:OnSelect(self);
 
-    if (self:IsCanSimulateEvent()) then
-        SelectSimulator:SimulateSelectOption(select:GetAttrStringValue("id"), self:GetValue());
+        if (self:IsCanSimulateEvent()) then
+            SelectSimulator:SimulateSelectOption(select:GetAttrStringValue("id"), self:GetValue());
+        end
+        
+        event:Accept();
     end
-    
+
+    local value_callback = self:GetAttrValue("value");
+    if (type(value_callback) == "function") then
+        local default_value = select:GetValue();
+        value_callback(default_value, function(value)
+            local label = self:GetLabel();
+            self:SetLabel(value);
+            self:SetValue(value);
+            on_mouse_down();
+            self:SetLabel(label);
+            self:SetValue("");
+        end);
+    else
+        on_mouse_down();
+        self:CaptureMouse();
+    end
+end
+
+function Option:OnMouseEnter(event)
+    self._super:OnMouseEnter(event)
     event:Accept();
-    self:CaptureMouse();
+end
+
+function Option:OnMouseLeave(event)
+    self._super:OnMouseLeave(event)
+    event:Accept();
 end
 
 function Option:OnMouseUp(event)
@@ -187,6 +214,7 @@ Select:Property("BaseStyle", {
 
 function Select:ctor()
     self:SetCanFocus(true);
+    self:SetEnableIME(true);
 end
 
 function Select:Init(xmlNode, window, parent)
@@ -267,6 +295,8 @@ function Select:Init(xmlNode, window, parent)
 
     InputBox:SetVisible(false);
     ListBox:SetVisible(false);
+
+    self:SetEnableIME(self:IsAllowCreate());
 
     return self;
 end

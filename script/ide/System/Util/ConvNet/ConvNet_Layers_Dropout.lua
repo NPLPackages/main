@@ -31,15 +31,18 @@ function DropoutLayer:Init(opt)
 	self["layer_type"] = "dropout";
 	self["drop_prob"] = opt["drop_prob"] or 0.5
 	self.dropped = ConvNet.zeros(self["out_sx"] * self["out_sy"] * self["out_depth"]);
+	return self;
 end
 
 function DropoutLayer:forward(V, is_training)
 	self["in_act"] = V;
 	local V2 = V:clone();
 	local N = #V.w;
+	local drop_prob = self["drop_prob"] or 0;
+	local keep_prob = 1 - drop_prob
 	if(is_training) then
 		for i = 1, N do
-			if(math.random() < self["drop_prob"])then
+			if(math.random() < drop_prob)then
 				V2.w[i] = 0;
 				self.dropped[i] = true;
 			else
@@ -48,7 +51,7 @@ function DropoutLayer:forward(V, is_training)
 		end
 	else
 		for i = 1, N do
-			V2.w[i] = V2.w[i] * self["drop_prob"]
+			V2.w[i] = V2.w[i] * keep_prob
 		end
 	end
 	self["out_act"] = V2;

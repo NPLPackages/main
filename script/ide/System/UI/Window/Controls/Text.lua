@@ -4,15 +4,15 @@ Author(s): wxa
 Date: 2020/8/14
 Desc: 文本
 -------------------------------------------------------
-local Text = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Window/Controls/Text.lua");
+local Text = NPL.load("script/ide/System/UI/Window/Controls/Text.lua");
 -------------------------------------------------------
 ]]
 
-local Element = NPL.load("../Element.lua", IsDevEnv);
+local Element = NPL.load("../Element.lua");
 
 local Text = commonlib.inherit(Element, NPL.export());
 
-local TextDebug = GGS.Debug.GetModuleDebug("TextDebug").Disable();  -- Enable() Disable;
+local TextDebug = System.Util.Debug.GetModuleDebug("TextDebug").Disable();  -- Enable() Disable;
 
 Text:Property("Value");  -- 文本值
 Text:Property("Name", "Text");
@@ -24,7 +24,15 @@ Text:Property("BaseStyle", {
 
 -- 处理实体字符
 local function ReplaceEntityReference(value)
-	value = string.gsub(value or "", "&?nbsp;", " ");
+	value = string.gsub(value or "", "&nbsp;", " ");
+	value = string.gsub(value or "", "&lt;", "<");
+	value = string.gsub(value or "", "&gt;", ">");
+	value = string.gsub(value or "", "&amp;", "&");
+	value = string.gsub(value or "", "&quot;", '"');
+	value = string.gsub(value or "", "&apos;", "'");
+	value = string.gsub(value or "", "&#10;", "\n");
+	value = string.gsub(value or "", "&#13;", "\r");
+	
 	return value;
 end
 
@@ -57,7 +65,7 @@ function Text:FormatText(text)
 	text = string.gsub(text, "\r\n", "\n");
 	if (whiteSpace == "pre") then
 	else  -- normal
-		text = string.gsub(text, "%s", " ");
+		-- text = string.gsub(text, "%s", " ");
 	end
 
 	return text;

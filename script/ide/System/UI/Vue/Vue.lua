@@ -8,18 +8,17 @@ use the lib:
 local Vue = NPL.load("script/ide/System/UI/Vue/Vue.lua");
 -------------------------------------------------------
 ]]
-
-local Window = NPL.load("../Window/Window.lua", IsDevEnv);
+local Window = NPL.load("../Window/Window.lua");
 local ElementManager = NPL.load("../Window/ElementManager.lua");
-local Helper = NPL.load("./Helper.lua", IsDevEnv);
--- local Scope = NPL.load("./Scope.lua", IsDevEnv);
+local Helper = NPL.load("./Helper.lua");
+-- local Scope = NPL.load("./Scope.lua");
 local Scope = NPL.load("./Scope.lua");
-local ComponentScope = NPL.load("./ComponentScope.lua", IsDevEnv);
-local Table = NPL.load("./Table.lua", IsDevEnv);
--- local Compile = NPL.load("./Compile.lua", IsDevEnv);
+local ComponentScope = NPL.load("./ComponentScope.lua");
+local Table = NPL.load("./Table.lua");
+-- local Compile = NPL.load("./Compile.lua");
 local Compile = NPL.load("./Compile.lua");
-local Component = NPL.load("./Component.lua", IsDevEnv);
-local Slot = NPL.load("./Slot.lua", IsDevEnv);
+local Component = NPL.load("./Component.lua");
+local Slot = NPL.load("./Slot.lua");
 
 ElementManager:RegisterByTagName("Component", Component);
 ElementManager:RegisterByTagName("Slot", Slot);

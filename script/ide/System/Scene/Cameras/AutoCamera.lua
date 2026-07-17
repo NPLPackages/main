@@ -43,65 +43,6 @@ function AutoCamera:ctor()
 	self.ptCurMouseDelta = {x=0,y=0};
 end
 
-local uiname = "autoCameraMiniScene"
--- this function must be called in order for "beforeRenderFrameMoved" events to fire. 
-function AutoCamera:EnableCameraFrameMove(bEnable)
-	if(bEnable) then
-		-- tricky: we will create a dummy mini scenegraph, whose On_Paint callback is invoked 
-		-- after camera is frame moved, but before any 3d scene is rendered. 
-		if(not self.cameraMiniScene or not self.cameraMiniScene:IsValid()) then
-			local scene = ParaScene.GetMiniSceneGraph(uiname);
-			self.cameraMiniScene = scene;
-			scene:SetRenderTargetSize(2, 2);
-			scene:Reset();
-			scene:EnableCamera(true);
-			scene:EnableActiveRendering(true);
-			local att = scene:GetAttributeObject();
-			att:SetField("ShowSky", false);
-			att:SetField("EnableFog", false)
-			att:SetField("EnableLight", false)
-			att:SetField("EnableSunLight", false)
-			local rendertarget = att:QueryObject();
-			rendertarget:SetScript("On_Paint", function()
-				-- called after C++'s camera frame move is called, but before the scene is actually rendered. 
-				self:OnBeforeRenderFrameMove();
-			end)
-
-			local _this = ParaUI.GetUIObject(uiname)
-			if(not _this:IsValid()) then
-				_this = ParaUI.CreateUIObject("button", uiname, "_lt", -10, -10, 1, 1);
-				_this.enabled = false;
-				_this:AttachToRoot();
-			end
-			_this:SetBGImage(scene:GetTexture());
-		end
-	else
-		if(self.cameraMiniScene) then
-			ParaUI.Destroy(uiname);
-			ParaScene.DeleteMiniSceneGraph(uiname);
-			self.cameraMiniScene = nil;
-		end
-	end
-end
-
-function AutoCamera:OnBeforeRenderFrameMove()
-	self:beforeRenderFrameMoved();
-	if(self.frameMoveCallbacks) then
-		for i=#self.frameMoveCallbacks, 1, -1 do
-			local callbackFunc = self.frameMoveCallbacks[i]
-			self.frameMoveCallbacks[i] = nil;
-			callbackFunc();
-		end
-	end
-end
-
--- call callbackFunc in the next frame move before scene rendering. 
-function AutoCamera:ScheduleCameraMove(callbackFunc)
-	self.frameMoveCallbacks = self.frameMoveCallbacks or {}
-	self.frameMoveCallbacks[#(self.frameMoveCallbacks) + 1] = callbackFunc;
-	self:EnableCameraFrameMove(true)
-end
-
 function AutoCamera:GetViewProjMatrix()
 	return ParaCamera.GetAttributeObject():GetField("ViewProjMatrix", self.viewprojMatrix);
 end

@@ -6,7 +6,7 @@ Use Lib:
 -------------------------------------------------------
 NPL.load("(gl)script/ide/TimeSeries/AnimBlock.lua");
 
-local ctl = AnimBlock:new{
+local ctl = commonlib.AnimBlock:new{
 	name = "AnimBlock1",
 	type = "Linear", "Discrete", or "Hermite"
 };
@@ -18,13 +18,27 @@ NPL.load("(gl)script/ide/commonlib.lua");
 NPL.load("(gl)script/ide/mathlib.lua");
 local mathlib = commonlib.gettable("mathlib");
 
-if(not AnimBlock) then AnimBlock = {}; end
+if(not AnimBlock) then AnimBlock = commonlib.gettable("commonlib.AnimBlock"); end
 
 local type = type;
 AnimBlock.tableType = "AnimBlock";
 -- "Linear "or "Hermite" or "Discrete" or "LinearAngle"
 AnimBlock.type = "Linear";
 AnimBlock.used = true;
+
+-- compare values
+local function IsEqual(from, to)
+	if(type(from) ~= "table") then
+		return from == to;
+	elseif(type(from[1]) == "number") then
+		for i = 1, #from do
+			if(from[i] ~= to[i]) then
+				return false;
+			end
+		end
+		return true;
+	end
+end
 
 function AnimBlock:new(o)
 	o = o or {};
@@ -74,6 +88,18 @@ function AnimBlock:SetConstantKey(key, fEpsilon)
 			end
 		end
 		self.used = false;
+	end
+end
+
+-- key at time and the two keys before it are all equal, we will remove the middle one. 
+-- @return true if same. 
+function AnimBlock:RemoveConstantKeyAtTime(time)
+	local curIndex = self:GetNextKeyIndex(1, time);
+	if(curIndex and time == self.times[curIndex] and curIndex >= 3) then
+		if(IsEqual(self.data[curIndex], self.data[curIndex-1]) and IsEqual(self.data[curIndex], self.data[curIndex-2])) then
+			self:RemoveKeyFrameAtIndex(curIndex-1)
+			return true
+		end
 	end
 end
 
@@ -560,7 +586,7 @@ function AnimBlock:AutoAppendKey(time, data, bForceAppend)
 			self:AppendKey(time, data);
 			self:SetRangeByIndex(1, 1, 1);
 		elseif(timesCount == 1) then
-			if(self.data[dataCount] ~= data) then
+			if(not IsEqual(self.data[dataCount], data)) then
 				self:AppendKey(time, data);
 				self:SetRangeByIndex(1, 1, 2);	
 			else
@@ -568,7 +594,7 @@ function AnimBlock:AutoAppendKey(time, data, bForceAppend)
 				self.data[timesCount] = data;
 			end
 		else -- if(timesCount >= 2) then	
-			if( (self.data[dataCount] == self.data[dataCount-1]) and (self.data[dataCount]==data)) then
+			if( IsEqual(self.data[dataCount], self.data[dataCount-1]) and IsEqual(self.data[dataCount], data)) then
 				self.times[timesCount] = time;
 				self.data[timesCount] = data;
 			else
@@ -602,7 +628,7 @@ function AnimBlock:AutoAddKey(time, data)
 	-- local next_data = self.data[index];
 	if(next_time) then
 		if(next_time == time) then
-			if(self.data[index]~=data) then
+			if(not IsEqual(self.data[index], data)) then
 				self.data[index] = data;
 				return true;
 			end
@@ -610,7 +636,7 @@ function AnimBlock:AutoAddKey(time, data)
 			if(next_time < time) then
 				index = index + 1;
 			end
-			if( (index >=3) and (self.data[index-1] == self.data[index-2]) and (self.data[index-1]==data)) then
+			if( (index >=3) and IsEqual(self.data[index-1], self.data[index-2]) and IsEqual(self.data[index-1], data)) then
 				-- do nothing, since it is linear
 				return;
 			else
@@ -634,7 +660,7 @@ function AnimBlock:AddKey(time, data)
 	local next_time = self.times[index];
 	if(next_time) then
 		if(next_time == time) then
-			if(self.data[index]~=data) then
+			if(not IsEqual(self.data[index], data)) then
 				self.data[index] = data;
 				return true;
 			end
@@ -775,6 +801,12 @@ function AnimBlock:RemoveKeyFrame(key_time)
 		self:SetRangeByIndex(1, 1, #(self.times));	
 		return true;
 	end
+end
+
+function AnimBlock:RemoveKeyFrameAtIndex(index)
+	commonlib.removeArrayItem(self.times, index);
+	commonlib.removeArrayItem(self.data, index);
+	self:SetRangeByIndex(1, 1, #(self.times));	
 end
 
 -- remove all keys in the [fromTime, toTime]

@@ -1,6 +1,6 @@
 
 
-local UIManager = NPL.load("./UIManager.lua", IsDevEnv);
+local UIManager = NPL.load("./UIManager.lua");
 
 local Window = GetWindow();
 local screenX, screenY, screenWidth, screenHeight = Window:GetScreenPosition();

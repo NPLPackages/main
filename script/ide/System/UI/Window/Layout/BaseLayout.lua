@@ -5,12 +5,12 @@ Date: 2020/6/30
 Desc: 弹性布局类
 use the lib:
 -------------------------------------------------------
-local BaseLayout = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Window/Layout/BaseLayout.lua");
+local BaseLayout = NPL.load("script/ide/System/UI/Window/Layout/BaseLayout.lua");
 -------------------------------------------------------
 ]]
 
 local BaseLayout = commonlib.inherit(commonlib.gettable("System.Core.ToolBase"), NPL.export());
-local BaseLayoutDebug = GGS.Debug.GetModuleDebug("BaseLayoutDebug").Disable(); --Enable  Disable
+local BaseLayoutDebug = System.Util.Debug.GetModuleDebug("BaseLayoutDebug").Disable(); --Enable  Disable
 
 local nid = 0;
 

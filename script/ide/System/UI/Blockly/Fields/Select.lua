@@ -5,18 +5,17 @@ Date: 2020/6/30
 Desc: 输入字段
 use the lib:
 -------------------------------------------------------
-local Select = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Blockly/Fields/Select.lua");
+local Select = NPL.load("script/ide/System/UI/Blockly/Fields/Select.lua");
 -------------------------------------------------------
 ]]
-local DivElement = NPL.load("../../Window/Elements/Div.lua", IsDevEnv);
-local InputElement = NPL.load("../../Window/Elements/Input.lua", IsDevEnv);
-local SelectElement = NPL.load("../../Window/Elements/Select.lua", IsDevEnv);
+local DivElement = NPL.load("../../Window/Elements/Div.lua");
+local InputElement = NPL.load("../../Window/Elements/Input.lua");
+local SelectElement = NPL.load("../../Window/Elements/Select.lua");
 local Const = NPL.load("../Const.lua");
 local Options = NPL.load("../Options.lua");
-local Field = NPL.load("./Field.lua", IsDevEnv);
+local Field = NPL.load("./Field.lua");
 
 local Select = commonlib.inherit(Field, NPL.export());
-local select_options = {};
 
 function Select:Init(block, option)
     Select._super.Init(self, block, option);
@@ -50,6 +49,21 @@ end
 function Select:GetOptions(bRefresh)
     local selectType = self:GetSelectType();
     if (not selectType) then return Select._super.GetOptions(self, bRefresh) end
+    local blockly = self:GetBlockly();
+    local select_options = blockly.__select_options__ or {};
+    blockly.__select_options__ = select_options;
+    if (selectType == "VARIABLE" and not select_options[selectType]) then
+        local global_options = self:GetGlobalVaribaleNameMap();
+        local options = {};
+        for varname in pairs(global_options) do
+            table.insert(options, {varname, varname});
+        end
+        table.sort(options, function(item1, item2)
+            return item1[1] < item2[1];
+        end);
+        select_options[selectType] = options;
+    end
+   
     select_options[selectType] = select_options[selectType] or {};
     return select_options[selectType];
 end
@@ -66,6 +80,7 @@ function Select:OnValueChanged(newValue, oldValue)
         if (blockInputField:GetSelectType() ~= selectType) then return end
         -- 更新字段值
         if (oldValue and not blockInputField:IsAllowNewSelectOption() and blockInputField:GetValue() == oldValue) then
+            -- print("======================", oldValue, newValue)
             blockInputField:SetValue(newValue);
             blockInputField:SetLabel(label);
             UpdateBlockMap[blockInputField:GetTopBlock()] = true;
@@ -80,6 +95,17 @@ function Select:OnValueChanged(newValue, oldValue)
             end
         end
     end)
+
+    if (selectType == "VARIABLE") then
+        local global_options = self:GetGlobalVaribaleNameMap();
+        for varname in pairs(global_options) do
+            if (not ValueExistMap[varname]) then
+                options[index] = {varname, varname};
+                index = index + 1;
+                ValueExistMap[varname] = true;
+            end
+        end
+    end
 
     for i = index, size do
         options[i] = nil;
@@ -111,4 +137,23 @@ function Select:OnUI(eventName, eventData)
             table.insert(options, {value, value});
         end
     end
+end
+
+function Select:GetGlobalVaribaleNameMap()
+    NPL.load("(gl)script/apps/Aries/Creator/Game/Entity/EntityManager.lua");
+    local EntityManager = commonlib.gettable("MyCompany.Aries.Game.EntityManager");
+    local entities = EntityManager.FindEntities({category="b", }) or {};
+    local varnames = {};
+    for _, entity in ipairs(entities) do
+        if(entity.FindFile) then
+            local bFound, filename, filenames = entity:FindFile([[set("]])
+            if (bFound and filename) then
+                local varname = string.match(filename, 'set%("([^"]+)');
+                if (varname) then
+                    varnames[varname] = true;
+                end
+            end
+        end
+    end
+    return varnames;
 end

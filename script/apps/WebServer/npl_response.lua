@@ -212,7 +212,7 @@ local plainTextTypes = {
 };
 
 function response:isContentTypePlainText(contentType)
-	return contentType and (plainTextTypes[contentType] or contentType:match("^text"));
+	return type(contentType) == "string" and (plainTextTypes[contentType] or contentType:match("^text"));
 end
 -- sends prebuilt content to the client
 -- 		if possible, sets Content-Length: header field

@@ -408,6 +408,16 @@ function PageCtrl:OnRefresh(_parent)
 	if(self.status== 1 and self.mcmlNode) then
 		if(self.SelfPaint) then
 			_parent:SetField("SelfPaint", true);
+			if(self.SelfPaintTextureName) then
+				_parent:SetField("SelfPaintRenderTargetName", self.SelfPaintTextureName);
+				-- there may be transparent textures, we will enable auto clear. 
+				_parent:SetField("AutoClearBackground", true);
+				if(not _parent:GetField("SelfPaintInParent", false)) then
+					-- if self paint parent API is not supported(Engine is not up to date), we will not use self paint. 
+					_parent:SetField("SelfPaint", false);
+					self.SelfPaint = false;
+				end
+			end
 		end
 
 		-- call OnLoad
@@ -709,7 +719,7 @@ function PageCtrl:GetUIValue(name)
 	if(node) then
 		return node:GetUIValue(self.name);
 	else
-		LOG.std(nil, "debug", "mcml",  "mcml page item "..tostring(name).."not found in SetUIValue")	
+		LOG.std(nil, "debug", "mcml",  "mcml page item "..tostring(name).."not found in GetUIValue")	
 	end	
 end
 

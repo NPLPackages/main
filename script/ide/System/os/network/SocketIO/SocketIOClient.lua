@@ -61,10 +61,10 @@ NPL.load("(gl)script/ide/EventDispatcher.lua");
 NPL.load("(gl)script/ide/commonlib.lua");
 NPL.load("(gl)script/ide/socket/url.lua");
 local socket_url = commonlib.gettable("commonlib.socket.url")
-local packet = require("./packet")
-local tools = NPL.load("../WebSocket/tools");
-local frame = NPL.load("../WebSocket/frame");
-local handshake = NPL.load("../WebSocket/handshake");
+local packet = NPL.load("./packet.lua")
+local tools = NPL.load("../WebSocket/tools.lua");
+local frame = NPL.load("../WebSocket/frame.lua");
+local handshake = NPL.load("../WebSocket/handshake.lua");
 
 local SocketIOClient = commonlib.inherit(commonlib.gettable("commonlib.EventSystem"), NPL.export());
 
@@ -161,10 +161,12 @@ function SocketIOClient:Connect_Polling(url,moreQuery)
 
 end
 function SocketIOClient:Connect(url,sid,moreQuery)
+    if (System.os.IsEmscripten()) then return end
+    
     url = self:BuildURL(url,"websocket",sid,moreQuery);
     local protocol,host,port,uri = tools.parse_url(url);
     LOG.std("", "info", "SocketIOClient", "Connect:%s", url);
-    LOG.std("", "info", "SocketIOClient pared url", {
+    LOG.std("", "info", "SocketIOClient url", {
         protocol = protocol,
         host = host,
         port = port,
@@ -189,10 +191,13 @@ function SocketIOClient:Connect(url,sid,moreQuery)
     self.key = key;
     self.state = "CONNECTING";
 
-    NPL.AddPublicFile("script/ide/System/os/network/SocketIO/SocketIOClient.lua", -30);
-    NPL.StartNetServer("0.0.0.0", "0");
-    NPL.AddNPLRuntimeAddress({host = host, port = tostring(port), nid = self:GetAddressID()})
     
+    NPL.AddNPLRuntimeAddress({host = host, port = tostring(port), nid = self:GetAddressID()})
+
+    NPL.load("(gl)script/ide/System/os/network/TcpConnection.lua");
+    local TcpConnection = commonlib.gettable("System.os.network.TcpConnection");
+    TcpConnection.AddConnectionHandler(self:GetAddressID(), SocketIOClient.onReceiveMsg)
+
     LOG.std("", "info", "SocketIOClient req:", req);
     LOG.std("", "info", "SocketIOClient GetServerAddr:", self:GetServerAddr());
 
@@ -290,7 +295,8 @@ end
 function SocketIOClient:IsConnected()
     return self.state == "OPEN";
 end
-local function activate()
+
+function SocketIOClient.onReceiveMsg(msg)
     --LOG.std("", "debug", "SocketIOClient OnMsg", msg);
     local nid = msg.nid;
     if(not nid)then
@@ -302,7 +308,9 @@ local function activate()
         return
     end
     local response = msg[1];
-    
+    if not response then
+        return
+    end
     -- waitting for handshake
     if(client.state == "CONNECTING")then
         local headers = handshake.http_headers(response)
@@ -336,4 +344,3 @@ local function activate()
     end
     
 end
-NPL.this(activate)

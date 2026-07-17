@@ -135,7 +135,7 @@ function Vol:fromJSON(json)
 	local n = (self.sx * self.sy * self.depth);
 	self.w = ConvNet.zeros(n);
 	self.dw = ConvNet.zeros(n);
-	for k=1, #self.w do
+	for i=1, #self.w do
 		self.w[i] = json.w[i];
 	end
 end 

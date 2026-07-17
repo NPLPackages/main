@@ -39,6 +39,10 @@ function AudioSource:ctor()
 	]]
 end
 
+function AudioSource:IsValid()
+	return self.file and self.file ~= "";
+end
+
 -- get the low level API audio source object. It will try to create one if not before. 
 function AudioSource:GetSource()
 	if((self.file or "") ~= "" and (not self.source or not self.source:IsValid())) then

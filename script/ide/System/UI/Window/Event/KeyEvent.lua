@@ -5,7 +5,7 @@ Date: 2020/6/30
 Desc: Event
 use the lib:
 -------------------------------------------------------
-local MouseEvent = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Window/Event/MouseEvent.lua");
+local MouseEvent = NPL.load("script/ide/System/UI/Window/Event/MouseEvent.lua");
 -------------------------------------------------------
 ]]
 
@@ -30,7 +30,6 @@ function KeyEvent:Init(event_type, window, params)
 		self.keyname, self.shift_pressed, self.alt_pressed, self.ctrl_pressed, self.key_sequence = params.keyname or self.keyname, params.shift_pressed or self.shift_pressed, params.alt_pressed or self.alt_pressed, params.ctrl_pressed or self.ctrl_pressed, params.key_sequence or self.key_sequence;
 		-- self:SetCommitString(params.commit_string);
 	end
-
 	return self;
 end
 
@@ -68,6 +67,8 @@ local ctrl_shift_seq_map = {
 }
 
 local std_seq_map = {
+	["DIK_PAGE_UP"] = "MoveToStart",
+	["DIK_PAGE_DOWN"] = "MoveToEnd",
 	["DIK_HOME"] = "MoveToStartOfLine",
 	["DIK_END"] = "MoveToEndOfLine",
 	["DIK_UP"] = "MoveToPreviousLine",

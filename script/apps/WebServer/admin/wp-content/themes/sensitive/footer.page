@@ -6,7 +6,7 @@
 			  local source_path = commonlib.Encoding.DefaultToUtf8(page_path() or __FILE__);
 			  echo(format('<a href="viewsource?src=%s">View source:%s</a><br/>', source_path, source_path))
 			?>
-			Copyright &copy; Tatfook Inc. Powered by ParaEngine and NPL |  <a href="http://www.nplproject.com">Official Website</a>
+			Powered by ParaEngine and NPL |  <a href="http://www.paracraft.cn">Official Website</a>
 		  </div>
 	  </div>
 	</div>

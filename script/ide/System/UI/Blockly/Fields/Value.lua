@@ -5,12 +5,12 @@ Date: 2020/6/30
 Desc: 值字段 仅用于存贮数据用
 use the lib:
 -------------------------------------------------------
-local Value = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Blockly/Fields/Value.lua");
+local Value = NPL.load("script/ide/System/UI/Blockly/Fields/Value.lua");
 -------------------------------------------------------
 ]]
 
 local Const = NPL.load("../Const.lua");
-local Field = NPL.load("./Field.lua", IsDevEnv);
+local Field = NPL.load("./Field.lua");
 local Value = commonlib.inherit(Field, NPL.export());
 
 function Value:RenderContent(painter)

@@ -5,12 +5,12 @@ Date: 2020/6/30
 Desc: 弹性布局类
 use the lib:
 -------------------------------------------------------
-local Flex = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Window/Layout/Flex.lua");
+local Flex = NPL.load("script/ide/System/UI/Window/Layout/Flex.lua");
 -------------------------------------------------------
 ]]
 
 local Flex = NPL.export();
-local FlexDebug = GGS.Debug.GetModuleDebug("FlexDebug").Enable(); --Enable  Disable
+local FlexDebug = System.Util.Debug.GetModuleDebug("FlexDebug").Enable(); --Enable  Disable
 
 
 local function LayoutElementFilter(el)

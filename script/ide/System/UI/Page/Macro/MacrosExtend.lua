@@ -8,16 +8,14 @@ use the lib:
 local MacrosExtend = NPL.load("script/ide/System/UI/Page/Macro/MacrosExtend.lua");
 -------------------------------------------------------
 ]]
-
 NPL.load("(gl)script/apps/Aries/Creator/Game/Macros/Macros.lua");
 local Macros = commonlib.gettable("MyCompany.Aries.Game.GameLogic.Macros");
-
-local Page = NPL.load("Mod/GeneralGameServerMod/UI/Page.lua");
 local MacrosExtend = NPL.export();
 
 function Macros.ShowSubTitlePage(params)
     local callback = {};
 
+	local Page = NPL.load("script/ide/System/UI/Page.lua");
     Page.ShowSubTitlePage({
         text = params.text,
         OnClose = function() 
@@ -32,6 +30,7 @@ local MacroManagerPage = nil;
 GameLogic.GetFilters():add_filter("Macro_BeginRecord", function()
     if (not GGS.IsDeveloper) then return end
     
+	local Page = NPL.load("script/ide/System/UI/Page.lua");
     MacroManagerPage = Page.Show(nil, {
         url="%ui%/Page/Macro/MacrosManager.html",  
         alignment="_lt", 

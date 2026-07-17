@@ -21,7 +21,7 @@ name3 = commonlib.Json.Null()
 }
 
 local json = commonlib.Json.Encode(t)
-print (json) 
+print(json) 
 --> {"name1":"value1","name3":null,"name2":[1,false,true,23.54,"a \u0015 string", {}]}
 
 local t = commonlib.Json.Decode(json)
@@ -69,6 +69,8 @@ local math_floor = math.floor;
 local math_max = math.max;
 local type = type;
 local error = log;
+local Null = nil;
+
 local assert = function(bSucceed)
 	if(not bSucceed) then
 		log("warning: json parsing assert\n")
@@ -559,3 +561,85 @@ function commonlib.Json.Null()
 	return Null
 end
 
+-- Beautify a JSON string with proper indentation
+-- @param s: the JSON string or table to beautify
+-- @param indent: optional indent string, defaults to "  " (two spaces)
+-- @return: the beautified JSON string, or nil if parsing fails
+function commonlib.Json.Beautify(s, indent)
+	if type(s) == "table" then
+		s = commonlib.Json.Encode(s)
+	end
+	if type(s) ~= "string" or s == "" then
+		return nil
+	end
+	indent = indent or "  "
+	
+	local result = {}
+	local level = 0
+	local inString = false
+	local escape = false
+	local i = 1
+	local len = #s
+	
+	local function addNewline()
+		result[#result + 1] = "\n"
+		for j = 1, level do
+			result[#result + 1] = indent
+		end
+	end
+	
+	while i <= len do
+		local ch = string.sub(s, i, i)
+		
+		if escape then
+			result[#result + 1] = ch
+			escape = false
+		elseif ch == '\\' and inString then
+			result[#result + 1] = ch
+			escape = true
+		elseif ch == '"' then
+			result[#result + 1] = ch
+			inString = not inString
+		elseif inString then
+			result[#result + 1] = ch
+		elseif ch == '{' or ch == '[' then
+			result[#result + 1] = ch
+			-- Check if empty object/array
+			local nextNonSpace = i + 1
+			while nextNonSpace <= len and string.find(string.sub(s, nextNonSpace, nextNonSpace), "%s") do
+				nextNonSpace = nextNonSpace + 1
+			end
+			local nextCh = string.sub(s, nextNonSpace, nextNonSpace)
+			if (ch == '{' and nextCh == '}') or (ch == '[' and nextCh == ']') then
+				-- Empty object/array, don't add newline
+			else
+				level = level + 1
+				addNewline()
+			end
+		elseif ch == '}' or ch == ']' then
+			-- Check if previous non-space was opening bracket
+			local prevIdx = #result
+			while prevIdx > 0 and string.find(result[prevIdx], "^%s*$") do
+				prevIdx = prevIdx - 1
+			end
+			local prevCh = result[prevIdx]
+			if prevCh ~= '{' and prevCh ~= '[' then
+				level = level - 1
+				addNewline()
+			end
+			result[#result + 1] = ch
+		elseif ch == ',' then
+			result[#result + 1] = ch
+			addNewline()
+		elseif ch == ':' then
+			result[#result + 1] = ch
+			result[#result + 1] = " "
+		elseif not string.find(ch, "%s") then
+			result[#result + 1] = ch
+		end
+		
+		i = i + 1
+	end
+	
+	return table.concat(result)
+end

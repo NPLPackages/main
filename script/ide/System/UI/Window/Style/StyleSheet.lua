@@ -5,13 +5,13 @@ Date: 2020/6/30
 Desc: 样式管理类
 use the lib:
 -------------------------------------------------------
-local StyleSheet = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Window/Style/StyleSheet.lua");
+local StyleSheet = NPL.load("script/ide/System/UI/Window/Style/StyleSheet.lua");
 -------------------------------------------------------
 ]]
 
-local Style = NPL.load("./Style.lua", IsDevEnv);
+local Style = NPL.load("./Style.lua");
 local StyleSheet = commonlib.inherit(nil, NPL.export());
-local StyleSheetDebug = GGS.Debug.GetModuleDebug("StyleSheetDebug").Enable();   --Enable  Disable
+local StyleSheetDebug = System.Util.Debug.GetModuleDebug("StyleSheetDebug").Enable();   --Enable  Disable
 
 local function StringTrim(str, ch)
     ch = ch or "%s";

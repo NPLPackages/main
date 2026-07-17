@@ -95,21 +95,31 @@ function commonlib.timehelp.GetDaysTweenDate(date1, date2)
 	end
 end
 
---�������ڵĺ�����
---@param date:yyyy-MM-dd H:mm:ss
-function commonlib.GetMillisecond_Date(date)
-	local __,__,year,month,day,hour,min,sec = string_find(date,"(.+)-(.+)-(.+) (.+):(.+):(.+)");
+--@param dateStr: this can be strings like "yyyy-MM-dd" or "yyyy/MM/dd HH:mm:ss" or "yyyy-MM-dd-H-mm"
+function commonlib.timehelp.GetNumberFromDateString(dateStr)
+	if(not dateStr)then return 0 end
+	local value = 0
+	for num in dateStr:gmatch("(%d+)") do
+		value = 100 * value + tonumber(num)
+	end
+	return value
+end
+
+--@param date: this can be strings like "yyyy-MM-dd H:mm:ss"
+function commonlib.GetMillisecond_Date(dateStr)
+	if(not dateStr)then return 0 end
+	local year, month, day, hour, min, sec = dateStr:match("^(%d+)%D(%d+)%D(%d+)%D(%d+)%D(%d+)%D(%d+)") 
 	year = tonumber(year);
 	month = tonumber(month);
 	day = tonumber(day);
 	hour = tonumber(hour);
 	min = tonumber(min);
 	sec = tonumber(sec);
-	local days = commonlib.GetDaysFrom_1900_1_1(year, month, day)
+	local days = commonlib.GetDaysFrom_1900_1_1(year, month, day) or 0;
 	local total_secs = days * commonlib.timehelp.GetDaySeconds() + commonlib.timehelp.GetSeconds(hour,min,sec);
 	return total_secs * 1000;
 end
---������������֮�����ĺ�����
+
 --@param date1:yyyy-MM-dd H:mm:ss
 --@param date2:yyyy-MM-dd H:mm:ss
 function commonlib.GetMillisecond_BetweenToDate(date1,date2)
@@ -485,6 +495,17 @@ function timehelp.GetTimeStampByDateTime(date_time, is_get_server_time)
 		time_stamp = os.time({day=tonumber(day), month=tonumber(month), year=tonumber(2037), hour=tonumber(hour) + 8, min=tonumber(min), sec=tonumber(sec)})
 	end
     return time_stamp
+end
+
+function timehelp.FormatTimeStampToDate(time_stamp)
+	-- 减去 8 小时（28800 秒）
+    -- local adjustedTimestamp = time_stamp - 28800 
+    -- 使用 os.date 格式化时间
+    local dateTable = os.date("!*t", time_stamp)  -- UTC 时间
+    local isoString = string.format("%04d-%02d-%02dT%02d:%02d:%02d.000Z",
+        dateTable.year, dateTable.month, dateTable.day,
+        dateTable.hour, dateTable.min, dateTable.sec)
+    return isoString
 end
 
 function timehelp.GetWeeHoursTimeStamp(time)

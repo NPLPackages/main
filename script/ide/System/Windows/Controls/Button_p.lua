@@ -505,3 +505,13 @@ function Button:paintCloseButton(painter)
 	painter:DrawLineList(lines);
 
 end
+
+-- virtual: An event is sent to the widget when the mouse cursor enters the widget.
+function Button:mouseEnterEvent(event)
+	self:update()
+end
+
+-- virtual: A leave event is sent to the widget when the mouse cursor leaves the widget.
+function Button:mouseLeaveEvent(event)
+	self:update()
+end

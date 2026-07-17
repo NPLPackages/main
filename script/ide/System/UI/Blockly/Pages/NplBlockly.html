@@ -3,10 +3,13 @@
     <div style="position: absolute; left: 0px; right: 0px; top: 0px; bottom: 0px;">
         <Blockly ref="blockly" 
             v-bind:language="Language or 'SystemNplBlock'" 
+            v-bind:LanguageType="LanguageType or 'npl'" 
             style="width: 100%; height: 100%;" 
+            CustomBlocklyFactory="true"
             onchange=OnBlocklyChange
             v-bind:OnGenerateBlockCodeBefore="OnGenerateBlockCodeBefore" 
             v-bind:OnGenerateBlockCodeAfter="OnGenerateBlockCodeAfter" 
+            v-bind:CustomCurrentBlockText="CustomCurrentBlockText"
             v-bind:ToolBoxXmlText="ToolBoxXmlText"></Blockly>
     </div>
 </template>
@@ -45,8 +48,12 @@ function OnReady()
         if (not BlocklyEl) then return end 
         BlocklyEl:SetRunBlockId(BlocklyEl:PopRunBlockId());
     end
+    _G.SetToolBoxWidth = function(width)
+        if (not BlocklyEl) then return end 
+        BlocklyEl:SetToolBoxWidth(width);
+    end
     BlocklyEl:SetReadOnly((ReadOnly == true or ReadOnly == "true"))
-    BlocklyEl:LoadFromXmlNodeText(_G.xmltext);
+    BlocklyEl:SetInitWorkspaceXml(_G.xmltext);
 end
 
 function OnBlocklyChange()

@@ -121,10 +121,12 @@ end
 
 -- concatenate another array, same as AddAll above. 
 function vector:concat(arrayList)
-	local n = #self;
-	for i = 1, #arrayList do
-		n = n + 1;
-		self[n] = self[i]
+	if(arrayList) then
+		local n = #self;
+		for i = 1, #arrayList do
+			n = n + 1;
+			self[n] = self[i]
+		end
 	end
 end
 

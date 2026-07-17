@@ -28,10 +28,14 @@ function pe_markdown:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
     local node = self
     while not css2.width do
         node = node:GetParent()
-        css2 = node:GetStyle()
+        if(note) then
+            css2 = node:GetStyle()
+        else
+            break;
+        end
     end
     --必须要获得控件显示的大小，不然获取不到需要显示的文本行数，否则会陷入死循环
-    if css2.width <= 0 then
+    if (css2.width or 0) <= 0 then
         return 
     end
     MarkDown.SetTextProperty(css2:margin_left(),css2:margin_top(),css2.width, css2.height)

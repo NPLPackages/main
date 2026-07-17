@@ -13,42 +13,49 @@ local ElementManager = NPL.load("script/ide/System/UI/Window/ElementManager.lua"
 -- -- 初始化基本元素
 -- mcml:StaticInit();
 
-local Element = NPL.load("./Element.lua", IsDevEnv);
-local Html = NPL.load("./Elements/Html.lua", IsDevEnv);
-local Style = NPL.load("./Elements/Style.lua", IsDevEnv);
-local Script = NPL.load("./Elements/Script.lua", IsDevEnv);
-local Div = NPL.load("./Elements/Div.lua", IsDevEnv);
-local Image = NPL.load("./Elements/Image.lua", IsDevEnv);
-local BigImage = NPL.load("./Elements/BigImage.lua", IsDevEnv);
-local Button = NPL.load("./Elements/Button.lua", IsDevEnv);
-local Label = NPL.load("./Elements/Label.lua", IsDevEnv);
-local Radio = NPL.load("./Elements/Radio.lua", IsDevEnv);
-local RadioGroup = NPL.load("./Elements/RadioGroup.lua", IsDevEnv);
-local CheckBox = NPL.load("./Elements/CheckBox.lua", IsDevEnv);
-local CheckBoxGroup = NPL.load("./Elements/CheckBoxGroup.lua", IsDevEnv);
-local Input = NPL.load("./Elements/Input.lua", IsDevEnv);
-local Select = NPL.load("./Elements/Select.lua", IsDevEnv);
-local TextArea = NPL.load("./Elements/TextArea.lua", IsDevEnv);
-local Canvas = NPL.load("./Elements/Canvas.lua", IsDevEnv);
-local Loading = NPL.load("./Elements/Loading.lua", IsDevEnv);
-local Progress = NPL.load("./Elements/Progress.lua", IsDevEnv);
-local QRCode = NPL.load("./Elements/QRCode.lua", IsDevEnv);
-local ColorPicker = NPL.load("./Elements/ColorPicker.lua", IsDevEnv);
-local DateTimeText = NPL.load("./Elements/DateTimeText.lua", IsDevEnv);
-local ProxyElement = NPL.load("./Elements/ProxyElement.lua", IsDevEnv);
+local IsRecursiveLoadFile = __rts__:GetField("IsRecursiveLoadFile", true);
+__rts__:SetField("IsRecursiveLoadFile", false);
+local Element = NPL.load("./Element.lua");
+local Html = NPL.load("./Elements/Html.lua");
+local Style = NPL.load("./Elements/Style.lua");
+local Script = NPL.load("./Elements/Script.lua");
+local Div = NPL.load("./Elements/Div.lua");
+local Template = NPL.load("./Elements/Template.lua");
+local TemplateList = NPL.load("./Elements/TemplateList.lua");
+local Image = NPL.load("./Elements/Image.lua");
+local BigImage = NPL.load("./Elements/BigImage.lua");
+local Button = NPL.load("./Elements/Button.lua");
+local Label = NPL.load("./Elements/Label.lua");
+local Radio = NPL.load("./Elements/Radio.lua");
+local RadioGroup = NPL.load("./Elements/RadioGroup.lua");
+local CheckBox = NPL.load("./Elements/CheckBox.lua");
+local CheckBoxGroup = NPL.load("./Elements/CheckBoxGroup.lua");
+local Input = NPL.load("./Elements/Input.lua");
+local Select = NPL.load("./Elements/Select.lua");
+local TextArea = NPL.load("./Elements/TextArea.lua");
+local Canvas = NPL.load("./Elements/Canvas.lua");
+local Loading = NPL.load("./Elements/Loading.lua");
+local Progress = NPL.load("./Elements/Progress.lua");
+local QRCode = NPL.load("./Elements/QRCode.lua");
+local ColorPicker = NPL.load("./Elements/ColorPicker.lua");
+local DateTimeText = NPL.load("./Elements/DateTimeText.lua");
+local ProxyElement = NPL.load("./Elements/ProxyElement.lua");
 
-local Component = NPL.load("../Vue/Component.lua", IsDevEnv);
-local Slot = NPL.load("../Vue/Slot.lua", IsDevEnv);
+local Component = NPL.load("../Vue/Component.lua");
+local Slot = NPL.load("../Vue/Slot.lua");
 
-local Blockly = NPL.load("../Blockly/Blockly.lua", IsDevEnv);
+local Blockly = NPL.load("../Blockly/Blockly.lua");
+local BlocklyBlock = NPL.load("../Blockly/BlocklyBlock.lua");
 
-local Canvas3D = NPL.load("./Controls/Canvas3D.lua", IsDevEnv);
+local Canvas3D = NPL.load("./Controls/Canvas3D.lua");
 
 local ElementManager = commonlib.inherit(commonlib.gettable("System.Core.ToolBase"), NPL.export());
-local ElementManagerDebug = GGS.Debug.GetModuleDebug("ElementManagerDebug").Enable();   --Enable  Disable
+local ElementManagerDebug = System.Util.Debug.GetModuleDebug("ElementManagerDebug").Enable();   --Enable  Disable
 
-ElementManager.ScrollBar = NPL.load("./Controls/ScrollBar.lua", IsDevEnv);
-ElementManager.Text = NPL.load("./Controls/Text.lua", IsDevEnv);
+ElementManager.ScrollBar = NPL.load("./Controls/ScrollBar.lua");
+ElementManager.Text = NPL.load("./Controls/Text.lua");
+
+__rts__:SetField("IsRecursiveLoadFile", IsRecursiveLoadFile);
 
 local ElementClassMap = {};
 
@@ -57,6 +64,8 @@ local DivAliasTag = {"H1", "H2", "H3", "H4", "H5", "H6", "p", "span"};
 function ElementManager:ctor()
     -- 注册元素
     ElementManager:RegisterByTagName("Html", Html);
+    ElementManager:RegisterByTagName("Template", Template);
+    ElementManager:RegisterByTagName("TemplateList", TemplateList);
     ElementManager:RegisterByTagName("Style", Style);
     ElementManager:RegisterByTagName("Script", Script);
     ElementManager:RegisterByTagName("Div", Div);
@@ -83,6 +92,7 @@ function ElementManager:ctor()
     ElementManager:RegisterByTagName("Slot", Slot);
 
     ElementManager:RegisterByTagName("Blockly", Blockly);
+    ElementManager:RegisterByTagName("BlocklyBlock", BlocklyBlock);
 
     -- 控件元素
     ElementManager:RegisterByTagName("Canvas3D", Canvas3D);

@@ -5,7 +5,7 @@
 NPL.load(GameLogic.GetWorldDirectory() .. "MatataLab/Example.lua")
 ]]
 
-local Page = NPL.load("Mod/GeneralGameServerMod/UI/Page.lua");
+local Page = NPL.load("script/ide/System/UI/Page.lua");
 -- GGS 模块的 MatataLab 目录路径, 使用GGS里的MatataLab实现, 不定制UI
 local MatataLabDirectory = "script/ide/System/UI/MatataLab/";
 -- 若需要定制, 将Mod/GeneralGameServerMod/UI/MatataLab拷贝至世界目录, 解除下行注释, 注释上行

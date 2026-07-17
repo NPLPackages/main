@@ -15,14 +15,14 @@ local Color = commonlib.gettable("System.Core.Color");
 local Rect = commonlib.gettable("mathlib.Rect");
 local Point = commonlib.gettable("mathlib.Point");
 
-local Style = NPL.load("./Style/Style.lua", IsDevEnv);
-local Layout = NPL.load("./Layout/Layout.lua", IsDevEnv);
-local ElementUI = NPL.load("./ElementUI.lua", IsDevEnv);
+local Style = NPL.load("./Style/Style.lua");
+local Layout = NPL.load("./Layout/Layout.lua");
+local ElementUI = NPL.load("./ElementUI.lua");
 local Element = commonlib.inherit(ElementUI, NPL.export());
 
-local ElementDebug = GGS.Debug.GetModuleDebug("ElementDebug").Enable();   --Enable  Disable
-local ElementHoverDebug = GGS.Debug.GetModuleDebug("ElementHoverDebug").Enable();
-local ElementFocusDebug = GGS.Debug.GetModuleDebug("ElementFocusDebug").Disable();
+local ElementDebug = System.Util.Debug.GetModuleDebug("ElementDebug").Enable();   --Enable  Disable
+local ElementHoverDebug = System.Util.Debug.GetModuleDebug("ElementHoverDebug").Enable();
+local ElementFocusDebug = System.Util.Debug.GetModuleDebug("ElementFocusDebug").Disable();
 
 Element:Property("Window");                               -- 元素所在窗口
 Element:Property("Attr", {});                             -- 元素属性
@@ -465,7 +465,8 @@ function Element:UpdateLayout(bApplyElementStyle)
     -- 是否正在更新布局
     if (self.isUpdateLayout) then return end
     self.isUpdateLayout = true;
-    
+    self:Refresh();
+
     -- ElementDebug.If(self:GetAttrValue("id") == "debug", "Update Layout", bApplyElementStyle);
     -- 生成元素样式
     if (bApplyElementStyle) then self:ApplyElementStyle() end

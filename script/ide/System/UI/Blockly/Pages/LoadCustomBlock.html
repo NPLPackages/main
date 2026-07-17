@@ -1,0 +1,183 @@
+<template class="container">
+    <WindowTitleBar title="加载定制块"></WindowTitleBar>
+    <div class="filelist-container">
+        <div style="position: absolute; left: 0px; top: 0px; height: 100%; width: 250px; overflow-y: scroll;">
+            <div v-for="file in filelist" class="file-container">
+                <checkbox v-bind:ref="'file_checkbox_' .. tostring(file.index)" onclick="OnFileChecked(file)"></checkbox>
+                <div onclick="OnClickLabel(file)" v-bind:style="FileNameStyle(file)">{{file.name}}</div>
+            </div>
+        </div>
+        <div style="position: absolute; left: 254px; top: 0px; height: 100%; width: 330px;border-left: 1px solid #554e4e; padding-left: 10px;">
+            <div style="position: absolute; left: 10px; top: 2px; right: 10px; bottom: 10px; overflow-y: scroll;">
+                <div v-for="blocktype in blocklist" style="width: 100%; margin-top: 10px; margin-bottom: 10px;">
+                    <div style="position: absolute; left: 0px; top: 0px; width: 20px; height: 20px;">
+                        <checkbox onclick="OnBlockChecked(blocktype)" v-bind:checked="GetBlockValue(blocktype)"></checkbox>
+                    </div>
+                    <BlocklyBlock onclick="OnBlockChecked(blocktype)" v-bind:block="GetBlockOption(blocktype)" style="margin-left: 20px;">
+                    </BlocklyBlock>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="operation-container">
+        <div onclick="OnClickEdit" class="btn">编辑...</div>
+        <div onclick="OnClickImport" class="btn">导入...</div>
+        <div onclick="OnClickOK" class="btn">确定</div>
+        <div onclick="OnClickCancel" class="btn">取消</div>
+    </div>
+</template>
+
+<script type="text/lua">
+RegisterComponent("WindowTitleBar", "%vue%/Components/WindowTitleBar.html");
+
+local all_file_map = {};
+local all_index_block_map = {};
+all_block_option_map = {};
+filelist = LoadCustomBlock.filteredResultDS or LoadCustomBlock.resultDS;
+fileindex = 0;
+filename = ""
+
+GetGlobalScope():Set("blocklist", {});
+
+function FileNameStyle(file)
+    return "width: 200px; height: 100%; position: absolute; left: 20px; top:2px; " .. (file.name == filename and "background-color: #d0d0d0ff" or "");
+end
+
+function FilterResult(value)
+    LoadCustomBlock.FilterResult(value);
+end
+
+function GetBlockValue(blocktype)
+    return GetGlobalScope():Get("block_value_" .. tostring(fileindex) .. "_" .. blocktype);
+end
+
+function GetBlockOption(blocktype)
+    return all_block_option_map[blocktype];
+end
+
+function SetBlockValue(blocktype, value)
+    -- print("block_value_" .. tostring(fileindex) .. "_" .. blocktype, value)
+    return GetGlobalScope():Set("block_value_" .. tostring(fileindex) .. "_" .. blocktype, value);
+end
+
+function OnBlockChecked(blocktype)
+    local all_block_map = all_index_block_map[fileindex] or {};
+    all_block_map[blocktype] = not all_block_map[blocktype];
+    SetBlockValue(blocktype, not GetBlockValue(blocktype));
+    if (all_block_map[blocktype] and not all_file_map[fileindex]) then
+        all_file_map[fileindex] = true;
+        GetRef("file_checkbox_" .. tostring(fileindex)):SetChecked(true);
+    end
+end
+
+function LoadBlockList(index, checked)
+    local GetBlockListByIndex = GetG().GetBlockListByIndex;
+    local global_scope = GetGlobalScope();
+    local all_block_map = all_index_block_map[index] or {};
+    all_index_block_map[index] = all_block_map;
+
+    if (type(GetBlockListByIndex) == "function") then
+        local blocks, block_option_map = GetBlockListByIndex(index);
+        for _, blocktype in pairs(blocks) do
+            if (checked ~= nil) then
+                all_block_map[blocktype] = checked;
+            elseif (all_block_map[blocktype] == nil) then
+                all_block_map[blocktype] = false;
+            end 
+            SetBlockValue(blocktype, all_block_map[blocktype]);
+            all_block_option_map[blocktype] = block_option_map[blocktype] or all_block_option_map[blocktype];
+        end
+        GetGlobalScope():Set("blocklist", blocks or {});
+    end
+end
+
+function OnFileChecked(file)
+    local index = file.index;
+    filename = file.name;
+    fileindex = file.index;
+    all_file_map[index] = not all_file_map[index];
+    LoadBlockList(index, all_file_map[index]);
+end
+
+function OnClickLabel(file)
+    local index = file.index;
+    filename = file.name;
+    fileindex = file.index;
+    LoadBlockList(index);
+end
+
+function OnClickEdit()
+    LoadCustomBlock.OnClickEdit();
+    CloseWindow();
+end
+
+function OnClickImport()
+    LoadCustomBlock.OnClickImport();
+    CloseWindow();
+end
+
+function OnClickOK()
+    LoadCustomBlock.OnClickOK(all_file_map, all_index_block_map);
+    CloseWindow();
+end
+
+function OnClickCancel()
+    CloseWindow();
+end
+
+function RefreshFileList()
+    filelist = LoadCustomBlock.filteredResultDS or LoadCustomBlock.resultDS;
+end
+
+function OnReady()
+end
+
+_G.RefreshFileList = RefreshFileList;
+</script>
+
+<style scoped=true>
+    .container {
+        height: 100%;
+        width: 100%;
+        padding: 0px 2px 2px 2px;
+        background-color: rgb(206,200,168);
+        background: url(Texture/Aries/Creator/keepwork/Window/dakuang_32bits.png#0 0 440 93:378 43 33 44);
+    }
+
+    .operation-container {
+        position: absolute;
+        left: 0px;
+        top: 400px;
+        width: 100%;
+        height: 50px;
+        display: flex;
+        justify-content: space-around;
+        padding: 10px 0px 20px 0px;
+    }
+
+    .filelist-container {
+        width: 100%;
+        height: 360px;
+        position: absolute;
+        left: 10px;
+        top: 50px;
+        height: 330px;
+        width: 580px;
+    }
+
+    .file-container {
+        width: 100%;
+        height: 22px;
+    }
+
+    .btn {
+        width: 20%;
+        padding: 6px 16px;
+        border-radius: 5px;
+        background-color: #e6e6e6;
+    }
+
+    .btn:hover {
+        background-color: #ffffff;
+    }
+</style>

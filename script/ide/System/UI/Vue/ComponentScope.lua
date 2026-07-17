@@ -5,7 +5,7 @@ Date: 2020/6/30
 Desc: 组件脚本执行环境
 use the lib:
 -------------------------------------------------------
-local ComponentScope = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/ComponentScope.lua");
+local ComponentScope = NPL.load("script/ide/System/UI/Vue/ComponentScope.lua");
 -------------------------------------------------------
 ]]
 

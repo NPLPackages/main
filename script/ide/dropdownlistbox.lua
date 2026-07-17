@@ -73,6 +73,9 @@ local dropdownlistbox = {
 	editbox_id = -1,
 	onremove = nil,
 	emptyText = "",
+	fontColor = "#000000",
+	useTooltip = false,
+	fontSize = 12,
 }
 CommonCtrl.dropdownlistbox = dropdownlistbox;
 
@@ -122,9 +125,10 @@ function dropdownlistbox:Show(bShow)
 		_this = ParaUI.CreateUIObject("imeeditbox", "e", "_mt", 0, 0, width, height);
 		_this:GetAttributeObject():SetField("EmptyText", self.emptyText);
 		_parent:AddChild(_this);
-
+		_guihelper.SetFontColor(_this, self.fontColor);
 		self.editbox_id = _this.id;
 		_this.text = self.text;
+		_this.font = string.format("%s;%d", "System", self.fontSize);
 
 		if not self.AllowUserEdit then
 			_this.enabled = false;
@@ -361,7 +365,54 @@ function dropdownlistbox:RefillListBox(width, height)
 
 					_this:AddChild(_itemUI)
 				else
-					_this:AddTextItem(tostring(value));
+					if not self.useTooltip then
+						_this:AddTextItem(tostring(value));
+					else
+						local buttonHeight = math.max(16, height / #self.items); --由于文本大小是12，预留部分空间
+						
+						if buttonHeight * index > height then
+							break;
+						end
+	
+						local _itemUI = ParaUI.CreateUIObject("container", "item", "_lt", 1 , buttonHeight * (index - 1), width - 2, buttonHeight);
+						_itemUI.background = "Texture/whitedot.png";
+						_itemUI.tooltip = tostring(value);
+	
+						-- call the event handler if any
+						_itemUI:SetScript("onmouseup", function()
+							-- change editbox text with the selection text
+							local editbox = ParaUI.GetUIObject(self.editbox_id);
+							if(editbox:IsValid()) then
+								-- use some formatting if any.
+								if(not self.FuncTextFormat) then
+									editbox.text = tostring(value);
+								else
+									editbox.text = self.FuncTextFormat(tostring(value));
+								end
+	
+								-- call the event handler if any
+								if(self.onselect ~= nil)then
+									if(type(self.onselect) == "string") then
+										NPL.DoString(self.onselect);
+									else
+										self.onselect(self.name, self:GetValue());
+									end
+								end
+							end
+	
+							ParaUI.Destroy(self.listbox_id);
+						end);
+						
+	
+						local _text = ParaUI.CreateUIObject("text", "textitem" .. index, "_lt", 1, 1, width, buttonHeight);
+						_text.text = tostring(value);
+						_text.font = "System;12;normal;"
+						_text.shadow = false;
+						_guihelper.SetUIFontFormat(_text, 36)
+	
+						_itemUI:AddChild(_text);
+						_this:AddChild(_itemUI);
+					end
 				end
 			end
 		end	
@@ -388,7 +439,6 @@ end
 function dropdownlistbox.OnClickDropDownButton(self)
 	-- calculate the position of drop down list box from the current position of the control
 	local _this = ParaUI.GetUIObject(self.id);
-
 	if(_this:IsValid() == false) then
 		return;
 	end
@@ -396,6 +446,10 @@ function dropdownlistbox.OnClickDropDownButton(self)
 	local _, _, screenWidth, screenHeight = ParaUI.GetUIObject("root"):GetAbsPosition();
 	local left, top, width, height = _this:GetAbsPosition();
 
+	if(type(self.onBeforeClickDropDownButton) == "function") then
+		self.onBeforeClickDropDownButton(self);
+	end
+	
 	-- make the listbox appear at the right position
 	if (top + height + self.dropdownheight) > screenHeight then
 		-- float up display if there is no enough space for drop down display. 
@@ -429,18 +483,23 @@ function dropdownlistbox.OnClickDropDownButton(self)
 		_parent = _this;
 
 		if not self.onremove then
-			_this = ParaUI.CreateUIObject("listbox","l","_fi",0,0,0,0);
-			
-			if(self.listbox_bg~=nil) then
-				_this.background=self.listbox_bg;
-			end	
-			
-			_parent:AddChild(_this);
+			if not self.useTooltip then
+				_this = ParaUI.CreateUIObject("listbox","l","_fi",0,0,0,0);
+				
+				if(self.listbox_bg~=nil) then
+					_this.background=self.listbox_bg;
+				end	
+				
+				_parent:AddChild(_this);
+			end
+
 			self.listbox_id = _this.id;
 
-			_this:SetScript("onselect", function()
-				self:handleEvent("OnSelectListBox");
-			end)
+			if not self.useTooltip then
+				_this:SetScript("onselect", function()
+					self:handleEvent("OnSelectListBox");
+				end)
+			end
 		end
 
 		-- refresh on first use
@@ -479,7 +538,6 @@ end
 
 -- called when the user select a list box item
 function dropdownlistbox.OnMouseUpListBoxCont(self)
-	
 	ParaUI.Destroy(self.listbox_cont_id);
 	
 	if(KidsUI~=nil) then

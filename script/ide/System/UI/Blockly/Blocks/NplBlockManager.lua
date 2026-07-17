@@ -12,10 +12,10 @@ local NplToolbox = NPL.load("script/ide/System/UI/Blockly/Blocks/NplToolbox.lua"
 NPL.load("(gl)script/apps/Aries/Creator/Game/Code/CodeHelpWindow.lua");
 local CodeHelpWindow = commonlib.gettable("MyCompany.Aries.Game.Code.CodeHelpWindow");
 
--- local GIBlockly = NPL.load("Mod/GeneralGameServerMod/GI/Independent/GIBlockly.lua", IsDevEnv);
+-- local GIBlockly = NPL.load("Mod/GeneralGameServerMod/GI/Independent/GIBlockly.lua");
 
-local NplBlockMCML = NPL.load("./NplBlockMCML.lua", IsDevEnv);
-local NplBlockCad = NPL.load("./NplBlockCad.lua", IsDevEnv);
+local NplBlockMCML = NPL.load("./NplBlockMCML.lua");
+local NplBlockCad = NPL.load("./NplBlockCad.lua");
 
 local NplBlockManager = NPL.export();
 
@@ -57,57 +57,68 @@ local function GetAllBlocksAndCategoryList(all_cmds, all_categories, lang)
     for i = 1, cmd_count do
         local cmd = all_cmds[i];
         local category = CategoryMap[cmd.category];
-        -- if (not cmd.func_description) then echo(cmd) end
-        local func_description = string.gsub(cmd.func_description or "", "\\n", "\n");
-        func_description = string.gsub(func_description, "%%d", "%%s");
-        local block = {
-            isScratchBlock = true;
-            color = category and category.color;
-            category = cmd.category;
-            message = cmd.message,
-            arg = commonlib.deepcopy(cmd.arg),
-            previousStatement = cmd.previousStatement and true or false,
-            nextStatement = cmd.nextStatement and true or false,
-            output = cmd.output and true or false,
-            type = cmd.type,
-            code = cmd.code,
-            code_description = cmd.code_description,
-            ToCode = cmd.ToCode or function(block, DefaultToCode)
-                if (cmd.code_description) then return DefaultToCode(block) end
-                if (not cmd.func_description) then return cmd.ToNPL(block) end
+        if (category) then
+            -- if (not cmd.func_description) then echo(cmd) end
+            local func_description = string.gsub(cmd.func_description or "", "\\n", "\n");
+            func_description = string.gsub(func_description, "%%d", "%%s");
+            local block = {
+                isScratchBlock = true;
+                color = category and category.color;
+                category = cmd.category;
+                message = cmd.message,
+                arg = commonlib.deepcopy(cmd.arg),
+                previousStatement = cmd.previousStatement and true or false,
+                nextStatement = cmd.nextStatement and true or false,
+                output = cmd.output and true or false,
+                type = cmd.type,
+                code = cmd.code,
+                code_description = cmd.code_description,
+                headerText = cmd.headerText,
+                topython = cmd.ToPython,
+                tomicropython = cmd.ToMicroPython,
+                toarduino = cmd.ToArduino or cmd.ToCpp,
+                tocpp = cmd.ToCpp,
+                ToCode = cmd.ToCode or function(block, DefaultToCode)
+                    if (cmd.code_description) then return DefaultToCode(block) end
+                    if (not cmd.func_description) then return cmd.ToNPL(block) end
 
-                local args = {};
-                local index = 1;
-                for i, opt in ipairs(block.inputFieldOptionList) do
-                    if (opt.type ~= "input_dummy") then
-                        if (opt.type == "input_value" or opt.type == "input_statement") then
-                            args[index] = block:GetValueAsString(opt.name) or "";
-                        else 
-                            args[index] = block:GetFieldValue(opt.name) or "";
+                    local args = {};
+                    local index = 1;
+                    for i, opt in ipairs(block.inputFieldOptionList) do
+                        if (opt.type ~= "input_dummy") then
+                            if (opt.type == "input_value" or opt.type == "input_statement") then
+                                args[index] = block:GetValueAsString(opt.name) or "";
+                            else 
+                                args[index] = block:GetFieldValue(opt.name) or "";
+                            end
+                            index = index + 1;
                         end
-                        index = index + 1;
                     end
-                end
-                return string.format(func_description, unpack(args));
-            end,
-            hideInToolbox = cmd.hide_in_toolbox,
-        } 
-        if (block.previousStatement or block.nextStatement) then func_description = func_description .. "\n" end 
-        format_field_type(block.arg);
-        for i = 0, 10 do
-            local messageName = "message" .. tostring(i);
-            local argName = "arg" .. tostring(i);
-            if (not cmd[messageName]) then break end
-            block[messageName] = cmd[messageName];
-            block[argName] = commonlib.deepcopy(cmd[argName]);
-            format_field_type(block[argName]);
+                    return string.format(func_description, unpack(args));
+                end,
+                tocpp = cmd.ToCpp,
+                PostProcess = cmd.PostProcess,
+                hideInToolbox = cmd.hide_in_toolbox,
+                hideInBlockly = cmd.hide_in_blockly,
+            } 
+            if (block.previousStatement or block.nextStatement) then block.output = false end
+            if (block.previousStatement or block.nextStatement) then func_description = func_description .. "\n" end 
+            format_field_type(block.arg);
+            for i = 0, 10 do
+                local messageName = "message" .. tostring(i);
+                local argName = "arg" .. tostring(i);
+                if (not cmd[messageName]) then break end
+                block[messageName] = cmd[messageName];
+                block[argName] = commonlib.deepcopy(cmd[argName]);
+                format_field_type(block[argName]);
+            end
+        
+            if (not block.hideInToolbox and not block.hideInBlockly) then
+                table.insert(category.blocktypes, #(category.blocktypes) + 1, block.type);
+            end
+            table.insert(AllBlocks, #AllBlocks + 1, block);
+            AllBlockMap[block.type] = block;
         end
-    
-        if (not block.hideInToolbox) then
-            table.insert(category.blocktypes, #(category.blocktypes) + 1, block.type);
-        end
-        table.insert(AllBlocks, #AllBlocks + 1, block);
-        AllBlockMap[block.type] = block;
     end
 
     all_blocks_cache[key], all_category_list_cache[key] = AllBlocks, CategoryList;
@@ -116,7 +127,8 @@ local function GetAllBlocksAndCategoryList(all_cmds, all_categories, lang)
 end
 
 function NplBlockManager.IsNplLanguage(lang)
-    return CodeHelpWindow.GetLanguageConfigFile() == "npl" or CodeHelpWindow.GetLanguageConfigFile() == "" or CodeHelpWindow.GetLanguageConfigFile() == "npl_junior";
+    if (CodeHelpWindow.codeLanguageType == "python") then return false end 
+    return CodeHelpWindow.GetLanguageConfigFile() == "npl" or CodeHelpWindow.GetLanguageConfigFile() == "" or CodeHelpWindow.GetLanguageConfigFile() == "npl_junior" or CodeHelpWindow.GetLanguageConfigFile() == "codeblock";
 end
 
 function NplBlockManager.IsMcmlLanguage(lang)
@@ -220,106 +232,3 @@ function NplBlockManager.GetCategoryListAndMap(blockManager, lang)
     return CategoryList, AllCategoryMap;
 end
 
-
---[[
--- scratch cad block defined
-<toolbox>
-	<category name="Shapes">
-		<block type="createNode"/>
-		<block type="pushNode"/>
-		<block type="pushNodeByName"/>
-		<block type="cube"/>
-		<block type="box"/>
-		<block type="sphere"/>
-		<block type="cylinder"/>
-		<block type="cone"/>
-		<block type="torus"/>
-		<block type="prism"/>
-		<block type="ellipsoid"/>
-		<block type="wedge"/>
-		<block type="trapezoid"/>
-		<block type="importStl"/>
-		<block type="importStl_2"/>
-		<block type="plane"/>
-		<block type="circle"/>
-		<block type="ellipse"/>
-		<block type="regularPolygon"/>
-		<block type="polygon"/>
-		<block type="text3d"/>
-	</category>
-	<category name="ShapeOperators">
-		<block type="move"/>
-		<block type="rotate"/>
-		<block type="rotateFromPivot"/>
-		<block type="moveNode"/>
-		<block type="rotateNode"/>
-		<block type="rotateNodeFromPivot"/>
-		<block type="cloneNodeByName"/>
-		<block type="cloneNode"/>
-		<block type="deleteNode"/>
-		<block type="fillet"/>
-		<block type="getEdgeCount"/>
-		<block type="chamfer"/>
-		<block type="extrude"/>
-		<block type="revolve"/>
-		<block type="mirror"/>
-		<block type="mirrorNode"/>
-		<block type="deflection"/>
-	</category>
-	<category name="Control">
-		<block type="repeat_count"/>
-		<block type="control_if"/>
-		<block type="if_else"/>
-	</category>
-	<category name="Math">
-		<block type="math_op"/>
-		<block type="random"/>
-		<block type="math_compared"/>
-		<block type="not"/>
-		<block type="mod"/>
-		<block type="round"/>
-		<block type="math_oneop"/>
-	</category>
-	<category name="Data">
-		<block type="getLocalVariable"/>
-		<block type="createLocalVariable"/>
-		<block type="assign"/>
-		<block type="getString"/>
-		<block type="getBoolean"/>
-		<block type="getNumber"/>
-		<block type="newEmptyTable"/>
-		<block type="getTableValue"/>
-		<block type="defineFunction"/>
-		<block type="callFunction"/>
-		<block type="code_comment"/>
-		<block type="setMaxTrianglesCnt"/>
-		<block type="jsonToObj"/>
-		<block type="objToJson"/>
-	</category>
-	<category name="Skeleton">
-		<block type="createJointRoot"/>
-		<block type="createJoint"/>
-		<block type="bindNodeByName"/>
-		<block type="boneNames"/>
-		<block type="rotateJoint"/>
-		<block type="startBoneNameConstraint"/>
-		<block type="setBoneConstraint_Name"/>
-		<block type="setBoneConstraint_min"/>
-		<block type="setBoneConstraint_max"/>
-		<block type="setBoneConstraint_offset"/>
-		<block type="setBoneConstraint_2"/>
-		<block type="setBoneConstraint_3"/>
-		<block type="setBoneConstraint_4"/>
-		<block type="setBoneConstraint_5"/>
-		<block type="setBoneConstraint_6"/>
-	</category>
-	<category name="Animation">
-		<block type="createAnimation"/>
-		<block type="addChannel"/>
-		<block type="setAnimationTimeValue_Translate"/>
-		<block type="setAnimationTimeValue_Scale"/>
-		<block type="setAnimationTimeValue_Rotate"/>
-		<block type="animationiNames"/>
-	</category>
-</toolbox>
-]]

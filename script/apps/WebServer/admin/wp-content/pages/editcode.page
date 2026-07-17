@@ -46,6 +46,37 @@ if(is_ajax()) then
         end
         wp_send_json(output);
     end)
+    add_action('wp_ajax_find_definition', function()
+        local output = {success = false};
+	    local line = request:get("line");
+        local cursor = tonumber(request:get("cursor") or 1);
+        if(line) then
+            NPL.load("(gl)script/apps/Aries/Creator/Game/Code/CodeIntelliSense.lua");
+            NPL.load("(gl)script/ide/System/Core/UniString.lua");
+            local UniString = commonlib.gettable("System.Core.UniString");
+            local CodeIntelliSense = commonlib.gettable("MyCompany.Aries.Game.Code.CodeIntelliSense");
+            line = UniString:new(line);
+            local from, to = line:wordPosition(cursor);
+            if(to) then
+                local func = CodeIntelliSense:GetFunctionByCursor(line, to)
+                if(func) then
+                    NPL.load("(gl)script/apps/Aries/Creator/Game/Code/CodeInspector.lua");
+                    local CodeInspector = commonlib.gettable("MyCompany.Aries.Game.Code.CodeInspector");
+                    local info = CodeInspector:GetFunctionDefinition(func)
+                    if(info and info.source) then
+                        output.success = true;
+                        output.source = info.source;
+                        output.filepath = info.source;
+                        if(not commonlib.Files.IsAbsolutePath(info.source)) then
+                            output.filepath = ParaIO.GetCurDirectory(0)..info.source;
+                        end
+                        output.linedefined = info.linedefined;
+                    end
+                end
+            end
+        end
+        wp_send_json(output);
+    end)
 	return;
 end
 wp_enqueue_script("ace", "/wp-includes/js/ace/ace.js");
@@ -58,7 +89,7 @@ wp_enqueue_style("jqueryui_css", "/wp-includes/js/jquery/jquery-ui.min.css");
 wp_enqueue_script("easyui", "/wp-includes/js/jeasyui/jquery.easyui.min.js");
 wp_enqueue_script("jqueryui", "/wp-includes/js/jquery/jquery-ui.min.js"); 
 
-echo(format("<script>window.editorInfo = {workspaceDir:'%s', req_src:'%s', req_line:'%s'};</script>", ParaIO.GetCurDirectory(0), src or "", line or ""));
+echo(format("<script>window.editorInfo = {workspaceDir:'%s', curWorldDir:'%s', req_src:'%s', req_line:'%s'};</script>", ParaIO.GetCurDirectory(0),  ParaWorld.GetWorldDirectory(), src or "", line or ""));
 ?>
 <script>
     angular.module('EditCode', ['ngStorage', 'ngSanitize'])
@@ -91,15 +122,18 @@ echo(format("<script>window.editorInfo = {workspaceDir:'%s', req_src:'%s', req_l
     .controller('EditCodeController', function ($scope, $http, $interval, $localStorage) {
         $scope.fileExtensions = ["*.*", "*.lua", "*.npl", "*.xml", "*.page", "*.html", "*.txt"];
         $scope.status = "";
-        $scope.rootdir = "";
+        $scope.rootdir = "world"; // default to world directory, it can be "" for SDK root. 
+        $scope.navdir = "";
         $scope.isModified = false;
 		$scope.FindWnd = {visible:false, word:""};
+        $scope.ImageWnd = {visible:false, url:"", width:0, height: 0};
         $scope.status = { type: null, htmlText: "" };
         $scope.$storage = $localStorage.$default({
             openedfiles: [], // {filename, line}
-            extFilter: "*.lua",
+            extFilter: "*.*",
         });
 		var workspaceDir = editorInfo.workspaceDir;
+        var curWorldDir = editorInfo.curWorldDir;
         var req_src = editorInfo.req_src;
         if (req_src != "")
             $scope.$storage.currentFilename = req_src;
@@ -141,6 +175,8 @@ echo(format("<script>window.editorInfo = {workspaceDir:'%s', req_src:'%s', req_l
                 onClick: function (item) {
                     if (item.name == "close")
                         $scope.closeFile($index);
+                    else if (item.name == "closeOthers")
+						$scope.closeFile($index, "others");
                     else if (item.name == "save")
                         $scope.saveFile(file.filename);
                     else if (item.name == "refresh")
@@ -157,20 +193,67 @@ echo(format("<script>window.editorInfo = {workspaceDir:'%s', req_src:'%s', req_l
             $('#cmTabFile').menu('show', { left: $event.pageX - 5, top: $event.pageY - 10 });
         }
         
+        $scope.RefreshGetFileUrl = function() {
+            var url = "ajax/world?action=get_world_files&filter=" + $scope.$storage.extFilter;
+            if($scope.rootdir != "world"){
+                url = url + "&rootdir=" + $scope.rootdir;
+            }
+            if ($('#filedir').treegrid("options").url != url) {
+                $('#filedir').treegrid("options").url = url;
+                $('#filedir').treegrid("reload");
+            }
+        }
+
+        // @param dir: "" or "world" for current world directory. 
+        $scope.SetRootDirTo = function (dir) {
+            $scope.rootdir = dir;
+            $scope.navdir = "";
+            if($scope.rootdir == "world"){
+                $scope.$storage.extFilter = "*.*";
+            }
+            else{
+                $scope.$storage.extFilter = "*.lua"
+            }
+            $scope.RefreshGetFileUrl();
+        }
+        // convert string str, replacing all none-alpha numic and _ chars with "_x%02x" hex string
+        function toHexString(str){
+            var ret = "";
+            for(var i = 0; i < str.length; i++){
+                var c = str.charCodeAt(i);
+                if((c >= 48 && c <= 57) || (c >= 65 && c <= 90) || (c >= 97 && c <= 122)){
+                    ret += str[i];
+                }
+                else{
+                    ret += "_x" + c.toString(16) + "x";
+                }
+            }
+            return ret;
+        }
+        function fromHexString(str){
+            var ret = "";
+            for(var i = 0; i < str.length; i++){
+                if(str[i] == "_" && i < (str.length - 4)){
+                    if(str[i + 1] == "x" && str[i + 4] == "x"){
+                        var c = parseInt(str.substr(i + 2, 2), 16);
+                        ret += String.fromCharCode(c);
+                        i += 4;
+                    }
+                    else{
+                        ret += str[i];
+                    }
+                }
+                else{
+                    ret += str[i];
+                }
+            }
+            return ret;
+        }
         //  @param filename: "/", "world", null, or filename
         $scope.NavigateTreeViewTo = function (filename) {
             var tv = $('#filedir');
             if (filename == "" || filename == "/") {
-                $scope.rootdir = "";
                 tv.treegrid("reload");
-                return;
-            }
-            else if (filename == "$world") {
-                var worlddir = workspaceDir;
-                if ($scope.rootdir != worlddir)
-                    $scope.rootdir = worlddir;
-                else
-                    $scope.NavigateTreeViewTo(worlddir);
                 return;
             }
             else if (!filename)
@@ -178,7 +261,8 @@ echo(format("<script>window.editorInfo = {workspaceDir:'%s', req_src:'%s', req_l
 
             filename = filename.toLowerCase();
             filename = filename.replace(/\/$/, "");
-            filename = filename.replace(/\//g, "#");
+            //filename = filename.replace(/\//g, "#");
+            filename = toHexString(filename);
             
             function expandTo(children) {
                 if (children) {
@@ -252,23 +336,32 @@ echo(format("<script>window.editorInfo = {workspaceDir:'%s', req_src:'%s', req_l
             $scope.addNotice(fullpath);
         }
         
-        $scope.closeFile = function (index, bForceClose) {
-            if ($scope.$storage.openedfiles[index].filename != $scope.$storage.currentFilename) {
-                $scope.$storage.openedfiles.splice(index, 1);
+        $scope.closeFile = function (index, methodOrForceClose) {
+            if(methodOrForceClose == "others") {
+                var count = $scope.$storage.openedfiles.length;
+				if(index < count-1)
+					$scope.$storage.openedfiles.splice(index+1, count-index-1);
+				if(index > 0) 
+					$scope.$storage.openedfiles.splice(0, index);
             }
-            else {
-                var editor = ace.edit("editor");
-                if (!bForceClose && !editor.session.getUndoManager().isClean()) {
-                    if (confirm("file:" + $scope.$storage.currentFilename + " is modified. Do you want to discard the changes?")) {
-                        $scope.closeFile(index, true);
-                    }
-                    return;
+            else{
+                if ($scope.$storage.openedfiles[index].filename != $scope.$storage.currentFilename) {
+                    $scope.$storage.openedfiles.splice(index, 1);
                 }
-                $scope.$storage.openedfiles.splice(index, 1);
-                if ($scope.$storage.openedfiles.length > 0)
-                    $scope.openFile($scope.$storage.openedfiles[0].filename, $scope.$storage.openedfiles[0].line, true);
-                else
-                    $scope.openFile("", null, true);
+                else {
+                    var editor = ace.edit("editor");
+                    if (!methodOrForceClose && !editor.session.getUndoManager().isClean()) {
+                        if (confirm("file:" + $scope.$storage.currentFilename + " is modified. Do you want to discard the changes?")) {
+                            $scope.closeFile(index, true);
+                        }
+                        return;
+                    }
+                    $scope.$storage.openedfiles.splice(index, 1);
+                    if ($scope.$storage.openedfiles.length > 0)
+                        $scope.openFile($scope.$storage.openedfiles[0].filename, $scope.$storage.openedfiles[0].line, true);
+                    else
+                        $scope.openFile("", null, true);
+                }
             }
         }
         $scope.saveFileOpenHistory = function (filename, line) {
@@ -318,7 +411,7 @@ echo(format("<script>window.editorInfo = {workspaceDir:'%s', req_src:'%s', req_l
         }
 		$scope.getRelativePath = function (filename) {
 			filename = filename.replace(/\\/g, "/");
-			filename = filename.replace(workspaceDir, "");
+            filename = filename.replace(workspaceDir, "");
 			filename = filename.replace(/.*npl_packages\/[^\/]+\//g, "");
 			return filename;
 		}
@@ -330,7 +423,29 @@ echo(format("<script>window.editorInfo = {workspaceDir:'%s', req_src:'%s', req_l
 			}
 		}
         $scope.openFile = function (filename, line, bForceReopen, bForceNoPrompt) {
+            var oldFilename = filename;
 			filename = $scope.getRelativePath(filename);
+
+            // show image wnd for image file
+            var ext = filename.split('.').pop();
+            if(ext == "png" || ext == "jpg") {
+                $scope.ImageWnd.visible = true;
+                if($scope.rootdir == "world"){
+                    oldFilename = oldFilename.replace(/\\/g, "/");
+                    oldFilename = oldFilename.replace(curWorldDir, "");
+                    var relativeWorldDir = curWorldDir.replace(workspaceDir, "");
+                    oldFilename = oldFilename.replace(relativeWorldDir, "");
+                    $scope.ImageWnd.url = "~/" + encodeURIComponent(oldFilename);
+                }
+                else{
+                    $scope.ImageWnd.url = "~root/" + encodeURIComponent(filename);
+                }
+                $scope.SetImageMeta($scope.ImageWnd.url);
+            }
+            else{
+                $scope.ImageWnd.visible = false;
+            }
+
             var editor = ace.edit("editor");
             if ($scope.$storage.currentFilename != filename || bForceReopen) {
                 if (!bForceNoPrompt && !editor.session.getUndoManager().isClean()) {
@@ -355,6 +470,15 @@ echo(format("<script>window.editorInfo = {workspaceDir:'%s', req_src:'%s', req_l
                 });
             }
         }
+        $scope.SetImageMeta = function(url){
+            var img = new Image();
+            img.onload = function(){
+                $scope.ImageWnd.width = img.naturalWidth;
+                $scope.ImageWnd.height = img.naturalHeight;
+                $scope.$apply();
+            };
+            img.src = url;
+        };
         // binding editor
         function initEditor() {
             var editor = ace.edit("editor");
@@ -391,8 +515,13 @@ echo(format("<script>window.editorInfo = {workspaceDir:'%s', req_src:'%s', req_l
 
             $('#filedir').treegrid({
                 onClickRow: function (row) {
-                    var filename = row.id.replace(/#/g, "/");
-                    if (/\.\w+$/.test(filename)) {
+                    //var filename = row.id.replace(/#/g, "/");
+                    var filename = fromHexString(row.id);
+
+                    if (row.filesize > 0 || /\.\w+$/.test(filename)) {
+                        if($scope.rootdir == "world") {
+                            filename = curWorldDir + filename;
+                        }
                         $scope.openFile(filename);
                     }
                     else {
@@ -410,18 +539,15 @@ echo(format("<script>window.editorInfo = {workspaceDir:'%s', req_src:'%s', req_l
         if(typeof Page != 'undefined')
             Page.ShowSideBar(false);
 
-        $scope.$watch('rootdir', function (newValue, oldValue) {
+        $scope.$watch('navdir', function (newValue, oldValue) {
             if (newValue && newValue != "")
                 $scope.NavigateTreeViewTo(newValue);
         });
         $scope.$watch('$storage.extFilter', function (newValue, oldValue) {
-            var url = "ajax/world?action=get_world_files&filter=" + newValue + "&rootdir=";
-            if ($('#filedir').treegrid("options").url != url) {
-                $('#filedir').treegrid("options").url = url;
-                $('#filedir').treegrid("reload");
-            }
+            $scope.RefreshGetFileUrl();
         });
 	});
+   
 </script>
 <h1>NPL Code Editor</h1>
 <div ng-app="EditCode" ng-controller="EditCodeController as Editor" style="margin-top:10px;" class="form-horizontal">
@@ -430,8 +556,8 @@ echo(format("<script>window.editorInfo = {workspaceDir:'%s', req_src:'%s', req_l
             <div>
                 <div>
                     <div class="btn-group">
-                        <button class="btn btn-default" title="Goto Root Directory" ng-click="NavigateTreeViewTo('/')">Root</button>
-                        <button class="btn btn-default" title="Goto Current World Directory" ng-click="NavigateTreeViewTo('$world')">World</button>
+                        <button class="btn {{rootdir=='' && 'btn-primary' || 'btn-default'}}" title="Goto Root Directory" ng-click="SetRootDirTo('')">Root</button>
+                        <button class="btn {{rootdir=='world' && 'btn-primary' || 'btn-default'}}" title="Goto Current World Directory" ng-click="SetRootDirTo('world')">World</button>
                         <button class="btn btn-default" title="Sync with Active Document" ng-click="NavigateTreeViewTo()"><i class="glyphicon glyphicon-transfer"></i></button>
                     </div>
                     Filters: 
@@ -439,16 +565,19 @@ echo(format("<script>window.editorInfo = {workspaceDir:'%s', req_src:'%s', req_l
                         <option ng-repeat="ext in fileExtensions">{{ext}}</option>
                     </select>
                 </div>
-                <form ng-submit="NavigateTreeViewTo(rootdir)">
-                    <input type="text" placeholder="enter directory" style="width:100%" ng-model="rootdir" />
+                <form ng-submit="NavigateTreeViewTo(navdir)">
+                    <input type="text" placeholder="enter directory" style="width:100%" ng-model="navdir" />
                 </form>
             </div>
             <table id="filedir" style="height:500px;width:100%;overflow: auto;" class="easyui-treegrid"
-                   url="ajax/world?action=get_world_files&filter=*.lua&rootdir="
+                   url="ajax/world?action=get_world_files&filter=*.lua&"
                    idField="id" treeField="filename" remoteSort="false" singleSelect="true">
                 <thead>
                     <tr>
-                        <th field="filename" width="100%" sortable="true">Filename</th>
+                        <th field="filename" width="50%" sortable="true">Name</th>
+                        <th field="filesize" sortable="true">size</th>
+                        <th field="createdate" sortable="true">Create Date</th>
+                        <th field="writedate" sortable="true">Write Date</th>
                     </tr>
                 </thead>
             </table>
@@ -479,6 +608,10 @@ echo(format("<script>window.editorInfo = {workspaceDir:'%s', req_src:'%s', req_l
 					</div>
 				</form>
 			</div>
+            <div ng-if="ImageWnd.visible" class="bg-info" style="padding:2px;max-width:512px;">
+                <img style="background-color:white;" id="ImageWnd" src="{{ImageWnd.url}}" style="object-fit: contain;"/>
+                <div id="ImageLabel">size: {{ImageWnd.width + " * " + ImageWnd.height}}</div>
+			</div>
             <div id="resizable" style="position:relative;min-height:512px;height:100%;padding-bottom:3px;border-bottom:3px solid #bbbbbb">
                 <div id="editor" style="position: absolute; top:0;left:0;right:0;bottom:0;"></div>
             </div>
@@ -493,6 +626,7 @@ echo(format("<script>window.editorInfo = {workspaceDir:'%s', req_src:'%s', req_l
 <div id="cmTabFile" class="easyui-menu" style="">
     <div data-options="name:'save',iconCls:'glyphicon glyphicon-save'">Save <strong id="filename"></strong> (Ctrl+S)</div>
     <div data-options="name:'close',iconCls:'glyphicon glyphicon-remove-sign'">Close File</div>
+    <div data-options="name:'closeOthers'">Close All But This</div>
     <div data-options="name:'refresh',iconCls:'glyphicon glyphicon-refresh'">Reload File</div>
     <div class="menu-sep"></div>
     <div data-options="name:'openFolder'">Open Containing Folder</div>

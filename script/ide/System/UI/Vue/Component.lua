@@ -5,7 +5,7 @@ Date: 2020/6/30
 Desc: 组件基类
 use the lib:
 -------------------------------------------------------
-local Component = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Vue/Component.lua");
+local Component = NPL.load("script/ide/System/UI/Vue/Component.lua");
 -------------------------------------------------------
 ]]
 local Element = NPL.load("../Window/Element.lua");
@@ -15,7 +15,7 @@ local ComponentScope = NPL.load("./ComponentScope.lua");
 local Compile = NPL.load("./Compile.lua");
 
 local Component = commonlib.inherit(Element, NPL.export());
-local ComponentDebug = GGS.Debug.GetModuleDebug("Component");
+local ComponentDebug = System.Util.Debug.GetModuleDebug("Component");
 
 Component:Property("Components");             -- 组件依赖组件集
 Component:Property("ParentComponent");        -- 父组件
@@ -25,8 +25,23 @@ Component:Property("Compiled", false, "IsCompiled");              -- 是否编�
 -- 全局组件
 local GlobalComponentClassMap = {};
 local XmlFileCache = {};
+local lineCount = 0;
 
 local function FormatXmlTemplate(template)
+    if (System.options.httpdebug) then
+        template = template or "";
+        lineCount = 0;
+
+		for _ in string.gmatch(template, "([^\n]*)\n?") do
+			lineCount = lineCount + 1
+			if string.find(_, "<script") then
+				break
+			end
+		end
+
+        lineCount = lineCount - 1;
+	end
+
     -- 移除xml注释
     template = string.gsub(template, "<!%-%-.-%-%->", "");
     -- 维持脚本原本格式
@@ -309,6 +324,13 @@ end
 -- 执行代码
 function Component:ExecCode(code, filename) 
     if (type(code) ~= "string" or code == "") then return end
+
+    if (System.options.httpdebug) then
+        for i = 1, lineCount do
+			code = "\r\n" .. code;
+		end
+    end
+
     local func, errmsg = loadstring(code, "loadstring:" .. (filename or ""));
     if (not func) then return ComponentDebug("===============================Exec Code Error=================================", errmsg, code) end
 

@@ -457,6 +457,13 @@ function vector3d:toVector2D()
     return vector2d:new(self[1], self[3]);
 end
 
+-- return a new vector3d which is projected on to the plane defined by v1 and v2
+function vector3d:projectOnPlane(v1, v2)
+	local normal = v1*v2;
+	local d = self:dot(normal);
+	return (self - normal * d):normalize();
+end
+
 --[[
 function vector3d.clearPool()
 	VectorPool.GetSingleton():clearPool();

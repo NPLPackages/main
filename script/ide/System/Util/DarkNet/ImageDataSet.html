@@ -1,0 +1,110 @@
+<template class="container">
+    <WindowTitleBar title="图像分类"></WindowTitleBar>
+    <div style="position: absolute; top: 44px; bottom: 2px; left: 2px; width: 220px; padding-left: 30px; padding-right: 30px;">
+        <div>相机图像:</div>
+        <image style="width: 160px; height: 120px; margin-top:4px;" v-bind:src="camera_url"></image>
+        <div style="display: flex; flex-direction: row; align-items: center;padding-top: 4px;">
+            <label style="height: 30px; line-height: 30px;">分类:</label>
+            <input v-model="ImageClassName"></input>
+        </div>
+        <div style="height: 30px; width: 100%;padding-top: 4px;">
+            <button onclick="OnClickNewBtn" style="width: 100%;">新增训练图</button>
+        </div>
+    </div>
+    <div style="position: absolute; top: 44px; bottom: 2px; left: 222px; width: 180px; padding-left: 30px; padding-right: 30px; border-left: 1px solid #cccccc;">
+        <div>
+            <div>训练图像:</div>
+            <image style="width: 120px; height: 120px; margin-top:4px;" v-bind:src="CurrentImage.filepath"></image>
+            <div style="padding-top: 4px;">{{"分类: " .. CurrentImage.classname}}</div>
+            <div style="padding-top: 4px; display: flex; justify-content: space-between;">
+                <div >{{"索引: " .. tostring(CurrentImageIndex)}}</div>
+                <div >{{"总数: " .. tostring(#ImageLists)}}</div>
+            </div>
+        </div>
+        <div style="display: flex; flex-direction: column; align-items: center;">
+            <button style="width: 100%; padding-top: 4px;" onclick="OnClickPrevBtn">上一张</button>
+            <button style="width: 100%; padding-top: 4px;" onclick="OnClickNextBtn">下一张</button>
+            <button style="width: 100%; padding-top: 4px;" onclick="OnClickDeleteBtn">删除</button>
+        </div>
+    </div>
+</template>
+
+<script type="text/lua">
+RegisterComponent("WindowTitleBar", "%vue%/Components/WindowTitleBar.html");
+
+ImageClassName = "";
+ImageLists = {};
+CurrentImage = {filepath = "", classname = ""}
+CurrentImageIndex = 0;
+
+function OnClickNewBtn()
+    local filepath = _G.ImageDataSet:SaveCameraImage();
+    local classname = ImageClassName;
+    table.insert(ImageLists, {filepath = filepath, classname = classname});
+    CurrentImageIndex = CurrentImageIndex + 1;
+    SetCurrentImage(ImageLists[CurrentImageIndex] or CurrentImage);
+    SaveImageLists();
+end
+
+function OnClickDeleteBtn()
+    table.remove(ImageLists, CurrentImageIndex);
+    CurrentImageIndex = CurrentImageIndex - 1;
+    if CurrentImageIndex < 1 then
+        CurrentImageIndex = 1;
+    end
+    if (CurrentImageIndex > #ImageLists) then
+        CurrentImageIndex = #ImageLists;
+    end
+    SetCurrentImage(ImageLists[CurrentImageIndex] or CurrentImage);
+    SaveImageLists();
+end
+
+function OnClickPrevBtn()
+    CurrentImageIndex = CurrentImageIndex - 1;
+    if CurrentImageIndex < 1 then
+        CurrentImageIndex = 1;
+    end
+    SetCurrentImage(ImageLists[CurrentImageIndex] or CurrentImage);
+end
+
+function OnClickNextBtn()
+    CurrentImageIndex = CurrentImageIndex + 1;
+    if CurrentImageIndex > #ImageLists then
+        CurrentImageIndex = #ImageLists;
+    end
+    SetCurrentImage(ImageLists[CurrentImageIndex] or CurrentImage);
+end
+
+function SetCurrentImage(item)
+    item = item or CurrentImage;
+    CurrentImage.filepath = item.filepath;
+    CurrentImage.classname = item.classname;
+end
+
+function SaveImageLists()
+    local datas = {}
+    for _, item in pairs(ImageLists) do 
+        datas[item.filepath] = item.classname;
+    end
+    _G.ImageDataSet:SetDatas(datas);
+    _G.ImageDataSet:Save();
+end
+
+function OnReady()
+    local datas = _G.ImageDataSet:GetDatas();
+    for filepath, classname in pairs(datas) do
+        table.insert(ImageLists, {filepath = filepath, classname = classname});
+        CurrentImageIndex = CurrentImageIndex + 1;
+    end 
+    SetCurrentImage(ImageLists[CurrentImageIndex] or CurrentImage);
+end
+</script>
+
+<style>
+.container {
+    height: 100%; 
+    width: 100%; 
+    padding: 0px 2px 2px 2px;
+    background: url(Texture/Aries/Creator/keepwork/Window/dakuang_32bits.png#0 0 440 93:378 43 33 44);
+}
+</style>

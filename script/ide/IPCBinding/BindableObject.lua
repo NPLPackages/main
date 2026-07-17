@@ -14,9 +14,7 @@ local tonumber = tonumber
 local type = type
 local format = format;
 
-local BindableObject = commonlib.inherit(nil,{
-})
-commonlib.setfield("IPCBinding.BindableObject",BindableObject);
+local BindableObject = commonlib.inherit(nil, commonlib.gettable("IPCBinding.BindableObject"))
 
 local classTitle = {label = "BindableObject",};
 local props = {

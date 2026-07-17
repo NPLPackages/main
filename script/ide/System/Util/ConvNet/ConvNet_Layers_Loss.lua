@@ -75,6 +75,7 @@ end
 function SoftmaxLayer:backward(y)
 	local x = self.in_act;
 	x.dw = ConvNet.zeros(#x.w); -- zero out the gradient of input Vol
+	y = math.min(y, self.out_depth)
 	for i = 1, self.out_depth do
 		local indicator = (i == y) and 1 or 0
 		local mul = -(indicator - self.es[i]);

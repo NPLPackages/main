@@ -15,8 +15,10 @@
   </servers>
   <!--"npl_code_wiki" is an internal rule, but we can also overwrite it here.--> 
   <rules id="npl_code_wiki">
+    <rule match="^/?webparacraft/" with="WebServer.filehandler" params='{baseDir = "temp/", add_headers={["Cross-Origin-Embedder-Policy"]="require-corp", ["Cross-Origin-Opener-Policy"]="same-origin", }}'></rule>
     <rule match='{"^[^%.]+$", "robots.txt"}' with="WebServer.redirecthandler" params='{"/index.page"}'></rule>
     <rule match="%.page$" with="WebServer.npl_page_handler" params="{docroot='%CD%', enable_file_monitor=true}"></rule>
+    <rule match='^/?script/.+%.js' with="WebServer.filehandler" params='{baseDir = "", nocache=true, add_headers={["Cache-Control"]="no-cache", }}'></rule>
     <rule match="." with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/"}'></rule>
   </rules>
   <!--rules used when starting a web server. Multiple rules with different id can be defined. -->
@@ -32,6 +34,8 @@
     <rule match="^/?tafcad/desktop" with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/nplcad3", filename = "desktop.html"}'></rule>
     <rule match="^/?tafcad/block" with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/nplcad3", filename = "block.html"}'></rule>
     <rule match="^/?tafcad/design" with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/nplcad3", filename = "design.html"}'></rule>
+
+    <rule match="^/?webparacraft/" with="WebServer.filehandler" params='{baseDir = "temp/", add_headers={["Cross-Origin-Embedder-Policy"]="require-corp", ["Cross-Origin-Opener-Policy"]="same-origin", }}'></rule>
     
     <!--URI map everything without extension to index.page-->
     <rule match='{"^[^%./]*/$", "^[^%.]+$", "robots.txt"}' with="WebServer.redirecthandler" params='{"/index.page"}'></rule>
@@ -42,10 +46,15 @@
     <rule match="%.page$" with="WebServer.npl_page_handler" params="{docroot='%CD%', enable_file_monitor=true}"></rule>
     <!--Serve files statically in Textures, model, character directory, so that we can use any available png textures. -->
     <rule match='{"^/?Texture/", "^/?model/", "^/?character/"}' with="WebServer.filehandler" params='{baseDir = "", nocache=true}'></rule>
-    <!--serving static files in current world directory %world%. -->
-    <rule match='^/?www/' with="WebServer.filehandler" params='{baseDir = "%world%", nocache=true}'></rule>
+    <!--serving static files in current world directory %world%/www/. -->
+    <rule match="^/?www/.+%.wasm" with="WebServer.filehandler" params='{baseDir = "%world%", nocache=true, add_headers={["Content-Type"]="application/wasm", ["Cache-Control"]="no-cache", ["Pragma"]="no-cache", ["Expires"]="0"}}'></rule>
+    <rule match='^/?www/' with="WebServer.filehandler" params='{baseDir = "%world%", nocache=true, add_headers={["Cache-Control"]="no-cache", ["Pragma"]="no-cache", ["Expires"]="0"}}'></rule>
+    <!--serving static files in current world directory %world%/ -->
+    <rule match='^/?~/' with="WebServer.filehandler" params='{baseDir = "%world%", nocache=true}'></rule>
+    <!--serving static files in SDK root directory  -->
+    <rule match='^/?~root/' with="WebServer.filehandler" params='{baseDir = "", nocache=true}'></rule>
     <!--serving static js files in runtime root directory. -->
-    <rule match='^/?script/.+%.js' with="WebServer.filehandler" params='{baseDir = ""}'></rule>
+    <rule match='^/?script/.+%.js' with="WebServer.filehandler" params='{baseDir = "", nocache=true, add_headers={["Cache-Control"]="no-cache", }}'></rule>
     <!--wp framework related js, css, files-->
     <rule match="^/?wp%-" with="WebServer.filehandler" params='{baseDir = "script/apps/WebServer/admin/"}'></rule>
     <!--filehandler example, base dir is where the root file directory is. 

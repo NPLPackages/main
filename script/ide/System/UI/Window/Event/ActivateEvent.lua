@@ -5,7 +5,7 @@ Date: 2020/6/30
 Desc: Event
 use the lib:
 -------------------------------------------------------
-local ActivateEvent = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Window/Event/ActivateEvent.lua");
+local ActivateEvent = NPL.load("script/ide/System/UI/Window/Event/ActivateEvent.lua");
 -------------------------------------------------------
 ]]
 

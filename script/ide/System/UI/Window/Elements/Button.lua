@@ -4,11 +4,11 @@ Author(s): wxa
 Date: 2020/8/14
 Desc: 按钮
 -------------------------------------------------------
-local Button = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Window/Elements/Button.lua");
+local Button = NPL.load("script/ide/System/UI/Window/Elements/Button.lua");
 -------------------------------------------------------
 ]]
 
-local Element = NPL.load("../Element.lua", IsDevEnv);
+local Element = NPL.load("../Element.lua");
 local Button = commonlib.inherit(Element, NPL.export());
 
 Button:Property("Active", false, "IsActive");            -- 是否激活
@@ -37,12 +37,21 @@ Button:Property("BaseStyle", {
 	},
 });
 
-local ButtonElementDebug = GGS.Debug.GetModuleDebug("ButtonElementDebug");
+local ButtonElementDebug = System.Util.Debug.GetModuleDebug("ButtonElementDebug");
 
 function Button:ctor()
 	self:SetName("Button");
 end
 
+function Button:OnMouseEnter(event)
+    self._super:OnMouseEnter(event)
+    event:Accept();
+end
+
+function Button:OnMouseLeave(event)
+    self._super:OnMouseLeave(event)
+    event:Accept();
+end
 
 
 

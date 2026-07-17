@@ -45,14 +45,14 @@ function pe_progressbar:OnLoadComponentBeforeChild(parentElem, parentLayout, css
 
 	_this:Connect("valueChanged", self, self.OnStep, "UniqueConnection")
 
-	self:UpdateGetters();
-
 	pe_progressbar._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
 end
 
 function pe_progressbar:OnAddGetter(name, func, bindingContext)
 	if(name == "value") then
 		bindingContext:AddGetter(self.control, "SetValue", func)
+	else
+		pe_progressbar._super.OnAddGetter(self, name, func, bindingContext);
 	end
 end
 

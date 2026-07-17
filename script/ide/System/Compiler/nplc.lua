@@ -82,8 +82,8 @@ function nplc.loadstring(code, filename, nplp_obj)
 			ast = nplp:src_to_ast(code, filename)
 		end
 		local gen = nplgen:new()
-		local compiled_src = gen:run(ast)
-		return loadstring(compiled_src, filename)
+		code = gen:run(ast)
+		return loadstring(code, filename)
 	end
 end
 NPL.loadstring = nplc.loadstring

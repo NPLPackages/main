@@ -5,11 +5,11 @@ Date: 2020/6/30
 Desc: G
 use the lib:
 -------------------------------------------------------
-local BlocklyEditor = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Blockly/BlocklyEditor.lua");
+local BlocklyEditor = NPL.load("script/ide/System/UI/Blockly/BlocklyEditor.lua");
 -------------------------------------------------------
 ]]
 
-local Element = NPL.load("../Window/Element.lua", IsDevEnv);
+local Element = NPL.load("../Window/Element.lua");
 
 local BlocklyEditor = commonlib.inherit(Element, NPL.export());
 
@@ -21,7 +21,6 @@ function BlocklyEditor:OnMouseDown(event)
 end
 
 function BlocklyEditor:OnMouseMove(event)
-    event:Accept();
 end
 
 function BlocklyEditor:OnMouseUp(event)

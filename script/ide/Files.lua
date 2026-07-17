@@ -54,6 +54,16 @@ function Files.IsAbsolutePath(filename)
 	end
 end
 
+function Files.GetRelativePath(filename)
+	local root_dir = ParaIO.GetWritablePath()
+	local file_dir = filename:sub(1, #root_dir);
+	if(root_dir == file_dir) then
+		return filename:sub(#root_dir+1) or "";
+	else
+		return filename;
+	end
+end	
+
 -- replace / with \ under win32, and vice versa on linux. 
 function Files.ToCanonicalFilePath(filename)
 	if type(filename)~="string" then
@@ -78,7 +88,7 @@ end
 
 
 --预期获得 C:\Users\hyz\AppData\Local\Paracraft\
-function Files.GetAppDataDirectory()
+function Files.GetAppDataDirectory(subDir)
 	local lfs = commonlib.Files.GetLuaFileSystem();
 	if not Files._AppDataDirectory then		
 		local ret = ParaIO.GetWritablePath()
@@ -90,7 +100,9 @@ function Files.GetAppDataDirectory()
 			if env_appdata==nil then
 				break
 			end
-			local temp = env_appdata.."/Paracraft/"
+			print("env_appdata=============",env_appdata)
+			local path = (subDir and subDir ~= "") and subDir or "/Paracraft/"
+			local temp = env_appdata..path
 			temp = commonlib.Files.ToCanonicalFilePath(temp)
 			if not ParaIO.DoesFileExist(temp) then
 				if not lfs.mkdir(temp) then
@@ -427,7 +439,7 @@ function Files.MoveFolder(src, dest)
 	ParaIO.DeleteFile(src);
 end
 
--- 获取文件内容
+-- return file text as binary string, or nil if not found
 function Files.GetFileText(filename)
 	if filename==nil or filename=="" then
 		return
@@ -442,7 +454,7 @@ function Files.GetFileText(filename)
 	end	
 end
 
--- 写文件
+-- write file content
 function Files.WriteFile(filename, text)
     if text==nil or text=="" then
         return
@@ -458,7 +470,7 @@ function Files.WriteFile(filename, text)
         end
     end
 
-    local file = ParaIO.open(filename , "wb");
+    local file = ParaIO.open(filename, "wb");
 	if(file:IsValid()) then
 		file:WriteString(text, #text);
 		file:close();
@@ -468,15 +480,14 @@ function Files.WriteFile(filename, text)
 	end	
 end
 
--- 获取文件大小
 function Files.GetFileSize(filename)
-    local file = ParaIO.open(filename , "rb");
+    local file = ParaIO.open(filename, "rb");
 	if(file:IsValid()) then
 		local size = file:GetFileSize();
 		file:close();
 		return size;
     else
-        print("------不可用",filename)
+        log("can not get file size: "..filename)
         file:close();
 	end	
     return 0
@@ -531,6 +542,7 @@ function Files.GetRemoteFileText(url,filepath,callback,tokenRequired)
 	local key = "Files.GetRemoteFileText:"..url
 	local ls = System.localserver.CreateStore(nil, 1);
 	local eTag = nil
+	local item
 	if ls then
 		item = ls:GetItem(key)
 	end
@@ -541,7 +553,7 @@ function Files.GetRemoteFileText(url,filepath,callback,tokenRequired)
 	end
 
 	local _cachedFilepath = filepath
-	if item then
+	if item and item.payload then
 		if item.payload.cached_filepath then
 			_cachedFilepath = item.payload.cached_filepath
 		else
@@ -553,7 +565,7 @@ function Files.GetRemoteFileText(url,filepath,callback,tokenRequired)
 		if ParaIO.DoesFileExist(_cachedFilepath) then
 			eTag = item.payload:GetHeader("ETag")
 			local expireTime = item.payload.creation_date;
-			if(not cp:IsExpired(expireTime)) then --没过期直接用
+			if(not cp:IsExpired(expireTime)) then
 				local data = Files.GetFileText(_cachedFilepath)
 				if data then
 					onComplete(data,_cachedFilepath)

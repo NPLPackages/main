@@ -11,7 +11,7 @@ local Textarea = NPL.load("script/ide/System/UI/Core/Blockly/Fields/Textarea.lua
 
 local Const = NPL.load("../Const.lua");
 local Shape = NPL.load("../Shape.lua");
-local Field = NPL.load("./Field.lua", IsDevEnv);
+local Field = NPL.load("./Field.lua");
 
 local Textarea = commonlib.inherit(Field, NPL.export());
 

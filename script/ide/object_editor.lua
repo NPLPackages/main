@@ -152,7 +152,7 @@ function ObjEditor.CreateObjectByParams(param)
 		param.name = obj.name;
 		
 		obj:SetPersistent((param.IsPersistent==nil or param.IsPersistent==true));
-		obj:SetPosition(param.x, param.y, param.z);
+		obj:SetPosition(param.x or 0, param.y or 0, param.z or 0);
 		
 		if(param.CCSInfoStr ~= nil) then
             if(System and System.options and System.options.mc)then
@@ -248,7 +248,7 @@ function ObjEditor.CreateObjectByParams(param)
 				end
 			end
 			
-			obj:SetPosition(param.x,param.y,param.z);
+			obj:SetPosition(param.x or 0, param.y or 0, param.z or 0);
 			if(param.facing~=nil) then
 				obj:SetFacing(param.facing);
 			end

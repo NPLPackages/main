@@ -50,7 +50,9 @@ function Map3DSystem.App.Registration.ConnectToAppDB()
 				app_count = stmt:first_cols()
 				stmt:close();
 			end
-			if(not app_count or app_count<=0) then
+			-- if(not app_count or app_count<=0) then
+			-- 创建db并没添加数据
+			if(not app_count) then
 				log("error: errors found in application db\n");
 				ParaIO.DeleteFile(Map3DSystem.App.Registration._AppDBFilePath);
 				Map3DSystem.App.Registration.RecreateAppDB();

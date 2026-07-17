@@ -14,6 +14,9 @@ local q1 = Quaternion:new():identity();
 local q2 = Quaternion:new():identity();
 local q = q1 * q2;
 echo(q);
+local q = Quaternion:new():FromAngleAxis(0.717, {1,0,0});
+local vec1 = q * {0,1,0}
+echo(vec1)
 -------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/math/math3d.lua");
@@ -71,6 +74,22 @@ function Quaternion.__mul(a,b)
 	else
 		return { Quaternion.RotateVector3(a, b[1], b[2], b[3]) }
 	end
+end
+
+function Quaternion:length()
+	return math.sqrt(self[1]^2 + self[2]^2 + self[3]^2 + self[4]^2);
+end
+
+function Quaternion:Normalize()
+	local len = self:length();
+	if(len > 0.000001) then
+		local invLen = 1.0 / len;
+		self[1] = self[1] * invLen;
+		self[2] = self[2] * invLen;
+		self[3] = self[3] * invLen;
+		self[4] = self[4] * invLen;
+	end
+	return self;
 end
 
 -- use this if one do not want to create additional vector3 table
@@ -430,6 +449,53 @@ function Quaternion:Inverse()
     self[1], self[2], self[3], self[4] = -self[1],-self[2],-self[3], self[4];
 end
 
+-- smooth lerp:  from * (1-t) + to * t
+-- using the smallest angle 
+function Quaternion:slerp(from, to, t)
+	local cosOmega = from[1]*to[1] + from[2]*to[2] + from[3]*to[3] + from[4]*to[4];
+	local to1 = Quaternion:new();
+	if (cosOmega < 0.0) then
+		cosOmega = -cosOmega;
+		to1[1], to1[2], to1[3], to1[4] = -to[1], -to[2], -to[3], -to[4];
+	else
+		to1[1], to1[2], to1[3], to1[4] = to[1], to[2], to[3], to[4];
+	end
 
--- const static identity matrix. 
-Quaternion.IDENTITY = Quaternion:new({0, 0, 0, 1});
+	local k0, k1;
+	if (cosOmega > 0.9999) then
+		-- very close, just use linear interpolation
+		k0 = 1.0 - t;
+		k1 = t;
+	elseif (cosOmega < 0.0001) then
+		-- nearly opposite
+		local sinOmega = math.sqrt(1.0 - cosOmega*cosOmega);
+		local omega = math.atan2(sinOmega, cosOmega);
+		local invSinOmega = 1.0 / sinOmega;
+		k0 = math.sin((1.0 - t) * omega) * invSinOmega;
+		k1 = math.sin(t * omega) * invSinOmega;
+	else
+		-- normal case
+		local omega = math.acos(cosOmega);
+		local invSinOmega = 1.0 / math.sin(omega);
+		k0 = math.sin((1.0 - t) * omega) * invSinOmega;
+		k1 = math.sin(t * omega) * invSinOmega;
+	end
+	self[1] = from[1] * k0 + to1[1] * k1;
+	self[2] = from[2] * k0 + to1[2] * k1;
+	self[3] = from[3] * k0 + to1[3] * k1;
+	self[4] = from[4] * k0 + to1[4] * k1;
+	return self;
+end
+
+-- rotate from1 to to1, also make sure the plane defined by (from1*from2) overlaps with (to1*to2)
+function Quaternion:FromVectorsToVectorsInPlane(from1, from2, to1, to2)
+	local q1 = Quaternion:new():FromVectorToVector(from1, to1);
+	local p1 = from1*from2;
+	local p2 = to1*to2;
+	p1[1], p1[2], p1[3] = q1:RotateVector3(p1[1], p1[2], p1[3])
+	local q2 = Quaternion:new():FromVectorToVector(p1, p2);
+	self:set(q2 * q1);
+	return self;
+end
+
+Quaternion.IDENTITY = Quaternion:new({0,0,0,1});

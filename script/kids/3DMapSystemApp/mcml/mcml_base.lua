@@ -203,6 +203,9 @@ end
 
 -- get the value of an attribute of this node as its original format (usually string)
 function mcml.baseNode:GetAttribute(attrName,defaultValue)
+	if(self.attr_eval and self.attr_eval[attrName] ~= nil) then
+		return self.attr_eval[attrName];
+	end
 	if(self.attr) then
 		return self.attr[attrName];
 	end
@@ -217,16 +220,28 @@ end
 -- e.g. attrName='<%="string"+Eval("index")}%>' attrName1='<%={fieldname="table"}%>'
 function mcml.baseNode:GetAttributeWithCode(attrName,defaultValue, bNoOverwrite)
 	if(self.attr) then
-		local value = self.attr[attrName];
-		if(type(value) == "string") then
-			local code = string_match(value, "^[<%%]%%(=.*)%%[%%>]$")
-			if(code) then
-				value = mcml_controls.pe_script.DoPageCode(code, self:GetPageCtrl());
-				if(not bNoOverwrite) then
-					self.attr[attrName] = value;
-				end	
+		local value;
+		-- Check if we have a cached evaluated result when bNoOverwrite is nil
+		if(not bNoOverwrite and self.attr_eval and self.attr_eval[attrName] ~= nil) then
+			value = self.attr_eval[attrName];
+		else
+			value = self.attr[attrName];
+			if(type(value) == "string") then
+				local code = string_match(value, "^[<%%]%%(=.*)%%[%%>]$")
+				if(code) then
+					value = mcml_controls.pe_script.DoPageCode(code, self:GetPageCtrl());
+					
+					-- Save evaluated result to self.attr_eval
+					self.attr_eval = self.attr_eval or {};
+					self.attr_eval[attrName] = value;
+					
+					if(not bNoOverwrite) then
+						self.attr[attrName] = value;
+					end
+				end
 			end
 		end
+		
 		if(value ~= nil) then
 			return value;
 		end
@@ -557,6 +572,7 @@ function mcml.baseNode:ApplyClasses()
 				for class_name in class_names:gmatch("[^ ]+") do
 					style:Merge(pe_css.default[class_name]);
 					pageStyle:ApplyToStyleItem(style, class_name);
+					pageStyle:ApplyCssStyleToStyleItem(style, self);
 				end
 			end
 		end
@@ -586,6 +602,10 @@ function mcml.baseNode:GetStyle(baseStyle, base_baseStyle)
 	if(self.attr and self.attr.style) then
 		local style_code = self:GetAttributeWithCode("style", nil, true);
 		style:Merge(style_code);
+		if(self.attr_eval and (self.attr_eval.style ~= nil or self.attr_eval.class ~= nil)) then
+			-- if style or class attribute is code, we will not cache the style table. 
+			self.style = nil;
+		end
 	end
 	return style;
 end
@@ -731,7 +751,7 @@ function mcml.baseNode:GetAbsoluteURL(url)
 				if(secureOrigin.url) then
 					url = secureOrigin.url..url;
 				end	
-			elseif(string_find(url, "[/\\]")) then
+			elseif(string_find(url, "[/\\]") or string_find(url, "^_miniscenegraph")) then
 				-- if relative to url path contains "/", it is regarded as client side SDK root folder. such as "Texture/whitedot.png"
 			elseif(string_find(url, "^#")) then	
 				-- this is an anchor
@@ -1372,6 +1392,24 @@ function mcml.baseNode:DrawDisplayBlock(rootName, bindingContext, _parent, left,
 			(css["margin-bottom"] or css["margin"] or 0),
 			(css["margin-right"] or css["margin"] or 0);
 
+	-- keep track of whether margins are "auto" before converting to numbers
+	local margin_left_auto = (margin_left == "auto");
+	local margin_right_auto = (margin_right == "auto");
+
+	-- convert "auto" to 0 initially, will be calculated later when width is known
+	if (margin_left_auto) then
+		margin_left = 0;
+	end
+	if (margin_right_auto) then
+		margin_right = 0;
+	end
+	if(margin_bottom == "auto") then
+		margin_bottom = 0;
+	end
+	if(margin_top == "auto") then
+		margin_top = 0;
+	end
+
 	if (style and style.scale) then
 		margin_left = margin_left * style.scale;
 		margin_top = margin_top * style.scale;
@@ -1468,6 +1506,32 @@ function mcml.baseNode:DrawDisplayBlock(rootName, bindingContext, _parent, left,
 				end
 			end	
 		end	
+	end
+
+	-- handle auto margins for horizontal centering
+	if (css.width and (margin_left_auto or margin_right_auto)) then
+		local available_margin = maxWidth - css.width;
+		if (available_margin > 0) then
+			if (margin_left_auto and margin_right_auto) then
+				-- both auto: center the element
+				margin_left = available_margin / 2;
+				margin_right = available_margin / 2;
+			elseif (margin_left_auto) then
+				-- only left is auto: push to right
+				margin_left = available_margin - margin_right;
+			elseif (margin_right_auto) then
+				-- only right is auto: push to left
+				margin_right = available_margin - margin_left;
+			end
+		else
+			-- not enough space, reset auto margins to 0
+			if (margin_left_auto) then
+				margin_left = 0;
+			end
+			if (margin_right_auto) then
+				margin_right = 0;
+			end
+		end
 	end
 
 	-- whether this control takes up space

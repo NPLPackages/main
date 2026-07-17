@@ -7,7 +7,7 @@ local Http = NPL.load("script/ide/System/UI/Window/Api/Http.lua");
 -----------------------------------------------
 ]]
 
-local Promise = NPL.load("./Promise.lua", IsDevEnv);
+local Promise = NPL.load("./Promise.lua");
 
 local Http = commonlib.inherit(commonlib.gettable("System.Core.ToolBase"), NPL.export());
 

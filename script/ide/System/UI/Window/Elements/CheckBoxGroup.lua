@@ -4,11 +4,11 @@ Author(s): wxa
 Date: 2020/8/14
 Desc: 复选框
 -------------------------------------------------------
-local CheckBoxGroup = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Window/Elements/CheckBoxGroup.lua");
+local CheckBoxGroup = NPL.load("script/ide/System/UI/Window/Elements/CheckBoxGroup.lua");
 -------------------------------------------------------
 ]]
 
-local Element = NPL.load("../Element.lua", IsDevEnv);
+local Element = NPL.load("../Element.lua");
 local CheckBoxGroup = commonlib.inherit(Element, NPL.export());
 
 CheckBoxGroup:Property("Name", "CheckBoxGroup");

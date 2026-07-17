@@ -152,7 +152,7 @@ function npl_http.start(config)
 	npl_http.LoadConfig(config);
 	LOG.std(nil, "system", "WebServer", "NPL Web Server is started. ");
 	NPL.AddPublicFile("script/apps/WebServer/npl_http.lua", -10);
-	NPL.StopNetServer();
+	-- NPL.StopNetServer();
 	NPL.StartNetServer(tostring(config.server.ip or ""), tostring(config.server.port or 8080));
 	if(enable_http_pipeline) then
 		NPL.RegisterEvent(0, "_n_npl_http_network", ";npl_http_event();");

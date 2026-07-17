@@ -216,6 +216,7 @@ function FileSystemWatcher:AddDirectory(dir)
 			watcher_dirs[self.name][dir] = 1;
 			local watcher = ParaIO.GetFileSystemWatcher(self.name);
 			watcher:AddDirectory(dir);
+			LOG.std(nil, "debug", "FileSystemWatcher", "Added watching directory %s", dir)
 		else
 			watcher_dirs[self.name][dir] = watcher_dirs[self.name][dir]+ 1;	
 		end	
@@ -234,6 +235,8 @@ function FileSystemWatcher:RemoveDirectory(dir)
 			if(watcher_dirs[self.name][dir] == 1) then
 				local watcher = ParaIO.GetFileSystemWatcher(self.name);
 				watcher:RemoveDirectory(self:NormalizeDirectory(dir));
+				LOG.std(nil, "debug", "FileSystemWatcher", "Removed watching directory %s", dir)
+				watcher_dirs[self.name][dir] = nil;
 			else
 				watcher_dirs[self.name][dir] = watcher_dirs[self.name][dir] -1;
 			end	

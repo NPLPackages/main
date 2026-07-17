@@ -316,7 +316,7 @@ function ToolBase:DisconnectHelper(connection, receiver, slot, disconnectType)
 	local success;
 	local synapse = connection:first();
 	while (synapse) do
-		if(not receiver or (synapse.receiver == receiver and (not slot or synapse.slot == slot))) then
+		if((not receiver and not slot) or (synapse.receiver == receiver and (not slot or synapse.slot == slot))) then
 			if(synapse.receiver and synapse.receiver.senders) then
 				synapse.receiver.senders[synapse] = nil;
 			end

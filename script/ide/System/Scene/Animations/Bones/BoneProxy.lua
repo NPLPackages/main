@@ -61,6 +61,8 @@ function Bone:init(attr, allbones)
 	local tag = attr:GetField("Tag", "");
 	if(tag and tag ~= "") then
 		self:ReadBonePropertiesFromTag(tag);
+	else
+		self:ReadBonePropertiesFromTag(self.name);
 	end
 
 	return self;

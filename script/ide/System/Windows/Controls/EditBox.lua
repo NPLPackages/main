@@ -56,6 +56,7 @@ EditBox:Signal("selectionChanged");
 EditBox:Signal("cursorPositionChanged", function(oldPos, newPos) end);
 EditBox:Signal("textChanged", function(text) end);
 EditBox:Signal("textEdited");
+EditBox:Signal("enter");
 EditBox:Signal("accepted");
 EditBox:Signal("editingFinished");
 EditBox:Signal("updateNeeded");
@@ -100,7 +101,7 @@ function EditBox:setReadOnly(bReadOnly)
 	if (bReadOnly) then
         self:setCursorBlinkPeriod(0);
     else
-        self:setCursorBlinkPeriod(Application:cursorFlashTime());
+        self:setCursorBlinkPeriod(self:cursorFlashTime());
 	end
 end
 
@@ -145,6 +146,7 @@ function EditBox:internalSetText(txt, pos, edited)
 	local text_len = self.m_text:length();
 	self.m_cursor = if_else(pos < 0 or pos > text_len, text_len, pos);
 	self.m_textDirty = (tostring(oldText) ~= tostring(self.m_text));
+		
 	self:finishChange(-1, true, edited);
 end
 
@@ -175,7 +177,7 @@ function EditBox:setPlaceholderText(placeholderText)
     if (self.m_placeholderText ~= placeholderText) then
         self.m_placeholderText = placeholderText;
         if (self:shouldShowPlaceholderText()) then
-            self:Update();
+            self:update();
 		end
     end
 end
@@ -195,7 +197,7 @@ function EditBox:setEchoMode(mode)
 		return;
 	end
     self.m_echoMode = mode;
-	self:Update();
+	self:update();
 end
 
 
@@ -256,6 +258,7 @@ function EditBox:moveCursor(pos, mark)
         self:selectionChanged();
     end
     self:emitCursorPositionChanged();
+	self:update();
 end
 
 function EditBox:removeSelectedText()
@@ -314,6 +317,7 @@ function EditBox:internalInsert(s)
 			self.m_cursor = self.m_cursor + 1;
 		end
         self.m_textDirty = true;
+		self:update();
     end
 end
 
@@ -329,6 +333,7 @@ function EditBox:internalDelete(wasBackspace)
 		self.m_text:remove(self.m_cursor+1, 1);
 		self:UpdateEncryptedText();
         self.m_textDirty = true;
+		self:update();
     end
 end
 
@@ -353,7 +358,7 @@ function EditBox:inputMethodEvent(event)
 	-- echo({string.byte(commitString, 1), string.byte(commitString, 2)});
 
 	local char1 = string.byte(commitString, 1);
-	if(char1 <= 31) then
+	if(char1 and char1 <= 31) then
 		-- ignore control characters
 		event:ignore();
 		return;
@@ -414,7 +419,7 @@ function EditBox:finishChange(validateFromState, update, edited)
 	if(self.m_textDirty) then
 		-- TODO: do text validation and rollback text if failed
 		self:updateDisplayText();
-
+		self:update();
 		if (self.m_textDirty) then
             self.m_textDirty = false;
             local actualText = self:GetText();
@@ -427,6 +432,7 @@ function EditBox:finishChange(validateFromState, update, edited)
 
 	if (self.m_selDirty) then
         self.m_selDirty = false;
+		self:update();
         self:selectionChanged();
     end
 end
@@ -457,7 +463,7 @@ end
 function EditBox:focusInEvent(event)
 
 	self:setCursorVisible(true);
-	self:setCursorBlinkPeriod(Application:cursorFlashTime());
+	self:setCursorBlinkPeriod(self:cursorFlashTime());
 
 	if self.bAutoVirtualKeyboard and System.options.IsTouchDevice then
 		NPL.load("(gl)script/apps/Aries/Creator/Game/GUI/TouchVirtualKeyboardIcon.lua");
@@ -466,15 +472,11 @@ function EditBox:focusInEvent(event)
 	else
 		self:attachWithIME();
 	end
-	
-	
 	EditBox._super.focusInEvent(self, event)
+	self:update();
 end
 
-
--- virtual: 
 function EditBox:focusOutEvent(event)
-
 	if self.bAutoVirtualKeyboard and System.options.IsTouchDevice then
 		NPL.load("(gl)script/apps/Aries/Creator/Game/GUI/TouchVirtualKeyboardIcon.lua");
 		local TouchVirtualKeyboardIcon = commonlib.gettable("MyCompany.Aries.Game.GUI.TouchVirtualKeyboardIcon");
@@ -487,6 +489,7 @@ function EditBox:focusOutEvent(event)
 	self:setCursorBlinkPeriod(0);
 
 	EditBox._super.focusOutEvent(self, event)
+	self:update();
 end
 
 function EditBox:GetPasswordText()
@@ -784,6 +787,7 @@ function EditBox:internalUndo(untilPos)
 		end
     end
     self.m_textDirty = true;
+	self:update();
     self:emitCursorPositionChanged();
 end
 
@@ -824,6 +828,7 @@ function EditBox:internalRedo()
         end
     end
     self.m_textDirty = true;
+	self:update();
     self:emitCursorPositionChanged();
 end
 
@@ -852,6 +857,7 @@ end
 
 function EditBox:paste(mode)
 	local clip = ParaMisc.GetTextFromClipboard();
+	clip = string.gsub(clip or "", "%c", "");
 	if(clip or self:hasSelectedText()) then
 		self:separate(); -- make it a separate undo/redo command
         self:insert(clip);
@@ -975,6 +981,7 @@ function EditBox:keyPressEvent(event)
 		if(self:hasAcceptableInput()) then
 			self:accepted(); -- emit
 			self:editingFinished(); -- emit
+			self:enter();
 		end
 	elseif(keyname == "DIK_ESCAPE") then
 		self:escape();

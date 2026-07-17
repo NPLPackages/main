@@ -5,14 +5,14 @@ Date: 2020/6/30
 Desc: 对象字段
 use the lib:
 -------------------------------------------------------
-local Color = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Blockly/Fields/Color.lua");
+local Color = NPL.load("script/ide/System/UI/Blockly/Fields/Color.lua");
 -------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/Json.lua");
 
 local Const = NPL.load("../Const.lua");
 local Shape = NPL.load("../Shape.lua");
-local Field = NPL.load("./Field.lua", IsDevEnv);
+local Field = NPL.load("./Field.lua");
 
 local Color = commonlib.inherit(Field, NPL.export());
 

@@ -228,6 +228,11 @@ function StyleItem:AddItem(name,value)
 			value = transform;
 		elseif(name == "transform-origin") then
 			-- transform-origin: 0 0
+			local transform = self.transform
+			if(not transform) then
+				transform = {}
+				self.transform = transform;
+			end
 			local values = {}
 			for v in value:gmatch("%-?%d+") do
 				values[#values+1] = tonumber(v);
@@ -235,6 +240,7 @@ function StyleItem:AddItem(name,value)
 			if(values[1]) then
 				values[2] = values[2] or 0;
 				value = values;
+				self.transform.origin = value;
 			else
 				value = nil;
 			end

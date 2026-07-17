@@ -5,12 +5,14 @@ Date: 2020/6/30
 Desc: G
 use the lib:
 -------------------------------------------------------
-local BlockInputField = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Blockly/BlockInputField.lua");
+local ToolBox = NPL.load("script/ide/System/UI/Blockly/ToolBox.lua");
 -------------------------------------------------------
 ]]
 
 local Const = NPL.load("./Const.lua");
 local Shape = NPL.load("./Shape.lua");
+local Helper = NPL.load("./Helper.lua");
+local FoldedBlock = NPL.load("./FoldedBlock.lua");
 local ToolBox = commonlib.inherit(commonlib.gettable("System.Core.ToolBase"), NPL.export());
 
 local categoryFont = "System;12;norm";
@@ -19,8 +21,9 @@ ToolBox:Property("ClassName", "ToolBox");
 ToolBox:Property("Blockly");
 ToolBox:Property("CurrentCategoryName");
 ToolBox:Property("Scale", 1);
+ToolBox:Property("ShowCategory", true, "IsShowCategory");
 
-local DefaultCategoryColor = "#459197";
+local DefaultCategoryColor = "#ffffff";
 local BlockOffset = 5;  -- 图块之间的偏移量
 
 function ToolBox:ctor()
@@ -33,10 +36,13 @@ function ToolBox:ctor()
     self.categoryTotalHeight = 0;
     self.MouseWheel = {};
     self:SetScale(1);
+
+    self.m_is_clip_toolbox = true;
 end
 
 function ToolBox:Init(blockly)
     self:SetBlockly(blockly);
+    self.ToolBoxWidth = blockly.ToolBoxWidth;
     return self;
 end
 
@@ -51,9 +57,22 @@ end
 function ToolBox:SetCategoryList(categorylist)
     self.categoryList = {};
     self.blocks, self.blockPosMap, self.categoryMap = {}, {}, {};
-    local offsetX, offsetY = 25, 0;
+
+    -- 默认开启一个分类直接隐藏可能存在兼容性问题
+    -- local CategorySize = #categorylist;
+    -- if (CategorySize == 1) then 
+    --     self:SetShowCategory(false);
+    -- end
+    local ExtendCategory = self:GetBlockly():GetExtendCategory();
+    local ToolBoxCategoryUnitSize = Const.ToolBoxCategoryWidth / Const.UnitSize;
+    if (not self:IsShowCategory()) then
+        ToolBoxCategoryUnitSize = 0;
+    end
+    local offsetX, offsetY = ToolBoxCategoryUnitSize + 5, 0;
     local block_opts = {};
-    for _, categoryitem in ipairs(categorylist) do
+    local category_size = #categorylist + 1;
+    for i = 1, category_size do
+        local categoryitem = i == category_size and ExtendCategory or categorylist[i]
         local category = {name = categoryitem.name, text = categoryitem.text, color = categoryitem.color};
         local blocktypes = categoryitem.blocktypes or {};
         if (not categoryitem.blocktypes and not categoryitem.hideInToolbox) then
@@ -84,6 +103,9 @@ function ToolBox:SetCategoryList(categorylist)
                 self.blockPosMap[blocktype] = {leftUnitCount = offsetX, topUnitCount = offsetY, widthUnitCount = widthUnitCount, heightUnitCount = heightUnitCount, block = block};
                 offsetY = offsetY + heightUnitCount;
                 table.insert(self.blocks, block);
+                if (not category.color) then
+                    category.color = block:GetColor();
+                end
             else 
                 print("无效图块", blocktype, block, block and block:IsHideInToolbox());
             end
@@ -93,13 +115,15 @@ function ToolBox:SetCategoryList(categorylist)
             self.categoryMap[category.name] = category;
         end
     end
-    self:SetCurrentCategoryName(categorylist[1] and categorylist[1].name);
-    self.categoryTotalHeight = #categorylist * Const.ToolBoxCategoryHeight;
+    self:SetCurrentCategoryName(self.categoryList[1] and self.categoryList[1].name);
+    self.categoryTotalHeight = #(self.categoryList) * Const.ToolBoxCategoryHeight;
     self.categoryTotalWidth = Const.ToolBoxCategoryWidth;
 end
 
 -- 绘制分类
 function ToolBox:RenderCategory(painter)
+    if (not self:IsShowCategory()) then return end
+
     local _, _, _, height = self:GetBlockly():GetContentGeometry();
     local categoryWidth = Const.ToolBoxCategoryWidth;
     local categoryHeight = Const.ToolBoxCategoryHeight;
@@ -125,10 +149,19 @@ function ToolBox:RenderCategory(painter)
         if (category.name == self:GetCurrentCategoryName()) then
             painter:SetPen("#ffffff");
         else 
-            painter:SetPen(categoryColor);
+            painter:SetPen("#cccccc");
+            -- painter:SetPen(categoryColor);
         end
         painter:DrawText((categoryWidth - category.textWidth) / 2, offsetY + circleSize + 4, category.text or category.name);
     end
+
+    -- 加号
+    local offsetX = circleOffsetX;
+    local offsetY = (#categories) * categoryHeight + circleOffsetY; 
+    painter:SetPen("#808080");
+    painter:DrawRectTexture(offsetX, offsetY, circleSize, circleSize, "Texture/Aries/Creator/keepwork/ggs/blockly/yuan_26X26_32bits.png#0 0 26 26");
+    painter:SetPen("#80808080");
+    painter:DrawRectTexture(offsetX + (circleSize - 13) / 2, offsetY + (circleSize - 13) / 2, 13, 13, "Texture/Aries/Creator/keepwork/ggs/blockly/plus_13x13_32bits.png#0 0 13 13");
 end
 
 function ToolBox:IsClipToolBox()
@@ -136,20 +169,20 @@ function ToolBox:IsClipToolBox()
     local blockly = self:GetBlockly();
     local mouseX, mouseY = blockly:GetRelPoint(mouse_x, mouse_y);
     local _, _, _, height = self:GetBlockly():GetContentGeometry();
-    return not (0 < mouseX and mouseX < Const.ToolBoxWidth and 0 < mouseY and mouseY < height);
+    return not (0 < mouseX and mouseX < self.ToolBoxWidth and 0 < mouseY and mouseY < height);
 end
 
 function ToolBox:Render(painter)
     local _, _, width, height = self:GetBlockly():GetContentGeometry();
-    local isClipToolBox = self:IsClipToolBox();
+    local isClipToolBox = self.m_is_clip_toolbox; -- self:IsClipToolBox();
     
     painter:Save();
-    -- painter:SetClipRegion(0, 0, isClipToolBox and (Const.ToolBoxWidth - 10) or width, height);
-    painter:SetClipRegion(0, 0, isClipToolBox and Const.ToolBoxWidth or width, height);
+    -- painter:SetClipRegion(0, 0, isClipToolBox and (self.ToolBoxWidth - 10) or width, height);
+    painter:SetClipRegion(0, 0, isClipToolBox and self.ToolBoxWidth or width, height);
     
     -- 绘制背景
     painter:SetBrush("#ffffff");
-    painter:DrawRectTexture(0, 0, Const.ToolBoxWidth, height, "Texture/Aries/Creator/keepwork/ggs/blockly/toolbox_bj_32X32_32bits.png#0 0 32 32:10 10 10 10");
+    painter:DrawRectTexture(0, 0, self.ToolBoxWidth, height, "Texture/Aries/Creator/keepwork/ggs/blockly/toolbox_bj_32X32_32bits.png#0 0 32 32:10 10 10 10");
     -- 绘制分类
     self:RenderCategory(painter);
 
@@ -177,8 +210,8 @@ function ToolBox:GetMouseUI(x, y, event)
     local blockly = self:GetBlockly();
     local scale = self:GetScale();
     x, y = blockly._super.GetRelPoint(blockly, event.x, event.y);
-    if (x > Const.ToolBoxWidth) then return nil end
-    if (x <= Const.ToolBoxCategoryWidth) then return self end
+    if (x > self.ToolBoxWidth) then return nil end
+    if (self:IsShowCategory() and x <= Const.ToolBoxCategoryWidth) then return self end
     if (self.MouseWheel.isStartWheel) then return self end 
     x, y = math.floor(x / scale + 0.5), math.floor(y / scale + 0.5);
     for _, block in ipairs(self.blocks) do
@@ -206,7 +239,13 @@ end
 function ToolBox:OnMouseDownCategory(event)
     local blockly = self:GetBlockly();
     local x, y = blockly._super.GetRelPoint(blockly, event.x, event.y);         -- 防止减去偏移量
-    if (x > self.categoryTotalWidth or y > self.categoryTotalHeight) then return end
+    if (x > self.categoryTotalWidth or y > self.categoryTotalHeight) then 
+        if (x < self.categoryTotalWidth and y > self.categoryTotalHeight and y < (self.categoryTotalHeight + Const.ToolBoxCategoryHeight)) then
+            local LoadCustomBlock = NPL.load("script/ide/System/UI/Blockly/Pages/LoadCustomBlock.lua");
+            LoadCustomBlock.Show()
+        end
+        return 
+    end
     local categoryHeight = Const.ToolBoxCategoryHeight;
     local index = math.ceil(y / categoryHeight);
     local category = self.categoryList[index];
@@ -217,7 +256,7 @@ end
 function ToolBox:OnMouseDown(event)
     local blockly = self:GetBlockly();
     local x, y = blockly._super.GetRelPoint(blockly, event.x, event.y);         -- 防止减去偏移量
-    if (x <= Const.ToolBoxCategoryWidth) then return self:OnMouseDownCategory(event) end
+    if (self:IsShowCategory() and x <= Const.ToolBoxCategoryWidth) then return self:OnMouseDownCategory(event) end
 
     if (self:GetBlockly():IsTouchMode()) then
         self.MouseWheel.mouseX, self.MouseWheel.mouseY = event:GetScreenXY();
@@ -227,7 +266,12 @@ function ToolBox:OnMouseDown(event)
 end
 
 function ToolBox:OnMouseMove(event)
+    local blockly = self:GetBlockly();
+    local cur_block = blockly:GetCurrentBlock();
+    if (cur_block and cur_block:IsDragging()) then return end
+
     if (self.MouseWheel.isStartWheel) then
+        event:Accept();
         local x, y = event:GetScreenXY();
         if (y ~= self.MouseWheel.mouseY) then
             local mouse_wheel = 0;
@@ -249,6 +293,20 @@ function ToolBox:OnMouseUp(event)
     if (self.MouseWheel.isStartWheel) then 
         self.MouseWheel.isStartWheel = false; 
         self:GetBlockly():ReleaseMouseCapture();
+    end
+end
+
+function ToolBox:OnMouseEnter(event)
+    if (self.m_is_clip_toolbox) then
+        event:Accept();
+        self.m_is_clip_toolbox = false;
+    end
+end
+
+function ToolBox:OnMouseLeave(event)
+    if (not self.m_is_clip_toolbox) then
+        event:Accept();
+        self.m_is_clip_toolbox = true;
     end
 end
 
@@ -292,11 +350,11 @@ end
 
 function ToolBox:UpdateLayout(widthUnitCount, heightUnitCount)
     local _, _, width, height = self:GetBlockly():GetContentGeometry();
-    self.widthUnitCount, self.heightUnitCount = math.ceil(Const.ToolBoxWidth / self:GetUnitSize()), math.ceil(height / self:GetUnitSize());
+    self.widthUnitCount, self.heightUnitCount = math.ceil(self.ToolBoxWidth / self:GetUnitSize()), math.ceil(height / self:GetUnitSize());
 end
 
 function ToolBox:IsContainPoint(x, y)
-    return x < Const.ToolBoxWidth;
+    return x < self.ToolBoxWidth;
 end
 
 function ToolBox:SetBlockPos(block_type, block_top)
@@ -370,4 +428,10 @@ function ToolBox:LoadFromXmlNode(xmlNode)
     if (not self.categoryMap[category]) then
         self:SwitchCategory(self.categoryList[1] and self.categoryList[1].name);
     end
+end
+
+function ToolBox:GetToolBoxBlockByBlockType(blockType)
+    local blockpos = self.blockPosMap[blockType];
+    if (not blockpos) then return end
+    return blockpos.block;
 end

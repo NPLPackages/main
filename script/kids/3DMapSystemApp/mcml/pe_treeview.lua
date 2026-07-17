@@ -163,8 +163,13 @@ function pe_treeview.create(rootName, mcmlNode, bindingContext, _parent, left, t
 	if(css.width) then
 		width = left + css.width + margin_left + margin_right
 	end
+
+	local maxWidth, maxHeight = parentLayout:GetMaxSize();
+	
 	if(css.height) then
 		height = top + css.height + margin_top + margin_bottom
+	elseif (css["max-height"]) then
+		height = top + css["max-height"] + margin_top + margin_bottom
 	end
 	
 	parentLayout:AddObject(width-left, height-top);
@@ -240,7 +245,14 @@ function pe_treeview.create(rootName, mcmlNode, bindingContext, _parent, left, t
 		VerticalScrollBarWidth = mcmlNode:GetNumber("VerticalScrollBarWidth") or css.VerticalScrollBarWidth or CommonCtrl.TreeView.VerticalScrollBarWidth,
 		ScrollBarTrackWidth = mcmlNode:GetNumber("ScrollBarTrackWidth") or css.ScrollBarTrackWidth or CommonCtrl.TreeView.ScrollBarTrackWidth,
 		onmousewheel = mcmlNode:GetString("onmousewheel"),
+		-- set custom scrollbar
+		CustomScrollBar = mcmlNode:GetBool("CustomScrollBar"),
+		TrackBg = mcmlNode:GetString("TrackBg"),
+		UpLeftBg = mcmlNode:GetString("UpLeftBg"),
+		DownRightBg = mcmlNode:GetString("DownRightBg"),
+		ThumbBg = mcmlNode:GetString("ThumbBg"),
 	};
+	
 	mcmlNode.control = ctl;
 
 	if(type(ctl.onclick) == "string") then
@@ -253,6 +265,18 @@ function pe_treeview.create(rootName, mcmlNode, bindingContext, _parent, left, t
 	-- add all child nodes, but does not render them. 
 	pe_treeview.Refresh(mcmlNode,rootName, nil, ctl);
 	ctl:Show(true);
+
+	if (css["max-height"]) then
+		local max_height = css["max-height"];
+		local usedHeight = ctl:GetLogicalHeight();
+		if(usedHeight < max_height and ctl.height > usedHeight) then
+			parentLayout:OffsetPos(0, usedHeight-ctl.height);
+			parentLayout:ResetUsedSize();
+			parentLayout:NewLine();
+			ctl.height = usedHeight;
+			ctl:Update();
+		end
+	end
 end
 
 -- Public method: for pe:pager

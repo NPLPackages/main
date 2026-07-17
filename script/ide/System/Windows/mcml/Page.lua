@@ -274,9 +274,9 @@ end
 -- forcing a repaint in the next frame. this function does nothing if SelfPaint is false.
 function Page:InvalidateRect()
 	if(self.SelfPaint) then
-		local parent = self:GetParentUIObject()
-		if(parent) then
-			parent:InvalidateRect();
+		local window = self:GetWindow()
+		if(window) then
+			window:markDirty();
 		end
 	end
 end
@@ -692,6 +692,8 @@ function Page:OnRefresh()
 		self:OnCreate();
 		-- add url
 		self:AddOpenedUrl();
+		-- for self painted window
+		self:InvalidateRect();
 	else
 		-- TODO: display an animated background in _parent for other self.status values, such as downloading or error.
 		-- TODO: we can also display a user defined self.errorpage page.
@@ -739,6 +741,7 @@ function Page:Attach(uiElement)
 		self:Detach();
 		self.layout = PageLayout:new();
 		self.layout:SetPage(self, uiElement);
+		self.SelfPaint = uiElement:IsSelfPaint();
 		uiElement.layout = self.layout;
 	end
 end

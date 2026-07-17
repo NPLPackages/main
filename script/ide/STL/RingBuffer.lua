@@ -51,8 +51,14 @@ function RingBuffer:remove(k)
 	end
 end
 
-function RingBuffer:get()
-	return self[self.current]
+function RingBuffer:get(offset)
+	offset = offset or 0
+	if offset == 0 then
+		return self[self.current]
+	else
+		local pos = ((self.current + offset - 1) % #self) + 1
+		return self[pos]
+	end
 end
 
 function RingBuffer:size()

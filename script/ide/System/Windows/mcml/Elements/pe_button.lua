@@ -48,8 +48,6 @@ function pe_button:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	_this:SetText(tostring(self:GetAttributeWithCode("value", nil, true) or ""));
 	_this:SetTooltip(self:GetAttributeWithCode("tooltip", nil, true));
 
-	self:UpdateGetters();
-
 	self.buttonName = self:GetAttributeWithCode("name",nil,true); -- touch name
 
 	_this:Connect("clicked", self, self.OnClick, "UniqueConnection")
@@ -62,6 +60,8 @@ function pe_button:OnAddGetter(name, func, bindingContext)
 		bindingContext:AddGetter(self.control, "SetText", func)
 	elseif(name == "tooltip") then
 		bindingContext:AddGetter(self.control, "SetTooltip", func)
+	else
+		pe_button._super.OnAddGetter(self, name, func, bindingContext);
 	end
 end
 

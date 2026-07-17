@@ -344,4 +344,116 @@ function TestGUI:test_NonClientArea()
 	_parent:AddChild(_this);
 end
 
+function TestGUI:test_DrawCircle(radius,line_width)
+	local _parent;
+	-- local _this = ParaUI.GetUIObject("test_draw_circle_test")
+	-- if(_this and _this:IsValid()) then
+	-- 	ParaUI.Destroy("test_draw_circle_test");
+
+	-- end
+	local startX,startY = 100,100
+	_this = ParaUI.CreateUIObject("container", "test_draw_circle_test", "_lt", 100, 100, 600, 600);
+	_this:AttachToRoot();
+	_this.background = "Texture/alphadot.png";
+	-- This line will allow the user to drag this container to move the window. 
+	_this:SetField("EnableClientTest", true);
+	_this.zorder = 1002;
+	_parent = _this;
+
+	local dotNum = radius*8
+
+	local circle_position_x,circle_position_y = 100 + radius,100 + radius
+	local circle_line_width = math.floor(4*(line_width/4))
+	local circle_pos_sp = ParaUI.CreateUIObject("container", "circle_pos", "_lt", circle_position_x, circle_position_y, circle_line_width, circle_line_width);
+	circle_pos_sp.zorder=10;
+	circle_pos_sp.background = "Texture/whitedot.png";
+	_parent:AddChild(circle_pos_sp);
+	
+	local r = 0
+	local rad_dis = 360 / dotNum
+	for i=1,dotNum do
+		r = rad_dis * i
+		local dx = circle_position_x + radius * math.cos(math.rad(r))
+		local dy = circle_position_y + radius * math.sin(math.rad(r))
+		local circle_sp = ParaUI.CreateUIObject("container", "circle_sp"..i, "_lt", dx, dy, circle_line_width, circle_line_width);
+		circle_sp.zorder=10;
+		circle_sp.rotation = r
+		circle_sp.background = "Texture/whitedot.png";
+		_parent:AddChild(circle_sp);
+	end
+end
+
+--1/4圆生成的进度条
+function TestGUI:test_DrawCircleProgress() 
+	local _parent,_this;
+	local startX,startY = 100,100
+	_this = ParaUI.CreateUIObject("container", "test_draw_circle_test", "_lt", 10, 100, 1200, 600);
+	_this:AttachToRoot();
+	_this.background = "Texture/alphadot.png";
+	_this.zorder = 1002;
+	_parent = _this;
+	
+	for i=1,4 do 
+		local circle_sp = ParaUI.CreateUIObject("container", "circle_sp"..i, "_lt", 100, 100, 256, 256);
+		circle_sp.zorder=12-((i - 1)*2);
+		circle_sp.rotation = math.rad(i*90 - 90)
+		circle_sp.background = "Texture/black2_1024x1024_32bits.png";
+		_parent:AddChild(circle_sp);
+	end
+ 
+	local sp_progresses = {}
+	for i=1,4 do
+		local circle_sp_progress = ParaUI.CreateUIObject("container", "circle_sp_progress", "_lt", 100, 100, 256, 256);
+		circle_sp_progress.rotation = math.rad(i*90 - 90)
+		circle_sp_progress.zorder = 11-(i - 1) * 2
+		if i == 4 then
+			circle_sp_progress.zorder = 13
+			circle_sp_progress.visible = false
+		end
+		circle_sp_progress.background = "Texture/white2_1024x1024_32bits.png";
+		_parent:AddChild(circle_sp_progress);
+		sp_progresses[#sp_progresses + 1] = circle_sp_progress
+	end
+
+	local percent = 0
+	local playIndex = 1
+	self.timer = commonlib.Timer:new({callbackFunc = function(timer)
+		percent = percent + 1
+		if percent > 100 then
+			percent = 0
+		end
+		playIndex = math.ceil(percent/25)
+		for i = 1,4 do
+			if i == playIndex then
+				if playIndex == 4 then				
+					sp_progresses[i].visible = true 
+				end
+				local angle = (i - 1)*90 + 90*((percent - (i - 1) * 25))/25
+				sp_progresses[i].rotation = math.rad(angle)
+			elseif i > playIndex then
+				local angle = i*90 - 90
+				sp_progresses[i].rotation = math.rad(angle)
+				if i == 4 then
+					sp_progresses[i].visible = false
+				end
+			elseif i < playIndex then
+				local angle = i*90
+				sp_progresses[i].rotation = math.rad(angle)
+				if i == 4 then
+					sp_progresses[i].visible = false
+				end
+			end
+			--_guihelper.SetUIColor(sp_progresses[i],"255 0 0")
+		end	
+	end})
+	self.timer:Change(0,50)
+end
+
+--半圆，生成的图片
+function TestGUI:test_DrawCircleProgress2()
+
+end
+
+
+
 -- LuaUnit:run('TestGUIHelper:test_gui_trim_text')

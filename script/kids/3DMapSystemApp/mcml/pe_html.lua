@@ -95,6 +95,7 @@ However if the type property is button or name or id property is not nil, page s
 | cachepolicy | cache policy to use with the default src url. such as "access plus 10 days" |
 | AutoSize | boolean, defaults to false. AutoSize only takes effect when the parent page is refreshed and the inner page can be evaluated without using postponed page:refresh(). |
 | alignment | "_fi" if fill, it will ignore all margin and padding. default to "_lt", left top. |
+| SelfPaint | boolean, if true, the iframe will paint itself into a texture. |
 ---++ pe:webbrowser tag
 *properties*: 
 | url | initial url |
@@ -913,6 +914,15 @@ function pe_iframe.create(rootName,mcmlNode, bindingContext, _parent, left, top,
 	_iframe.background = "";
 	_parent:AddChild(_iframe);
 	
+	if(mcmlNode:GetBool("SelfPaint")) then
+		_iframe:SetField("SelfPaint", true);
+		if(not _iframe:GetField("SelfPaintInParent", false)) then
+			_iframe:SetField("SelfPaint", false);
+		else
+			_iframe:SetField("SelfPaintRenderTargetName", mcmlNode:GetString("name") or instName);
+		end
+	end
+
 	NPL.load("(gl)script/kids/3DMapSystemApp/mcml/PageCtrl.lua");
 	
 	-- create PageCtrl 
@@ -1628,6 +1638,12 @@ function pe_label.create(rootName,mcmlNode, bindingContext, _parent, left, top, 
 	if(css["text-shadow"]) then
 		_this.shadow = true;
 	end	
+	if(css["background-color"]) then
+		if(not css.background) then
+			_this.background = "Texture/whitedot.png";
+		end
+		_guihelper.SetUIColor(_this, css["background-color"]);
+	end
 	_this.text = mcmlNode:GetAttributeWithCode("value", nil, true) or mcmlNode:GetInnerText();
 	
 	if(mcmlNode:GetBool("autosize")) then

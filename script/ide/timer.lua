@@ -115,6 +115,20 @@ function Timer:Enable()
 	TimerManager.AddTimer(self);
 end
 
+function Timer:SetEnabled(bEnabled)
+	if(bEnabled) then
+		TimerManager.AddTimer(self);
+	else
+		TimerManager.RemoveTimer(self);
+	end
+end
+
+-- whether the timer is going to be called at least once in the future. 
+-- NOTE: this may not be accurate if scene is reset. 
+function Timer:IsEnabled()
+	return self.enabled;
+end
+
 -- this function is called by the timer manager to process the time. 
 -- set the tick count. it will return true, if the timer is activated. 
 -- call this function regularly with new tick count. 
@@ -158,12 +172,6 @@ function Timer:Activate()
 	if(self.callbackFunc) then	
 		self:callbackFunc();
 	end
-end
-
--- whether the timer is going to be called at least once in the future. 
--- NOTE: this may not be accurate if scene is reset. 
-function Timer:IsEnabled()
-	return self.enabled;
 end
 
 --------------------------------------

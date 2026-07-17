@@ -5,12 +5,12 @@ Date: 2020/6/30
 Desc: 样式类
 use the lib:
 -------------------------------------------------------
-local Style = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Window/Style.lua");
+local Style = NPL.load("script/ide/System/UI/Window/Style.lua");
 -------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/System/Windows/mcml/css/StyleColor.lua");
 NPL.load("(gl)script/ide/System/Windows/mcml/LocalCache.lua");
-local CommonLib = NPL.load("Mod/GeneralGameServerMod/CommonLib/CommonLib.lua");
+local CommonLib = NPL.load("(gl)script/ide/System/Util/CommonLib.lua");
 local Files = commonlib.gettable("MyCompany.Aries.Game.Common.Files");
 local LocalCache = commonlib.gettable("System.Windows.mcml.LocalCache");
 local StyleColor = commonlib.gettable("System.Windows.mcml.css.StyleColor");

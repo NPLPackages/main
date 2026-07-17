@@ -521,7 +521,7 @@ function CommonCtrl.Canvas3D:Show3dUIWithEntityLiveModelLinkedXmlInfo(_xmlInfo)
 			if attr.skin then
 				CustomGeosets = attr.skin
 			elseif filepath and (PlayerAssetFile:IsCustomModel(filepath)) then
-				CCSInfoStr = PlayerAssetFile:GetDefaultCCSString()
+				CCSInfoStr = PlayerAssetFile:GetDefaultCCSString(filepath)
 			elseif filepath and (PlayerSkins:CheckModelHasSkin(filepath)) then
 				-- TODO:  hard code worker skin here
 				ReplaceableTextures = {[2] = PlayerSkins:GetSkinByID(12)};
@@ -554,9 +554,10 @@ function CommonCtrl.Canvas3D:Show3dUIWithEntityLiveModelLinkedXmlInfo(_xmlInfo)
             -- curObj:SetField("AnimID",xml.attr.anim)
 		else
             curObj = ObjEditor.CreateObjectByParams(modelInfo);
-            scene:AddChild(curObj)
-            
-            curObj:SetField("AnimID",xml.attr.anim)
+			if curObj and curObj:IsValid() then
+				scene:AddChild(curObj)
+				curObj:SetField("AnimID",xml.attr.anim)
+			end
 		end
 		if curObj and curObj:IsValid() and _xmlInfo.wholeScale then
 			curObj:SetScale(modelInfo.scaling * _xmlInfo.wholeScale);
@@ -809,7 +810,7 @@ end
 -- @param toTime: default to -1, which is the movie length
 -- @param originX, originY, originZ: origin to play inside the mini scene graph or main 3d scene. default to 0,128,0
 -- @return movieEntity
-function Canvas3D:PlayMovieFile(filename, fromTime, toTime, originX, originY, originZ, isLooping)
+function Canvas3D:PlayMovieFile(filename, fromTime, toTime, originX, originY, originZ, isLooping, offsetParams)
 	NPL.load("(gl)script/apps/Aries/Creator/Game/Movie/MovieManager.lua");
 	local MovieManager = commonlib.gettable("MyCompany.Aries.Game.Movie.MovieManager");
 	if MovieManager:GetInited() ==nil then--if not in world or is entering world something logic is not Init,so return 
@@ -821,10 +822,65 @@ function Canvas3D:PlayMovieFile(filename, fromTime, toTime, originX, originY, or
 	self:PrepareScene()
 	self:ClearScene()
 	channel.canvas3d_obj = self;
-	channel:CreateFromTemplateFile(filename, originX or 0, originY or 128, originZ or 0);
+	channel:CreateFromTemplateFile(filename, originX or 0, originY or 128, originZ or 0, nil, nil);
+	if offsetParams and (offsetParams.facing or offsetParams.skin) then
+		NPL.load("(gl)script/apps/Aries/Creator/Game/block_engine.lua");
+		local BlockEngine = commonlib.gettable("MyCompany.Aries.Game.BlockEngine")
+		local facing = offsetParams.facing
+		local skin = offsetParams.skin
+		local bx,by,bz = originX, originY, originZ
+		local x,y,z = BlockEngine:real(bx, by, bz);
+		channel:TransformActorsByFirstActor(x,y,z, facing, skin);
+	end
 	channel:SetScene(self.resourceName)
 	channel:Stop()
-	channel:Play(fromTime or 0, toTime or -1, isLooping)
+	channel:Play(fromTime or 0, toTime or -1, isLooping,true)
+	channel:Connect("finished", self ,self.PlayMovieEnd);
+end
+
+function Canvas3D:PlayMovieEnd()
+	if(self.movieChannelName) then
+		NPL.load("(gl)script/apps/Aries/Creator/Game/Movie/MovieManager.lua");
+		local MovieManager = commonlib.gettable("MyCompany.Aries.Game.Movie.MovieManager");
+		if MovieManager:GetInited() ==nil then--if not in world or is entering world something logic is not Init,so return 
+			return
+		end
+		local channel = MovieManager:CreateGetMovieChannel(self.movieChannelName);
+		if channel and channel.canvas3d_obj == self then
+			channel:Disconnect("finished", self, self.PlayMovieEnd);
+		end
+		GameLogic.GetFilters():apply_filters("Canvas3DMovieEnd", self.movieChannelName,self.resourceName)	
+	end
+end
+
+function Canvas3D:StopMovie(channelName)
+	local channelName = channelName or self.movieChannelName
+	if channelName then
+		NPL.load("(gl)script/apps/Aries/Creator/Game/Movie/MovieManager.lua");
+		local MovieManager = commonlib.gettable("MyCompany.Aries.Game.Movie.MovieManager");
+		if MovieManager:GetInited() ==nil then--if not in world or is entering world something logic is not Init,so return 
+			return
+		end
+		local channel = MovieManager:CreateGetMovieChannel(channelName);
+		channel:Stop()
+		channel:Destroy()
+		ParaScene.DeleteMiniSceneGraph(self.resourceName)
+		self.movieChannelName = nil
+	end
+end
+
+function Canvas3D:PlayMovie(startTime, endTime) -- 播放循环帧
+	if self.movieChannelName then
+		NPL.load("(gl)script/apps/Aries/Creator/Game/Movie/MovieManager.lua");
+		local MovieManager = commonlib.gettable("MyCompany.Aries.Game.Movie.MovieManager");
+		if MovieManager:GetInited() ==nil then--if not in world or is entering world something logic is not Init,so return 
+			return
+		end
+		local channel = MovieManager:CreateGetMovieChannel(self.movieChannelName);
+		if channel then
+			channel:Play(startTime, endTime, true,true)
+		end
+	end
 end
 
 ----------------------------------------------------

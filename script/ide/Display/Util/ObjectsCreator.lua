@@ -8,6 +8,9 @@ use the lib:
 NPL.load("(gl)script/ide/Display/Util/ObjectsCreator.lua");
 ------------------------------------------------------------
 ]]
+NPL.load("(gl)script/ide/Display/Object.lua");
+NPL.load("(gl)script/ide/Display/EventDispatcher.lua");
+NPL.load("(gl)script/ide/Display/DisplayObject.lua");
 NPL.load("(gl)script/ide/Display/InteractiveObject.lua");
 local ObjectsCreator = {
 }
@@ -49,7 +52,7 @@ function ObjectsCreator.CreateObjectByParams(classType,params)
 end
 -- pos_x, pos_y,pos_z: is the point at the bottom center of the box. 
 -- obb_x,obb_y,obb_z: is the size of the box. 
--- column:true ¼ì²âÈýÎ¬ false ¼ì²â¶þÎ¬£¬Ä¬ÈÏÎªfalse
+-- column:true æ£€æµ‹ä¸‰ç»´ false æ£€æµ‹äºŒç»´ï¼Œé»˜è®¤ä¸ºfalse
 function ObjectsCreator.Contains(point,box,column)
 	if(not point or not box)then return end
 	local dx =  box.obb_x/2;

@@ -55,9 +55,8 @@ function pe_editbox:OnLoadComponentBeforeChild(parentElem, parentLayout, css)
 	_this:setEncrypted(type == "password");
 
 	_this:Connect("textChanged", self, self.OnTextChanged, "UniqueConnection")
-
-	self:UpdateGetters();
-
+	_this:Connect("enter", self, self.OnEnter, "UniqueConnection")
+	
 	pe_editbox._super.OnLoadComponentBeforeChild(self, parentElem, parentLayout, css)
 end
 
@@ -66,6 +65,8 @@ function pe_editbox:OnAddGetter(name, func, bindingContext)
 		bindingContext:AddGetter(self.control, "SetText", func)
 	elseif(name == "tooltip") then
 		bindingContext:AddGetter(self.control, "SetTooltip", func)
+	else
+		pe_editbox._super.OnAddGetter(self, name, func, bindingContext);
 	end
 end
 
@@ -86,6 +87,13 @@ function pe_editbox:OnLoadComponentAfterChild(parentElem, parentLayout, css)
 		if(ctrl) then
 			ctrl:setFocus("autofocus");
 		end
+	end
+end
+
+function pe_editbox:OnEnter()
+	local onenter = self:GetString("onenter");
+	if (onenter) then
+		self:DoPageEvent(onenter, nil, self);
 	end
 end
 

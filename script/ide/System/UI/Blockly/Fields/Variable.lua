@@ -5,11 +5,11 @@ Date: 2020/6/30
 Desc: 输入字段
 use the lib:
 -------------------------------------------------------
-local Variable = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Blockly/Fields/Variable.lua");
+local Variable = NPL.load("script/ide/System/UI/Blockly/Fields/Variable.lua");
 -------------------------------------------------------
 ]]
 local Const = NPL.load("../Const.lua");
-local Field = NPL.load("./Field.lua", IsDevEnv);
+local Field = NPL.load("./Field.lua");
 
 local Variable = commonlib.inherit(Field, NPL.export());
 local variable_options = {};

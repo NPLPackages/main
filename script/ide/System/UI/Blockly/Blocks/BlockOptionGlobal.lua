@@ -1,7 +1,7 @@
 
-local MacroBlock = NPL.load("./MacroBlock.lua", IsDevEnv);
-local ListBlock = NPL.load("./ListBlock.lua", IsDevEnv);
-local UIBlock = NPL.load("./UIBlock.lua", IsDevEnv);
+local MacroBlock = NPL.load("./MacroBlock.lua");
+local ListBlock = NPL.load("./ListBlock.lua");
+local UIBlock = NPL.load("./UIBlock.lua");
 
 local BlockOptionGlobal = commonlib.inherit(nil, NPL.export());
 
@@ -11,11 +11,10 @@ local function ExtendBlock(SrcMap, DstMap)
     end
 end
 
-
 function BlockOptionGlobal:ctor()
     self.__default_options__ = {};
     self.__overwirte_options__ = {};
-    self.__G__ = setmetatable({}, {__index = _G});
+    self.__G__ = setmetatable({_G = _G, __ENV = _G}, {__index = _G});
 end
 
 function BlockOptionGlobal:Init()

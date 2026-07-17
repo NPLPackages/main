@@ -41,6 +41,10 @@ Application:Property({"tooltipWalkupDelay", 300});
 Application:Property({"toolTipFallAsleepDelay", 5000});
 Application:Property({"bLogEvent", nil, desc="whether to log event to log file. "});
 Application:Signal("focusChanged", function(prev, focus_widget)  end);
+Application:Signal("appPaused", function() end);
+Application:Signal("appResumed", function() end);
+Application:Signal("appStopped", function() end);
+Application:Signal("appDestroyed", function() end);
 
 function Application:ctor()
 	self.postEventList = PostEventList:new();
@@ -55,6 +59,35 @@ function Application:ctor()
 	NPL.load("(gl)script/ide/System/Windows/InputMethod.lua");
 	local InputMethod = commonlib.gettable("System.Windows.InputMethod");
 	self.m_inputMethod = InputMethod:new();
+
+	commonlib.EventSystem.getInstance():AddEventListener("OnAppPause", self.OnAppPause, self);
+	commonlib.EventSystem.getInstance():AddEventListener("OnAppResume", self.OnAppResume, self);
+	commonlib.EventSystem.getInstance():AddEventListener("OnAppStop", self.OnAppStop, self);
+	commonlib.EventSystem.getInstance():AddEventListener("OnAppDestroy", self.OnAppDestroy, self);
+end
+
+-- only mobile platforms will call this function
+function Application:OnAppPause()
+	-- handle app pause event here
+	self:appPaused();
+end
+
+-- only mobile platforms will call this function
+function Application:OnAppResume()
+	-- handle app resume event here
+	self:appResumed();
+end
+
+-- only mobile platforms will call this function
+function Application:OnAppStop()
+	-- handle app stop event here
+	self:appStopped();
+end
+
+-- only mobile platforms will call this function
+function Application:OnAppDestroy()
+	-- handle app destroy event here
+	self:appDestroyed();
 end
 
 -- get the IME input method object. 

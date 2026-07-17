@@ -155,6 +155,10 @@ function BufferPicking:Pick(x, y, width, height, nViewportId)
 		x = math.floor(x - width/2 + 0.5);
 		y = math.floor(y - height/2 + 0.5);
 	end
+	x = math.max(0, x);
+	y = math.max(0, y);
+	width = math.max(1, width);
+	height = math.max(1, height);
 	self:SetPickLeftTop(x, y);
 	self:SetPickWidthHeight(width, height);
 	self:SetViewport(nViewportId);
@@ -187,7 +191,8 @@ end
 
 -- return the number of objects picked. 
 function BufferPicking:GetPickingCount()
-	return self.engine:GetField("PickingCount", 0);
+	local count = self.engine:GetField("PickingCount", 0);
+	return count;
 end
 
 -- get the picked item id of the given picking item. if no data at the index return 0. 
@@ -204,23 +209,36 @@ function BufferPicking:ClearPickingResult()
 	self.engine:CallField("ClearPickingResult");
 end
 
+local tmpVec2 = {};
+
 function BufferPicking:SetPickLeftTop(x, y)
 	if(x and y) then
-		self.engine:SetField("PickLeftTop", {x,y});
+		x = math.max(0, x)
+		y = math.max(0, y)
+		-- TODO: what if region exceed the screen width and height?
+		self.lastLeftTop = self.lastLeftTop or {};
+		self.lastLeftTop[1], self.lastLeftTop[2] = x, y
+		self.engine:SetField("PickLeftTop", self.lastLeftTop);
 	end
 end
 function BufferPicking:GetPickLeftTop()
-	local res = self.engine:GetField("PickLeftTop", {0,0});
+	tmpVec2[1], tmpVec2[2] = 0, 0;
+	local res = self.engine:GetField("PickLeftTop", tmpVec2);
 	return res[1], res[2];
 end
 
 function BufferPicking:SetPickWidthHeight(w,h)
 	if(w and h) then
-		self.engine:SetField("PickWidthHeight", {w,h});
+		w = math.max(1, w)
+		h = math.max(1, h)
+		tmpVec2[1], tmpVec2[2] = w, h
+		-- TODO: what if region exceed the screen width and height?
+		self.engine:SetField("PickWidthHeight", tmpVec2);
 	end
 end
 function BufferPicking:GetPickWidthHeight()
-	local res = self.engine:GetField("PickWidthHeight", {0,0});
+	tmpVec2[1], tmpVec2[2] = 0, 0;
+	local res = self.engine:GetField("PickWidthHeight", tmpVec2);
 	return res[1], res[2];
 end
 

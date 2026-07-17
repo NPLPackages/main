@@ -278,7 +278,7 @@ function ContextMenu:Show(x, y, param1)
 			_menu = _menu_cont:GetChild("Menu");
 			_menu.x = x;
 			_menu.y = y;
-			CommonCtrl.WindowFrame.MoveContainerInScreenArea(_menu);
+			ContextMenu.MoveContainerInScreenSafeArea(_menu);
 			_menu_cont.enabled = true;
 			ContextMenu.ShowContainerWithAnimation(_menu_cont);
 		end
@@ -424,6 +424,7 @@ function ContextMenu:Show(x, y, param1)
 							if(style.textFont) then
 								_text.font = style.textFont;
 							end
+							_guihelper.SetUIFontFormat(_text, 36)
 							_item:AddChild(_text);
 						end
 					
@@ -577,7 +578,7 @@ function ContextMenu:Show(x, y, param1)
 	-- ismodify
 	-- move within screen area
 	
-	CommonCtrl.WindowFrame.MoveContainerInScreenArea(_menu);
+	ContextMenu.MoveContainerInScreenSafeArea(_menu);
 end
 
 -- hide the context menu
@@ -726,12 +727,25 @@ function ContextMenu.OnMouseEnterItem(sCtrlName, index)
 		_submenu.x = x_item - width_submenu + 2;
 	end
 	
-	CommonCtrl.WindowFrame.MoveContainerInScreenArea(_submenu);
+	ContextMenu.MoveContainerInScreenSafeArea(_submenu);
 	
 	if(_submenu.visible == false) then
 		ContextMenu.ShowContainerWithAnimation(_submenu);
 	end
 	_submenu.visible = true;
+end
+
+function ContextMenu.MoveContainerInScreenSafeArea(uiobj)
+	if(uiobj and uiobj:IsValid()) then
+		local x, y, width, height = uiobj:GetAbsPosition();
+		-- put the window inside the screen area
+		x, y, width, height = CommonCtrl.WindowFrame.GetInsideScreenPosition(x, y, width, height);
+		if(System.os.IsTouchMode()) then
+			x = math.max(60, x)
+		end
+		uiobj.x = x;
+		uiobj.y = y;
+	end
 end
 
 -- onmouseleave event handler

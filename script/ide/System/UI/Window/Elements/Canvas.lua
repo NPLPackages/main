@@ -4,10 +4,10 @@ Author(s): wxa
 Date: 2020/8/14
 Desc: 按钮
 -------------------------------------------------------
-local Canvas = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Window/Elements/Canvas.lua");
+local Canvas = NPL.load("script/ide/System/UI/Window/Elements/Canvas.lua");
 -------------------------------------------------------
 ]]
-local Element = NPL.load("../Element.lua", IsDevEnv);
+local Element = NPL.load("../Element.lua");
 local Canvas = commonlib.inherit(Element, NPL.export());
 
 Canvas:Property("Name", "Canvas");

@@ -22,9 +22,9 @@ local function InitCode(cache)
     if (not UI.inited) then
         UI.inited = true;
         if (IsDevEnv) then
-            return 'local Page = NPL.load("Mod/GeneralGameServerMod/UI/Page.lua", true)\n';
+            return 'local Page = NPL.load("script/ide/System/UI/Page.lua");\n';
         else
-            return 'local Page = NPL.load("Mod/GeneralGameServerMod/UI/Page.lua")\n';
+            return 'local Page = NPL.load("script/ide/System/UI/Page.lua");\n';
         end
     end
     return "";
@@ -75,7 +75,7 @@ local function UI_Element_Attr_Click_CallBack(field)
     local left, top = field:GetScreenXY();
     local oldLabel,oldValue = field:GetLabel(), field:GetValue();
     local obj = NPL.LoadTableFromString(oldValue);
-    local Page = NPL.load("Mod/GeneralGameServerMod/UI/Page.lua");
+    local Page = NPL.load("script/ide/System/UI/Page.lua");
     local function OnBlocklyChange(codetext, xmltext)
         local codes = commonlib.split(codetext, "\n");
         local attr, style = "", "";

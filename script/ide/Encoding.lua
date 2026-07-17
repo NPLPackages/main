@@ -146,22 +146,10 @@ function Encoding.split(data, eol, width)
 	return string_gsub(data, line, repl)
 end
 
------------------------------------------------------------------------------
--- Encodes a string into its base64 representation
--- Input 
---   s: binary string to be encoded
---   single: single line output?
--- Returns
---   string with corresponding base64 representation
------------------------------------------------------------------------------
-function Encoding.base64(s, single)
+function Encoding.base64(s)
 	if(s) then
 		local result = ParaMisc.base64(s);
-		if single then 
-			return result
-		else 
-			return Encoding.split(result, Encoding.LINEWIDTH) 
-		end
+		return result
 	end
 end
 
@@ -267,4 +255,39 @@ function Encoding.url_encode(str)
 		str = string_gsub (str, " ", "+")
 	end
 	return str
+end
+
+local function toHexChar_(c) 
+	return string.format("_%02x", string.byte(c)) 
+end
+-- convert string str, replacing all none-alpha numic and _ chars with "_%x" hex string
+function Encoding.toValidParamName(str)
+	if(str) then
+		str = string.gsub(str, "[^%w_]", toHexChar_);
+	end
+	return str;
+end
+
+local function toHexChar2_(c) 
+	return string.format("_x%02xx", string.byte(c)) 
+end
+
+-- to valid name containing only word and '_'
+function Encoding.toValidName(str)
+	if(str) then
+		str = string.gsub(str, "[^%w_]", toHexChar2_);
+	end
+	return str;
+end
+
+local function fromHexChar_(c) 
+	return string.char(tonumber(string.sub(c,3,4),16))
+end
+
+-- from valid name containing only word and '_'
+function Encoding.fromValidName(str)
+	if(str) then
+		str = string.gsub(str, "_x%w%wx", fromHexChar_);
+	end
+	return str;
 end

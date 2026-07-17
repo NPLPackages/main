@@ -1,5 +1,5 @@
 
-local Button = NPL.load("./Button.lua", IsDevEnv);
+local Button = NPL.load("./Button.lua");
 local Workspace = commonlib.inherit(commonlib.gettable("System.Core.ToolBase"), NPL.export());
 
 Workspace:Property("MatataLab");         -- 所属mata

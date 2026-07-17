@@ -5,7 +5,7 @@ Date: 2020/6/30
 Desc: Slot
 use the lib:
 -------------------------------------------------------
-local Slot = NPL.load("Mod/GeneralGameServerMod/App/ui/Core/Vue/Slot.lua");
+local Slot = NPL.load("script/ide/System/UI/Vue/Slot.lua");
 -------------------------------------------------------
 ]]
 

@@ -1,0 +1,7 @@
+<?npl
+-- desc: open npl page in app root directory and force reload (no cache)
+PAGE_NO_HEADER = true;
+PAGE_NO_SIDE_BAR = true;
+PAGE_NO_TITLE = true;
+include("open.page", nil, true);
+?>
