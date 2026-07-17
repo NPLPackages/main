@@ -76,6 +76,8 @@ function YamlConverter.LuaToYAML(luaTable, options)
     end
     
     local indent = options and options.indent or 0
+    local useFrontMatter = options and options.useFrontMatter
+    local hasContent = useFrontMatter and not isArray(luaTable) and luaTable.content ~= nil
     local indentStr = string.rep(" ", indent)
     local result = {}
     
@@ -141,7 +143,9 @@ function YamlConverter.LuaToYAML(luaTable, options)
         -- 获取排序后的键
         local keys = {}
         for k, _ in pairs(luaTable) do
-            table.insert(keys, k)
+            if not (hasContent and tostring(k) == "content") then
+                table.insert(keys, k)
+            end
         end
         table.sort(keys, function(a, b)
             return tostring(a) < tostring(b)
@@ -185,7 +189,16 @@ function YamlConverter.LuaToYAML(luaTable, options)
             end
         end
     end
-    return table.concat(result, "\n")
+    local yamlStr = table.concat(result, "\n")
+    if hasContent then
+        local contentStr = tostring(luaTable.content)
+        if yamlStr ~= "" then
+            return "---\n" .. yamlStr .. "\n---\n" .. contentStr
+        else
+            return "---\n---\n" .. contentStr
+        end
+    end
+    return yamlStr
 end
 
 local function YamlToLuaParse(text)
@@ -413,13 +426,65 @@ local function YamlToLuaParse(text)
     return parseDocument(cleanLines, 1, #cleanLines, 0)
 end
 
+-- Parse front-matter format: ---\nyaml\n---\ncontent
+-- The 'content' key stores raw text after the closing --- delimiter.
+local function ParseFrontMatter(text)
+    local lines = {}
+    for line in string.gmatch(text .. "\n", "([^\n]*)\n") do
+        table.insert(lines, line)
+    end
+
+    if not lines[1] or lines[1]:gsub("%s+$", "") ~= "---" then
+        return nil
+    end
+
+    local closingLine = -1
+    for i = 2, #lines do
+        if lines[i]:gsub("%s+$", "") == "---" then
+            closingLine = i
+            break
+        end
+    end
+    if closingLine == -1 then
+        return nil
+    end
+
+    local frontMatterLines = {}
+    for i = 2, closingLine - 1 do
+        table.insert(frontMatterLines, lines[i])
+    end
+
+    local contentLines = {}
+    for i = closingLine + 1, #lines do
+        table.insert(contentLines, lines[i])
+    end
+    local contentStr = table.concat(contentLines, "\n")
+
+    local result = {}
+    local fmText = table.concat(frontMatterLines, "\n")
+    if fmText:match("%S") then
+        result = YamlToLuaParse(fmText) or {}
+    end
+
+    result.content = contentStr
+    return result
+end
+
 -- 将YAML字符串转换为Lua表
-function YamlConverter.YAMLToLua(yamlStr)
+-- @param options: {useFrontMatter=bool} when true, detect --- front-matter and extract 'content' from body
+function YamlConverter.YAMLToLua(yamlStr, options)
     if not yamlStr or type(yamlStr) ~= "string" or yamlStr:match("^%s*$") then
         return {}
     end
-    
-    -- 使用改进的解析器
+
+    local useFrontMatter = options and options.useFrontMatter
+    if useFrontMatter and (yamlStr:sub(1, 4) == "---\n" or yamlStr:sub(1, 5) == "---\r\n") then
+        local fmResult = ParseFrontMatter(yamlStr)
+        if fmResult then
+            return fmResult
+        end
+    end
+
     return YamlToLuaParse(yamlStr)
 end
 

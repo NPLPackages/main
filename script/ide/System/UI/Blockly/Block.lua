@@ -295,6 +295,16 @@ function Block:GetBrush()
 end
 
 function Block:Render(painter)
+    -- 视口裁剪(仅工作区内容渲染时启用): 块链自上而下, 超出视口下边界的整链跳过; 视口上方的块跳过自绘但继续绘制后续块
+    local __blockly__ = self:GetBlockly();
+    local cullingTop, cullingBottom = __blockly__ and __blockly__.__render_culling_top__, __blockly__ and __blockly__.__render_culling_bottom__;
+    if (cullingBottom and self.top and self.top > cullingBottom) then return end
+    if (cullingTop and self.top and (self.top + (self.maxHeight or 0)) < cullingTop) then
+        local nextBlock = self:GetNextBlock();
+        if (nextBlock) then nextBlock:Render(painter) end
+        return;
+    end
+
     -- 绘制凹陷部分
     -- Shape:SetPen(self:GetPen());
     if (self.__is_running__) then

@@ -40,3 +40,6 @@ Documentation/*
 !/script/kids/3DMapSystemApp/localserver/
 
 
+
+# syncRoots allowlist (managed by sync_nplpackages.py)
+!/Documentation/

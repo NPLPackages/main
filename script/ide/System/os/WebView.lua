@@ -142,6 +142,13 @@ function WebView:bringToTop()
 	self._att:CallField("bringToTop")
 end
 
+function WebView:setTransparent(bTransparent)
+	if (not self._wv) then
+		return false
+	end
+	self._att:SetField("Transparent", bTransparent);
+end
+
 function WebView:activate(filepath, msg)
 	if (self._wv) then
 		if (self._wv.activate) then

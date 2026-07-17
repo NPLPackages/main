@@ -49,7 +49,6 @@ function Screen:OnSizeChange(width, height)
 	if(self.last_width ~= width or self.last_height~=height) then
 		self.last_width, self.last_height = width, height;
 		self:GetUIScaling(true);
-		echo("signal function sizeChange called==============")
 		self:sizeChanged(width, height);
 	end
 end
@@ -259,8 +258,18 @@ function Screen:SetUIScale(scalingX, scalingY)
 
 	LOG.std(nil, "info", "Screen", "set UIScale to %f, %f", scalingX, scalingY);
 	ui_scaling = ui_scaling or {};
+	local changed = (ui_scaling[1] ~= scalingX or ui_scaling[2] ~= scalingY);
 	ui_scaling[1], ui_scaling[2] = scalingX, scalingY;
 	ParaUI.GetUIObject("root"):SetField("UIScale", ui_scaling);
+	if(changed) then
+		-- UIScale changes the logical screen resolution (logical size = physical / UIScale),
+		-- so broadcast a size change to keep downstream listeners (Viewport, CodeBlockWindow,
+		-- Blockly drag/scroll bounds, etc.) in sync. Without this, a UIScale change made by the
+		-- delayed AutoAdjustUIScalingImp timer would silently leave those layouts stale.
+		-- NOTE: the `changed` guard is required to avoid infinite recursion, since
+		-- AutoAdjustUIScalingImp itself listens on sizeChanged and may call SetUIScale again.
+		self:OnSizeChange(self:GetWidth(), self:GetHeight());
+	end
 end
 
 -- return scaleX, scaleY

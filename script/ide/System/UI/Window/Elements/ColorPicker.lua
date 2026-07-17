@@ -67,12 +67,10 @@ function ColorPicker:RenderContent(painter)
     local x, y, w, h = self:GetContentGeometry();
     painter:Translate(x, y);
 
-    -- local targetColorWidth, targetColorHeight = 40, 20;
-    -- painter:SetPen(string.format("#%02x%02x%02x", self.r, self.g, self.b));
-    -- painter:DrawRect(w / 2 - targetColorWidth / 2, 10, targetColorWidth, targetColorHeight);
-    -- offsetY = offsetY + 30;
-    
-    local colorWidth, colorHeight = 1, 20;
+    local barWidth = w;
+    local steps = 100;
+    local colorWidth = barWidth / steps;
+    local colorHeight = 20;
     local offsetX, offsetY, textOffsetX, colorOffsetY = 0, 0, 0, 4;
     local r, g, b = 255, 0, 0;
     painter:SetFont("System;12;norm")
@@ -80,85 +78,80 @@ function ColorPicker:RenderContent(painter)
     painter:DrawText(offsetX + textOffsetX, offsetY, string.format("颜色 %d", math.floor(self.h * 100)));
     offsetY = offsetY + 30;
     painter:DrawText(offsetX - 14, offsetY, "-");
-    for i = 1, 100 do
-        r, g, b = Color.hsl2rgb(i/100, self.s, self.l);
+    for i = 1, steps do
+        r, g, b = Color.hsl2rgb(i/steps, self.s, self.l);
         painter:SetPen(string.format("#%02x%02x%02x", r, g, b));
-        painter:DrawRect(offsetX + (i - 1) * colorWidth, offsetY, colorWidth, colorHeight);
+        painter:DrawRect(offsetX + (i - 1) * colorWidth, offsetY, math.ceil(colorWidth), colorHeight);
     end
     painter:SetPen("#000000");
-    painter:DrawText(offsetX + 105, offsetY, "+");
-    painter:DrawRect(offsetX + (self.h*100 - 1) * colorWidth, offsetY - colorOffsetY, colorWidth, colorHeight + 2 * colorOffsetY);
+    painter:DrawText(offsetX + barWidth + 5, offsetY, "+");
+    painter:DrawRect(offsetX + self.h * barWidth - 1, offsetY - colorOffsetY, 2, colorHeight + 2 * colorOffsetY);
 
     offsetY = offsetY + 30;
     painter:SetPen("#000000");
     painter:DrawText(offsetX + textOffsetX, offsetY, string.format("饱和度 %s", math.floor(self.s * 100)));
     offsetY = offsetY + 30;
     painter:DrawText(offsetX - 14, offsetY, "-");
-    for i = 1, 100 do
-        r, g, b = Color.hsl2rgb(self.h, i/100, self.l);
+    for i = 1, steps do
+        r, g, b = Color.hsl2rgb(self.h, i/steps, self.l);
         painter:SetPen(string.format("#%02x%02x%02x", r, g, b));
-        painter:DrawRect(offsetX + (i - 1) * colorWidth, offsetY, colorWidth, colorHeight);
+        painter:DrawRect(offsetX + (i - 1) * colorWidth, offsetY, math.ceil(colorWidth), colorHeight);
     end
     painter:SetPen("#000000");
-    painter:DrawText(offsetX + 105, offsetY, "+");
-    painter:DrawRect(offsetX + (self.s*100 - 1) * colorWidth, offsetY - colorOffsetY, colorWidth, colorHeight + 2 * colorOffsetY);
+    painter:DrawText(offsetX + barWidth + 5, offsetY, "+");
+    painter:DrawRect(offsetX + self.s * barWidth - 1, offsetY - colorOffsetY, 2, colorHeight + 2 * colorOffsetY);
 
     offsetY = offsetY + 30;
     painter:SetPen("#000000");
     painter:DrawText(offsetX + textOffsetX, offsetY, string.format("亮度  %s", math.floor(self.l * 100)));
     offsetY = offsetY + 30;
     painter:DrawText(offsetX - 14, offsetY, "-");
-    for i = 1, 100 do
-        r, g, b = Color.hsl2rgb(self.h, self.s, i/100);
+    for i = 1, steps do
+        r, g, b = Color.hsl2rgb(self.h, self.s, i/steps);
         painter:SetPen(string.format("#%02x%02x%02x", r, g, b));
-        painter:DrawRect(offsetX + (i - 1) * colorWidth, offsetY, colorWidth, colorHeight);
+        painter:DrawRect(offsetX + (i - 1) * colorWidth, offsetY, math.ceil(colorWidth), colorHeight);
     end
     painter:SetPen("#000000");
-    painter:DrawText(offsetX + 105, offsetY, "+");
-    painter:DrawRect(offsetX + (self.l*100 - 1) * colorWidth, offsetY - colorOffsetY, colorWidth, colorHeight + 2 * colorOffsetY);
+    painter:DrawText(offsetX + barWidth + 5, offsetY, "+");
+    painter:DrawRect(offsetX + self.l * barWidth - 1, offsetY - colorOffsetY, 2, colorHeight + 2 * colorOffsetY);
 
     painter:Translate(-x, -y);
 end
 
 function ColorPicker:OnMouseDown(event)
-    local x, y  = self:GetGeometry();
-    local cx, cy = self:GetContentGeometry();
-    local offsetX, offsetY = cx - x, cy - y;
+    local gx, gy = self:GetGeometry();
+    local cx, cy, cw, ch = self:GetContentGeometry();
+    local contentOffsetX, contentOffsetY = cx - gx, cy - gy;
+    local barWidth = cw;
 
-    x, y = event:GetScreenXY();
-    x, y = self:GetRelPoint(x, y);
-    x, y = x - offsetX, y - offsetY - 30;
+    local sx, sy = event:GetScreenXY();
+    local rx, ry = self:GetRelPoint(sx, sy);
+    local x, y = rx - contentOffsetX, ry - contentOffsetY - 30;
     if (0 <= y and y <= 20) then
-        if (0 <= x and x <= 100) then
-            self.h = x / 100;
-        elseif (-10 <= x and x <= 0) then
-            self.h = self.h - 0.01;
-            self.h = math.max(self.h, 0);
-        elseif (100 <= x and x <= 120) then
-            self.h = self.h + 0.01;
-            self.h = math.min(self.h, 1);
+        if (0 <= x and x <= barWidth) then
+            self.h = x / barWidth;
+        elseif (-14 <= x and x < 0) then
+            self.h = math.max(self.h - 0.01, 0);
+        elseif (barWidth < x and x <= barWidth + 20) then
+            self.h = math.min(self.h + 0.01, 1);
         end
     end
     if (60 <= y and y <= 80) then
-        if (0 <= x and x <= 100) then
-            self.s = x / 100;
-        elseif (-10 <= x and x <= 0) then
-            self.s = self.s - 0.01;
-            self.s = math.max(self.s, 0);
-        elseif (100 <= x and x <= 120) then
-            self.s = self.s + 0.01;
-            self.s = math.min(self.s, 1);
+        if (0 <= x and x <= barWidth) then
+            self.s = x / barWidth;
+        elseif (-14 <= x and x < 0) then
+            self.s = math.max(self.s - 0.01, 0);
+        elseif (barWidth < x and x <= barWidth + 20) then
+            self.s = math.min(self.s + 0.01, 1);
         end
     end
     if (120 <= y and y <= 140) then
-        if (0 <= x and x <= 100) then
-            self.l = x / 100;
-        elseif (-10 <= x and x <= 0) then
-            self.l = self.l - 0.01;
-            self.l = math.max(self.l, 0);
-        elseif (100 <= x and x <= 120) then
-            self.l = self.l + 0.01;
-            self.l = math.min(self.l, 1);
+        if (0 <= x and x <= barWidth) then
+            self.l = x / barWidth;
+        elseif (-14 <= x and x < 0) then
+            self.l = math.max(self.l - 0.01, 0);
+        elseif (barWidth < x and x <= barWidth + 20) then
+            self.l = math.min(self.l + 0.01, 1);
         end
     end
 
@@ -167,4 +160,6 @@ function ColorPicker:OnMouseDown(event)
         self:SetValue(color);
         self:OnChange(color);
     end
+    local window = self:GetWindow();
+    if (window) then window:markDirty() end
 end

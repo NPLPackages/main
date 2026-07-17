@@ -64,9 +64,16 @@ local upgrade_request = function(req)
     'Upgrade: websocket',
     'Connection: Upgrade',
     format('Sec-WebSocket-Key: %s', req.key),
-    format('Sec-WebSocket-Protocol: %s', table.concat(req.protocols, ', ')),
     'Sec-WebSocket-Version: 13',
   };
+
+  -- Only include Sec-WebSocket-Protocol when non-empty protocols are specified
+  if (req.protocols and #req.protocols > 0) then
+    local protocolStr = table.concat(req.protocols, ', ');
+    if (protocolStr ~= '') then
+      tinsert(lines, format('Sec-WebSocket-Protocol: %s', protocolStr));
+    end
+  end
 
   if (req.origin) then
     tinsert(lines, string.format('Origin: %s', req.origin));

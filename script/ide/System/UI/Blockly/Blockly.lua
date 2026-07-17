@@ -95,6 +95,9 @@ function Blockly:Reset()
     self.__block_id_map__ = {};
     self.__running_block_id_stack__ = {};
     self.offsetX, self.offsetY = 0, 0;
+    self.__target_offset_x__, self.__target_offset_y__ = nil, nil;   -- 平滑滚动目标偏移
+    if (self.__pending_do_timer__) then self.__pending_do_timer__:Change(); self.__pending_do_timer__ = nil end
+    self.__pending_do_cmd__ = nil;
     self.mouseMoveX, self.mouseMoveY = 0, 0;
     self.__content_left_unit_count__, self.__content_top_unit_count__, self.__content_right_unit_count__, self.__content_bottom_unit_count__ = 0, 0, 0, 0;
     self.__offset_x_unit_count__, self.__offset_y_unit_count__ = 0, 0;
@@ -427,6 +430,33 @@ end
 -- 操作
 function Blockly:Do(cmd)
     cmd = cmd or {};
+    -- 小工作区直接快照; 大工作区全量XML序列化开销大, 延迟合并快照避免频繁操作卡顿
+    if (self:GetStatementBlockCount() < 300) then
+        self:FlushPendingDo();
+        return self:DoSnapshot(cmd);
+    end
+    self.__pending_do_cmd__ = cmd;
+    if (self.__pending_do_timer__) then return end
+    self.__pending_do_timer__ = commonlib.TimerManager.SetTimeout(function()
+        self.__pending_do_timer__ = nil;
+        local pending_cmd = self.__pending_do_cmd__;
+        self.__pending_do_cmd__ = nil;
+        if (pending_cmd) then self:DoSnapshot(pending_cmd) end
+    end, 200);
+end
+
+-- 立即执行挂起的延迟快照
+function Blockly:FlushPendingDo()
+    if (self.__pending_do_timer__) then
+        self.__pending_do_timer__:Change();
+        self.__pending_do_timer__ = nil;
+    end
+    local pending_cmd = self.__pending_do_cmd__;
+    self.__pending_do_cmd__ = nil;
+    if (pending_cmd) then self:DoSnapshot(pending_cmd) end
+end
+
+function Blockly:DoSnapshot(cmd)
     cmd.workspace_xml_text = self:SaveToXmlNodeText();
 
     local last_cmd = self.undos[#self.undos];
@@ -443,6 +473,7 @@ end
 
 -- 撤销命令
 function Blockly:Undo()
+    self:FlushPendingDo();
     if (#self.undos == 0) then return end
     table.insert(self.redos, #self.redos + 1, self.undos[#self.undos]);
     table.remove(self.undos, #self.undos);
@@ -453,6 +484,7 @@ end
 
 -- 恢复
 function Blockly:Redo()
+    self:FlushPendingDo();
     if (#self.redos == 0) then return end
     local cmd = self.redos[#self.redos];
     table.remove(self.redos, #self.redos);
@@ -682,6 +714,7 @@ end
 function Blockly:RenderContent(painter)
     local UnitSize, scale = self:GetUnitSize(), self:GetScale();
     local x, y, w, h = self:GetContentGeometry();
+    self:UpdateSmoothScroll();
     self:RenderBG(painter);
     self:RenderIcons(painter);
     -- 设置绘图类
@@ -698,19 +731,27 @@ function Blockly:RenderContent(painter)
     end
     painter:Scale(scale, scale);
     painter:Translate(self.offsetX, self.offsetY);
+    -- 视口的逻辑坐标范围, 裁剪屏幕外的块
+    local viewLeft = (self.isHideToolBox and 0 or toolboxWidth) / scale - self.offsetX;
+    local viewTop = -self.offsetY;
+    local viewRight = w / scale - self.offsetX;
+    local viewBottom = h / scale - self.offsetY;
+    self.__render_culling_top__, self.__render_culling_bottom__ = viewTop, viewBottom;
     for _, block in ipairs(self.blocks) do
         if (block:IsDragging()) then
-            if (self:GetMouseCaptureUI() ~= block) then 
+            if (self:GetMouseCaptureUI() ~= block) then
                 block:SetDragging(false);
                 self:GetShadowBlock():Shadow(nil);
             else
                 DraggingBlock = block;
             end
-        else 
+        elseif ((block.left or 0) <= viewRight and ((block.left or 0) + (block.totalWidth or 0)) >= viewLeft and
+                (block.top or 0) <= viewBottom and ((block.top or 0) + (block.totalHeight or 0)) >= viewTop) then
             block:Render(painter);
             painter:Flush();
         end
     end
+    self.__render_culling_top__, self.__render_culling_bottom__ = nil, nil;
     painter:Translate(-self.offsetX, -self.offsetY);
     painter:Scale(1 / scale, 1 / scale);
     painter:Restore();
@@ -869,6 +910,7 @@ end
 -- 鼠标按下事件
 function Blockly:OnMouseDown(event)
     event:Accept();
+    self:CancelSmoothScroll();
     self.mouseMoveX, self.mouseMoveY = Blockly._super.GetRelPoint(self, event.x, event.y);
     self:GetContextMenu():Hide();
     local ui = self:GetMouseDownUI(event);
@@ -955,23 +997,33 @@ function Blockly:AdjustCenter(targetBlock)
     self:OnOffsetChange();
 end
 
--- 重新布局
-function Blockly:UpdateScale(offset)
+-- 更新缩放: 以锚点(屏幕坐标)为中心缩放, 缺省锚点为工作区视口中心, 缩放前后锚点下的逻辑点保持不动
+function Blockly:UpdateScale(offset, anchorX, anchorY)
     local oldScale = self:GetScale();
     local newScale = offset and (oldScale + offset) or 1;
     newScale = math.min(newScale, 4);
     newScale = math.max(newScale, 0.5);
-    
+
     if (oldScale == newScale) then return end
+    if (not anchorX or not anchorY) then
+        local width, height = self:GetSize();
+        local toolboxWidth = self.isHideToolBox and 0 or self.ToolBoxWidth;
+        anchorX, anchorY = toolboxWidth + (width - toolboxWidth) / 2, height / 2;
+    end
+    self:CancelSmoothScroll();
+    -- 锚点下的逻辑点: anchor / scale - offset, 保持不变可得新偏移
+    local UnitSize = self:GetUnitSize();
+    local offsetX = anchorX / newScale - (anchorX / oldScale - self.offsetX);
+    local offsetY = anchorY / newScale - (anchorY / oldScale - self.offsetY);
     self:SetScale(newScale);
-    self:AdjustCenter();
-    -- for _, block in ipairs(self.blocks) do
-    --     local leftUnitCount, topUnitCount = block:GetLeftTopUnitCount();
-    --     leftUnitCount = math.floor(leftUnitCount * oldScale / newScale);
-    --     topUnitCount = math.floor(topUnitCount * oldScale / newScale);
-    --     block:SetLeftTopUnitCount(leftUnitCount, topUnitCount);
-    --     block:UpdateLayout();
-    -- end
+    self:AdjustContentSize();
+    self.__offset_x_unit_count__ = math.floor(offsetX / UnitSize + 0.5);
+    self.__offset_y_unit_count__ = math.floor(offsetY / UnitSize + 0.5);
+    self.__offset_x_unit_count__ = math.min(math.max(self.__offset_x_unit_count__, self.__min_offset_x_count__), self.__max_offset_x_count__);
+    self.__offset_y_unit_count__ = math.min(math.max(self.__offset_y_unit_count__, self.__min_offset_y_count__), self.__max_offset_y_count__);
+    self.offsetX = self.__offset_x_unit_count__ * UnitSize;
+    self.offsetY = self.__offset_y_unit_count__ * UnitSize;
+    self:OnOffsetChange();
 end
 
 -- 获取当前鼠标顶点值
@@ -1095,28 +1147,37 @@ end
 function Blockly:AdjustContentSize()
     local width, height = self:GetSize();
     local UnitSize = self:GetUnitSize();
+    local scale = self:GetScale();
     self.__toolbox_unit_count__ = self.isHideToolBox and 0 or math.floor(self.ToolBoxWidth / UnitSize);
     self.__width_unit_count__, self.__height_unit_count__ = math.ceil(width / UnitSize), math.ceil(height / UnitSize);
     self.__offset_x_unit_count__, self.__offset_y_unit_count__ = math.floor(self.offsetX / UnitSize), math.floor(self.offsetY / UnitSize);
     local left, top, right, bottom = nil, nil, nil, nil;
-    local content_offset, max_block_width_unit_count, max_block_height_unit_count = -1000, 0, 0;
-    for _, block in ipairs(self.blocks) do 
+    for _, block in ipairs(self.blocks) do
         local leftUnitCount, topUnitCount = block:GetLeftTopUnitCount();
-        local widthUnitCount, heightUnitCount = block:GetWidthHeightUnitCount();
+        local widthUnitCount, heightUnitCount = block:GetTotalWidthHeightUnitCount();
         local rightUnitCount, bottomUnitCount = leftUnitCount + widthUnitCount, topUnitCount + heightUnitCount;
         left = left and math.min(left, leftUnitCount) or leftUnitCount;
         top = top and math.min(top, topUnitCount) or topUnitCount;
         right = right and math.max(right, rightUnitCount) or rightUnitCount;
         bottom = bottom and math.max(bottom, bottomUnitCount) or bottomUnitCount;
-        max_block_width_unit_count = math.max(max_block_width_unit_count, widthUnitCount);
-        max_block_height_unit_count = math.max(max_block_height_unit_count, heightUnitCount);
     end
-    max_block_width_unit_count, max_block_height_unit_count = 0, 0; -- 兼容宏示教,  比较好的效果应屏蔽  content_offset = 20
     self.__content_left_unit_count__, self.__content_top_unit_count__, self.__content_right_unit_count__, self.__content_bottom_unit_count__ = left or 0, top or 0, right or 0, bottom or 0;
-    self.__min_offset_x_count__ = self.__toolbox_unit_count__ + content_offset + max_block_width_unit_count - self.__content_right_unit_count__;
-    self.__max_offset_x_count__ = self.__width_unit_count__ - content_offset - max_block_width_unit_count - self.__content_left_unit_count__;
-    self.__min_offset_y_count__ = content_offset + max_block_height_unit_count - self.__content_bottom_unit_count__;
-    self.__max_offset_y_count__ = self.__height_unit_count__ - content_offset - max_block_height_unit_count - self.__content_top_unit_count__;
+    -- 滚动边界 = 内容包围盒向四周扩展半个视口(视口逻辑尺寸受缩放影响), 避免内容被滑出可视范围太远
+    local view_width_unit_count = math.ceil(width / scale / UnitSize);
+    local view_height_unit_count = math.ceil(height / scale / UnitSize);
+    local toolbox_view_unit_count = self.isHideToolBox and 0 or math.ceil(self.ToolBoxWidth / scale / UnitSize);
+    local half_view_width_unit_count = math.floor((view_width_unit_count - toolbox_view_unit_count) / 2);
+    local half_view_height_unit_count = math.floor(view_height_unit_count / 2);
+    self.__min_offset_x_count__ = toolbox_view_unit_count - half_view_width_unit_count - self.__content_right_unit_count__;
+    self.__max_offset_x_count__ = view_width_unit_count + half_view_width_unit_count - self.__content_left_unit_count__;
+    self.__min_offset_y_count__ = -half_view_height_unit_count - self.__content_bottom_unit_count__;
+    self.__max_offset_y_count__ = view_height_unit_count + half_view_height_unit_count - self.__content_top_unit_count__;
+    -- 当前偏移可能超出上述边界(旧存档保存的偏移/居中定位等): 扩展边界包含当前偏移,
+    -- 保证从当前位置能平滑滚回内容区而不被钳制卡住(否则平移会被钳在边界上拖不动, 滚动条滑块也会画出轨道外)
+    self.__min_offset_x_count__ = math.min(self.__min_offset_x_count__, self.__offset_x_unit_count__);
+    self.__max_offset_x_count__ = math.max(self.__max_offset_x_count__, self.__offset_x_unit_count__);
+    self.__min_offset_y_count__ = math.min(self.__min_offset_y_count__, self.__offset_y_unit_count__);
+    self.__max_offset_y_count__ = math.max(self.__max_offset_y_count__, self.__offset_y_unit_count__);
 end
 
 function Blockly:OnOffsetChange()
@@ -1127,6 +1188,28 @@ end
 
 function Blockly:GetOffset()
     return self.offsetX, self.offsetY;
+end
+
+-- 平滑滚动: 每帧向目标偏移插值, 由 RenderContent 驱动
+function Blockly:UpdateSmoothScroll()
+    if (not self.__target_offset_x__ and not self.__target_offset_y__) then return end
+    local UnitSize = self:GetUnitSize();
+    local function NextOffset(offset, target)
+        if (not target) then return offset, nil end
+        local diff = target - offset;
+        if (math.abs(diff) <= UnitSize) then return target, nil end
+        return offset + diff * 0.4, target;
+    end
+    self.offsetX, self.__target_offset_x__ = NextOffset(self.offsetX, self.__target_offset_x__);
+    self.offsetY, self.__target_offset_y__ = NextOffset(self.offsetY, self.__target_offset_y__);
+    self.__offset_x_unit_count__ = math.floor(self.offsetX / UnitSize + 0.5);
+    self.__offset_y_unit_count__ = math.floor(self.offsetY / UnitSize + 0.5);
+    self:OnOffsetChange();
+end
+
+-- 取消平滑滚动(直接设置偏移前调用, 防止插值与直接操作冲突)
+function Blockly:CancelSmoothScroll()
+    self.__target_offset_x__, self.__target_offset_y__ = nil, nil;
 end
 
 -- 获取鼠标元素
@@ -1188,12 +1271,31 @@ end
 function Blockly:OnMouseWheel(event)
     event:Accept();
     if (self:IsInnerToolBox(event)) then return self:GetToolBox():OnMouseWheel(event) end
-    if (self:IsEditing()) then return end 
+    if (self:IsEditing()) then return end
     local delta = event:GetDelta();             -- 1 向上滚动  -1 向下滚动
     local UnitSize = self:GetUnitSize();
-    self.__offset_y_unit_count__ = math.floor((self.offsetY + delta * 20) / UnitSize);
-    self.__offset_y_unit_count__ = math.min(math.max(self.__offset_y_unit_count__, self.__min_offset_y_count__), self.__max_offset_y_count__);
-    self.offsetY = self.__offset_y_unit_count__ * UnitSize;
+    local scale = self:GetScale();
+
+    -- Ctrl + 滚轮: 以鼠标位置为锚点缩放
+    if (event.ctrl_pressed) then
+        local anchorX, anchorY = Blockly._super.GetRelPoint(self, event.x, event.y);
+        self:UpdateScale(delta > 0 and 0.1 or -0.1, anchorX, anchorY);
+        return;
+    end
+
+    -- 每格滚动约3行内容高, 除以缩放值使视觉步长恒定; 只更新目标偏移, 由 UpdateSmoothScroll 逐帧插值
+    local step = delta * Const.LineHeightUnitCount * UnitSize * 3 / scale;
+    if (event.shift_pressed) then
+        local targetX = (self.__target_offset_x__ or self.offsetX) + step;
+        targetX = math.floor(targetX / UnitSize) * UnitSize;
+        targetX = math.min(math.max(targetX, self.__min_offset_x_count__ * UnitSize), self.__max_offset_x_count__ * UnitSize);
+        self.__target_offset_x__ = targetX;
+    else
+        local targetY = (self.__target_offset_y__ or self.offsetY) + step;
+        targetY = math.floor(targetY / UnitSize) * UnitSize;
+        targetY = math.min(math.max(targetY, self.__min_offset_y_count__ * UnitSize), self.__max_offset_y_count__ * UnitSize);
+        self.__target_offset_y__ = targetY;
+    end
 end
 
 -- 键盘事件
