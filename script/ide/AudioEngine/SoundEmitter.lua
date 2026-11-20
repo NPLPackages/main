@@ -235,29 +235,26 @@ FootstepEmitter.exceptionList["character/v6/02animals/MagicBesom/MagicBesom.x"] 
 
 
 function FootstepEmitter:checkFootstep(location)
-	--not moving
+	if(self.lastX == location.x and self.lastY == location.z) then
+		self.hasFootstepSound = false;
+		return;
+	end
 
 	local Player = MyCompany.Aries.Player;
-
-	if(Player.IsMounted())then
+	if(Player.IsMounted()) then
 		local mount = ParaScene.GetPlayer():GetPrimaryAsset():GetKeyName();
-		if(FootstepEmitter.exceptionList[mount])then
+		if(FootstepEmitter.exceptionList[mount]) then
 			self.hasFootstepSound = false;
 			return;
 		end
 	end
-	  
-	if(self.lastX == location.x and self.lastY == location.z)then
+
+	self.lastX = location.x;
+	self.lastY = location.z;
+	if(Player.IsFlying() or Player.IsInAir()) then
 		self.hasFootstepSound = false;
 	else
-		self.lastX = location.x;
-		self.lastY = location.z;
-
-		if(Player.IsFlying() or Player.IsInAir()) then
-			self.hasFootstepSound = false;
-		else
-			self.hasFootstepSound = true;		
-		end
+		self.hasFootstepSound = true;
 	end
 end
 

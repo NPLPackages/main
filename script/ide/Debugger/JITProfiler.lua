@@ -44,8 +44,6 @@ commonlib.TimerManager.SetTimeout(function()  p.stop() end, 10*1000)
 ----------------------------------------------------------------------------
 
 -- Cache some library functions and objects.
-local jit = require("jit")
-assert(jit.version_num == 20100, "LuaJIT core/library version mismatch")
 local profile = require("jit.profile")
 local math = math
 local pairs, ipairs, tonumber, floor = pairs, ipairs, tonumber, math.floor
@@ -231,14 +229,13 @@ local function prof_finish()
 		local samples = prof_samples
 		if samples == 0 then
 			if prof_raw ~= true then out:write("[No samples collected]\n") end
-			return
-		end
-		if prof_ann then
+		elseif prof_ann then
 			prof_annotate(prof_count1, samples)
 		else
 			prof_top(prof_count1, prof_count2, samples, "")
 		end
-		out:close()
+		if out ~= stdout then out:close() end
+		getmetatable(prof_ud).__gc = nil
 		prof_count1 = nil
 		prof_count2 = nil
 		prof_ud = nil
@@ -298,6 +295,7 @@ end
 ------------------------------------------------------------------------------
 
 local function start(mode, outfile)
+	prof_finish()
 	if not outfile then outfile = os.getenv("LUAJIT_PROFILEFILE") end
 	if outfile then
 		out = outfile == "-" and stdout or assert(io.open(outfile, "w"))

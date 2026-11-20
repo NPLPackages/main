@@ -9,6 +9,7 @@ Install: `NPL.load("npl_packages/main/")` (usually loaded automatically at NPL s
 | Path | Role |
 |------|------|
 | `script/ide/` | IDE / framework (`commonlib`, `System.*`, UI, MCML, math, …) |
+| [JITProfiler.lua](script/ide/Debugger/JITProfiler.lua) | Samples NPL stacks and VM states on beta3 and rolling LuaJIT 2.1 builds |
 | `script/apps/WebServer/` | NPL web server |
 | `script/kids/` | Partial Map3DSystem / legacy helpers (allowlisted only) |
 | `script/sqlite/`, `script/test/` | SQLite bindings + tests |

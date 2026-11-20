@@ -71,6 +71,11 @@ local MAX_TIMER_DUE_TIME = 30*24*60*60*1000;
 -- mapping from id to the timer object. 
 local activeTimerList = commonlib.List:new();
 
+local function isInActiveList(timer)
+	-- The only node in the list has neither a previous nor a next node.
+	return timer.prev or timer.next or activeTimerList.head == timer;
+end
+
 -- a new timer class with infinite time. 
 function Timer:new(o)
 	o = o or {};
@@ -227,7 +232,7 @@ function TimerManager.AddTimer(timer)
 		timer.enabled = true;
 
 		-- only add if not already in list
-		if(not timer.prev and not timer.next) then
+		if(not isInActiveList(timer)) then
 			-- start immediately on load
 			if(not IsStarted) then
 				IsStarted = true;
@@ -277,7 +282,7 @@ function TimerManager.OnTimer()
 	if(new_timers) then
 		for id, timer in pairs(new_timers) do
 			-- only add if not already in list
-			if(not timer.prev and not timer.next) then
+			if(not isInActiveList(timer)) then
 				activeTimerList:addtail(timer)
 			end
 		end
@@ -289,7 +294,7 @@ function TimerManager.OnTimer()
 	while (timer) do
 		if(timer.enabled) then
 			timer:Tick(last_tick);
-			timer = activeTimerList:next(timer)
+			timer = timer.next
 		else
 			timer = activeTimerList:remove(timer)
 		end	
